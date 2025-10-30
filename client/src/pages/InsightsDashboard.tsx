@@ -96,7 +96,7 @@ function InsightsDashboardContent() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-6 gap-2 bg-slate-200/75">
           <TabsTrigger value="overview" data-testid="tab-overview" className="relative" onClick={() => setActiveTab("overview")}>
             <div className="flex items-center gap-2">
               Overview

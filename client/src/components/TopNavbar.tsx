@@ -158,7 +158,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                     </Button>
                   </div>
                 </div>
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-4 bg-slate-200/75">
                   <TabsTrigger
                     value="all"
                     className="text-xs"

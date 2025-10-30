@@ -40,7 +40,7 @@ export default function AgentPerformanceTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         {/* Left side - Tabs */}
-        <div className="flex items-center space-x-1 bg-black/5 rounded-lg p-1">
+        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1">
           <button
             onClick={() => handleTabChange("agent-performance-main")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${

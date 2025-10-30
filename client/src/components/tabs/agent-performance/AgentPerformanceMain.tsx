@@ -227,9 +227,48 @@ export default function AgentPerformanceMain() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b">
-                      <td colSpan={4} className="text-center py-6 text-xs text-muted-foreground">
-                        No agents available
+                    <tr className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-3">John Smith</td>
+                      <td className="py-2 px-3">Sales Team</td>
+                      <td className="py-2 px-3">09:30 AM</td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span>Online</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-3">Sarah Johnson</td>
+                      <td className="py-2 px-3">Support Team</td>
+                      <td className="py-2 px-3">08:45 AM</td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                          <span>Busy</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-3">Mike Wilson</td>
+                      <td className="py-2 px-3">Technical Team</td>
+                      <td className="py-2 px-3">10:15 AM</td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span>Online</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-3">Emma Davis</td>
+                      <td className="py-2 px-3">Sales Team</td>
+                      <td className="py-2 px-3">09:00 AM</td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                          <span>Away</span>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
