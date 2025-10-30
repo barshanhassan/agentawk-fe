@@ -1,4 +1,4 @@
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Utility function to abbreviate large numbers
@@ -15,6 +15,29 @@ const abbreviateNumber = (num: number): string => {
 // Utility function to format percentage
 const formatPercentage = (num: number): string => {
   return num.toFixed(1) + "%";
+};
+
+// Custom tooltip for charts
+const CustomTooltip = ({ active, payload, label, isStickinessChart }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background border border-border rounded-md p-2 shadow-md">
+        <p className="text-sm font-medium">{label}</p>
+        {isStickinessChart ? (
+          <span>
+            <span className="text-sm">Stickiness:</span>
+            <span className="text-sm text-primary pl-2">{`${payload[0].value}%`}</span>
+          </span>
+        ) : (
+          <span>
+            <span className="text-sm">Users:</span>
+            <span className="text-sm text-primary pl-2">{`${abbreviateNumber(payload[0].value)}`}</span>
+          </span>
+        )}
+      </div>
+    );
+  }
+  return null;
 };
 
 export default function OverviewTab() {
@@ -62,85 +85,85 @@ export default function OverviewTab() {
   const agentUtilizationPercentage = (kpiData.activeAgents / kpiData.totalSeats) * 100;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Row 1: 4 KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: User Activity */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">User Activity</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">User Activity</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-1">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Active Today</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.activeToday)}</span>
+              <span className="text-xs text-muted-foreground">Active Today</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.activeToday)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Active Week</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.activeWeek)}</span>
+              <span className="text-xs text-muted-foreground">Active Week</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.activeWeek)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Active Month</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.activeMonth)}</span>
+              <span className="text-xs text-muted-foreground">Active Month</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.activeMonth)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total Users</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.totalUsers)}</span>
+              <span className="text-xs text-muted-foreground">Total Users</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.totalUsers)}</span>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t">
-              <span className="text-sm text-muted-foreground">Stickiness</span>
-              <span className="font-semibold">{formatPercentage(kpiData.stickiness)}</span>
+            <div className="flex justify-between items-center pt-1 border-t">
+              <span className="text-xs text-muted-foreground">Stickiness</span>
+              <span className="text-sm font-semibold">{formatPercentage(kpiData.stickiness)}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 2: New Users */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">New Users</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">New Users</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-muted-foreground">Daily</span>
-                <span className="font-semibold">{abbreviateNumber(kpiData.dailyNewUsers)}</span>
+          <CardContent className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">Daily</span>
+              <span className="text-xs text-green-600 pl-1">+{kpiData.dailyNewUsersChange}%</span>
+              <div className="flex items-center justify-end flex-1 ml-4">
+                <span className="text-sm font-semibold ml-auto">{abbreviateNumber(kpiData.dailyNewUsers)}</span>
               </div>
-              <span className="text-xs text-green-600">+{kpiData.dailyNewUsersChange}%</span>
             </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-muted-foreground">Weekly</span>
-                <span className="font-semibold">{abbreviateNumber(kpiData.weeklyNewUsers)}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">Weekly</span>
+              <span className="text-xs text-green-600 pl-1">+{kpiData.weeklyNewUsersChange}%</span>
+              <div className="flex items-center justify-end flex-1 ml-4">
+                <span className="text-sm font-semibold ml-auto">{abbreviateNumber(kpiData.weeklyNewUsers)}</span>
               </div>
-              <span className="text-xs text-green-600">+{kpiData.weeklyNewUsersChange}%</span>
             </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-muted-foreground">Monthly</span>
-                <span className="font-semibold">{abbreviateNumber(kpiData.monthlyNewUsers)}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">Monthly</span>
+              <span className="text-xs text-green-600 pl-1">+{kpiData.monthlyNewUsersChange}%</span>
+              <div className="flex items-center justify-end flex-1 ml-4">
+                <span className="text-sm font-semibold ml-auto">{abbreviateNumber(kpiData.monthlyNewUsers)}</span>
               </div>
-              <span className="text-xs text-green-600">+{kpiData.monthlyNewUsersChange}%</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 3: Plan Usage */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Plan Usage</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Plan Usage</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-1">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Current MAU</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.currentMAU)}</span>
+              <span className="text-xs text-muted-foreground">Current MAU</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.currentMAU)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">MAU Limit</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.mauLimit)}</span>
+              <span className="text-xs text-muted-foreground">MAU Limit</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.mauLimit)}</span>
             </div>
-            <div className="flex justify-between items-center pb-2">
-              <span className="text-sm text-muted-foreground">Usage</span>
-              <span className="font-semibold">{formatPercentage(mauUsagePercentage)}</span>
+            <div className="flex justify-between items-center pb-1">
+              <span className="text-xs text-muted-foreground">Usage</span>
+              <span className="text-sm font-semibold">{formatPercentage(mauUsagePercentage)}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
@@ -153,25 +176,25 @@ export default function OverviewTab() {
 
         {/* Card 4: Agent Capacity */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Agent Capacity</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Agent Capacity</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-1">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Active Agents</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.activeAgents)}</span>
+              <span className="text-xs text-muted-foreground">Active Agents</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.activeAgents)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total Seats</span>
-              <span className="font-semibold">{abbreviateNumber(kpiData.totalSeats)}</span>
+              <span className="text-xs text-muted-foreground">Total Seats</span>
+              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.totalSeats)}</span>
             </div>
-            <div className="flex justify-between items-center pb-2">
-              <span className="text-sm text-muted-foreground">Utilization</span>
-              <span className="font-semibold">{formatPercentage(agentUtilizationPercentage)}</span>
+            <div className="flex justify-between items-center pb-1">
+              <span className="text-xs text-muted-foreground">Utilization</span>
+              <span className="text-sm font-semibold">{formatPercentage(agentUtilizationPercentage)}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
-                className="bg-chart-3 h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${Math.min(agentUtilizationPercentage, 100)}%` }}
               />
             </div>
@@ -182,16 +205,17 @@ export default function OverviewTab() {
       {/* Row 2: Daily Active Users & Monthly Active Users */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader>
-            <CardTitle>Daily Active Users (DAU)</CardTitle>
-            <p className="text-sm text-muted-foreground">Last 30 Days</p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Daily Active Users (DAU)</CardTitle>
+            <p className="text-xs text-muted-foreground">Last 30 Days</p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dauData}>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={dauData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                 <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -199,17 +223,18 @@ export default function OverviewTab() {
         </Card>
 
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader>
-            <CardTitle>Monthly Active Users (MAU)</CardTitle>
-            <p className="text-sm text-muted-foreground">Last 6 Months</p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Monthly Active Users (MAU)</CardTitle>
+            <p className="text-xs text-muted-foreground">Last 6 Months</p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mauData}>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={mauData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <Line type="monotone" dataKey="users" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+                <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -219,34 +244,36 @@ export default function OverviewTab() {
       {/* Row 3: Weekly Active Users & Stickiness */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader>
-            <CardTitle>Weekly Active Users (WAU)</CardTitle>
-            <p className="text-sm text-muted-foreground">Last 5 Weeks</p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Weekly Active Users (WAU)</CardTitle>
+            <p className="text-xs text-muted-foreground">Last 5 Weeks</p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={wauData}>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={wauData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="week" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <Line type="monotone" dataKey="users" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
+                <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+                <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader>
-            <CardTitle>Stickiness (DAU/MAU)</CardTitle>
-            <p className="text-sm text-muted-foreground">Last 30 Days</p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Stickiness (DAU/MAU)</CardTitle>
+            <p className="text-xs text-muted-foreground">Last 30 Days</p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stickinessData}>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={stickinessData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <Line type="monotone" dataKey="ratio" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip content={<CustomTooltip isStickinessChart={true} />} cursor={{ strokeDasharray: '3 3' }} />
+                <Line type="monotone" dataKey="ratio" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -255,4 +282,3 @@ export default function OverviewTab() {
     </div>
   );
 }
-

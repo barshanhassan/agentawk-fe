@@ -83,10 +83,10 @@ function InsightsDashboardContent() {
             </Popover>
           )}
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setIsExportModalOpen(true)}
-            className="gap-2 hover-elevate"
+            className="gap-2 hover-elevate [border-color:hsl(var(--input))]"
             data-testid="export-button"
           >
             <Download size={16} />

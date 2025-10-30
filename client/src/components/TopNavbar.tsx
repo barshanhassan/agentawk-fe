@@ -30,53 +30,63 @@ interface TopNavbarProps {
 export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsMuted, setNotificationsMuted] = useState(false);
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: "chat",
+      message: "New message from John Doe",
+      time: "2m ago",
+      read: false,
+    },
+    {
+      id: 2,
+      type: "alert",
+      message: "Campaign 'Summer Sale' delivered",
+      time: "15m ago",
+      read: false,
+    },
+    {
+      id: 3,
+      type: "info",
+      message: "System update available",
+      time: "1h ago",
+      read: true,
+    },
+    {
+      id: 4,
+      type: "chat",
+      message: "New message from Sarah Smith",
+      time: "45m ago",
+      read: false,
+    },
+    {
+      id: 5,
+      type: "alert",
+      message: "API rate limit warning",
+      time: "2h ago",
+      read: true,
+    },
+  ]);
 
   const mockNotifications = {
-    all: [
-      {
-        id: 1,
-        type: "chat",
-        message: "New message from John Doe",
-        time: "2m ago",
-      },
-      {
-        id: 2,
-        type: "alert",
-        message: "Campaign 'Summer Sale' delivered",
-        time: "15m ago",
-      },
-      {
-        id: 3,
-        type: "info",
-        message: "System update available",
-        time: "1h ago",
-      },
-    ],
-    chats: [
-      {
-        id: 1,
-        type: "chat",
-        message: "New message from John Doe",
-        time: "2m ago",
-      },
-    ],
-    alerts: [
-      {
-        id: 2,
-        type: "alert",
-        message: "Campaign 'Summer Sale' delivered",
-        time: "15m ago",
-      },
-    ],
-    info: [
-      {
-        id: 3,
-        type: "info",
-        message: "System update available",
-        time: "1h ago",
-      },
-    ],
+    all: notifications,
+    chats: notifications.filter((n) => n.type === "chat"),
+    alerts: notifications.filter((n) => n.type === "alert"),
+    info: notifications.filter((n) => n.type === "info"),
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleMarkAsRead = (id: number) => {
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    );
+  };
+
+  const handleMarkAllAsRead = () => {
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
 
   return (
@@ -107,12 +117,12 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
               data-testid="button-notifications"
             >
               {notificationsMuted ? <BellOff size={20} /> : <Bell size={20} />}
-              {!notificationsMuted && hasUnreadNotifications && (
+              {!notificationsMuted && unreadCount > 0 && (
                 <Badge
                   variant="destructive"
                   className="absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center p-0 text-xs"
                 >
-                  3
+                  {unreadCount}
                 </Badge>
               )}
             </Button>
@@ -127,13 +137,13 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-semibold text-base">Notifications</h3>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className={`h-8 w-8 ${hasUnreadNotifications ? "text-blue-500" : "text-muted-foreground"}`} 
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ${unreadCount > 0 ? "text-blue-500" : "text-muted-foreground"}`}
                       title="Mark all as read"
-                      onClick={() => setHasUnreadNotifications(false)}
-                      disabled={!hasUnreadNotifications}
+                      onClick={handleMarkAllAsRead}
+                      disabled={unreadCount === 0}
                     >
                       <CheckCircle size={16} />
                     </Button>
@@ -186,15 +196,33 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                       {mockNotifications[tab].map((notif) => (
                         <div
                           key={notif.id}
-                          className="p-4 hover-elevate cursor-pointer"
+                          className={`p-4 hover-elevate cursor-pointer transition-colors ${
+                            notif.read
+                              ? "bg-background"
+                              : "bg-blue-50 dark:bg-blue-950/20"
+                          }`}
+                          onClick={() => handleMarkAsRead(notif.id)}
                           data-testid={`notification-${notif.id}`}
                         >
-                          <p className="text-sm text-foreground">
-                            {notif.message}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {notif.time}
-                          </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p
+                                className={`text-sm ${
+                                  notif.read
+                                    ? "text-muted-foreground"
+                                    : "font-semibold text-foreground"
+                                }`}
+                              >
+                                {notif.message}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {notif.time}
+                              </p>
+                            </div>
+                            {!notif.read && (
+                              <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
