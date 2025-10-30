@@ -88,6 +88,18 @@ export default function WhatsAppPricingTab() {
         </div>
       </div>
 
+      {/* Filter Summary */}
+      {selectedCountries.length > 0 && (
+        <div className="bg-muted/50 rounded-lg p-3 mb-6">
+          <p className="text-sm text-muted-foreground">
+            Filtered by:&nbsp;
+            <span className="text-foreground font-medium">
+              {selectedCountries.map(countryId => countryOptions.find(c => c.id === countryId)?.name).join(", ")}
+            </span>
+          </p>
+        </div>
+      )}
+
       {/* Tab Content */}
       {whatsappPricingTab === "messages" && <MessagesSubTab />}
       {whatsappPricingTab === "calls" && <CallsSubTab />}
