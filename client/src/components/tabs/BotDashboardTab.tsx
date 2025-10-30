@@ -1,10 +1,22 @@
+import { useState } from "react";
+import CustomDropdown from "@/components/CustomDropdown";
+import BotDashboardContent from "./bot-dashboard/BotDashboardContent";
+
+const botOptions = [
+  { id: "bot-1", name: "Bot Alpha" },
+  { id: "bot-2", name: "Bot Beta" },
+  { id: "bot-3", name: "Bot Gamma" },
+  { id: "bot-4", name: "Bot Delta" },
+  { id: "bot-5", name: "Bot Epsilon" },
+];
+
 export default function BotDashboardTab() {
+  const [selectedBots, setSelectedBots] = useState<string[]>([]);
+
   return (
     <div className="space-y-6">
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold mb-2">Bot Summary Dashboard</h3>
-        <p className="text-muted-foreground">Bot performance metrics and conversation analytics will be displayed here.</p>
-      </div>
+      {/* Dashboard Content */}
+      <BotDashboardContent />
     </div>
   );
 }

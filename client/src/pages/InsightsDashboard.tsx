@@ -47,7 +47,7 @@ function InsightsDashboardContent() {
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
               <SelectItem value="last-7-days">Last 7 Days</SelectItem>
               <SelectItem value="last-14-days">Last 14 Days</SelectItem>
               <SelectItem value="this-month">This Month</SelectItem>
