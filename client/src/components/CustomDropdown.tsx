@@ -11,6 +11,7 @@ interface CustomDropdownProps {
   selected: string[];
   onChange: (selected: string[]) => void;
   placeholder: string;
+  width?: string;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -18,6 +19,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   selected,
   onChange,
   placeholder,
+  width = "180px",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -52,7 +54,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   };
 
   return (
-    <div className="relative w-[180px]" ref={dropdownRef}>
+    <div className="relative" style={{ width }} ref={dropdownRef}>
       <button
         type="button"
         className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring text-foreground transition-colors"
@@ -85,11 +87,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 key={option.id}
                 className={`flex items-center px-3 py-2 text-sm cursor-pointer select-none transition-colors rounded-md hover:bg-accent`}
                 onClick={() => handleSelect(option.id)}
+                title={option.name}
               >
-                <span className="flex items-center w-5 h-5 mr-2 justify-center">
+                <span className="flex items-center w-5 h-5 mr-2 justify-center flex-shrink-0">
                   {selected.includes(option.id) && <Check className="h-4 w-4"/>}
                 </span>
-                <span className="truncate">{option.name}</span>
+                <span className="truncate overflow-hidden">{option.name}</span>
               </li>
             ))}
           </ul>
