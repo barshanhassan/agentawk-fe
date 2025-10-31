@@ -271,7 +271,7 @@ export default function CampaignManager() {
 
             <TabsContent value="recipients" className="space-y-4">
               <div className="flex items-center gap-2">
-                <Input placeholder="Search recipients..." className="max-w-sm" data-testid="input-search-recipients" />
+                <Input placeholder="Search recipients..." className="max-w-sm border-input focus:ring-2 focus:ring-ring" data-testid="input-search-recipients" />
               </div>
               <Card className="border-t-4 border-t-primary">
                 <ScrollArea className="h-96">

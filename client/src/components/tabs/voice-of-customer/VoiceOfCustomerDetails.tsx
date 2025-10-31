@@ -160,7 +160,7 @@ export default function VoiceOfCustomerDetails() {
                 placeholder="Search by agent name or ID..."
                 value={searchAgent}
                 onChange={(e) => setSearchAgent(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-border rounded-md bg-background"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
               />
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function VoiceOfCustomerDetails() {
                 placeholder="Search by conversation ID or agent..."
                 value={searchConversation}
                 onChange={(e) => setSearchConversation(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-border rounded-md bg-background"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
               />
             </div>
           </div>

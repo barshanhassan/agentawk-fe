@@ -1,14 +1,30 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Settings, Edit2, Copy } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar } from "react-feather";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import CustomDropdown from "@/components/CustomDropdown";
 
 type SortDirection = "asc" | "desc" | "default";
 
 interface SortState {
   column: string | null;
   direction: SortDirection;
+}
+
+interface SortEntry {
+  id: string;
+  column: string;
+  direction: "asc" | "desc";
+}
+
+interface FilterEntry {
+  id: string;
+  column: string;
+  operator: string;
+  value: string;
 }
 
 interface Contact {
@@ -55,56 +71,151 @@ export default function ContactsSection() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sort, setSort] = useState<SortState>({ column: null, direction: "default" });
+  const [sorts, setSorts] = useState<SortEntry[]>([]);
+  const [filters, setFilters] = useState<FilterEntry[]>([]);
   const [showSort, setShowSort] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
-  const [showView, setShowView] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState({
-    name: true,
-    phoneNumber: true,
-    tags: true,
-    createdAt: true,
-    lastActive: true,
-    updatedBy: true,
-  });
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [createdAtDate, setCreatedAtDate] = useState<Date | undefined>(undefined);
+  const [lastActiveDate, setLastActiveDate] = useState<Date | undefined>(undefined);
+  const [createdAtOpen, setCreatedAtOpen] = useState(false);
+  const [lastActiveOpen, setLastActiveOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
 
-  const renderSortIcon = (column: string) => {
-    const isActive = sort.column === column;
-    const color = isActive ? "text-foreground" : "text-muted-foreground";
+  const allTags = Array.from(new Set(mockContacts.flatMap(c => c.tags)));
 
-    if (sort.column !== column) {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
-    }
-    if (sort.direction === "asc") {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronUp size={14} className={color} /></div>;
-    }
-    if (sort.direction === "desc") {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronDown size={14} className={color} /></div>;
-    }
-    return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
+  const [draggedSortId, setDraggedSortId] = useState<string | null>(null);
+  const [openSortColumnDropdown, setOpenSortColumnDropdown] = useState<string | null>(null);
+  const [openSortDirectionDropdown, setOpenSortDirectionDropdown] = useState<string | null>(null);
+  const [draggedFilterId, setDraggedFilterId] = useState<string | null>(null);
+  const [openFilterColumnDropdown, setOpenFilterColumnDropdown] = useState<string | null>(null);
+  const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
+
+  const addSort = () => {
+    const availableColumns = ["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"];
+    const usedColumns = sorts.map(s => s.column);
+    const nextColumn = availableColumns.find(col => !usedColumns.includes(col)) || "name";
+    setSorts([...sorts, { id: Date.now().toString(), column: nextColumn, direction: "asc" }]);
   };
 
-  const handleSort = (column: string) => {
-    setSort((prev) => {
-      if (prev.column === column) {
-        if (prev.direction === "default") return { column, direction: "asc" };
-        if (prev.direction === "asc") return { column, direction: "desc" };
-        return { column: null, direction: "default" };
-      }
-      return { column, direction: "asc" };
+  const removeSort = (id: string) => {
+    setSorts(sorts.filter(s => s.id !== id));
+  };
+
+  const updateSort = (id: string, column: string, direction: "asc" | "desc") => {
+    // Check if this column is already used by another sort entry
+    if (sorts.some(s => s.id !== id && s.column === column)) {
+      return; // Don't allow duplicate columns
+    }
+    setSorts(sorts.map(s => s.id === id ? { ...s, column, direction } : s));
+  };
+
+  const handleSortDragStart = (id: string) => {
+    setDraggedSortId(id);
+  };
+
+  const handleSortDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleSortDrop = (targetId: string) => {
+    if (!draggedSortId || draggedSortId === targetId) return;
+
+    const draggedIndex = sorts.findIndex(s => s.id === draggedSortId);
+    const targetIndex = sorts.findIndex(s => s.id === targetId);
+
+    const newSorts = [...sorts];
+    [newSorts[draggedIndex], newSorts[targetIndex]] = [newSorts[targetIndex], newSorts[draggedIndex]];
+    setSorts(newSorts);
+    setDraggedSortId(null);
+  };
+
+  const canAddSort = (column: string) => {
+    return !sorts.some(s => s.column === column);
+  };
+
+  const handleFilterDragStart = (id: string) => {
+    setDraggedFilterId(id);
+  };
+
+  const handleFilterDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleFilterDrop = (targetId: string) => {
+    if (!draggedFilterId || draggedFilterId === targetId) return;
+
+    const draggedIndex = filters.findIndex(f => f.id === draggedFilterId);
+    const targetIndex = filters.findIndex(f => f.id === targetId);
+
+    const newFilters = [...filters];
+    [newFilters[draggedIndex], newFilters[targetIndex]] = [newFilters[targetIndex], newFilters[draggedIndex]];
+    setFilters(newFilters);
+    setDraggedFilterId(null);
+  };
+
+
+
+  const addFilter = () => {
+    setFilters([...filters, { id: Date.now().toString(), column: "name", operator: "contains", value: "" }]);
+  };
+
+  const removeFilter = (id: string) => {
+    setFilters(filters.filter(f => f.id !== id));
+  };
+
+  const updateFilter = (id: string, column: string, operator: string, value: string) => {
+    setFilters(filters.map(f => f.id === id ? { ...f, column, operator, value } : f));
+  };
+
+  const getFilteredAndSortedData = () => {
+    let data = [...mockContacts];
+
+    // Apply search
+    if (search) {
+      data = data.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.phoneNumber.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // Apply tag filter
+    if (selectedTags.length > 0) {
+      data = data.filter(item => selectedTags.some(tag => item.tags.includes(tag)));
+    }
+
+    // Apply custom filters
+    data = data.filter(item => {
+      return filters.every(filter => {
+        const itemValue = item[filter.column as keyof Contact];
+        if (typeof itemValue !== "string") return true;
+
+        switch (filter.operator) {
+          case "contains":
+            return itemValue.toLowerCase().includes(filter.value.toLowerCase());
+          case "does not contain":
+            return !itemValue.toLowerCase().includes(filter.value.toLowerCase());
+          case "is":
+            return itemValue.toLowerCase() === filter.value.toLowerCase();
+          case "is not":
+            return itemValue.toLowerCase() !== filter.value.toLowerCase();
+          case "is empty":
+            return itemValue === "";
+          case "is not empty":
+            return itemValue !== "";
+          default:
+            return true;
+        }
+      });
     });
-  };
 
-  const getSortedData = () => {
-    let sorted = [...mockContacts];
-
-    if (sort.column && sort.direction !== "default") {
-      sorted.sort((a, b) => {
+    // Apply sorting
+    sorts.forEach(sort => {
+      data.sort((a, b) => {
         const aVal = a[sort.column as keyof Contact];
         const bVal = b[sort.column as keyof Contact];
 
@@ -113,13 +224,72 @@ export default function ContactsSection() {
         }
         return 0;
       });
-    }
+    });
 
-    return sorted.filter(item =>
-      search === "" ||
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.phoneNumber.toLowerCase().includes(search.toLowerCase())
-    );
+    return data;
+  };
+
+  const toggleRowSelection = (id: string) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const toggleAllRows = () => {
+    const data = getFilteredAndSortedData();
+    if (selectedRows.size === data.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(data.map(c => c.id)));
+    }
+  };
+
+  const handleEditContact = (contact: Contact) => {
+    alert(`Edit contact: ${contact.name}`);
+  };
+
+  const handleCopyContact = (contact: Contact) => {
+    const contactText = `${contact.name} - ${contact.phoneNumber}`;
+    navigator.clipboard.writeText(contactText);
+    alert("Contact copied to clipboard!");
+  };
+
+  const handleDeleteContact = (contact: Contact) => {
+    if (confirm(`Are you sure you want to delete ${contact.name}?`)) {
+      alert(`Deleted contact: ${contact.name}`);
+    }
+  };
+
+  const handleColumnSort = (column: string) => {
+    const existingSort = sorts.find(s => s.column === column);
+    if (existingSort) {
+      if (existingSort.direction === "asc") {
+        updateSort(existingSort.id, column, "desc");
+      } else {
+        removeSort(existingSort.id);
+      }
+    } else {
+      addSort();
+      setSorts([...sorts, { id: Date.now().toString(), column, direction: "asc" }]);
+    }
+  };
+
+  const renderSortIcon = (column: string) => {
+    const sort = sorts.find(s => s.column === column);
+    const isActive = !!sort;
+    const color = isActive ? "text-foreground" : "text-muted-foreground";
+
+    if (!sort) {
+      return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
+    }
+    if (sort.direction === "asc") {
+      return <div className="w-4 h-4 flex items-center justify-center"><ChevronUp size={14} className={color} /></div>;
+    }
+    return <div className="w-4 h-4 flex items-center justify-center"><ChevronDown size={14} className={color} /></div>;
   };
 
   useEffect(() => {
@@ -132,9 +302,6 @@ export default function ContactsSection() {
       }
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
         setShowFilter(false);
-      }
-      if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
-        setShowView(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -157,243 +324,423 @@ export default function ContactsSection() {
         <CardContent>
           {/* Search and Filters */}
           <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-9 text-sm w-full border border-border rounded-md bg-background"
-          />
-        </div>
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+              />
+            </div>
 
-        <button className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted flex items-center gap-2">
-          <span>Tags</span>
-          <ChevronDown size={14} />
-        </button>
+            {/* Tags Dropdown */}
+            <CustomDropdown
+              options={allTags.map(tag => ({ id: tag, name: tag }))}
+              selected={selectedTags}
+              onChange={setSelectedTags}
+              placeholder="Tags"
+              width="130px"
+            />
 
-        <button className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted flex items-center gap-2">
-          <span>Created At</span>
-          <ChevronDown size={14} />
-        </button>
+            {/* Created At Calendar */}
+            <Popover open={createdAtOpen} onOpenChange={setCreatedAtOpen}>
+              <PopoverTrigger asChild>
+                <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors">
+                  <Calendar size={14} />
+                  <span>Created At</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={createdAtDate}
+                  onSelect={(date) => {
+                    setCreatedAtDate(date);
+                    setCreatedAtOpen(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
 
-        <button className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted flex items-center gap-2">
-          <span>Last Active</span>
-          <ChevronDown size={14} />
-        </button>
+            {/* Last Active Calendar */}
+            <Popover open={lastActiveOpen} onOpenChange={setLastActiveOpen}>
+              <PopoverTrigger asChild>
+                <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors">
+                  <Calendar size={14} />
+                  <span>Last Active</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={lastActiveDate}
+                  onSelect={(date) => {
+                    setLastActiveDate(date);
+                    setLastActiveOpen(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
 
-        <div className="flex gap-2 ml-auto">
-          <button
-            onClick={() => setShowSort(!showSort)}
-            className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted flex items-center gap-2"
-          >
-            <span>Sort</span>
-          </button>
-          <button
-            onClick={() => setShowFilter(!showFilter)}
-            className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted flex items-center gap-2"
-          >
-            <span>Filter</span>
-          </button>
-          <button
-            onClick={() => setShowView(!showView)}
-            className="px-3 py-2 text-sm border border-border rounded-md hover:bg-muted flex items-center gap-2"
-            ref={viewDropdownRef}
-          >
-            <span>View</span>
-            <ChevronDown size={14} />
-            {showView && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-md border border-border z-10">
-                <div className="p-3 border-b">
-                  <input
-                    type="text"
-                    placeholder="Search columns..."
-                    className="w-full px-2 py-1 text-xs border border-border rounded"
-                  />
-                </div>
-                <div className="p-2">
-                  {Object.entries(visibleColumns).map(([col, visible]) => (
-                    <label key={col} className="flex items-center gap-2 px-2 py-2 text-sm cursor-pointer hover:bg-muted rounded">
-                      <input
-                        type="checkbox"
-                        checked={visible}
-                        onChange={(e) => setVisibleColumns({ ...visibleColumns, [col]: e.target.checked })}
-                        className="w-4 h-4"
-                      />
-                      <span>{col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1')}</span>
-                    </label>
-                  ))}
-                </div>
+            <div className="flex gap-2 ml-auto">
+              {/* Sort Button */}
+              <div className="relative" ref={sortDropdownRef}>
+                <button
+                  onClick={() => setShowSort(!showSort)}
+                  className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors"
+                >
+                  <ArrowUpDown size={14} />
+                  <span>Sort {sorts.length > 0 && `(${sorts.length})`}</span>
+                </button>
+
+                {/* Sort Popover */}
+                {showSort && (
+                  <div className="absolute z-50 bg-white border border-border rounded-md shadow-lg p-3 top-full mt-2 right-0" style={{
+                    minWidth: '320px'
+                  }}>
+                    {sorts.length === 0 ? (
+                      <div className="text-center py-6">
+                        <h3 className="font-semibold text-sm mb-1">No sorting applied</h3>
+                        <p className="text-xs text-muted-foreground mb-4">Add sorting to organize your rows.</p>
+                        <Button onClick={addSort} className="bg-blue-500 hover:bg-blue-600 text-white">Add sort</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {sorts.map((sort) => (
+                          <div
+                            key={sort.id}
+                            className="flex gap-2 items-center"
+                            draggable
+                            onDragStart={() => handleSortDragStart(sort.id)}
+                            onDragOver={handleSortDragOver}
+                            onDrop={() => handleSortDrop(sort.id)}
+                          >
+                            <div className="relative flex-1">
+                              <button
+                                type="button"
+                                onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)}
+                                className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                              >
+                                <span className="truncate text-xs font-normal">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                              </button>
+                              {openSortColumnDropdown === sort.id && (
+                                <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                  <ul className="py-1">
+                                    {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
+                                      const isCurrentOption = option === sort.column;
+                                      const isDisabled = !canAddSort(option) && option !== sort.column;
+                                      return (
+                                        <li
+                                          key={option}
+                                          className={`px-3 py-2 text-sm ${isCurrentOption || isDisabled ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
+                                          onClick={() => {
+                                            if (!isDisabled && !isCurrentOption) {
+                                              updateSort(sort.id, option, sort.direction);
+                                              setOpenSortColumnDropdown(null);
+                                            }
+                                          }}
+                                        >
+                                          {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
+                                className="w-[80px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                              >
+                                <span className="truncate text-xs font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
+                                <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                              </button>
+                              {openSortDirectionDropdown === sort.id && (
+                                <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                  <ul className="py-1">
+                                    {["asc", "desc"].map(option => (
+                                      <li
+                                        key={option}
+                                        className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
+                                        onClick={() => {
+                                          updateSort(sort.id, sort.column, option as "asc" | "desc");
+                                          setOpenSortDirectionDropdown(null);
+                                        }}
+                                      >
+                                        {option === "asc" ? "Asc" : "Desc"}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <button onClick={() => removeSort(sort.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                            <GripVertical size={14} className="text-muted-foreground cursor-grab" />
+                          </div>
+                        ))}
+                        <div className="flex gap-2 pt-2 border-t">
+                          <Button
+                            onClick={addSort}
+                            disabled={sorts.length >= 5}
+                            className="bg-blue-500 hover:bg-blue-600 text-white flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Add sort
+                          </Button>
+                          <Button onClick={() => setSorts([])} variant="outline" className="flex-1 border-input focus:ring-2 focus:ring-ring">Reset sorts</Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </button>
-        </div>
-          </div>
 
-          {/* Sort Panel */}
-          {showSort && (
-            <div className="border border-border rounded-md p-4 bg-muted/30 mt-3">
-              <h3 className="font-semibold text-sm mb-3">Sort by</h3>
-              <div className="flex gap-2 mb-3">
-                <select className="px-3 py-2 text-sm border border-border rounded-md">
-                  <option>Name</option>
-                  <option>Phone Number</option>
-                  <option>Created At</option>
-                  <option>Last Active</option>
-                </select>
-                <select className="px-3 py-2 text-sm border border-border rounded-md">
-                  <option>Asc</option>
-                  <option>Desc</option>
-                </select>
-                <button className="p-2 hover:bg-muted rounded"><Trash2 size={16} /></button>
-                <button className="p-2 hover:bg-muted rounded"><Settings size={16} /></button>
-              </div>
-              <div className="flex gap-2">
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white">Add sort</Button>
-                <Button variant="outline">Reset sorting</Button>
+              {/* Filter Button */}
+              <div className="relative" ref={filterDropdownRef}>
+                <button
+                  onClick={() => setShowFilter(!showFilter)}
+                  className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors"
+                >
+                  <Filter size={14} />
+                  <span>Filter {filters.length > 0 && `(${filters.length})`}</span>
+                </button>
+
+                {/* Filter Popover */}
+                {showFilter && (
+                  <div className="absolute z-50 bg-white border border-border rounded-md shadow-lg p-3 top-full mt-2 right-0" style={{
+                    minWidth: '320px'
+                  }}>
+                    {filters.length === 0 ? (
+                      <div className="text-center py-6">
+                        <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
+                        <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
+                        <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white">Add filter</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filters.map((filter) => (
+                          <div
+                            key={filter.id}
+                            className="flex gap-2 items-center"
+                            draggable
+                            onDragStart={() => handleFilterDragStart(filter.id)}
+                            onDragOver={handleFilterDragOver}
+                            onDrop={() => handleFilterDrop(filter.id)}
+                          >
+                            <div className="relative flex-1">
+                              <button
+                                type="button"
+                                onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
+                                className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                              >
+                                <span className="truncate text-xs font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                              </button>
+                              {openFilterColumnDropdown === filter.id && (
+                                <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                  <ul className="py-1">
+                                    {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
+                                      const isCurrentOption = option === filter.column;
+                                      return (
+                                        <li
+                                          key={option}
+                                          className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
+                                          onClick={() => {
+                                            if (!isCurrentOption) {
+                                              updateFilter(filter.id, option, filter.operator, filter.value);
+                                              setOpenFilterColumnDropdown(null);
+                                            }
+                                          }}
+                                        >
+                                          {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
+                                className="w-[130px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                              >
+                                <span className="truncate text-xs font-normal">{filter.operator}</span>
+                                <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                              </button>
+                              {openFilterOperatorDropdown === filter.id && (
+                                <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                  <ul className="py-1">
+                                    {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
+                                      <li
+                                        key={option}
+                                        className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
+                                        onClick={() => {
+                                          updateFilter(filter.id, filter.column, option, filter.value);
+                                          setOpenFilterOperatorDropdown(null);
+                                        }}
+                                      >
+                                        {option}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Value..."
+                              value={filter.value}
+                              onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
+                              className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                            />
+                            <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                            <GripVertical size={14} className="text-muted-foreground cursor-grab" />
+                          </div>
+                        ))}
+                        <div className="flex gap-2 pt-2 border-t">
+                          <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white flex-1">Add filter</Button>
+                          <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input focus:ring-2 focus:ring-ring">Reset filters</Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Filter Panel */}
-          {showFilter && (
-            <div className="border border-border rounded-md p-4 bg-muted/30 mt-3">
-              <h3 className="font-semibold text-sm mb-3">Filters</h3>
-              <div className="flex gap-2 mb-3">
-                <select className="px-3 py-2 text-sm border border-border rounded-md">
-                  <option>Where</option>
-                  <option>Name</option>
-                  <option>Phone Number</option>
-                </select>
-                <select className="px-3 py-2 text-sm border border-border rounded-md">
-                  <option>contains</option>
-                  <option>equals</option>
-                  <option>starts with</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Enter a value..."
-                  className="px-3 py-2 text-sm border border-border rounded-md flex-1"
-                />
-                <button className="p-2 hover:bg-muted rounded"><Trash2 size={16} /></button>
-                <button className="p-2 hover:bg-muted rounded"><Settings size={16} /></button>
-              </div>
-              <div className="flex gap-2">
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white">Add filter</Button>
-                <Button variant="outline">Reset filters</Button>
+
+
+          {/* Bulk Actions Toolbar */}
+          {selectedRows.size > 0 && (
+            <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+              <span className="text-sm text-foreground">{selectedRows.size} selected</span>
+              <div className="flex gap-2 ml-auto">
+                <button className="p-1 hover:bg-blue-100 rounded" title="Edit">
+                  <Edit2 size={14} className="text-blue-600" />
+                </button>
+                <button className="p-1 hover:bg-blue-100 rounded" title="Copy">
+                  <Copy size={14} className="text-blue-600" />
+                </button>
+                <button className="p-1 hover:bg-blue-100 rounded" title="Delete">
+                  <Trash2 size={14} className="text-red-600" />
+                </button>
               </div>
             </div>
           )}
 
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded accent-muted-foreground"
+                      checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
+                      onChange={toggleAllRows}
+                    />
                   </th>
-                  {visibleColumns.name && (
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleSort("name")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Name
-                        {renderSortIcon("name")}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.phoneNumber && (
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleSort("phoneNumber")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Phone Number
-                        {renderSortIcon("phoneNumber")}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.tags && (
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Tags</th>
-                  )}
-                  {visibleColumns.createdAt && (
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Created At
-                        {renderSortIcon("createdAt")}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.lastActive && (
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleSort("lastActive")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Last Active
-                        {renderSortIcon("lastActive")}
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.updatedBy && (
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleSort("updatedBy")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Updated by
-                        {renderSortIcon("updatedBy")}
-                      </div>
-                    </th>
-                  )}
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("name")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Name
+                      {renderSortIcon("name")}
+                    </div>
+                  </th>
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("phoneNumber")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Phone Number
+                      {renderSortIcon("phoneNumber")}
+                    </div>
+                  </th>
+                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Tags</th>
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("createdAt")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Created At
+                      {renderSortIcon("createdAt")}
+                    </div>
+                  </th>
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("lastActive")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Last Active
+                      {renderSortIcon("lastActive")}
+                    </div>
+                  </th>
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("updatedBy")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Updated by
+                      {renderSortIcon("updatedBy")}
+                    </div>
+                  </th>
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {getSortedData().length === 0 ? (
+                {getFilteredAndSortedData().length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-8 text-muted-foreground">
                       No results
                     </td>
                   </tr>
                 ) : (
-                  getSortedData().map((contact) => (
+                  getFilteredAndSortedData().map((contact) => (
                     <tr key={contact.id} className="border-b hover:bg-muted/50">
                       <td className="py-2 px-3">
-                        <input type="checkbox" className="w-4 h-4" />
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded accent-muted-foreground"
+                          checked={selectedRows.has(contact.id)}
+                          onChange={() => toggleRowSelection(contact.id)}
+                        />
                       </td>
-                      {visibleColumns.name && <td className="py-2 px-3">{contact.name}</td>}
-                      {visibleColumns.phoneNumber && <td className="py-2 px-3">{contact.phoneNumber}</td>}
-                      {visibleColumns.tags && (
-                        <td className="py-2 px-3">
-                          <div className="flex gap-1">
-                            {contact.tags.map((tag) => (
-                              <span key={tag} className="px-2 py-1 bg-muted rounded text-xs">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                      )}
-                      {visibleColumns.createdAt && <td className="py-2 px-3">{contact.createdAt}</td>}
-                      {visibleColumns.lastActive && <td className="py-2 px-3">{contact.lastActive}</td>}
-                      {visibleColumns.updatedBy && <td className="py-2 px-3">{contact.updatedBy}</td>}
+                      <td className="py-2 px-3">{contact.name}</td>
+                      <td className="py-2 px-3">{contact.phoneNumber}</td>
                       <td className="py-2 px-3">
-                        <div className="flex items-center gap-2">
-                          <button className="p-1 hover:bg-muted rounded" title="Edit">
+                        <div className="flex gap-1">
+                          {contact.tags.map((tag) => (
+                            <span key={tag} className="px-2 py-1 bg-muted rounded text-xs">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">{contact.createdAt}</td>
+                      <td className="py-2 px-3">{contact.lastActive}</td>
+                      <td className="py-2 px-3">{contact.updatedBy}</td>
+                      <td className="py-2 px-3">
+                        <div className={`flex items-center gap-2 ${selectedRows.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <button onClick={() => handleEditContact(contact)} className="p-1 hover:bg-muted rounded" title="Edit">
                             <Edit2 size={14} className="text-muted-foreground hover:text-foreground" />
                           </button>
-                          <button className="p-1 hover:bg-muted rounded" title="Copy">
+                          <button onClick={() => handleCopyContact(contact)} className="p-1 hover:bg-muted rounded" title="Copy">
                             <Copy size={14} className="text-muted-foreground hover:text-foreground" />
                           </button>
-                          <button className="p-1 hover:bg-muted rounded" title="Delete">
-                            <Trash2 size={14} className="text-muted-foreground hover:text-foreground" />
+                          <button onClick={() => handleDeleteContact(contact)} className="p-1 hover:bg-muted rounded" title="Delete">
+                            <Trash2 size={14} className="text-red-600 hover:text-red-700" />
                           </button>
                         </div>
                       </td>
@@ -406,7 +753,7 @@ export default function ContactsSection() {
 
           {/* Pagination */}
           <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{getSortedData().length} results</span>
+            <span className="text-muted-foreground">{getFilteredAndSortedData().length} results</span>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Rows per page:</span>
               <div className="relative w-15" ref={dropdownRef}>

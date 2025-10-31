@@ -168,7 +168,7 @@ export default function CSATDetails() {
                 placeholder="Search by name or number..."
                 value={searchAgent}
                 onChange={(e) => setSearchAgent(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-border rounded-md bg-background"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
               />
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function CSATDetails() {
                 placeholder="Search by name or number..."
                 value={searchFeedback}
                 onChange={(e) => setSearchFeedback(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-border rounded-md bg-background"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
               />
             </div>
           </div>

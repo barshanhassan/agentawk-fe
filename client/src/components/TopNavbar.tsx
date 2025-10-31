@@ -134,7 +134,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
           >
             <Tabs defaultValue="all" className="w-full">
               <div className="p-4 pb-0">
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-2">
                   <h3 className="font-semibold text-base">Notifications</h3>
                   <div className="flex gap-2">
                     <Button
@@ -158,7 +158,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                     </Button>
                   </div>
                 </div>
-                <TabsList className="grid w-full grid-cols-4 bg-slate-200/75">
+                <TabsList className="grid w-full grid-cols-4 bg-slate-200/75 mb-2">
                   <TabsTrigger
                     value="all"
                     className="text-xs"

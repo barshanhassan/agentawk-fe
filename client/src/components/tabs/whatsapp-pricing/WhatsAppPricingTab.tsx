@@ -3,6 +3,7 @@ import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
 import MessagesSubTab from "./MessagesSubTab";
 import CallsSubTab from "./CallsSubTab";
+import { AlertCircle } from "lucide-react";
 
 const countryOptions = [
   { id: "us", name: "United States" },
@@ -74,6 +75,14 @@ export default function WhatsAppPricingTab() {
           >
             Calls
           </button>
+        </div>
+        
+        {/* Alert Banner */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> All insights data is approximate and may differ from what's shown on your invoices due to small variations in data processing.
+          </p>
         </div>
 
         {/* Right side - Country Select */}

@@ -20,9 +20,9 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
+        caption: "flex justify-between pt-1 relative items-center px-8",
         caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
+        nav: "space-x-3 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"

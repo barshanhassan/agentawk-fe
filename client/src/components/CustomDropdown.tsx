@@ -80,7 +80,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               placeholder="Search..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full text-sm focus:outline-none bg-transparent"
+              className="w-full text-sm focus:outline-none bg-transparent focus:ring-0"
             />
           </div>
           <ul className="max-h-48 overflow-y-auto py-1">

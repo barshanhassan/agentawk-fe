@@ -1,7 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
 
 // Utility function to abbreviate large numbers
 const abbreviateNumber = (num: number): string => {
@@ -77,14 +75,6 @@ export default function CallsSubTab() {
 
   return (
     <div className="space-y-4">
-      {/* Alert Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> All insights data is approximate and may differ from what's shown on your invoices due to small variations in data processing.
-        </p>
-      </div>
-
       {/* Row 1: 3 KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Card 1: All Calls */}
@@ -142,15 +132,7 @@ export default function CallsSubTab() {
       {/* Row 2: All Calls Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
-              <CardTitle className="text-sm">All Calls</CardTitle>
-            </div>
-            <Button variant="outline" size="sm" className="text-xs h-8">
-              Customize
-            </Button>
-          </div>
+          <CardTitle className="text-sm">All Calls</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -170,15 +152,7 @@ export default function CallsSubTab() {
       {/* Row 3: Average Billable Call Duration Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
-              <CardTitle className="text-sm">Average Billable Call Duration (seconds)</CardTitle>
-            </div>
-            <Button variant="outline" size="sm" className="text-xs h-8">
-              Customize
-            </Button>
-          </div>
+          <CardTitle className="text-sm">Average Billable Call Duration (seconds)</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -198,15 +172,7 @@ export default function CallsSubTab() {
       {/* Row 4: Calls & Approximate Charges Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
-              <CardTitle className="text-sm">Calls & Approximate Charges</CardTitle>
-            </div>
-            <Button variant="outline" size="sm" className="text-xs h-8">
-              Customize
-            </Button>
-          </div>
+          <CardTitle className="text-sm">Calls & Approximate Charges</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>

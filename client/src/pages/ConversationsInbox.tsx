@@ -72,7 +72,7 @@ export default function ConversationsInbox() {
             </Tabs>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-              <Input placeholder="Search conversations..." className="pl-10" data-testid="input-search" />
+              <Input placeholder="Search conversations..." className="pl-10 border-input focus:ring-2 focus:ring-ring" data-testid="input-search" />
             </div>
             <div className="flex gap-2">
               <Select defaultValue="newest">

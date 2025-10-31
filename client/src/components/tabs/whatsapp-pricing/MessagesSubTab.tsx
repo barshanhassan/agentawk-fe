@@ -105,14 +105,6 @@ export default function MessagesSubTab() {
 
   return (
     <div className="space-y-4">
-      {/* Alert Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> All insights data is approximate and may differ from what's shown on your invoices due to small variations in data processing.
-        </p>
-      </div>
-
       {/* Row 1: 5 KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Card 1: All Messages */}
@@ -248,10 +240,7 @@ export default function MessagesSubTab() {
       {/* Row 2: All Deliveries Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <CardTitle className="text-sm">All Deliveries</CardTitle>
-          </div>
+          <CardTitle className="text-sm">All Deliveries</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -275,10 +264,7 @@ export default function MessagesSubTab() {
       {/* Row 3: Free Deliveries Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <CardTitle className="text-sm">Free Deliveries</CardTitle>
-          </div>
+          <CardTitle className="text-sm">Free Deliveries</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -298,10 +284,7 @@ export default function MessagesSubTab() {
       {/* Row 4: Paid Deliveries Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <CardTitle className="text-sm">Paid Deliveries</CardTitle>
-          </div>
+          <CardTitle className="text-sm">Paid Deliveries</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -324,10 +307,7 @@ export default function MessagesSubTab() {
       {/* Row 5: Approximate Charges Chart */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <CardTitle className="text-sm">Approximate Charges</CardTitle>
-          </div>
+          <CardTitle className="text-sm">Approximate Charges</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
