@@ -201,7 +201,7 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
           <p className="text-sm font-medium">{tooltip.day}, {tooltip.time}</p>
           <div className="flex items-center gap-2">
             <span className="text-sm">{valueLabel}:</span>
-            <span className="text-sm font-medium">{tooltip.value}</span>
+            <span className="text-sm font-medium text-blue-500">{tooltip.value}</span>
           </div>
         </div>
       )}

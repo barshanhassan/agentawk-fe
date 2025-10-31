@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown } from "lucide-react";
 
 export default function CSATSummary() {
   // Mock data for satisfaction score
@@ -44,7 +43,7 @@ export default function CSATSummary() {
           <p className="text-sm font-medium">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2">
-              <span className="text-xs">{entry.name}:</span>
+              <span className="text-xs">{entry.name.charAt(0).toUpperCase() + entry.name.slice(1)}:</span>
               <span className="text-xs font-medium" style={{ color: entry.color }}>
                 {entry.value}
               </span>
@@ -66,13 +65,15 @@ export default function CSATSummary() {
             <CardTitle className="text-sm">Satisfaction Score</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="text-3xl font-bold text-red-500">{satisfactionScore}%</div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Total responses</div>
-              <div className="text-sm font-medium">{totalResponses}</div>
+            <div className="text-3xl font-bold">{satisfactionScore}%</div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Total responses</span>
+              <span className="text-sm font-semibold">{totalResponses}</span>
             </div>
-            <div className="text-xs text-muted-foreground">Based on</div>
-            <div className="text-sm font-medium">{basedOnConversations} conversations</div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Based on</span>
+              <span className="text-sm font-semibold">{basedOnConversations} conversations</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -82,16 +83,18 @@ export default function CSATSummary() {
             <CardTitle className="text-sm">Response Rate</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Feedback rate</div>
-              <div className="text-sm font-medium">{feedbackRate}%</div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Feedback rate</span>
+              <span className="text-sm font-semibold">{feedbackRate}%</span>
             </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Responded</div>
-              <div className="text-sm font-medium">{responded}</div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Responded</span>
+              <span className="text-sm font-semibold">{responded}</span>
             </div>
-            <div className="text-xs text-muted-foreground">Total conversations</div>
-            <div className="text-sm font-medium">{totalConversations}</div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Total conversations</span>
+              <span className="text-sm font-semibold">{totalConversations}</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -100,13 +103,18 @@ export default function CSATSummary() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Distribution</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             {distributionData.map((item) => (
-              <div key={item.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div key={item.name} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{item.name}</span>
+                  <span className="text-sm font-semibold">{item.percentage}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="h-2 rounded-full"
                     style={{
+                      width: `${item.percentage}%`,
                       backgroundColor:
                         item.name === "Great"
                           ? "#22c55e"
@@ -115,9 +123,7 @@ export default function CSATSummary() {
                           : "#ef4444",
                     }}
                   />
-                  <span className="text-xs text-muted-foreground">{item.name}</span>
                 </div>
-                <span className="text-xs font-medium">{item.percentage}%</span>
               </div>
             ))}
           </CardContent>
@@ -132,19 +138,12 @@ export default function CSATSummary() {
             {agentRankings.map((agent, idx) => (
               <div key={idx} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {agent.name === "Most Great" ? (
-                    <TrendingUp size={16} className="text-green-500" />
-                  ) : (
-                    <TrendingDown size={16} className="text-red-500" />
-                  )}
-                  <div>
-                    <div className="text-xs font-medium">{agent.name}</div>
-                    <div className="text-xs text-muted-foreground">{agent.label}</div>
-                  </div>
+                  <span className="text-xs text-muted-foreground">{agent.name}</span>
+                  <span className={`text-xs ${agent.name === "Most Great" ? "text-green-500" : "text-red-500"}`}>
+                    +{agent.count}
+                  </span>
                 </div>
-                <span className={`text-xs font-medium ${agent.name === "Most Great" ? "text-green-500" : "text-red-500"}`}>
-                  {agent.count} {agent.name === "Most Great" ? "great ratings" : "great ratings"}
-                </span>
+                <span className="text-sm font-semibold">{agent.label}</span>
               </div>
             ))}
           </CardContent>

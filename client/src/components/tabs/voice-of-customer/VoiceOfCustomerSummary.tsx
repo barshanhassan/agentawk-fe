@@ -88,7 +88,7 @@ export default function VoiceOfCustomerSummary() {
                       />
                     )}
                   </div>
-                  <span className="text-xs font-semibold w-12 text-right">{item.percentage}%</span>
+                  <span className="text-sm font-semibold w-12 text-right">{item.percentage}%</span>
                 </div>
               </div>
             ))}
