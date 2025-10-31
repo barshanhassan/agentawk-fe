@@ -76,7 +76,7 @@
   --chart-4: 24 94% 50%;
   --chart-5: 339 90% 51%;
 
-  --font-sans: Montserrat, Open Sans, sans-serif;
+  --font-sans: "Zalando Sans SemiExpanded", Calibri, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem; /* 8px */
@@ -268,6 +268,16 @@
     content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
     pointer-events: none;
+  }
+
+  /* Hide scrollbar while keeping functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of

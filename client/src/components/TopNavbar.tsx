@@ -8,6 +8,8 @@ import {
   LogOut,
   CheckCircle,
   BellOff,
+  Check,
+  Clock,
 } from "react-feather";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +30,7 @@ interface TopNavbarProps {
 }
 
 export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
+  const [agentStatus, setAgentStatus] = useState<"available" | "away">("available");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsMuted, setNotificationsMuted] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -105,6 +108,29 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
       </Button>
 
       <div className="flex items-center gap-3">
+        {/* Agent Status */}
+        <button
+          onClick={() => setAgentStatus(agentStatus === "available" ? "away" : "available")}
+          className={`group flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            agentStatus === "available"
+              ? "bg-green-100 text-green-700 hover:bg-green-200"
+              : "bg-gray-300 text-gray-700 hover:bg-gray-400 hover:text-white"
+          }`}
+        >
+          <div className={`w-2 h-2 rounded-full transition-colors ${agentStatus === "available" ? "bg-green-500" : "bg-gray-400 group-hover:bg-white"}`}></div>
+          {agentStatus === "available" ? (
+            <>
+              <Check size={14} />
+              Available
+            </>
+          ) : (
+            <>
+              <Clock size={14} />
+              Away
+            </>
+          )}
+        </button>
+
         <DropdownMenu
           open={notificationsOpen}
           onOpenChange={setNotificationsOpen}
@@ -113,14 +139,14 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative hover-elevate w-12 h-12"
+              className="relative hover-elevate flex items-center justify-center"
               data-testid="button-notifications"
             >
-              {notificationsMuted ? <BellOff size={20} /> : <Bell size={20} />}
+              {notificationsMuted ? <BellOff className="absolute" transform="scale(1.1)" /> : <Bell className="absolute" transform="scale(1.1)"/>}
               {!notificationsMuted && unreadCount > 0 && (
                 <Badge
                   variant="destructive"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center p-0 text-xs"
+                  className="-top-[0.7rem] -right-[0.9rem] h-5 w-5 rounded-full flex items-center justify-center p-0 text-[0.7rem]"
                 >
                   {unreadCount}
                 </Badge>
