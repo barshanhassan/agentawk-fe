@@ -13,9 +13,13 @@ className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0
 ```
 
 **Components:**
-- `CardHeader` with `pb-2` (padding-bottom)
+- `CardHeader` with `pb-2` (padding-bottom) or `pb-4` for charts
 - `CardTitle` with `text-sm` (14px)
 - `CardContent` with `space-y-1` or `space-y-2` (vertical spacing)
+
+### Card Title Rules
+- **No dots or emojis** - Card titles must be plain text without decorative elements
+- **Plain text only** - Use descriptive names without special characters
 
 ---
 
@@ -78,11 +82,14 @@ Label (text-xs, muted-foreground) | Value (text-sm, font-semibold)
 - **Axis Stroke**: `hsl(var(--muted-foreground))`
 - **Axis Font Size**: `fontSize: "12px"`
 
-### Line Charts (OverviewTab)
-- **Line Stroke**: `hsl(var(--primary))`
+### Line Charts
+- **Line Stroke**: `hsl(var(--primary))` or custom colors (e.g., `#22c55e`, `#f97316`, `#ef4444`)
 - **Line Width**: `strokeWidth={2}`
 - **Dots**: `dot={false}` (no dots on line)
 - **Cursor**: `cursor={{ strokeDasharray: '3 3' }}` (dashed line on hover)
+- **Legend**: `wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}` with `iconType="circle"`
+- **Height**: 300px for multi-line charts, 220px for single-line charts
+- **Example**: Bot vs Human Performance chart, Sentiment Trend Analysis chart
 
 ### Bar Charts (Agent Performance)
 - **Type**: Stacked bar charts
@@ -112,9 +119,32 @@ bg-background border border-border rounded-md p-2 shadow-md
 - **Line Charts**: `cursor={{ strokeDasharray: '3 3' }}` (dashed cursor line)
 - **Bar Charts**: `cursor={false}` (no cursor background)
 
+### Tooltip Implementation
+```typescript
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background border border-border rounded-md p-2 shadow-md">
+        <p className="text-sm font-medium">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center gap-2">
+            <span className="text-xs">{entry.name}:</span>
+            <span className="text-xs font-medium" style={{ color: entry.color }}>
+              {entry.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+```
+
 ### Custom Tooltip Components
 - **OverviewTab**: `CustomTooltip` - Shows label and single value (Users or Stickiness)
 - **AgentConversion**: `ConversionVolumeTooltip` & `CallEngagementTooltip` - Shows label and all stacked values with color coding
+- **VoiceOfCustomer**: `CustomTooltip` - Shows label and all sentiment values with color coding
 
 ---
 
