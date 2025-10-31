@@ -10,6 +10,7 @@ import InsightsDashboard from "@/pages/InsightsDashboard";
 import ConversationsInbox from "@/pages/ConversationsInbox";
 import TemplateManager from "@/pages/TemplateManager";
 import CampaignManager from "@/pages/CampaignManager";
+import ContactsPage from "@/pages/ContactsPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/conversations/inbox" component={ConversationsInbox} />
       <Route path="/templates" component={TemplateManager} />
       <Route path="/campaigns" component={CampaignManager} />
+      <Route path="/contacts" component={ContactsPage} />
       <Route component={NotFound} />
     </Switch>
   );
