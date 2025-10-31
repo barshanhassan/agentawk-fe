@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, Check } from "lucide-react";
+import TimeHeatmap from "@/components/TimeHeatmap";
 
 // Top Filter Dropdown Component
 interface TopFilterDropdownProps {
@@ -138,28 +139,21 @@ export default function BotDashboardContent() {
 
   // Dummy data for Busiest Period (Heatmap-like data)
   const busiestPeriodData = [
-    { time: "12 AM", Thu: 0.1, Fri: 0.2, Sat: 0.15, Sun: 0.1, Mon: 0.3, Tue: 0.25, Wed: 0.2 },
-    { time: "2 AM", Thu: 0.05, Fri: 0.1, Sat: 0.08, Sun: 0.05, Mon: 0.15, Tue: 0.12, Wed: 0.1 },
-    { time: "4 AM", Thu: 0.02, Fri: 0.05, Sat: 0.03, Sun: 0.02, Mon: 0.08, Tue: 0.06, Wed: 0.05 },
-    { time: "6 AM", Thu: 0.1, Fri: 0.15, Sat: 0.12, Sun: 0.1, Mon: 0.2, Tue: 0.18, Wed: 0.15 },
-    { time: "8 AM", Thu: 0.3, Fri: 0.4, Sat: 0.35, Sun: 0.25, Mon: 0.5, Tue: 0.45, Wed: 0.4 },
-    { time: "10 AM", Thu: 0.5, Fri: 0.6, Sat: 0.55, Sun: 0.4, Mon: 0.7, Tue: 0.65, Wed: 0.6 },
-    { time: "12 PM", Thu: 0.8, Fri: 0.9, Sat: 0.85, Sun: 0.7, Mon: 1.0, Tue: 0.95, Wed: 0.9 },
-    { time: "2 PM", Thu: 0.6, Fri: 0.7, Sat: 0.65, Sun: 0.5, Mon: 0.8, Tue: 0.75, Wed: 0.7 },
-    { time: "4 PM", Thu: 0.4, Fri: 0.5, Sat: 0.45, Sun: 0.3, Mon: 0.6, Tue: 0.55, Wed: 0.5 },
-    { time: "6 PM", Thu: 0.3, Fri: 0.4, Sat: 0.35, Sun: 0.25, Mon: 0.5, Tue: 0.45, Wed: 0.4 },
-    { time: "8 PM", Thu: 0.2, Fri: 0.3, Sat: 0.25, Sun: 0.15, Mon: 0.35, Tue: 0.3, Wed: 0.25 },
-    { time: "10 PM", Thu: 0.15, Fri: 0.2, Sat: 0.18, Sun: 0.1, Mon: 0.25, Tue: 0.22, Wed: 0.2 },
+    { time: "12 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 3, Tue: 3, Wed: 2 },
+    { time: "2 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
+    { time: "4 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
+    { time: "6 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
+    { time: "8 AM", Thu: 3, Fri: 4, Sat: 4, Sun: 3, Mon: 5, Tue: 5, Wed: 4 },
+    { time: "10 AM", Thu: 5, Fri: 6, Sat: 6, Sun: 4, Mon: 7, Tue: 7, Wed: 6 },
+    { time: "12 PM", Thu: 8, Fri: 9, Sat: 9, Sun: 7, Mon: 10, Tue: 10, Wed: 9 },
+    { time: "2 PM", Thu: 6, Fri: 7, Sat: 7, Sun: 5, Mon: 8, Tue: 8, Wed: 7 },
+    { time: "4 PM", Thu: 4, Fri: 5, Sat: 5, Sun: 3, Mon: 6, Tue: 6, Wed: 5 },
+    { time: "6 PM", Thu: 3, Fri: 4, Sat: 4, Sun: 3, Mon: 5, Tue: 5, Wed: 4 },
+    { time: "8 PM", Thu: 2, Fri: 3, Sat: 3, Sun: 2, Mon: 4, Tue: 3, Wed: 3 },
+    { time: "10 PM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 3, Tue: 2, Wed: 2 },
   ];
 
-  const getHeatmapColor = (value: number) => {
-    if (value >= 2.5) return "#1e40af";
-    if (value >= 2.0) return "#1e3a8a";
-    if (value >= 1.5) return "#3b82f6";
-    if (value >= 1.0) return "#60a5fa";
-    if (value >= 0.5) return "#93c5fd";
-    return "#dbeafe";
-  };
+
 
   return (
     <div className="space-y-4">
@@ -275,34 +269,14 @@ export default function BotDashboardContent() {
             <CardTitle className="text-sm">Busiest Period</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <div className="space-y-2">
-                {busiestPeriodData.map((row, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <div className="w-12 text-xs font-medium text-muted-foreground">{row.time}</div>
-                    <div className="flex gap-1 flex-1">
-                      {["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"].map((day) => (
-                        <div
-                          key={day}
-                          className="flex-1 h-6 rounded"
-                          style={{ backgroundColor: getHeatmapColor((row as any)[day]) }}
-                          title={`${day}: ${(row as any)[day]}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-4 text-xs">
-                <span className="text-muted-foreground">Low</span>
-                <div className="flex gap-1">
-                  {["#dbeafe", "#93c5fd", "#60a5fa", "#3b82f6", "#1e3a8a", "#1e40af"].map((color, idx) => (
-                    <div key={idx} className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
-                  ))}
-                </div>
-                <span className="text-muted-foreground">High</span>
-              </div>
-            </div>
+            <TimeHeatmap
+              data={busiestPeriodData}
+              days={["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"]}
+              rowsPerTimeSlot={2}
+              cellHeight={12}
+              startDay={4}
+              valueLabel="Messages"
+            />
           </CardContent>
         </Card>
       </div>
