@@ -36,7 +36,7 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({ topFilter, setTop
     <div className="relative w-32" ref={dropdownRef}>
       <button
         type="button"
-        className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring text-foreground transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="truncate text-sm font-normal">

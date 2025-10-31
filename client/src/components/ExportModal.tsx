@@ -135,6 +135,7 @@ export default function ExportModal() {
             variant="outline"
             onClick={() => setIsExportModalOpen(false)}
             data-testid="close-button"
+            className="[border-color:hsl(var(--input))]"
           >
             Close
           </Button>

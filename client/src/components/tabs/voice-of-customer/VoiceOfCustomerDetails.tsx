@@ -160,7 +160,7 @@ export default function VoiceOfCustomerDetails() {
                 placeholder="Search by agent name or ID..."
                 value={searchAgent}
                 onChange={(e) => setSearchAgent(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none  transition-colors"
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function VoiceOfCustomerDetails() {
               <div className="relative w-15" ref={agentDropdownRef}>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
                   onClick={() => setAgentDropdownOpen(!agentDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">
@@ -300,7 +300,7 @@ export default function VoiceOfCustomerDetails() {
                 placeholder="Search by conversation ID or agent..."
                 value={searchConversation}
                 onChange={(e) => setSearchConversation(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none  transition-colors"
               />
             </div>
           </div>
@@ -419,7 +419,7 @@ export default function VoiceOfCustomerDetails() {
               <div className="relative w-15" ref={conversationDropdownRef}>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
                   onClick={() => setConversationDropdownOpen(!conversationDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">

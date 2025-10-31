@@ -168,7 +168,7 @@ export default function CSATDetails() {
                 placeholder="Search by name or number..."
                 value={searchAgent}
                 onChange={(e) => setSearchAgent(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none  transition-colors"
               />
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function CSATDetails() {
               <div className="relative w-15" ref={agentDropdownRef}>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
                   onClick={() => setAgentDropdownOpen(!agentDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">
@@ -328,7 +328,7 @@ export default function CSATDetails() {
                 placeholder="Search by name or number..."
                 value={searchFeedback}
                 onChange={(e) => setSearchFeedback(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none  transition-colors"
               />
             </div>
           </div>
@@ -417,7 +417,7 @@ export default function CSATDetails() {
               <div className="relative w-15" ref={feedbackDropdownRef}>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
                   onClick={() => setFeedbackDropdownOpen(!feedbackDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">

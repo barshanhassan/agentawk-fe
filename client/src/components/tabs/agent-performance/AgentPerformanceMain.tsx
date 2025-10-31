@@ -136,7 +136,7 @@ export default function AgentPerformanceMain() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search agents..."
-                className="pl-10 h-8 text-xs border-input focus:ring-2 focus:ring-ring"
+                className="pl-10 h-8 text-xs border-input "
               />
             </div>
           </div>
@@ -288,7 +288,7 @@ export default function AgentPerformanceMain() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search by agent or channel..."
-                className="pl-10 h-8 text-xs border-input focus:ring-2 focus:ring-ring"
+                className="pl-10 h-8 text-xs border-input "
               />
             </div>
           </div>

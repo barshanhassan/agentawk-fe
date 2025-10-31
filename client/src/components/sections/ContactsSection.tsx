@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import CustomDropdown from "@/components/CustomDropdown";
 
 type SortDirection = "asc" | "desc" | "default";
@@ -331,7 +332,7 @@ export default function ContactsSection() {
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none  transition-colors"
               />
             </div>
 
@@ -347,7 +348,7 @@ export default function ContactsSection() {
             {/* Created At Calendar */}
             <Popover open={createdAtOpen} onOpenChange={setCreatedAtOpen}>
               <PopoverTrigger asChild>
-                <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors">
+                <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors">
                   <Calendar size={14} />
                   <span>Created At</span>
                 </button>
@@ -368,7 +369,7 @@ export default function ContactsSection() {
             {/* Last Active Calendar */}
             <Popover open={lastActiveOpen} onOpenChange={setLastActiveOpen}>
               <PopoverTrigger asChild>
-                <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors">
+                <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors">
                   <Calendar size={14} />
                   <span>Last Active</span>
                 </button>
@@ -391,7 +392,7 @@ export default function ContactsSection() {
               <div className="relative" ref={sortDropdownRef}>
                 <button
                   onClick={() => setShowSort(!showSort)}
-                  className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors"
+                  className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors"
                 >
                   <ArrowUpDown size={14} />
                   <span>Sort {sorts.length > 0 && `(${sorts.length})`}</span>
@@ -423,9 +424,9 @@ export default function ContactsSection() {
                               <button
                                 type="button"
                                 onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)}
-                                className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                                className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
                               >
-                                <span className="truncate text-xs font-normal">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <span className="truncate text-sm font-normal">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
                                 <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                               </button>
                               {openSortColumnDropdown === sort.id && (
@@ -457,9 +458,9 @@ export default function ContactsSection() {
                               <button
                                 type="button"
                                 onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
-                                className="w-[80px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                                className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
                               >
-                                <span className="truncate text-xs font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
+                                <span className="truncate text-sm font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
                                 <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                               </button>
                               {openSortDirectionDropdown === sort.id && (
@@ -493,7 +494,7 @@ export default function ContactsSection() {
                           >
                             Add sort
                           </Button>
-                          <Button onClick={() => setSorts([])} variant="outline" className="flex-1 border-input focus:ring-2 focus:ring-ring">Reset sorts</Button>
+                          <Button onClick={() => setSorts([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset sorts</Button>
                         </div>
                       </div>
                     )}
@@ -505,7 +506,7 @@ export default function ContactsSection() {
               <div className="relative" ref={filterDropdownRef}>
                 <button
                   onClick={() => setShowFilter(!showFilter)}
-                  className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring flex items-center gap-2 transition-colors"
+                  className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors"
                 >
                   <Filter size={14} />
                   <span>Filter {filters.length > 0 && `(${filters.length})`}</span>
@@ -537,9 +538,9 @@ export default function ContactsSection() {
                               <button
                                 type="button"
                                 onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
-                                className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                                className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
                               >
-                                <span className="truncate text-xs font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <span className="truncate text-sm font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
                                 <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                               </button>
                               {openFilterColumnDropdown === filter.id && (
@@ -570,9 +571,9 @@ export default function ContactsSection() {
                               <button
                                 type="button"
                                 onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
-                                className="w-[130px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                                className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
                               >
-                                <span className="truncate text-xs font-normal">{filter.operator}</span>
+                                <span className="truncate text-sm font-normal">{filter.operator}</span>
                                 <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                               </button>
                               {openFilterOperatorDropdown === filter.id && (
@@ -599,7 +600,7 @@ export default function ContactsSection() {
                               placeholder="Value..."
                               value={filter.value}
                               onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                              className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                              className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors"
                             />
                             <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
                             <GripVertical size={14} className="text-muted-foreground cursor-grab" />
@@ -607,7 +608,7 @@ export default function ContactsSection() {
                         ))}
                         <div className="flex gap-2 pt-2 border-t">
                           <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white flex-1">Add filter</Button>
-                          <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input focus:ring-2 focus:ring-ring">Reset filters</Button>
+                          <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset filters</Button>
                         </div>
                       </div>
                     )}
@@ -643,11 +644,9 @@ export default function ContactsSection() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded accent-muted-foreground"
+                    <Checkbox
                       checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
-                      onChange={toggleAllRows}
+                      onCheckedChange={toggleAllRows}
                     />
                   </th>
                   <th
@@ -710,11 +709,9 @@ export default function ContactsSection() {
                   getFilteredAndSortedData().map((contact) => (
                     <tr key={contact.id} className="border-b hover:bg-muted/50">
                       <td className="py-2 px-3">
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded accent-muted-foreground"
+                        <Checkbox
                           checked={selectedRows.has(contact.id)}
-                          onChange={() => toggleRowSelection(contact.id)}
+                          onCheckedChange={() => toggleRowSelection(contact.id)}
                         />
                       </td>
                       <td className="py-2 px-3">{contact.name}</td>
