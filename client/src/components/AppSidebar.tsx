@@ -51,7 +51,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
         { label: "Logs", path: "/conversations/logs" },
       ],
     },
-    { icon: <Cpu size={20} />, label: "Bot Conversations", path: "/bot-conversations" },
+    { icon: <Cpu size={20} />, label: "Bot Conversations", path: "/conversations/bot" },
     { icon: <FileText size={20} />, label: "WhatsApp Templates", path: "/templates" },
     { icon: <Send size={20} />, label: "Campaign Manager", path: "/campaigns" },
     { icon: <Users size={20} />, label: "Contacts", path: "/contacts" },
