@@ -12,6 +12,7 @@ interface CustomDropdownProps {
   onChange: (selected: string[]) => void;
   placeholder: string;
   width?: string;
+  showSelectedOption?: boolean;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -20,6 +21,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   placeholder,
   width = "180px",
+  showSelectedOption = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -46,10 +48,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   );
 
   const handleSelect = (id: string) => {
-    if (selected.includes(id)) {
-      onChange(selected.filter(item => item !== id));
+    if (showSelectedOption) {
+      // Single selection mode
+      onChange([id]);
+      setIsOpen(false);
     } else {
-      onChange([...selected, id]);
+      // Multi-selection mode
+      if (selected.includes(id)) {
+        onChange(selected.filter(item => item !== id));
+      } else {
+        onChange([...selected, id]);
+      }
     }
   };
 
@@ -63,6 +72,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         <span className="truncate text-sm font-normal">
           {selected.length === 0
             ? placeholder
+            : showSelectedOption
+            ? options.find(opt => opt.id === selected[0])?.name || placeholder
             : `${placeholder} (${selected.length})`}
         </span>
         <span className="ml-2 text-muted-foreground">
