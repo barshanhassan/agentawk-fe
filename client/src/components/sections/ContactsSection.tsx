@@ -112,6 +112,11 @@ export default function ContactsSection() {
   const [showDeleteContactModal, setShowDeleteContactModal] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
 
+  // Bulk Edit Modal State
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [bulkEditTags, setBulkEditTags] = useState<string[]>([]);
+  const [bulkTagInput, setBulkTagInput] = useState("");
+
   // Copy tooltip state
   const [copiedContactId, setCopiedContactId] = useState<string | null>(null);
 
@@ -337,6 +342,50 @@ export default function ContactsSection() {
     }
   };
 
+  const handleOpenBulkEdit = () => {
+    setBulkEditTags([]);
+    setBulkTagInput("");
+    setShowBulkEditModal(true);
+  };
+
+  const handleAddBulkTag = () => {
+    if (bulkTagInput.trim() && !bulkEditTags.includes(bulkTagInput.trim())) {
+      setBulkEditTags([...bulkEditTags, bulkTagInput.trim()]);
+      setBulkTagInput("");
+    }
+  };
+
+  const handleRemoveBulkTag = (tag: string) => {
+    setBulkEditTags(bulkEditTags.filter(t => t !== tag));
+  };
+
+  const handleToggleBulkTag = (tag: string) => {
+    if (bulkEditTags.includes(tag)) {
+      setBulkEditTags(bulkEditTags.filter(t => t !== tag));
+    } else {
+      setBulkEditTags([...bulkEditTags, tag]);
+    }
+  };
+
+  const handleSaveBulkEdit = () => {
+    const selectedContactIds = Array.from(selectedRows);
+    setContacts(contacts.map(contact => {
+      if (selectedContactIds.includes(contact.id)) {
+        return {
+          ...contact,
+          tags: bulkEditTags,
+        };
+      }
+      return contact;
+    }));
+    toast({
+      title: "Contacts Updated",
+      description: `Tags updated for ${selectedContactIds.length} contact(s)`,
+    });
+    setShowBulkEditModal(false);
+    setSelectedRows(new Set());
+  };
+
   const handleAddTag = () => {
     if (newTagInput.trim() && !newContactTags.includes(newTagInput.trim())) {
       setNewContactTags([...newContactTags, newTagInput.trim()]);
@@ -552,7 +601,7 @@ export default function ContactsSection() {
         <h2 className="text-3xl font-bold">Contacts</h2>
         <Button
           onClick={() => setShowAddContactModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9"
+          className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"
         >
           <Plus size={16} />
           Add Contact
@@ -561,14 +610,14 @@ export default function ContactsSection() {
 
       {/* Search and Filters Section - Outside Card */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search names..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-9 text-sm w-full border border-input rounded-md bg-background focus:outline-none  transition-colors"
+            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
           />
         </div>
 
@@ -894,7 +943,7 @@ export default function ContactsSection() {
             <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
               <span className="text-sm text-foreground">{selectedRows.size} selected</span>
               <div className="flex gap-2 ml-auto">
-                <button className="p-1 hover:bg-blue-100 rounded" title="Edit">
+                <button onClick={handleOpenBulkEdit} className="p-1 hover:bg-blue-100 rounded" title="Edit">
                   <Edit2 size={14} className="text-blue-600" />
                 </button>
                 <button onClick={handleExportSelectedAsCSV} className="p-1 hover:bg-blue-100 rounded" title="Export as CSV">
@@ -1154,7 +1203,7 @@ export default function ContactsSection() {
                 />
                 <Button
                   onClick={handleAddTag}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 h-9"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 h-9 font-normal"
                 >
                   Add
                 </Button>
@@ -1189,13 +1238,13 @@ export default function ContactsSection() {
             <Button
               onClick={() => setShowAddContactModal(false)}
               variant="outline"
-              className="border-input [border-color:hsl(var(--input))]"
+              className="border-input [border-color:hsl(var(--input))] font-normal"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveContact}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
             >
               Save Contact
             </Button>
@@ -1346,6 +1395,98 @@ export default function ContactsSection() {
               className="bg-red-500 hover:bg-red-600 text-white"
             >
               Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Edit Modal */}
+      <Dialog open={showBulkEditModal} onOpenChange={setShowBulkEditModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Tags for {selectedRows.size} Contact(s)</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Tags Section */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Tags</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Add or select tag"
+                  value={bulkTagInput}
+                  onChange={(e) => setBulkTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddBulkTag();
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none transition-colors"
+                />
+                <Button
+                  onClick={handleAddBulkTag}
+                  size="sm"
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Add
+                </Button>
+              </div>
+
+              {/* Selected Tags */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {bulkEditTags.map((tag) => (
+                  <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs flex items-center gap-1">
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveBulkTag(tag)}
+                      className="hover:text-blue-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Available Tags */}
+              {allTags.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Available tags:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => handleToggleBulkTag(tag)}
+                        className={`px-2 py-1 rounded text-xs transition-colors ${
+                          bulkEditTags.includes(tag)
+                            ? "bg-blue-500 text-white"
+                            : "bg-muted text-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-6">
+            <Button
+              onClick={() => setShowBulkEditModal(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveBulkEdit}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Save Changes
             </Button>
           </div>
         </DialogContent>

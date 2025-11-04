@@ -263,7 +263,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="gap-2 hover-elevate"
+              className="gap-2 hover-elevate px-2"
               data-testid="button-user-menu"
             >
               <Avatar className="h-8 w-8">

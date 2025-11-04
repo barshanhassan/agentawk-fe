@@ -9,6 +9,7 @@ import TopNavbar from "@/components/TopNavbar";
 import InsightsDashboard from "@/pages/InsightsDashboard";
 import ConversationsInbox from "@/pages/ConversationsInbox";
 import BotConversations from "@/pages/BotConversations";
+import ConversationsLogs from "@/pages/ConversationsLogs";
 import TemplateManager from "@/pages/TemplateManager";
 import CampaignManager from "@/pages/CampaignManager";
 import ContactsPage from "@/pages/ContactsPage";
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/" component={InsightsDashboard} />
       <Route path="/conversations/inbox" component={ConversationsInbox} />
       <Route path="/conversations/bot" component={BotConversations} />
+      <Route path="/conversations/logs" component={ConversationsLogs} />
       <Route path="/templates" component={TemplateManager} />
       <Route path="/campaigns" component={CampaignManager} />
       <Route path="/contacts" component={ContactsPage} />

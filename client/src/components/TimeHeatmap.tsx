@@ -97,7 +97,7 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
     "Friday",
     "Saturday",
   ];
-  const orderedDays = [];
+  const orderedDays: string[] = [];
   for (let i = 0; i < 7; i++) {
     orderedDays.push(dayNames[(startDay + i) % 7]);
   }

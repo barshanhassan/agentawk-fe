@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, Calendar, X, Image, Mic, MicOff, Paperclip, XCircle, Smile } from "react-feather";
+import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile } from "react-feather";
 import { GripVertical, MoreVertical } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,16 +30,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+
 import { Separator } from "@/components/ui/separator";
 import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
-import { DateRange } from "react-day-picker";
 import { AlertCircle } from "lucide-react";
 
 // Generate a color based on the hash of a name
@@ -192,11 +186,6 @@ export default function BotConversations() {
     }
   };
 
-  // Export modal state
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [exportDateRange, setExportDateRange] = useState<DateRange | undefined>(undefined);
-  const [isExportDateOpen, setIsExportDateOpen] = useState(false);
-
   const handleExportConversations = () => {
     // Mock data for conversations
     const mockMessages = [
@@ -205,16 +194,9 @@ export default function BotConversations() {
       { number: 3, status: "Completed", direction: "Inbound", senderName: "John Doe", content: "I have a billing issue", messageStatus: "Delivered" },
     ];
 
-    // Filter by date range if selected
-    let dataToExport = mockMessages;
-    if (exportDateRange?.from && exportDateRange?.to) {
-      // In a real scenario, you'd filter based on message timestamps
-      dataToExport = mockMessages;
-    }
-
     // Create CSV
     const headers = ["Number", "Status", "Inbound/Outbound", "Sender Name", "Messages Content", "Messages Status"];
-    const rows = dataToExport.map(msg => [
+    const rows = mockMessages.map(msg => [
       msg.number,
       msg.status,
       msg.direction,
@@ -238,9 +220,6 @@ export default function BotConversations() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    setIsExportModalOpen(false);
-    setExportDateRange(undefined);
   };
 
   const handleMouseDown = () => {
@@ -1048,7 +1027,7 @@ export default function BotConversations() {
                     <TooltipContent>Export</TooltipContent>
                   </Tooltip>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setIsExportModalOpen(true)}>Export as CSV</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportConversations}>Export as CSV</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -1730,70 +1709,7 @@ export default function BotConversations() {
           </DialogContent>
         </Dialog>
 
-        {/* Export Modal */}
-        <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Export Conversations</DialogTitle>
-            </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Select Date Range</label>
-                <Popover open={isExportDateOpen} onOpenChange={setIsExportDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2 w-full justify-start">
-                      <Calendar size={16} />
-                      <span>
-                        {exportDateRange?.from && exportDateRange?.to
-                          ? `${exportDateRange.from.toLocaleDateString()} - ${exportDateRange.to.toLocaleDateString()}`
-                          : exportDateRange?.from
-                          ? exportDateRange.from.toLocaleDateString()
-                          : "Select Date Range"}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      initialFocus
-                      mode="range"
-                      defaultMonth={exportDateRange?.from}
-                      selected={exportDateRange}
-                      onSelect={(range) => {
-                        // If both from and to are the same date, clear the range
-                        if (
-                          range?.from &&
-                          range?.to &&
-                          range.from.toDateString() === range.to.toDateString()
-                        ) {
-                          setExportDateRange(undefined);
-                        } else {
-                          setExportDateRange(range);
-                        }
-                      }}
-                      numberOfMonths={1}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Export fields: Number, Status, Inbound/Outbound, Sender Name, Messages Content, Messages Status
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsExportModalOpen(false)} className="[border-color:hsl(var(--input))]">
-                Cancel
-              </Button>
-              <Button onClick={handleExportConversations}>
-                Export CSV
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Add Teams Modal */}
         <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
