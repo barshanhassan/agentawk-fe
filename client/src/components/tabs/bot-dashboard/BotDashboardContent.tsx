@@ -161,61 +161,67 @@ export default function BotDashboardContent() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {/* Card 1: Bot Triggered */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Bot Triggered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{kpiData.botTriggered}</div>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Bot Triggered</p>
+              <p className="text-2xl font-bold">{kpiData.botTriggered}</p>
+              <p className="text-xs text-muted-foreground">Sessions</p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Card 2: Responded by Bot */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Responded by Bot</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{kpiData.respondedByBot}</div>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Responded by Bot</p>
+              <p className="text-2xl font-bold">{kpiData.respondedByBot}</p>
+              <p className="text-xs text-muted-foreground">Messages</p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Card 3: Received by Bot */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Received by Bot</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{kpiData.receivedByBot}</div>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Received by Bot</p>
+              <p className="text-2xl font-bold">{kpiData.receivedByBot}</p>
+              <p className="text-xs text-muted-foreground">Messages</p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Card 4: Total Messages */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Total Messages</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{kpiData.totalMessages}</div>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Total Messages</p>
+              <p className="text-2xl font-bold">{kpiData.totalMessages}</p>
+              <p className="text-xs text-muted-foreground">All messages</p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Card 5: Escalated to Human */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Escalated to Human</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{kpiData.escalatedToHuman}</div>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Escalated to Human</p>
+              <p className="text-2xl font-bold">{kpiData.escalatedToHuman}</p>
+              <p className="text-xs text-muted-foreground">Escalations</p>
+            </div>
           </CardContent>
         </Card>
 
         {/* Card 6: Avg Session Duration */}
         <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Avg Session Duration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{kpiData.avgSessionDuration}</div>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Avg. Session Duration</p>
+              <p className="text-2xl font-bold">{kpiData.avgSessionDuration}</p>
+              <p className="text-xs text-muted-foreground">Per session</p>
+            </div>
           </CardContent>
         </Card>
       </div>

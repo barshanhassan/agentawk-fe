@@ -704,7 +704,7 @@ export default function ContactsSection() {
           </PopoverContent>
         </Popover>
 
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-3 ml-auto">
           {/* Sort Button */}
           <div className="relative" ref={sortDropdownRef}>
             <button

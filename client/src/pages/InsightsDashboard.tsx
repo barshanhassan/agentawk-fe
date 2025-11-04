@@ -44,7 +44,7 @@ function InsightsDashboardContent() {
         </div>
         <div className="flex items-center gap-4">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[180px] hover-elevate" style={{ height: "38px" }}>
+            <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>

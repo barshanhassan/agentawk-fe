@@ -3,11 +3,12 @@ import { Search, RefreshCw, MoreVertical, Download } from "react-feather";
 import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1376,6 +1377,21 @@ export default function ConversationsLogs() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Logs</h1>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 w-10 p-0 border hover-elevate [border-color:hsl(var(--input))]"
+              onClick={() => {
+                // Refresh logic here
+              }}
+            >
+              <RefreshCw size={16} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Refresh</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Tabs */}
@@ -1409,47 +1425,52 @@ export default function ConversationsLogs() {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Total Conversations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{kpiData.totalConversations}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Total Conversations</p>
+                  <p className="text-2xl font-bold">{kpiData.totalConversations}</p>
+                  <p className="text-xs text-muted-foreground">Conversations</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Queued</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{kpiData.queued}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Queued</p>
+                  <p className="text-2xl font-bold">{kpiData.queued}</p>
+                  <p className="text-xs text-muted-foreground">Waiting</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Active</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{kpiData.active}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Active</p>
+                  <p className="text-2xl font-bold">{kpiData.active}</p>
+                  <p className="text-xs text-muted-foreground">In progress</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Completed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{kpiData.completed}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="text-2xl font-bold">{kpiData.completed}</p>
+                  <p className="text-xs text-muted-foreground">Resolved</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Resolution Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{kpiData.resolutionRate}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Resolution Rate</p>
+                  <p className="text-2xl font-bold">{kpiData.resolutionRate}</p>
+                  <p className="text-xs text-muted-foreground">Success rate</p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -1470,7 +1491,7 @@ export default function ConversationsLogs() {
 
               {/* Date Range Preset */}
               <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
-                <SelectTrigger className="w-[180px] hover-elevate" style={{ height: "38px" }}>
+                <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
                   <Calendar className="h-4 w-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -1520,21 +1541,6 @@ export default function ConversationsLogs() {
                 placeholder="Status"
                 width="160px"
               />
-            </div>
-
-            {/* Right side: Refresh */}
-            <div className="flex items-center gap-3">
-              {/* Refresh Button */}
-              <Button
-                variant="outline"
-                className="gap-2 font-normal"
-                onClick={() => {
-                  // Refresh logic here
-                }}
-              >
-                <RefreshCw size={16} />
-                Refresh
-              </Button>
             </div>
           </div>
 
@@ -1755,47 +1761,52 @@ export default function ConversationsLogs() {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Total Calls</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{callKpiData.totalCalls}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Total Calls</p>
+                  <p className="text-2xl font-bold">{callKpiData.totalCalls}</p>
+                  <p className="text-xs text-muted-foreground">All calls</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Completed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{callKpiData.completed}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="text-2xl font-bold">{callKpiData.completed}</p>
+                  <p className="text-xs text-muted-foreground">Successful</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Inbound Calls</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{callKpiData.inboundCalls}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Inbound Calls</p>
+                  <p className="text-2xl font-bold">{callKpiData.inboundCalls}</p>
+                  <p className="text-xs text-muted-foreground">Received</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Outbound Calls</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{callKpiData.outboundCalls}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Outbound Calls</p>
+                  <p className="text-2xl font-bold">{callKpiData.outboundCalls}</p>
+                  <p className="text-xs text-muted-foreground">Initiated</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Avg. Duration</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold">{callKpiData.avgDuration}</div>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Avg. Duration</p>
+                  <p className="text-2xl font-bold">{callKpiData.avgDuration}</p>
+                  <p className="text-xs text-muted-foreground">Per call</p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -1816,7 +1827,7 @@ export default function ConversationsLogs() {
 
               {/* Date Range Preset */}
               <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
-                <SelectTrigger className="w-[180px] hover-elevate" style={{ height: "38px" }}>
+                <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
                   <Calendar className="h-4 w-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -1875,21 +1886,6 @@ export default function ConversationsLogs() {
                 placeholder="Status"
                 width="160px"
               />
-            </div>
-
-            {/* Right side: Refresh */}
-            <div className="flex items-center gap-3">
-              {/* Refresh Button */}
-              <Button
-                variant="outline"
-                className="gap-2 font-normal"
-                onClick={() => {
-                  // Refresh logic here
-                }}
-              >
-                <RefreshCw size={16} />
-                Refresh
-              </Button>
             </div>
           </div>
 
