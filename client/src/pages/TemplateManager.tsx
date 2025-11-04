@@ -54,7 +54,7 @@ export default function TemplateManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
@@ -444,7 +444,7 @@ export default function TemplateManager() {
     }
 
     // Apply status filter
-    if (selectedStatus) {
+    if (selectedStatuses.length > 0) {
       // Map status IDs to actual status names
       const statusMap: { [key: string]: string } = {
         "active-hq": "Active - HQ",
@@ -453,7 +453,8 @@ export default function TemplateManager() {
         "pending": "Pending",
         "rejected": "Rejected"
       };
-      data = data.filter(item => item.status === statusMap[selectedStatus]);
+      const mappedStatuses = selectedStatuses.map(id => statusMap[id]);
+      data = data.filter(item => mappedStatuses.includes(item.status));
     }
 
     // Apply advanced filters (from Sort/Filter buttons)
@@ -687,11 +688,10 @@ export default function TemplateManager() {
                   { id: "pending", name: "Pending" },
                   { id: "rejected", name: "Rejected" },
                 ]}
-                selected={selectedStatus ? [selectedStatus] : []}
-                onChange={(selected) => setSelectedStatus(selected.length > 0 ? selected[0] : null)}
+                selected={selectedStatuses}
+                onChange={setSelectedStatuses}
                 placeholder="Status"
                 width="180px"
-                showSelectedOption={true}
               />
 
               <div className="flex gap-3 ml-auto">
