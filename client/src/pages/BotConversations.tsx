@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
 import { AlertCircle } from "lucide-react";
@@ -68,7 +69,7 @@ const getDisplayName = (conversation: any): string => {
 export default function BotConversations() {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [showContactPanel, setShowContactPanel] = useState(false); // Always start minimized by default
-  const [activeTab, setActiveTab] = useState("active");
+  const [activeTab, setActiveTab] = useState("all");
   const [agentStatus, setAgentStatus] = useState<"available" | "away">("available");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [sidebarWidth, setSidebarWidth] = useState(384); // w-96 = 384px
@@ -141,12 +142,13 @@ export default function BotConversations() {
   const getFilteredConversations = () => {
     let filtered = conversations;
 
-    // Filter by tab (only active and expired)
+    // Filter by tab (all, active, and expired)
     if (activeTab === "active") {
       filtered = filtered.filter(conv => conv.status === "active");
     } else if (activeTab === "expired") {
       filtered = filtered.filter(conv => conv.status === "expired");
     }
+    // "all" tab shows all conversations
 
     // Filter by search query
     if (searchQuery.trim()) {
@@ -864,9 +866,11 @@ export default function BotConversations() {
           <CardHeader className="space-y-3 pb-3 flex-shrink-0">
             {/* Tabs */}
             <div className="flex justify-between border-b pb-0 w-full">
-              {["Active", "Expired"].map((tab) => {
+              {["All", "Active", "Expired"].map((tab) => {
                 const tabKey = tab.toLowerCase();
-                const count = tabKey === "active"
+                const count = tabKey === "all"
+                  ? conversations.length
+                  : tabKey === "active"
                   ? conversations.filter(c => c.status === "active").length
                   : conversations.filter(c => c.status === "expired").length;
                 return (
@@ -949,6 +953,18 @@ export default function BotConversations() {
                         <div className="flex items-center justify-between mb-1 gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className={`text-sm truncate ${getPendingMessagesCount(conv.id) > 0 ? "font-bold" : " font-semibold"}`}>{getDisplayName(conv)}</span>
+                            {activeTab === "all" && (
+                              <Badge
+                                variant="outline"
+                                className={`text-xs flex-shrink-0 ${
+                                  conv.status === "active" ? "bg-green-50 text-green-700 border-green-200" :
+                                  conv.status === "expired" ? "bg-red-50 text-red-700 border-red-200" :
+                                  "bg-gray-50 text-gray-700 border-gray-200"
+                                }`}
+                              >
+                                {conv.status}
+                              </Badge>
+                            )}
                           </div>
                           <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
                         </div>
