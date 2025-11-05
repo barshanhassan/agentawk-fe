@@ -1177,35 +1177,33 @@ export default function BotConversations() {
                       {/* Voice message */}
                       {msg.audio && (
                         <div className="mt-2 space-y-2">
-                          <div className="flex items-center gap-2 bg-black/10 rounded p-3">
-                            <button
-                              onClick={() => {
-                                const audio = new Audio(msg.audio.url);
-                                audio.play();
+                          <div className="bg-black/10 rounded p-3 max-w-sm">
+                            <audio
+                              controls
+                              className="h-12 rounded"
+                              style={{
+                                accentColor: "hsl(var(--primary))",
                               }}
-                              className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors"
-                              title="Play voice message"
+                              controlsList="nodownload"
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </button>
-                            <div className="flex-1 min-w-0">
+                              <source src={msg.audio.url} type="audio/webm" />
+                              Your browser does not support the audio element.
+                            </audio>
+                            <div className="flex items-center justify-between mt-2">
                               <p className="text-xs font-medium">Voice message</p>
-                              <p className="text-xs opacity-70">{msg.audio.duration}</p>
+                              <button
+                                onClick={() => {
+                                  const link = document.createElement("a");
+                                  link.href = msg.audio.url;
+                                  link.download = `voice-message-${msg.id}.webm`;
+                                  link.click();
+                                }}
+                                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                title="Download voice message"
+                              >
+                                <Download size={14} />
+                              </button>
                             </div>
-                            <button
-                              onClick={() => {
-                                const link = document.createElement("a");
-                                link.href = msg.audio.url;
-                                link.download = `voice-message-${msg.id}.webm`;
-                                link.click();
-                              }}
-                              className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                              title="Download voice message"
-                            >
-                              <Download size={14} />
-                            </button>
                           </div>
                         </div>
                       )}

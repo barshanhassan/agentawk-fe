@@ -2340,7 +2340,7 @@ export default function ConversationsLogs() {
       {/* Call Details Modal */}
       <Dialog open={callDetailsOpen} onOpenChange={setCallDetailsOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Call Details</DialogTitle>
           </DialogHeader>
           {selectedCallLog && (
@@ -2405,12 +2405,12 @@ export default function ConversationsLogs() {
                 </div>
                 <div className="col-span-2">
                   <label className="text-sm font-medium text-foreground">Call Recording</label>
-                  <div className="mt-1">
+                  <div className="mt-2">
                     {/* 50/50 chance to show available vs unavailable recording */}
-                    {Math.random() > 0.5 ? (
+                    {Math.random() > 0 ? (
                       <audio 
                         controls 
-                        className="w-full h-8"
+                        className="w-full h-12"
                         style={{ maxWidth: '100%' }}
                       >
                         <source src="/api/placeholder-audio.mp3" type="audio/mpeg" />
@@ -2426,7 +2426,7 @@ export default function ConversationsLogs() {
           )}
 
           {/* Modal Footer */}
-          <div className="flex gap-2 justify-end mt-6">
+          <div className="flex gap-2 justify-end mt-2">
             <Button
               onClick={() => setCallDetailsOpen(false)}
               variant="outline"

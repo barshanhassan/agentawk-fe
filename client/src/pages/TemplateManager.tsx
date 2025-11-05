@@ -1204,10 +1204,10 @@ export default function TemplateManager() {
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-md" data-testid="dialog-preview">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Template Preview</DialogTitle>
           </DialogHeader>
-          <div className="flex justify-center py-6">
+          <div className="flex justify-center">
             <div className="flex-1 flex items-center justify-center">
               {/* Phone mockup */}
               <div className="aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
