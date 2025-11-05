@@ -274,18 +274,27 @@ export default function ContactsSection() {
       });
     });
 
-    // Apply sorting
-    sorts.forEach(sort => {
+    // Apply sorting - Excel-style multi-level sort
+    if (sorts.length > 0) {
       data.sort((a, b) => {
-        const aVal = a[sort.column as keyof Contact];
-        const bVal = b[sort.column as keyof Contact];
+        for (const sort of sorts) {
+          const aVal = a[sort.column as keyof Contact];
+          const bVal = b[sort.column as keyof Contact];
 
-        if (typeof aVal === "string" && typeof bVal === "string") {
-          return sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          let comparison = 0;
+          if (typeof aVal === "string" && typeof bVal === "string") {
+            comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          }
+
+          // If values are different, return the comparison result
+          if (comparison !== 0) {
+            return comparison;
+          }
+          // If values are equal, continue to next sort criterion
         }
-        return 0;
+        return 0; // All criteria are equal
       });
-    });
+    }
 
     return data;
   };

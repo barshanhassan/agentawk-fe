@@ -1063,21 +1063,29 @@ export default function ConversationsLogs() {
       });
     }
 
-    // Apply sorting
-    sorts.forEach(sort => {
+    // Apply sorting - Excel-style multi-level sort
+    if (sorts.length > 0) {
       data.sort((a, b) => {
-        const aVal = a[sort.column as keyof Conversation];
-        const bVal = b[sort.column as keyof Conversation];
+        for (const sort of sorts) {
+          const aVal = a[sort.column as keyof Conversation];
+          const bVal = b[sort.column as keyof Conversation];
 
-        if (typeof aVal === "string" && typeof bVal === "string") {
-          return sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          let comparison = 0;
+          if (typeof aVal === "string" && typeof bVal === "string") {
+            comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          } else if (typeof aVal === "number" && typeof bVal === "number") {
+            comparison = sort.direction === "asc" ? aVal - bVal : bVal - aVal;
+          }
+
+          // If values are different, return the comparison result
+          if (comparison !== 0) {
+            return comparison;
+          }
+          // If values are equal, continue to next sort criterion
         }
-        if (typeof aVal === "number" && typeof bVal === "number") {
-          return sort.direction === "asc" ? aVal - bVal : bVal - aVal;
-        }
-        return 0;
+        return 0; // All criteria are equal
       });
-    });
+    }
 
     return data;
   };
@@ -1160,24 +1168,31 @@ export default function ConversationsLogs() {
       });
     }
 
-    // Apply sorting
-    callSorts.forEach(sort => {
+    // Apply sorting - Excel-style multi-level sort
+    if (callSorts.length > 0) {
       data.sort((a, b) => {
-        const aVal = a[sort.column as keyof CallLog];
-        const bVal = b[sort.column as keyof CallLog];
+        for (const sort of callSorts) {
+          const aVal = a[sort.column as keyof CallLog];
+          const bVal = b[sort.column as keyof CallLog];
 
-        if (typeof aVal === "string" && typeof bVal === "string") {
-          return sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          let comparison = 0;
+          if (typeof aVal === "string" && typeof bVal === "string") {
+            comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          } else if (typeof aVal === "number" && typeof bVal === "number") {
+            comparison = sort.direction === "asc" ? aVal - bVal : bVal - aVal;
+          } else if (typeof aVal === "boolean" && typeof bVal === "boolean") {
+            comparison = sort.direction === "asc" ? (aVal === bVal ? 0 : aVal ? 1 : -1) : (aVal === bVal ? 0 : aVal ? -1 : 1);
+          }
+
+          // If values are different, return the comparison result
+          if (comparison !== 0) {
+            return comparison;
+          }
+          // If values are equal, continue to next sort criterion
         }
-        if (typeof aVal === "number" && typeof bVal === "number") {
-          return sort.direction === "asc" ? aVal - bVal : bVal - aVal;
-        }
-        if (typeof aVal === "boolean" && typeof bVal === "boolean") {
-          return sort.direction === "asc" ? (aVal === bVal ? 0 : aVal ? 1 : -1) : (aVal === bVal ? 0 : aVal ? -1 : 1);
-        }
-        return 0;
+        return 0; // All criteria are equal
       });
-    });
+    }
 
     return data;
   };
