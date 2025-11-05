@@ -1142,7 +1142,7 @@ export default function ContactsSection() {
       {/* Add Contact Modal */}
       <Dialog open={showAddContactModal} onOpenChange={setShowAddContactModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Add New Contact</DialogTitle>
           </DialogHeader>
 
@@ -1243,7 +1243,7 @@ export default function ContactsSection() {
           </div>
 
           {/* Modal Footer */}
-          <div className="flex gap-2 justify-end mt-6">
+          <div className="flex gap-2 justify-end mt-2">
             <Button
               onClick={() => setShowAddContactModal(false)}
               variant="outline"
@@ -1264,7 +1264,7 @@ export default function ContactsSection() {
       {/* Edit Contact Modal */}
       <Dialog open={showEditContactModal} onOpenChange={setShowEditContactModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Edit Contact</DialogTitle>
           </DialogHeader>
 
@@ -1359,7 +1359,7 @@ export default function ContactsSection() {
           </div>
 
           {/* Modal Footer */}
-          <div className="flex gap-2 justify-end mt-6">
+          <div className="flex gap-2 justify-end mt-2">
             <Button
               onClick={() => setShowEditContactModal(false)}
               variant="outline"
@@ -1380,7 +1380,7 @@ export default function ContactsSection() {
       {/* Delete Contact Modal */}
       <Dialog open={showDeleteContactModal} onOpenChange={setShowDeleteContactModal}>
         <DialogContent className="max-w-sm">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Delete Contact</DialogTitle>
           </DialogHeader>
 
@@ -1391,7 +1391,7 @@ export default function ContactsSection() {
           </div>
 
           {/* Modal Footer */}
-          <div className="flex gap-2 justify-end mt-6">
+          <div className="flex gap-2 justify-end mt-2">
             <Button
               onClick={() => setShowDeleteContactModal(false)}
               variant="outline"
@@ -1412,7 +1412,7 @@ export default function ContactsSection() {
       {/* Bulk Edit Modal */}
       <Dialog open={showBulkEditModal} onOpenChange={setShowBulkEditModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Edit Tags for {selectedRows.size} Contact(s)</DialogTitle>
           </DialogHeader>
 
@@ -1483,7 +1483,7 @@ export default function ContactsSection() {
           </div>
 
           {/* Modal Footer */}
-          <div className="flex gap-2 justify-end mt-6">
+          <div className="flex gap-2 justify-end mt-2">
             <Button
               onClick={() => setShowBulkEditModal(false)}
               variant="outline"

@@ -220,10 +220,10 @@ export default function CampaignManager() {
       {/* Create Campaign Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent data-testid="dialog-create-campaign">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Create Campaign</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
             <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-api-triggered">
               <CardHeader className="text-center pb-2">
                 <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -253,7 +253,7 @@ export default function CampaignManager() {
       {/* Performance Dialog */}
       <Dialog open={performanceOpen} onOpenChange={setPerformanceOpen}>
         <DialogContent className="max-w-5xl" data-testid="dialog-performance">
-          <DialogHeader>
+          <DialogHeader className="mb-2">
             <DialogTitle>Campaign Performance - Summer Sale 2024</DialogTitle>
           </DialogHeader>
 

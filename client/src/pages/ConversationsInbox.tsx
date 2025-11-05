@@ -885,12 +885,8 @@ export default function ConversationsInbox() {
 
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
-      <div className="p-6 pb-2">
-        <h1 className="text-3xl font-bold">Conversations</h1>
-        <Breadcrumb items={["Conversations", "Inbox"]} />
-      </div>
 
-      <div className="flex-1 flex gap-4 px-6 pb-6 max-h-[calc(100vh-10.5rem)]">
+      <div className="flex-1 flex gap-4 px-6 py-6 max-h-full">
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
           <Card className="flex flex-col overflow-hidden shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
@@ -1753,11 +1749,11 @@ export default function ConversationsInbox() {
         {/* Edit Basic Details Modal */}
         <Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen}>
           <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-            <DialogHeader className="px-1">
+            <DialogHeader className="px-1 mb-2">
               <DialogTitle>Edit Basic Details</DialogTitle>
             </DialogHeader>
 
-            <div className="px-1 space-y-4 py-4 overflow-y-auto flex-1">
+            <div className="px-1 space-y-4 overflow-y-auto flex-1">
               {/* Name */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Name</label>
@@ -1870,7 +1866,7 @@ export default function ConversationsInbox() {
               </div>
             </div>
 
-            <DialogFooter className="px-1">
+            <DialogFooter className="px-1 mt-2">
               <Button variant="outline" onClick={() => setIsEditBasicDetailsOpen(false)} className="[border-color:hsl(var(--input))]">
                 Close
               </Button>
@@ -1884,11 +1880,11 @@ export default function ConversationsInbox() {
         {/* Add Custom Attribute Modal */}
         <Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen}>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Add Custom Attribute</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Attribute Name</label>
                 <Input
@@ -1910,7 +1906,7 @@ export default function ConversationsInbox() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setIsAddAttributeModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Close
               </Button>
@@ -1926,11 +1922,11 @@ export default function ConversationsInbox() {
         {/* Add Teams Modal */}
         <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Add Teams</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Select Teams</label>
                 <CustomDropdown
@@ -1943,7 +1939,7 @@ export default function ConversationsInbox() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setIsAddTeamsModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Cancel
               </Button>
@@ -1957,11 +1953,11 @@ export default function ConversationsInbox() {
         {/* Filter Modal */}
         <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Filter Conversations</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Team</label>
                 <CustomDropdown
@@ -1996,7 +1992,7 @@ export default function ConversationsInbox() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setIsFilterModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Cancel
               </Button>
@@ -2010,7 +2006,7 @@ export default function ConversationsInbox() {
         {/* Make Outbound Call Modal */}
         <Dialog open={isMakeCallModalOpen} onOpenChange={setIsMakeCallModalOpen}>
           <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Make Outbound Call</DialogTitle>
             </DialogHeader>
 
@@ -2256,12 +2252,12 @@ export default function ConversationsInbox() {
         {/* Send Template Message Modal */}
         <Dialog open={isTemplateMessageModalOpen} onOpenChange={setIsTemplateMessageModalOpen}>
           <DialogContent className="sm:max-w-3xl min-h-[35rem] flex flex-col">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Send Template Message</DialogTitle>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-6 p-4">
+              <div className="grid grid-cols-2 gap-6">
                 {/* Left: Phone Numbers and Template Selection */}
                 <div className="space-y-4">
                   <div>

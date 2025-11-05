@@ -16,6 +16,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -866,6 +872,10 @@ export default function ConversationsLogs() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [conversationDetailsOpen, setConversationDetailsOpen] = useState(false);
+  const [callDetailsOpen, setCallDetailsOpen] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedCallLog, setSelectedCallLog] = useState<CallLog | null>(null);
 
   const statusOptions = [
     { id: "Active", name: "Active" },
@@ -1338,6 +1348,16 @@ export default function ConversationsLogs() {
     document.body.removeChild(link);
   };
 
+  const handleViewConversationDetails = (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+    setConversationDetailsOpen(true);
+  };
+
+  const handleViewCallDetails = (call: CallLog) => {
+    setSelectedCallLog(call);
+    setCallDetailsOpen(true);
+  };
+
   const handleExportSingleCallLogAsCSV = (call: CallLog) => {
     const escapeCSV = (value: string | number | boolean) => {
       const str = String(value);
@@ -1685,7 +1705,7 @@ export default function ConversationsLogs() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewConversationDetails(conv)}>View Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleExportSingleAsCSV(conv)}>Export Log</DropdownMenuItem>
                                 <DropdownMenuItem>Export Chat</DropdownMenuItem>
                               </DropdownMenuContent>
@@ -2067,7 +2087,7 @@ export default function ConversationsLogs() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>View Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
                                 Export Log
                                 </DropdownMenuItem>
@@ -2154,6 +2174,269 @@ export default function ConversationsLogs() {
         </div>
         )}
       </div>
+
+      {/* Conversation Details Modal */}
+      <Dialog open={conversationDetailsOpen} onOpenChange={setConversationDetailsOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Conversation Details</DialogTitle>
+          </DialogHeader>
+          {selectedConversation && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left side - Conversation Details */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Customer Name</label>
+                    <p className="mt-1 text-sm">{selectedConversation.customer}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Agent Name</label>
+                    <p className="mt-1 text-sm">{selectedConversation.agent}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Start Time</label>
+                    <p className="mt-1 text-sm">{selectedConversation.startTime}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Duration</label>
+                    <p className="mt-1 text-sm">{selectedConversation.duration}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Status</label>
+                    <p className="mt-1">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        selectedConversation.status === "Completed" ? "bg-green-100 text-green-700" :
+                        selectedConversation.status === "Active" ? "bg-blue-100 text-blue-700" :
+                        selectedConversation.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                        selectedConversation.status === "Queued" ? "bg-yellow-100 text-yellow-700" :
+                        selectedConversation.status === "Pending" ? "bg-yellow-100 text-yellow-700" :
+                        selectedConversation.status === "Forwarded" ? "bg-yellow-100 text-yellow-700" :
+                        selectedConversation.status === "Expired" ? "bg-red-100 text-red-700" :
+                        selectedConversation.status === "Spammed" ? "bg-red-100 text-red-700" :
+                        "bg-gray-100 text-gray-700"
+                      }`}>
+                        {selectedConversation.status}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Number of Messages</label>
+                    <p className="mt-1 text-sm">{selectedConversation.messages}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Sentiment</label>
+                    <p className="mt-1">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        selectedConversation.sentiment === "Positive" ? "bg-green-100 text-green-700" :
+                        selectedConversation.sentiment === "Negative" ? "bg-red-100 text-red-700" :
+                        "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {selectedConversation.sentiment}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium text-foreground">Sentiment Summary</label>
+                    <p className="mt-1 text-sm">{selectedConversation.sentimentSummary}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side - Conversation Timeline */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg">Conversation Timeline</h3>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {/* Timeline Events */}
+                  <div className="relative pl-6">
+                    {/* Timeline line */}
+                    <div className="absolute left-[0.45rem] top-2 bottom-0 w-0.5 bg-gray-200"></div>
+                    
+                    {/* Timeline Events */}
+                    <div className="space-y-6">
+                      {/* Conversation Started */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Customer initiated conversation</div>
+                        <div className="text-xs text-gray-500 mt-1">10:30:15 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">First message received from customer</div>
+                      </div>
+
+                      {/* Bot Response */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Bot auto-response sent</div>
+                        <div className="text-xs text-gray-500 mt-1">10:30:18 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">Automated greeting and initial assistance</div>
+                      </div>
+
+                      {/* Customer Response */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Customer replied</div>
+                        <div className="text-xs text-gray-500 mt-1">10:30:45 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">Customer sent a reply message</div>
+                      </div>
+
+                      {/* Transferred to Agent */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Escalated to agent</div>
+                        <div className="text-xs text-gray-500 mt-1">10:31:02 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">Bot escalated to human agents</div>
+                      </div>
+
+                      {/* Agent Joined */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Chat was assigned to agent</div>
+                        <div className="text-xs text-gray-500 mt-1">10:31:15 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">Chat Assigned to Sarah Johnson</div>
+                      </div>
+
+                      {/* Agent Messages */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Agent provided assistance</div>
+                        <div className="text-xs text-gray-500 mt-1">10:31:20 AM to 10:34:45 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">8 messages exchanged</div>
+                      </div>
+
+                      {/* Issue Resolved */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Issue resolved</div>
+                        <div className="text-xs text-gray-500 mt-1">10:34:50 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">Customer confirmed satisfaction with resolution</div>
+                      </div>
+
+                      {/* Conversation Completed */}
+                      <div className="relative">
+                        <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 z-10"></div>
+                        <div className="text-sm font-medium text-gray-900">Conversation completed</div>
+                        <div className="text-xs text-gray-500 mt-1">10:35:23 AM</div>
+                        <div className="text-xs text-gray-600 mt-1">Agent marked conversation as resolved</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button
+              onClick={() => setConversationDetailsOpen(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))] font-normal"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Call Details Modal */}
+      <Dialog open={callDetailsOpen} onOpenChange={setCallDetailsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Call Details</DialogTitle>
+          </DialogHeader>
+          {selectedCallLog && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground">Contact Name</label>
+                  <p className="mt-1 text-sm">{selectedCallLog.contact}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Agent Name</label>
+                  <p className="mt-1 text-sm">{selectedCallLog.agent}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Direction</label>
+                  <p className="mt-1">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      selectedCallLog.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                    }`}>
+                      {selectedCallLog.direction}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Start Time</label>
+                  <p className="mt-1 text-sm">{selectedCallLog.startTime}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Duration</label>
+                  <p className="mt-1 text-sm">{selectedCallLog.duration}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Status</label>
+                  <p className="mt-1">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      selectedCallLog.status === "Completed" ? "bg-green-100 text-green-700" :
+                      selectedCallLog.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                      selectedCallLog.status === "Missed" ? "bg-red-100 text-red-700" :
+                      selectedCallLog.status === "Declined" ? "bg-red-100 text-red-700" :
+                      selectedCallLog.status === "Failed" ? "bg-red-100 text-red-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>
+                      {selectedCallLog.status}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground">Sentiment</label>
+                  <p className="mt-1">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      selectedCallLog.sentiment === "Positive" ? "bg-green-100 text-green-700" :
+                      selectedCallLog.sentiment === "Negative" ? "bg-red-100 text-red-700" :
+                      "bg-yellow-100 text-yellow-700"
+                    }`}>
+                      {selectedCallLog.sentiment}
+                    </span>
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-foreground">Sentiment Summary</label>
+                  <p className="mt-1 text-sm">{selectedCallLog.sentimentSummary}</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-foreground">Call Recording</label>
+                  <div className="mt-1">
+                    {/* 50/50 chance to show available vs unavailable recording */}
+                    {Math.random() > 0.5 ? (
+                      <audio 
+                        controls 
+                        className="w-full h-8"
+                        style={{ maxWidth: '100%' }}
+                      >
+                        <source src="/api/placeholder-audio.mp3" type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Call Recording Unavailable</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-6">
+            <Button
+              onClick={() => setCallDetailsOpen(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))] font-normal"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

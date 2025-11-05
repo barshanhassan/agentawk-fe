@@ -117,11 +117,11 @@ export default function ExportModal() {
   return (
     <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
       <DialogContent className="sm:max-w-md" data-testid="export-modal">
-        <DialogHeader className="flex flex-row items-center justify-between">
+        <DialogHeader className="flex flex-row items-center justify-between mb-2">
           <DialogTitle>Export Insights</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4">
           <div>
             <p className="text-sm font-medium mb-3">Include Breakdown By:</p>
             <div className="space-y-3">
@@ -130,7 +130,7 @@ export default function ExportModal() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-2">
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(false)}

@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile } from "react-feather";
+import { Search, RefreshCw, Eye, EyeOff, Download, ArrowUp, X, Paperclip } from "react-feather";
 import { GripVertical, MoreVertical } from "lucide-react";
-import EmojiPicker from "emoji-picker-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -33,7 +31,6 @@ import {
 
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
 import { AlertCircle } from "lucide-react";
 
@@ -89,13 +86,6 @@ export default function BotConversations() {
     { id: "agent-3", name: "Emma Davis" },
     { id: "agent-4", name: "Alex Rodriguez" },
   ];
-
-  // Helper function to get agent name by ID
-  const getAgentName = (agentId: string | null) => {
-    if (!agentId) return "";
-    const agent = agentOptions.find(a => a.id === agentId);
-    return agent?.name || agentId;
-  };
 
   // Toggle contact panel visibility
   const handleToggleContactPanel = () => {
@@ -855,11 +845,7 @@ export default function BotConversations() {
 
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
-      <div className="p-6 pb-8">
-        <h1 className="text-3xl font-bold">Bot Conversations</h1>
-      </div>
-
-      <div className="flex-1 flex gap-4 px-6 pb-6 max-h-[calc(100vh-10.5rem)]">
+      <div className="flex-1 flex gap-4 px-6 py-6 max-h-full">
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
           <Card className="flex flex-col overflow-hidden shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
@@ -1233,154 +1219,13 @@ export default function BotConversations() {
             <Separator />
 
             {/* Message Input or Assignment Prompt */}
-            {assignedAgent === "self" ? (
-              <div className="p-4 flex-shrink-0 relative">
-                {/* Attached files preview */}
-                {(attachedFiles.length > 0 || recordedAudio) && (
-                  <div className="mb-3 p-3 bg-muted rounded-lg space-y-2">
-                    {attachedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between gap-2 text-sm">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
-                          <span className="truncate text-foreground">{file.name}</span>
-                          <span className="text-xs text-muted-foreground flex-shrink-0">({(file.size / 1024).toFixed(1)}KB)</span>
-                        </div>
-                        <button
-                          onClick={() => removeAttachedFile(index)}
-                          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                    {recordedAudio && (
-                      <div className="flex items-center justify-between gap-2 text-sm">
-                        <div className="flex items-center gap-2 flex-1">
-                          <Mic size={14} className="text-muted-foreground" />
-                          <span className="text-foreground">Voice message</span>
-                          <span className="text-xs text-muted-foreground">({(recordedAudio.size / 1024).toFixed(1)}KB)</span>
-                        </div>
-                        <button
-                          onClick={() => setRecordedAudio(null)}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex gap-2 items-center">
-                  <Input
-                    placeholder="Type a message..."
-                    className="flex-1"
-                    data-testid="input-message"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 [border-color:hsl(var(--input))]"
-                      title="Add emoji"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    >
-                      <Smile size={18} />
-                    </Button>
-                    {showEmojiPicker && (
-                      <div
-                        ref={emojiPickerRef}
-                        className="absolute bottom-12 right-0 z-50"
-                      >
-                        <EmojiPicker
-                          onEmojiClick={(emojiObject: any) => {
-                            setMessageText(messageText + emojiObject.emoji);
-                            setShowEmojiPicker(false);
-                          }}
-                          theme={"light" as any}
-                          height={400}
-                          width={350}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* File attachment */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileAttach}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 [border-color:hsl(var(--input))]"
-                    title="Attach file"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Paperclip size={18} />
-                  </Button>
-
-                  {/* Image attachment */}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleImageAttach}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 [border-color:hsl(var(--input))]"
-                    title="Send picture"
-                    onClick={() => imageInputRef.current?.click()}
-                  >
-                    <Image size={18} />
-                  </Button>
-
-                  {/* Voice message */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-9 w-9 [border-color:hsl(var(--input))] ${isRecording ? "bg-red-100 text-red-600" : ""}`}
-                    title={isRecording ? "Stop recording" : "Send voice message"}
-                    onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  >
-                    <Mic size={18} />
-                  </Button>
-
-                  {/* Send button */}
-                  <Button
-                    size="icon"
-                    data-testid="button-send"
-                    onClick={handleSendMessage}
-                    disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
-                  >
-                    <Send size={18} />
-                  </Button>
-                </div>
+            <div className="p-6 flex-shrink-0 bg-muted/30 flex flex-col items-center justify-center gap-3">
+              <AlertCircle className="w-6 h-6 text-muted-foreground" />
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">Assign this chat to start messaging</p>
+                <p className="text-xs text-muted-foreground mt-1">Use the assignment options above to get started</p>
               </div>
-            ) : (
-              <div className="p-6 flex-shrink-0 bg-muted/30 flex flex-col items-center justify-center gap-3">
-                <AlertCircle className="w-6 h-6 text-muted-foreground" />
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">Assign this chat to start messaging</p>
-                  <p className="text-xs text-muted-foreground mt-1">Use the assignment options above to get started</p>
-                </div>
-              </div>
-            )}
+            </div>
           </Card>
         ) : (
           <Card className="flex-1 flex flex-col items-center justify-center shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
@@ -1557,11 +1402,11 @@ export default function BotConversations() {
         {/* Edit Basic Details Modal */}
         <Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen}>
           <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-            <DialogHeader className="px-1">
+            <DialogHeader className="px-1 mb-2">
               <DialogTitle>Edit Basic Details</DialogTitle>
             </DialogHeader>
 
-            <div className="px-1 space-y-4 py-4 overflow-y-auto flex-1">
+            <div className="px-1 space-y-4 overflow-y-auto flex-1">
               {/* Name */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Name</label>
@@ -1674,7 +1519,7 @@ export default function BotConversations() {
               </div>
             </div>
 
-            <DialogFooter className="px-1">
+            <DialogFooter className="px-1 mt-2">
               <Button variant="outline" onClick={() => setIsEditBasicDetailsOpen(false)} className="[border-color:hsl(var(--input))]">
                 Close
               </Button>
@@ -1688,11 +1533,11 @@ export default function BotConversations() {
         {/* Add Custom Attribute Modal */}
         <Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen}>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Add Custom Attribute</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Attribute Name</label>
                 <Input
@@ -1714,7 +1559,7 @@ export default function BotConversations() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setIsAddAttributeModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Close
               </Button>
@@ -1730,11 +1575,11 @@ export default function BotConversations() {
         {/* Add Teams Modal */}
         <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
+            <DialogHeader className="mb-2">
               <DialogTitle>Add Teams</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Select Teams</label>
                 <CustomDropdown
@@ -1747,7 +1592,7 @@ export default function BotConversations() {
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setIsAddTeamsModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Cancel
               </Button>
@@ -1757,628 +1602,6 @@ export default function BotConversations() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Filter Modal */}
-        <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Filter Conversations</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Team</label>
-                <CustomDropdown
-                  options={teamOptions}
-                  selected={filterTeams}
-                  onChange={setFilterTeams}
-                  placeholder="Select teams"
-                  width="100%"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Agent</label>
-                <CustomDropdown
-                  options={agentOptions}
-                  selected={filterAgents}
-                  onChange={setFilterAgents}
-                  placeholder="Select agents"
-                  width="100%"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <CustomDropdown
-                  options={[]}
-                  selected={filterStatus}
-                  onChange={setFilterStatus}
-                  placeholder="Select status"
-                  width="100%"
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsFilterModalOpen(false)} className="[border-color:hsl(var(--input))]">
-                Cancel
-              </Button>
-              <Button onClick={() => setIsFilterModalOpen(false)}>
-                Apply Filters
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Make Outbound Call Modal */}
-        <Dialog open={isMakeCallModalOpen} onOpenChange={setIsMakeCallModalOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Make Outbound Call</DialogTitle>
-            </DialogHeader>
-
-            {/* Tabs */}
-            <div className="flex gap-4 border-b">
-              <button
-                onClick={() => {
-                  setMakeCallTab("make-call");
-                }}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  makeCallTab === "make-call"
-                    ? "border-b-primary text-foreground"
-                    : "border-b-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Make Call
-              </button>
-              <button
-                onClick={() => setMakeCallTab("search-contacts")}
-                className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
-                  makeCallTab === "search-contacts"
-                    ? "border-b-primary text-foreground"
-                    : "border-b-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Search Contacts
-              </button>
-            </div>
-
-            {/* Make Call Tab */}
-            {makeCallTab === "make-call" && (
-              <div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Search for a customer or enter a phone number to place an outbound call using the WhatsApp Business API. Please note that outbound calls are chargeable as per{" "}
-                    <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/calling/pricing" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">
-                      Meta's pricing policies
-                    </a>
-                  </p>
-                </div>
-
-                {!(hasCallPermission && selectedContact) && (
-                  <div>
-                    <label className="text-sm font-medium">Enter phone number</label>
-                    <div className="flex gap-2 mt-1 mb-4">
-                      <Input
-                        placeholder="+1 (555) 000-0000"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="border-input w-full"
-                      />
-
-                      <Button onClick={handleCheckPermission} className="h-9" disabled={!phoneNumber.trim()}>
-                        Check Permission
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {callPermissionChecked && (
-                  <div className="space-y-4">
-                    {hasCallPermission && selectedContact ? (
-                      <div className="border border-input rounded-lg p-4 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarFallback className={getAvatarColor(selectedContact.name)}>
-                                {selectedContact.name.split(" ").map((n: string) => n[0]).join("").toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium text-sm">{selectedContact.name}</p>
-                              <p className="text-xs text-muted-foreground">{selectedContact.number}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs font-medium text-green-600">Call Consent: Active</p>
-                            <p className="text-xs text-muted-foreground">Expires in {selectedContact.expiryDays}d {selectedContact.expiryHours}h</p>
-                          </div>
-                        </div>
-
-                        <div className="border-t pt-4 space-y-2">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-medium">Tries {selectedContact.callsUsed}/{selectedContact.callsMax}</span>
-                            <span className="text-xs text-muted-foreground">Renews in {selectedContact.renewsIn}</span>
-                          </div>
-                          <div className="flex gap-1">
-                            {Array.from({ length: selectedContact.callsMax }).map((_, index) => (
-                              <div
-                                key={index}
-                                className={`flex-1 h-2 rounded-full transition-colors ${
-                                  index < selectedContact.callsUsed ? "bg-primary" : "bg-muted"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-800">
-                          <strong>Permission Denied</strong> - This contact does not have call consent enabled.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <Button variant="outline" onClick={() => {
-                    setPhoneNumber("");
-                    setCallPermissionChecked(false);
-                    setHasCallPermission(false);
-                    setSelectedContact(null);
-                    setLimitReached(false);
-                  }} className="[border-color:hsl(var(--input))]">
-                    Clear
-                  </Button>
-                  <Button
-                    disabled={!hasCallPermission || !callPermissionChecked || limitReached}
-                    onClick={() => {
-                      setIsCallActive(true);
-                      setCallPhoneNumber(selectedContact?.number || phoneNumber);
-                      setCallContactName(selectedContact?.name || "");
-                      setCallDuration(0);
-                      setIsMuted(false);
-                      setIsSpeakerOn(false);
-                      setIsMakeCallModalOpen(false);
-                    }}
-                  >
-                    Call
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Search Contacts Tab */}
-            {makeCallTab === "search-contacts" && (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search contacts..."
-                    value={searchContactsQuery}
-                    onChange={(e) => setSearchContactsQuery(e.target.value)}
-                    className="border-input pl-9"
-                  />
-                </div>
-
-                <ScrollArea className="h-64 border border-input rounded-lg">
-                  <div className="space-y-2 p-3">
-                    {mockContacts
-                      .filter(contact =>
-                        contact.name.toLowerCase().includes(searchContactsQuery.toLowerCase()) ||
-                        contact.number.includes(searchContactsQuery)
-                      )
-                      .map(contact => (
-                        <div
-                          key={contact.id}
-                          onClick={() => {
-                            setSelectedContact(contact);
-                            setPhoneNumber(contact.number);
-                            setCallPermissionChecked(true);
-                            setHasCallPermission(contact.callConsent === "Active");
-                          }}
-                          className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                            selectedContact?.id === contact.id
-                              ? "border-primary bg-primary/10"
-                              : "border-input"
-                          }`}
-                        >
-                          <div className="flex gap-2">
-                            {/* Left: Avatar */}
-                            <Avatar className="h-11 w-11 flex-shrink-0">
-                              <AvatarFallback className={getAvatarColor(contact.name)}>
-                                {contact.pfp}
-                              </AvatarFallback>
-                            </Avatar>
-
-                            {/* Right: Name/Badge and Tries/Expires */}
-                            <div className="flex-1 space-y-1">
-                              {/* Row 1: Name and Badge */}
-                              <div className="flex items-center justify-between">
-                                <p className="font-medium text-sm">{contact.name}</p>
-                                <div className={`px-2 py-1 rounded text-xs font-medium ${contact.callConsent === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                                  {contact.callConsent === "Active" ? "Active" : "Expired"}
-                                </div>
-                              </div>
-
-                              {/* Row 2: Tries/Renews and Expires */}
-                              {contact.callConsent === "Active" ? (
-                                <div className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-1">
-                                    <span className="font-medium">{contact.callsUsed}/{contact.callsMax} tries</span>
-                                    <span className="text-muted-foreground">•</span>
-                                    <span className="text-muted-foreground">Renews in {contact.renewsIn}</span>
-                                  </div>
-                                  <span className="text-muted-foreground">Expires {contact.expiryDays}d {contact.expiryHours}h</span>
-                                </div>
-                              ) : (
-                                <p className="text-xs text-muted-foreground italic">Request consent again to enable calling</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </ScrollArea>
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <Button variant="outline" onClick={() => {
-                    setPhoneNumber("");
-                    setCallPermissionChecked(false);
-                    setHasCallPermission(false);
-                    setSelectedContact(null);
-                    setSearchContactsQuery("");
-                    setLimitReached(false);
-                  }} className="[border-color:hsl(var(--input))]">
-                    Clear
-                  </Button>
-                  <Button
-                    disabled={!selectedContact}
-                    onClick={() => {
-                      if (selectedContact) {
-                        setIsCallActive(true);
-                        setCallPhoneNumber(selectedContact.number);
-                        setCallContactName(selectedContact.name);
-                        setCallDuration(0);
-                        setIsMuted(false);
-                        setIsSpeakerOn(false);
-                        setIsMakeCallModalOpen(false);
-                      }
-                    }}
-                  >
-                    Call
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Send Template Message Modal */}
-        <Dialog open={isTemplateMessageModalOpen} onOpenChange={setIsTemplateMessageModalOpen}>
-          <DialogContent className="sm:max-w-3xl min-h-[35rem] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Send Template Message</DialogTitle>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-6 p-4">
-                {/* Left: Phone Numbers and Template Selection */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Recipients (up to 5)</label>
-                    <div className="space-y-2">
-                      {templatePhoneNumbers.map((phone, index) => (
-                        <div key={index} className="flex gap-2 items-center">
-                          <Input
-                            placeholder={`+1 (555) 000-${String(index).padStart(4, "0")}`}
-                            value={phone}
-                            onChange={(e) => {
-                              const newNumbers = [...templatePhoneNumbers];
-                              newNumbers[index] = e.target.value;
-                              setTemplatePhoneNumbers(newNumbers);
-                            }}
-                            className="border-input flex-1"
-                          />
-                          {phone.trim() !== "" && (
-                            <button
-                              onClick={() => {
-                                // If this is the last input, just clear it
-                                if (index === templatePhoneNumbers.length - 1) {
-                                  const newNumbers = [...templatePhoneNumbers];
-                                  newNumbers[index] = "";
-                                  setTemplatePhoneNumbers(newNumbers);
-                                } else {
-                                  // Otherwise, remove this input entirely
-                                  const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
-                                  setTemplatePhoneNumbers(newNumbers);
-                                }
-                              }}
-                              className="text-muted-foreground hover:text-foreground transition-colors border-[]"
-                            >
-                              <X size={18} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Add another recipient button */}
-                    {templatePhoneNumbers.length < 5 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-2 text-xs"
-                        disabled={templatePhoneNumbers.some(p => p.trim() === "")}
-                        onClick={() => {
-                          setTemplatePhoneNumbers([...templatePhoneNumbers, ""]);
-                        }}
-                      >
-                        <Plus size={14} className="mr-1" />
-                        Add another recipient
-                      </Button>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">WhatsApp Template</label>
-                    <div className="space-y-3">
-                      <CustomDropdown
-                        options={dummyTemplates.map(t => ({ id: t.id, name: t.name }))}
-                        selected={selectedTemplate ? [selectedTemplate.id] : []}
-                        onChange={(selected) => {
-                          if (selected.length > 0) {
-                            const template = dummyTemplates.find(t => t.id === selected[0]);
-                            if (template) {
-                              setSelectedTemplate(template);
-                              setTemplateVariables({});
-                            }
-                          }
-                        }}
-                        placeholder="Select a template"
-                        width="100%"
-                        showSelectedOption={true}
-                      />
-                      {dummyTemplates.length === 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          You don't have any templates yet. Create one to send messages.{" "}
-                          <a
-                            href="/template-manager"
-                            className="text-primary underline hover:no-underline"
-                          >
-                            Go to Template Manager
-                          </a>
-                          {" "}to create one.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Variable inputs */}
-                  {selectedTemplate && selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium block pt-2">Customize Variables</label>
-                      <div className="space-y-2">
-                        {selectedTemplate.variables.map((variable: string, index: number) => (
-                          <div key={index} className="space-y-1">
-                            <label className="text-xs font-medium text-gray-600">{variable}</label>
-                            <Input
-                              placeholder={`Enter ${variable}...`}
-                              value={templateVariables[variable] || ""}
-                              onChange={(e) => {
-                                setTemplateVariables({
-                                  ...templateVariables,
-                                  [variable]: e.target.value
-                                });
-                              }}
-                              className="border-input text-sm h-9"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: Template Preview */}
-                <div className="space-y-4 flex flex-col">
-                  <div className="flex-1 flex flex-col">
-                    <label className="text-sm font-medium mb-3 block">Template Preview</label>
-                    {selectedTemplate ? (
-                      <div className="flex-1 flex items-center justify-center">
-                        {/* Phone mockup */}
-                        <div className="aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
-                          {/* Phone header - WhatsApp green */}
-                          <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
-                              <div>
-                                <p className="text-xs font-semibold text-white">WhatsApp</p>
-                                <p className="text-xs text-[#DCF8C6]">Online</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Chat area - WhatsApp light background */}
-                          <div className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto flex flex-col justify-end space-y-3" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                            {/* Customer message (left side) - incoming message */}
-                            <div className="flex justify-start">
-                              <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                                <p className="text-sm text-[#111B21] leading-relaxed">
-                                  {selectedTemplate.body.split(/\{\{|\}\}/).map((part: string, idx: number) => {
-                                    // Check if this part is a variable name
-                                    const isVariable = selectedTemplate.variables?.includes(part);
-                                    if (isVariable) {
-                                      const value = templateVariables[part];
-                                      return (
-                                        <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                          {value || `{{${part}}}`}
-                                        </span>
-                                      );
-                                    }
-                                    return <span key={idx}>{part}</span>;
-                                  })}
-                                </p>
-                                <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Input area */}
-                          <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                            <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
-                              <p className="text-sm text-[#999999]">Type a message...</p>
-                            </div>
-                            <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
-                              <Send size={16} className="text-white" />
-                            </button>
-                          </div>
-                        </div>
-
-
-                      </div>
-                    ) : (
-                      <div className="flex-1 border-2 border-dashed border-input rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/30">
-                        <div className="text-muted-foreground space-y-2">
-                          <p className="text-sm font-medium">No template selected</p>
-                          <p className="text-xs">Choose a template from the left to see a preview</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t pt-4 px-4 flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                Message rates apply. See{" "}
-                <a
-                  href="https://developers.facebook.com/docs/whatsapp/cloud-api/calling/pricing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  WhatsApp pricing
-                </a>
-                {" "}for details.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsTemplateMessageModalOpen(false);
-                    setTemplatePhoneNumbers([""]);
-                    setSelectedTemplate(null);
-                    setTemplateVariables({});
-                  }}
-                  className="[border-color:hsl(var(--input))]"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  disabled={
-                    !selectedTemplate ||
-                    templatePhoneNumbers.filter(p => p.trim()).length === 0 ||
-                    (selectedTemplate?.variables && selectedTemplate.variables.length > 0 &&
-                     !selectedTemplate.variables.every((v: string) => templateVariables[v]?.trim()))
-                  }
-                  onClick={handleSendTemplateMessage}
-                >
-                  Send Message
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Call UI Overlay */}
-        {isCallActive && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 space-y-6">
-              {/* Avatar */}
-              <div className="flex justify-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                  <Phone size={48} className="text-white" />
-                </div>
-              </div>
-
-              {/* Contact Info */}
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Calling</p>
-                {callContactName && <p className="text-2xl font-bold">{callContactName}</p>}
-                <p className="text-lg font-semibold text-muted-foreground">{callPhoneNumber}</p>
-              </div>
-
-              {/* Call Duration */}
-              <div className="text-center">
-                <p className="text-4xl font-bold text-primary font-mono">{formatCallDuration(callDuration)}</p>
-              </div>
-
-              {/* Call Controls */}
-              <div className="flex items-center justify-center gap-4">
-                {/* Mute Button */}
-                <button
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                    isMuted
-                      ? "bg-red-100 hover:bg-red-200"
-                      : "bg-muted hover:bg-muted/80"
-                  }`}
-                  title={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted ? (
-                    <MicOff size={20} className={isMuted ? "text-red-600" : "text-foreground"} />
-                  ) : (
-                    <Mic size={20} className="text-foreground" />
-                  )}
-                </button>
-
-                {/* Speaker Button */}
-                <button
-                  onClick={() => setIsSpeakerOn(!isSpeakerOn)}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                    isSpeakerOn
-                      ? "bg-blue-100 hover:bg-blue-200"
-                      : "bg-muted hover:bg-muted/80"
-                  }`}
-                  title={isSpeakerOn ? "Speaker off" : "Speaker on"}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isSpeakerOn ? "text-blue-600" : "text-foreground"}>
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <path d="M15.54 8.46a6.5 6.5 0 0 1 0 9.07"></path>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                  </svg>
-                </button>
-
-                {/* End Call Button */}
-                <button
-                  onClick={() => {
-                    setIsCallActive(false);
-                    setCallDuration(0);
-                    setCallPhoneNumber("");
-                    setCallContactName("");
-                    setIsMuted(false);
-                    setIsSpeakerOn(false);
-                    setIsMakeCallModalOpen(false);
-                  }}
-                  className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors"
-                  title="End call"
-                >
-                  <Phone size={20} className="text-white rotate-135" />
-                </button>
-              </div>
-
-              {/* Call Status */}
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">Connected</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

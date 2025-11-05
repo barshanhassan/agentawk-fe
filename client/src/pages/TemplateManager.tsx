@@ -48,6 +48,7 @@ interface FilterEntry {
 export default function TemplateManager() {
   const [selectedTemplates, setSelectedTemplates] = useState<number[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
   const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
@@ -82,6 +83,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "Reported as Spam",
       lastEdited: "2025-11-03",
+      content: "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
     },
     {
       id: 2,
@@ -92,6 +94,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-11-01",
+      content: "Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
     },
     {
       id: 3,
@@ -102,6 +105,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "Blocked Business",
       lastEdited: "2025-10-28",
+      content: "🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
     },
     {
       id: 4,
@@ -112,6 +116,7 @@ export default function TemplateManager() {
       statusType: "warning" as const,
       topBlockReason: "",
       lastEdited: "2025-10-25",
+      content: "You left something in your cart! 🛒 Complete your purchase now and get free shipping on orders over $50. Don't miss out!",
     },
     {
       id: 5,
@@ -122,6 +127,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-10-20",
+      content: "📦 Your package is on its way! Track your order with code ABC123. Expected delivery: Tomorrow by 6 PM.",
     },
     {
       id: 6,
@@ -132,6 +138,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "Sent Too Frequently",
       lastEdited: "2025-10-15",
+      content: "Recordatorio de pago: Su factura de $150 vence mañana. Pague ahora para evitar cargos adicionales. Gracias! 💳",
     },
     {
       id: 7,
@@ -142,6 +149,7 @@ export default function TemplateManager() {
       statusType: "danger" as const,
       topBlockReason: "",
       lastEdited: "2025-10-10",
+      content: "⚡ FLASH SALE ALERT! 50% OFF everything for the next 2 hours only! Use code FLASH50. Hurry, limited time!",
     },
     {
       id: 8,
@@ -152,6 +160,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "Reported as Suspicious",
       lastEdited: "2025-10-05",
+      content: "Please verify your account by clicking this link: verify.com/abc123. This link expires in 24 hours. 🔐",
     },
     {
       id: 9,
@@ -162,6 +171,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-09-30",
+      content: "Reset your password by clicking here: reset.com/xyz789. If you didn't request this, please ignore this message. 🔑",
     },
     {
       id: 10,
@@ -172,6 +182,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-09-25",
+      content: "Rappel de rendez-vous: Votre rendez-vous est demain à 14h00. Confirmez votre présence en répondant OUI. 📅",
     },
     {
       id: 11,
@@ -182,6 +193,7 @@ export default function TemplateManager() {
       statusType: "warning" as const,
       topBlockReason: "",
       lastEdited: "2025-09-20",
+      content: "Help us improve! Take our 2-minute survey and get a 10% discount on your next order. Your feedback matters! 📝",
     },
     {
       id: 12,
@@ -192,6 +204,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "Blocked Business",
       lastEdited: "2025-09-15",
+      content: "📦 Package delivered! Your order has been successfully delivered to your address. Thank you for choosing us!",
     },
     {
       id: 13,
@@ -202,6 +215,7 @@ export default function TemplateManager() {
       statusType: "danger" as const,
       topBlockReason: "",
       lastEdited: "2025-09-10",
+      content: "🎯 Zeitlich begrenztes Angebot! 30% Rabatt auf alle Artikel. Code: SAVE30DE. Nur heute gültig!",
     },
     {
       id: 14,
@@ -212,6 +226,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "Irrelevant Content",
       lastEdited: "2025-08-30",
+      content: "Support Update: Your ticket #12345 has been resolved. If you need further assistance, please reply to this message. 🎧",
     },
     {
       id: 15,
@@ -222,6 +237,7 @@ export default function TemplateManager() {
       statusType: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-08-25",
+      content: "🚀 New Feature Alert! We've just launched dark mode! Update your app now to try this exciting new feature.",
     },
   ];
 
@@ -484,13 +500,28 @@ export default function TemplateManager() {
 
     // Apply sorting - Excel-style multi-level sort
     if (sorts.length > 0) {
+      // Define custom sort order for status
+      const statusOrder = {
+        "Active - HQ": 0,
+        "Quality Pending": 1,
+        "Approved": 2,
+        "Pending": 3,
+        "Rejected": 4
+      };
+
       data.sort((a, b) => {
         for (const sort of sorts) {
           const aVal = a[sort.column as keyof typeof a];
           const bVal = b[sort.column as keyof typeof b];
 
           let comparison = 0;
-          if (typeof aVal === "string" && typeof bVal === "string") {
+          
+          // Special handling for status column
+          if (sort.column === "status" && typeof aVal === "string" && typeof bVal === "string") {
+            const aOrder = statusOrder[aVal as keyof typeof statusOrder] ?? 999;
+            const bOrder = statusOrder[bVal as keyof typeof statusOrder] ?? 999;
+            comparison = sort.direction === "asc" ? aOrder - bOrder : bOrder - aOrder;
+          } else if (typeof aVal === "string" && typeof bVal === "string") {
             comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
           }
 
@@ -1076,7 +1107,10 @@ export default function TemplateManager() {
                                   <Edit2 size={14} className="mr-2" />
                                   Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setPreviewOpen(true)} data-testid={`button-preview-${template.id}`}>
+                                <DropdownMenuItem onClick={() => {
+                                  setPreviewTemplateId(template.id);
+                                  setPreviewOpen(true);
+                                }} data-testid={`button-preview-${template.id}`}>
                                   <Eye size={14} className="mr-2" />
                                   Preview
                                 </DropdownMenuItem>
@@ -1194,7 +1228,10 @@ export default function TemplateManager() {
                   <div className="flex justify-start">
                     <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
                       <p className="text-sm text-[#111B21] leading-relaxed">
-                        Hi there! Welcome to our platform. We're excited to have you here!
+                        {previewTemplateId ? 
+                          whatsappTemplates.find(t => t.id === previewTemplateId)?.content || "Template content not found" :
+                          "Select a template to preview"
+                        }
                       </p>
                       <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
                     </div>
