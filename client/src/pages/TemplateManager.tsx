@@ -29,8 +29,7 @@ import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, Che
 import { Input } from "@/components/ui/input";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -52,11 +51,16 @@ export default function TemplateManager() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
   const [createTemplateOpen, setCreateTemplateOpen] = useState(false);
-  const [templateCreationStep, setTemplateCreationStep] = useState<"choice" | "category" | "form">("choice");
+  const [templateCreationStep, setTemplateCreationStep] = useState<"choice" | "category" | "form" | "content">("choice");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
   const [templateName, setTemplateName] = useState<string>("");
-  const [templateContent, setTemplateContent] = useState<string>("");
+  const [templateType, setTemplateType] = useState<string>("");
+  const [mediaSample, setMediaSample] = useState<string>("none");
+  const [headerText, setHeaderText] = useState<string>("");
+  const [bodyText, setBodyText] = useState<string>("");
+  const [footerText, setFooterText] = useState<string>("");
+  const [variableSamples, setVariableSamples] = useState<{[key: string]: string}>({});
 
   // Helper functions for template creation flow
   const handleBlankTemplateClick = () => {
@@ -82,13 +86,91 @@ export default function TemplateManager() {
     }
   };
 
+  const handleNextFromForm = () => {
+    if (templateName.trim() && templateType.trim()) {
+      setTemplateCreationStep("content");
+    }
+  };
+
+  const handleBackToForm = () => {
+    setTemplateCreationStep("form");
+  };
+
+  // Helper function to get the next variable number
+  const getNextVariableNumber = () => {
+    const allText = headerText + " " + bodyText;
+    const variableMatches = allText.match(/\{\{(\d+)\}\}/g);
+
+    if (!variableMatches) return 1;
+
+    const numbers = variableMatches.map(match => {
+      const numberMatch = match.match(/\{\{(\d+)\}\}/);
+      return numberMatch ? parseInt(numberMatch[1]) : 0;
+    });
+
+    const maxNumber = Math.max(...numbers);
+    return maxNumber + 1;
+  };
+
+  // Helper function to get all variables used in header and body (both numeric and text)
+  const getAllVariables = () => {
+    const allText = headerText + " " + bodyText;
+    // Match both numeric {{1}} and text {{name}} variables
+    const variableMatches = allText.match(/\{\{[^}]+\}\}/g);
+
+    if (!variableMatches) return [];
+
+    const uniqueVariables = Array.from(new Set(variableMatches));
+    return uniqueVariables.sort((a, b) => {
+      // Extract content inside braces
+      const aContent = a.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+      const bContent = b.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+
+      // Check if both are numeric
+      const aIsNumeric = /^\d+$/.test(aContent);
+      const bIsNumeric = /^\d+$/.test(bContent);
+
+      if (aIsNumeric && bIsNumeric) {
+        return parseInt(aContent) - parseInt(bContent);
+      } else if (aIsNumeric && !bIsNumeric) {
+        return -1; // Numeric variables come first
+      } else if (!aIsNumeric && bIsNumeric) {
+        return 1; // Text variables come after numeric
+      } else {
+        return aContent.localeCompare(bContent); // Alphabetical for text variables
+      }
+    });
+  };
+
+  // Helper function to check if the template form is valid
+  const isTemplateFormValid = () => {
+    // Body is required
+    if (!bodyText.trim()) return false;
+
+    // If variables exist, all must have samples
+    const variables = getAllVariables();
+    if (variables.length > 0) {
+      return variables.every(variable => {
+        const variableKey = variable.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+        return variableSamples[variableKey]?.trim();
+      });
+    }
+
+    return true;
+  };
+
   const handleCloseCreateTemplate = () => {
     setCreateTemplateOpen(false);
     setTemplateCreationStep("choice");
     setSelectedCategory(null);
     setSelectedLanguage("english");
     setTemplateName("");
-    setTemplateContent("");
+    setTemplateType("");
+    setMediaSample("none");
+    setHeaderText("");
+    setBodyText("");
+    setFooterText("");
+    setVariableSamples({});
   };
 
   const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
@@ -1301,7 +1383,9 @@ export default function TemplateManager() {
 
       {/* Create Template Dialog */}
       <Dialog open={createTemplateOpen} onOpenChange={handleCloseCreateTemplate}>
-        <DialogContent className="max-w-3xl" data-testid="dialog-create-template">
+        <DialogContent className={
+          templateCreationStep === "content" ? "max-w-4xl" : "max-w-3xl"
+        } data-testid="dialog-create-template">
           {templateCreationStep === "choice" && (
             <>
               <DialogHeader className="mb-2">
@@ -1338,7 +1422,12 @@ export default function TemplateManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <Button variant="ghost" size="sm" onClick={handleBackToChoice} className="p-1 h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackToChoice}
+                    className="font-normal p-1 h-8 w-8"
+                  >
                     <ArrowLeft size={16} />
                   </Button>
                   <DialogTitle>Use Blank Template</DialogTitle>
@@ -1426,13 +1515,17 @@ export default function TemplateManager() {
 
                 {/* Action Buttons */}
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={handleBackToChoice}>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToChoice}
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                  >
                     Back
                   </Button>
                   <Button
                     onClick={handleNextFromCategory}
                     disabled={!selectedCategory}
-                    className="gap-2"
+                    className="gap-2 font-normal"
                   >
                     Next
                   </Button>
@@ -1445,7 +1538,12 @@ export default function TemplateManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <Button variant="ghost" size="sm" onClick={handleBackToCategory} className="p-1 h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackToCategory}
+                    className="font-normal p-1 h-8 w-8"
+                  >
                     <ArrowLeft size={16} />
                   </Button>
                   <DialogTitle>Use Blank Template</DialogTitle>
@@ -1464,7 +1562,7 @@ export default function TemplateManager() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Template Details</h3>
-                    <p className="text-sm text-muted-foreground">Fill in the template information and content.</p>
+                    <p className="text-sm text-muted-foreground">Fill in the template information and type.</p>
                   </div>
                 </div>
               </DialogHeader>
@@ -1472,70 +1570,679 @@ export default function TemplateManager() {
               <div className="space-y-6">
                 {/* Template Form */}
                 <div className="space-y-4">
-                  {/* Template Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="template-name" className="text-sm font-medium">
-                      Template Name
-                    </Label>
-                    <Input
-                      id="template-name"
-                      placeholder="Enter template name"
-                      value={templateName}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                    />
+                  {/* Template Name and Language - Side by Side */}
+                  <div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Template Name */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                          Template Name<span className="text-red-500 pl-0.5">*</span>
+                        </label>
+                        <Input
+                          id="template-name"
+                          placeholder="my_template"
+                          value={templateName}
+                          onChange={(e) => {
+                            // Auto-decapitalize and allow only lowercase, numbers, underscores
+                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                            setTemplateName(value);
+                          }}
+                        />
+                      </div>
+
+                      {/* Language Selection */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                          Language<span className="text-red-500 pl-0.5">*</span>
+                        </label>
+                        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select language" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="english">English</SelectItem>
+                            <SelectItem value="spanish">Spanish</SelectItem>
+                            <SelectItem value="french">French</SelectItem>
+                            <SelectItem value="german">German</SelectItem>
+                            <SelectItem value="portuguese">Portuguese</SelectItem>
+                            <SelectItem value="italian">Italian</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    
+                    </div>
+                      {/* Template Name Guidelines */}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Lowercase letters, numbers and underscores only.
+                      </p>
                   </div>
 
-                  {/* Language Selection */}
-                  <div className="space-y-2">
-                    <Label htmlFor="template-language" className="text-sm font-medium">
-                      Language
-                    </Label>
-                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="spanish">Spanish</SelectItem>
-                        <SelectItem value="french">French</SelectItem>
-                        <SelectItem value="german">German</SelectItem>
-                        <SelectItem value="portuguese">Portuguese</SelectItem>
-                        <SelectItem value="italian">Italian</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Template Type */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">
+                      Template Type<span className="text-red-500 pl-0.5">*</span>
+                    </label>
 
-                  {/* Template Content */}
-                  <div className="space-y-2">
-                    <Label htmlFor="template-content" className="text-sm font-medium">
-                      Message Content
-                    </Label>
-                    <Textarea
-                      id="template-content"
-                      placeholder="Enter your message content here..."
-                      value={templateContent}
-                      onChange={(e) => setTemplateContent(e.target.value)}
-                      rows={6}
-                      className="resize-none"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Use variables like {"{1}"} for dynamic content that will be replaced when sending.
-                    </p>
+                    {/* Template Type Cards */}
+                    <div>
+                      <div className="max-h-[calc(100vh-30rem)] overflow-y-auto space-y-2">
+                      {selectedCategory === "utility" && (
+                        <>
+                          <div
+                            onClick={() => setTemplateType("utility-default")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-default"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Default</h4>
+                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-appointment")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-appointment"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Appointment Update</h4>
+                              <p className="text-xs text-muted-foreground">Appointment confirmations and reminders.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-issue")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-issue"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Issue Resolution</h4>
+                              <p className="text-xs text-muted-foreground">Support and issue updates.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-payment")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-payment"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Payment Update</h4>
+                              <p className="text-xs text-muted-foreground">Payment confirmations and receipts.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-shipping")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-shipping"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Shipping Update</h4>
+                              <p className="text-xs text-muted-foreground">Delivery and shipping notifications.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-reservation")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-reservation"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Reservation Update</h4>
+                              <p className="text-xs text-muted-foreground">Booking confirmations and changes.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-account")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-account"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
+                              <p className="text-xs text-muted-foreground">Account changes and notifications.</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {selectedCategory === "marketing" && (
+                        <>
+                          <div
+                            onClick={() => setTemplateType("marketing-default")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-default"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Default</h4>
+                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("marketing-catalog")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-catalog"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Catalog</h4>
+                              <p className="text-xs text-muted-foreground">Send messages that drive sales by connecting your product catalog.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("marketing-flows")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-flows"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Flows</h4>
+                              <p className="text-xs text-muted-foreground">Send a form to capture customer interests, appointment requests, or run surveys.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("marketing-calling")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-calling"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Calling permissions request</h4>
+                              <p className="text-xs text-muted-foreground">Ask customers if you can call them on WhatsApp.</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {selectedCategory === "authentication" && (
+                        <>
+                          <div
+                            onClick={() => setTemplateType("auth-default")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "auth-default"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Default</h4>
+                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("auth-account")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "auth-account"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
+                              <p className="text-xs text-muted-foreground">Security and account notifications.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("auth-alert")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "auth-alert"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Alert Update</h4>
+                              <p className="text-xs text-muted-foreground">Security alerts and warnings.</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={handleBackToCategory}>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToCategory}
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                  >
                     Back
                   </Button>
                   <Button
-                    disabled={!templateName.trim() || !templateContent.trim()}
-                    className="gap-2"
+                    onClick={handleNextFromForm}
+                    disabled={!templateName.trim() || !templateType.trim()}
+                    className="gap-2 font-normal"
                   >
-                    Create Template
+                    Next
                   </Button>
                 </div>
+              </div>
+            </>
+          )}
+
+          {templateCreationStep === "content" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackToForm}
+                    className="font-normal p-1 h-8 w-8"
+                  >
+                    <ArrowLeft size={16} />
+                  </Button>
+                  <DialogTitle>Use Blank Template</DialogTitle>
+                </div>
+                <div className="space-y-3">
+                  {/* 3-segment progress bar */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 h-2 rounded-full transition-colors ${
+                          index < 3 ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Template Content</h3>
+                    <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="flex gap-4">
+                {/* Left: Template Form */}
+                <div className="flex-1 max-h-[55vh] overflow-y-auto pr-2 -ml-1">
+                  <div className="space-y-6 pl-1">
+                    {/* Header */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-foreground">Header</label>
+                          <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => setHeaderText(headerText + `{{${getNextVariableNumber()}}}`)}
+                        >
+                          <Plus size={12} className="mr-1" />
+                          Add variable
+                        </Button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Add header text..."
+                          value={headerText}
+                          onChange={(e) => setHeaderText(e.target.value.slice(0, 60))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {headerText.length}/60
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Media Sample */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Media Sample</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Select value={mediaSample} onValueChange={setMediaSample}>
+                          <SelectTrigger className="w-[160px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                            <SelectValue placeholder="Select media type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="image">Image</SelectItem>
+                            <SelectItem value="video">Video</SelectItem>
+                            <SelectItem value="document">Document</SelectItem>
+                            <SelectItem value="location">Location</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {/* Browse Button - Show for browsable media types */}
+                        {(mediaSample === "image" || mediaSample === "video" || mediaSample === "document") && (
+                          <Button
+                            className="font-normal"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = mediaSample === 'image' ? 'image/*' :
+                                            mediaSample === 'video' ? 'video/*' :
+                                            mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) {
+                                  console.log('Selected file:', file.name);
+                                  // Handle file upload here
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            Browse {mediaSample.charAt(0).toUpperCase() + mediaSample.slice(1)}
+                          </Button>
+                        )}
+                        {/* Coordinates Input - Show for location */}
+                        {mediaSample === "location" && (
+                          <Input
+                            placeholder="Enter latitude, longitude (e.g., 40.7128, -74.0060)"
+                            className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-foreground">
+                          Body<span className="text-red-500 pl-0.5">*</span>
+                        </label>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                            <strong>B</strong>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                            <em>I</em>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                            <s>S</s>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                            😊
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setBodyText(bodyText + `{{${getNextVariableNumber()}}}`)}
+                          >
+                            <Plus size={12} className="mr-1" />
+                            Add variable
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <textarea
+                          placeholder="Add body text..."
+                          value={bodyText}
+                          onChange={(e) => setBodyText(e.target.value.slice(0, 1024))}
+                          className="w-full min-h-[120px] p-3 pr-16 pb-8 border border-input [border-color:hsl(var(--input))] rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-[0.90rem] hover-elevate"
+                        />
+                        <span className="absolute bottom-4 right-2 text-xs text-muted-foreground">
+                          {bodyText.length}/1024
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Variable Samples */}
+                    {getAllVariables().length > 0 && (
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground mb-1">
+                            Variable Samples<span className="text-red-500 pl-0.5">*</span>
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            Include samples of all variables in your message to help Meta review your template.
+                            Remember not to include any customer information to protect your customer's privacy.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 items-center">
+                          {getAllVariables().map((variable) => {
+                            // Extract the content inside the braces (could be number or text)
+                            const variableKey = variable.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+                            return (
+                              <>
+                                <div key={`${variable}-label`} className="font-medium text-sm">{variable}</div>
+                                <Input
+                                  key={`${variable}-input`}
+                                  placeholder={`Sample text for ${variable}`}
+                                  value={variableSamples[variableKey] || ""}
+                                  onChange={(e) => setVariableSamples({...variableSamples, [variableKey]: e.target.value})}
+                                  className="border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                />
+                              </>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Footer</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Add footer text..."
+                          value={footerText}
+                          onChange={(e) => setFooterText(e.target.value.slice(0, 60))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {footerText.length}/60
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Buttons</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add up to 10 buttons for customer actions or responses. More than 3 buttons will appear in a list.
+                      </p>
+                      <Select>
+                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                          <SelectValue placeholder="Add button" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="quick-reply">
+                            <div>
+                              <div className="font-medium">Quick reply</div>
+                              <div className="text-xs text-muted-foreground">Simple response buttons for customer replies</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="visit-website">
+                            <div>
+                              <div className="font-medium">Visit website</div>
+                              <div className="text-xs text-muted-foreground">Direct customers to your website or URL</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="call-whatsapp">
+                            <div>
+                              <div className="font-medium">Call on WhatsApp</div>
+                              <div className="text-xs text-muted-foreground">Enable voice calls through WhatsApp</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="call-phone">
+                            <div>
+                              <div className="font-medium">Call phone number</div>
+                              <div className="text-xs text-muted-foreground">Direct customers to call a phone number</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="complete-flow">
+                            <div>
+                              <div className="font-medium">Complete Flow</div>
+                              <div className="text-xs text-muted-foreground">Trigger a WhatsApp Flow for interactive experiences</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="copy-offer">
+                            <div>
+                              <div className="font-medium">Copy offer code</div>
+                              <div className="text-xs text-muted-foreground">Allow customers to copy promotional codes</div>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Template Preview */}
+                <div className="max-h-[55vh] flex-shrink-0 w-[27.5vh]">
+                  <div className="flex flex-col h-full">
+                    <label className="text-sm font-medium mb-3 block flex-shrink-0 mt-1">Template Preview</label>
+                    <div className="flex-1 flex items-center justify-center min-h-0">
+                      {/* Phone mockup */}
+                      <div className="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
+                        {/* Phone header - WhatsApp green */}
+                        <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
+                            <div>
+                              <p className="text-xs font-semibold text-white">WhatsApp</p>
+                              <p className="text-xs text-[#DCF8C6]">Online</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Chat area - WhatsApp light background */}
+                        <div className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto flex flex-col justify-end space-y-3" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                          {/* Template message preview */}
+                          <div className="flex justify-start">
+                            <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                              {/* Header */}
+                              {headerText && (
+                                <div className="mb-2">
+                                  <p className="text-sm font-semibold text-[#111B21] leading-relaxed">
+                                    {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+                                      const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                                      if (variableMatch) {
+                                        const variableKey = variableMatch[1];
+                                        const value = variableSamples[variableKey];
+                                        return (
+                                          <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                                            {value || part}
+                                          </span>
+                                        );
+                                      }
+                                      return <span key={idx}>{part}</span>;
+                                    })}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Body */}
+                              {bodyText && (
+                                <p className="text-sm text-[#111B21] leading-relaxed">
+                                  {bodyText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+                                    const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                                    if (variableMatch) {
+                                      const variableKey = variableMatch[1];
+                                      const value = variableSamples[variableKey];
+                                      return (
+                                        <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                                          {value || part}
+                                        </span>
+                                      );
+                                    }
+                                    return <span key={idx}>{part}</span>;
+                                  })}
+                                </p>
+                              )}
+
+                              {/* Footer */}
+                              {footerText && (
+                                <div className="mt-2">
+                                  <p className="text-xs text-[#666666] leading-relaxed">
+                                    {footerText}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Placeholder when no content */}
+                              {!headerText && !bodyText && !footerText && (
+                                <p className="text-sm text-[#999999] italic">
+                                  Start typing to see your template preview...
+                                </p>
+                              )}
+
+                              <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Input area */}
+                        <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                          <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
+                            <p className="text-sm text-[#999999]">Type a message...</p>
+                          </div>
+                          <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
+                            <Send size={16} className="text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleBackToForm}
+                  className="border-input [border-color:hsl(var(--input))] font-normal"
+                >
+                  Back
+                </Button>
+                <Button
+                  className="gap-2 font-normal"
+                  disabled={!isTemplateFormValid()}
+                >
+                  Create Template
+                </Button>
               </div>
             </>
           )}
