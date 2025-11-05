@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, X } from "react-feather";
+import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, X, FileText, BookOpen, ArrowLeft, ShoppingCart, Bell, Shield } from "react-feather";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,6 +29,8 @@ import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, Che
 import { Input } from "@/components/ui/input";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -49,6 +51,46 @@ export default function TemplateManager() {
   const [selectedTemplates, setSelectedTemplates] = useState<number[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
+  const [createTemplateOpen, setCreateTemplateOpen] = useState(false);
+  const [templateCreationStep, setTemplateCreationStep] = useState<"choice" | "category" | "form">("choice");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
+  const [templateName, setTemplateName] = useState<string>("");
+  const [templateContent, setTemplateContent] = useState<string>("");
+
+  // Helper functions for template creation flow
+  const handleBlankTemplateClick = () => {
+    setTemplateCreationStep("category");
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+  };
+
+  const handleBackToChoice = () => {
+    setTemplateCreationStep("choice");
+    setSelectedCategory(null);
+  };
+
+  const handleBackToCategory = () => {
+    setTemplateCreationStep("category");
+  };
+
+  const handleNextFromCategory = () => {
+    if (selectedCategory) {
+      setTemplateCreationStep("form");
+    }
+  };
+
+  const handleCloseCreateTemplate = () => {
+    setCreateTemplateOpen(false);
+    setTemplateCreationStep("choice");
+    setSelectedCategory(null);
+    setSelectedLanguage("english");
+    setTemplateName("");
+    setTemplateContent("");
+  };
+
   const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
@@ -450,10 +492,12 @@ export default function TemplateManager() {
       data = data.filter(item => {
         // Map language IDs to actual language codes
         const languageMap: { [key: string]: string } = {
-          "en": "EN",
-          "es": "ES",
-          "fr": "FR",
-          "de": "DE"
+          "english": "EN",
+          "spanish": "ES",
+          "french": "FR",
+          "german": "DE",
+          "portuguese": "PT",
+          "italian": "IT"
         };
         return selectedLanguages.some(id => languageMap[id] === item.language);
       });
@@ -549,7 +593,7 @@ export default function TemplateManager() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Template Manager</h1>
         <div className="flex items-center gap-3">
-          <Button className="gap-2 font-normal h-10 text-sm" data-testid="button-create-template">
+          <Button className="gap-2 font-normal h-10 text-sm" onClick={() => setCreateTemplateOpen(true)} data-testid="button-create-template">
             <Plus size={16} />
             Create Template
           </Button>
@@ -708,10 +752,12 @@ export default function TemplateManager() {
               {/* Language Filter */}
               <CustomDropdown
                 options={[
-                  { id: "en", name: "English" },
-                  { id: "es", name: "Spanish" },
-                  { id: "fr", name: "French" },
-                  { id: "de", name: "German" },
+                  { id: "english", name: "English" },
+                  { id: "spanish", name: "Spanish" },
+                  { id: "french", name: "French" },
+                  { id: "german", name: "German" },
+                  { id: "portuguese", name: "Portuguese" },
+                  { id: "italian", name: "Italian" },
                 ]}
                 selected={selectedLanguages}
                 onChange={setSelectedLanguages}
@@ -1250,6 +1296,249 @@ export default function TemplateManager() {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Template Dialog */}
+      <Dialog open={createTemplateOpen} onOpenChange={handleCloseCreateTemplate}>
+        <DialogContent className="max-w-3xl" data-testid="dialog-create-template">
+          {templateCreationStep === "choice" && (
+            <>
+              <DialogHeader className="mb-2">
+                <DialogTitle>Create Template</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" onClick={handleBlankTemplateClick} data-testid="card-blank-template">
+                  <CardHeader className="text-center pb-2">
+                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FileText size={24} className="text-primary" />
+                    </div>
+                    <CardTitle className="text-base">Use Blank Template</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-muted-foreground">Create your template from scratch. Once you finish creating your template, it must be submitted for review.</p>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-template-library">
+                  <CardHeader className="text-center pb-2">
+                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <BookOpen size={24} className="text-blue-600" />
+                    </div>
+                    <CardTitle className="text-base">Browse our template library</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-muted-foreground">Get started faster with pre-written templates. Use a template as is and it will be available to send immediately.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
+
+          {templateCreationStep === "category" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <Button variant="ghost" size="sm" onClick={handleBackToChoice} className="p-1 h-8 w-8">
+                    <ArrowLeft size={16} />
+                  </Button>
+                  <DialogTitle>Use Blank Template</DialogTitle>
+                </div>
+                <div className="space-y-3">
+                  {/* 3-segment progress bar */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 h-2 rounded-full transition-colors ${
+                          index < 1 ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Choose template category</h3>
+                    <p className="text-sm text-muted-foreground">Select the category that best describes your message purpose. Each category has specific types and approval requirements.</p>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {/* Category Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  <Card
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "marketing" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("marketing")}
+                    data-testid="card-category-marketing"
+                  >
+                    <CardHeader className="text-center pb-2">
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
+                        <ShoppingCart size={24} className="text-orange-600" />
+                      </div>
+                      <CardTitle className="text-base">Marketing</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground">Send promotional content, product updates, and offers</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "utility" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("utility")}
+                    data-testid="card-category-utility"
+                  >
+                    <CardHeader className="text-center pb-2">
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Bell size={24} className="text-blue-600" />
+                      </div>
+                      <CardTitle className="text-base">Utility</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground">Send account updates, alerts, and service notifications</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "authentication" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("authentication")}
+                    data-testid="card-category-authentication"
+                  >
+                    <CardHeader className="text-center pb-2">
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <Shield size={24} className="text-green-600" />
+                      </div>
+                      <CardTitle className="text-base">Authentication</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground">Send OTP codes, login confirmations, and security alerts</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Category Guidelines Banner */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-base text-blue-800 mb-2">Category Guidelines:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5">
+                    <li><strong>Marketing:</strong> Requires opt-in from customers and has a 24-hour messaging window</li>
+                    <li><strong>Utility:</strong> For transactional messages like confirmations, alerts, and updates</li>
+                    <li><strong>Authentication:</strong> For security codes, login verifications, and account alerts</li>
+                  </ul>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={handleBackToChoice}>
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleNextFromCategory}
+                    disabled={!selectedCategory}
+                    className="gap-2"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {templateCreationStep === "form" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <Button variant="ghost" size="sm" onClick={handleBackToCategory} className="p-1 h-8 w-8">
+                    <ArrowLeft size={16} />
+                  </Button>
+                  <DialogTitle>Use Blank Template</DialogTitle>
+                </div>
+                <div className="space-y-3">
+                  {/* 3-segment progress bar */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 h-2 rounded-full transition-colors ${
+                          index < 2 ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Template Details</h3>
+                    <p className="text-sm text-muted-foreground">Fill in the template information and content.</p>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {/* Template Form */}
+                <div className="space-y-4">
+                  {/* Template Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="template-name" className="text-sm font-medium">
+                      Template Name
+                    </Label>
+                    <Input
+                      id="template-name"
+                      placeholder="Enter template name"
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Language Selection */}
+                  <div className="space-y-2">
+                    <Label htmlFor="template-language" className="text-sm font-medium">
+                      Language
+                    </Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="english">English</SelectItem>
+                        <SelectItem value="spanish">Spanish</SelectItem>
+                        <SelectItem value="french">French</SelectItem>
+                        <SelectItem value="german">German</SelectItem>
+                        <SelectItem value="portuguese">Portuguese</SelectItem>
+                        <SelectItem value="italian">Italian</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Template Content */}
+                  <div className="space-y-2">
+                    <Label htmlFor="template-content" className="text-sm font-medium">
+                      Message Content
+                    </Label>
+                    <Textarea
+                      id="template-content"
+                      placeholder="Enter your message content here..."
+                      value={templateContent}
+                      onChange={(e) => setTemplateContent(e.target.value)}
+                      rows={6}
+                      className="resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use variables like {"{1}"} for dynamic content that will be replaced when sending.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={handleBackToCategory}>
+                    Back
+                  </Button>
+                  <Button
+                    disabled={!templateName.trim() || !templateContent.trim()}
+                    className="gap-2"
+                  >
+                    Create Template
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
