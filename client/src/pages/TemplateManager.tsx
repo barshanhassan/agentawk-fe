@@ -1799,7 +1799,7 @@ export default function TemplateManager() {
       {/* Create Template Dialog */}
       <Dialog open={createTemplateOpen} onOpenChange={handleCloseCreateTemplate}>
         <DialogContent className={
-          templateCreationStep === "content" ? "max-w-4xl" : "max-w-3xl"
+          templateCreationStep === "content" ? "max-w-5xl" : "max-w-3xl"
         } data-testid="dialog-create-template">
           {templateCreationStep === "category" && (
             <>
@@ -2247,17 +2247,18 @@ export default function TemplateManager() {
                       />
                     ))}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">Template Content</h3>
-                    <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
-                  </div>
                 </div>
               </DialogHeader>
-              
+
               <div className="flex gap-4">
                 {/* Left: Template Form */}
-                <div className="flex-1 max-h-[55vh] overflow-y-auto pr-2 -ml-1">
+                <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
                   <div className="space-y-6 pl-1 pb-1">
+                    {/* Template Content Heading */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Template Content</h3>
+                      <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
+                    </div>
                     {/* Header */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -2914,11 +2915,11 @@ export default function TemplateManager() {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Right: Template Preview */}
-                <div className="max-h-[55vh] flex-shrink-0 w-[27.5vh]">
+                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
                   <div className="flex flex-col h-full">
-                    <label className="text-sm font-medium mb-3 block flex-shrink-0 mt-1">Template Preview</label>
+                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
                     <TemplatePreview
                       headerText={headerText}
                       bodyText={bodyText}
@@ -2957,7 +2958,7 @@ export default function TemplateManager() {
       {/* Edit Template Dialog */}
       <Dialog open={editTemplateOpen} onOpenChange={handleCloseEditTemplate}>
         <DialogContent className={
-          templateCreationStep === "content" ? "max-w-4xl" : "max-w-3xl"
+          templateCreationStep === "content" ? "max-w-5xl" : "max-w-3xl"
         } data-testid="dialog-edit-template">
           {templateCreationStep === "category" && (
             <>
@@ -2978,8 +2979,8 @@ export default function TemplateManager() {
                     ))}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-1">Choose template category</h3>
-                    <p className="text-sm text-muted-foreground">Select the category that best describes your message purpose. Each category has specific types and approval requirements.</p>
+                      <h3 className="font-semibold text-lg mb-1">Choose template category</h3>
+                      <p className="text-sm text-muted-foreground">Select the category that best describes your message purpose. Each category has specific types and approval requirements.</p>
                   </div>
                 </div>
               </DialogHeader>
@@ -3391,7 +3392,7 @@ export default function TemplateManager() {
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToForm} />
-                  <DialogTitle>Create Template</DialogTitle>
+                  <DialogTitle>Edit Template</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -3405,17 +3406,18 @@ export default function TemplateManager() {
                       />
                     ))}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">Template Content</h3>
-                    <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
-                  </div>
                 </div>
               </DialogHeader>
               
               <div className="flex gap-4">
                 {/* Left: Template Form */}
-                <div className="flex-1 max-h-[55vh] overflow-y-auto pr-2 -ml-1">
+                <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
                   <div className="space-y-6 pl-1 pb-1">
+                    {/* Template Content Heading */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Template Content</h3>
+                      <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
+                    </div>
                     {/* Header */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -4074,9 +4076,9 @@ export default function TemplateManager() {
                 </div>
 
                 {/* Right: Template Preview */}
-                <div className="max-h-[55vh] flex-shrink-0 w-[27.5vh]">
+                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
                   <div className="flex flex-col h-full">
-                    <label className="text-sm font-medium mb-3 block flex-shrink-0 mt-1">Template Preview</label>
+                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
                     <TemplatePreview
                       headerText={headerText}
                       bodyText={bodyText}
