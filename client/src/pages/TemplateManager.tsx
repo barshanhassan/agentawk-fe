@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, X, FileText, BookOpen, ArrowLeft, ShoppingCart, Bell, Shield } from "react-feather";
+import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, FileText, BookOpen, ArrowLeft, ShoppingCart, Bell, Shield } from "react-feather";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,6 +77,22 @@ export default function TemplateManager() {
   const [footerText, setFooterText] = useState<string>("");
   const [variableSamples, setVariableSamples] = useState<{[key: string]: string}>({});
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [templateButtons, setTemplateButtons] = useState<Array<{
+    id: number;
+    type: string;
+    buttonText?: string;
+    urlType?: string;
+    websiteUrl?: string;
+    trackAppConversion?: boolean;
+    enableMetaTracking?: boolean;
+    activeFor?: string;
+    country?: string;
+    phoneNumber?: string;
+    flowButton?: string;
+    flowId?: string;
+    offerCode?: string;
+  }>>([]);
+  const [draggedButtonId, setDraggedButtonId] = useState<number | null>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -190,6 +206,34 @@ export default function TemplateManager() {
     setFooterText("");
     setVariableSamples({});
     setShowEmojiPicker(false);
+    setTemplateButtons([]);
+  };
+
+  // Button drag handlers
+  const handleButtonDragStart = (id: number) => {
+    setDraggedButtonId(id);
+  };
+
+  const handleButtonDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleButtonDrop = (targetId: number) => {
+    if (!draggedButtonId || draggedButtonId === targetId) return;
+
+    const draggedIndex = templateButtons.findIndex(b => b.id === draggedButtonId);
+    const targetIndex = templateButtons.findIndex(b => b.id === targetId);
+
+    const newButtons = [...templateButtons];
+    [newButtons[draggedIndex], newButtons[targetIndex]] = [newButtons[targetIndex], newButtons[draggedIndex]];
+    setTemplateButtons(newButtons);
+    setDraggedButtonId(null);
+  };
+
+  const updateButtonConfig = (buttonId: number, field: string, value: any) => {
+    setTemplateButtons(templateButtons.map(btn =>
+      btn.id === buttonId ? { ...btn, [field]: value } : btn
+    ));
   };
 
   // Text formatting functions
@@ -2408,7 +2452,12 @@ export default function TemplateManager() {
                       <p className="text-xs text-muted-foreground">
                         Add up to 10 buttons for customer actions or responses. More than 3 buttons will appear in a list.
                       </p>
-                      <Select>
+                      <Select onValueChange={(value) => {
+                        if (value) {
+                          // Add button to list instead of selecting
+                          setTemplateButtons([...templateButtons, { id: Date.now(), type: value }]);
+                        }
+                      }} value="">
                         <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
                           <SelectValue placeholder="Add button" />
                         </SelectTrigger>
@@ -2451,6 +2500,324 @@ export default function TemplateManager() {
                           </SelectItem>
                         </SelectContent>
                       </Select>
+
+                      {/* Added Buttons List */}
+                      {templateButtons.length > 0 && (
+                        <div className="space-y-4 mt-4">
+                          {templateButtons.map((button) => {
+                            const buttonLabels: Record<string, { label: string; description: string }> = {
+                              "quick-reply": { label: "Quick reply", description: "Simple response buttons for customer replies" },
+                              "visit-website": { label: "Visit website", description: "Direct customers to your website or URL" },
+                              "call-whatsapp": { label: "Call on WhatsApp", description: "Enable voice calls through WhatsApp" },
+                              "call-phone": { label: "Call phone number", description: "Direct customers to call a phone number" },
+                              "complete-flow": { label: "Complete Flow", description: "Trigger a WhatsApp Flow for interactive experiences" },
+                              "copy-offer": { label: "Copy offer code", description: "Allow customers to copy promotional codes" }
+                            };
+                            const buttonInfo = buttonLabels[button.type];
+                            return (
+                              <div
+                                key={button.id}
+                                className="border border-input rounded-lg bg-muted/30 overflow-hidden"
+                                draggable
+                                onDragStart={() => handleButtonDragStart(button.id)}
+                                onDragOver={handleButtonDragOver}
+                                onDrop={() => handleButtonDrop(button.id)}
+                              >
+                                {/* Button Header */}
+                                <div className="flex gap-2 items-center p-3 border-b border-input">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">{buttonInfo?.label}</p>
+                                    <p className="text-xs text-muted-foreground">{buttonInfo?.description}</p>
+                                  </div>
+                                  <button onClick={() => setTemplateButtons(templateButtons.filter(b => b.id !== button.id))} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                                  <GripVertical size={14} className="text-muted-foreground cursor-grab" />
+                                </div>
+
+                                {/* Button Configuration */}
+                                <div className="p-4 space-y-3">
+                                  {/* Quick Reply */}
+                                  {button.type === "quick-reply" && (
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-foreground">Button Text</label>
+                                      <div className="relative">
+                                        <Input
+                                          placeholder="Enter button text..."
+                                          value={button.buttonText || ""}
+                                          onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                          {(button.buttonText || "").length}/25
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Visit Website */}
+                                  {button.type === "visit-website" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">URL Type</label>
+                                        <Select value={button.urlType || ""} onValueChange={(value) => updateButtonConfig(button.id, "urlType", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select URL type" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="static">Static</SelectItem>
+                                            <SelectItem value="dynamic">Dynamic</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Website URL</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter website URL..."
+                                            value={button.websiteUrl || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "websiteUrl", e.target.value.slice(0, 2000))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.websiteUrl || "").length}/2000
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Checkbox
+                                          id={`track-conversion-${button.id}`}
+                                          checked={button.trackAppConversion || false}
+                                          onCheckedChange={(checked) => updateButtonConfig(button.id, "trackAppConversion", checked)}
+                                        />
+                                        <label htmlFor={`track-conversion-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
+                                          Track app conversion (Marketing Messages Lite API only)
+                                        </label>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Checkbox
+                                          id={`enable-meta-${button.id}`}
+                                          checked={button.enableMetaTracking || false}
+                                          onCheckedChange={(checked) => updateButtonConfig(button.id, "enableMetaTracking", checked)}
+                                        />
+                                        <label htmlFor={`enable-meta-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
+                                          Enable Meta to track and report website clicks
+                                        </label>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Call on WhatsApp */}
+                                  {button.type === "call-whatsapp" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Active for</label>
+                                        <Select value={button.activeFor || ""} onValueChange={(value) => updateButtonConfig(button.id, "activeFor", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select duration" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
+                                              <SelectItem key={day} value={`${day}`}>
+                                                {day} day{day > 1 ? "s" : ""}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Call Phone Number */}
+                                  {button.type === "call-phone" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Country</label>
+                                        <Select value={button.country || ""} onValueChange={(value) => updateButtonConfig(button.id, "country", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select country" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="+1">+1 (US/Canada)</SelectItem>
+                                            <SelectItem value="+44">+44 (UK)</SelectItem>
+                                            <SelectItem value="+33">+33 (France)</SelectItem>
+                                            <SelectItem value="+49">+49 (Germany)</SelectItem>
+                                            <SelectItem value="+39">+39 (Italy)</SelectItem>
+                                            <SelectItem value="+34">+34 (Spain)</SelectItem>
+                                            <SelectItem value="+91">+91 (India)</SelectItem>
+                                            <SelectItem value="+86">+86 (China)</SelectItem>
+                                            <SelectItem value="+81">+81 (Japan)</SelectItem>
+                                            <SelectItem value="+55">+55 (Brazil)</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Phone number</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter phone number..."
+                                            value={button.phoneNumber || ""}
+                                            onChange={(e) => {
+                                              const numbersOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 20);
+                                              updateButtonConfig(button.id, "phoneNumber", numbersOnly);
+                                            }}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.phoneNumber || "").length}/20
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Complete Flow */}
+                                  {button.type === "complete-flow" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button</label>
+                                        <Select value={button.flowButton || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowButton", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select button type" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="default">Default</SelectItem>
+                                            <SelectItem value="document">Document</SelectItem>
+                                            <SelectItem value="promotion">Promotion</SelectItem>
+                                            <SelectItem value="review">Review</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Flow</label>
+                                        <Select value={button.flowId || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowId", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select flow" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="product-inquiry">
+                                              <div>
+                                                <div className="font-medium">Product Inquiry Form</div>
+                                                <div className="text-xs text-muted-foreground">Collect customers product inquires</div>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="support-request">
+                                              <div>
+                                                <div className="font-medium">Support Request</div>
+                                                <div className="text-xs text-muted-foreground">Handle customer support requests</div>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="promotional-survey">
+                                              <div>
+                                                <div className="font-medium">Promotional Survey</div>
+                                                <div className="text-xs text-muted-foreground">Gather feedback on promotions</div>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="review-collection">
+                                              <div>
+                                                <div className="font-medium">Review Collection</div>
+                                                <div className="text-xs text-muted-foreground">Collect customer reviews</div>
+                                              </div>
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Copy Offer */}
+                                  {button.type === "copy-offer" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Offer code</label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter offer code..."
+                                            value={button.offerCode || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "offerCode", e.target.value.slice(0, 15))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.offerCode || "").length}/15
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
