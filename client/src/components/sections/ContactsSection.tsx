@@ -117,6 +117,9 @@ export default function ContactsSection() {
   const [bulkEditTags, setBulkEditTags] = useState<string[]>([]);
   const [bulkTagInput, setBulkTagInput] = useState("");
 
+  // Bulk Delete Modal State
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+
   // Copy tooltip state
   const [copiedContactId, setCopiedContactId] = useState<string | null>(null);
 
@@ -392,6 +395,21 @@ export default function ContactsSection() {
       description: `Tags updated for ${selectedContactIds.length} contact(s)`,
     });
     setShowBulkEditModal(false);
+    setSelectedRows(new Set());
+  };
+
+  const handleOpenBulkDelete = () => {
+    setShowBulkDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    const selectedContactIds = Array.from(selectedRows);
+    setContacts(contacts.filter(c => !selectedContactIds.includes(c.id)));
+    toast({
+      title: "Contacts Deleted",
+      description: `${selectedContactIds.length} contact(s) have been deleted`,
+    });
+    setShowBulkDeleteModal(false);
     setSelectedRows(new Set());
   };
 
@@ -958,7 +976,7 @@ export default function ContactsSection() {
                 <button onClick={handleExportSelectedAsCSV} className="p-1 hover:bg-blue-100 rounded" title="Export as CSV">
                   <Download size={14} className="text-blue-600" />
                 </button>
-                <button className="p-1 hover:bg-blue-100 rounded" title="Delete">
+                <button onClick={handleOpenBulkDelete} className="p-1 hover:bg-blue-100 rounded" title="Delete">
                   <Trash2 size={14} className="text-red-600" />
                 </button>
               </div>
@@ -1496,6 +1514,38 @@ export default function ContactsSection() {
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Modal */}
+      <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Delete Contacts</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-foreground">
+              Are you sure you want to delete <span className="font-semibold">{selectedRows.size} contact(s)</span>? This action cannot be undone.
+            </p>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button
+              onClick={() => setShowBulkDeleteModal(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmBulkDelete}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
             </Button>
           </div>
         </DialogContent>
