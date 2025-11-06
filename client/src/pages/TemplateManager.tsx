@@ -3,6 +3,8 @@ import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 import {
   Dialog,
   DialogContent,
@@ -25,11 +27,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ArrowUpDown, GripVertical } from "lucide-react";
+import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ArrowUpDown, GripVertical, Bold, Italic, Strikethrough, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -47,6 +48,20 @@ interface FilterEntry {
 }
 
 export default function TemplateManager() {
+  // Add style to hide scrollbar
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const [selectedTemplates, setSelectedTemplates] = useState<number[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
@@ -61,6 +76,9 @@ export default function TemplateManager() {
   const [bodyText, setBodyText] = useState<string>("");
   const [footerText, setFooterText] = useState<string>("");
   const [variableSamples, setVariableSamples] = useState<{[key: string]: string}>({});
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Helper functions for template creation flow
   const handleBlankTemplateClick = () => {
@@ -171,6 +189,158 @@ export default function TemplateManager() {
     setBodyText("");
     setFooterText("");
     setVariableSamples({});
+    setShowEmojiPicker(false);
+  };
+
+  // Text formatting functions
+  const applyFormatting = (formatChar: string) => {
+    const textarea = bodyTextareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = bodyText.substring(start, end);
+
+    if (selectedText) {
+      // Check if the selected text is already formatted
+      const beforeSelection = bodyText.substring(Math.max(0, start - formatChar.length), start);
+      const afterSelection = bodyText.substring(end, Math.min(bodyText.length, end + formatChar.length));
+
+      const isAlreadyFormatted = beforeSelection === formatChar && afterSelection === formatChar;
+
+      if (isAlreadyFormatted) {
+        // Remove formatting
+        const newText =
+          bodyText.substring(0, start - formatChar.length) +
+          selectedText +
+          bodyText.substring(end + formatChar.length);
+        setBodyText(newText);
+
+        // Restore cursor position after removing formatting
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start - formatChar.length, end - formatChar.length);
+        }, 0);
+      } else {
+        // Add formatting
+        const formattedText = `${formatChar}${selectedText}${formatChar}`;
+        const newText = bodyText.substring(0, start) + formattedText + bodyText.substring(end);
+        setBodyText(newText);
+
+        // Restore cursor position after formatting
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + formatChar.length, end + formatChar.length);
+        }, 0);
+      }
+    } else {
+      // No selection - check if cursor is between formatting characters
+      const beforeCursor = bodyText.substring(Math.max(0, start - formatChar.length), start);
+      const afterCursor = bodyText.substring(start, Math.min(bodyText.length, start + formatChar.length));
+
+      if (beforeCursor === formatChar && afterCursor === formatChar) {
+        // Remove the formatting characters
+        const newText =
+          bodyText.substring(0, start - formatChar.length) +
+          bodyText.substring(start + formatChar.length);
+        setBodyText(newText);
+
+        // Place cursor where it was (adjusted for removed characters)
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start - formatChar.length, start - formatChar.length);
+        }, 0);
+      } else {
+        // Insert formatting characters at cursor position
+        const formattedText = `${formatChar}${formatChar}`;
+        const newText = bodyText.substring(0, start) + formattedText + bodyText.substring(end);
+        setBodyText(newText);
+
+        // Place cursor between formatting characters
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + formatChar.length, start + formatChar.length);
+        }, 0);
+      }
+    }
+  };
+
+  const handleBold = () => applyFormatting("*");
+  const handleItalic = () => applyFormatting("_");
+  const handleStrikethrough = () => applyFormatting("~");
+
+  // WhatsApp-style text formatter with nested formatting support
+  const formatWhatsAppText = (text: string): React.ReactNode => {
+    const parts: React.ReactNode[] = [];
+    let currentIndex = 0;
+    let key = 0;
+
+    // Process text character by character to handle WhatsApp formatting
+    // WhatsApp uses: *bold*, _italic_, ~strikethrough~
+    const regex = /(\*[^*]+\*|_[^_]+_|~[^~]+~)/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > currentIndex) {
+        const beforeText = text.substring(currentIndex, match.index);
+        parts.push(...splitByNewlines(beforeText, key));
+        key += beforeText.split('\n').length;
+      }
+
+      const matchedText = match[0];
+      const innerText = matchedText.substring(1, matchedText.length - 1);
+      const formatChar = matchedText[0];
+
+      // Recursively format the inner text to support nested formatting
+      const formattedInner = formatWhatsAppText(innerText);
+
+      // Apply formatting based on WhatsApp syntax
+      if (formatChar === '*') {
+        parts.push(<strong key={key++}>{formattedInner}</strong>);
+      } else if (formatChar === '_') {
+        parts.push(<em key={key++}>{formattedInner}</em>);
+      } else if (formatChar === '~') {
+        parts.push(<s key={key++}>{formattedInner}</s>);
+      }
+
+      currentIndex = match.index + matchedText.length;
+    }
+
+    // Add remaining text
+    if (currentIndex < text.length) {
+      const remainingText = text.substring(currentIndex);
+      parts.push(...splitByNewlines(remainingText, key));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
+  // Helper to split text by newlines and insert <br /> tags
+  const splitByNewlines = (text: string, startKey: number) => {
+    const lines = text.split('\n');
+    const result: React.ReactNode[] = [];
+
+    lines.forEach((line, index) => {
+      // Check if line starts with "- " for bullet points
+      if (line.trim().startsWith('- ')) {
+        const bulletText = line.replace(/^\s*-\s/, '');
+        result.push(
+          <span key={startKey + index * 2}>
+            <span className="inline-block mr-1">•</span>
+            {bulletText}
+          </span>
+        );
+      } else {
+        result.push(<span key={startKey + index * 2}>{line}</span>);
+      }
+
+      if (index < lines.length - 1) {
+        result.push(<br key={startKey + index * 2 + 1} />);
+      }
+    });
+
+    return result;
   };
 
   const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
@@ -411,6 +581,39 @@ export default function TemplateManager() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showEmojiPicker]);
+
+  // Handle emoji selection from emoji-mart
+  const handleEmojiSelect = (emoji: any) => {
+    const textarea = bodyTextareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const emojiChar = emoji.native;
+      const newText = bodyText.substring(0, start) + emojiChar + bodyText.substring(end);
+      setBodyText(newText);
+      setShowEmojiPicker(false);
+
+      // Restore cursor position after emoji
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + emojiChar.length, start + emojiChar.length);
+      }, 0);
+    }
+  };
 
   // Sort functions
   const addSort = () => {
@@ -1338,42 +1541,104 @@ export default function TemplateManager() {
           <div className="flex justify-center">
             <div className="flex-1 flex items-center justify-center">
               {/* Phone mockup */}
-              <div className="aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
-                {/* Phone header - WhatsApp green */}
-                <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
-                    <div>
-                      <p className="text-xs font-semibold text-white">WhatsApp</p>
-                      <p className="text-xs text-[#DCF8C6]">Online</p>
+              <div className="flex-1 flex items-center justify-center min-h-0">
+                {/* Phone mockup */}
+                <div className="h-full max-h-[80vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
+                  {/* Phone header - WhatsApp green */}
+                  <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
+                      <div>
+                        <p className="text-xs font-semibold text-white">WhatsApp</p>
+                        <p className="text-xs text-[#DCF8C6]">Online</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Chat area - WhatsApp light background */}
-                <div className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto flex flex-col justify-end space-y-3" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                  {/* Customer message (left side) - incoming message */}
-                  <div className="flex justify-start">
-                    <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                      <p className="text-sm text-[#111B21] leading-relaxed">
-                        {previewTemplateId ? 
-                          whatsappTemplates.find(t => t.id === previewTemplateId)?.content || "Template content not found" :
-                          "Select a template to preview"
-                        }
-                      </p>
-                      <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
+                  {/* Chat area - WhatsApp light background */}
+                  <div
+                    className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide"
+                    style={{
+                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    {/* Spacer to push message to bottom */}
+                    <div className="flex-1 min-h-0"></div>
+                    {/* Template message preview */}
+                    <div className="flex justify-start flex-shrink-0">
+                      <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                        {/* Header */}
+                        {headerText && (
+                          <div className="mb-2">
+                            <p className="text-sm font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                              {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+                                const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                                if (variableMatch) {
+                                  const variableKey = variableMatch[1];
+                                  const value = variableSamples[variableKey];
+                                  return (
+                                    <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                                      {value || part}
+                                    </span>
+                                  );
+                                }
+                                return <span key={idx}>{part}</span>;
+                              })}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Body */}
+                        {bodyText && (
+                          <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                            {bodyText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+                              const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                              if (variableMatch) {
+                                const variableKey = variableMatch[1];
+                                const value = variableSamples[variableKey];
+                                return (
+                                  <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                                    {value || part}
+                                  </span>
+                                );
+                              }
+                              return <span key={idx}>{formatWhatsAppText(part)}</span>;
+                            })}
+                          </p>
+                        )}
+
+                        {/* Footer */}
+                        {footerText && (
+                          <div className="mt-2">
+                            <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                              {footerText}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Placeholder when no content */}
+                        {!headerText && !bodyText && !footerText && (
+                          <p className="text-sm text-[#999999] italic">
+                            Start typing to see your template preview...
+                          </p>
+                        )}
+
+                        <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Input area */}
-                <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                  <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
-                    <p className="text-sm text-[#999999]">Type a message...</p>
+                  {/* Input area */}
+                  <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                    <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
+                      <p className="text-sm text-[#999999]">Type a message...</p>
+                    </div>
+                    <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
+                      <Send size={16} className="text-white" />
+                    </button>
                   </div>
-                  <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
-                    <Send size={16} className="text-white" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -1907,10 +2172,10 @@ export default function TemplateManager() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 px-2 text-xs"
+                          className="h-6 px-2 text-xs gap-1"
                           onClick={() => setHeaderText(headerText + `{{${getNextVariableNumber()}}}`)}
                         >
-                          <Plus size={12} className="mr-1" />
+                          <Plus size={12} />
                           Add variable
                         </Button>
                       </div>
@@ -1985,32 +2250,92 @@ export default function TemplateManager() {
                         <label className="text-sm font-medium text-foreground">
                           Body<span className="text-red-500 pl-0.5">*</span>
                         </label>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                            <strong>B</strong>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                            <em>I</em>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                            <s>S</s>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                            😊
-                          </Button>
+                        <div className="flex gap-1 items-center">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleBold}
+                              >
+                                <Bold size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Bold</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleItalic}
+                              >
+                                <Italic size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Italic</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleStrikethrough}
+                              >
+                                <Strikethrough size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Strikethrough</TooltipContent>
+                          </Tooltip>
+                          <div className="relative">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                >
+                                  <Smile size={14} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Add emoji</TooltipContent>
+                            </Tooltip>
+                            {showEmojiPicker && (
+                              <div
+                                ref={emojiPickerRef}
+                                className="absolute top-8 right-0 z-50"
+                              >
+                                <Picker
+                                  data={data}
+                                  onEmojiSelect={handleEmojiSelect}
+                                  theme="light"
+                                  previewPosition="none"
+                                  skinTonePosition="top"
+                                  maxFrequentRows={1}
+                                  perLine={8}
+                                  set="native"
+                                />
+                              </div>
+                            )}
+                          </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-xs"
+                            className="h-6 px-2 text-xs gap-1"
                             onClick={() => setBodyText(bodyText + `{{${getNextVariableNumber()}}}`)}
                           >
-                            <Plus size={12} className="mr-1" />
+                            <Plus size={12} />
                             Add variable
                           </Button>
                         </div>
                       </div>
                       <div className="relative">
                         <textarea
+                          ref={bodyTextareaRef}
                           placeholder="Add body text..."
                           value={bodyText}
                           onChange={(e) => setBodyText(e.target.value.slice(0, 1024))}
@@ -2149,14 +2474,23 @@ export default function TemplateManager() {
                         </div>
 
                         {/* Chat area - WhatsApp light background */}
-                        <div className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto flex flex-col justify-end space-y-3" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                        <div
+                          className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide"
+                          style={{
+                            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none'
+                          }}
+                        >
+                          {/* Spacer to push message to bottom */}
+                          <div className="flex-1 min-h-0"></div>
                           {/* Template message preview */}
-                          <div className="flex justify-start">
-                            <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                          <div className="flex justify-start flex-shrink-0">
+                            <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
                               {/* Header */}
                               {headerText && (
                                 <div className="mb-2">
-                                  <p className="text-sm font-semibold text-[#111B21] leading-relaxed">
+                                  <p className="text-sm font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                     {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
                                       const variableMatch = part.match(/\{\{([^}]+)\}\}/);
                                       if (variableMatch) {
@@ -2176,7 +2510,7 @@ export default function TemplateManager() {
 
                               {/* Body */}
                               {bodyText && (
-                                <p className="text-sm text-[#111B21] leading-relaxed">
+                                <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                   {bodyText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
                                     const variableMatch = part.match(/\{\{([^}]+)\}\}/);
                                     if (variableMatch) {
@@ -2188,7 +2522,7 @@ export default function TemplateManager() {
                                         </span>
                                       );
                                     }
-                                    return <span key={idx}>{part}</span>;
+                                    return <span key={idx}>{formatWhatsAppText(part)}</span>;
                                   })}
                                 </p>
                               )}
@@ -2196,7 +2530,7 @@ export default function TemplateManager() {
                               {/* Footer */}
                               {footerText && (
                                 <div className="mt-2">
-                                  <p className="text-xs text-[#666666] leading-relaxed">
+                                  <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                     {footerText}
                                   </p>
                                 </div>

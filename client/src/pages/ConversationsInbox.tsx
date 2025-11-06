@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile } from "react-feather";
 import { GripVertical, MoreVertical } from "lucide-react";
-import EmojiPicker from "emoji-picker-react";
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -426,6 +427,12 @@ export default function ConversationsInbox() {
     }
   }, [showEmojiPicker]);
 
+  // Handle emoji selection from emoji-mart
+  const handleEmojiSelect = (emoji: any) => {
+    setMessageText(messageText + emoji.native);
+    setShowEmojiPicker(false);
+  };
+
   // Handle file attachment
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
@@ -619,6 +626,80 @@ export default function ConversationsInbox() {
 
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
+
+  // Helper to split text by newlines and insert <br /> tags
+  const splitByNewlines = (text: string, startKey: number) => {
+    const lines = text.split('\n');
+    const result: React.ReactNode[] = [];
+
+    lines.forEach((line, index) => {
+      // Check if line starts with "- " for bullet points
+      if (line.trim().startsWith('- ')) {
+        const bulletText = line.replace(/^\s*-\s/, '');
+        result.push(
+          <span key={startKey + index * 2}>
+            <span className="inline-block mr-1">•</span>
+            {bulletText}
+          </span>
+        );
+      } else {
+        result.push(<span key={startKey + index * 2}>{line}</span>);
+      }
+
+      if (index < lines.length - 1) {
+        result.push(<br key={startKey + index * 2 + 1} />);
+      }
+    });
+
+    return result;
+  };
+
+  // WhatsApp-style text formatter with nested formatting support
+  const formatWhatsAppText = (text: string): React.ReactNode => {
+    const parts: React.ReactNode[] = [];
+    let currentIndex = 0;
+    let key = 0;
+
+    // Process text character by character to handle WhatsApp formatting
+    // WhatsApp uses: *bold*, _italic_, ~strikethrough~
+    const regex = /(\*[^*]+\*|_[^_]+_|~[^~]+~)/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > currentIndex) {
+        const beforeText = text.substring(currentIndex, match.index);
+        parts.push(...splitByNewlines(beforeText, key));
+        key += beforeText.split('\n').length;
+      }
+
+      const matchedText = match[0];
+      const innerText = matchedText.substring(1, matchedText.length - 1);
+      const formatChar = matchedText[0];
+
+      // Recursively format the inner text to support nested formatting
+      const formattedInner = formatWhatsAppText(innerText);
+
+      // Apply formatting based on WhatsApp syntax
+      if (formatChar === '*') {
+        parts.push(<strong key={key++}>{formattedInner}</strong>);
+      } else if (formatChar === '_') {
+        parts.push(<em key={key++}>{formattedInner}</em>);
+      } else if (formatChar === '~') {
+        parts.push(<s key={key++}>{formattedInner}</s>);
+      }
+
+      currentIndex = match.index + matchedText.length;
+    }
+
+    // Add remaining text
+    if (currentIndex < text.length) {
+      const remainingText = text.substring(currentIndex);
+      parts.push(...splitByNewlines(remainingText, key));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
 
   // Handle sending template message
   const handleSendTemplateMessage = () => {
@@ -1492,14 +1573,15 @@ export default function ConversationsInbox() {
                         ref={emojiPickerRef}
                         className="absolute bottom-12 right-0 z-50"
                       >
-                        <EmojiPicker
-                          onEmojiClick={(emojiObject: any) => {
-                            setMessageText(messageText + emojiObject.emoji);
-                            setShowEmojiPicker(false);
-                          }}
-                          theme={"light" as any}
-                          height={400}
-                          width={350}
+                        <Picker
+                          data={data}
+                          onEmojiSelect={handleEmojiSelect}
+                          theme="light"
+                          previewPosition="none"
+                          skinTonePosition="none"
+                          maxFrequentRows={1}
+                          perLine={8}
+                          set="native"
                         />
                       </div>
                     )}
@@ -2256,10 +2338,10 @@ export default function ConversationsInbox() {
               <DialogTitle>Send Template Message</DialogTitle>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto -ml-1">
               <div className="grid grid-cols-2 gap-6">
                 {/* Left: Phone Numbers and Template Selection */}
-                <div className="space-y-4">
+                <div className="space-y-4 pl-1">
                   <div>
                     <label className="text-sm font-medium mb-2 block">Recipients (up to 5)</label>
                     <div className="space-y-2">
@@ -2380,9 +2462,9 @@ export default function ConversationsInbox() {
                   <div className="flex-1 flex flex-col">
                     <label className="text-sm font-medium mb-3 block">Template Preview</label>
                     {selectedTemplate ? (
-                      <div className="flex-1 flex items-center justify-center">
+                      <div className="flex-1 flex items-center justify-center min-h-0">
                         {/* Phone mockup */}
-                        <div className="aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
+                        <div className="h-full max-h-[70vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
                           {/* Phone header - WhatsApp green */}
                           <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
                             <div className="flex items-center gap-2">
@@ -2393,32 +2475,41 @@ export default function ConversationsInbox() {
                               </div>
                             </div>
                           </div>
-
+  
                           {/* Chat area - WhatsApp light background */}
-                          <div className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto flex flex-col justify-end space-y-3" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                            {/* Customer message (left side) - incoming message */}
-                            <div className="flex justify-start">
-                              <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                                <p className="text-sm text-[#111B21] leading-relaxed">
-                                  {selectedTemplate.body.split(/\{\{|\}\}/).map((part: string, idx: number) => {
-                                    // Check if this part is a variable name
-                                    const isVariable = selectedTemplate.variables?.includes(part);
-                                    if (isVariable) {
-                                      const value = templateVariables[part];
+                          <div
+                            className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide"
+                            style={{
+                              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                              scrollbarWidth: 'none',
+                              msOverflowStyle: 'none'
+                            }}
+                          >
+                            {/* Spacer to push message to bottom */}
+                            <div className="flex-1 min-h-0"></div>
+                            {/* Template message preview */}
+                            <div className="flex justify-start flex-shrink-0">
+                              <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                                <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                  {selectedTemplate.body.split(/(\{\{[^}]+\}\})/).map((part: string, idx: number) => {
+                                    const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                                    if (variableMatch) {
+                                      const variableKey = variableMatch[1];
+                                      const value = templateVariables[variableKey];
                                       return (
                                         <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                          {value || `{{${part}}}`}
+                                          {value || part}
                                         </span>
                                       );
                                     }
-                                    return <span key={idx}>{part}</span>;
+                                    return <span key={idx}>{formatWhatsAppText(part)}</span>;
                                   })}
                                 </p>
                                 <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
                               </div>
                             </div>
                           </div>
-
+  
                           {/* Input area */}
                           <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
                             <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
@@ -2429,8 +2520,6 @@ export default function ConversationsInbox() {
                             </button>
                           </div>
                         </div>
-
-
                       </div>
                     ) : (
                       <div className="flex-1 border-2 border-dashed border-input rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/30">
