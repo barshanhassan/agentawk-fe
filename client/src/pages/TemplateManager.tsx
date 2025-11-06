@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, FileText, BookOpen, ArrowLeft, ShoppingCart, Bell, Shield } from "react-feather";
+import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, FileText, ArrowLeft, ShoppingCart, Bell, Shield, Paperclip, X } from "react-feather";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +31,7 @@ import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, Che
 import { Input } from "@/components/ui/input";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import TemplatePreview from "@/components/TemplatePreview";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -66,12 +67,18 @@ export default function TemplateManager() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
   const [createTemplateOpen, setCreateTemplateOpen] = useState(false);
-  const [templateCreationStep, setTemplateCreationStep] = useState<"choice" | "category" | "form" | "content">("choice");
+  const [editTemplateOpen, setEditTemplateOpen] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
+  const [cloneTemplateName, setCloneTemplateName] = useState<string>("");
+  const [templateToCloneId, setTemplateToCloneId] = useState<number | null>(null);
+  const [templateCreationStep, setTemplateCreationStep] = useState<"category" | "form" | "content">("category");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [templateName, setTemplateName] = useState<string>("");
   const [templateType, setTemplateType] = useState<string>("");
   const [mediaSample, setMediaSample] = useState<string>("none");
+  const [selectedMediaFile, setSelectedMediaFile] = useState<File | null>(null);
   const [headerText, setHeaderText] = useState<string>("");
   const [bodyText, setBodyText] = useState<string>("");
   const [footerText, setFooterText] = useState<string>("");
@@ -97,21 +104,13 @@ export default function TemplateManager() {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Helper functions for template creation flow
-  const handleBlankTemplateClick = () => {
-    setTemplateCreationStep("category");
-  };
-
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
   };
 
-  const handleBackToChoice = () => {
-    setTemplateCreationStep("choice");
-    setSelectedCategory(null);
-  };
-
   const handleBackToCategory = () => {
     setTemplateCreationStep("category");
+    setSelectedCategory(null);
   };
 
   const handleNextFromCategory = () => {
@@ -184,23 +183,71 @@ export default function TemplateManager() {
     // If variables exist, all must have samples
     const variables = getAllVariables();
     if (variables.length > 0) {
-      return variables.every(variable => {
+      if (!variables.every(variable => {
         const variableKey = variable.match(/\{\{([^}]+)\}\}/)?.[1] || "";
         return variableSamples[variableKey]?.trim();
+      })) {
+        return false;
+      }
+    }
+
+    // If buttons exist, all required fields must be filled
+    if (templateButtons.length > 0) {
+      return templateButtons.every(button => {
+        // All buttons must have buttonText
+        if (!button.buttonText?.trim()) return false;
+
+        // Type-specific validations
+        switch (button.type) {
+          case "quick-reply":
+            return true; // Only buttonText is required
+          case "visit-website":
+            return button.urlType?.trim() && button.websiteUrl?.trim();
+          case "call-whatsapp":
+            return true; // Only buttonText is required
+          case "call-phone":
+            return button.country?.trim() && button.phoneNumber?.trim();
+          case "complete-flow":
+            return button.flowButton?.trim() && button.flowId?.trim();
+          case "copy-offer":
+            return button.offerCode?.trim();
+          default:
+            return false;
+        }
       });
     }
 
     return true;
   };
 
+  // Helper function to check if template has changed
+  const hasTemplateChanged = () => {
+    if (!originalTemplate) return false;
+
+    return (
+      templateName !== originalTemplate.name ||
+      selectedCategory !== originalTemplate.category ||
+      templateType !== originalTemplate.type ||
+      selectedLanguage !== originalTemplate.language ||
+      headerText !== (originalTemplate.header || "") ||
+      bodyText !== (originalTemplate.body || "") ||
+      footerText !== (originalTemplate.footer || "") ||
+      JSON.stringify(templateButtons) !== JSON.stringify(originalTemplate.buttons || []) ||
+      JSON.stringify(variableSamples) !== JSON.stringify(originalTemplate.variableSamples || {}) ||
+      mediaSample !== (originalTemplate.mediaSample || "none") ||
+      selectedMediaFile !== (originalTemplate.mediaFile || null)
+    );
+  };
+
   const handleCloseCreateTemplate = () => {
     setCreateTemplateOpen(false);
-    setTemplateCreationStep("choice");
+    setTemplateCreationStep("category");
     setSelectedCategory(null);
-    setSelectedLanguage("english");
+    setSelectedLanguage("English");
     setTemplateName("");
     setTemplateType("");
     setMediaSample("none");
+    setSelectedMediaFile(null);
     setHeaderText("");
     setBodyText("");
     setFooterText("");
@@ -234,6 +281,198 @@ export default function TemplateManager() {
     setTemplateButtons(templateButtons.map(btn =>
       btn.id === buttonId ? { ...btn, [field]: value } : btn
     ));
+  };
+
+  // Handler to create template
+  const handleCreateTemplate = () => {
+    if (!isTemplateFormValid()) return;
+
+    // Extract variables from header and body
+    const allText = headerText + " " + bodyText;
+    const variableMatches = allText.match(/\{\{[^}]+\}\}/g) || [];
+    const uniqueVariables = Array.from(new Set(variableMatches)).map(v =>
+      v.match(/\{\{([^}]+)\}\}/)?.[1] || ""
+    );
+
+    const now = new Date();
+
+    // Create new template object
+    const newTemplate: any = {
+      id: Date.now(),
+      name: templateName,
+      category: selectedCategory,
+      type: templateType,
+      language: selectedLanguage,
+      header: headerText || undefined,
+      body: bodyText,
+      footer: footerText || undefined,
+      variables: uniqueVariables,
+      buttons: templateButtons,
+      status: "Pending",
+      statusTypeColor: "warning" as const,
+      topBlockReason: "",
+      lastEdited: new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10),
+    };
+
+    // Add media if selected
+    if (mediaSample !== "none" && selectedMediaFile) {
+      newTemplate.mediaSample = mediaSample;
+      newTemplate.mediaFile = selectedMediaFile;
+    }
+
+    // Add variable samples if any
+    if (Object.keys(variableSamples).length > 0) {
+      newTemplate.variableSamples = variableSamples;
+    }
+
+    // Add to templates list
+    setWhatappTemplates([...whatsappTemplates, newTemplate]);
+
+    // Reset form
+    handleCloseCreateTemplate();
+  };
+
+  // Open edit template handler
+  const handleOpenEditTemplate = (templateId: number) => {
+    const templateToEdit = whatsappTemplates.find(t => t.id === templateId);
+    if (!templateToEdit) return;
+
+    // Save original template for change detection
+    setOriginalTemplate(templateToEdit);
+
+    // Prefill all form fields with template data
+    setEditingTemplateId(templateId);
+    setSelectedCategory(templateToEdit.category);
+    setTemplateType(templateToEdit.type || "");
+    setSelectedLanguage(templateToEdit.language);
+    setTemplateName(templateToEdit.name);
+    setHeaderText(templateToEdit.header || "");
+    setBodyText(templateToEdit.body || "");
+    setFooterText(templateToEdit.footer || "");
+    setTemplateButtons(templateToEdit.buttons || []);
+    setSelectedMediaFile(templateToEdit.mediaFile || null);
+    setMediaSample(templateToEdit.mediaSample || "none");
+    setVariableSamples(templateToEdit.variableSamples || {});
+
+    // Start at category step to show all 3 steps
+    setTemplateCreationStep("category");
+    setEditTemplateOpen(true);
+  };
+
+  // Close edit template handler
+  const handleCloseEditTemplate = () => {
+    setEditTemplateOpen(false);
+    setEditingTemplateId(null);
+    setOriginalTemplate(null);
+    setTemplateCreationStep("category");
+    setSelectedCategory(null);
+    setSelectedLanguage("English");
+    setTemplateName("");
+    setTemplateType("");
+    setMediaSample("none");
+    setSelectedMediaFile(null);
+    setHeaderText("");
+    setBodyText("");
+    setFooterText("");
+    setTemplateButtons([]);
+    setVariableSamples({});
+  };
+
+  // Save edited template handler
+  const handleSaveEditedTemplate = () => {
+    if (!isTemplateFormValid() || editingTemplateId === null) return;
+
+    // Extract variables from header and body
+    const allText = headerText + " " + bodyText;
+    const variableMatches = allText.match(/\{\{[^}]+\}\}/g) || [];
+    const uniqueVariables = Array.from(new Set(variableMatches)).map(v =>
+      v.match(/\{\{([^}]+)\}\}/)?.[1] || ""
+    );
+
+    const now = new Date();
+
+    // Update template object
+    const updatedTemplate: any = {
+      id: editingTemplateId, // Keep the same ID
+      name: templateName,
+      category: selectedCategory,
+      type: templateType,
+      language: selectedLanguage,
+      header: headerText || undefined,
+      body: bodyText,
+      footer: footerText || undefined,
+      variables: uniqueVariables,
+      buttons: templateButtons,
+      status: "Pending", // Reset to Pending
+      statusTypeColor: "warning" as const,
+      topBlockReason: "",
+      lastEdited: new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10), // Update to current date
+    };
+
+    // Add media if selected
+    if (mediaSample !== "none" && selectedMediaFile) {
+      updatedTemplate.mediaSample = mediaSample;
+      updatedTemplate.mediaFile = selectedMediaFile;
+    }
+
+    // Add variable samples if any
+    if (Object.keys(variableSamples).length > 0) {
+      updatedTemplate.variableSamples = variableSamples;
+    }
+
+    // Update the template in the list
+    setWhatappTemplates(whatsappTemplates.map(t =>
+      t.id === editingTemplateId ? updatedTemplate : t
+    ));
+
+    // Close edit dialog
+    handleCloseEditTemplate();
+  };
+
+  // Delete template handler
+  const handleDeleteTemplate = (templateId: number) => {
+    setWhatappTemplates(whatsappTemplates.filter(t => t.id !== templateId));
+    // Also remove from selected templates if it was selected
+    setSelectedTemplates(selectedTemplates.filter(id => id !== templateId));
+  };
+
+  // Open clone dialog
+  const handleOpenCloneDialog = (templateId: number) => {
+    const templateToClone = whatsappTemplates.find(t => t.id === templateId);
+    if (!templateToClone) return;
+
+    setTemplateToCloneId(templateId);
+    setCloneTemplateName(`${templateToClone.name}_copy`);
+    setCloneDialogOpen(true);
+  };
+
+  // Close clone dialog
+  const handleCloseCloneDialog = () => {
+    setCloneDialogOpen(false);
+    setCloneTemplateName("");
+    setTemplateToCloneId(null);
+  };
+
+  // Clone template handler
+  const handleCloneTemplate = () => {
+    if (!templateToCloneId || !cloneTemplateName.trim()) return;
+
+    const templateToClone = whatsappTemplates.find(t => t.id === templateToCloneId);
+    if (!templateToClone) return;
+
+    const now = new Date();
+    const clonedTemplate = {
+      ...templateToClone,
+      id: Date.now(),
+      name: cloneTemplateName,
+      status: "Pending",
+      statusTypeColor: "warning" as const,
+      topBlockReason: "No blocks!",
+      lastEdited: new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10),
+    };
+
+    setWhatappTemplates([...whatsappTemplates, clonedTemplate]);
+    handleCloseCloneDialog();
   };
 
   // Text formatting functions
@@ -313,80 +552,6 @@ export default function TemplateManager() {
   const handleItalic = () => applyFormatting("_");
   const handleStrikethrough = () => applyFormatting("~");
 
-  // WhatsApp-style text formatter with nested formatting support
-  const formatWhatsAppText = (text: string): React.ReactNode => {
-    const parts: React.ReactNode[] = [];
-    let currentIndex = 0;
-    let key = 0;
-
-    // Process text character by character to handle WhatsApp formatting
-    // WhatsApp uses: *bold*, _italic_, ~strikethrough~
-    const regex = /(\*[^*]+\*|_[^_]+_|~[^~]+~)/g;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      // Add text before the match
-      if (match.index > currentIndex) {
-        const beforeText = text.substring(currentIndex, match.index);
-        parts.push(...splitByNewlines(beforeText, key));
-        key += beforeText.split('\n').length;
-      }
-
-      const matchedText = match[0];
-      const innerText = matchedText.substring(1, matchedText.length - 1);
-      const formatChar = matchedText[0];
-
-      // Recursively format the inner text to support nested formatting
-      const formattedInner = formatWhatsAppText(innerText);
-
-      // Apply formatting based on WhatsApp syntax
-      if (formatChar === '*') {
-        parts.push(<strong key={key++}>{formattedInner}</strong>);
-      } else if (formatChar === '_') {
-        parts.push(<em key={key++}>{formattedInner}</em>);
-      } else if (formatChar === '~') {
-        parts.push(<s key={key++}>{formattedInner}</s>);
-      }
-
-      currentIndex = match.index + matchedText.length;
-    }
-
-    // Add remaining text
-    if (currentIndex < text.length) {
-      const remainingText = text.substring(currentIndex);
-      parts.push(...splitByNewlines(remainingText, key));
-    }
-
-    return parts.length > 0 ? parts : text;
-  };
-
-  // Helper to split text by newlines and insert <br /> tags
-  const splitByNewlines = (text: string, startKey: number) => {
-    const lines = text.split('\n');
-    const result: React.ReactNode[] = [];
-
-    lines.forEach((line, index) => {
-      // Check if line starts with "- " for bullet points
-      if (line.trim().startsWith('- ')) {
-        const bulletText = line.replace(/^\s*-\s/, '');
-        result.push(
-          <span key={startKey + index * 2}>
-            <span className="inline-block mr-1">•</span>
-            {bulletText}
-          </span>
-        );
-      } else {
-        result.push(<span key={startKey + index * 2}>{line}</span>);
-      }
-
-      if (index < lines.length - 1) {
-        result.push(<br key={startKey + index * 2 + 1} />);
-      }
-    });
-
-    return result;
-  };
-
   const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
@@ -410,174 +575,201 @@ export default function TemplateManager() {
   const [draggedFilterId, setDraggedFilterId] = useState<string | null>(null);
   const [openFilterColumnDropdown, setOpenFilterColumnDropdown] = useState<string | null>(null);
   const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
+  const [originalTemplate, setOriginalTemplate] = useState<any>(null);
 
-  const whatsappTemplates = [
+  const [whatsappTemplates, setWhatappTemplates] = useState<Array<any>>(
+  [
     {
       id: 1,
-      name: "Welcome Message",
+      name: "welcome_message",
       category: "Marketing",
-      language: "EN",
+      type: "marketing-default",
+      language: "English",
       status: "Active - HQ",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "Reported as Spam",
       lastEdited: "2025-11-03",
-      content: "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
+      body:"Hi there! Welcome to our platform. We're excited to have you here! 🎉",
+      header: "Welcome to {{company}}",
+      footer: "Thank you for choosing us",
+      variables: ["company"],
+      buttons: [
+        { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
+        { id: 2, type: "quick-reply", buttonText: "Learn More" }
+      ],
+      variableSamples: {
+        company: "Acme Corp"
+      }
     },
     {
       id: 2,
-      name: "Order Confirmation",
+      name: "order_confirmation",
       category: "Utility",
-      language: "EN",
+      type: "utility-default",
+      language: "English",
       status: "Active - HQ",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-11-01",
-      content: "Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
+      body:"Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
     },
     {
       id: 3,
-      name: "Promotional Offer",
+      name: "promotional_offer",
       category: "Marketing",
-      language: "EN",
+      type: "marketing-default",
+      language: "English",
       status: "Quality Pending",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "Blocked Business",
       lastEdited: "2025-10-28",
-      content: "🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
+      body:"🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
     },
     {
       id: 4,
-      name: "Cart Abandonment",
+      name: "cart_abandonment",
       category: "Marketing",
-      language: "EN",
+      type: "marketing-default",
+      language: "English",
       status: "Pending",
-      statusType: "warning" as const,
+      statusTypeColor: "warning" as const,
       topBlockReason: "",
       lastEdited: "2025-10-25",
-      content: "You left something in your cart! 🛒 Complete your purchase now and get free shipping on orders over $50. Don't miss out!",
+      body:"You left something in your cart! 🛒 Complete your purchase now and get free shipping on orders over $50. Don't miss out!",
     },
     {
       id: 5,
-      name: "Shipping Update",
+      name: "shipping_update",
       category: "Utility",
-      language: "EN",
+      type: "utility-default",
+      language: "English",
       status: "Active - HQ",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-10-20",
-      content: "📦 Your package is on its way! Track your order with code ABC123. Expected delivery: Tomorrow by 6 PM.",
+      body:"📦 Your package is on its way! Track your order with code ABC123. Expected delivery: Tomorrow by 6 PM.",
     },
     {
       id: 6,
-      name: "Payment Reminder",
+      name: "payment_reminder",
       category: "Utility",
-      language: "ES",
+      type: "utility-default",
+      language: "Spanish",
       status: "Approved",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "Sent Too Frequently",
       lastEdited: "2025-10-15",
-      content: "Recordatorio de pago: Su factura de $150 vence mañana. Pague ahora para evitar cargos adicionales. Gracias! 💳",
+      body:"Recordatorio de pago: Su factura de $150 vence mañana. Pague ahora para evitar cargos adicionales. Gracias! 💳",
     },
     {
       id: 7,
-      name: "Flash Sale Alert",
+      name: "flash_sale_alert",
       category: "Marketing",
-      language: "EN",
+      type: "marketing-default",
+      language: "English",
       status: "Rejected",
-      statusType: "danger" as const,
+      statusTypeColor: "danger" as const,
       topBlockReason: "",
       lastEdited: "2025-10-10",
-      content: "⚡ FLASH SALE ALERT! 50% OFF everything for the next 2 hours only! Use code FLASH50. Hurry, limited time!",
+      body:"⚡ FLASH SALE ALERT! 50% OFF everything for the next 2 hours only! Use code FLASH50. Hurry, limited time!",
     },
     {
       id: 8,
-      name: "Account Verification",
+      name: "account_verification",
       category: "Authentication",
-      language: "EN",
+      type: "auth-account",
+      language: "English",
       status: "Active - HQ",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "Reported as Suspicious",
       lastEdited: "2025-10-05",
-      content: "Please verify your account by clicking this link: verify.com/abc123. This link expires in 24 hours. 🔐",
+      body:"Please verify your account by clicking this link: verify.com/abc123. This link expires in 24 hours. 🔐",
     },
     {
       id: 9,
-      name: "Password Reset",
+      name: "password_reset",
       category: "Authentication",
-      language: "EN",
+      type: "auth-account",
+      language: "English",
       status: "Quality Pending",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-09-30",
-      content: "Reset your password by clicking here: reset.com/xyz789. If you didn't request this, please ignore this message. 🔑",
+      body:"Reset your password by clicking here: reset.com/xyz789. If you didn't request this, please ignore this message. 🔑",
     },
     {
       id: 10,
-      name: "Appointment Reminder",
+      name: "appointment_reminder",
       category: "Utility",
-      language: "FR",
+      type: "utility-default",
+      language: "French",
       status: "Active - HQ",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-09-25",
-      content: "Rappel de rendez-vous: Votre rendez-vous est demain à 14h00. Confirmez votre présence en répondant OUI. 📅",
+      body:"Rappel de rendez-vous: Votre rendez-vous est demain à 14h00. Confirmez votre présence en répondant OUI. 📅",
     },
     {
       id: 11,
-      name: "Survey Request",
+      name: "survey_request",
       category: "Marketing",
-      language: "EN",
+      type: "marketing-flows",
+      language: "English",
       status: "Pending",
-      statusType: "warning" as const,
+      statusTypeColor: "warning" as const,
       topBlockReason: "",
       lastEdited: "2025-09-20",
-      content: "Help us improve! Take our 2-minute survey and get a 10% discount on your next order. Your feedback matters! 📝",
+      body:"Help us improve! Take our 2-minute survey and get a 10% discount on your next order. Your feedback matters! 📝",
     },
     {
       id: 12,
-      name: "Delivery Notification",
+      name: "delivery_notification",
       category: "Utility",
-      language: "EN",
+      type: "utility-default",
+      language: "English",
       status: "Approved",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "Blocked Business",
       lastEdited: "2025-09-15",
-      content: "📦 Package delivered! Your order has been successfully delivered to your address. Thank you for choosing us!",
+      body:"📦 Package delivered! Your order has been successfully delivered to your address. Thank you for choosing us!",
     },
     {
       id: 13,
-      name: "Limited Time Offer",
+      name: "limited_time_offer",
       category: "Marketing",
-      language: "DE",
+      type: "marketing-default",
+      language: "German",
       status: "Rejected",
-      statusType: "danger" as const,
+      statusTypeColor: "danger" as const,
       topBlockReason: "",
       lastEdited: "2025-09-10",
-      content: "🎯 Zeitlich begrenztes Angebot! 30% Rabatt auf alle Artikel. Code: SAVE30DE. Nur heute gültig!",
+      body:"🎯 Zeitlich begrenztes Angebot! 30% Rabatt auf alle Artikel. Code: SAVE30German. Nur heute gültig!",
     },
     {
       id: 14,
-      name: "Support Ticket Update",
+      name: "support_ticket_update",
       category: "Utility",
-      language: "EN",
+      type: "utility-issue",
+      language: "English",
       status: "Quality Pending",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "Irrelevant Content",
       lastEdited: "2025-08-30",
-      content: "Support Update: Your ticket #12345 has been resolved. If you need further assistance, please reply to this message. 🎧",
+      body:"Support Update: Your ticket #12345 has been resolved. If you need further assistance, please reply to this message. 🎧",
     },
     {
       id: 15,
-      name: "New Feature Announcement",
+      name: "new_feature_announcement",
       category: "Marketing",
-      language: "EN",
+      type: "marketing-default",
+      language: "English",
       status: "Active - HQ",
-      statusType: "success" as const,
+      statusTypeColor: "success" as const,
       topBlockReason: "",
       lastEdited: "2025-08-25",
-      content: "🚀 New Feature Alert! We've just launched dark mode! Update your app now to try this exciting new feature.",
+      body:"🚀 New Feature Alert! We've just launched dark mode! Update your app now to try this exciting new feature.",
     },
-  ];
+  ]);
 
   const toggleTemplate = (id: number) => {
     setSelectedTemplates((prev) =>
@@ -593,8 +785,8 @@ export default function TemplateManager() {
     }
   };
 
-  const getStatusBadgeClasses = (statusType: string) => {
-    switch (statusType) {
+  const getStatusBadgeClasses = (statusTypeColor: string) => {
+    switch (statusTypeColor) {
       case "success":
         return "bg-green-100 text-green-700";
       case "warning":
@@ -821,10 +1013,10 @@ export default function TemplateManager() {
       data = data.filter(item => {
         // Map language IDs to actual language codes
         const languageMap: { [key: string]: string } = {
-          "english": "EN",
-          "spanish": "ES",
-          "french": "FR",
-          "german": "DE",
+          "english": "English",
+          "spanish": "Spanish",
+          "french": "French",
+          "german": "German",
           "portuguese": "PT",
           "italian": "IT"
         };
@@ -1462,7 +1654,7 @@ export default function TemplateManager() {
                           <td className="py-2 px-3">{template.category}</td>
                           <td className="py-2 px-3">{template.language}</td>
                           <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClasses(template.statusType)}`}>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClasses(template.statusTypeColor)}`}>
                               {template.status}
                             </span>
                           </td>
@@ -1478,7 +1670,7 @@ export default function TemplateManager() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem data-testid={`button-edit-${template.id}`}>
+                                <DropdownMenuItem onClick={() => handleOpenEditTemplate(template.id)} data-testid={`button-edit-${template.id}`}>
                                   <Edit2 size={14} className="mr-2" />
                                   Edit
                                 </DropdownMenuItem>
@@ -1489,11 +1681,11 @@ export default function TemplateManager() {
                                   <Eye size={14} className="mr-2" />
                                   Preview
                                 </DropdownMenuItem>
-                                <DropdownMenuItem data-testid={`button-clone-${template.id}`}>
+                                <DropdownMenuItem onClick={() => handleOpenCloneDialog(template.id)} data-testid={`button-clone-${template.id}`}>
                                   <Copy size={14} className="mr-2" />
                                   Clone
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" data-testid={`button-delete-${template.id}`}>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTemplate(template.id)} data-testid={`button-delete-${template.id}`}>
                                   <Trash2 size={14} className="mr-2" />
                                   Delete
                                 </DropdownMenuItem>
@@ -1508,7 +1700,7 @@ export default function TemplateManager() {
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-4 text-xs">
-                  <span className="text-muted-foreground">{whatsappTemplates.length} results</span>
+                  <span className="text-muted-foreground">{filteredAndSortedTemplates.length} results</span>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">Rows per page:</span>
                     <div className="relative w-15" ref={dropdownRef}>
@@ -1583,109 +1775,23 @@ export default function TemplateManager() {
             <DialogTitle>Template Preview</DialogTitle>
           </DialogHeader>
           <div className="flex justify-center">
-            <div className="flex-1 flex items-center justify-center">
-              {/* Phone mockup */}
-              <div className="flex-1 flex items-center justify-center min-h-0">
-                {/* Phone mockup */}
-                <div className="h-full max-h-[80vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
-                  {/* Phone header - WhatsApp green */}
-                  <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
-                      <div>
-                        <p className="text-xs font-semibold text-white">WhatsApp</p>
-                        <p className="text-xs text-[#DCF8C6]">Online</p>
-                      </div>
-                    </div>
-                  </div>
+            {(() => {
+              const previewTemplate = whatsappTemplates.find(t => t.id === previewTemplateId);
+              if (!previewTemplate) return null;
 
-                  {/* Chat area - WhatsApp light background */}
-                  <div
-                    className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide"
-                    style={{
-                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                      scrollbarWidth: 'none',
-                      msOverflowStyle: 'none'
-                    }}
-                  >
-                    {/* Spacer to push message to bottom */}
-                    <div className="flex-1 min-h-0"></div>
-                    {/* Template message preview */}
-                    <div className="flex justify-start flex-shrink-0">
-                      <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                        {/* Header */}
-                        {headerText && (
-                          <div className="mb-2">
-                            <p className="text-sm font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                              {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
-                                const variableMatch = part.match(/\{\{([^}]+)\}\}/);
-                                if (variableMatch) {
-                                  const variableKey = variableMatch[1];
-                                  const value = variableSamples[variableKey];
-                                  return (
-                                    <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                      {value || part}
-                                    </span>
-                                  );
-                                }
-                                return <span key={idx}>{part}</span>;
-                              })}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Body */}
-                        {bodyText && (
-                          <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                            {bodyText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
-                              const variableMatch = part.match(/\{\{([^}]+)\}\}/);
-                              if (variableMatch) {
-                                const variableKey = variableMatch[1];
-                                const value = variableSamples[variableKey];
-                                return (
-                                  <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                    {value || part}
-                                  </span>
-                                );
-                              }
-                              return <span key={idx}>{formatWhatsAppText(part)}</span>;
-                            })}
-                          </p>
-                        )}
-
-                        {/* Footer */}
-                        {footerText && (
-                          <div className="mt-2">
-                            <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                              {footerText}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Placeholder when no content */}
-                        {!headerText && !bodyText && !footerText && (
-                          <p className="text-sm text-[#999999] italic">
-                            Start typing to see your template preview...
-                          </p>
-                        )}
-
-                        <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Input area */}
-                  <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                    <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
-                      <p className="text-sm text-[#999999]">Type a message...</p>
-                    </div>
-                    <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
-                      <Send size={16} className="text-white" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              return (
+                <TemplatePreview
+                  headerText={previewTemplate.header || ""}
+                  bodyText={previewTemplate.body || ""}
+                  footerText={previewTemplate.footer || ""}
+                  selectedMediaFile={previewTemplate.mediaFile || null}
+                  templateButtons={previewTemplate.buttons || []}
+                  variableSamples={previewTemplate.variableSamples || {}}
+                  containerClassName="flex-1 flex items-center justify-center"
+                  phoneClassName="h-full max-h-[80vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                />
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
@@ -1695,51 +1801,11 @@ export default function TemplateManager() {
         <DialogContent className={
           templateCreationStep === "content" ? "max-w-4xl" : "max-w-3xl"
         } data-testid="dialog-create-template">
-          {templateCreationStep === "choice" && (
-            <>
-              <DialogHeader className="mb-2">
-                <DialogTitle>Create Template</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" onClick={handleBlankTemplateClick} data-testid="card-blank-template">
-                  <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <FileText size={24} className="text-primary" />
-                    </div>
-                    <CardTitle className="text-base">Use Blank Template</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-sm text-muted-foreground">Create your template from scratch. Once you finish creating your template, it must be submitted for review.</p>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-template-library">
-                  <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <BookOpen size={24} className="text-blue-600" />
-                    </div>
-                    <CardTitle className="text-base">Browse our template library</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-sm text-muted-foreground">Get started faster with pre-written templates. Use a template as is and it will be available to send immediately.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
-          )}
-
           {templateCreationStep === "category" && (
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToChoice}
-                    className="font-normal p-1 h-8 w-8"
-                  >
-                    <ArrowLeft size={16} />
-                  </Button>
-                  <DialogTitle>Use Blank Template</DialogTitle>
+                  <DialogTitle>Create Template</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -1764,8 +1830,8 @@ export default function TemplateManager() {
                 {/* Category Cards */}
                 <div className="grid grid-cols-3 gap-4">
                   <Card
-                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "marketing" ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => handleCategorySelect("marketing")}
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Marketing" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("Marketing")}
                     data-testid="card-category-marketing"
                   >
                     <CardHeader className="text-center pb-2">
@@ -1780,8 +1846,8 @@ export default function TemplateManager() {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "utility" ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => handleCategorySelect("utility")}
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Utility" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("Utility")}
                     data-testid="card-category-utility"
                   >
                     <CardHeader className="text-center pb-2">
@@ -1796,8 +1862,8 @@ export default function TemplateManager() {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "authentication" ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => handleCategorySelect("authentication")}
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Authentication" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("Authentication")}
                     data-testid="card-category-authentication"
                   >
                     <CardHeader className="text-center pb-2">
@@ -1826,10 +1892,10 @@ export default function TemplateManager() {
                 <div className="flex justify-between pt-2">
                   <Button
                     variant="outline"
-                    onClick={handleBackToChoice}
+                    onClick={handleCloseCreateTemplate}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                   >
-                    Back
+                    Close
                   </Button>
                   <Button
                     onClick={handleNextFromCategory}
@@ -1847,15 +1913,8 @@ export default function TemplateManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToCategory}
-                    className="font-normal p-1 h-8 w-8"
-                  >
-                    <ArrowLeft size={16} />
-                  </Button>
-                  <DialogTitle>Use Blank Template</DialogTitle>
+                  <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToCategory} />
+                  <DialogTitle>Create Template</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -1910,12 +1969,12 @@ export default function TemplateManager() {
                             <SelectValue placeholder="Select language" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="english">English</SelectItem>
-                            <SelectItem value="spanish">Spanish</SelectItem>
-                            <SelectItem value="french">French</SelectItem>
-                            <SelectItem value="german">German</SelectItem>
-                            <SelectItem value="portuguese">Portuguese</SelectItem>
-                            <SelectItem value="italian">Italian</SelectItem>
+                            <SelectItem value="English">English</SelectItem>
+                            <SelectItem value="Spanish">Spanish</SelectItem>
+                            <SelectItem value="French">French</SelectItem>
+                            <SelectItem value="German">German</SelectItem>
+                            <SelectItem value="Portuguese">Portuguese</SelectItem>
+                            <SelectItem value="Italian">Italian</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1936,7 +1995,7 @@ export default function TemplateManager() {
                     {/* Template Type Cards */}
                     <div>
                       <div className="max-h-[calc(100vh-30rem)] overflow-y-auto space-y-2">
-                      {selectedCategory === "utility" && (
+                      {selectedCategory === "Utility" && (
                         <>
                           <div
                             onClick={() => setTemplateType("utility-default")}
@@ -2038,7 +2097,7 @@ export default function TemplateManager() {
                         </>
                       )}
 
-                      {selectedCategory === "marketing" && (
+                      {selectedCategory === "Marketing" && (
                         <>
                           <div
                             onClick={() => setTemplateType("marketing-default")}
@@ -2098,7 +2157,7 @@ export default function TemplateManager() {
                         </>
                       )}
 
-                      {selectedCategory === "authentication" && (
+                      {selectedCategory === "Authentication" && (
                         <>
                           <div
                             onClick={() => setTemplateType("auth-default")}
@@ -2173,15 +2232,8 @@ export default function TemplateManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToForm}
-                    className="font-normal p-1 h-8 w-8"
-                  >
-                    <ArrowLeft size={16} />
-                  </Button>
-                  <DialogTitle>Use Blank Template</DialogTitle>
+                  <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToForm} />
+                  <DialogTitle>Create Template</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -2205,7 +2257,7 @@ export default function TemplateManager() {
               <div className="flex gap-4">
                 {/* Left: Template Form */}
                 <div className="flex-1 max-h-[55vh] overflow-y-auto pr-2 -ml-1">
-                  <div className="space-y-6 pl-1">
+                  <div className="space-y-6 pl-1 pb-1">
                     {/* Header */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -2242,50 +2294,57 @@ export default function TemplateManager() {
                         <label className="text-sm font-medium text-foreground">Media Sample</label>
                         <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
                       </div>
-                      <div className="flex gap-2">
-                        <Select value={mediaSample} onValueChange={setMediaSample}>
-                          <SelectTrigger className="w-[160px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                            <SelectValue placeholder="Select media type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="video">Video</SelectItem>
-                            <SelectItem value="document">Document</SelectItem>
-                            <SelectItem value="location">Location</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {/* Browse Button - Show for browsable media types */}
-                        {(mediaSample === "image" || mediaSample === "video" || mediaSample === "document") && (
-                          <Button
-                            className="font-normal"
-                            onClick={() => {
-                              const input = document.createElement('input');
-                              input.type = 'file';
-                              input.accept = mediaSample === 'image' ? 'image/*' :
-                                            mediaSample === 'video' ? 'video/*' :
-                                            mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
-                              input.onchange = (e) => {
-                                const file = (e.target as HTMLInputElement).files?.[0];
-                                if (file) {
-                                  console.log('Selected file:', file.name);
-                                  // Handle file upload here
-                                }
-                              };
-                              input.click();
-                            }}
+                      {selectedMediaFile ? (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded border border-input [border-color:hsl(var(--input))]">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
+                            <span className="truncate text-foreground text-sm">{selectedMediaFile.name}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">({(selectedMediaFile.size / 1024).toFixed(1)}KB)</span>
+                          </div>
+                          <button
+                            onClick={() => setSelectedMediaFile(null)}
+                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                           >
-                            Browse {mediaSample.charAt(0).toUpperCase() + mediaSample.slice(1)}
-                          </Button>
-                        )}
-                        {/* Coordinates Input - Show for location */}
-                        {mediaSample === "location" && (
-                          <Input
-                            placeholder="Enter latitude, longitude (e.g., 40.7128, -74.0060)"
-                            className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1"
-                          />
-                        )}
-                      </div>
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Select value={mediaSample} onValueChange={setMediaSample}>
+                            <SelectTrigger className="w-[160px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                              <SelectValue placeholder="Select media type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="image">Image</SelectItem>
+                              <SelectItem value="video">Video</SelectItem>
+                              <SelectItem value="document">Document</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {/* Browse Button - Show for browsable media types */}
+                          {(mediaSample === "image" || mediaSample === "video" || mediaSample === "document") && (
+                            <Button
+                              className="font-normal"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = mediaSample === 'image' ? 'image/*' :
+                                              mediaSample === 'video' ? 'video/*' :
+                                              mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
+                                input.onchange = (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (file) {
+                                    setSelectedMediaFile(file);
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              Browse {mediaSample.charAt(0).toUpperCase() + mediaSample.slice(1)}
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Body */}
@@ -2393,7 +2452,7 @@ export default function TemplateManager() {
 
                     {/* Variable Samples */}
                     {getAllVariables().length > 0 && (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div>
                           <h4 className="text-sm font-medium text-foreground mb-1">
                             Variable Samples<span className="text-red-500 pl-0.5">*</span>
@@ -2424,27 +2483,8 @@ export default function TemplateManager() {
                       </div>
                     )}
 
-                    {/* Footer */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Footer</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          placeholder="Add footer text..."
-                          value={footerText}
-                          onChange={(e) => setFooterText(e.target.value.slice(0, 60))}
-                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {footerText.length}/60
-                        </span>
-                      </div>
-                    </div>
-
                     {/* Buttons */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <label className="text-sm font-medium text-foreground">Buttons</label>
                         <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
@@ -2453,46 +2493,59 @@ export default function TemplateManager() {
                         Add up to 10 buttons for customer actions or responses. More than 3 buttons will appear in a list.
                       </p>
                       <Select onValueChange={(value) => {
-                        if (value) {
+                        if (value && templateButtons.length < 10) {
                           // Add button to list instead of selecting
-                          setTemplateButtons([...templateButtons, { id: Date.now(), type: value }]);
+                          const newButton: any = { id: Date.now(), type: value };
+
+                          // Initialize with default values based on button type
+                          if (value === "visit-website") {
+                            newButton.urlType = "static";
+                          } else if (value === "call-phone") {
+                            newButton.country = "+1";
+                          } else if (value === "complete-flow") {
+                            newButton.flowButton = "default";
+                          } else if (value === "copy-offer") {
+                            newButton.activeFor = "7";
+                          }
+
+                          setTemplateButtons([...templateButtons, newButton]);
                         }
-                      }} value="">
-                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                          <SelectValue placeholder="Add button" />
+                      }} value="" disabled={templateButtons.length >= 10}>
+                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                          <SelectValue placeholder={templateButtons.length >= 10 ? "Maximum 10 buttons reached" : "Add button"} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="quick-reply">
+                          <SelectItem value="quick-reply" className="pl-4">
                             <div>
                               <div className="font-medium">Quick reply</div>
                               <div className="text-xs text-muted-foreground">Simple response buttons for customer replies</div>
                             </div>
                           </SelectItem>
-                          <SelectItem value="visit-website">
+                          <SelectItem value="visit-website" className="pl-4">
                             <div>
                               <div className="font-medium">Visit website</div>
                               <div className="text-xs text-muted-foreground">Direct customers to your website or URL</div>
                             </div>
                           </SelectItem>
-                          <SelectItem value="call-whatsapp">
+                          <SelectItem value="call-whatsapp" className="pl-4">
                             <div>
                               <div className="font-medium">Call on WhatsApp</div>
                               <div className="text-xs text-muted-foreground">Enable voice calls through WhatsApp</div>
                             </div>
                           </SelectItem>
-                          <SelectItem value="call-phone">
+                          <SelectItem value="call-phone" className="pl-4">
                             <div>
                               <div className="font-medium">Call phone number</div>
                               <div className="text-xs text-muted-foreground">Direct customers to call a phone number</div>
                             </div>
                           </SelectItem>
-                          <SelectItem value="complete-flow">
+                          <SelectItem value="complete-flow" className="pl-4">
                             <div>
                               <div className="font-medium">Complete Flow</div>
                               <div className="text-xs text-muted-foreground">Trigger a WhatsApp Flow for interactive experiences</div>
                             </div>
                           </SelectItem>
-                          <SelectItem value="copy-offer">
+                          <SelectItem value="copy-offer" className="pl-4">
                             <div>
                               <div className="font-medium">Copy offer code</div>
                               <div className="text-xs text-muted-foreground">Allow customers to copy promotional codes</div>
@@ -2538,7 +2591,7 @@ export default function TemplateManager() {
                                   {/* Quick Reply */}
                                   {button.type === "quick-reply" && (
                                     <div className="space-y-2">
-                                      <label className="text-sm font-medium text-foreground">Button Text</label>
+                                      <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
                                       <div className="relative">
                                         <Input
                                           placeholder="Enter button text..."
@@ -2557,7 +2610,7 @@ export default function TemplateManager() {
                                   {button.type === "visit-website" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter button text..."
@@ -2571,8 +2624,8 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">URL Type</label>
-                                        <Select value={button.urlType || ""} onValueChange={(value) => updateButtonConfig(button.id, "urlType", value)}>
+                                        <label className="text-sm font-medium text-foreground">URL Type<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.urlType || "static"} onValueChange={(value) => updateButtonConfig(button.id, "urlType", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
                                             <SelectValue placeholder="Select URL type" />
                                           </SelectTrigger>
@@ -2583,7 +2636,7 @@ export default function TemplateManager() {
                                         </Select>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Website URL</label>
+                                        <label className="text-sm font-medium text-foreground">Website URL<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter website URL..."
@@ -2623,7 +2676,7 @@ export default function TemplateManager() {
                                   {button.type === "call-whatsapp" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter button text..."
@@ -2638,11 +2691,11 @@ export default function TemplateManager() {
                                       </div>
                                       <div className="space-y-2">
                                         <label className="text-sm font-medium text-foreground">Active for</label>
-                                        <Select value={button.activeFor || ""} onValueChange={(value) => updateButtonConfig(button.id, "activeFor", value)}>
+                                        <Select value={button.activeFor || "7"} onValueChange={(value) => updateButtonConfig(button.id, "activeFor", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
                                             <SelectValue placeholder="Select duration" />
                                           </SelectTrigger>
-                                          <SelectContent>
+                                          <SelectContent className="max-h-[200px]">
                                             {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
                                               <SelectItem key={day} value={`${day}`}>
                                                 {day} day{day > 1 ? "s" : ""}
@@ -2658,7 +2711,7 @@ export default function TemplateManager() {
                                   {button.type === "call-phone" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter button text..."
@@ -2672,12 +2725,12 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Country</label>
-                                        <Select value={button.country || ""} onValueChange={(value) => updateButtonConfig(button.id, "country", value)}>
+                                        <label className="text-sm font-medium text-foreground">Country<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.country || "+1"} onValueChange={(value) => updateButtonConfig(button.id, "country", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
                                             <SelectValue placeholder="Select country" />
                                           </SelectTrigger>
-                                          <SelectContent>
+                                          <SelectContent className="max-h-[200px]">
                                             <SelectItem value="+1">+1 (US/Canada)</SelectItem>
                                             <SelectItem value="+44">+44 (UK)</SelectItem>
                                             <SelectItem value="+33">+33 (France)</SelectItem>
@@ -2692,7 +2745,7 @@ export default function TemplateManager() {
                                         </Select>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Phone number</label>
+                                        <label className="text-sm font-medium text-foreground">Phone number<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter phone number..."
@@ -2715,7 +2768,7 @@ export default function TemplateManager() {
                                   {button.type === "complete-flow" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter button text..."
@@ -2729,8 +2782,8 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button</label>
-                                        <Select value={button.flowButton || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowButton", value)}>
+                                        <label className="text-sm font-medium text-foreground">Button<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.flowButton || "default"} onValueChange={(value) => updateButtonConfig(button.id, "flowButton", value)}>
                                           <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
                                             <SelectValue placeholder="Select button type" />
                                           </SelectTrigger>
@@ -2743,33 +2796,54 @@ export default function TemplateManager() {
                                         </Select>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Flow</label>
+                                        <label className="text-sm font-medium text-foreground">Flow<span className="text-red-500 pl-0.5">*</span></label>
                                         <Select value={button.flowId || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowId", value)}>
-                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select flow" />
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3">
+                                            <SelectValue placeholder="Select flow">
+                                              {button.flowId && (
+                                                <span className="font-normal">
+                                                  {button.flowId === "product-inquiry" && "Product Inquiry Form"}
+                                                  {button.flowId === "support-request" && "Support Request"}
+                                                  {button.flowId === "promotional-survey" && "Promotional Survey"}
+                                                  {button.flowId === "review-collection" && "Review Collection"}
+                                                </span>
+                                              )}
+                                            </SelectValue>
                                           </SelectTrigger>
                                           <SelectContent>
                                             <SelectItem value="product-inquiry">
                                               <div>
-                                                <div className="font-medium">Product Inquiry Form</div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Product Inquiry Form
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Default</span>
+                                                </div>
                                                 <div className="text-xs text-muted-foreground">Collect customers product inquires</div>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="support-request">
                                               <div>
-                                                <div className="font-medium">Support Request</div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Support Request
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Document</span>
+                                                </div>
                                                 <div className="text-xs text-muted-foreground">Handle customer support requests</div>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="promotional-survey">
                                               <div>
-                                                <div className="font-medium">Promotional Survey</div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Promotional Survey
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Promotion</span>
+                                                </div>
                                                 <div className="text-xs text-muted-foreground">Gather feedback on promotions</div>
                                               </div>
                                             </SelectItem>
                                             <SelectItem value="review-collection">
                                               <div>
-                                                <div className="font-medium">Review Collection</div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Review Collection
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Review</span>
+                                                </div>
                                                 <div className="text-xs text-muted-foreground">Collect customer reviews</div>
                                               </div>
                                             </SelectItem>
@@ -2783,7 +2857,7 @@ export default function TemplateManager() {
                                   {button.type === "copy-offer" && (
                                     <div className="space-y-3">
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text</label>
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
                                             placeholder="Enter button text..."
@@ -2797,10 +2871,10 @@ export default function TemplateManager() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Offer code</label>
+                                        <label className="text-sm font-medium text-foreground">Offer code<span className="text-red-500 pl-0.5">*</span></label>
                                         <div className="relative">
                                           <Input
-                                            placeholder="Enter offer code..."
+                                            placeholder="Enter offer code... e.g. SUMMER50"
                                             value={button.offerCode || ""}
                                             onChange={(e) => updateButtonConfig(button.id, "offerCode", e.target.value.slice(0, 15))}
                                             className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
@@ -2819,6 +2893,25 @@ export default function TemplateManager() {
                         </div>
                       )}
                     </div>
+
+                    {/* Footer */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Footer</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Add footer text..."
+                          value={footerText}
+                          onChange={(e) => setFooterText(e.target.value.slice(0, 60))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {footerText.length}/60
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2826,106 +2919,16 @@ export default function TemplateManager() {
                 <div className="max-h-[55vh] flex-shrink-0 w-[27.5vh]">
                   <div className="flex flex-col h-full">
                     <label className="text-sm font-medium mb-3 block flex-shrink-0 mt-1">Template Preview</label>
-                    <div className="flex-1 flex items-center justify-center min-h-0">
-                      {/* Phone mockup */}
-                      <div className="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
-                        {/* Phone header - WhatsApp green */}
-                        <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
-                            <div>
-                              <p className="text-xs font-semibold text-white">WhatsApp</p>
-                              <p className="text-xs text-[#DCF8C6]">Online</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Chat area - WhatsApp light background */}
-                        <div
-                          className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide"
-                          style={{
-                            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none'
-                          }}
-                        >
-                          {/* Spacer to push message to bottom */}
-                          <div className="flex-1 min-h-0"></div>
-                          {/* Template message preview */}
-                          <div className="flex justify-start flex-shrink-0">
-                            <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                              {/* Header */}
-                              {headerText && (
-                                <div className="mb-2">
-                                  <p className="text-sm font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                    {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
-                                      const variableMatch = part.match(/\{\{([^}]+)\}\}/);
-                                      if (variableMatch) {
-                                        const variableKey = variableMatch[1];
-                                        const value = variableSamples[variableKey];
-                                        return (
-                                          <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                            {value || part}
-                                          </span>
-                                        );
-                                      }
-                                      return <span key={idx}>{part}</span>;
-                                    })}
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* Body */}
-                              {bodyText && (
-                                <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                  {bodyText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
-                                    const variableMatch = part.match(/\{\{([^}]+)\}\}/);
-                                    if (variableMatch) {
-                                      const variableKey = variableMatch[1];
-                                      const value = variableSamples[variableKey];
-                                      return (
-                                        <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                          {value || part}
-                                        </span>
-                                      );
-                                    }
-                                    return <span key={idx}>{formatWhatsAppText(part)}</span>;
-                                  })}
-                                </p>
-                              )}
-
-                              {/* Footer */}
-                              {footerText && (
-                                <div className="mt-2">
-                                  <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                    {footerText}
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* Placeholder when no content */}
-                              {!headerText && !bodyText && !footerText && (
-                                <p className="text-sm text-[#999999] italic">
-                                  Start typing to see your template preview...
-                                </p>
-                              )}
-
-                              <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Input area */}
-                        <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                          <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
-                            <p className="text-sm text-[#999999]">Type a message...</p>
-                          </div>
-                          <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
-                            <Send size={16} className="text-white" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <TemplatePreview
+                      headerText={headerText}
+                      bodyText={bodyText}
+                      footerText={footerText}
+                      selectedMediaFile={selectedMediaFile}
+                      templateButtons={templateButtons}
+                      variableSamples={variableSamples}
+                      containerClassName="flex-1 flex items-center justify-center min-h-0"
+                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                    />
                   </div>
                 </div>
               </div>
@@ -2941,12 +2944,1202 @@ export default function TemplateManager() {
                 <Button
                   className="gap-2 font-normal"
                   disabled={!isTemplateFormValid()}
+                  onClick={handleCreateTemplate}
                 >
                   Create Template
                 </Button>
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Template Dialog */}
+      <Dialog open={editTemplateOpen} onOpenChange={handleCloseEditTemplate}>
+        <DialogContent className={
+          templateCreationStep === "content" ? "max-w-4xl" : "max-w-3xl"
+        } data-testid="dialog-edit-template">
+          {templateCreationStep === "category" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <DialogTitle>Edit Template</DialogTitle>
+                </div>
+                <div className="space-y-3">
+                  {/* 3-segment progress bar */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 h-2 rounded-full transition-colors ${
+                          index < 1 ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Choose template category</h3>
+                    <p className="text-sm text-muted-foreground">Select the category that best describes your message purpose. Each category has specific types and approval requirements.</p>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {/* Category Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  <Card
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Marketing" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("Marketing")}
+                    data-testid="card-category-marketing"
+                  >
+                    <CardHeader className="text-center pb-2">
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
+                        <ShoppingCart size={24} className="text-orange-600" />
+                      </div>
+                      <CardTitle className="text-base">Marketing</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground">Send promotional content, product updates, and offers</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Utility" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("Utility")}
+                    data-testid="card-category-utility"
+                  >
+                    <CardHeader className="text-center pb-2">
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Bell size={24} className="text-blue-600" />
+                      </div>
+                      <CardTitle className="text-base">Utility</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground">Send account updates, alerts, and service notifications</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Authentication" ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => handleCategorySelect("Authentication")}
+                    data-testid="card-category-authentication"
+                  >
+                    <CardHeader className="text-center pb-2">
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <Shield size={24} className="text-green-600" />
+                      </div>
+                      <CardTitle className="text-base">Authentication</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground">Send OTP codes, login confirmations, and security alerts</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Category Guidelines Banner */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-base text-blue-800 mb-2">Category Guidelines:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5">
+                    <li><strong>Marketing:</strong> Requires opt-in from customers and has a 24-hour messaging window</li>
+                    <li><strong>Utility:</strong> For transactional messages like confirmations, alerts, and updates</li>
+                    <li><strong>Authentication:</strong> For security codes, login verifications, and account alerts</li>
+                  </ul>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleCloseEditTemplate}
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={handleNextFromCategory}
+                    disabled={!selectedCategory}
+                    className="gap-2 font-normal"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {templateCreationStep === "form" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToCategory} />
+                  <DialogTitle>Edit Template</DialogTitle>
+                </div>
+                <div className="space-y-3">
+                  {/* 3-segment progress bar */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 h-2 rounded-full transition-colors ${
+                          index < 2 ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Template Details</h3>
+                    <p className="text-sm text-muted-foreground">Fill in the template information and type.</p>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {/* Template Form */}
+                <div className="space-y-4">
+                  {/* Template Name and Language - Side by Side */}
+                  <div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Template Name */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                          Template Name<span className="text-red-500 pl-0.5">*</span>
+                        </label>
+                        <Input
+                          id="template-name"
+                          placeholder="my_template"
+                          value={templateName}
+                          onChange={(e) => {
+                            // Auto-decapitalize and allow only lowercase, numbers, underscores
+                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                            setTemplateName(value);
+                          }}
+                        />
+                      </div>
+
+                      {/* Language Selection */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">
+                          Language<span className="text-red-500 pl-0.5">*</span>
+                        </label>
+                        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select language" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="English">English</SelectItem>
+                            <SelectItem value="Spanish">Spanish</SelectItem>
+                            <SelectItem value="French">French</SelectItem>
+                            <SelectItem value="German">German</SelectItem>
+                            <SelectItem value="Portuguese">Portuguese</SelectItem>
+                            <SelectItem value="Italian">Italian</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                    </div>
+                      {/* Template Name Guidelines */}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Lowercase letters, numbers and underscores only.
+                      </p>
+                  </div>
+
+                  {/* Template Type */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">
+                      Template Type<span className="text-red-500 pl-0.5">*</span>
+                    </label>
+
+                    {/* Template Type Cards */}
+                    <div>
+                      <div className="max-h-[calc(100vh-30rem)] overflow-y-auto space-y-2">
+                      {selectedCategory === "Utility" && (
+                        <>
+                          <div
+                            onClick={() => setTemplateType("utility-default")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-default"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Default</h4>
+                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-appointment")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-appointment"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Appointment Update</h4>
+                              <p className="text-xs text-muted-foreground">Appointment confirmations and reminders.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-issue")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-issue"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Issue Resolution</h4>
+                              <p className="text-xs text-muted-foreground">Support and issue updates.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-payment")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-payment"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Payment Update</h4>
+                              <p className="text-xs text-muted-foreground">Payment confirmations and receipts.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-shipping")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-shipping"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Shipping Update</h4>
+                              <p className="text-xs text-muted-foreground">Delivery and shipping notifications.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-reservation")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-reservation"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Reservation Update</h4>
+                              <p className="text-xs text-muted-foreground">Booking confirmations and changes.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("utility-account")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "utility-account"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
+                              <p className="text-xs text-muted-foreground">Account changes and notifications.</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {selectedCategory === "Marketing" && (
+                        <>
+                          <div
+                            onClick={() => setTemplateType("marketing-default")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-default"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Default</h4>
+                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("marketing-catalog")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-catalog"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Catalog</h4>
+                              <p className="text-xs text-muted-foreground">Send messages that drive sales by connecting your product catalog.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("marketing-flows")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-flows"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Flows</h4>
+                              <p className="text-xs text-muted-foreground">Send a form to capture customer interests, appointment requests, or run surveys.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("marketing-calling")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "marketing-calling"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Calling permissions request</h4>
+                              <p className="text-xs text-muted-foreground">Ask customers if you can call them on WhatsApp.</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {selectedCategory === "Authentication" && (
+                        <>
+                          <div
+                            onClick={() => setTemplateType("auth-default")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "auth-default"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Default</h4>
+                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("auth-account")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "auth-account"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
+                              <p className="text-xs text-muted-foreground">Security and account notifications.</p>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => setTemplateType("auth-alert")}
+                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                              templateType === "auth-alert"
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                          >
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Alert Update</h4>
+                              <p className="text-xs text-muted-foreground">Security alerts and warnings.</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToCategory}
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleNextFromForm}
+                    disabled={!templateName.trim() || !templateType.trim()}
+                    className="gap-2 font-normal"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {templateCreationStep === "content" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToForm} />
+                  <DialogTitle>Create Template</DialogTitle>
+                </div>
+                <div className="space-y-3">
+                  {/* 3-segment progress bar */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`flex-1 h-2 rounded-full transition-colors ${
+                          index < 3 ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Template Content</h3>
+                    <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="flex gap-4">
+                {/* Left: Template Form */}
+                <div className="flex-1 max-h-[55vh] overflow-y-auto pr-2 -ml-1">
+                  <div className="space-y-6 pl-1 pb-1">
+                    {/* Header */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-foreground">Header</label>
+                          <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs gap-1"
+                          onClick={() => setHeaderText(headerText + `{{${getNextVariableNumber()}}}`)}
+                        >
+                          <Plus size={12} />
+                          Add variable
+                        </Button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Add header text..."
+                          value={headerText}
+                          onChange={(e) => setHeaderText(e.target.value.slice(0, 60))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {headerText.length}/60
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Media Sample */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Media Sample</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      {selectedMediaFile ? (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded border border-input [border-color:hsl(var(--input))]">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
+                            <span className="truncate text-foreground text-sm">{selectedMediaFile.name}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">({(selectedMediaFile.size / 1024).toFixed(1)}KB)</span>
+                          </div>
+                          <button
+                            onClick={() => setSelectedMediaFile(null)}
+                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Select value={mediaSample} onValueChange={setMediaSample}>
+                            <SelectTrigger className="w-[160px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                              <SelectValue placeholder="Select media type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="image">Image</SelectItem>
+                              <SelectItem value="video">Video</SelectItem>
+                              <SelectItem value="document">Document</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {/* Browse Button - Show for browsable media types */}
+                          {(mediaSample === "image" || mediaSample === "video" || mediaSample === "document") && (
+                            <Button
+                              className="font-normal"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = mediaSample === 'image' ? 'image/*' :
+                                              mediaSample === 'video' ? 'video/*' :
+                                              mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
+                                input.onchange = (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (file) {
+                                    setSelectedMediaFile(file);
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              Browse {mediaSample.charAt(0).toUpperCase() + mediaSample.slice(1)}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Body */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-foreground">
+                          Body<span className="text-red-500 pl-0.5">*</span>
+                        </label>
+                        <div className="flex gap-1 items-center">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleBold}
+                              >
+                                <Bold size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Bold</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleItalic}
+                              >
+                                <Italic size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Italic</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={handleStrikethrough}
+                              >
+                                <Strikethrough size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Strikethrough</TooltipContent>
+                          </Tooltip>
+                          <div className="relative">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                >
+                                  <Smile size={14} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Add emoji</TooltipContent>
+                            </Tooltip>
+                            {showEmojiPicker && (
+                              <div
+                                ref={emojiPickerRef}
+                                className="absolute top-8 right-0 z-50"
+                              >
+                                <Picker
+                                  data={data}
+                                  onEmojiSelect={handleEmojiSelect}
+                                  theme="light"
+                                  previewPosition="none"
+                                  skinTonePosition="top"
+                                  maxFrequentRows={1}
+                                  perLine={8}
+                                  set="native"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs gap-1"
+                            onClick={() => setBodyText(bodyText + `{{${getNextVariableNumber()}}}`)}
+                          >
+                            <Plus size={12} />
+                            Add variable
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <textarea
+                          ref={bodyTextareaRef}
+                          placeholder="Add body text..."
+                          value={bodyText}
+                          onChange={(e) => setBodyText(e.target.value.slice(0, 1024))}
+                          className="w-full min-h-[120px] p-3 pr-16 pb-8 border border-input [border-color:hsl(var(--input))] rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-[0.90rem] hover-elevate"
+                        />
+                        <span className="absolute bottom-4 right-2 text-xs text-muted-foreground">
+                          {bodyText.length}/1024
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Variable Samples */}
+                    {getAllVariables().length > 0 && (
+                      <div className="space-y-2">
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground mb-1">
+                            Variable Samples<span className="text-red-500 pl-0.5">*</span>
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            Include samples of all variables in your message to help Meta review your template.
+                            Remember not to include any customer information to protect your customer's privacy.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 items-center">
+                          {getAllVariables().map((variable) => {
+                            // Extract the content inside the braces (could be number or text)
+                            const variableKey = variable.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+                            return (
+                              <>
+                                <div key={`${variable}-label`} className="font-medium text-sm">{variable}</div>
+                                <Input
+                                  key={`${variable}-input`}
+                                  placeholder={`Sample text for ${variable}`}
+                                  value={variableSamples[variableKey] || ""}
+                                  onChange={(e) => setVariableSamples({...variableSamples, [variableKey]: e.target.value})}
+                                  className="border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                />
+                              </>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Buttons */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Buttons</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add up to 10 buttons for customer actions or responses. More than 3 buttons will appear in a list.
+                      </p>
+                      <Select onValueChange={(value) => {
+                        if (value && templateButtons.length < 10) {
+                          // Add button to list instead of selecting
+                          const newButton: any = { id: Date.now(), type: value };
+
+                          // Initialize with default values based on button type
+                          if (value === "visit-website") {
+                            newButton.urlType = "static";
+                          } else if (value === "call-phone") {
+                            newButton.country = "+1";
+                          } else if (value === "complete-flow") {
+                            newButton.flowButton = "default";
+                          } else if (value === "copy-offer") {
+                            newButton.activeFor = "7";
+                          }
+
+                          setTemplateButtons([...templateButtons, newButton]);
+                        }
+                      }} value="" disabled={templateButtons.length >= 10}>
+                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                          <SelectValue placeholder={templateButtons.length >= 10 ? "Maximum 10 buttons reached" : "Add button"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="quick-reply" className="pl-4">
+                            <div>
+                              <div className="font-medium">Quick reply</div>
+                              <div className="text-xs text-muted-foreground">Simple response buttons for customer replies</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="visit-website" className="pl-4">
+                            <div>
+                              <div className="font-medium">Visit website</div>
+                              <div className="text-xs text-muted-foreground">Direct customers to your website or URL</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="call-whatsapp" className="pl-4">
+                            <div>
+                              <div className="font-medium">Call on WhatsApp</div>
+                              <div className="text-xs text-muted-foreground">Enable voice calls through WhatsApp</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="call-phone" className="pl-4">
+                            <div>
+                              <div className="font-medium">Call phone number</div>
+                              <div className="text-xs text-muted-foreground">Direct customers to call a phone number</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="complete-flow" className="pl-4">
+                            <div>
+                              <div className="font-medium">Complete Flow</div>
+                              <div className="text-xs text-muted-foreground">Trigger a WhatsApp Flow for interactive experiences</div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="copy-offer" className="pl-4">
+                            <div>
+                              <div className="font-medium">Copy offer code</div>
+                              <div className="text-xs text-muted-foreground">Allow customers to copy promotional codes</div>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {/* Added Buttons List */}
+                      {templateButtons.length > 0 && (
+                        <div className="space-y-4 mt-4">
+                          {templateButtons.map((button) => {
+                            const buttonLabels: Record<string, { label: string; description: string }> = {
+                              "quick-reply": { label: "Quick reply", description: "Simple response buttons for customer replies" },
+                              "visit-website": { label: "Visit website", description: "Direct customers to your website or URL" },
+                              "call-whatsapp": { label: "Call on WhatsApp", description: "Enable voice calls through WhatsApp" },
+                              "call-phone": { label: "Call phone number", description: "Direct customers to call a phone number" },
+                              "complete-flow": { label: "Complete Flow", description: "Trigger a WhatsApp Flow for interactive experiences" },
+                              "copy-offer": { label: "Copy offer code", description: "Allow customers to copy promotional codes" }
+                            };
+                            const buttonInfo = buttonLabels[button.type];
+                            return (
+                              <div
+                                key={button.id}
+                                className="border border-input rounded-lg bg-muted/30 overflow-hidden"
+                                draggable
+                                onDragStart={() => handleButtonDragStart(button.id)}
+                                onDragOver={handleButtonDragOver}
+                                onDrop={() => handleButtonDrop(button.id)}
+                              >
+                                {/* Button Header */}
+                                <div className="flex gap-2 items-center p-3 border-b border-input">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">{buttonInfo?.label}</p>
+                                    <p className="text-xs text-muted-foreground">{buttonInfo?.description}</p>
+                                  </div>
+                                  <button onClick={() => setTemplateButtons(templateButtons.filter(b => b.id !== button.id))} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                                  <GripVertical size={14} className="text-muted-foreground cursor-grab" />
+                                </div>
+
+                                {/* Button Configuration */}
+                                <div className="p-4 space-y-3">
+                                  {/* Quick Reply */}
+                                  {button.type === "quick-reply" && (
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                      <div className="relative">
+                                        <Input
+                                          placeholder="Enter button text..."
+                                          value={button.buttonText || ""}
+                                          onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                          {(button.buttonText || "").length}/25
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Visit Website */}
+                                  {button.type === "visit-website" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">URL Type<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.urlType || "static"} onValueChange={(value) => updateButtonConfig(button.id, "urlType", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select URL type" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="static">Static</SelectItem>
+                                            <SelectItem value="dynamic">Dynamic</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Website URL<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter website URL..."
+                                            value={button.websiteUrl || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "websiteUrl", e.target.value.slice(0, 2000))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.websiteUrl || "").length}/2000
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Checkbox
+                                          id={`track-conversion-${button.id}`}
+                                          checked={button.trackAppConversion || false}
+                                          onCheckedChange={(checked) => updateButtonConfig(button.id, "trackAppConversion", checked)}
+                                        />
+                                        <label htmlFor={`track-conversion-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
+                                          Track app conversion (Marketing Messages Lite API only)
+                                        </label>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Checkbox
+                                          id={`enable-meta-${button.id}`}
+                                          checked={button.enableMetaTracking || false}
+                                          onCheckedChange={(checked) => updateButtonConfig(button.id, "enableMetaTracking", checked)}
+                                        />
+                                        <label htmlFor={`enable-meta-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
+                                          Enable Meta to track and report website clicks
+                                        </label>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Call on WhatsApp */}
+                                  {button.type === "call-whatsapp" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Active for</label>
+                                        <Select value={button.activeFor || "7"} onValueChange={(value) => updateButtonConfig(button.id, "activeFor", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select duration" />
+                                          </SelectTrigger>
+                                          <SelectContent className="max-h-[200px]">
+                                            {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
+                                              <SelectItem key={day} value={`${day}`}>
+                                                {day} day{day > 1 ? "s" : ""}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Call Phone Number */}
+                                  {button.type === "call-phone" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Country<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.country || "+1"} onValueChange={(value) => updateButtonConfig(button.id, "country", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select country" />
+                                          </SelectTrigger>
+                                          <SelectContent className="max-h-[200px]">
+                                            <SelectItem value="+1">+1 (US/Canada)</SelectItem>
+                                            <SelectItem value="+44">+44 (UK)</SelectItem>
+                                            <SelectItem value="+33">+33 (France)</SelectItem>
+                                            <SelectItem value="+49">+49 (Germany)</SelectItem>
+                                            <SelectItem value="+39">+39 (Italy)</SelectItem>
+                                            <SelectItem value="+34">+34 (Spain)</SelectItem>
+                                            <SelectItem value="+91">+91 (India)</SelectItem>
+                                            <SelectItem value="+86">+86 (China)</SelectItem>
+                                            <SelectItem value="+81">+81 (Japan)</SelectItem>
+                                            <SelectItem value="+55">+55 (Brazil)</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Phone number<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter phone number..."
+                                            value={button.phoneNumber || ""}
+                                            onChange={(e) => {
+                                              const numbersOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 20);
+                                              updateButtonConfig(button.id, "phoneNumber", numbersOnly);
+                                            }}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.phoneNumber || "").length}/20
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Complete Flow */}
+                                  {button.type === "complete-flow" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.flowButton || "default"} onValueChange={(value) => updateButtonConfig(button.id, "flowButton", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                            <SelectValue placeholder="Select button type" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="default">Default</SelectItem>
+                                            <SelectItem value="document">Document</SelectItem>
+                                            <SelectItem value="promotion">Promotion</SelectItem>
+                                            <SelectItem value="review">Review</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Flow<span className="text-red-500 pl-0.5">*</span></label>
+                                        <Select value={button.flowId || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowId", value)}>
+                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3">
+                                            <SelectValue placeholder="Select flow">
+                                              {button.flowId && (
+                                                <span className="font-normal">
+                                                  {button.flowId === "product-inquiry" && "Product Inquiry Form"}
+                                                  {button.flowId === "support-request" && "Support Request"}
+                                                  {button.flowId === "promotional-survey" && "Promotional Survey"}
+                                                  {button.flowId === "review-collection" && "Review Collection"}
+                                                </span>
+                                              )}
+                                            </SelectValue>
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="product-inquiry">
+                                              <div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Product Inquiry Form
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Default</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Collect customers product inquires</div>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="support-request">
+                                              <div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Support Request
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Document</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Handle customer support requests</div>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="promotional-survey">
+                                              <div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Promotional Survey
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Promotion</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Gather feedback on promotions</div>
+                                              </div>
+                                            </SelectItem>
+                                            <SelectItem value="review-collection">
+                                              <div>
+                                                <div className="font-medium flex items-center gap-2">
+                                                  Review Collection
+                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Review</span>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Collect customer reviews</div>
+                                              </div>
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Copy Offer */}
+                                  {button.type === "copy-offer" && (
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter button text..."
+                                            value={button.buttonText || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.buttonText || "").length}/25
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <label className="text-sm font-medium text-foreground">Offer code<span className="text-red-500 pl-0.5">*</span></label>
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Enter offer code... e.g. SUMMER50"
+                                            value={button.offerCode || ""}
+                                            onChange={(e) => updateButtonConfig(button.id, "offerCode", e.target.value.slice(0, 15))}
+                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                                          />
+                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                            {(button.offerCode || "").length}/15
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-foreground">Footer</label>
+                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Add footer text..."
+                          value={footerText}
+                          onChange={(e) => setFooterText(e.target.value.slice(0, 60))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {footerText.length}/60
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Template Preview */}
+                <div className="max-h-[55vh] flex-shrink-0 w-[27.5vh]">
+                  <div className="flex flex-col h-full">
+                    <label className="text-sm font-medium mb-3 block flex-shrink-0 mt-1">Template Preview</label>
+                    <TemplatePreview
+                      headerText={headerText}
+                      bodyText={bodyText}
+                      footerText={footerText}
+                      selectedMediaFile={selectedMediaFile}
+                      templateButtons={templateButtons}
+                      variableSamples={variableSamples}
+                      containerClassName="flex-1 flex items-center justify-center min-h-0"
+                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleBackToForm}
+                  className="border-input [border-color:hsl(var(--input))] font-normal"
+                >
+                  Back
+                </Button>
+                <Button
+                  className="gap-2 font-normal"
+                  disabled={!isTemplateFormValid() || !hasTemplateChanged()}
+                  onClick={handleSaveEditedTemplate}
+                >
+                  Save Template
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Clone Template Dialog */}
+      <Dialog open={cloneDialogOpen} onOpenChange={handleCloseCloneDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Clone Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Template Name<span className="text-red-500 pl-0.5">*</span></label>
+              <Input
+                placeholder="Enter template name..."
+                value={cloneTemplateName}
+                onChange={(e) => setCloneTemplateName(e.target.value)}
+                className="border border-input [border-color:hsl(var(--input))] hover-elevate"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={handleCloseCloneDialog}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCloneTemplate}
+                disabled={!cloneTemplateName.trim()}
+              >
+                Clone Template
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -37,6 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
 import { AlertCircle } from "lucide-react";
+import TemplatePreview from "@/components/TemplatePreview";
 
 // Generate a color based on the hash of a name
 const getAvatarColor = (name: string) => {
@@ -602,25 +603,43 @@ export default function ConversationsInbox() {
   // Dummy templates for testing
   const dummyTemplates = [
     {
-      id: "1",
+      id: 1,
       name: "Welcome Message",
       category: "Marketing",
+      header: "Welcome to {{company}}",
       body: "Hello {{name}}, welcome to our service! We're excited to have you on board.",
-      variables: ["name"]
+      footer: "Thank you for choosing us",
+      variables: ["name", "company"],
+      buttons: [
+        { id: 1, type: "visit-website", buttonText: "Visit Website", websiteUrl: "https://example.com" },
+        { id: 2, type: "quick-reply", buttonText: "Learn More" }
+      ]
     },
     {
-      id: "2",
+      id: 2,
       name: "Order Confirmation",
       category: "Transactional",
-      body: "Your order #{{order_id}} has been confirmed. Total: {{amount}}. Delivery in {{days}} days.",
-      variables: ["order_id", "amount", "days"]
+      header: "Order #{{order_id}}",
+      body: "Your order has been confirmed. Total: {{amount}}. Delivery in {{days}} days.",
+      footer: "Track your order anytime",
+      variables: ["order_id", "amount", "days"],
+      buttons: [
+        { id: 1, type: "visit-website", buttonText: "Track Order", websiteUrl: "https://example.com/track" },
+        { id: 2, type: "call-phone", buttonText: "Call Support", country: "US", phoneNumber: "1234567890" }
+      ]
     },
     {
-      id: "3",
+      id: 3,
       name: "Appointment Reminder",
       category: "Reminder",
+      header: "Appointment Reminder",
       body: "Hi {{name}}, reminder: your appointment is on {{date}} at {{time}}.",
-      variables: ["name", "date", "time"]
+      footer: "Reply CONFIRM to confirm",
+      variables: ["name", "date", "time"],
+      buttons: [
+        { id: 1, type: "quick-reply", buttonText: "Confirm" },
+        { id: 2, type: "quick-reply", buttonText: "Reschedule" }
+      ]
     }
   ];
 
@@ -2401,11 +2420,11 @@ export default function ConversationsInbox() {
                     <label className="text-sm font-medium mb-2 block">WhatsApp Template</label>
                     <div className="space-y-3">
                       <CustomDropdown
-                        options={dummyTemplates.map(t => ({ id: t.id, name: t.name }))}
-                        selected={selectedTemplate ? [selectedTemplate.id] : []}
+                        options={dummyTemplates.map(t => ({ id: String(t.id), name: t.name }))}
+                        selected={selectedTemplate ? [String(selectedTemplate.id)] : []}
                         onChange={(selected) => {
                           if (selected.length > 0) {
-                            const template = dummyTemplates.find(t => t.id === selected[0]);
+                            const template = dummyTemplates.find(t => String(t.id) === selected[0]);
                             if (template) {
                               setSelectedTemplate(template);
                               setTemplateVariables({});
@@ -2462,65 +2481,16 @@ export default function ConversationsInbox() {
                   <div className="flex-1 flex flex-col">
                     <label className="text-sm font-medium mb-3 block">Template Preview</label>
                     {selectedTemplate ? (
-                      <div className="flex-1 flex items-center justify-center min-h-0">
-                        {/* Phone mockup */}
-                        <div className="h-full max-h-[70vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden">
-                          {/* Phone header - WhatsApp green */}
-                          <div className="bg-[#075E54] rounded-t-2xl px-4 py-2 flex items-center justify-between" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-[#25D366] rounded-full"></div>
-                              <div>
-                                <p className="text-xs font-semibold text-white">WhatsApp</p>
-                                <p className="text-xs text-[#DCF8C6]">Online</p>
-                              </div>
-                            </div>
-                          </div>
-  
-                          {/* Chat area - WhatsApp light background */}
-                          <div
-                            className="flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide"
-                            style={{
-                              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                              scrollbarWidth: 'none',
-                              msOverflowStyle: 'none'
-                            }}
-                          >
-                            {/* Spacer to push message to bottom */}
-                            <div className="flex-1 min-h-0"></div>
-                            {/* Template message preview */}
-                            <div className="flex justify-start flex-shrink-0">
-                              <div className="bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                                <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                  {selectedTemplate.body.split(/(\{\{[^}]+\}\})/).map((part: string, idx: number) => {
-                                    const variableMatch = part.match(/\{\{([^}]+)\}\}/);
-                                    if (variableMatch) {
-                                      const variableKey = variableMatch[1];
-                                      const value = templateVariables[variableKey];
-                                      return (
-                                        <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                                          {value || part}
-                                        </span>
-                                      );
-                                    }
-                                    return <span key={idx}>{formatWhatsAppText(part)}</span>;
-                                  })}
-                                </p>
-                                <p className="text-xs text-[#999999] mt-1">9:41 AM</p>
-                              </div>
-                            </div>
-                          </div>
-  
-                          {/* Input area */}
-                          <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-                            <div className="h-8 flex flex-1 bg-white rounded-full px-3 py-1 items-center border border-[#E5E5EA]">
-                              <p className="text-sm text-[#999999]">Type a message...</p>
-                            </div>
-                            <button className="w-8 h-8 bg-[#25D366] rounded-full flex items-center justify-center hover:bg-[#20BA5A] transition-colors">
-                              <Send size={16} className="text-white" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      <TemplatePreview
+                        headerText={selectedTemplate?.header || ""}
+                        bodyText={selectedTemplate?.body || ""}
+                        footerText={selectedTemplate?.footer || ""}
+                        templateButtons={selectedTemplate?.buttons || []}
+                        variableSamples={templateVariables}
+                        containerClassName="flex-1 flex items-center justify-center min-h-0"
+                        phoneClassName="h-full max-h-[70vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                        placeholderText="Select a template to see preview..."
+                      />
                     ) : (
                       <div className="flex-1 border-2 border-dashed border-input rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/30">
                         <div className="text-muted-foreground space-y-2">
