@@ -986,7 +986,7 @@ export default function ContactsSection() {
           {/* Table */}
           <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
             <table className="w-full text-xs">
-              <thead>
+              <thead className="select-none">
                 <tr className="border-b">
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">
                     <Checkbox

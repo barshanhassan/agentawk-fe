@@ -646,7 +646,7 @@ export default function CampaignManager() {
 
           <div className={`overflow-x-auto ${selectedCampaigns.length > 0 ? 'mt-3' : 'mt-6'}`}>
             <table className="w-full text-xs">
-              <thead>
+              <thead className="select-none">
                 <tr className="border-b">
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">
                     <Checkbox
@@ -1586,7 +1586,7 @@ export default function CampaignManager() {
           <div className="space-y-4">
             <div className="max-h-[60vh] overflow-y-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="select-none">
                   <tr className="border-b">
                     <th className="text-left p-2 font-medium text-muted-foreground">Name</th>
                     <th className="text-left p-2 font-medium text-muted-foreground">Number</th>
@@ -1766,7 +1766,7 @@ export default function CampaignManager() {
                     <ScrollArea className="h-96">
                       <div className="overflow-x-auto mt-6">
                         <table className="w-full text-xs">
-                          <thead>
+                          <thead className="select-none">
                             <tr className="border-b">
                               <th className="text-left py-2 px-3 font-medium text-muted-foreground">Name</th>
                               <th className="text-left py-2 px-3 font-medium text-muted-foreground">Phone</th>

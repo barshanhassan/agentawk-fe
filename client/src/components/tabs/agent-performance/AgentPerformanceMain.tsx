@@ -218,7 +218,7 @@ export default function AgentPerformanceMain() {
             <div className="lg:col-span-2">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead>
+                  <thead className="select-none">
                     <tr className="border-b">
                       <th className="text-left pt-0 pb-2 px-3 font-medium text-muted-foreground">Agent</th>
                       <th className="text-left pt-0 pb-2 px-3 font-medium text-muted-foreground">Team</th>
@@ -296,7 +296,7 @@ export default function AgentPerformanceMain() {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead>
+              <thead className="select-none">
                 <tr className="border-b">
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Agent</th>
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Accepted</th>

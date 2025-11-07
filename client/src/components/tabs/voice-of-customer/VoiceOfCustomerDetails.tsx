@@ -170,7 +170,7 @@ export default function VoiceOfCustomerDetails() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead>
+              <thead className="select-none">
                 <tr className="border-b">
                   <th
                     className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
@@ -310,7 +310,7 @@ export default function VoiceOfCustomerDetails() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead>
+              <thead className="select-none">
                 <tr className="border-b">
                   <th
                     className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
