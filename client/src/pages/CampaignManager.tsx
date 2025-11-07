@@ -1331,14 +1331,14 @@ export default function CampaignManager() {
                                 <>
                                   <span className="text-sm text-muted-foreground">every</span>
                                   <Select
-                                    value={repeatFrequency === 'daily' ? dailyRepeatInterval : '1'}
+                                    value={repeatFrequency === 'daily' ? dailyRepeatInterval : ''}
                                     onValueChange={setDailyRepeatInterval}
                                     disabled={repeatFrequency !== 'daily'}
                                   >
                                     <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
                                       <SelectValue placeholder={
-                                        repeatFrequency === 'weekly' ? "single week" :
-                                        repeatFrequency === 'monthly' ? "single month" :
+                                        repeatFrequency === 'weekly' ? "Single Week" :
+                                        repeatFrequency === 'monthly' ? "Single Month" :
                                         "Select interval"
                                       } />
                                     </SelectTrigger>
