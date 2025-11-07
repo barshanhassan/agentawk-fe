@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download } from "react-feather";
+import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +81,11 @@ export default function CampaignManager() {
   const [csvData, setCsvData] = useState<any[]>([]);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [isViewCsvModalOpen, setIsViewCsvModalOpen] = useState(false);
+  const [campaignScheduleDate, setCampaignScheduleDate] = useState<Date | undefined>(undefined);
+  const [scheduleDatePickerOpen, setScheduleDatePickerOpen] = useState(false);
+  const [campaignScheduleHour, setCampaignScheduleHour] = useState<string>("");
+  const [campaignScheduleMinute, setCampaignScheduleMinute] = useState<string>("");
+  const [campaignSchedulePeriod, setCampaignSchedulePeriod] = useState<string>("");
   
   const whatsappTemplates = [
     {
@@ -420,6 +425,10 @@ export default function CampaignManager() {
     setSelectedWhatsAppTemplate(null);
     setSelectedTemplate(null);
     setNeverEnds(false);
+    setCampaignScheduleDate(undefined);
+    setCampaignScheduleHour("");
+    setCampaignScheduleMinute("");
+    setCampaignSchedulePeriod("");
   };
 
   const handleCreateCampaign = (status: "draft" | "scheduled") => {
@@ -1033,6 +1042,73 @@ export default function CampaignManager() {
                       </Select>
                     </div>
 
+                    {broadcastCampaignType === 'scheduled' && (
+                      <div className="flex flex-col gap-6">
+                        <div className="space-y-2 flex-1">
+                          <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
+                          <Popover open={scheduleDatePickerOpen} onOpenChange={setScheduleDatePickerOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                              >
+                                <div className="flex items-center">
+                                  <Calendar size={14} className="mr-2" />
+                                  {campaignScheduleDate ? campaignScheduleDate.toLocaleDateString() : <span>Pick a date</span>}
+                                </div>
+                                <ChevronDown size={14} className="text-muted-foreground" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <CalendarComponent
+                                mode="single"
+                                selected={campaignScheduleDate}
+                                onSelect={(date) => {
+                                  setCampaignScheduleDate(date);
+                                  setScheduleDatePickerOpen(false);
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-foreground">Campaign schedule time<span className="text-red-500 pl-0.5">*</span></label>
+                          <div className="flex gap-2">
+                            <Select value={campaignScheduleHour} onValueChange={setCampaignScheduleHour}>
+                              <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                <SelectValue placeholder="HH" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
+                                  <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select value={campaignScheduleMinute} onValueChange={setCampaignScheduleMinute}>
+                              <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                <SelectValue placeholder="MM" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
+                                  <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select value={campaignSchedulePeriod} onValueChange={setCampaignSchedulePeriod}>
+                              <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                <SelectValue placeholder="AM/PM" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="AM">AM</SelectItem>
+                                <SelectItem value="PM">PM</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* WhatsApp Template Dropdown */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">WhatsApp Template<span className="text-red-500 pl-0.5">*</span></label>
@@ -1052,12 +1128,6 @@ export default function CampaignManager() {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    {/* Timezone Checkbox */}
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="timezone-delivery" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
-                      <label htmlFor="timezone-delivery" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
                     </div>
 
                     {/* CSV Upload */}
@@ -1127,39 +1197,34 @@ export default function CampaignManager() {
                           Browse
                         </Button>
                       ) : (
-                        <div className="border rounded-lg p-3 flex items-center gap-3">
-                          <div className="p-2 bg-gray-100 rounded-md">
-                            <FileText size={20} className="text-gray-600" />
+                        <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded border border-input [border-color:hsl(var(--input))]">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
+                            <span className="truncate text-foreground text-sm">{csvFile.name}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">({(csvFile.size / 1024).toFixed(1)}KB)</span>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium truncate">{csvFile.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {csvFile.size > 1024 * 1024
-                                ? `${(csvFile.size / 1024 / 1024).toFixed(2)} MB`
-                                : `${(csvFile.size / 1024).toFixed(2)} KB`}
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             onClick={() => setIsViewCsvModalOpen(true)}
-                            className="p-1 h-auto"
+                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                           >
                             <Edit2 size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          </button>
+                          <button
                             onClick={() => setCsvFile(null)}
-                            className="p-1 h-auto"
+                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                           >
                             <X size={16} />
-                          </Button>
+                          </button>
                         </div>
                       )}
                       {csvError && <p className="text-sm text-red-500">{csvError}</p>}
                     </div>
-
+                    
+                    {/* Timezone Checkbox */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="timezone-delivery" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
+                      <label htmlFor="timezone-delivery" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
+                    </div>
                   </div>
                 </div>
 
@@ -1200,7 +1265,7 @@ export default function CampaignManager() {
                   </Button>
                   <Button
                     className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={!apiCampaignName || !broadcastCampaignType || !selectedWhatsAppTemplate || !csvFile}
+                    disabled={!apiCampaignName || !broadcastCampaignType || !selectedWhatsAppTemplate || !csvFile || (broadcastCampaignType === 'scheduled' && (!campaignScheduleDate || !campaignScheduleHour || !campaignScheduleMinute || !campaignSchedulePeriod))}
                     onClick={() => handleCreateBroadcastCampaign("scheduled")}
                   >
                     Set Live
