@@ -406,6 +406,36 @@ export default function CampaignManager() {
     setSelectedCampaigns([]);
   };
 
+  const resetCreateCampaignForm = () => {
+    setCampaignCreationStep("selectType");
+    setApiCampaignName("");
+    setCampaignStartDate(undefined);
+    setCampaignEndDate(undefined);
+    setSelectedWhatsAppTemplate(null);
+    setSelectedTemplate(null);
+    setNeverEnds(false);
+  };
+
+  const handleCreateCampaign = (status: "draft" | "scheduled") => {
+    const newCampaign: Campaign = {
+      id: Date.now(),
+      name: apiCampaignName,
+      type: "API Triggered",
+      messageType: "Recurring", // Default for API Triggered
+      sent: 0,
+      delivered: 0,
+      status: status,
+    };
+
+    setCampaigns(prev => [...prev, newCampaign]);
+    toast({
+      title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
+      description: `${apiCampaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
+    });
+    setCreateOpen(false);
+    resetCreateCampaignForm();
+  };
+
   return (
     <div className="p-6 space-y-6" data-testid="campaign-manager">
       {/* Header */}
@@ -699,12 +729,7 @@ export default function CampaignManager() {
       <Dialog open={createOpen} onOpenChange={(isOpen) => {
         setCreateOpen(isOpen);
         if (!isOpen) {
-          setCampaignCreationStep("selectType");
-          setApiCampaignName("");
-          setCampaignStartDate(undefined);
-          setCampaignEndDate(undefined);
-          setSelectedWhatsAppTemplate(null);
-          setSelectedTemplate(null);
+          resetCreateCampaignForm();
         }
       }}>
         <DialogContent className={campaignCreationStep === "apiTriggeredForm" ? "max-w-3xl" : "max-w-lg"} data-testid="dialog-create-campaign">
@@ -915,27 +940,14 @@ export default function CampaignManager() {
                     variant="outline"
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                     disabled={!apiCampaignName}
-                    onClick={() => {
-                      toast({
-                        title: "Draft Saved",
-                        description: `${apiCampaignName} has been saved as a draft.`,
-                      });
-                      setCreateOpen(false);
-                    }}
+                    onClick={() => handleCreateCampaign("draft")}
                   >
                     Save Draft
                   </Button>
                   <Button
                     className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
                     disabled={!apiCampaignName || !campaignStartDate || (!campaignEndDate && !neverEnds) || !selectedWhatsAppTemplate}
-                    onClick={() => {
-                      // Handle Set Live logic here
-                      toast({
-                        title: "Campaign Set Live",
-                        description: `${apiCampaignName} is now live.`,
-                      });
-                      setCreateOpen(false);
-                    }}
+                    onClick={() => handleCreateCampaign("scheduled")}
                   >
                     Set Live
                   </Button>
