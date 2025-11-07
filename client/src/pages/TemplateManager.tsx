@@ -1862,22 +1862,28 @@ export default function TemplateManager() {
                   {/* Template Name and Language - Side by Side */}
                   <div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex gap-4">
                       {/* Template Name */}
-                      <div className="space-y-2">
+                      <div className="space-y-2 w-full">
                         <label className="text-sm font-medium text-foreground">
                           Template Name<span className="text-red-500 pl-0.5">*</span>
                         </label>
-                        <Input
-                          id="template-name"
-                          placeholder="my_template"
-                          value={templateName}
-                          onChange={(e) => {
-                            // Auto-decapitalize and allow only lowercase, numbers, underscores
-                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                            setTemplateName(value);
-                          }}
-                        />
+                        <div className="relative">
+                          <Input
+                            id="template-name"
+                            placeholder="my_template"
+                            value={templateName}
+                            onChange={(e) => {
+                              // Auto-decapitalize and allow only lowercase, numbers, underscores
+                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 100);
+                              setTemplateName(value);
+                            }}
+                            className="pr-12"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                            {templateName.length}/100
+                          </span>
+                        </div>
                       </div>
 
                       {/* Language Selection */}
@@ -1886,7 +1892,7 @@ export default function TemplateManager() {
                           Language<span className="text-red-500 pl-0.5">*</span>
                         </label>
                         <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder="Select language" />
                           </SelectTrigger>
                           <SelectContent>
@@ -3021,22 +3027,28 @@ export default function TemplateManager() {
                   {/* Template Name and Language - Side by Side */}
                   <div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex gap-4">
                       {/* Template Name */}
-                      <div className="space-y-2">
+                      <div className="space-y-2 w-full">
                         <label className="text-sm font-medium text-foreground">
                           Template Name<span className="text-red-500 pl-0.5">*</span>
                         </label>
-                        <Input
-                          id="template-name"
-                          placeholder="my_template"
-                          value={templateName}
-                          onChange={(e) => {
-                            // Auto-decapitalize and allow only lowercase, numbers, underscores
-                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                            setTemplateName(value);
-                          }}
-                        />
+                        <div className="relative">
+                          <Input
+                            id="template-name"
+                            placeholder="my_template"
+                            value={templateName}
+                            onChange={(e) => {
+                              // Auto-decapitalize and allow only lowercase, numbers, underscores
+                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 100);
+                              setTemplateName(value);
+                            }}
+                            className="pr-12"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                            {templateName.length}/100
+                          </span>
+                        </div>
                       </div>
 
                       {/* Language Selection */}
@@ -3045,7 +3057,7 @@ export default function TemplateManager() {
                           Language<span className="text-red-500 pl-0.5">*</span>
                         </label>
                         <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder="Select language" />
                           </SelectTrigger>
                           <SelectContent>
