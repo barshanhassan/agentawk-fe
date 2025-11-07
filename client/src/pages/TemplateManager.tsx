@@ -439,7 +439,7 @@ export default function TemplateManager() {
     if (!templateToClone) return;
 
     setTemplateToCloneId(templateId);
-    setCloneTemplateName(`${templateToClone.name}_copy`);
+    setCloneTemplateName(templateToClone.name);
     setCloneDialogOpen(true);
   };
 
@@ -4056,12 +4056,17 @@ export default function TemplateManager() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Template Name<span className="text-red-500 pl-0.5">*</span></label>
-              <Input
-                placeholder="Enter template name..."
-                value={cloneTemplateName}
-                onChange={(e) => setCloneTemplateName(e.target.value)}
-                className="border border-input [border-color:hsl(var(--input))] hover-elevate"
-              />
+              <div className="relative">
+                <Input
+                  placeholder="Enter template name..."
+                  value={cloneTemplateName}
+                  onChange={(e) => setCloneTemplateName(e.target.value.slice(0, 100))}
+                  className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {cloneTemplateName.length}/100
+                </span>
+              </div>
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={handleCloseCloneDialog}>

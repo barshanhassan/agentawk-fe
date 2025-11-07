@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar } from "react-feather";
+import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download } from "react-feather";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,7 +66,7 @@ export default function CampaignManager() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
   const [sort, setSort] = useState<SortEntry | null>(null);
-  const [campaignCreationStep, setCampaignCreationStep] = useState<"selectType" | "apiTriggeredForm">("selectType");
+  const [campaignCreationStep, setCampaignCreationStep] = useState<"selectType" | "apiTriggeredForm" | "broadcastForm">("selectType");
   const [apiCampaignName, setApiCampaignName] = useState("");
   const [campaignStartDate, setCampaignStartDate] = useState<Date | undefined>(undefined);
   const [campaignEndDate, setCampaignEndDate] = useState<Date | undefined>(undefined);
@@ -75,6 +75,12 @@ export default function CampaignManager() {
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [neverEnds, setNeverEnds] = useState(false);
+  const [broadcastCampaignType, setBroadcastCampaignType] = useState("");
+  const [deliverInTimezone, setDeliverInTimezone] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [isViewCsvModalOpen, setIsViewCsvModalOpen] = useState(false);
   
   const whatsappTemplates = [
     {
@@ -293,7 +299,7 @@ export default function CampaignManager() {
     if (!campaignToClone) return;
 
     setCampaignToCloneId(campaignId);
-    setCloneCampaignName(`${campaignToClone.name}_copy`);
+    setCloneCampaignName(campaignToClone.name);
     setCloneDialogOpen(true);
   };
 
@@ -422,6 +428,26 @@ export default function CampaignManager() {
       name: apiCampaignName,
       type: "API Triggered",
       messageType: "Recurring", // Default for API Triggered
+      sent: 0,
+      delivered: 0,
+      status: status,
+    };
+
+    setCampaigns(prev => [...prev, newCampaign]);
+    toast({
+      title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
+      description: `${apiCampaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
+    });
+    setCreateOpen(false);
+    resetCreateCampaignForm();
+  };
+
+  const handleCreateBroadcastCampaign = (status: "draft" | "scheduled") => {
+    const newCampaign: Campaign = {
+      id: Date.now(),
+      name: apiCampaignName,
+      type: "Broadcast",
+      messageType: broadcastCampaignType,
       sent: 0,
       delivered: 0,
       status: status,
@@ -732,7 +758,7 @@ export default function CampaignManager() {
           resetCreateCampaignForm();
         }
       }}>
-        <DialogContent className={campaignCreationStep === "apiTriggeredForm" ? "max-w-3xl" : "max-w-lg"} data-testid="dialog-create-campaign">
+        <DialogContent className={campaignCreationStep === "apiTriggeredForm" || campaignCreationStep === "broadcastForm" ? "max-w-3xl" : "max-w-lg"} data-testid="dialog-create-campaign">
           {campaignCreationStep === "selectType" && (
             <>
               <DialogHeader className="mb-2">
@@ -750,7 +776,7 @@ export default function CampaignManager() {
                     <p className="text-sm text-muted-foreground">Send messages based on API calls and user actions</p>
                   </CardContent>
                 </Card>
-                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-broadcast">
+                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-broadcast" onClick={() => setCampaignCreationStep("broadcastForm")}>
                   <CardHeader className="text-center pb-2">
                     <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                       <Send size={24} className="text-blue-600" />
@@ -955,6 +981,295 @@ export default function CampaignManager() {
               </div>
             </>
           )}
+
+          {campaignCreationStep === "broadcastForm" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <ArrowLeft size={18} className="cursor-pointer" onClick={() => setCampaignCreationStep("selectType")} />
+                  <DialogTitle>Create Broadcast Campaign</DialogTitle>
+                </div>
+              </DialogHeader>
+
+              <div className="flex gap-4">
+                {/* Left: Form */}
+                <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
+                  <div className="space-y-6 pl-1 pb-1">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Campaign Details</h3>
+                      <p className="text-sm text-muted-foreground">Give your campaign a name and choose its type.</p>
+                    </div>
+
+                    {/* Campaign Name */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-foreground">Campaign name<span className="text-red-500 pl-0.5">*</span></label>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter campaign name..."
+                          value={apiCampaignName}
+                          onChange={(e) => setApiCampaignName(e.target.value.slice(0, 100))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {apiCampaignName.length}/100
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Campaign Type */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Campaign Type<span className="text-red-500 pl-0.5">*</span></label>
+                      <Select value={broadcastCampaignType} onValueChange={setBroadcastCampaignType}>
+                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                          <SelectValue placeholder="Select a type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="immediate">Immediate</SelectItem>
+                          <SelectItem value="scheduled">Scheduled</SelectItem>
+                          <SelectItem value="recurring">Recurring</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* WhatsApp Template Dropdown */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">WhatsApp Template<span className="text-red-500 pl-0.5">*</span></label>
+                      <Select
+                        value={selectedWhatsAppTemplate || ""}
+                        onValueChange={(value) => {
+                          setSelectedWhatsAppTemplate(value);
+                          setSelectedTemplate(whatsappTemplates.find(t => t.name === value) || null);
+                        }}
+                      >
+                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                          <SelectValue placeholder="Select a template" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {whatsappTemplates.map(template => (
+                            <SelectItem key={template.id} value={template.name}>{template.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Timezone Checkbox */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="timezone-delivery" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
+                      <label htmlFor="timezone-delivery" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
+                    </div>
+
+                    {/* CSV Upload */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Contact List (CSV)<span className="text-red-500 pl-0.5">*</span></label>
+                      <p className="text-xs text-muted-foreground">Upload a CSV with 'name' and 'number' columns.</p>
+                      <input type="file" id="csv-upload" accept=".csv" className="hidden" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setCsvFile(file);
+                        setCsvData([]);
+                        setCsvError(null);
+
+                        if (!file.name.endsWith(".csv")) {
+                          setCsvError("Invalid file type. Please upload a .csv file.");
+                          setCsvFile(null);
+                          return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const text = event.target?.result as string;
+                          if (!text) {
+                            setCsvError("Could not read the file.");
+                            setCsvFile(null);
+                            return;
+                          }
+
+                          const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+                          if (lines.length < 2) {
+                            setCsvError("CSV must have a header and at least one data row.");
+                            setCsvFile(null);
+                            return;
+                          }
+
+                          const header = lines[0].split(",").map(h => h.trim());
+                          if (header.includes("name") && header.includes("number")) {
+                            const data = lines.slice(1).map(line => {
+                              const values = line.split(",");
+                              const obj: { [key: string]: string } = {};
+                              header.forEach((h, i) => {
+                                obj[h] = values[i] || "";
+                              });
+                              return obj;
+                            });
+                            setCsvData(data);
+                          } else {
+                            setCsvError("Invalid CSV format. Header must include 'name' and 'number' columns.");
+                            setCsvFile(null);
+                            setCsvData([]);
+                          }
+                        };
+                        reader.onerror = () => {
+                          setCsvError("Error reading file.");
+                          setCsvFile(null);
+                          setCsvData([]);
+                        };
+                        reader.readAsText(file);
+                        
+                        if(e.target) {
+                          e.target.value = ''
+                        }
+                      }} />
+                      {!csvFile ? (
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => document.getElementById('csv-upload')?.click()}>
+                          Browse
+                        </Button>
+                      ) : (
+                        <div className="border rounded-lg p-3 flex items-center gap-3">
+                          <div className="p-2 bg-gray-100 rounded-md">
+                            <FileText size={20} className="text-gray-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium truncate">{csvFile.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {csvFile.size > 1024 * 1024
+                                ? `${(csvFile.size / 1024 / 1024).toFixed(2)} MB`
+                                : `${(csvFile.size / 1024).toFixed(2)} KB`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsViewCsvModalOpen(true)}
+                            className="p-1 h-auto"
+                          >
+                            <Edit2 size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCsvFile(null)}
+                            className="p-1 h-auto"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      )}
+                      {csvError && <p className="text-sm text-red-500">{csvError}</p>}
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Right: Template Preview */}
+                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
+                  <div className="flex flex-col h-full">
+                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                    <TemplatePreview
+                      headerText={selectedTemplate?.header || ""}
+                      bodyText={selectedTemplate?.body || ""}
+                      footerText={selectedTemplate?.footer || ""}
+                      selectedMediaFile={null}
+                      templateButtons={selectedTemplate?.buttons || []}
+                      variableSamples={selectedTemplate?.variableSamples || {}}
+                      containerClassName="flex-1 flex items-center justify-center min-h-0"
+                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCampaignCreationStep("selectType")}
+                  className="border-input [border-color:hsl(var(--input))] font-normal"
+                >
+                  Back
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                    disabled={!apiCampaignName}
+                    onClick={() => handleCreateBroadcastCampaign("draft")}
+                  >
+                    Save Draft
+                  </Button>
+                  <Button
+                    className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={!apiCampaignName || !broadcastCampaignType || !selectedWhatsAppTemplate || !csvFile}
+                    onClick={() => handleCreateBroadcastCampaign("scheduled")}
+                  >
+                    Set Live
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View CSV Modal */}
+      <Dialog open={isViewCsvModalOpen} onOpenChange={setIsViewCsvModalOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>CSV Editor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="max-h-[60vh] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2 font-medium text-muted-foreground">Name</th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">Number</th>
+                    <th className="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {csvData.map((row, index) => (
+                    <tr key={index} className="border-b">
+                      <td>
+                        <Input
+                          value={row.name}
+                          onChange={(e) => {
+                            const newData = [...csvData];
+                            newData[index].name = e.target.value;
+                            setCsvData(newData);
+                          }}
+                          className="border-0 rounded-none focus-visible:ring-0"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={row.number}
+                          onChange={(e) => {
+                            const newData = [...csvData];
+                            newData[index].number = e.target.value;
+                            setCsvData(newData);
+                          }}
+                          className="border-0 rounded-none focus-visible:ring-0"
+                        />
+                      </td>
+                      <td>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          const newData = [...csvData];
+                          newData.splice(index, 1);
+                          setCsvData(newData);
+                        }}>X</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-between">
+              <Button variant="outline" className="border-input [border-color:hsl(var(--input))]" onClick={() => setCsvData([...csvData, { name: "", number: "" }])}>Add Row</Button>
+              <Button onClick={() => setIsViewCsvModalOpen(false)}>Done</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -1130,12 +1445,17 @@ export default function CampaignManager() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Campaign Name<span className="text-red-500 pl-0.5">*</span></label>
-              <Input
-                placeholder="Enter campaign name..."
-                value={cloneCampaignName}
-                onChange={(e) => setCloneCampaignName(e.target.value)}
-                className="border border-input [border-color:hsl(var(--input))] hover-elevate"
-              />
+              <div className="relative">
+                <Input
+                  placeholder="Enter campaign name..."
+                  value={cloneCampaignName}
+                  onChange={(e) => setCloneCampaignName(e.target.value.slice(0, 100))}
+                  className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {cloneCampaignName.length}/100
+                </span>
+              </div>
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={handleCloseCloneDialog}>
