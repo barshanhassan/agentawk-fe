@@ -55,6 +55,23 @@ interface Campaign {
   sent: number;
   delivered: number;
   status: "draft" | "scheduled" | "delivered" | "archived";
+  // New fields for API Triggered
+  startDate?: Date;
+  endDate?: Date;
+  neverEnds?: boolean;
+  whatsAppTemplateName: string;
+  // New fields for Broadcast
+  schedules?: Schedule[];
+  recurringStartDate?: Date;
+  recurringEndDate?: Date;
+  recurringTime?: { hour: string; minute: string; period: string };
+  repeatFrequency?: string;
+  dailyRepeatInterval?: string;
+  weeklyRepeatDays?: string[];
+  monthlyRepeatDates?: number[];
+  deliverInTimezone?: boolean;
+  csvFileName?: string;
+  csvContent?: any[];
 }
 
 interface Schedule {
@@ -211,6 +228,11 @@ export default function CampaignManager() {
           sent: 15420,
           delivered: 14892,
           status: "delivered",
+          whatsAppTemplateName: "promotional_offer",
+          startDate: new Date('2024-07-01'),
+          endDate: new Date('2024-07-31'),
+          csvFileName: "summer_sale_contacts.csv",
+          csvContent: [{ name: "Alice", number: "+1234567890" }],
         },
         {
           id: 2,
@@ -220,6 +242,9 @@ export default function CampaignManager() {
           sent: 8923,
           delivered: 8654,
           status: "delivered",
+          whatsAppTemplateName: "promotional_offer",
+          startDate: new Date('2024-01-01'),
+          neverEnds: true,
         },
         {
           id: 3,
@@ -229,6 +254,11 @@ export default function CampaignManager() {
           sent: 0,
           delivered: 0,
           status: "scheduled",
+          whatsAppTemplateName: "welcome_message",
+          schedules: [{ id: 1, date: new Date('2025-01-15'), hour: '10', minute: '00', period: 'AM' }],
+          deliverInTimezone: true,
+          csvFileName: "product_launch_contacts.csv",
+          csvContent: [{ name: "Bob", number: "+1987654321" }],
         },
         {
           id: 4,
@@ -238,6 +268,10 @@ export default function CampaignManager() {
           sent: 0,
           delivered: 0,
           status: "draft",
+          whatsAppTemplateName: "welcome_message",
+          startDate: new Date('2025-02-01'),
+          csvFileName: "draft_contacts.csv",
+          csvContent: [{ name: "Charlie", number: "+1122334455" }],
         },
         {
           id: 5,
@@ -247,6 +281,9 @@ export default function CampaignManager() {
           sent: 5000,
           delivered: 4800,
           status: "archived",
+          whatsAppTemplateName: "order_confirmation",
+          startDate: new Date('2023-01-01'),
+          endDate: new Date('2023-12-31'),
         },
       ]);
     }
@@ -467,10 +504,14 @@ export default function CampaignManager() {
       id: Date.now(),
       name: apiCampaignName,
       type: "API Triggered",
-      messageType: "Recurring", // Default for API Triggered
+      messageType: "Recurring",
       sent: 0,
       delivered: 0,
       status: status,
+      startDate: campaignStartDate,
+      endDate: neverEnds ? undefined : campaignEndDate,
+      neverEnds: neverEnds,
+      whatsAppTemplateName: selectedWhatsAppTemplate!,
     };
 
     setCampaigns(prev => [...prev, newCampaign]);
@@ -496,6 +537,18 @@ export default function CampaignManager() {
       sent: 0,
       delivered: 0,
       status: status,
+      whatsAppTemplateName: selectedWhatsAppTemplate!,
+      csvFileName: csvFile?.name,
+      csvContent: csvData,
+      schedules: broadcastCampaignType === 'scheduled' ? schedules : undefined,
+      recurringStartDate: broadcastCampaignType === 'recurring' ? recurringStartDate : undefined,
+      recurringEndDate: broadcastCampaignType === 'recurring' ? recurringEndDate : undefined,
+      recurringTime: broadcastCampaignType === 'recurring' ? recurringTime : undefined,
+      repeatFrequency: broadcastCampaignType === 'recurring' ? repeatFrequency : undefined,
+      dailyRepeatInterval: broadcastCampaignType === 'recurring' ? dailyRepeatInterval : undefined,
+      weeklyRepeatDays: broadcastCampaignType === 'recurring' ? weeklyRepeatDays : undefined,
+      monthlyRepeatDates: broadcastCampaignType === 'recurring' ? monthlyRepeatDates : undefined,
+      deliverInTimezone: deliverInTimezone,
     };
 
     setCampaigns(prev => [...prev, newCampaign]);
