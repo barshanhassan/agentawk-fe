@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive } from "react-feather";
+import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar } from "react-feather";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +19,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronDown, ChevronsUpDown, ChevronUp, ChevronDown as ChevronDownIcon } from "lucide-react";
+import { MoreVertical, ChevronDown, ChevronsUpDown, ChevronUp, ChevronDown as ChevronDownIcon, ArrowLeft } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import TemplatePreview from "@/components/TemplatePreview";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 
@@ -52,6 +66,43 @@ export default function CampaignManager() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
   const [sort, setSort] = useState<SortEntry | null>(null);
+  const [campaignCreationStep, setCampaignCreationStep] = useState<"selectType" | "apiTriggeredForm">("selectType");
+  const [apiCampaignName, setApiCampaignName] = useState("");
+  const [campaignStartDate, setCampaignStartDate] = useState<Date | undefined>(undefined);
+  const [campaignEndDate, setCampaignEndDate] = useState<Date | undefined>(undefined);
+  const [selectedWhatsAppTemplate, setSelectedWhatsAppTemplate] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+  const [neverEnds, setNeverEnds] = useState(false);
+  
+  const whatsappTemplates = [
+    {
+      id: 1,
+      name: "welcome_message",
+      body: "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
+      header: "Welcome to {{company}}",
+      footer: "Thank you for choosing us",
+      variables: ["company"],
+      buttons: [
+        { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
+        { id: 2, type: "quick-reply", buttonText: "Learn More" }
+      ],
+      variableSamples: {
+        company: "Acme Corp"
+      }
+    },
+    {
+      id: 2,
+      name: "order_confirmation",
+      body: "Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
+    },
+    {
+      id: 3,
+      name: "promotional_offer",
+      body: "🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
+    },
+  ];
 
   // Modal states
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
@@ -645,35 +696,253 @@ export default function CampaignManager() {
       </Card>
 
       {/* Create Campaign Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent data-testid="dialog-create-campaign">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Create Campaign</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-api-triggered">
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Zap size={24} className="text-primary" />
+      <Dialog open={createOpen} onOpenChange={(isOpen) => {
+        setCreateOpen(isOpen);
+        if (!isOpen) {
+          setCampaignCreationStep("selectType");
+          setApiCampaignName("");
+          setCampaignStartDate(undefined);
+          setCampaignEndDate(undefined);
+          setSelectedWhatsAppTemplate(null);
+          setSelectedTemplate(null);
+        }
+      }}>
+        <DialogContent className={campaignCreationStep === "apiTriggeredForm" ? "max-w-3xl" : "max-w-lg"} data-testid="dialog-create-campaign">
+          {campaignCreationStep === "selectType" && (
+            <>
+              <DialogHeader className="mb-2">
+                <DialogTitle>Create Campaign</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-api-triggered" onClick={() => setCampaignCreationStep("apiTriggeredForm")}>
+                  <CardHeader className="text-center pb-2">
+                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Zap size={24} className="text-primary" />
+                    </div>
+                    <CardTitle className="text-base">API Triggered</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-muted-foreground">Send messages based on API calls and user actions</p>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-broadcast">
+                  <CardHeader className="text-center pb-2">
+                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Send size={24} className="text-blue-600" />
+                    </div>
+                    <CardTitle className="text-base">Broadcast</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-muted-foreground">Send bulk messages to a list of contacts</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
+
+          {campaignCreationStep === "apiTriggeredForm" && (
+            <>
+              <DialogHeader className="mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <ArrowLeft size={18} className="cursor-pointer" onClick={() => setCampaignCreationStep("selectType")} />
+                  <DialogTitle>Create API Triggered Campaign</DialogTitle>
                 </div>
-                <CardTitle className="text-base">API Triggered</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-sm text-muted-foreground">Send messages based on API calls and user actions</p>
-              </CardContent>
-            </Card>
-            <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-broadcast">
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Send size={24} className="text-blue-600" />
+              </DialogHeader>
+
+              <div className="flex gap-4">
+                {/* Left: Form */}
+                <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
+                  <div className="space-y-6 pl-1 pb-1">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Campaign Details</h3>
+                      <p className="text-sm text-muted-foreground">Give your campaign a name and choose when you want to schedule your campaign.</p>
+                    </div>
+
+                    {/* Campaign Name */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-foreground">Campaign name<span className="text-red-500 pl-0.5">*</span></label>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter campaign name..."
+                          value={apiCampaignName}
+                          onChange={(e) => setApiCampaignName(e.target.value.slice(0, 100))}
+                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          {apiCampaignName.length}/100
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Campaign Start and End Date */}
+                    <div className="flex flex-col gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">Campaign start date<span className="text-red-500 pl-0.5">*</span></label>
+                        <Popover open={startDatePickerOpen} onOpenChange={setStartDatePickerOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                            >
+                              <div className="flex items-center">
+                                <Calendar size={14} className="mr-2" />
+                                {campaignStartDate ? campaignStartDate.toLocaleDateString() : <span>Pick a date</span>}
+                              </div>
+                              <ChevronDown size={14} className="text-muted-foreground" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <CalendarComponent
+                              mode="single"
+                              selected={campaignStartDate}
+                              onSelect={(date) => {
+                                setCampaignStartDate(date);
+                                if (campaignEndDate && date && date > campaignEndDate) {
+                                  setCampaignEndDate(undefined);
+                                }
+                                setStartDatePickerOpen(false);
+                              }}
+                              disabled={campaignEndDate ? { after: campaignEndDate } : undefined}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-foreground">Campaign end date<span className="text-red-500 pl-0.5">*</span></label>
+                          <div className="flex items-end space-x-2 mt-2">
+                          <Checkbox id="never-ends" checked={neverEnds} onCheckedChange={(checked) => {
+                            setNeverEnds(checked as boolean);
+                            if (checked) {
+                              setCampaignEndDate(undefined);
+                            }
+                          }} />
+                          <label
+                            htmlFor="never-ends"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Never end
+                          </label>
+                        </div>
+                        </div>
+                        <Popover open={endDatePickerOpen} onOpenChange={setEndDatePickerOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                              disabled={neverEnds}
+                            >
+                              <div className="flex items-center">
+                                <Calendar size={14} className="mr-2" />
+                                {campaignEndDate ? campaignEndDate.toLocaleDateString() : <span>Pick a date</span>}
+                              </div>
+                              <ChevronDown size={14} className="text-muted-foreground" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <CalendarComponent
+                              mode="single"
+                              selected={campaignEndDate}
+                              onSelect={(date) => {
+                                setCampaignEndDate(date);
+                                if (campaignStartDate && date && date < campaignStartDate) {
+                                  setCampaignStartDate(undefined);
+                                }
+                                setEndDatePickerOpen(false);
+                              }}
+                              disabled={campaignStartDate ? { before: campaignStartDate } : undefined}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+
+                    {/* WhatsApp Template Dropdown */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">WhatsApp Template<span className="text-red-500 pl-0.5">*</span></label>
+                      <Select
+                        value={selectedWhatsAppTemplate || ""}
+                        onValueChange={(value) => {
+                          setSelectedWhatsAppTemplate(value);
+                          setSelectedTemplate(whatsappTemplates.find(t => t.name === value) || null);
+                        }}
+                      >
+                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                          <SelectValue placeholder="Select a template" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {whatsappTemplates.map(template => (
+                            <SelectItem key={template.id} value={template.name}>{template.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
-                <CardTitle className="text-base">Broadcast</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-sm text-muted-foreground">Send bulk messages to a list of contacts</p>
-              </CardContent>
-            </Card>
-          </div>
+
+                {/* Right: Template Preview */}
+                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
+                  <div className="flex flex-col h-full">
+                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                    <TemplatePreview
+                      headerText={selectedTemplate?.header || ""}
+                      bodyText={selectedTemplate?.body || ""}
+                      footerText={selectedTemplate?.footer || ""}
+                      selectedMediaFile={null}
+                      templateButtons={selectedTemplate?.buttons || []}
+                      variableSamples={selectedTemplate?.variableSamples || {}}
+                      containerClassName="flex-1 flex items-center justify-center min-h-0"
+                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCampaignCreationStep("selectType")}
+                  className="border-input [border-color:hsl(var(--input))] font-normal"
+                >
+                  Back
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                    disabled={!apiCampaignName}
+                    onClick={() => {
+                      toast({
+                        title: "Draft Saved",
+                        description: `${apiCampaignName} has been saved as a draft.`,
+                      });
+                      setCreateOpen(false);
+                    }}
+                  >
+                    Save Draft
+                  </Button>
+                  <Button
+                    className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={!apiCampaignName || !campaignStartDate || (!campaignEndDate && !neverEnds) || !selectedWhatsAppTemplate}
+                    onClick={() => {
+                      // Handle Set Live logic here
+                      toast({
+                        title: "Campaign Set Live",
+                        description: `${apiCampaignName} is now live.`,
+                      });
+                      setCreateOpen(false);
+                    }}
+                  >
+                    Set Live
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
