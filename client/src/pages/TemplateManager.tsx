@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Calendar, Search, Filter, Send, FileText, ArrowLeft, ShoppingCart, Bell, Shield, Paperclip, X } from "react-feather";
+import { Plus, RefreshCw, Edit2, Eye, Copy, Trash2, Download, Search, Filter, Send, FileText, ArrowLeft, ShoppingCart, Bell, Shield, Paperclip, X } from "react-feather";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,9 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { DateRange } from "react-day-picker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -552,9 +549,6 @@ export default function TemplateManager() {
   const handleItalic = () => applyFormatting("_");
   const handleStrikethrough = () => applyFormatting("~");
 
-  const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
-  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
-  const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -966,35 +960,6 @@ export default function TemplateManager() {
       );
     }
 
-    // Apply date range filter
-    if (dateRangePreset !== "all-time") {
-      const now = new Date();
-      let startDate: Date;
-
-      if (dateRangePreset === "custom" && customDateRange?.from) {
-        startDate = customDateRange.from;
-      } else {
-        switch (dateRangePreset) {
-          case "last-7-days":
-            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            break;
-          case "last-30-days":
-            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            break;
-          case "last-90-days":
-            startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-            break;
-          default:
-            startDate = new Date(0);
-        }
-      }
-
-      data = data.filter(item => {
-        const itemDate = new Date(item.lastEdited);
-        return itemDate >= startDate;
-      });
-    }
-
     // Apply category filter
     if (selectedCategories.length > 0) {
       data = data.filter(item => {
@@ -1212,50 +1177,6 @@ export default function TemplateManager() {
                   data-testid="input-search"
                 />
               </div>
-
-              {/* Date Filter */}
-              <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
-                <SelectTrigger className="w-[160px] h-10 hover-elevate" data-testid="select-date-filter" style={{ height: "38px" }}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
-                  <SelectItem value="last-7-days">Last 7 Days</SelectItem>
-                  <SelectItem value="last-14-days">Last 14 Days</SelectItem>
-                  <SelectItem value="last-30-days">Last 30 Days</SelectItem>
-                  <SelectItem value="this-month">This Month</SelectItem>
-                  <SelectItem value="this-quarter">This Quarter</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Custom Date Range */}
-              {dateRangePreset === "custom" && (
-                <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))]">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {customDateRange
-                          ? customDateRange.to
-                            ? `${customDateRange.from?.toLocaleDateString() || ""} - ${customDateRange.to?.toLocaleDateString() || ""}`
-                            : customDateRange.from?.toLocaleDateString() || ""
-                          : "Select Date"}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <CalendarComponent
-                      initialFocus
-                      mode="range"
-                      defaultMonth={customDateRange?.from}
-                      selected={customDateRange}
-                      onSelect={setCustomDateRange}
-                      numberOfMonths={1}
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
 
               {/* Category Filter */}
               <CustomDropdown
