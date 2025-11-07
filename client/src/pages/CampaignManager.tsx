@@ -97,7 +97,8 @@ export default function CampaignManager() {
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
   const [sort, setSort] = useState<SortEntry | null>(null);
   const [campaignCreationStep, setCampaignCreationStep] = useState<"selectType" | "apiTriggeredForm" | "broadcastForm">("selectType");
-  const [apiCampaignName, setApiCampaignName] = useState("");
+  const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null);
+  const [campaignName, setCampaignName] = useState("");
   const [campaignStartDate, setCampaignStartDate] = useState<Date | undefined>(undefined);
   const [campaignEndDate, setCampaignEndDate] = useState<Date | undefined>(undefined);
   const [selectedWhatsAppTemplate, setSelectedWhatsAppTemplate] = useState<string | null>(null);
@@ -289,6 +290,46 @@ export default function CampaignManager() {
     }
   }, []);
 
+  useEffect(() => {
+    if (editingCampaignId !== null) {
+      const campaignToEdit = campaigns.find(c => c.id === editingCampaignId);
+      if (campaignToEdit) {
+        setCampaignName(campaignToEdit.name);
+        setSelectedWhatsAppTemplate(campaignToEdit.whatsAppTemplateName);
+
+        if (campaignToEdit.type === "API Triggered") {
+          setCampaignCreationStep("apiTriggeredForm");
+          setCampaignStartDate(campaignToEdit.startDate);
+          setCampaignEndDate(campaignToEdit.endDate);
+          setNeverEnds(campaignToEdit.neverEnds || false);
+        } else if (campaignToEdit.type === "Broadcast") {
+          setCampaignCreationStep("broadcastForm");
+          setBroadcastCampaignType(campaignToEdit.messageType);
+          setDeliverInTimezone(campaignToEdit.deliverInTimezone || false);
+          // For csvFile, we can't directly restore a File object from just its name and content
+          // A dummy File object is created for display purposes, actual content is in csvData
+          setCsvFile(campaignToEdit.csvFileName ? new File([], campaignToEdit.csvFileName) : null);
+          setCsvData(campaignToEdit.csvContent || []);
+
+          if (campaignToEdit.messageType === 'Scheduled') {
+            setSchedules(campaignToEdit.schedules || [{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
+          } else if (campaignToEdit.messageType === 'Recurring') {
+            setRecurringStartDate(campaignToEdit.recurringStartDate);
+            setRecurringEndDate(campaignToEdit.recurringEndDate);
+            setRecurringTime(campaignToEdit.recurringTime || { hour: "", minute: "", period: "" });
+            setRepeatFrequency(campaignToEdit.repeatFrequency || "");
+            setDailyRepeatInterval(campaignToEdit.dailyRepeatInterval || "1");
+            setWeeklyRepeatDays(campaignToEdit.weeklyRepeatDays || []);
+            setMonthlyRepeatDates(campaignToEdit.monthlyRepeatDates || []);
+          }
+        }
+      }
+    } else {
+      // Reset form when not editing (e.g., creating a new campaign)
+      resetCreateCampaignForm();
+    }
+  }, [editingCampaignId, campaigns]);
+
   const engagementData = Array.from({ length: 24 }, (_, i) => ({
     hour: `${i}:00`,
     delivered: Math.floor(Math.random() * 1000) + 500,
@@ -478,7 +519,7 @@ export default function CampaignManager() {
 
   const resetCreateCampaignForm = () => {
     setCampaignCreationStep("selectType");
-    setApiCampaignName("");
+    setCampaignName("");
     setCampaignStartDate(undefined);
     setCampaignEndDate(undefined);
     setSelectedWhatsAppTemplate(null);
@@ -500,9 +541,9 @@ export default function CampaignManager() {
   };
 
   const handleCreateCampaign = (status: "draft" | "scheduled") => {
-    const newCampaign: Campaign = {
-      id: Date.now(),
-      name: apiCampaignName,
+    const campaignData: Campaign = {
+      id: editingCampaignId || Date.now(), // Preserve ID if editing, otherwise generate new
+      name: campaignName,
       type: "API Triggered",
       messageType: "Recurring",
       sent: 0,
@@ -514,24 +555,33 @@ export default function CampaignManager() {
       whatsAppTemplateName: selectedWhatsAppTemplate!,
     };
 
-    setCampaigns(prev => [...prev, newCampaign]);
-    toast({
-      title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
-      description: `${apiCampaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
-    });
+    if (editingCampaignId) {
+      setCampaigns(prev => prev.map(c => c.id === editingCampaignId ? { ...campaignData, sent: c.sent, delivered: c.delivered } : c));
+      toast({
+        title: "Campaign Saved",
+        description: `${campaignName} has been updated.`,
+      });
+    } else {
+      setCampaigns(prev => [...prev, campaignData]);
+      toast({
+        title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
+        description: `${campaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
+      });
+    }
     setCreateOpen(false);
+    setEditingCampaignId(null); // Reset editingCampaignId
     resetCreateCampaignForm();
   };
 
   const handleCreateBroadcastCampaign = (status: "draft" | "scheduled") => {
-    if (broadcastCampaignType === 'immediate')
+    if (broadcastCampaignType === 'Immediate')
     {
       setDeliverInTimezone(false);
     }
     
-    const newCampaign: Campaign = {
-      id: Date.now(),
-      name: apiCampaignName,
+    const campaignData: Campaign = {
+      id: editingCampaignId || Date.now(), // Preserve ID if editing, otherwise generate new
+      name: campaignName,
       type: "Broadcast",
       messageType: broadcastCampaignType,
       sent: 0,
@@ -540,23 +590,32 @@ export default function CampaignManager() {
       whatsAppTemplateName: selectedWhatsAppTemplate!,
       csvFileName: csvFile?.name,
       csvContent: csvData,
-      schedules: broadcastCampaignType === 'scheduled' ? schedules : undefined,
-      recurringStartDate: broadcastCampaignType === 'recurring' ? recurringStartDate : undefined,
-      recurringEndDate: broadcastCampaignType === 'recurring' ? recurringEndDate : undefined,
-      recurringTime: broadcastCampaignType === 'recurring' ? recurringTime : undefined,
-      repeatFrequency: broadcastCampaignType === 'recurring' ? repeatFrequency : undefined,
-      dailyRepeatInterval: broadcastCampaignType === 'recurring' ? dailyRepeatInterval : undefined,
-      weeklyRepeatDays: broadcastCampaignType === 'recurring' ? weeklyRepeatDays : undefined,
-      monthlyRepeatDates: broadcastCampaignType === 'recurring' ? monthlyRepeatDates : undefined,
+      schedules: broadcastCampaignType === 'Scheduled' ? schedules : undefined,
+      recurringStartDate: broadcastCampaignType === 'Recurring' ? recurringStartDate : undefined,
+      recurringEndDate: broadcastCampaignType === 'Recurring' ? recurringEndDate : undefined,
+      recurringTime: broadcastCampaignType === 'Recurring' ? recurringTime : undefined,
+      repeatFrequency: broadcastCampaignType === 'Recurring' ? repeatFrequency : undefined,
+      dailyRepeatInterval: broadcastCampaignType === 'Recurring' ? dailyRepeatInterval : undefined,
+      weeklyRepeatDays: broadcastCampaignType === 'Recurring' ? weeklyRepeatDays : undefined,
+      monthlyRepeatDates: broadcastCampaignType === 'Recurring' ? monthlyRepeatDates : undefined,
       deliverInTimezone: deliverInTimezone,
     };
 
-    setCampaigns(prev => [...prev, newCampaign]);
-    toast({
-      title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
-      description: `${apiCampaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
-    });
+    if (editingCampaignId) {
+      setCampaigns(prev => prev.map(c => c.id === editingCampaignId ? { ...campaignData, sent: c.sent, delivered: c.delivered } : c));
+      toast({
+        title: "Campaign Saved",
+        description: `${campaignName} has been updated.`,
+      });
+    } else {
+      setCampaigns(prev => [...prev, campaignData]);
+      toast({
+        title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
+        description: `${campaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
+      });
+    }
     setCreateOpen(false);
+    setEditingCampaignId(null); // Reset editingCampaignId
     resetCreateCampaignForm();
   };
 
@@ -801,7 +860,10 @@ export default function CampaignManager() {
                             <BarChart2 size={14} className="mr-2" />
                             View Performance
                           </DropdownMenuItem>
-                          <DropdownMenuItem data-testid={`button-edit-${campaign.id}`}>
+                          <DropdownMenuItem onClick={() => {
+                              setEditingCampaignId(campaign.id);
+                              setCreateOpen(true);
+                          }} data-testid={`button-edit-${campaign.id}`}>
                             <Edit2 size={14} className="mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -887,6 +949,7 @@ export default function CampaignManager() {
         setCreateOpen(isOpen);
         if (!isOpen) {
           resetCreateCampaignForm();
+          setEditingCampaignId(null); // Reset editingCampaignId when dialog closes
         }
       }}>
         <DialogContent className={campaignCreationStep === "apiTriggeredForm" || campaignCreationStep === "broadcastForm" ? "max-w-3xl" : "max-w-lg"} data-testid="dialog-create-campaign">
@@ -926,8 +989,10 @@ export default function CampaignManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <ArrowLeft size={18} className="cursor-pointer" onClick={() => setCampaignCreationStep("selectType")} />
-                  <DialogTitle>Create API Triggered Campaign</DialogTitle>
+                  {!editingCampaignId && (
+                    <ArrowLeft size={18} className="cursor-pointer" onClick={() => setCampaignCreationStep("selectType")} />
+                  )}
+                  <DialogTitle>{editingCampaignId ? "Edit API Triggered Campaign" : "Create API Triggered Campaign"}</DialogTitle>
                 </div>
               </DialogHeader>
 
@@ -948,12 +1013,12 @@ export default function CampaignManager() {
                       <div className="relative">
                         <Input
                           placeholder="Enter campaign name..."
-                          value={apiCampaignName}
-                          onChange={(e) => setApiCampaignName(e.target.value.slice(0, 100))}
+                          value={campaignName}
+                          onChange={(e) => setCampaignName(e.target.value.slice(0, 100))}
                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {apiCampaignName.length}/100
+                          {campaignName.length}/100
                         </span>
                       </div>
                     </div>
@@ -1085,28 +1150,40 @@ export default function CampaignManager() {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setCampaignCreationStep("selectType")}
-                  className="border-input [border-color:hsl(var(--input))] font-normal"
-                >
-                  Back
-                </Button>
-                <div className="flex gap-2">
+                {editingCampaignId ? (
                   <Button
                     variant="outline"
+                    onClick={() => { setCreateOpen(false); setEditingCampaignId(null); }}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
-                    disabled={!apiCampaignName}
-                    onClick={() => handleCreateCampaign("draft")}
                   >
-                    Save Draft
+                    Close
                   </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCampaignCreationStep("selectType")}
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                  >
+                    Back
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  {!editingCampaignId && (
+                    <Button
+                      variant="outline"
+                      className="border-input [border-color:hsl(var(--input))] font-normal"
+                      disabled={!campaignName}
+                      onClick={() => handleCreateCampaign("draft")}
+                    >
+                      Save Draft
+                    </Button>
+                  )}
                   <Button
                     className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={!apiCampaignName || !campaignStartDate || (!campaignEndDate && !neverEnds) || !selectedWhatsAppTemplate}
+                    disabled={!campaignName || !campaignStartDate || (!campaignEndDate && !neverEnds) || !selectedWhatsAppTemplate}
                     onClick={() => handleCreateCampaign("scheduled")}
                   >
-                    Set Live
+                    {editingCampaignId ? "Save Campaign" : "Set Live"}
                   </Button>
                 </div>
               </div>
@@ -1117,8 +1194,10 @@ export default function CampaignManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <ArrowLeft size={18} className="cursor-pointer" onClick={() => setCampaignCreationStep("selectType")} />
-                  <DialogTitle>Create Broadcast Campaign</DialogTitle>
+                  {!editingCampaignId && (
+                    <ArrowLeft size={18} className="cursor-pointer" onClick={() => setCampaignCreationStep("selectType")} />
+                  )}
+                  <DialogTitle>{editingCampaignId ? "Edit Broadcast Campaign" : "Create Broadcast Campaign"}</DialogTitle>
                 </div>
               </DialogHeader>
 
@@ -1139,12 +1218,12 @@ export default function CampaignManager() {
                       <div className="relative">
                         <Input
                           placeholder="Enter campaign name..."
-                          value={apiCampaignName}
-                          onChange={(e) => setApiCampaignName(e.target.value.slice(0, 100))}
+                          value={campaignName}
+                          onChange={(e) => setCampaignName(e.target.value.slice(0, 100))}
                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {apiCampaignName.length}/100
+                          {campaignName.length}/100
                         </span>
                       </div>
                     </div>
@@ -1157,13 +1236,13 @@ export default function CampaignManager() {
                           <SelectValue placeholder="Select a type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="immediate">Immediate</SelectItem>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="recurring">Recurring</SelectItem>
+                          <SelectItem value="Immediate">Immediate</SelectItem>
+                          <SelectItem value="Scheduled">Scheduled</SelectItem>
+                          <SelectItem value="Recurring">Recurring</SelectItem>
                         </SelectContent>
                       </Select>
 
-                      {broadcastCampaignType === 'scheduled' && (
+                      {broadcastCampaignType === 'Scheduled' && (
                         <div className="space-y-4 pt-2">
                           {schedules.map((schedule, index) => (
                             <div key={schedule.id} className="flex flex-col gap-6 p-4 border rounded-lg">
@@ -1262,7 +1341,7 @@ export default function CampaignManager() {
                         </div>
                       )}
 
-                      {broadcastCampaignType === 'recurring' && (() => {
+                      {broadcastCampaignType === 'Recurring' && (() => {
                         const weekDays = [
                           { display: 'M', value: 'mon' },
                           { display: 'T', value: 'tue' },
@@ -1446,8 +1525,8 @@ export default function CampaignManager() {
                           
                           {/* Timezone Checkbox */}
                           <div className="flex items-center space-x-2 pt-2">
-                            <Checkbox id="timezone-delivery-recurring" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
-                            <label htmlFor="timezone-delivery-recurring" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
+                            <Checkbox id="timezone-delivery-Recurring" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
+                            <label htmlFor="timezone-delivery-Recurring" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Info className="h-4 w-4" />
@@ -1593,35 +1672,47 @@ export default function CampaignManager() {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setCampaignCreationStep("selectType")}
-                  className="border-input [border-color:hsl(var(--input))] font-normal"
-                >
-                  Back
-                </Button>
-                <div className="flex gap-2">
+                {editingCampaignId ? (
                   <Button
                     variant="outline"
+                    onClick={() => { setCreateOpen(false); setEditingCampaignId(null); }}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
-                    disabled={!apiCampaignName}
-                    onClick={() => handleCreateBroadcastCampaign("draft")}
                   >
-                    Save Draft
+                    Close
                   </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCampaignCreationStep("selectType")}
+                    className="border-input [border-color:hsl(var(--input))] font-normal"
+                  >
+                    Back
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  {!editingCampaignId && (
+                    <Button
+                      variant="outline"
+                      className="border-input [border-color:hsl(var(--input))] font-normal"
+                      disabled={!campaignName}
+                      onClick={() => handleCreateBroadcastCampaign("draft")}
+                    >
+                      Save Draft
+                    </Button>
+                  )}
                   <Button
                     className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
                     disabled={
-                      !apiCampaignName || 
-                      !broadcastCampaignType || 
-                      !selectedWhatsAppTemplate || 
-                      !csvFile || 
-                      (broadcastCampaignType === 'scheduled' && isSchedulesInvalid) ||
-                      (broadcastCampaignType === 'recurring' && isRecurringInvalid)
+                      !campaignName ||
+                      !broadcastCampaignType ||
+                      !selectedWhatsAppTemplate ||
+                      !csvFile ||
+                      (broadcastCampaignType === 'Scheduled' && isSchedulesInvalid) ||
+                      (broadcastCampaignType === 'Recurring' && isRecurringInvalid)
                     }
                     onClick={() => handleCreateBroadcastCampaign("scheduled")}
                   >
-                    Set Live
+                    {editingCampaignId ? "Save Campaign" : "Set Live"}
                   </Button>
                 </div>
               </div>
@@ -1632,7 +1723,7 @@ export default function CampaignManager() {
 
       {/* View CSV Modal */}
       <Dialog open={isViewCsvModalOpen} onOpenChange={setIsViewCsvModalOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>CSV Editor</DialogTitle>
           </DialogHeader>
@@ -1676,7 +1767,7 @@ export default function CampaignManager() {
                           const newData = [...csvData];
                           newData.splice(index, 1);
                           setCsvData(newData);
-                        }}>X</Button>
+                        }}><X/></Button>
                       </td>
                     </tr>
                   ))}
