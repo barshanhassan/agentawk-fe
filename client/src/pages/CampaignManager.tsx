@@ -52,6 +52,14 @@ interface Campaign {
   status: "draft" | "scheduled" | "delivered" | "archived";
 }
 
+interface Schedule {
+  id: number;
+  date: Date | undefined;
+  hour: string;
+  minute: string;
+  period: string;
+}
+
 export default function CampaignManager() {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -81,11 +89,7 @@ export default function CampaignManager() {
   const [csvData, setCsvData] = useState<any[]>([]);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [isViewCsvModalOpen, setIsViewCsvModalOpen] = useState(false);
-  const [campaignScheduleDate, setCampaignScheduleDate] = useState<Date | undefined>(undefined);
-  const [scheduleDatePickerOpen, setScheduleDatePickerOpen] = useState(false);
-  const [campaignScheduleHour, setCampaignScheduleHour] = useState<string>("");
-  const [campaignScheduleMinute, setCampaignScheduleMinute] = useState<string>("");
-  const [campaignSchedulePeriod, setCampaignSchedulePeriod] = useState<string>("");
+  const [schedules, setSchedules] = useState<Schedule[]>([{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
   
   const whatsappTemplates = [
     {
@@ -425,10 +429,7 @@ export default function CampaignManager() {
     setSelectedWhatsAppTemplate(null);
     setSelectedTemplate(null);
     setNeverEnds(false);
-    setCampaignScheduleDate(undefined);
-    setCampaignScheduleHour("");
-    setCampaignScheduleMinute("");
-    setCampaignSchedulePeriod("");
+    setSchedules([{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
   };
 
   const handleCreateCampaign = (status: "draft" | "scheduled") => {
@@ -470,6 +471,25 @@ export default function CampaignManager() {
     setCreateOpen(false);
     resetCreateCampaignForm();
   };
+
+  const handleScheduleChange = (index: number, field: keyof Schedule, value: any) => {
+    const newSchedules = [...schedules];
+    newSchedules[index] = { ...newSchedules[index], [field]: value };
+    setSchedules(newSchedules);
+  };
+
+  const addSchedule = () => {
+    if (schedules.length < 5) {
+      setSchedules([...schedules, { id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
+    }
+  };
+
+  const removeSchedule = (id: number) => {
+    setSchedules(schedules.filter(s => s.id !== id));
+  };
+
+  const isSchedulesInvalid = schedules.length === 0 || schedules.some(s => !s.date || !s.hour || !s.minute || !s.period);
+
 
   return (
     <div className="p-6 space-y-6" data-testid="campaign-manager">
@@ -1040,74 +1060,92 @@ export default function CampaignManager() {
                           <SelectItem value="recurring">Recurring</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
 
-                    {broadcastCampaignType === 'scheduled' && (
-                      <div className="flex flex-col gap-6">
-                        <div className="space-y-2 flex-1">
-                          <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
-                          <Popover open={scheduleDatePickerOpen} onOpenChange={setScheduleDatePickerOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
-                              >
-                                <div className="flex items-center">
-                                  <Calendar size={14} className="mr-2" />
-                                  {campaignScheduleDate ? campaignScheduleDate.toLocaleDateString() : <span>Pick a date</span>}
+                      {broadcastCampaignType === 'scheduled' && (
+                        <div className="space-y-4 pt-2">
+                          {schedules.map((schedule, index) => (
+                            <div key={schedule.id} className="flex flex-col gap-6 p-4 border rounded-lg">
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-2 flex-1">
+                                  <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant={"outline"}
+                                        className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                                      >
+                                        <div className="flex items-center">
+                                          <Calendar size={14} className="mr-2" />
+                                          {schedule.date ? schedule.date.toLocaleDateString() : <span>Pick a date</span>}
+                                        </div>
+                                        <ChevronDown size={14} className="text-muted-foreground" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                      <CalendarComponent
+                                        mode="single"
+                                        selected={schedule.date}
+                                        onSelect={(date) => handleScheduleChange(index, 'date', date)}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
                                 </div>
-                                <ChevronDown size={14} className="text-muted-foreground" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <CalendarComponent
-                                mode="single"
-                                selected={campaignScheduleDate}
-                                onSelect={(date) => {
-                                  setCampaignScheduleDate(date);
-                                  setScheduleDatePickerOpen(false);
-                                }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                                {schedules.length > 1 && (
+                                  <button onClick={() => removeSchedule(schedule.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
+                                    <X size={16} />
+                                  </button>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium text-foreground">Campaign schedule time<span className="text-red-500 pl-0.5">*</span></label>
+                                <div className="flex gap-2">
+                                  <Select value={schedule.hour} onValueChange={(value) => handleScheduleChange(index, 'hour', value)}>
+                                    <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                      <SelectValue placeholder="HH" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
+                                        <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <Select value={schedule.minute} onValueChange={(value) => handleScheduleChange(index, 'minute', value)}>
+                                    <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                      <SelectValue placeholder="MM" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
+                                        <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <Select value={schedule.period} onValueChange={(value) => handleScheduleChange(index, 'period', value)}>
+                                    <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                      <SelectValue placeholder="AM/PM" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="AM">AM</SelectItem>
+                                      <SelectItem value="PM">PM</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-2 text-xs"
+                            disabled={isSchedulesInvalid || schedules.length >= 5}
+                            onClick={addSchedule}
+                          >
+                            <Plus size={14} className="mr-1" />
+                            Add another schedule
+                          </Button>
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-foreground">Campaign schedule time<span className="text-red-500 pl-0.5">*</span></label>
-                          <div className="flex gap-2">
-                            <Select value={campaignScheduleHour} onValueChange={setCampaignScheduleHour}>
-                              <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                <SelectValue placeholder="HH" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
-                                  <SelectItem key={hour} value={hour}>{hour}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Select value={campaignScheduleMinute} onValueChange={setCampaignScheduleMinute}>
-                              <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                <SelectValue placeholder="MM" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
-                                  <SelectItem key={minute} value={minute}>{minute}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Select value={campaignSchedulePeriod} onValueChange={setCampaignSchedulePeriod}>
-                              <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                <SelectValue placeholder="AM/PM" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="AM">AM</SelectItem>
-                                <SelectItem value="PM">PM</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     {/* WhatsApp Template Dropdown */}
                     <div className="space-y-2">
@@ -1265,7 +1303,7 @@ export default function CampaignManager() {
                   </Button>
                   <Button
                     className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={!apiCampaignName || !broadcastCampaignType || !selectedWhatsAppTemplate || !csvFile || (broadcastCampaignType === 'scheduled' && (!campaignScheduleDate || !campaignScheduleHour || !campaignScheduleMinute || !campaignSchedulePeriod))}
+                    disabled={!apiCampaignName || !broadcastCampaignType || !selectedWhatsAppTemplate || !csvFile || (broadcastCampaignType === 'scheduled' && isSchedulesInvalid)}
                     onClick={() => handleCreateBroadcastCampaign("scheduled")}
                   >
                     Set Live

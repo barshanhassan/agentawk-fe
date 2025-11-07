@@ -307,7 +307,7 @@ export default function TemplatePreview({
 
               {/* Buttons */}
               {templateButtons.length > 0 && (
-                <div className="mt-1.5 space-y-2">
+                <div className="mt-1.5 mb-2.5 space-y-2">
                   {templateButtons.slice(0, 3).map((button) => (
                     <div
                       key={button.id}
@@ -329,11 +329,14 @@ export default function TemplatePreview({
 
               {/* Footer */}
               {footerText && (
-                <div className="mt-2">
-                  <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                    {footerText}
-                  </p>
-                </div>
+                <>
+                  <div className="w-[calc(100%+1.5rem)] mt-1 -mx-3" style={{borderTopWidth: "1px", borderTopColor: "#000000", transform: "scaleY(0.25)"}}></div>
+                  <div className="mt-1.5">
+                    <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                      {footerText}
+                    </p>
+                  </div>
+                </>
               )}
 
               {/* Placeholder when no content */}

@@ -2362,7 +2362,7 @@ export default function ConversationsInbox() {
                 {/* Left: Phone Numbers and Template Selection */}
                 <div className="space-y-4 pl-1">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Recipients (up to 5)</label>
+                    <label className="text-sm font-medium mb-2 block">Recipients (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
                     <div className="space-y-2">
                       {templatePhoneNumbers.map((phone, index) => (
                         <div key={index} className="flex gap-2 items-center">
@@ -2376,7 +2376,7 @@ export default function ConversationsInbox() {
                             }}
                             className="border-input flex-1"
                           />
-                          {phone.trim() !== "" && (
+                          {templatePhoneNumbers.length > 1 && (
                             <button
                               onClick={() => {
                                 // If this is the last input, just clear it
@@ -2417,7 +2417,7 @@ export default function ConversationsInbox() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block">WhatsApp Template</label>
+                    <label className="text-sm font-medium mb-2 block">WhatsApp Template<span className="text-red-500 pl-0.5">*</span></label>
                     <div className="space-y-3">
                       <CustomDropdown
                         options={dummyTemplates.map(t => ({ id: String(t.id), name: t.name }))}
@@ -2480,25 +2480,16 @@ export default function ConversationsInbox() {
                 <div className="space-y-4 flex flex-col">
                   <div className="flex-1 flex flex-col">
                     <label className="text-sm font-medium mb-3 block">Template Preview</label>
-                    {selectedTemplate ? (
-                      <TemplatePreview
-                        headerText={selectedTemplate?.header || ""}
-                        bodyText={selectedTemplate?.body || ""}
-                        footerText={selectedTemplate?.footer || ""}
-                        templateButtons={selectedTemplate?.buttons || []}
-                        variableSamples={templateVariables}
-                        containerClassName="flex-1 flex items-center justify-center min-h-0"
-                        phoneClassName="h-full max-h-[70vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
-                        placeholderText="Select a template to see preview..."
-                      />
-                    ) : (
-                      <div className="flex-1 border-2 border-dashed border-input rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/30">
-                        <div className="text-muted-foreground space-y-2">
-                          <p className="text-sm font-medium">No template selected</p>
-                          <p className="text-xs">Choose a template from the left to see a preview</p>
-                        </div>
-                      </div>
-                    )}
+                    <TemplatePreview
+                      headerText={selectedTemplate?.header || ""}
+                      bodyText={selectedTemplate?.body || ""}
+                      footerText={selectedTemplate?.footer || ""}
+                      templateButtons={selectedTemplate?.buttons || []}
+                      variableSamples={templateVariables}
+                      containerClassName="flex-1 flex items-center justify-center min-h-0"
+                      phoneClassName="h-full max-h-[70vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                      placeholderText="Select a template to see preview..."
+                    />
                   </div>
                 </div>
               </div>
@@ -2533,7 +2524,7 @@ export default function ConversationsInbox() {
                 <Button
                   disabled={
                     !selectedTemplate ||
-                    templatePhoneNumbers.filter(p => p.trim()).length === 0 ||
+                    templatePhoneNumbers.some(p => p.trim() === "") ||
                     (selectedTemplate?.variables && selectedTemplate.variables.length > 0 &&
                      !selectedTemplate.variables.every((v: string) => templateVariables[v]?.trim()))
                   }
