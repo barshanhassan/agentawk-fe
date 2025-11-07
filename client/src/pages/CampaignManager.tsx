@@ -96,6 +96,19 @@ export default function CampaignManager() {
   const [isViewCsvModalOpen, setIsViewCsvModalOpen] = useState(false);
   const [schedules, setSchedules] = useState<Schedule[]>([{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
   
+  // For Recurring Broadcast
+  const [recurringStartDate, setRecurringStartDate] = useState<Date | undefined>(undefined);
+  const [recurringEndDate, setRecurringEndDate] = useState<Date | undefined>(undefined);
+  const [recurringTime, setRecurringTime] = useState({ hour: "", minute: "", period: "" });
+  const [repeatFrequency, setRepeatFrequency] = useState(""); // "daily", "weekly", "monthly"
+  const [dailyRepeatInterval, setDailyRepeatInterval] = useState("1"); // "1" for "Single Day", "2" for "2 Days" etc.
+  const [weeklyRepeatDays, setWeeklyRepeatDays] = useState<string[]>([]); // e.g., ["mon", "tue"]
+  const [monthlyRepeatDates, setMonthlyRepeatDates] = useState<number[]>([]); // e.g., [1, 15, 31]
+
+  // For Popover states
+  const [recurringStartPickerOpen, setRecurringStartPickerOpen] = useState(false);
+  const [recurringEndPickerOpen, setRecurringEndPickerOpen] = useState(false);
+
   const whatsappTemplates = [
     {
       id: 1,
@@ -435,6 +448,18 @@ export default function CampaignManager() {
     setSelectedTemplate(null);
     setNeverEnds(false);
     setSchedules([{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
+    setBroadcastCampaignType("");
+    setCsvFile(null);
+    setCsvData([]);
+    setCsvError(null);
+    setDeliverInTimezone(false);
+    setRecurringStartDate(undefined);
+    setRecurringEndDate(undefined);
+    setRecurringTime({ hour: "", minute: "", period: "" });
+    setRepeatFrequency("");
+    setDailyRepeatInterval("1");
+    setWeeklyRepeatDays([]);
+    setMonthlyRepeatDates([]);
   };
 
   const handleCreateCampaign = (status: "draft" | "scheduled") => {
@@ -498,7 +523,21 @@ export default function CampaignManager() {
     setSchedules(schedules.filter(s => s.id !== id));
   };
 
+  const toggleWeeklyDay = (day: string) => {
+    setWeeklyRepeatDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const toggleMonthlyDate = (date: number) => {
+    setMonthlyRepeatDates(prev =>
+      prev.includes(date) ? prev.filter(d => d !== date) : [...prev, date]
+    );
+  };
+
   const isSchedulesInvalid = schedules.length === 0 || schedules.some(s => !s.date || !s.hour || !s.minute || !s.period);
+
+  const isRecurringInvalid = !recurringStartDate || !recurringEndDate || !recurringTime.hour || !recurringTime.minute || !recurringTime.period || !repeatFrequency || (repeatFrequency === 'weekly' && weeklyRepeatDays.length === 0) || (repeatFrequency === 'monthly' && monthlyRepeatDates.length === 0);
 
 
   return (
@@ -1169,6 +1208,192 @@ export default function CampaignManager() {
                           </div>
                         </div>
                       )}
+
+                      {broadcastCampaignType === 'recurring' && (
+                        <div className="space-y-4 pt-2">
+                          {/* Start and End Date */}
+                          <div className="flex gap-4">
+                            <div className="space-y-2 flex-1">
+                              <label className="text-sm font-medium text-foreground">Start date<span className="text-red-500 pl-0.5">*</span></label>
+                              <Popover open={recurringStartPickerOpen} onOpenChange={setRecurringStartPickerOpen}>
+                                <PopoverTrigger asChild>
+                                  <Button variant={"outline"} className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate">
+                                    <div className="flex items-center">
+                                      <Calendar size={14} className="mr-2" />
+                                      {recurringStartDate ? recurringStartDate.toLocaleDateString() : <span>Pick a date</span>}
+                                    </div>
+                                    <ChevronDown size={14} className="text-muted-foreground" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={recurringStartDate}
+                                    onSelect={(date) => {
+                                      setRecurringStartDate(date);
+                                      if (recurringEndDate && date && date > recurringEndDate) setRecurringEndDate(undefined);
+                                      setRecurringStartPickerOpen(false);
+                                    }}
+                                    disabled={recurringEndDate ? { after: recurringEndDate } : undefined}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              <label className="text-sm font-medium text-foreground">End date<span className="text-red-500 pl-0.5">*</span></label>
+                              <Popover open={recurringEndPickerOpen} onOpenChange={setRecurringEndPickerOpen}>
+                                <PopoverTrigger asChild>
+                                  <Button variant={"outline"} className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate">
+                                    <div className="flex items-center">
+                                      <Calendar size={14} className="mr-2" />
+                                      {recurringEndDate ? recurringEndDate.toLocaleDateString() : <span>Pick a date</span>}
+                                    </div>
+                                    <ChevronDown size={14} className="text-muted-foreground" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={recurringEndDate}
+                                    onSelect={(date) => {
+                                      setRecurringEndDate(date);
+                                      if (recurringStartDate && date && date < recurringStartDate) setRecurringStartDate(undefined);
+                                      setRecurringEndPickerOpen(false);
+                                    }}
+                                    disabled={recurringStartDate ? { before: recurringStartDate } : undefined}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+
+                          {/* Time Picker */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground">At<span className="text-red-500 pl-0.5">*</span></label>
+                            <div className="flex gap-2">
+                              <Select value={recurringTime.hour} onValueChange={(value) => setRecurringTime(t => ({ ...t, hour: value }))}>
+                                <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                  <SelectValue placeholder="HH" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
+                                    <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select value={recurringTime.minute} onValueChange={(value) => setRecurringTime(t => ({ ...t, minute: value }))}>
+                                <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                  <SelectValue placeholder="MM" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
+                                    <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select value={recurringTime.period} onValueChange={(value) => setRecurringTime(t => ({ ...t, period: value }))}>
+                                <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                  <SelectValue placeholder="AM/PM" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="AM">AM</SelectItem>
+                                  <SelectItem value="PM">PM</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Repeat Row */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-foreground">Repeat<span className="text-red-500 pl-0.5">*</span></label>
+                            <div className="flex items-center gap-2">
+                              <Select value={repeatFrequency} onValueChange={setRepeatFrequency}>
+                                <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
+                                  <SelectValue placeholder="Select frequency" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="daily">Daily</SelectItem>
+                                  <SelectItem value="weekly">Weekly</SelectItem>
+                                  <SelectItem value="monthly">Monthly</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <span className="text-sm text-muted-foreground">every</span>
+                              <Select
+                                value={repeatFrequency === 'daily' ? dailyRepeatInterval : '1'}
+                                onValueChange={setDailyRepeatInterval}
+                                disabled={repeatFrequency !== 'daily'}
+                              >
+                                <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
+                                  <SelectValue placeholder={
+                                    repeatFrequency === 'weekly' ? "single week" :
+                                    repeatFrequency === 'monthly' ? "single month" :
+                                    "Select interval"
+                                  } />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1">Single Day</SelectItem>
+                                  {Array.from({ length: 5 }, (_, i) => i + 2).map(day => (
+                                    <SelectItem key={day} value={String(day)}>{day} Days</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Conditional Multi-select */}
+                          {repeatFrequency === 'weekly' && (
+                            <div className="space-y-2 pt-2">
+                              <div className="flex gap-1">
+                                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                  <Button
+                                    key={day}
+                                    variant={weeklyRepeatDays.includes(day.toLowerCase()) ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => toggleWeeklyDay(day.toLowerCase())}
+                                    className="flex-1"
+                                  >
+                                    {day}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {repeatFrequency === 'monthly' && (
+                            <div className="space-y-2 pt-2">
+                              <div className="grid grid-cols-7 gap-1">
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
+                                  <Button
+                                    key={date}
+                                    variant={monthlyRepeatDates.includes(date) ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => toggleMonthlyDate(date)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    {date}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Timezone Checkbox */}
+                          <div className="flex items-center space-x-2">
+                            <Checkbox id="timezone-delivery-recurring" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
+                            <label htmlFor="timezone-delivery-recurring" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="break-normal w-[16rem] whitespace-normal">You can send campaign messages to the user as per their local time zone. i.e. If you schedule your campaign for 9:30 am Singapore time, we will deliver to users in Singapore at 9:30 am (UTC/GMT +8 hours) and to users in Dubai at 9:30 am (UTC/GMT +4 hours). Note that the Campaign Start Time is always the timezone of your Digital Connect Account.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* WhatsApp Template Dropdown */}
@@ -1321,7 +1546,14 @@ export default function CampaignManager() {
                   </Button>
                   <Button
                     className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={!apiCampaignName || !broadcastCampaignType || !selectedWhatsAppTemplate || !csvFile || (broadcastCampaignType === 'scheduled' && isSchedulesInvalid)}
+                    disabled={
+                      !apiCampaignName || 
+                      !broadcastCampaignType || 
+                      !selectedWhatsAppTemplate || 
+                      !csvFile || 
+                      (broadcastCampaignType === 'scheduled' && isSchedulesInvalid) ||
+                      (broadcastCampaignType === 'recurring' && isRecurringInvalid)
+                    }
                     onClick={() => handleCreateBroadcastCampaign("scheduled")}
                   >
                     Set Live
