@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronDown, ChevronsUpDown, ChevronUp, ChevronDown as ChevronDownIcon, ArrowLeft } from "lucide-react";
+import { MoreVertical, ChevronDown, ChevronsUpDown, ChevronUp, ChevronDown as ChevronDownIcon, ArrowLeft, Info } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -36,6 +36,11 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import TemplatePreview from "@/components/TemplatePreview";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SortEntry {
   column: string;
@@ -453,6 +458,11 @@ export default function CampaignManager() {
   };
 
   const handleCreateBroadcastCampaign = (status: "draft" | "scheduled") => {
+    if (broadcastCampaignType === 'immediate')
+    {
+      setDeliverInTimezone(false);
+    }
+    
     const newCampaign: Campaign = {
       id: Date.now(),
       name: apiCampaignName,
@@ -1143,6 +1153,20 @@ export default function CampaignManager() {
                             <Plus size={14} className="mr-1" />
                             Add another schedule
                           </Button>
+                    
+                          {/* Timezone Checkbox */}
+                          <div className="flex items-center space-x-2">
+                            <Checkbox id="timezone-delivery" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
+                            <label htmlFor="timezone-delivery" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="break-normal w-[16rem] whitespace-normal">You can send campaign messages to the user as per their local time zone. i.e. If you schedule your campaign for 9:30 am Singapore time, we will deliver to users in Singapore at 9:30 am (UTC/GMT +8 hours) and to users in Dubai at 9:30 am (UTC/GMT +4 hours). Note that the Campaign Start Time is always the timezone of your Digital Connect Account.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1256,12 +1280,6 @@ export default function CampaignManager() {
                         </div>
                       )}
                       {csvError && <p className="text-sm text-red-500">{csvError}</p>}
-                    </div>
-                    
-                    {/* Timezone Checkbox */}
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="timezone-delivery" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
-                      <label htmlFor="timezone-delivery" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
                     </div>
                   </div>
                 </div>
