@@ -1209,11 +1209,20 @@ export default function CampaignManager() {
                         </div>
                       )}
 
-                      {broadcastCampaignType === 'recurring' && (
+                      {broadcastCampaignType === 'recurring' && (() => {
+                        const weekDays = [
+                          { display: 'M', value: 'mon' },
+                          { display: 'T', value: 'tue' },
+                          { display: 'W', value: 'wed' },
+                          { display: 'T', value: 'thu' },
+                          { display: 'F', value: 'fri' },
+                          { display: 'S', value: 'sat' },
+                          { display: 'S', value: 'sun' }
+                        ];
+                        return (
                         <div className="space-y-4 pt-2">
                           {/* Start and End Date */}
-                          <div className="flex gap-4">
-                            <div className="space-y-2 flex-1">
+                          <div className="space-y-2">
                               <label className="text-sm font-medium text-foreground">Start date<span className="text-red-500 pl-0.5">*</span></label>
                               <Popover open={recurringStartPickerOpen} onOpenChange={setRecurringStartPickerOpen}>
                                 <PopoverTrigger asChild>
@@ -1240,7 +1249,7 @@ export default function CampaignManager() {
                                 </PopoverContent>
                               </Popover>
                             </div>
-                            <div className="space-y-2 flex-1">
+                            <div className="space-y-2">
                               <label className="text-sm font-medium text-foreground">End date<span className="text-red-500 pl-0.5">*</span></label>
                               <Popover open={recurringEndPickerOpen} onOpenChange={setRecurringEndPickerOpen}>
                                 <PopoverTrigger asChild>
@@ -1267,7 +1276,6 @@ export default function CampaignManager() {
                                 </PopoverContent>
                               </Popover>
                             </div>
-                          </div>
 
                           {/* Time Picker */}
                           <div className="space-y-2">
@@ -1319,42 +1327,46 @@ export default function CampaignManager() {
                                   <SelectItem value="monthly">Monthly</SelectItem>
                                 </SelectContent>
                               </Select>
-                              <span className="text-sm text-muted-foreground">every</span>
-                              <Select
-                                value={repeatFrequency === 'daily' ? dailyRepeatInterval : '1'}
-                                onValueChange={setDailyRepeatInterval}
-                                disabled={repeatFrequency !== 'daily'}
-                              >
-                                <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
-                                  <SelectValue placeholder={
-                                    repeatFrequency === 'weekly' ? "single week" :
-                                    repeatFrequency === 'monthly' ? "single month" :
-                                    "Select interval"
-                                  } />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1">Single Day</SelectItem>
-                                  {Array.from({ length: 5 }, (_, i) => i + 2).map(day => (
-                                    <SelectItem key={day} value={String(day)}>{day} Days</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              {repeatFrequency && (
+                                <>
+                                  <span className="text-sm text-muted-foreground">every</span>
+                                  <Select
+                                    value={repeatFrequency === 'daily' ? dailyRepeatInterval : '1'}
+                                    onValueChange={setDailyRepeatInterval}
+                                    disabled={repeatFrequency !== 'daily'}
+                                  >
+                                    <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
+                                      <SelectValue placeholder={
+                                        repeatFrequency === 'weekly' ? "single week" :
+                                        repeatFrequency === 'monthly' ? "single month" :
+                                        "Select interval"
+                                      } />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="1">Single Day</SelectItem>
+                                      {Array.from({ length: 5 }, (_, i) => i + 2).map(day => (
+                                        <SelectItem key={day} value={String(day)}>{day} Days</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </>
+                              )}
                             </div>
                           </div>
 
                           {/* Conditional Multi-select */}
                           {repeatFrequency === 'weekly' && (
-                            <div className="space-y-2 pt-2">
+                            <div className="space-y-2">
                               <div className="flex gap-1">
-                                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                {weekDays.map(day => (
                                   <Button
-                                    key={day}
-                                    variant={weeklyRepeatDays.includes(day.toLowerCase()) ? "default" : "outline"}
+                                    key={day.value}
+                                    variant={weeklyRepeatDays.includes(day.value) ? "default" : "outline"}
                                     size="sm"
-                                    onClick={() => toggleWeeklyDay(day.toLowerCase())}
+                                    onClick={() => toggleWeeklyDay(day.value)}
                                     className="flex-1"
                                   >
-                                    {day}
+                                    {day.display}
                                   </Button>
                                 ))}
                               </div>
@@ -1362,7 +1374,7 @@ export default function CampaignManager() {
                           )}
 
                           {repeatFrequency === 'monthly' && (
-                            <div className="space-y-2 pt-2">
+                            <div className="space-y-2">
                               <div className="grid grid-cols-7 gap-1">
                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
                                   <Button
@@ -1380,7 +1392,7 @@ export default function CampaignManager() {
                           )}
                           
                           {/* Timezone Checkbox */}
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 pt-2">
                             <Checkbox id="timezone-delivery-recurring" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
                             <label htmlFor="timezone-delivery-recurring" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
                             <Tooltip>
@@ -1393,7 +1405,7 @@ export default function CampaignManager() {
                             </Tooltip>
                           </div>
                         </div>
-                      )}
+                      )})()}
                     </div>
 
                     {/* WhatsApp Template Dropdown */}
