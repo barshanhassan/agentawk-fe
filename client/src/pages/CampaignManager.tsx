@@ -111,6 +111,7 @@ export default function CampaignManager() {
   const [deliverInTimezone, setDeliverInTimezone] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvData, setCsvData] = useState<any[]>([]);
+  const [localCsvData, setLocalCsvData] = useState<any[]>([]);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [isViewCsvModalOpen, setIsViewCsvModalOpen] = useState(false);
   const [schedules, setSchedules] = useState<Schedule[]>([{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
@@ -311,6 +312,26 @@ export default function CampaignManager() {
     if (!csvSort) return csvData;
     
     const sortedData = [...csvData].sort((a, b) => {
+      const aVal = a[csvSort.column as keyof typeof a];
+      const bVal = b[csvSort.column as keyof typeof b];
+
+      let comparison = 0;
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        comparison = csvSort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      } else if (typeof aVal === "number" && typeof bVal === "number") {
+        comparison = csvSort.direction === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      return comparison;
+    });
+
+    return sortedData;
+  };
+
+  const getSortedLocalCsvData = () => {
+    if (!csvSort) return localCsvData;
+    
+    const sortedData = [...localCsvData].sort((a, b) => {
       const aVal = a[csvSort.column as keyof typeof a];
       const bVal = b[csvSort.column as keyof typeof b];
 
@@ -704,6 +725,10 @@ export default function CampaignManager() {
   const isSchedulesInvalid = schedules.length === 0 || schedules.some(s => !s.date || !s.hour || !s.minute || !s.period);
 
   const isRecurringInvalid = !recurringStartDate || !recurringEndDate || !recurringTime.hour || !recurringTime.minute || !recurringTime.period || !repeatFrequency || (repeatFrequency === 'weekly' && weeklyRepeatDays.length === 0) || (repeatFrequency === 'monthly' && monthlyRepeatDates.length === 0);
+
+  const hasAtLeastOneCompleteRow = localCsvData.some(row => row.name?.trim() && row.number?.trim());
+  const hasPartiallyFilledRow = localCsvData.some(row => (row.name?.trim() && !row.number?.trim()) || (!row.name?.trim() && row.number?.trim()));
+  const isCsvSaveDisabled = !hasAtLeastOneCompleteRow || hasPartiallyFilledRow;
 
 
   return (
@@ -1689,7 +1714,10 @@ export default function CampaignManager() {
                             <span className="text-xs text-muted-foreground flex-shrink-0">({(csvFile.size / 1024).toFixed(1)}KB)</span>
                           </div>
                           <button
-                            onClick={() => setIsViewCsvModalOpen(true)}
+                            onClick={() => {
+                              setLocalCsvData(JSON.parse(JSON.stringify(csvData))); // Deep copy
+                              setIsViewCsvModalOpen(true);
+                            }}
                             className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                           >
                             <Edit2 size={16} />
@@ -1804,21 +1832,21 @@ export default function CampaignManager() {
                       </div>
                     </th>
                     <th className="w-10">
-                      <Button variant="ghost" size="sm" onClick={() => setCsvData([...csvData, { name: "", number: "" }])}><Plus/></Button>
+                      <Button variant="ghost" size="sm" onClick={() => setLocalCsvData([...localCsvData, { name: "", number: "" }])}><Plus/></Button>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {getSortedCsvData().map((row, index) => (
+                  {getSortedLocalCsvData().map((row, index) => (
                     <tr key={index} className="border-b border-gray-300">
                       <td>
                         <Input
                           value={row.name}
                           onChange={(e) => {
-                            const newData = csvData.map(originalRow => 
+                            const newData = localCsvData.map(originalRow => 
                               originalRow === row ? { ...originalRow, name: e.target.value } : originalRow
                             );
-                            setCsvData(newData);
+                            setLocalCsvData(newData);
                           }}
                           className="border-none rounded-none focus-visible:ring-0"
                         />
@@ -1827,17 +1855,17 @@ export default function CampaignManager() {
                         <Input
                           value={row.number}
                           onChange={(e) => {
-                            const newData = csvData.map(originalRow => 
+                            const newData = localCsvData.map(originalRow => 
                               originalRow === row ? { ...originalRow, number: e.target.value } : originalRow
                             );
-                            setCsvData(newData);
+                            setLocalCsvData(newData);
                           }}
                           className="border-none rounded-none focus-visible:ring-0"
                         />
                       </td>
                       <td>
                         <Button variant="ghost" size="sm" onClick={() => {
-                          setCsvData(csvData.filter(originalRow => originalRow !== row));
+                          setLocalCsvData(localCsvData.filter(originalRow => originalRow !== row));
                         }}><X/></Button>
                       </td>
                     </tr>
@@ -1853,7 +1881,16 @@ export default function CampaignManager() {
               >
                 Close
               </Button>
-              <Button onClick={() => setIsViewCsvModalOpen(false)}>Done</Button>
+              <Button
+                onClick={() => {
+                  const filteredData = localCsvData.filter(row => row.name?.trim() || row.number?.trim());
+                  setCsvData(filteredData);
+                  setIsViewCsvModalOpen(false);
+                }}
+                disabled={isCsvSaveDisabled}
+              >
+                Save
+              </Button>
             </div>
           </div>
         </DialogContent>
