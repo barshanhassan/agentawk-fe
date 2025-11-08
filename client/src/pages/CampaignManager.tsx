@@ -96,6 +96,7 @@ export default function CampaignManager() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
   const [sort, setSort] = useState<SortEntry | null>(null);
+  const [csvSort, setCsvSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [campaignCreationStep, setCampaignCreationStep] = useState<"selectType" | "apiTriggeredForm" | "broadcastForm">("selectType");
   const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null);
   const [campaignName, setCampaignName] = useState("");
@@ -290,12 +291,64 @@ export default function CampaignManager() {
     }
   }, []);
 
+  // Handle CSV column sorting
+  const handleCsvColumnSort = (column: string) => {
+    if (csvSort?.column === column) {
+      // Toggle: asc -> desc -> unsorted
+      if (csvSort.direction === "asc") {
+        setCsvSort({ column, direction: "desc" });
+      } else {
+        setCsvSort(null);
+      }
+    } else {
+      // New column, start with asc
+      setCsvSort({ column, direction: "asc" });
+    }
+  };
+
+  // Get sorted CSV data based on current sort state
+  const getSortedCsvData = () => {
+    if (!csvSort) return csvData;
+    
+    const sortedData = [...csvData].sort((a, b) => {
+      const aVal = a[csvSort.column as keyof typeof a];
+      const bVal = b[csvSort.column as keyof typeof b];
+
+      let comparison = 0;
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        comparison = csvSort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      } else if (typeof aVal === "number" && typeof bVal === "number") {
+        comparison = csvSort.direction === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      return comparison;
+    });
+
+    return sortedData;
+  };
+
+  // Render sort icon for CSV columns
+  const renderCsvSortIcon = (column: string) => {
+    const isActive = csvSort?.column === column;
+    const color = isActive ? "text-foreground" : "text-muted-foreground";
+
+    if (!isActive) {
+      return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
+    }
+    if (csvSort?.direction === "asc") {
+      return <div className="w-4 h-4 flex items-center justify-center"><ChevronUp size={14} className={color} /></div>;
+    }
+    return <div className="w-4 h-4 flex items-center justify-center"><ChevronDownIcon size={14} className={color} /></div>;
+  };
+
   useEffect(() => {
     if (editingCampaignId !== null) {
       const campaignToEdit = campaigns.find(c => c.id === editingCampaignId);
       if (campaignToEdit) {
         setCampaignName(campaignToEdit.name);
         setSelectedWhatsAppTemplate(campaignToEdit.whatsAppTemplateName);
+        // Set the selectedTemplate to match the pre-selected template name
+        setSelectedTemplate(whatsappTemplates.find(t => t.name === campaignToEdit.whatsAppTemplateName) || null);
 
         if (campaignToEdit.type === "API Triggered") {
           setCampaignCreationStep("apiTriggeredForm");
@@ -538,6 +591,7 @@ export default function CampaignManager() {
     setDailyRepeatInterval("1");
     setWeeklyRepeatDays([]);
     setMonthlyRepeatDates([]);
+    setCsvSort(null);
   };
 
   const handleCreateCampaign = (status: "draft" | "scheduled") => {
@@ -1722,7 +1776,12 @@ export default function CampaignManager() {
       </Dialog>
 
       {/* View CSV Modal */}
-      <Dialog open={isViewCsvModalOpen} onOpenChange={setIsViewCsvModalOpen}>
+      <Dialog open={isViewCsvModalOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setCsvSort(null);
+        }
+        setIsViewCsvModalOpen(isOpen);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>CSV Editor</DialogTitle>
@@ -1731,42 +1790,54 @@ export default function CampaignManager() {
             <div className="max-h-[60vh] overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="select-none">
-                  <tr className="border-b">
-                    <th className="text-left p-2 font-medium text-muted-foreground">Name</th>
-                    <th className="text-left p-2 font-medium text-muted-foreground">Number</th>
-                    <th className="w-10"></th>
+                  <tr className="border-b border-gray-300">
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleCsvColumnSort("name")}>
+                      <div className="flex items-center gap-2">
+                        Name
+                        {renderCsvSortIcon("name")}
+                      </div>
+                    </th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleCsvColumnSort("number")}>
+                      <div className="flex items-center gap-2">
+                        Number
+                        {renderCsvSortIcon("number")}
+                      </div>
+                    </th>
+                    <th className="w-10">
+                      <Button variant="ghost" size="sm" onClick={() => setCsvData([...csvData, { name: "", number: "" }])}><Plus/></Button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {csvData.map((row, index) => (
-                    <tr key={index} className="border-b">
+                  {getSortedCsvData().map((row, index) => (
+                    <tr key={index} className="border-b border-gray-300">
                       <td>
                         <Input
                           value={row.name}
                           onChange={(e) => {
-                            const newData = [...csvData];
-                            newData[index].name = e.target.value;
+                            const newData = csvData.map(originalRow => 
+                              originalRow === row ? { ...originalRow, name: e.target.value } : originalRow
+                            );
                             setCsvData(newData);
                           }}
-                          className="border-0 rounded-none focus-visible:ring-0"
+                          className="border-none rounded-none focus-visible:ring-0"
                         />
                       </td>
                       <td>
                         <Input
                           value={row.number}
                           onChange={(e) => {
-                            const newData = [...csvData];
-                            newData[index].number = e.target.value;
+                            const newData = csvData.map(originalRow => 
+                              originalRow === row ? { ...originalRow, number: e.target.value } : originalRow
+                            );
                             setCsvData(newData);
                           }}
-                          className="border-0 rounded-none focus-visible:ring-0"
+                          className="border-none rounded-none focus-visible:ring-0"
                         />
                       </td>
                       <td>
                         <Button variant="ghost" size="sm" onClick={() => {
-                          const newData = [...csvData];
-                          newData.splice(index, 1);
-                          setCsvData(newData);
+                          setCsvData(csvData.filter(originalRow => originalRow !== row));
                         }}><X/></Button>
                       </td>
                     </tr>
@@ -1775,7 +1846,13 @@ export default function CampaignManager() {
               </table>
             </div>
             <div className="flex justify-between">
-              <Button variant="outline" className="border-input [border-color:hsl(var(--input))]" onClick={() => setCsvData([...csvData, { name: "", number: "" }])}>Add Row</Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsViewCsvModalOpen(false)}
+                className="border-input [border-color:hsl(var(--input))] font-normal"
+              >
+                Close
+              </Button>
               <Button onClick={() => setIsViewCsvModalOpen(false)}>Done</Button>
             </div>
           </div>
