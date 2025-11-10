@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import TemplatePreview from "@/components/TemplatePreview"; // Assuming this component exists
+import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
 import { UploadCloud } from "react-feather"; // For drag and drop icon
 
 export default function WhatsAppManagerPage() {
@@ -74,41 +74,43 @@ export default function WhatsAppManagerPage() {
         </TabsList>
 
         <TabsContent value="business-profile">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 flex gap-6">
             {/* Left Side: Business Profile Form */}
             <div className="space-y-6">
               {/* Profile Photo */}
               <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
                 <CardHeader>
                   <CardTitle className="text-lg">Profile Photo</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">This will be visible on your business profile</p>
-                  <div
-                    className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onClick={() => document.getElementById('profilePhotoInput')?.click()}
-                  >
-                    {profilePhotoPreviewUrl ? (
-                      <img src={profilePhotoPreviewUrl} alt="Profile Preview" className="h-full w-full object-cover rounded-lg" />
-                    ) : (
-                      <>
-                        <UploadCloud className="w-10 h-10 text-gray-400" />
-                        <p className="text-sm text-gray-500">Drag or drop picture</p>
-                      </>
-                    )}
-                    <input
-                      id="profilePhotoInput"
-                      type="file"
-                      className="hidden"
-                      accept="image/jpeg, image/png"
-                      onChange={handleFileChange}
-                    />
+                </CardHeader>
+                <CardContent className="grid grid-cols-2">
+                  <div className="flex flex-col space-y-4">
+                    <div
+                      className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onClick={() => document.getElementById('profilePhotoInput')?.click()}
+                    >
+                      {profilePhotoPreviewUrl ? (
+                        <img src={profilePhotoPreviewUrl} alt="Profile Preview" className="h-full w-full object-cover rounded-lg" />
+                      ) : (
+                        <>
+                          <UploadCloud className="w-10 h-10 text-gray-400" />
+                          <p className="text-sm text-gray-500">Drag or drop picture</p>
+                        </>
+                      )}
+                      <input
+                        id="profilePhotoInput"
+                        type="file"
+                        className="hidden"
+                        accept="image/jpeg, image/png"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Recommended WhatsApp Business profile photo size: 640 x 640 pixels (max 5 MB) in JPG or PNG format, with a minimum of 192 x 192 pixels
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Recommended WhatsApp Business profile photo size: 640 x 640 pixels (max 5 MB) in JPG or PNG format, with a minimum of 192 x 192 pixels
-                  </p>
                 </CardContent>
               </Card>
 
@@ -116,9 +118,9 @@ export default function WhatsAppManagerPage() {
               <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
                 <CardHeader>
                   <CardTitle className="text-lg">Display Name</CardTitle>
+                  <p className="text-sm text-muted-foreground">The WhatsApp Business display name is your business name that customers see on your WhatsApp Business profile. Ensure that your name follows WhatsApp's regulations.</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">The WhatsApp Business display name is your business name that customers see on your WhatsApp Business profile. Ensure that your name follows WhatsApp's regulations.</p>
                   <div>
                     <label className="text-sm font-medium text-foreground">Display Name</label>
                     <Input value="WhatsApp Business Account" disabled />
@@ -130,9 +132,9 @@ export default function WhatsAppManagerPage() {
               <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
                 <CardHeader>
                   <CardTitle className="text-lg">Business Information</CardTitle>
+                  <p className="text-sm text-muted-foreground">Add some details about your Business</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Add some details about your Business</p>
                   <div>
                     <label className="text-sm font-medium text-foreground">Category</label>
                     <Select value={category} onValueChange={setCategory}>
@@ -199,17 +201,13 @@ export default function WhatsAppManagerPage() {
                   <CardTitle className="text-lg">WhatsApp Profile Preview</CardTitle>
                 </CardHeader>
                 <CardContent className="flex justify-center items-center h-full min-h-[500px]">
-                  {/* This is a placeholder. TemplatePreview expects template data. */}
-                  {/* For a business profile preview, you might need a different component or adapt TemplatePreview */}
-                  <TemplatePreview
-                    headerText="Your Business Name"
-                    bodyText="This is how your profile will appear to customers."
-                    footerText="Powered by WhatsApp"
-                    selectedMediaFile={null}
-                    templateButtons={[]}
-                    variableSamples={{}}
-                    containerClassName="flex-1 flex items-center justify-center"
-                    phoneClassName="h-full max-h-[80vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                  <ProfilePreview
+                    profilePhotoUrl={profilePhotoPreviewUrl}
+                    displayName={displayName}
+                    about={about}
+                    category={category}
+                    email={email}
+                    website={website}
                   />
                 </CardContent>
               </Card>
