@@ -5,16 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import {
   Dialog,
   DialogContent,
@@ -441,6 +432,10 @@ export default function TemplateManager() {
     setShowDeleteTemplateModal(true);
   };
 
+  const handleOpenBulkDeleteModal = () => {
+    setShowBulkDeleteModal(true);
+  };
+
   // Confirm delete handler
   const handleConfirmDelete = () => {
     if (!templateToDelete) return;
@@ -456,10 +451,6 @@ export default function TemplateManager() {
 
     setTemplateToDelete(null);
     setShowDeleteTemplateModal(false);
-  };
-
-  const handleOpenBulkDeleteModal = () => {
-    setShowBulkDeleteModal(true);
   };
 
   const handleConfirmBulkDelete = () => {
@@ -2862,9 +2853,41 @@ export default function TemplateManager() {
                                     </div>
                                   )}
                                 </div>
-                              </div>
-                            );
-                          })}
+                                  {/* Bulk Delete Modal */}
+                                  <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
+                                    <DialogContent className="max-w-sm">
+                                      <DialogHeader className="mb-2">
+                                        <DialogTitle>Delete Templates</DialogTitle>
+                                      </DialogHeader>
+                            
+                                      <div className="space-y-4">
+                                        <p className="text-sm text-foreground">
+                                          Are you sure you want to delete <span className="font-semibold">{selectedTemplates.length} template(s)</span>? This action cannot be undone.
+                                        </p>
+                                      </div>
+                            
+                                      {/* Modal Footer */}
+                                      <div className="flex gap-2 justify-end mt-2">
+                                        <Button
+                                          onClick={() => setShowBulkDeleteModal(false)}
+                                          variant="outline"
+                                          className="border-input [border-color:hsl(var(--input))]"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          onClick={handleConfirmBulkDelete}
+                                          className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
+                                        >
+                                          Delete
+                                        </Button>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                                );
+                              }
+                              )}
                         </div>
                       )}
                     </div>
@@ -2975,37 +2998,33 @@ export default function TemplateManager() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showDeleteTemplateModal} onOpenChange={setShowDeleteTemplateModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this template?</AlertDialogTitle>
-            <AlertDialogDescription className="text-foreground">
-              This action cannot be undone. This will permanently delete the template{" "}
-              <span className="font-bold text-foreground">{templateToDelete?.name}</span>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-input [border-color:hsl(var(--input))]">Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-500 hover:bg-red-600 border-red-600 text-white" onClick={handleConfirmDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete these templates?</AlertDialogTitle>
-            <AlertDialogDescription className="text-foreground">
-              This action cannot be undone. This will permanently delete{" "}
-              <span className="font-bold text-foreground">{selectedTemplates.length} template(s)</span>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-input [border-color:hsl(var(--input))]">Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-500 hover:bg-red-600 border-red-600 text-white" onClick={handleConfirmBulkDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={showDeleteTemplateModal} onOpenChange={setShowDeleteTemplateModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-foreground">
+              Are you sure you want to delete <span className="font-semibold">{templateToDelete?.name}</span>? This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button
+              onClick={() => setShowDeleteTemplateModal(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

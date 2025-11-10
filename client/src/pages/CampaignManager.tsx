@@ -1025,7 +1025,7 @@ export default function CampaignManager() {
                     title="Delete"
                     onClick={() => setShowBulkDeleteModal(true)}
                   >
-                    <Trash2 size={14} className="text-blue-600" />
+                    <Trash2 size={14} className="text-red-600" />
                   </button>
                 )}
               </div>
