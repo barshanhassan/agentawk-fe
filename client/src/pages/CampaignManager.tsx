@@ -733,7 +733,7 @@ export default function CampaignManager() {
     if (editingCampaignId) {
       setCampaigns(prev => prev.map(c => c.id === editingCampaignId ? { ...campaignData, sent: c.sent, delivered: c.delivered } : c));
       toast({
-        title: "Campaign Saved",
+        title: "Campaign Updated",
         description: `${campaignName} has been updated.`,
       });
     } else {
@@ -779,7 +779,7 @@ export default function CampaignManager() {
     if (editingCampaignId) {
       setCampaigns(prev => prev.map(c => c.id === editingCampaignId ? { ...campaignData, sent: c.sent, delivered: c.delivered } : c));
       toast({
-        title: "Campaign Saved",
+        title: "Campaign Updated",
         description: `${campaignName} has been updated.`,
       });
     } else {

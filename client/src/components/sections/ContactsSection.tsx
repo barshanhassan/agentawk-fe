@@ -1427,7 +1427,7 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleConfirmDelete}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
             >
               Delete
             </Button>
@@ -1551,7 +1551,7 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleConfirmBulkDelete}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
             >
               Delete
             </Button>

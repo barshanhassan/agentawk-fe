@@ -6,6 +6,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -26,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ArrowUpDown, GripVertical, Bold, Italic, Strikethrough, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import TemplatePreview from "@/components/TemplatePreview";
@@ -46,6 +57,8 @@ interface FilterEntry {
 }
 
 export default function TemplateManager() {
+  const { toast } = useToast();
+
   // Add style to hide scrollbar
   useEffect(() => {
     const style = document.createElement('style');
@@ -64,7 +77,6 @@ export default function TemplateManager() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
   const [createTemplateOpen, setCreateTemplateOpen] = useState(false);
-  const [editTemplateOpen, setEditTemplateOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const [cloneTemplateName, setCloneTemplateName] = useState<string>("");
@@ -238,6 +250,8 @@ export default function TemplateManager() {
 
   const handleCloseCreateTemplate = () => {
     setCreateTemplateOpen(false);
+    setEditingTemplateId(null);
+    setOriginalTemplate(null);
     setTemplateCreationStep("category");
     setSelectedCategory(null);
     setSelectedLanguage("English");
@@ -325,6 +339,11 @@ export default function TemplateManager() {
     // Add to templates list
     setWhatappTemplates([...whatsappTemplates, newTemplate]);
 
+    toast({
+      title: "Template Created",
+      description: `The template "${newTemplate.name}" has been created successfully.`,
+    });
+
     // Reset form
     handleCloseCreateTemplate();
   };
@@ -353,27 +372,10 @@ export default function TemplateManager() {
 
     // Start at category step to show all 3 steps
     setTemplateCreationStep("category");
-    setEditTemplateOpen(true);
+    setCreateTemplateOpen(true);
   };
 
-  // Close edit template handler
-  const handleCloseEditTemplate = () => {
-    setEditTemplateOpen(false);
-    setEditingTemplateId(null);
-    setOriginalTemplate(null);
-    setTemplateCreationStep("category");
-    setSelectedCategory(null);
-    setSelectedLanguage("English");
-    setTemplateName("");
-    setTemplateType("");
-    setMediaSample("none");
-    setSelectedMediaFile(null);
-    setHeaderText("");
-    setBodyText("");
-    setFooterText("");
-    setTemplateButtons([]);
-    setVariableSamples({});
-  };
+
 
   // Save edited template handler
   const handleSaveEditedTemplate = () => {
@@ -422,15 +424,28 @@ export default function TemplateManager() {
       t.id === editingTemplateId ? updatedTemplate : t
     ));
 
+    toast({
+      title: "Template Updated",
+      description: `The template "${updatedTemplate.name}" has been updated successfully.`,
+    });
+
     // Close edit dialog
-    handleCloseEditTemplate();
+    handleCloseCreateTemplate();
   };
 
   // Delete template handler
   const handleDeleteTemplate = (templateId: number) => {
+    const templateToDelete = whatsappTemplates.find(t => t.id === templateId);
+    if (!templateToDelete) return;
+
     setWhatappTemplates(whatsappTemplates.filter(t => t.id !== templateId));
     // Also remove from selected templates if it was selected
     setSelectedTemplates(selectedTemplates.filter(id => id !== templateId));
+
+    toast({
+      title: "Template Deleted",
+      description: `The template "${templateToDelete.name}" has been deleted successfully.`,
+    });
   };
 
   // Open clone dialog
@@ -469,6 +484,12 @@ export default function TemplateManager() {
     };
 
     setWhatappTemplates([...whatsappTemplates, clonedTemplate]);
+
+    toast({
+      title: "Template Cloned",
+      description: `The template "${templateToClone.name}" has been cloned to "${cloneTemplateName}" successfully.`,
+    });
+    
     handleCloseCloneDialog();
   };
 
@@ -1726,7 +1747,7 @@ export default function TemplateManager() {
             <>
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
-                  <DialogTitle>Create Template</DialogTitle>
+                  <DialogTitle>{editingTemplateId ? "Edit Template" : "Create Template"}</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -1835,7 +1856,7 @@ export default function TemplateManager() {
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToCategory} />
-                  <DialogTitle>Create Template</DialogTitle>
+                  <DialogTitle>{editingTemplateId ? "Edit Template" : "Create Template"}</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -2160,1172 +2181,7 @@ export default function TemplateManager() {
               <DialogHeader className="mb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToForm} />
-                  <DialogTitle>Create Template</DialogTitle>
-                </div>
-                <div className="space-y-3">
-                  {/* 3-segment progress bar */}
-                  <div className="flex gap-1">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`flex-1 h-2 rounded-full transition-colors ${
-                          index < 3 ? "bg-primary" : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <div className="flex gap-4">
-                {/* Left: Template Form */}
-                <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
-                  <div className="space-y-6 pl-1 pb-1">
-                    {/* Template Content Heading */}
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">Template Content</h3>
-                      <p className="text-sm text-muted-foreground">Create engaging content that connects with your customers and drives meaningful interactions.</p>
-                    </div>
-                    {/* Header */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-foreground">Header</label>
-                          <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs gap-1"
-                          onClick={() => setHeaderText(headerText + `{{${getNextVariableNumber()}}}`)}
-                        >
-                          <Plus size={12} />
-                          Add variable
-                        </Button>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          placeholder="Add header text..."
-                          value={headerText}
-                          onChange={(e) => setHeaderText(e.target.value.slice(0, 60))}
-                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {headerText.length}/60
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Media Sample */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Media Sample</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
-                      </div>
-                      {selectedMediaFile ? (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded border border-input [border-color:hsl(var(--input))]">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
-                            <span className="truncate text-foreground text-sm">{selectedMediaFile.name}</span>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">({(selectedMediaFile.size / 1024).toFixed(1)}KB)</span>
-                          </div>
-                          <button
-                            onClick={() => setSelectedMediaFile(null)}
-                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <Select value={mediaSample} onValueChange={setMediaSample}>
-                            <SelectTrigger className="w-[160px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                              <SelectValue placeholder="Select media type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              <SelectItem value="image">Image</SelectItem>
-                              <SelectItem value="video">Video</SelectItem>
-                              <SelectItem value="document">Document</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {/* Browse Button - Show for browsable media types */}
-                          {(mediaSample === "image" || mediaSample === "video" || mediaSample === "document") && (
-                            <Button
-                              className="font-normal"
-                              onClick={() => {
-                                const input = document.createElement('input');
-                                input.type = 'file';
-                                input.accept = mediaSample === 'image' ? 'image/*' :
-                                              mediaSample === 'video' ? 'video/*' :
-                                              mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
-                                input.onchange = (e) => {
-                                  const file = (e.target as HTMLInputElement).files?.[0];
-                                  if (file) {
-                                    setSelectedMediaFile(file);
-                                  }
-                                };
-                                input.click();
-                              }}
-                            >
-                              Browse {mediaSample.charAt(0).toUpperCase() + mediaSample.slice(1)}
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Body */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-foreground">
-                          Body<span className="text-red-500 pl-0.5">*</span>
-                        </label>
-                        <div className="flex gap-1 items-center">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={handleBold}
-                              >
-                                <Bold size={14} />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Bold</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={handleItalic}
-                              >
-                                <Italic size={14} />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Italic</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={handleStrikethrough}
-                              >
-                                <Strikethrough size={14} />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Strikethrough</TooltipContent>
-                          </Tooltip>
-                          <div className="relative">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                >
-                                  <Smile size={14} />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Add emoji</TooltipContent>
-                            </Tooltip>
-                            {showEmojiPicker && (
-                              <div
-                                ref={emojiPickerRef}
-                                className="absolute top-8 right-0 z-50"
-                              >
-                                <Picker
-                                  data={data}
-                                  onEmojiSelect={handleEmojiSelect}
-                                  theme="light"
-                                  previewPosition="none"
-                                  skinTonePosition="top"
-                                  maxFrequentRows={1}
-                                  perLine={8}
-                                  set="native"
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs gap-1"
-                            onClick={() => setBodyText(bodyText + `{{${getNextVariableNumber()}}}`)}
-                          >
-                            <Plus size={12} />
-                            Add variable
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="relative">
-                        <textarea
-                          ref={bodyTextareaRef}
-                          placeholder="Add body text..."
-                          value={bodyText}
-                          onChange={(e) => setBodyText(e.target.value.slice(0, 1024))}
-                          className="w-full min-h-[120px] p-3 pr-16 pb-8 border border-input [border-color:hsl(var(--input))] rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-[0.90rem] hover-elevate"
-                        />
-                        <span className="absolute bottom-4 right-2 text-xs text-muted-foreground">
-                          {bodyText.length}/1024
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Variable Samples */}
-                    {getAllVariables().length > 0 && (
-                      <div className="space-y-2">
-                        <div>
-                          <h4 className="text-sm font-medium text-foreground mb-1">
-                            Variable Samples<span className="text-red-500 pl-0.5">*</span>
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            Include samples of all variables in your message to help Meta review your template.
-                            Remember not to include any customer information to protect your customer's privacy.
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 items-center">
-                          {getAllVariables().map((variable) => {
-                            // Extract the content inside the braces (could be number or text)
-                            const variableKey = variable.match(/\{\{([^}]+)\}\}/)?.[1] || "";
-                            return (
-                              <>
-                                <div key={`${variable}-label`} className="font-medium text-sm">{variable}</div>
-                                <Input
-                                  key={`${variable}-input`}
-                                  placeholder={`Sample text for ${variable}`}
-                                  value={variableSamples[variableKey] || ""}
-                                  onChange={(e) => setVariableSamples({...variableSamples, [variableKey]: e.target.value})}
-                                  className="border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                />
-                              </>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Buttons */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Buttons</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Add up to 10 buttons for customer actions or responses. More than 3 buttons will appear in a list.
-                      </p>
-                      <Select onValueChange={(value) => {
-                        if (value && templateButtons.length < 10) {
-                          // Add button to list instead of selecting
-                          const newButton: any = { id: Date.now(), type: value };
-
-                          // Initialize with default values based on button type
-                          if (value === "visit-website") {
-                            newButton.urlType = "static";
-                          } else if (value === "call-phone") {
-                            newButton.country = "+1";
-                          } else if (value === "complete-flow") {
-                            newButton.flowButton = "default";
-                          } else if (value === "copy-offer") {
-                            newButton.activeFor = "7";
-                          }
-
-                          setTemplateButtons([...templateButtons, newButton]);
-                        }
-                      }} value="" disabled={templateButtons.length >= 10}>
-                        <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                          <SelectValue placeholder={templateButtons.length >= 10 ? "Maximum 10 buttons reached" : "Add button"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="quick-reply" className="pl-4">
-                            <div>
-                              <div className="font-medium">Quick reply</div>
-                              <div className="text-xs text-muted-foreground">Simple response buttons for customer replies</div>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="visit-website" className="pl-4">
-                            <div>
-                              <div className="font-medium">Visit website</div>
-                              <div className="text-xs text-muted-foreground">Direct customers to your website or URL</div>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="call-whatsapp" className="pl-4">
-                            <div>
-                              <div className="font-medium">Call on WhatsApp</div>
-                              <div className="text-xs text-muted-foreground">Enable voice calls through WhatsApp</div>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="call-phone" className="pl-4">
-                            <div>
-                              <div className="font-medium">Call phone number</div>
-                              <div className="text-xs text-muted-foreground">Direct customers to call a phone number</div>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="complete-flow" className="pl-4">
-                            <div>
-                              <div className="font-medium">Complete Flow</div>
-                              <div className="text-xs text-muted-foreground">Trigger a WhatsApp Flow for interactive experiences</div>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="copy-offer" className="pl-4">
-                            <div>
-                              <div className="font-medium">Copy offer code</div>
-                              <div className="text-xs text-muted-foreground">Allow customers to copy promotional codes</div>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {/* Added Buttons List */}
-                      {templateButtons.length > 0 && (
-                        <div className="space-y-4 mt-4">
-                          {templateButtons.map((button) => {
-                            const buttonLabels: Record<string, { label: string; description: string }> = {
-                              "quick-reply": { label: "Quick reply", description: "Simple response buttons for customer replies" },
-                              "visit-website": { label: "Visit website", description: "Direct customers to your website or URL" },
-                              "call-whatsapp": { label: "Call on WhatsApp", description: "Enable voice calls through WhatsApp" },
-                              "call-phone": { label: "Call phone number", description: "Direct customers to call a phone number" },
-                              "complete-flow": { label: "Complete Flow", description: "Trigger a WhatsApp Flow for interactive experiences" },
-                              "copy-offer": { label: "Copy offer code", description: "Allow customers to copy promotional codes" }
-                            };
-                            const buttonInfo = buttonLabels[button.type];
-                            return (
-                              <div
-                                key={button.id}
-                                className="border border-input rounded-lg bg-muted/30 overflow-hidden"
-                                draggable
-                                onDragStart={() => handleButtonDragStart(button.id)}
-                                onDragOver={handleButtonDragOver}
-                                onDrop={() => handleButtonDrop(button.id)}
-                              >
-                                {/* Button Header */}
-                                <div className="flex gap-2 items-center p-3 border-b border-input">
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium">{buttonInfo?.label}</p>
-                                    <p className="text-xs text-muted-foreground">{buttonInfo?.description}</p>
-                                  </div>
-                                  <button onClick={() => setTemplateButtons(templateButtons.filter(b => b.id !== button.id))} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
-                                  <GripVertical size={14} className="text-muted-foreground cursor-grab" />
-                                </div>
-
-                                {/* Button Configuration */}
-                                <div className="p-4 space-y-3">
-                                  {/* Quick Reply */}
-                                  {button.type === "quick-reply" && (
-                                    <div className="space-y-2">
-                                      <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
-                                      <div className="relative">
-                                        <Input
-                                          placeholder="Enter button text..."
-                                          value={button.buttonText || ""}
-                                          onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
-                                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                          {(button.buttonText || "").length}/25
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Visit Website */}
-                                  {button.type === "visit-website" && (
-                                    <div className="space-y-3">
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter button text..."
-                                            value={button.buttonText || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.buttonText || "").length}/25
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">URL Type<span className="text-red-500 pl-0.5">*</span></label>
-                                        <Select value={button.urlType || "static"} onValueChange={(value) => updateButtonConfig(button.id, "urlType", value)}>
-                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select URL type" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="static">Static</SelectItem>
-                                            <SelectItem value="dynamic">Dynamic</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Website URL<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter website URL..."
-                                            value={button.websiteUrl || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "websiteUrl", e.target.value.slice(0, 2000))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.websiteUrl || "").length}/2000
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Checkbox
-                                          id={`track-conversion-${button.id}`}
-                                          checked={button.trackAppConversion || false}
-                                          onCheckedChange={(checked) => updateButtonConfig(button.id, "trackAppConversion", checked)}
-                                        />
-                                        <label htmlFor={`track-conversion-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
-                                          Track app conversion (Marketing Messages Lite API only)
-                                        </label>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Checkbox
-                                          id={`enable-meta-${button.id}`}
-                                          checked={button.enableMetaTracking || false}
-                                          onCheckedChange={(checked) => updateButtonConfig(button.id, "enableMetaTracking", checked)}
-                                        />
-                                        <label htmlFor={`enable-meta-${button.id}`} className="text-sm font-medium text-foreground cursor-pointer">
-                                          Enable Meta to track and report website clicks
-                                        </label>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Call on WhatsApp */}
-                                  {button.type === "call-whatsapp" && (
-                                    <div className="space-y-3">
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter button text..."
-                                            value={button.buttonText || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.buttonText || "").length}/25
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Active for</label>
-                                        <Select value={button.activeFor || "7"} onValueChange={(value) => updateButtonConfig(button.id, "activeFor", value)}>
-                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select duration" />
-                                          </SelectTrigger>
-                                          <SelectContent className="max-h-[200px]">
-                                            {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
-                                              <SelectItem key={day} value={`${day}`}>
-                                                {day} day{day > 1 ? "s" : ""}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Call Phone Number */}
-                                  {button.type === "call-phone" && (
-                                    <div className="space-y-3">
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter button text..."
-                                            value={button.buttonText || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.buttonText || "").length}/25
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Country<span className="text-red-500 pl-0.5">*</span></label>
-                                        <Select value={button.country || "+1"} onValueChange={(value) => updateButtonConfig(button.id, "country", value)}>
-                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select country" />
-                                          </SelectTrigger>
-                                          <SelectContent className="max-h-[200px]">
-                                            <SelectItem value="+1">+1 (US/Canada)</SelectItem>
-                                            <SelectItem value="+44">+44 (UK)</SelectItem>
-                                            <SelectItem value="+33">+33 (France)</SelectItem>
-                                            <SelectItem value="+49">+49 (Germany)</SelectItem>
-                                            <SelectItem value="+39">+39 (Italy)</SelectItem>
-                                            <SelectItem value="+34">+34 (Spain)</SelectItem>
-                                            <SelectItem value="+91">+91 (India)</SelectItem>
-                                            <SelectItem value="+86">+86 (China)</SelectItem>
-                                            <SelectItem value="+81">+81 (Japan)</SelectItem>
-                                            <SelectItem value="+55">+55 (Brazil)</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Phone number<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter phone number..."
-                                            value={button.phoneNumber || ""}
-                                            onChange={(e) => {
-                                              const numbersOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 20);
-                                              updateButtonConfig(button.id, "phoneNumber", numbersOnly);
-                                            }}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.phoneNumber || "").length}/20
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Complete Flow */}
-                                  {button.type === "complete-flow" && (
-                                    <div className="space-y-3">
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter button text..."
-                                            value={button.buttonText || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.buttonText || "").length}/25
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button<span className="text-red-500 pl-0.5">*</span></label>
-                                        <Select value={button.flowButton || "default"} onValueChange={(value) => updateButtonConfig(button.id, "flowButton", value)}>
-                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                            <SelectValue placeholder="Select button type" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="default">Default</SelectItem>
-                                            <SelectItem value="document">Document</SelectItem>
-                                            <SelectItem value="promotion">Promotion</SelectItem>
-                                            <SelectItem value="review">Review</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Flow<span className="text-red-500 pl-0.5">*</span></label>
-                                        <Select value={button.flowId || ""} onValueChange={(value) => updateButtonConfig(button.id, "flowId", value)}>
-                                          <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate pl-3">
-                                            <SelectValue placeholder="Select flow">
-                                              {button.flowId && (
-                                                <span className="font-normal">
-                                                  {button.flowId === "product-inquiry" && "Product Inquiry Form"}
-                                                  {button.flowId === "support-request" && "Support Request"}
-                                                  {button.flowId === "promotional-survey" && "Promotional Survey"}
-                                                  {button.flowId === "review-collection" && "Review Collection"}
-                                                </span>
-                                              )}
-                                            </SelectValue>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="product-inquiry">
-                                              <div>
-                                                <div className="font-medium flex items-center gap-2">
-                                                  Product Inquiry Form
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Default</span>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">Collect customers product inquires</div>
-                                              </div>
-                                            </SelectItem>
-                                            <SelectItem value="support-request">
-                                              <div>
-                                                <div className="font-medium flex items-center gap-2">
-                                                  Support Request
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Document</span>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">Handle customer support requests</div>
-                                              </div>
-                                            </SelectItem>
-                                            <SelectItem value="promotional-survey">
-                                              <div>
-                                                <div className="font-medium flex items-center gap-2">
-                                                  Promotional Survey
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Promotion</span>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">Gather feedback on promotions</div>
-                                              </div>
-                                            </SelectItem>
-                                            <SelectItem value="review-collection">
-                                              <div>
-                                                <div className="font-medium flex items-center gap-2">
-                                                  Review Collection
-                                                  <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">Review</span>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">Collect customer reviews</div>
-                                              </div>
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Copy Offer */}
-                                  {button.type === "copy-offer" && (
-                                    <div className="space-y-3">
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Button Text<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter button text..."
-                                            value={button.buttonText || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "buttonText", e.target.value.slice(0, 25))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.buttonText || "").length}/25
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">Offer code<span className="text-red-500 pl-0.5">*</span></label>
-                                        <div className="relative">
-                                          <Input
-                                            placeholder="Enter offer code... e.g. SUMMER50"
-                                            value={button.offerCode || ""}
-                                            onChange={(e) => updateButtonConfig(button.id, "offerCode", e.target.value.slice(0, 15))}
-                                            className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                                          />
-                                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                                            {(button.offerCode || "").length}/15
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-foreground">Footer</label>
-                        <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">Optional</span>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          placeholder="Add footer text..."
-                          value={footerText}
-                          onChange={(e) => setFooterText(e.target.value.slice(0, 60))}
-                          className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {footerText.length}/60
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Right: Template Preview */}
-                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                    <TemplatePreview
-                      headerText={headerText}
-                      bodyText={bodyText}
-                      footerText={footerText}
-                      selectedMediaFile={selectedMediaFile}
-                      templateButtons={templateButtons}
-                      variableSamples={variableSamples}
-                      containerClassName="flex-1 flex items-center justify-center min-h-0"
-                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between pt-4">
-                <Button
-                  variant="outline"
-                  onClick={handleBackToForm}
-                  className="border-input [border-color:hsl(var(--input))] font-normal"
-                >
-                  Back
-                </Button>
-                <Button
-                  className="gap-2 font-normal"
-                  disabled={!isTemplateFormValid()}
-                  onClick={handleCreateTemplate}
-                >
-                  Create Template
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Template Dialog */}
-      <Dialog open={editTemplateOpen} onOpenChange={handleCloseEditTemplate}>
-        <DialogContent className={
-          templateCreationStep === "content" ? "max-w-5xl" : "max-w-3xl"
-        } data-testid="dialog-edit-template">
-          {templateCreationStep === "category" && (
-            <>
-              <DialogHeader className="mb-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <DialogTitle>Edit Template</DialogTitle>
-                </div>
-                <div className="space-y-3">
-                  {/* 3-segment progress bar */}
-                  <div className="flex gap-1">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`flex-1 h-2 rounded-full transition-colors ${
-                          index < 1 ? "bg-primary" : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <div>
-                      <h3 className="font-semibold text-lg mb-1">Choose template category</h3>
-                      <p className="text-sm text-muted-foreground">Select the category that best describes your message purpose. Each category has specific types and approval requirements.</p>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <div className="space-y-6">
-                {/* Category Cards */}
-                <div className="grid grid-cols-3 gap-4">
-                  <Card
-                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Marketing" ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => handleCategorySelect("Marketing")}
-                    data-testid="card-category-marketing"
-                  >
-                    <CardHeader className="text-center pb-2">
-                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                        <ShoppingCart size={24} className="text-orange-600" />
-                      </div>
-                      <CardTitle className="text-base">Marketing</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <p className="text-sm text-muted-foreground">Send promotional content, product updates, and offers</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Utility" ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => handleCategorySelect("Utility")}
-                    data-testid="card-category-utility"
-                  >
-                    <CardHeader className="text-center pb-2">
-                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Bell size={24} className="text-blue-600" />
-                      </div>
-                      <CardTitle className="text-base">Utility</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <p className="text-sm text-muted-foreground">Send account updates, alerts, and service notifications</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className={`cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 ${selectedCategory === "Authentication" ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => handleCategorySelect("Authentication")}
-                    data-testid="card-category-authentication"
-                  >
-                    <CardHeader className="text-center pb-2">
-                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                        <Shield size={24} className="text-green-600" />
-                      </div>
-                      <CardTitle className="text-base">Authentication</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <p className="text-sm text-muted-foreground">Send OTP codes, login confirmations, and security alerts</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Category Guidelines Banner */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-base text-blue-800 mb-2">Category Guidelines:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5">
-                    <li><strong>Marketing:</strong> Requires opt-in from customers and has a 24-hour messaging window</li>
-                    <li><strong>Utility:</strong> For transactional messages like confirmations, alerts, and updates</li>
-                    <li><strong>Authentication:</strong> For security codes, login verifications, and account alerts</li>
-                  </ul>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-between pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleCloseEditTemplate}
-                    className="border-input [border-color:hsl(var(--input))] font-normal"
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    onClick={handleNextFromCategory}
-                    disabled={!selectedCategory}
-                    className="gap-2 font-normal"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {templateCreationStep === "form" && (
-            <>
-              <DialogHeader className="mb-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToCategory} />
-                  <DialogTitle>Edit Template</DialogTitle>
-                </div>
-                <div className="space-y-3">
-                  {/* 3-segment progress bar */}
-                  <div className="flex gap-1">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`flex-1 h-2 rounded-full transition-colors ${
-                          index < 2 ? "bg-primary" : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">Template Details</h3>
-                    <p className="text-sm text-muted-foreground">Fill in the template information and type.</p>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <div className="space-y-6">
-                {/* Template Form */}
-                <div className="space-y-4">
-                  {/* Template Name and Language - Side by Side */}
-                  <div>
-
-                    <div className="flex gap-4">
-                      {/* Template Name */}
-                      <div className="space-y-2 w-full">
-                        <label className="text-sm font-medium text-foreground">
-                          Template Name<span className="text-red-500 pl-0.5">*</span>
-                        </label>
-                        <div className="relative">
-                          <Input
-                            id="template-name"
-                            placeholder="my_template"
-                            value={templateName}
-                            onChange={(e) => {
-                              // Auto-decapitalize and allow only lowercase, numbers, underscores
-                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 100);
-                              setTemplateName(value);
-                            }}
-                            className="pr-12"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                            {templateName.length}/100
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Language Selection */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">
-                          Language<span className="text-red-500 pl-0.5">*</span>
-                        </label>
-                        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Select language" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="English">English</SelectItem>
-                            <SelectItem value="Spanish">Spanish</SelectItem>
-                            <SelectItem value="French">French</SelectItem>
-                            <SelectItem value="German">German</SelectItem>
-                            <SelectItem value="Portuguese">Portuguese</SelectItem>
-                            <SelectItem value="Italian">Italian</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                    </div>
-                      {/* Template Name Guidelines */}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Lowercase letters, numbers and underscores only.
-                      </p>
-                  </div>
-
-                  {/* Template Type */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-foreground">
-                      Template Type<span className="text-red-500 pl-0.5">*</span>
-                    </label>
-
-                    {/* Template Type Cards */}
-                    <div>
-                      <div className="max-h-[calc(100vh-30rem)] overflow-y-auto space-y-2">
-                      {selectedCategory === "Utility" && (
-                        <>
-                          <div
-                            onClick={() => setTemplateType("utility-default")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-default"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Default</h4>
-                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("utility-appointment")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-appointment"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Appointment Update</h4>
-                              <p className="text-xs text-muted-foreground">Appointment confirmations and reminders.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("utility-issue")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-issue"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Issue Resolution</h4>
-                              <p className="text-xs text-muted-foreground">Support and issue updates.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("utility-payment")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-payment"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Payment Update</h4>
-                              <p className="text-xs text-muted-foreground">Payment confirmations and receipts.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("utility-shipping")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-shipping"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Shipping Update</h4>
-                              <p className="text-xs text-muted-foreground">Delivery and shipping notifications.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("utility-reservation")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-reservation"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Reservation Update</h4>
-                              <p className="text-xs text-muted-foreground">Booking confirmations and changes.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("utility-account")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-account"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
-                              <p className="text-xs text-muted-foreground">Account changes and notifications.</p>
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {selectedCategory === "Marketing" && (
-                        <>
-                          <div
-                            onClick={() => setTemplateType("marketing-default")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-default"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Default</h4>
-                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("marketing-catalog")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-catalog"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Catalog</h4>
-                              <p className="text-xs text-muted-foreground">Send messages that drive sales by connecting your product catalog.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("marketing-flows")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-flows"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Flows</h4>
-                              <p className="text-xs text-muted-foreground">Send a form to capture customer interests, appointment requests, or run surveys.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("marketing-calling")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-calling"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Calling permissions request</h4>
-                              <p className="text-xs text-muted-foreground">Ask customers if you can call them on WhatsApp.</p>
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {selectedCategory === "Authentication" && (
-                        <>
-                          <div
-                            onClick={() => setTemplateType("auth-default")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "auth-default"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Default</h4>
-                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("auth-account")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "auth-account"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
-                              <p className="text-xs text-muted-foreground">Security and account notifications.</p>
-                            </div>
-                          </div>
-
-                          <div
-                            onClick={() => setTemplateType("auth-alert")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "auth-alert"
-                                ? "border-primary bg-primary/10"
-                                : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Alert Update</h4>
-                              <p className="text-xs text-muted-foreground">Security alerts and warnings.</p>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-between pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleBackToCategory}
-                    className="border-input [border-color:hsl(var(--input))] font-normal"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleNextFromForm}
-                    disabled={!templateName.trim() || !templateType.trim()}
-                    className="gap-2 font-normal"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {templateCreationStep === "content" && (
-            <>
-              <DialogHeader className="mb-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <ArrowLeft size={18} className="cursor-pointer" onClick={handleBackToForm} />
-                  <DialogTitle>Edit Template</DialogTitle>
+                  <DialogTitle>{editingTemplateId ? "Edit Template" : "Create Template"}</DialogTitle>
                 </div>
                 <div className="space-y-3">
                   {/* 3-segment progress bar */}
@@ -4034,13 +2890,23 @@ export default function TemplateManager() {
                 >
                   Back
                 </Button>
-                <Button
-                  className="gap-2 font-normal"
-                  disabled={!isTemplateFormValid() || !hasTemplateChanged()}
-                  onClick={handleSaveEditedTemplate}
-                >
-                  Save Template
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    className="gap-2 font-normal"
+                    disabled={
+                      editingTemplateId === null
+                        ? !isTemplateFormValid()
+                        : !isTemplateFormValid() || !hasTemplateChanged()
+                    }
+                    onClick={
+                      editingTemplateId === null
+                        ? handleCreateTemplate
+                        : handleSaveEditedTemplate
+                    }
+                  >
+                    {editingTemplateId === null ? "Create Template" : "Save Template"}
+                  </Button>
+                </div>
               </div>
             </>
           )}
