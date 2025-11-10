@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar, X, Download } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -120,8 +126,7 @@ export default function ContactsSection() {
   // Bulk Delete Modal State
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-  // Copy tooltip state
-  const [copiedContactId, setCopiedContactId] = useState<string | null>(null);
+
 
   const allTags = Array.from(new Set(contacts.flatMap((c: Contact) => c.tags)));
 
@@ -333,8 +338,10 @@ export default function ContactsSection() {
   const handleCopyContact = (contact: Contact) => {
     const contactText = `${contact.name} - ${contact.phoneNumber}`;
     navigator.clipboard.writeText(contactText);
-    setCopiedContactId(contact.id);
-    setTimeout(() => setCopiedContactId(null), 2000);
+    toast({
+      title: "Copied to clipboard",
+      description: contactText,
+    });
   };
 
   const handleDeleteContact = (contact: Contact) => {
@@ -1074,27 +1081,28 @@ export default function ContactsSection() {
                       <td className="py-2 px-3">{contact.lastActive}</td>
                       <td className="py-2 px-3">{contact.updatedBy}</td>
                       <td className="py-2 px-3">
-                        <div className={`flex items-center gap-2 ${selectedRows.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-                          <button onClick={() => handleEditContact(contact)} className="p-1 hover:bg-muted rounded" title="Edit">
-                            <Edit2 size={14} className="text-muted-foreground hover:text-foreground" />
-                          </button>
-                          <div className="relative">
-                            <button
-                              onClick={() => handleCopyContact(contact)}
-                              className="p-1 hover:bg-muted rounded"
-                              title={copiedContactId === contact.id ? "Copied!" : "Copy"}
-                            >
-                              <Copy size={14} className={`transition-colors ${copiedContactId === contact.id ? 'text-blue-600' : 'text-muted-foreground hover:text-foreground'}`} />
-                            </button>
-                            {copiedContactId === contact.id && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-blue-600 text-white text-xs rounded whitespace-nowrap pointer-events-none">
-                                Copied!
-                              </div>
-                            )}
-                          </div>
-                          <button onClick={() => handleDeleteContact(contact)} className="p-1 hover:bg-muted rounded" title="Delete">
-                            <Trash2 size={14} className="text-red-600 hover:text-red-700" />
-                          </button>
+                        <div className={`${selectedRows.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 hover:bg-muted rounded">
+                                <MoreVertical size={14} className="text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditContact(contact)}>
+                                <Edit2 size={14} className="mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCopyContact(contact)}>
+                                <Copy size={14} className="mr-2" />
+                                Copy
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteContact(contact)} className="text-destructive">
+                                <Trash2 size={14} className="mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>

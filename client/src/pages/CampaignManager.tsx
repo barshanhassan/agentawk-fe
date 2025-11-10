@@ -86,10 +86,10 @@ export default function CampaignManager() {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
-  const [performanceOpen, setPerformanceOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  const [activePerformanceTab, setActivePerformanceTab] = useState("performance");
+  const [activeDetailsTab, setActiveDetailsTab] = useState("performance");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
   const [selectedMessageTypes, setSelectedMessageTypes] = useState<string[]>([]);
@@ -1004,7 +1004,7 @@ export default function CampaignManager() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setPerformanceOpen(true)} data-testid={`button-details-${campaign.id}`}>
+                          <DropdownMenuItem onClick={() => setDetailsOpen(true)} data-testid={`button-details-${campaign.id}`}>
                             <BarChart2 size={14} className="mr-2" />
                             View Details
                           </DropdownMenuItem>
@@ -1965,20 +1965,20 @@ export default function CampaignManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Performance Dialog */}
-      <Dialog open={performanceOpen} onOpenChange={setPerformanceOpen}>
-        <DialogContent className="max-w-5xl" data-testid="dialog-performance">
+      {/* Details Dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-5xl" data-testid="dialog-details">
           <DialogHeader className="mb-2">
-            <DialogTitle>Campaign Performance - Summer Sale 2024</DialogTitle>
+            <DialogTitle>Campaign Details - Summer Sale 2024</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Tabs */}
             <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
               <button
-                onClick={() => setActivePerformanceTab("performance")}
+                onClick={() => setActiveDetailsTab("performance")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activePerformanceTab === "performance"
+                  activeDetailsTab === "performance"
                     ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -1987,9 +1987,9 @@ export default function CampaignManager() {
                 Performance
               </button>
               <button
-                onClick={() => setActivePerformanceTab("recipients")}
+                onClick={() => setActiveDetailsTab("recipients")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activePerformanceTab === "recipients"
+                  activeDetailsTab === "recipients"
                     ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -2000,7 +2000,7 @@ export default function CampaignManager() {
             </div>
 
             {/* Performance Tab */}
-            {activePerformanceTab === "performance" && (
+            {activeDetailsTab === "performance" && (
               <div className="space-y-6">
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2076,7 +2076,7 @@ export default function CampaignManager() {
             )}
 
             {/* Recipients Tab */}
-            {activePerformanceTab === "recipients" && (
+            {activeDetailsTab === "recipients" && (
               <div className="space-y-4">
                 <div className="relative w-80">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />

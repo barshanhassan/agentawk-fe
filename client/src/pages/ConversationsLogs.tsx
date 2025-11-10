@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, RefreshCw, MoreVertical, Download } from "react-feather";
-import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { Search, RefreshCw, MoreVertical, Download, FileText } from "react-feather";
+import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1705,9 +1705,18 @@ export default function ConversationsLogs() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewConversationDetails(conv)}>View Details</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleExportSingleAsCSV(conv)}>Export Log</DropdownMenuItem>
-                                <DropdownMenuItem>Export Chat</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewConversationDetails(conv)}>
+                                  <FileText size={14} className="mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExportSingleAsCSV(conv)}>
+                                  <Download size={14} className="mr-2" />
+                                  Export Log
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <MessageSquare size={14} className="mr-2" />
+                                  Export Chat
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </td>
@@ -2087,11 +2096,18 @@ export default function ConversationsLogs() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>View Details</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
-                                Export Log
+                                <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>
+                                  <FileText size={14} className="mr-2" />
+                                  View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>Export Recording</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
+                                  <Download size={14} className="mr-2" />
+                                  Export Log
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Mic size={14} className="mr-2" />
+                                  Export Recording
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </td>
