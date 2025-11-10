@@ -20,9 +20,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CustomDropdown from "../CustomDropdown";
 
 type UserRole = "Administrator" | "Agent" | "Chatbot User" | "Marketer" | "Team Supervisor" | "Viewer" | "WABA Manager";
 type UserStatus = "Active" | "Invited" | "Inactive";
+
+interface Option {
+  id: string;
+  name: string;
+}
+
+const roleOptions: Option[] = [
+  { id: "Administrator", name: "Administrator" },
+  { id: "Agent", name: "Agent" },
+  { id: "Chatbot User", name: "Chatbot User" },
+  { id: "Marketer", name: "Marketer" },
+  { id: "Team Supervisor", name: "Team Supervisor" },
+  { id: "Viewer", name: "Viewer" },
+  { id: "WABA Manager", name: "WABA Manager" },
+];
+
+const statusOptions: Option[] = [
+  { id: "Active", name: "Active" },
+  { id: "Invited", name: "Invited" },
+  { id: "Inactive", name: "Inactive" },
+];
 
 interface User {
   id: string;
@@ -216,6 +238,8 @@ export default function UserManagementSection() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
+  const [filterRole, setFilterRole] = useState<UserRole[]>([]);
+  const [filterStatus, setFilterStatus] = useState<UserStatus[]>([]);
   const [isInvitedUserEditing, setIsInvitedUserEditing] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -285,6 +309,16 @@ export default function UserManagementSection() {
       );
     }
 
+    // Apply role filter
+    if (filterRole.length > 0) {
+      data = data.filter(user => filterRole.includes(user.role));
+    }
+
+    // Apply status filter
+    if (filterStatus.length > 0) {
+      data = data.filter(user => filterStatus.includes(user.status));
+    }
+
     // Apply sorting
     if (sort) {
       data.sort((a, b) => {
@@ -329,6 +363,15 @@ export default function UserManagementSection() {
         user.phoneNumber.toLowerCase().includes(search.toLowerCase())
       );
     }
+    // Apply role filter
+    if (filterRole.length > 0) {
+      data = data.filter(user => filterRole.includes(user.role));
+    }
+
+    // Apply status filter
+    if (filterStatus.length > 0) {
+      data = data.filter(user => filterStatus.includes(user.status));
+    }
     return data.length;
   };
 
@@ -343,7 +386,7 @@ export default function UserManagementSection() {
     setEditRole(user.role);
     setEditStatus(user.status);
     setEditPhoneNumber(user.phoneNumber.replace(/^\+\d+-/, '')); // Remove country code for editing
-    setEditCountryCode(user.phoneNumber.match(/^\+\d+-/)?.[0] || "+1"); // Extract country code
+    setEditCountryCode(user.phoneNumber.match(/^\+(\d+)-/)?.[1] ? `+${user.phoneNumber.match(/^\+(\d+)-/)?.[1]}` : "+1"); // Extract country code without hyphen
     setIsInvitedUserEditing(user.status === "Invited");
     setShowEditUserModal(true);
   };
@@ -448,10 +491,6 @@ export default function UserManagementSection() {
     }
   };
 
-
-
-
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -488,6 +527,20 @@ export default function UserManagementSection() {
             className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
           />
         </div>
+        <CustomDropdown
+          options={roleOptions}
+          selected={filterRole}
+          onChange={(selectedIds) => setFilterRole(selectedIds as UserRole[])}
+          placeholder="Role"
+          width="190px"
+        />
+        <CustomDropdown
+          options={statusOptions}
+          selected={filterStatus}
+          onChange={(selectedIds) => setFilterStatus(selectedIds as UserStatus[])}
+          placeholder="Status"
+          width="120px"
+        />
       </div>
 
       {/* Table Card */}
