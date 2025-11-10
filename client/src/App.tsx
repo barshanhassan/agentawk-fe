@@ -14,6 +14,7 @@ import TemplateManager from "@/pages/TemplateManager";
 import CampaignManager from "@/pages/CampaignManager";
 import UserManagementPage from "@/pages/UserManagementPage";
 import ContactsPage from "@/pages/ContactsPage";
+import TeamManagementSection from "@/components/sections/TeamManagementSection";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
@@ -64,6 +65,13 @@ function Router() {
       <Route path="/users">
         <ProtectedRoute>
           <UserManagementPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teams">
+        <ProtectedRoute>
+          <div className="p-6">
+            <TeamManagementSection />
+          </div>
         </ProtectedRoute>
       </Route>
       
