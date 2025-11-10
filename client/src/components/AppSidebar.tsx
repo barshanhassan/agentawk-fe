@@ -24,6 +24,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Import Tooltip components
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -41,7 +46,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
   const [conversationsOpen, setConversationsOpen] = useState(false);
 
   const mainMenuItems: MenuItem[] = [
-    { icon: <BarChart2 size={20} />, label: "Insights", path: "/" },
+    { icon: <BarChart2 size={20} />, label: "Insights", path: "/insights" }, // Changed path to /insights
     {
       icon: <MessageSquare size={20} />,
       label: "Conversations",
@@ -65,7 +70,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
     { icon: <Settings size={20} />, label: "Settings", path: "/settings-page" },
   ];
 
-  const isActive = (path: string) => location === path;
+  const isActive = (path: string) => location === path || (path === "/insights" && location === "/"); // Added condition for root path
 
   return (
     <div
@@ -100,28 +105,58 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
                   onOpenChange={setConversationsOpen}
                 >
                   <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start gap-3 hover-elevate ${
-                        collapsed ? "px-2" : "px-3"
-                      } ${
-                        location.startsWith(item.path)
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                          : "text-sidebar-foreground"
-                      }`}
-                      data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      {item.icon}
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 text-left">{item.label}</span>
-                          <ChevronDown
-                            size={16}
-                            className={`transition-transform ${conversationsOpen ? "rotate-180" : ""}`}
-                          />
-                        </>
-                      )}
-                    </Button>
+                    {collapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className={`w-full justify-start gap-3 hover-elevate ${
+                              collapsed ? "px-2" : "px-3"
+                            } ${
+                              location.startsWith(item.path)
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                                : "text-sidebar-foreground"
+                            }`}
+                            data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                          >
+                            {item.icon}
+                            {!collapsed && (
+                              <>
+                                <span className="flex-1 text-left">{item.label}</span>
+                                <ChevronDown
+                                  size={16}
+                                  className={`transition-transform ${conversationsOpen ? "rotate-180" : ""}`}
+                                />
+                              </>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{item.label}</TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start gap-3 hover-elevate ${
+                          collapsed ? "px-2" : "px-3"
+                        } ${
+                          location.startsWith(item.path)
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                            : "text-sidebar-foreground"
+                        }`}
+                        data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        {item.icon}
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1 text-left">{item.label}</span>
+                            <ChevronDown
+                              size={16}
+                              className={`transition-transform ${conversationsOpen ? "rotate-180" : ""}`}
+                            />
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </CollapsibleTrigger>
                   {!collapsed && (
                     <CollapsibleContent className="ml-9 mt-1 space-y-1">
@@ -148,20 +183,42 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
 
             return (
               <Link key={item.path} href={item.path}>
-                <Button
-                  variant="ghost"
-                  className={`w-full justify-start gap-3 hover-elevate ${
-                    collapsed ? "px-2" : "px-3"
-                  } ${
-                    isActive(item.path)
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                      : "text-sidebar-foreground"
-                  }`}
-                  data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  {item.icon}
-                  {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-                </Button>
+                {collapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start gap-3 hover-elevate ${
+                          collapsed ? "px-2" : "px-3"
+                        } ${
+                          isActive(item.path)
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                            : "text-sidebar-foreground"
+                        }`}
+                        data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        {item.icon}
+                        {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{item.label}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 hover-elevate ${
+                      collapsed ? "px-2" : "px-3"
+                    } ${
+                      isActive(item.path)
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                        : "text-sidebar-foreground"
+                    }`}
+                    data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {item.icon}
+                    {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                  </Button>
+                )}
               </Link>
             );
           })}
@@ -171,29 +228,60 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
       <div className="border-t border-sidebar-border py-4 px-2 space-y-1">
         {footerMenuItems.map((item) => (
           <Link key={item.path} href={item.path}>
-            <Button
-              variant="ghost"
-              className={`w-full justify-start gap-3 hover-elevate ${
-                collapsed ? "px-2" : "px-3"
-              } ${
-                isActive(item.path)
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                  : "text-sidebar-foreground"
-              }`}
-              data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-            >
-              {item.icon}
-              {!collapsed && (
-                <span className="flex-1 text-left flex items-center gap-2">
-                  {item.label}
-                  {item.label === "What's New" && (
-                    <Badge variant="default" className="text-xs">
-                      New
-                    </Badge>
-                  )}
-                </span>
-              )}
-            </Button>
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 hover-elevate ${
+                      collapsed ? "px-2" : "px-3"
+                    } ${
+                      isActive(item.path)
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                        : "text-sidebar-foreground"
+                    }`}
+                    data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {item.icon}
+                    {!collapsed && (
+                      <span className="flex-1 text-left flex items-center gap-2">
+                        {item.label}
+                        {item.label === "What's New" && (
+                          <Badge variant="default" className="text-xs">
+                            New
+                          </Badge>
+                        )}
+                      </span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="ghost"
+                className={`w-full justify-start gap-3 hover-elevate ${
+                  collapsed ? "px-2" : "px-3"
+                } ${
+                  isActive(item.path)
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                    : "text-sidebar-foreground"
+                }`}
+                data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+              >
+                {item.icon}
+                {!collapsed && (
+                  <span className="flex-1 text-left flex items-center gap-2">
+                    {item.label}
+                    {item.label === "What's New" && (
+                      <Badge variant="default" className="text-xs">
+                        New
+                      </Badge>
+                    )}
+                  </span>
+                )}
+              </Button>
+            )}
           </Link>
         ))}
       </div>
