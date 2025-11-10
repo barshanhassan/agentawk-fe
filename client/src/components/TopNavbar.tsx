@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter"; // Import useLocation from wouter
 import {
   Menu,
   Bell,
@@ -90,6 +91,13 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
 
   const handleMarkAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+  };
+
+  const [, navigate] = useLocation(); // Get navigate function from wouter
+
+  const handleLogout = () => {
+    document.cookie = 'demoLogin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;'; // Remove the cookie
+    navigate('/login'); // Redirect to login page
   };
 
   return (
@@ -315,6 +323,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             <DropdownMenuItem
               className="hover-elevate text-destructive"
               data-testid="menu-logout"
+              onClick={handleLogout} // Attach the logout handler here
             >
               <LogOut size={16} className="mr-2" />
               Logout
