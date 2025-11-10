@@ -14,6 +14,7 @@ import TemplateManager from "@/pages/TemplateManager";
 import CampaignManager from "@/pages/CampaignManager";
 import UserManagementPage from "@/pages/UserManagementPage";
 import ContactsPage from "@/pages/ContactsPage";
+import BillingPage from "@/pages/BillingPage";
 import TeamManagementSection from "@/components/sections/TeamManagementSection";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
@@ -72,6 +73,11 @@ function Router() {
           <div className="p-6">
             <TeamManagementSection />
           </div>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/billing">
+        <ProtectedRoute>
+          <BillingPage />
         </ProtectedRoute>
       </Route>
       
