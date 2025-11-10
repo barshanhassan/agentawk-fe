@@ -743,27 +743,91 @@ export default function CampaignManager() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
-        {[
-          { label: "All Campaigns", value: "all" },
-          { label: "Draft", value: "draft" },
-          { label: "Scheduled", value: "scheduled" },
-          { label: "Delivered", value: "delivered" },
-          { label: "Archived", value: "archived" },
-        ].map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveTab(tab.value)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.value
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            data-testid={`tab-${tab.value}`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+          {[
+            { label: "All Campaigns", value: "all" },
+            { label: "Draft", value: "draft" },
+            { label: "Scheduled", value: "scheduled" },
+            { label: "Delivered", value: "delivered" },
+            { label: "Archived", value: "archived" },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab.value
+                  ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              data-testid={`tab-${tab.value}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        
+        {/* WhatsApp Account Status */}
+        <div className="flex items-start space-x-20">
+          <div className="flex flex-col items-start">
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-medium text-foreground">Message limit</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-md w-fit">1K CUSTOMERS/24hr</div>
+          </div>
+          <div className="flex flex-col items-start">
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-medium text-foreground">Account Status</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="break-normal w-[16rem] whitespace-normal">Phone number is associated with this account and working properly</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {(() => {
+              const isConnected = Math.random() < 0.5;
+              return (
+                <div className={`text-sm px-2 py-1 rounded-md w-fit ${isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </div>
+              );
+            })()}
+          </div>
+          <div className="flex flex-col items-start">
+            <div className="flex items-center space-x-1">
+              <span className="text-sm font-medium text-foreground">Account Health</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="break-normal w-[16rem] whitespace-normal">Account health is based on how messages have been received by the recipients over the last 7 days. It is determined by a combination of quality signals from conversations between business and users. Examples include user feedback signals like blocks, reports and the reasons users provide when they block a business.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {(() => {
+              const health = Math.random();
+              if (health < 0.33) {
+                return <div className="text-sm px-2 py-1 bg-green-100 text-green-800 rounded-md w-fit">Green</div>;
+              } else if (health < 0.66) {
+                return <div className="text-sm px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md w-fit">Yellow</div>;
+              } else {
+                return <div className="text-sm px-2 py-1 bg-red-100 text-red-800 rounded-md w-fit">Red</div>;
+              }
+            })()}
+          </div>
+        </div>
       </div>
 
       {/* Search and Filters Section */}
