@@ -81,6 +81,9 @@ export default function TemplateManager() {
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const [cloneTemplateName, setCloneTemplateName] = useState<string>("");
   const [templateToCloneId, setTemplateToCloneId] = useState<number | null>(null);
+  const [showDeleteTemplateModal, setShowDeleteTemplateModal] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<any | null>(null);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [templateCreationStep, setTemplateCreationStep] = useState<"category" | "form" | "content">("category");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
@@ -433,18 +436,41 @@ export default function TemplateManager() {
     handleCloseCreateTemplate();
   };
 
-  // Delete template handler
-  const handleDeleteTemplate = (templateId: number) => {
-    const templateToDelete = whatsappTemplates.find(t => t.id === templateId);
+  const handleOpenDeleteModal = (template: any) => {
+    setTemplateToDelete(template);
+    setShowDeleteTemplateModal(true);
+  };
+
+  // Confirm delete handler
+  const handleConfirmDelete = () => {
     if (!templateToDelete) return;
 
-    setWhatappTemplates(whatsappTemplates.filter(t => t.id !== templateId));
+    setWhatappTemplates(whatsappTemplates.filter(t => t.id !== templateToDelete.id));
     // Also remove from selected templates if it was selected
-    setSelectedTemplates(selectedTemplates.filter(id => id !== templateId));
+    setSelectedTemplates(selectedTemplates.filter(id => id !== templateToDelete.id));
 
     toast({
       title: "Template Deleted",
       description: `The template "${templateToDelete.name}" has been deleted successfully.`,
+    });
+
+    setTemplateToDelete(null);
+    setShowDeleteTemplateModal(false);
+  };
+
+  const handleOpenBulkDeleteModal = () => {
+    setShowBulkDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    setWhatappTemplates(
+      whatsappTemplates.filter((template) => !selectedTemplates.includes(template.id))
+    );
+    setSelectedTemplates([]);
+    setShowBulkDeleteModal(false);
+    toast({
+      title: "Templates Deleted",
+      description: `${selectedTemplates.length} templates have been deleted successfully.`,
     });
   };
 
@@ -1507,8 +1533,8 @@ export default function TemplateManager() {
                   <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
                     <span className="text-sm text-foreground">{selectedTemplates.length} selected</span>
                     <div className="flex gap-2 ml-auto">
-                      <button className="p-1 hover:bg-blue-100 rounded" title="Delete">
-                        <Trash2 size={14} className="text-blue-600" />
+                      <button onClick={handleOpenBulkDeleteModal} className="p-1 hover:bg-blue-100 rounded" title="Delete">
+                        <Trash2 size={14} className="text-destructive" />
                       </button>
                     </div>
                   </div>
@@ -1627,7 +1653,7 @@ export default function TemplateManager() {
                                   <Copy size={14} className="mr-2" />
                                   Clone
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTemplate(template.id)} data-testid={`button-delete-${template.id}`}>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(template)} data-testid={`button-delete-${template.id}`}>
                                   <Trash2 size={14} className="mr-2" />
                                   Delete
                                 </DropdownMenuItem>
@@ -2948,6 +2974,38 @@ export default function TemplateManager() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteTemplateModal} onOpenChange={setShowDeleteTemplateModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this template?</AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground">
+              This action cannot be undone. This will permanently delete the template{" "}
+              <span className="font-bold text-foreground">{templateToDelete?.name}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-input [border-color:hsl(var(--input))]">Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-500 hover:bg-red-600 border-red-600 text-white" onClick={handleConfirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete these templates?</AlertDialogTitle>
+            <AlertDialogDescription className="text-foreground">
+              This action cannot be undone. This will permanently delete{" "}
+              <span className="font-bold text-foreground">{selectedTemplates.length} template(s)</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-input [border-color:hsl(var(--input))]">Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-500 hover:bg-red-600 border-red-600 text-white" onClick={handleConfirmBulkDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
