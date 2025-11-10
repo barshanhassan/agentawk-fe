@@ -766,26 +766,31 @@ export default function CampaignManager() {
             </button>
           ))}
         </div>
-        
-        {/* WhatsApp Account Status */}
-        <div className="flex items-start space-x-20">
-          <div className="flex flex-col items-start">
-            <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium text-foreground">Message limit</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3 w-3" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <div className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-md w-fit">1K CUSTOMERS/24hr</div>
-          </div>
-          <div className="flex flex-col items-start">
-            <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium text-foreground">Account Status</span>
+      </div>
+      
+      {/* WhatsApp Account Status */}
+      <div className="flex items-center space-x-5">
+        <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
+          <span className="text-sm font-medium text-foreground">Message limit:</span>
+          <span className="text-sm text-foreground">1K Customers/24hr</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        {(() => {
+          const isConnected = Math.random() < 0.5;
+          const bgColor = isConnected ? 'bg-green-100' : 'bg-red-100';
+          const textColor = isConnected ? 'text-green-800' : 'text-red-800';
+          const statusText = isConnected ? 'Connected' : 'Disconnected';
+          return (
+            <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
+              <span className="text-sm font-medium text-foreground">Account Status:</span>
+              <span className={`text-sm text-foreground`}>{statusText}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-3 w-3" />
@@ -795,18 +800,28 @@ export default function CampaignManager() {
                 </TooltipContent>
               </Tooltip>
             </div>
-            {(() => {
-              const isConnected = Math.random() < 0.5;
-              return (
-                <div className={`text-sm px-2 py-1 rounded-md w-fit ${isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </div>
-              );
-            })()}
-          </div>
-          <div className="flex flex-col items-start">
-            <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium text-foreground">Account Health</span>
+          );
+        })()}
+        {(() => {
+          const health = Math.random();
+          let healthStatus, bgColor, textColor;
+          if (health < 0.33) {
+            healthStatus = "Green";
+            bgColor = "bg-green-100";
+            textColor = "text-green-800";
+          } else if (health < 0.66) {
+            healthStatus = "Yellow";
+            bgColor = "bg-yellow-100";
+            textColor = "text-yellow-800";
+          } else {
+            healthStatus = "Red";
+            bgColor = "bg-red-100";
+            textColor = "text-red-800";
+          }
+          return (
+            <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
+              <span className="text-sm font-medium text-foreground">Account Health:</span>
+              <span className={`text-sm text-foreground`}>{healthStatus}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-3 w-3" />
@@ -816,18 +831,8 @@ export default function CampaignManager() {
                 </TooltipContent>
               </Tooltip>
             </div>
-            {(() => {
-              const health = Math.random();
-              if (health < 0.33) {
-                return <div className="text-sm px-2 py-1 bg-green-100 text-green-800 rounded-md w-fit">Green</div>;
-              } else if (health < 0.66) {
-                return <div className="text-sm px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md w-fit">Yellow</div>;
-              } else {
-                return <div className="text-sm px-2 py-1 bg-red-100 text-red-800 rounded-md w-fit">Red</div>;
-              }
-            })()}
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* Search and Filters Section */}
@@ -999,9 +1004,9 @@ export default function CampaignManager() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setPerformanceOpen(true)} data-testid={`button-performance-${campaign.id}`}>
+                          <DropdownMenuItem onClick={() => setPerformanceOpen(true)} data-testid={`button-details-${campaign.id}`}>
                             <BarChart2 size={14} className="mr-2" />
-                            View Performance
+                            View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => {
                               setEditingCampaignId(campaign.id);
