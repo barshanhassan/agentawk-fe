@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChartContainer } from "@/components/ui/chart";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -72,6 +72,8 @@ interface Campaign {
   deliverInTimezone?: boolean;
   csvFileName?: string;
   csvContent?: any[];
+  recipients?: Recipient[];
+  engagementData?: EngagementData[];
 }
 
 interface Schedule {
@@ -82,6 +84,20 @@ interface Schedule {
   period: string;
 }
 
+interface Recipient {
+  id: number;
+  name: string;
+  phone: string;
+  status: "Sent" | "Delivered" | "Viewed" | "Failed";
+  time: string;
+}
+
+interface EngagementData {
+  hour: string;
+  delivered: number;
+  viewed: number;
+}
+
 export default function CampaignManager() {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -89,7 +105,7 @@ export default function CampaignManager() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  const [activeDetailsTab, setActiveDetailsTab] = useState("performance");
+  const [activeDetailsTab, setActiveDetailsTab] = useState("details");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
   const [selectedMessageTypes, setSelectedMessageTypes] = useState<string[]>([]);
@@ -161,12 +177,18 @@ export default function CampaignManager() {
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const [cloneCampaignName, setCloneCampaignName] = useState("");
   const [campaignToCloneId, setCampaignToCloneId] = useState<number | null>(null);
+  const [selectedCampaignForPerformance, setSelectedCampaignForPerformance] = useState<Campaign | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [campaignToArchive, setCampaignToArchive] = useState<Campaign | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [recipientSort, setRecipientSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
+  const [recipientSearchQuery, setRecipientSearchQuery] = useState("");
+  const [recipientPage, setRecipientPage] = useState(1);
+  const [recipientRowsPerPage, setRecipientRowsPerPage] = useState(10);
+  const [selectedRecipientStatus, setSelectedRecipientStatus] = useState<string[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -222,6 +244,24 @@ export default function CampaignManager() {
   // Initialize campaigns on first render
   useEffect(() => {
     if (campaigns.length === 0) {
+      const generateEngagementData = () => Array.from({ length: 24 }, (_, i) => ({
+        hour: `${i}:00`,
+        delivered: Math.floor(Math.random() * 1000) + 500,
+        viewed: Math.floor(Math.random() * 800) + 300,
+      }));
+
+      const generateRecipients = (count: number) => Array.from({ length: count }, (_, i) => {
+        const statuses = ["Sent", "Delivered", "Viewed", "Failed"];
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        return {
+          id: i + 1,
+          name: `Recipient ${i + 1}`,
+          phone: `+1234567${(890 + i).toString().padStart(3, '0')}`,
+          status: randomStatus as "Sent" | "Delivered" | "Viewed" | "Failed",
+          time: `10:${(30 + i).toString().padStart(2, '0')} AM`,
+        };
+      });
+
       setCampaigns([
         {
           id: 1,
@@ -236,6 +276,8 @@ export default function CampaignManager() {
           endDate: new Date('2024-07-31'),
           csvFileName: "summer_sale_contacts.csv",
           csvContent: [{ name: "Alice", number: "+1234567890" }],
+          engagementData: generateEngagementData(),
+          recipients: generateRecipients(20),
         },
         {
           id: 2,
@@ -248,6 +290,8 @@ export default function CampaignManager() {
           whatsAppTemplateName: "promotional_offer",
           startDate: new Date('2024-01-01'),
           neverEnds: true,
+          engagementData: generateEngagementData(),
+          recipients: generateRecipients(15),
         },
         {
           id: 3,
@@ -262,6 +306,8 @@ export default function CampaignManager() {
           deliverInTimezone: true,
           csvFileName: "product_launch_contacts.csv",
           csvContent: [{ name: "Bob", number: "+1987654321" }],
+          engagementData: generateEngagementData(),
+          recipients: generateRecipients(10),
         },
         {
           id: 4,
@@ -275,6 +321,8 @@ export default function CampaignManager() {
           startDate: new Date('2025-02-01'),
           csvFileName: "draft_contacts.csv",
           csvContent: [{ name: "Charlie", number: "+1122334455" }],
+          engagementData: generateEngagementData(),
+          recipients: generateRecipients(5),
         },
         {
           id: 5,
@@ -287,6 +335,8 @@ export default function CampaignManager() {
           whatsAppTemplateName: "order_confirmation",
           startDate: new Date('2023-01-01'),
           endDate: new Date('2023-12-31'),
+          engagementData: generateEngagementData(),
+          recipients: generateRecipients(25),
         },
       ]);
     }
@@ -404,17 +454,7 @@ export default function CampaignManager() {
     }
   }, [editingCampaignId, campaigns]);
 
-  const engagementData = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i}:00`,
-    delivered: Math.floor(Math.random() * 1000) + 500,
-    viewed: Math.floor(Math.random() * 800) + 300,
-  }));
 
-  const recipients = [
-    { id: 1, name: "John Doe", phone: "+1234567890", status: "Delivered", time: "10:30 AM" },
-    { id: 2, name: "Jane Smith", phone: "+1234567891", status: "Delivered", time: "10:32 AM" },
-    { id: 3, name: "Bob Johnson", phone: "+1234567892", status: "Failed", time: "10:35 AM" },
-  ];
 
   const toggleCampaign = (id: number) => {
     setSelectedCampaigns((prev) =>
@@ -591,6 +631,66 @@ export default function CampaignManager() {
     setSelectedCampaigns([]);
   };
 
+  const handleRecipientSort = (column: string) => {
+    if (recipientSort?.column === column) {
+      if (recipientSort.direction === "asc") {
+        setRecipientSort({ column, direction: "desc" });
+      } else {
+        setRecipientSort(null);
+      }
+    } else {
+      setRecipientSort({ column, direction: "asc" });
+    }
+  };
+
+  const renderRecipientSortIcon = (column: string) => {
+    const isActive = recipientSort?.column === column;
+    const color = isActive ? "text-foreground" : "text-muted-foreground";
+
+    if (!isActive) {
+      return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
+    }
+    if (recipientSort?.direction === "asc") {
+      return <div className="w-4 h-4 flex items-center justify-center"><ChevronUp size={14} className={color} /></div>;
+    }
+    return <div className="w-4 h-4 flex items-center justify-center"><ChevronDownIcon size={14} className={color} /></div>;
+  };
+
+  const getSortedRecipients = () => {
+    let data = [...(selectedCampaignForPerformance?.recipients || [])];
+
+    if (recipientSearchQuery) {
+        data = data.filter(r => r.name.toLowerCase().includes(recipientSearchQuery.toLowerCase()) || r.phone.toLowerCase().includes(recipientSearchQuery.toLowerCase()));
+    }
+
+    if (recipientSort) {
+      data.sort((a, b) => {
+        const aVal = a[recipientSort.column as keyof typeof a];
+        const bVal = b[recipientSort.column as keyof typeof b];
+
+        let comparison = 0;
+        if (recipientSort.column === "status") {
+          const order = ["Viewed", "Delivered", "Sent", "Failed"];
+          const aIndex = order.indexOf(aVal as string);
+          const bIndex = order.indexOf(bVal as string);
+          comparison = recipientSort.direction === "asc" ? aIndex - bIndex : bIndex - aIndex;
+        } else if (typeof aVal === "string" && typeof bVal === "string") {
+          comparison = recipientSort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        } else if (typeof aVal === "number" && typeof bVal === "number") {
+          comparison = recipientSort.direction === "asc" ? aVal - bVal : bVal - aVal;
+        }
+
+        return comparison;
+      });
+    }
+
+    if (selectedRecipientStatus.length > 0) {
+      data = data.filter(r => selectedRecipientStatus.includes(r.status));
+    }
+
+    return data;
+  };
+
   const resetCreateCampaignForm = () => {
     setCampaignCreationStep("selectType");
     setCampaignName("");
@@ -729,6 +829,34 @@ export default function CampaignManager() {
   const hasAtLeastOneCompleteRow = localCsvData.some(row => row.name?.trim() && row.number?.trim());
   const hasPartiallyFilledRow = localCsvData.some(row => (row.name?.trim() && !row.number?.trim()) || (!row.name?.trim() && row.number?.trim()));
   const isCsvSaveDisabled = !hasAtLeastOneCompleteRow || hasPartiallyFilledRow;
+
+  // Utility function to format tooltip names
+  const formatTooltipName = (name: string): string => {
+    return name
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  };
+
+  // Custom Tooltip Component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border rounded-md p-2 shadow-md">
+          <p className="text-sm font-medium">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2">
+              <span className="text-sm">{formatTooltipName(entry.name)}:</span>
+              <span className="text-sm font-medium" style={{ color: entry.color }}>
+                {entry.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
 
   return (
@@ -1004,7 +1132,10 @@ export default function CampaignManager() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setDetailsOpen(true)} data-testid={`button-details-${campaign.id}`}>
+                          <DropdownMenuItem onClick={() => {
+                              setSelectedCampaignForPerformance(campaign);
+                              setDetailsOpen(true);
+                          }} data-testid={`button-performance-${campaign.id}`}>
                             <BarChart2 size={14} className="mr-2" />
                             View Details
                           </DropdownMenuItem>
@@ -1966,15 +2097,35 @@ export default function CampaignManager() {
       </Dialog>
 
       {/* Details Dialog */}
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-5xl" data-testid="dialog-details">
+      <Dialog open={detailsOpen} onOpenChange={(isOpen) => {
+        setDetailsOpen(isOpen);
+        if (!isOpen) {
+            setSelectedCampaignForPerformance(null);
+        }
+      }}>
+        <DialogContent className={`max-w-5xl ${
+          activeDetailsTab === "details" ? "max-w-2xl" :
+          activeDetailsTab === "performance" ? "max-w-4xl" :
+          activeDetailsTab === "recipients" ? "max-w-3xl" : ""
+        }`} data-testid="dialog-details">
           <DialogHeader className="mb-2">
-            <DialogTitle>Campaign Details - Summer Sale 2024</DialogTitle>
+            <DialogTitle>Campaign Performance - {selectedCampaignForPerformance?.name}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Tabs */}
             <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+              <button
+                onClick={() => setActiveDetailsTab("details")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeDetailsTab === "details"
+                    ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid="tab-details"
+              >
+                Details
+              </button>
               <button
                 onClick={() => setActiveDetailsTab("performance")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -1998,6 +2149,150 @@ export default function CampaignManager() {
                 Recipients
               </button>
             </div>
+
+            {/* Details Tab */}
+            {activeDetailsTab === "details" && (() => {
+              const selectedTemplate = whatsappTemplates.find(t => t.name === selectedCampaignForPerformance?.whatsAppTemplateName);
+              return (
+                <div className="flex gap-4">
+                  {/* Left: Details */}
+                  <div className="flex-1 space-y-4 !max-h-[62vh] overflow-y-auto">
+                    <div className="flex flex-col gap-x-4 gap-y-6">
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Campaign Name</label>
+                        <p className="mt-1 text-sm">{selectedCampaignForPerformance?.name}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Campaign Type</label>
+                        <p className="mt-1 text-sm">{selectedCampaignForPerformance?.type}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Message Type</label>
+                        <p className="mt-1 text-sm">{selectedCampaignForPerformance?.messageType}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Status</label>
+                        <p className="mt-1 text-sm capitalize">{selectedCampaignForPerformance?.status}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground">WhatsApp Template</label>
+                        <p className="mt-1 text-sm">{selectedCampaignForPerformance?.whatsAppTemplateName}</p>
+                      </div>
+
+                      {/* API Triggered Fields */}
+                      {selectedCampaignForPerformance?.type === 'API Triggered' && (
+                        <>
+                          {selectedCampaignForPerformance?.startDate && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Start Date</label>
+                              <p className="mt-1 text-sm">{new Date(selectedCampaignForPerformance.startDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.endDate ? (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">End Date</label>
+                              <p className="mt-1 text-sm">{new Date(selectedCampaignForPerformance.endDate).toLocaleDateString()}</p>
+                            </div>
+                          ) : selectedCampaignForPerformance?.neverEnds ? (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">End Date</label>
+                              <p className="mt-1 text-sm">Never</p>
+                            </div>
+                          ) : null}
+                        </>
+                      )}
+
+                      {/* Broadcast Fields */}
+                      {selectedCampaignForPerformance?.type === 'Broadcast' && (
+                        <>
+                          {selectedCampaignForPerformance?.csvContent && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Number of contacts</label>
+                              <p className="mt-1 text-sm">{selectedCampaignForPerformance.csvContent.length} contacts</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.deliverInTimezone && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Deliver in User's Timezone</label>
+                              <p className="mt-1 text-sm">Yes</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.schedules && selectedCampaignForPerformance.schedules.length > 0 && (
+                            <div className="col-span-2">
+                              <label className="text-sm font-medium text-foreground">Schedules</label>
+                              <ul className="mt-1 space-y-1 text-sm">
+                                {selectedCampaignForPerformance.schedules.map(s => (
+                                  <li key={s.id}>{s.date ? new Date(s.date).toLocaleDateString() : ''} at {s.hour}:{s.minute} {s.period}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.recurringStartDate && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Recurring Start Date</label>
+                              <p className="mt-1 text-sm">{new Date(selectedCampaignForPerformance.recurringStartDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.recurringEndDate && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Recurring End Date</label>
+                              <p className="mt-1 text-sm">{new Date(selectedCampaignForPerformance.recurringEndDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.recurringTime && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Recurring Time</label>
+                              <p className="mt-1 text-sm">{selectedCampaignForPerformance.recurringTime.hour}:{selectedCampaignForPerformance.recurringTime.minute} {selectedCampaignForPerformance.recurringTime.period}</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.repeatFrequency && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Repeat Frequency</label>
+                              <p className="mt-1 text-sm capitalize">{selectedCampaignForPerformance.repeatFrequency}</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.dailyRepeatInterval && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Daily Repeat Interval</label>
+                              <p className="mt-1 text-sm">{selectedCampaignForPerformance.dailyRepeatInterval} days</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.weeklyRepeatDays && selectedCampaignForPerformance.weeklyRepeatDays.length > 0 && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Weekly Repeat Days</label>
+                              <p className="mt-1 text-sm">{selectedCampaignForPerformance.weeklyRepeatDays.join(', ')}</p>
+                            </div>
+                          )}
+                          {selectedCampaignForPerformance?.monthlyRepeatDates && selectedCampaignForPerformance.monthlyRepeatDates.length > 0 && (
+                            <div>
+                              <label className="text-sm font-medium text-foreground">Monthly Repeat Dates</label>
+                              <p className="mt-1 text-sm">{selectedCampaignForPerformance.monthlyRepeatDates.join(', ')}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Template Preview */}
+                  <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
+                    <div className="flex flex-col h-full">
+                      <label className="text-sm font-medium text-foreground mb-1">Template Preview</label>
+                      <TemplatePreview
+                        headerText={selectedTemplate?.header || ""}
+                        bodyText={selectedTemplate?.body || ""}
+                        footerText={selectedTemplate?.footer || ""}
+                        selectedMediaFile={null}
+                        templateButtons={selectedTemplate?.buttons || []}
+                        variableSamples={selectedTemplate?.variableSamples || {}}
+                        containerClassName="flex-1 flex items-center justify-center min-h-0"
+                        phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Performance Tab */}
             {activeDetailsTab === "performance" && (
@@ -2059,13 +2354,13 @@ export default function CampaignManager() {
                           color: "hsl(var(--chart-2))",
                         },
                       }}
-                      className="h-[300px]"
+                      className="h-[300px] w-full"
                     >
-                      <AreaChart data={engagementData}>
+                      <AreaChart data={selectedCampaignForPerformance?.engagementData || []}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                         <XAxis dataKey="hour" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                         <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <RechartsTooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                         <Area type="monotone" dataKey="delivered" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
                         <Area type="monotone" dataKey="viewed" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.2} strokeWidth={2} />
                       </AreaChart>
@@ -2076,54 +2371,140 @@ export default function CampaignManager() {
             )}
 
             {/* Recipients Tab */}
-            {activeDetailsTab === "recipients" && (
-              <div className="space-y-4">
-                <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Search recipients..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color"
-                    data-testid="input-search-recipients"
-                  />
-                </div>
-                <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-                  <CardContent className="pt-2">
-                    <ScrollArea className="h-96">
-                      <div className="overflow-x-auto mt-6">
-                        <table className="w-full text-xs">
-                          <thead className="select-none">
-                            <tr className="border-b">
-                              <th className="text-left py-2 px-3 font-medium text-muted-foreground">Name</th>
-                              <th className="text-left py-2 px-3 font-medium text-muted-foreground">Phone</th>
-                              <th className="text-left py-2 px-3 font-medium text-muted-foreground">Status</th>
-                              <th className="text-left py-2 px-3 font-medium text-muted-foreground">Time</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {recipients.map((recipient) => (
-                              <tr key={recipient.id} className="border-b hover:bg-muted/50" data-testid={`recipient-${recipient.id}`}>
-                                <td className="py-2 px-3 font-medium">{recipient.name}</td>
-                                <td className="py-2 px-3">{recipient.phone}</td>
-                                <td className="py-2 px-3">
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    recipient.status === "Delivered" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                                  }`}>
-                                    {recipient.status}
-                                  </span>
-                                </td>
-                                <td className="py-2 px-3 text-muted-foreground">{recipient.time}</td>
+            {activeDetailsTab === "recipients" && (() => {
+              const sortedRecipients = getSortedRecipients();
+              const paginatedRecipients = sortedRecipients.slice((recipientPage - 1) * recipientRowsPerPage, recipientPage * recipientRowsPerPage);
+              const totalRecipientPages = Math.ceil(sortedRecipients.length / recipientRowsPerPage);
+
+              const recipientStatusOptions = [
+                { id: "Sent", name: "Sent" },
+                { id: "Delivered", name: "Delivered" },
+                { id: "Viewed", name: "Viewed" },
+                { id: "Failed", name: "Failed" },
+              ];
+
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3"> {/* New flex container */}
+                    <div className="relative w-80">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Search recipients..."
+                        value={recipientSearchQuery}
+                        onChange={(e) => {
+                          setRecipientSearchQuery(e.target.value);
+                          setRecipientPage(1); // Reset to first page on search
+                        }}
+                        className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color"
+                        data-testid="input-search-recipients"
+                      />
+                    </div>
+                    <CustomDropdown
+                      options={recipientStatusOptions}
+                      selected={selectedRecipientStatus}
+                      onChange={(values) => {
+                        setSelectedRecipientStatus(values);
+                        setRecipientPage(1); // Reset to first page on filter change
+                      }}
+                      placeholder="Status"
+                      width="160px"
+                    />
+                  </div>
+                  <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                    <CardContent className="pt-2">
+                      <ScrollArea className="h-104">
+                        <div className="overflow-x-auto mt-6">
+                          <table className="w-full text-xs">
+                            <thead className="select-none">
+                              <tr className="border-b">
+                                <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleRecipientSort('name')}>
+                                  <div className="flex items-center gap-2">
+                                    Name
+                                    {renderRecipientSortIcon('name')}
+                                  </div>
+                                </th>
+                                <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleRecipientSort('phone')}>
+                                  <div className="flex items-center gap-2">
+                                    Phone
+                                    {renderRecipientSortIcon('phone')}
+                                  </div>
+                                </th>
+                                <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleRecipientSort('status')}>
+                                  <div className="flex items-center gap-2">
+                                    Status
+                                    {renderRecipientSortIcon('status')}
+                                  </div>
+                                </th>
+                                <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleRecipientSort('time')}>
+                                  <div className="flex items-center gap-2">
+                                    Time
+                                    {renderRecipientSortIcon('time')}
+                                  </div>
+                                </th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {paginatedRecipients.map((recipient) => (
+                                <tr key={recipient.id} className="border-b hover:bg-muted/50" data-testid={`recipient-${recipient.id}`}>
+                                  <td className="py-2 px-3 font-medium">{recipient.name}</td>
+                                  <td className="py-2 px-3">{recipient.phone}</td>
+                                  <td className="py-2 px-3">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                      recipient.status === "Viewed" ? "bg-green-100 text-green-700" :
+                                      recipient.status === "Delivered" ? "bg-blue-100 text-blue-700" :
+                                      recipient.status === "Sent" ? "bg-yellow-100 text-yellow-700" :
+                                      "bg-red-100 text-red-700"
+                                    }`}>
+                                      {recipient.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3 text-muted-foreground">{recipient.time}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </ScrollArea>
+                      {/* Pagination */}
+                      <div className="flex items-center justify-between mt-4 text-xs">
+                        <span className="text-muted-foreground">{sortedRecipients.length} results</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Rows per page:</span>
+                          <Select value={String(recipientRowsPerPage)} onValueChange={(value) => {
+                            setRecipientRowsPerPage(Number(value));
+                            setRecipientPage(1);
+                          }}>
+                            <SelectTrigger className="w-16 h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5">5</SelectItem>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="20">20</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <span className="text-muted-foreground">Page {recipientPage} of {totalRecipientPages || 1}</span>
+                          <div className="flex gap-1">
+                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === 1} onClick={() => setRecipientPage(1)}>
+                              <ChevronsLeft size={16} />
+                            </button>
+                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === 1} onClick={() => setRecipientPage(p => p - 1)}>
+                              <ChevronLeft size={16} />
+                            </button>
+                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === totalRecipientPages} onClick={() => setRecipientPage(p => p + 1)}>
+                              <ChevronRight size={16} />
+                            </button>
+                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === totalRecipientPages} onClick={() => setRecipientPage(totalRecipientPages)}>
+                              <ChevronsRight size={16} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )
+            })()}
           </div>
         </DialogContent>
       </Dialog>

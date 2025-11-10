@@ -2379,16 +2379,8 @@ export default function ConversationsInbox() {
                           {templatePhoneNumbers.length > 1 && (
                             <button
                               onClick={() => {
-                                // If this is the last input, just clear it
-                                if (index === templatePhoneNumbers.length - 1) {
-                                  const newNumbers = [...templatePhoneNumbers];
-                                  newNumbers[index] = "";
-                                  setTemplatePhoneNumbers(newNumbers);
-                                } else {
-                                  // Otherwise, remove this input entirely
-                                  const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
-                                  setTemplatePhoneNumbers(newNumbers);
-                                }
+                                const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
+                                setTemplatePhoneNumbers(newNumbers);
                               }}
                               className="text-muted-foreground hover:text-foreground transition-colors border-[]"
                             >
