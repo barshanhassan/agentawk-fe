@@ -12,6 +12,7 @@ import BotConversations from "@/pages/BotConversations";
 import ConversationsLogs from "@/pages/ConversationsLogs";
 import TemplateManager from "@/pages/TemplateManager";
 import CampaignManager from "@/pages/CampaignManager";
+import UserManagementPage from "@/pages/UserManagementPage";
 import ContactsPage from "@/pages/ContactsPage";
 import NotFound from "@/pages/not-found";
 
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/templates" component={TemplateManager} />
       <Route path="/campaigns" component={CampaignManager} />
       <Route path="/contacts" component={ContactsPage} />
+      <Route path="/users" component={UserManagementPage} />
       <Route component={NotFound} />
     </Switch>
   );

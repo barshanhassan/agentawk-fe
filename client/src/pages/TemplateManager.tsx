@@ -242,7 +242,7 @@ export default function TemplateManager() {
     );
   };
 
-  const handleCloseCreateTemplate = () => {
+  const handleCancelCreateTemplate = () => {
     setCreateTemplateOpen(false);
     setEditingTemplateId(null);
     setOriginalTemplate(null);
@@ -339,7 +339,7 @@ export default function TemplateManager() {
     });
 
     // Reset form
-    handleCloseCreateTemplate();
+    handleCancelCreateTemplate();
   };
 
   // Open edit template handler
@@ -423,8 +423,8 @@ export default function TemplateManager() {
       description: `The template "${updatedTemplate.name}" has been updated successfully.`,
     });
 
-    // Close edit dialog
-    handleCloseCreateTemplate();
+    // Cancel edit dialog
+    handleCancelCreateTemplate();
   };
 
   const handleOpenDeleteModal = (template: any) => {
@@ -475,8 +475,8 @@ export default function TemplateManager() {
     setCloneDialogOpen(true);
   };
 
-  // Close clone dialog
-  const handleCloseCloneDialog = () => {
+  // Cancel clone dialog
+  const handleCancelCloneDialog = () => {
     setCloneDialogOpen(false);
     setCloneTemplateName("");
     setTemplateToCloneId(null);
@@ -507,7 +507,7 @@ export default function TemplateManager() {
       description: `The template "${templateToClone.name}" has been cloned to "${cloneTemplateName}" successfully.`,
     });
     
-    handleCloseCloneDialog();
+    handleCancelCloneDialog();
   };
 
   // Text formatting functions
@@ -831,7 +831,7 @@ export default function TemplateManager() {
     }
   };
 
-  // Close dropdown when clicking outside
+  // Cancel dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -851,7 +851,7 @@ export default function TemplateManager() {
     };
   }, []);
 
-  // Close emoji picker when clicking outside
+  // Cancel emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
@@ -1765,7 +1765,7 @@ export default function TemplateManager() {
       </Dialog>
 
       {/* Create Template Dialog */}
-      <Dialog open={createTemplateOpen} onOpenChange={handleCloseCreateTemplate}>
+      <Dialog open={createTemplateOpen} onOpenChange={handleCancelCreateTemplate}>
         <DialogContent className={
           templateCreationStep === "content" ? "max-w-5xl" : "max-w-3xl"
         } data-testid="dialog-create-template">
@@ -1860,10 +1860,10 @@ export default function TemplateManager() {
                 <div className="flex justify-between pt-2">
                   <Button
                     variant="outline"
-                    onClick={handleCloseCreateTemplate}
+                    onClick={handleCancelCreateTemplate}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                   >
-                    Close
+                    Cancel
                   </Button>
                   <Button
                     onClick={handleNextFromCategory}
@@ -2942,7 +2942,7 @@ export default function TemplateManager() {
       </Dialog>
 
       {/* Clone Template Dialog */}
-      <Dialog open={cloneDialogOpen} onOpenChange={handleCloseCloneDialog}>
+      <Dialog open={cloneDialogOpen} onOpenChange={handleCancelCloneDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Clone Template</DialogTitle>
@@ -2963,7 +2963,7 @@ export default function TemplateManager() {
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={handleCloseCloneDialog}>
+              <Button variant="outline" onClick={handleCancelCloneDialog}>
                 Cancel
               </Button>
               <Button

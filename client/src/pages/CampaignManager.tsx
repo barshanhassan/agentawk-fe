@@ -522,7 +522,7 @@ export default function CampaignManager() {
     setCloneDialogOpen(true);
   };
 
-  const handleCloseCloneDialog = () => {
+  const handleCancelCloneDialog = () => {
     setCloneDialogOpen(false);
     setCloneCampaignName("");
     setCampaignToCloneId(null);
@@ -548,7 +548,7 @@ export default function CampaignManager() {
       title: "Campaign Cloned",
       description: `${cloneCampaignName} has been cloned to Draft`,
     });
-    handleCloseCloneDialog();
+    handleCancelCloneDialog();
   };
 
   // Archive handlers
@@ -1236,7 +1236,7 @@ export default function CampaignManager() {
         setCreateOpen(isOpen);
         if (!isOpen) {
           resetCreateCampaignForm();
-          setEditingCampaignId(null); // Reset editingCampaignId when dialog closes
+          setEditingCampaignId(null); // Reset editingCampaignId when dialog Cancels
         }
       }}>
         <DialogContent className={campaignCreationStep === "apiTriggeredForm" || campaignCreationStep === "broadcastForm" ? "max-w-3xl" : "max-w-lg"} data-testid="dialog-create-campaign">
@@ -1443,7 +1443,7 @@ export default function CampaignManager() {
                     onClick={() => { setCreateOpen(false); setEditingCampaignId(null); }}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                   >
-                    Close
+                    Cancel
                   </Button>
                 ) : (
                   <Button
@@ -1968,7 +1968,7 @@ export default function CampaignManager() {
                     onClick={() => { setCreateOpen(false); setEditingCampaignId(null); }}
                     className="border-input [border-color:hsl(var(--input))] font-normal"
                   >
-                    Close
+                    Cancel
                   </Button>
                 ) : (
                   <Button
@@ -2087,7 +2087,7 @@ export default function CampaignManager() {
                 onClick={() => setIsViewCsvModalOpen(false)}
                 className="border-input [border-color:hsl(var(--input))] font-normal"
               >
-                Close
+                Cancel
               </Button>
               <Button
                 onClick={() => {
@@ -2518,7 +2518,7 @@ export default function CampaignManager() {
       </Dialog>
 
       {/* Clone Campaign Dialog */}
-      <Dialog open={cloneDialogOpen} onOpenChange={handleCloseCloneDialog}>
+      <Dialog open={cloneDialogOpen} onOpenChange={handleCancelCloneDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Clone Campaign</DialogTitle>
@@ -2539,7 +2539,7 @@ export default function CampaignManager() {
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={handleCloseCloneDialog}>
+              <Button variant="outline" onClick={handleCancelCloneDialog}>
                 Cancel
               </Button>
               <Button
