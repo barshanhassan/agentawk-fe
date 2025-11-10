@@ -1604,63 +1604,64 @@ export default function TemplateManager() {
                       {paginatedTemplates.length === 0 ? (
                         <tr>
                           <td colSpan={8} className="text-center py-8 text-muted-foreground">
-                            No templates found.
+                            No results
                           </td>
                         </tr>
                       ) : (
                         paginatedTemplates.map((template) => (
-                        <tr key={template.id} className="border-b hover:bg-muted/50" data-testid={`template-row-${template.id}`}>
-                          <td className="py-2 px-3">
-                            <Checkbox
-                              checked={selectedTemplates.includes(template.id)}
-                              onCheckedChange={() => toggleTemplate(template.id)}
-                              data-testid={`checkbox-template-${template.id}`}
-                            />
-                          </td>
-                          <td className="py-2 px-3">{template.name}</td>
-                          <td className="py-2 px-3">{template.category}</td>
-                          <td className="py-2 px-3">{template.language}</td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClasses(template.statusTypeColor)}`}>
-                              {template.status}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3">
-                            {template.topBlockReason || "No blocks!"}
-                          </td>
-                          <td className="py-2 px-3">{template.lastEdited}</td>
-                          <td className="py-2 px-3 flex justify-start">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1 hover:bg-muted rounded">
-                                  <MoreVertical size={14} className="text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleOpenEditTemplate(template.id)} data-testid={`button-edit-${template.id}`}>
-                                  <Edit2 size={14} className="mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                  setPreviewTemplateId(template.id);
-                                  setPreviewOpen(true);
-                                }} data-testid={`button-preview-${template.id}`}>
-                                  <Eye size={14} className="mr-2" />
-                                  Preview
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleOpenCloneDialog(template.id)} data-testid={`button-clone-${template.id}`}>
-                                  <Copy size={14} className="mr-2" />
-                                  Clone
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(template)} data-testid={`button-delete-${template.id}`}>
-                                  <Trash2 size={14} className="mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      ))}
+                          <tr key={template.id} className="border-b hover:bg-muted/50" data-testid={`template-row-${template.id}`}>
+                            <td className="py-2 px-3">
+                              <Checkbox
+                                checked={selectedTemplates.includes(template.id)}
+                                onCheckedChange={() => toggleTemplate(template.id)}
+                                data-testid={`checkbox-template-${template.id}`}
+                              />
+                            </td>
+                            <td className="py-2 px-3">{template.name}</td>
+                            <td className="py-2 px-3">{template.category}</td>
+                            <td className="py-2 px-3">{template.language}</td>
+                            <td className="py-2 px-3">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClasses(template.statusTypeColor)}`}>
+                                {template.status}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">
+                              {template.topBlockReason || "No blocks!"}
+                            </td>
+                            <td className="py-2 px-3">{template.lastEdited}</td>
+                            <td className="py-2 px-3 flex justify-start">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 hover:bg-muted rounded">
+                                    <MoreVertical size={14} className="text-muted-foreground" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleOpenEditTemplate(template.id)} data-testid={`button-edit-${template.id}`}>
+                                    <Edit2 size={14} className="mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setPreviewTemplateId(template.id);
+                                    setPreviewOpen(true);
+                                  }} data-testid={`button-preview-${template.id}`}>
+                                    <Eye size={14} className="mr-2" />
+                                    Preview
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleOpenCloneDialog(template.id)} data-testid={`button-clone-${template.id}`}>
+                                    <Copy size={14} className="mr-2" />
+                                    Clone
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(template)} data-testid={`button-delete-${template.id}`}>
+                                    <Trash2 size={14} className="mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

@@ -1106,73 +1106,74 @@ export default function CampaignManager() {
                 {getFilteredCampaigns().length === 0 ? (
                   <tr>
                     <td colSpan={activeTab === "all" ? 8 : 7} className="text-center py-8 text-muted-foreground">
-                      No campaigns found.
+                      No results
                     </td>
                   </tr>
                 ) : (
                   getFilteredCampaigns().map((campaign) => (
-                  <tr key={campaign.id} className="border-b hover:bg-muted/50" data-testid={`campaign-row-${campaign.id}`}>
-                    <td className="py-2 px-3">
-                      <Checkbox
-                        checked={selectedCampaigns.includes(campaign.id)}
-                        onCheckedChange={() => toggleCampaign(campaign.id)}
-                        data-testid={`checkbox-campaign-${campaign.id}`}
-                      />
-                    </td>
-                    <td className="py-2 px-3 font-medium">{campaign.name}</td>
-                    <td className="py-2 px-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeBadgeClasses(campaign.type)}`}>
-                        {campaign.type}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3">{campaign.messageType}</td>
-                    {activeTab === "all" && (
-                      <td className="py-2 px-3 capitalize text-xs">{campaign.status}</td>
-                    )}
-                    <td className="py-2 px-3">{campaign.sent.toLocaleString()}</td>
-                    <td className="py-2 px-3">{campaign.delivered.toLocaleString()}</td>
-                    <td className="py-2 px-3 flex justify-start">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1 hover:bg-muted rounded">
-                            <MoreVertical size={14} className="text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                              setSelectedCampaignForPerformance(campaign);
-                              setDetailsOpen(true);
-                          }} data-testid={`button-performance-${campaign.id}`}>
-                            <BarChart2 size={14} className="mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                              setEditingCampaignId(campaign.id);
-                              setCreateOpen(true);
-                          }} data-testid={`button-edit-${campaign.id}`}>
-                            <Edit2 size={14} className="mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleOpenCloneDialog(campaign.id)} data-testid={`button-clone-${campaign.id}`}>
-                            <Copy size={14} className="mr-2" />
-                            Clone
-                          </DropdownMenuItem>
-                          {campaign.status !== "archived" ? (
-                            <DropdownMenuItem onClick={() => handleOpenArchiveModal(campaign)} data-testid={`button-archive-${campaign.id}`}>
-                              <Archive size={14} className="mr-2" />
-                              Archive
+                    <tr key={campaign.id} className="border-b hover:bg-muted/50" data-testid={`campaign-row-${campaign.id}`}>
+                      <td className="py-2 px-3">
+                        <Checkbox
+                          checked={selectedCampaigns.includes(campaign.id)}
+                          onCheckedChange={() => toggleCampaign(campaign.id)}
+                          data-testid={`checkbox-campaign-${campaign.id}`}
+                        />
+                      </td>
+                      <td className="py-2 px-3 font-medium">{campaign.name}</td>
+                      <td className="py-2 px-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeBadgeClasses(campaign.type)}`}>
+                          {campaign.type}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3">{campaign.messageType}</td>
+                      {activeTab === "all" && (
+                        <td className="py-2 px-3 capitalize text-xs">{campaign.status}</td>
+                      )}
+                      <td className="py-2 px-3">{campaign.sent.toLocaleString()}</td>
+                      <td className="py-2 px-3">{campaign.delivered.toLocaleString()}</td>
+                      <td className="py-2 px-3 flex justify-start">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 hover:bg-muted rounded">
+                              <MoreVertical size={14} className="text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                                setSelectedCampaignForPerformance(campaign);
+                                setDetailsOpen(true);
+                            }} data-testid={`button-performance-${campaign.id}`}>
+                              <BarChart2 size={14} className="mr-2" />
+                              View Details
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(campaign)} data-testid={`button-delete-${campaign.id}`}>
-                              <Trash2 size={14} className="mr-2" />
-                              Delete
+                            <DropdownMenuItem onClick={() => {
+                                setEditingCampaignId(campaign.id);
+                                setCreateOpen(true);
+                            }} data-testid={`button-edit-${campaign.id}`}>
+                              <Edit2 size={14} className="mr-2" />
+                              Edit
                             </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
+                            <DropdownMenuItem onClick={() => handleOpenCloneDialog(campaign.id)} data-testid={`button-clone-${campaign.id}`}>
+                              <Copy size={14} className="mr-2" />
+                              Clone
+                            </DropdownMenuItem>
+                            {campaign.status !== "archived" ? (
+                              <DropdownMenuItem onClick={() => handleOpenArchiveModal(campaign)} data-testid={`button-archive-${campaign.id}`}>
+                                <Archive size={14} className="mr-2" />
+                                Archive
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(campaign)} data-testid={`button-delete-${campaign.id}`}>
+                                <Trash2 size={14} className="mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
