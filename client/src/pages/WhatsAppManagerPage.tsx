@@ -6,18 +6,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
 import { UploadCloud } from "react-feather"; // For drag and drop icon
+import { Info } from "lucide-react"; // Add Info icon import
 
 export default function WhatsAppManagerPage() {
   // State for Business Profile fields
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [profilePhotoPreviewUrl, setProfilePhotoPreviewUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState("WhatsApp Business Account"); // Default value as per requirement
+  const [displayName, setDisplayName] = useState("My business name"); // Default value as per requirement
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [address, setAddress] = useState("");
   const [about, setAbout] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+
+  // Dummy states for badges
+  const [isConnected, setIsConnected] = useState(Math.random() < 0.5);
+  const [accountHealth, setAccountHealth] = useState(Math.random());
 
   const categoryOptions = [
     "Automotive", "Beauty", "Apparel", "Education", "Entertainment",
@@ -69,9 +76,74 @@ export default function WhatsAppManagerPage() {
       <Tabs defaultValue="business-profile" className="space-y-4">
         <TabsList>
           <TabsTrigger value="business-profile">Business Profile</TabsTrigger>
-          <TabsTrigger value="message-templates">Message Templates</TabsTrigger>
-          <TabsTrigger value="phone-numbers">Phone Numbers</TabsTrigger>
+          <TabsTrigger value="automations">Automations</TabsTrigger>
+          <TabsTrigger value="calls">Calls</TabsTrigger>
         </TabsList>
+
+        {/* WhatsApp Account Status Badges */}
+        <div className="flex items-center space-x-5">
+          <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
+            <span className="text-sm font-medium text-foreground">Message limit:</span>
+            <span className="text-sm text-foreground">1K Customers/24hr</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-3 w-3" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          {(() => {
+            const bgColor = isConnected ? 'bg-green-100' : 'bg-red-100';
+            const textColor = isConnected ? 'text-green-800' : 'text-red-800';
+            const statusText = isConnected ? 'Connected' : 'Disconnected';
+            return (
+              <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
+                <span className="text-sm font-medium text-foreground">Account Status:</span>
+                <span className={`text-sm text-foreground`}>{statusText}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="break-normal w-[16rem] whitespace-normal">Phone number is associated with this account and working properly</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          })()}
+          {(() => {
+            let healthStatus, bgColor, textColor;
+            if (accountHealth < 0.33) {
+              healthStatus = "Green";
+              bgColor = "bg-green-100";
+              textColor = "text-green-800";
+            } else if (accountHealth < 0.66) {
+              healthStatus = "Yellow";
+              bgColor = "bg-yellow-100";
+              textColor = "text-yellow-800";
+            } else {
+              healthStatus = "Red";
+              bgColor = "bg-red-100";
+              textColor = "text-red-800";
+            }
+            return (
+              <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
+                <span className="text-sm font-medium text-foreground">Account Health:</span>
+                <span className={`text-sm text-foreground`}>{healthStatus}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="break-normal w-[16rem] whitespace-normal">Account health is based on how messages have been received by the recipients over the last 7 days. It is determined by a combination of quality signals from conversations between business and users. Examples include user feedback signals like blocks, reports and the reasons users provide when they block a business.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          })()}
+        </div>
 
         <TabsContent value="business-profile">
           <div className="grid grid-cols-2 flex gap-6">
@@ -123,7 +195,10 @@ export default function WhatsAppManagerPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-foreground">Display Name</label>
-                    <Input value="WhatsApp Business Account" disabled />
+                    <Input
+                      value={displayName}
+                      disabled
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -159,8 +234,8 @@ export default function WhatsAppManagerPage() {
                   <div>
                     <label className="text-sm font-medium text-foreground">Address (optional)</label>
                     <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
                       placeholder="The address of your business"
                     />
                   </div>
@@ -222,22 +297,22 @@ export default function WhatsAppManagerPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="message-templates">
-          {/* Content for Message Templates tab */}
+        <TabsContent value="automations">
+          {/* Content for Automations tab */}
           <Card>
-            <CardHeader><CardTitle>Message Templates</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Automations</CardTitle></CardHeader>
             <CardContent>
-              <p>Content for managing message templates will go here.</p>
+              <p>Content for managing automations will go here.</p>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="phone-numbers">
-          {/* Content for Phone Numbers tab */}
+        <TabsContent value="calls">
+          {/* Content for Calls tab */}
           <Card>
-            <CardHeader><CardTitle>Phone Numbers</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Calls</CardTitle></CardHeader>
             <CardContent>
-              <p>Content for managing phone numbers will go here.</p>
+              <p>Content for managing calls will go here.</p>
             </CardContent>
           </Card>
         </TabsContent>
