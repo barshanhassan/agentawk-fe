@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -613,7 +613,7 @@ export default function TeamManagementSection() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <h4 className="text-sm font-medium mb-2">Available Agents</h4>
-                        <div className="border rounded-md px-4 py-2 h-40 overflow-y-auto">
+                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
                           {initialEmployees
                             .filter(emp => emp.id !== newSupervisorId && !newAgents.includes(emp.id))
                             .map(emp => (
@@ -621,10 +621,10 @@ export default function TeamManagementSection() {
                                 <span className="text-sm">{emp.name}</span>
                                 <Button
                                   variant="ghost"
-                                  size="default" // Changed from "sm" to "default"
+                                  size="icon" // Changed from "default" to "icon"
                                   onClick={() => setNewAgents([...newAgents, emp.id])}
                                 >
-                                  +
+                                  <PlusCircle size={16} />
                                 </Button>
                               </div>
                             ))}
@@ -632,7 +632,7 @@ export default function TeamManagementSection() {
                       </div>
                       <div>
                         <h4 className="text-sm font-medium mb-2">Assigned Agents<span className="text-red-500 pl-0.5">*</span></h4>
-                        <div className="border rounded-md px-4 py-2 h-40 overflow-y-auto">
+                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
                           {initialEmployees
                             .filter(emp => newAgents.includes(emp.id))
                             .map(emp => (
@@ -640,10 +640,10 @@ export default function TeamManagementSection() {
                                 <span className="text-sm">{emp.name}</span>
                                 <Button
                                   variant="ghost"
-                                  size="default" // Changed from "sm" to "default"
+                                  size="icon" // Changed from "default" to "icon"
                                   onClick={() => setNewAgents(newAgents.filter(id => id !== emp.id))}
                                 >
-                                  -
+                                  <MinusCircle size={16} />
                                 </Button>
                               </div>
                             ))}
@@ -714,7 +714,7 @@ export default function TeamManagementSection() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <h4 className="text-sm font-medium mb-2">Available Agents</h4>
-                        <div className="border rounded-md px-4 py-2 h-40 overflow-y-auto">
+                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
                           {initialEmployees
                             .filter(emp => emp.id !== editSupervisorId && !assignedAgents.includes(emp.id))
                             .map(emp => (
@@ -722,10 +722,10 @@ export default function TeamManagementSection() {
                                 <span className="text-sm">{emp.name}</span>
                                 <Button
                                   variant="ghost"
-                                  size="default" // Changed from "sm" to "default"
+                                  size="icon" // Changed from "default" to "icon"
                                   onClick={() => setAssignedAgents([...assignedAgents, emp.id])}
                                 >
-                                  +
+                                  <PlusCircle size={16} />
                                 </Button>
                               </div>
                             ))}
@@ -733,7 +733,7 @@ export default function TeamManagementSection() {
                       </div>
                       <div>
                         <h4 className="text-sm font-medium mb-2">Assigned Agents<span className="text-red-500 pl-0.5">*</span></h4>
-                        <div className="border rounded-md px-4 py-2 h-40 overflow-y-auto">
+                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
                           {initialEmployees
                             .filter(emp => assignedAgents.includes(emp.id))
                             .map(emp => (
@@ -741,10 +741,10 @@ export default function TeamManagementSection() {
                                 <span className="text-sm">{emp.name}</span>
                                 <Button
                                   variant="ghost"
-                                  size="default" // Changed from "sm" to "default"
+                                  size="icon" // Changed from "default" to "icon"
                                   onClick={() => setAssignedAgents(assignedAgents.filter(id => id !== emp.id))}
                                 >
-                                  -
+                                  <MinusCircle size={16} />
                                 </Button>
                               </div>
                             ))}
