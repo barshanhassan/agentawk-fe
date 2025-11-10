@@ -810,10 +810,11 @@ export default function TemplateManager() {
   };
 
   const toggleAll = () => {
-    if (selectedTemplates.length === whatsappTemplates.length) {
+    const filteredIds = filteredAndSortedTemplates.map(t => t.id);
+    if (selectedTemplates.length === filteredIds.length && filteredIds.every(id => selectedTemplates.includes(id))) {
       setSelectedTemplates([]);
     } else {
-      setSelectedTemplates(whatsappTemplates.map((t) => t.id));
+      setSelectedTemplates(filteredIds);
     }
   };
 
@@ -1537,7 +1538,7 @@ export default function TemplateManager() {
                       <tr className="border-b">
                         <th className="text-left py-2 px-3 font-medium text-muted-foreground">
                           <Checkbox
-                            checked={selectedTemplates.length === whatsappTemplates.length}
+                            checked={filteredAndSortedTemplates.length > 0 && filteredAndSortedTemplates.every(t => selectedTemplates.includes(t.id))}
                             onCheckedChange={toggleAll}
                             data-testid="checkbox-select-all"
                           />
@@ -1600,7 +1601,14 @@ export default function TemplateManager() {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedTemplates.map((template) => (
+                      {paginatedTemplates.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="text-center py-8 text-muted-foreground">
+                            No templates found.
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedTemplates.map((template) => (
                         <tr key={template.id} className="border-b hover:bg-muted/50" data-testid={`template-row-${template.id}`}>
                           <td className="py-2 px-3">
                             <Checkbox
@@ -2853,37 +2861,7 @@ export default function TemplateManager() {
                                     </div>
                                   )}
                                 </div>
-                                  {/* Bulk Delete Modal */}
-                                  <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
-                                    <DialogContent className="max-w-sm">
-                                      <DialogHeader className="mb-2">
-                                        <DialogTitle>Delete Templates</DialogTitle>
-                                      </DialogHeader>
-                            
-                                      <div className="space-y-4">
-                                        <p className="text-sm text-foreground">
-                                          Are you sure you want to delete <span className="font-semibold">{selectedTemplates.length} template(s)</span>? This action cannot be undone.
-                                        </p>
-                                      </div>
-                            
-                                      {/* Modal Footer */}
-                                      <div className="flex gap-2 justify-end mt-2">
-                                        <Button
-                                          onClick={() => setShowBulkDeleteModal(false)}
-                                          variant="outline"
-                                          className="border-input [border-color:hsl(var(--input))]"
-                                        >
-                                          Cancel
-                                        </Button>
-                                        <Button
-                                          onClick={handleConfirmBulkDelete}
-                                          className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
-                                        >
-                                          Delete
-                                        </Button>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
+
                                 </div>
                                 );
                               }
@@ -3018,6 +2996,38 @@ export default function TemplateManager() {
             </Button>
             <Button
               onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Modal */}
+      <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Delete Templates</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-foreground">
+              Are you sure you want to delete <span className="font-semibold">{selectedTemplates.length} template(s)</span>? This action cannot be undone.
+            </p>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button
+              onClick={() => setShowBulkDeleteModal(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmBulkDelete}
               className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
             >
               Delete

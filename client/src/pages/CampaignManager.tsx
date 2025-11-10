@@ -1103,7 +1103,14 @@ export default function CampaignManager() {
                 </tr>
               </thead>
               <tbody>
-                {getFilteredCampaigns().map((campaign) => (
+                {getFilteredCampaigns().length === 0 ? (
+                  <tr>
+                    <td colSpan={activeTab === "all" ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                      No campaigns found.
+                    </td>
+                  </tr>
+                ) : (
+                  getFilteredCampaigns().map((campaign) => (
                   <tr key={campaign.id} className="border-b hover:bg-muted/50" data-testid={`campaign-row-${campaign.id}`}>
                     <td className="py-2 px-3">
                       <Checkbox
