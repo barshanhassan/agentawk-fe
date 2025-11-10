@@ -15,6 +15,7 @@ import CampaignManager from "@/pages/CampaignManager";
 import UserManagementPage from "@/pages/UserManagementPage";
 import ContactsPage from "@/pages/ContactsPage";
 import BillingPage from "@/pages/BillingPage";
+import WhatsAppManagerPage from "@/pages/WhatsAppManagerPage";
 import TeamManagementSection from "@/components/sections/TeamManagementSection";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
@@ -78,6 +79,11 @@ function Router() {
       <Route path="/billing">
         <ProtectedRoute>
           <BillingPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/whatsapp-manager">
+        <ProtectedRoute>
+          <WhatsAppManagerPage />
         </ProtectedRoute>
       </Route>
       
