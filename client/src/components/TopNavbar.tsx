@@ -312,13 +312,6 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
               <Lock size={16} className="mr-2" />
               Change Password
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="hover-elevate"
-              data-testid="menu-support"
-            >
-              <HelpCircle size={16} className="mr-2" />
-              Contact Support
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="hover-elevate text-destructive"
