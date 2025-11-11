@@ -63,24 +63,33 @@ const DeveloperSettingsSection = () => {
           <h4 className="font-semibold text-base">API Key</h4>
           <p className="text-sm text-muted-foreground">Use this API Key when using our API for authentication.</p>
           <div className="flex items-center gap-2">
-            <Input
-              readOnly
-              type={showApiKey ? "text" : "password"}
-              value={apiKey}
-              className="flex-1 max-w-[300px]"
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)}>
-                    {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{showApiKey ? "Hide" : "Show"} key</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="relative max-w-[450px] w-full">
+              <Input
+                readOnly
+                type={showApiKey ? "text" : "password"}
+                value={apiKey}
+                className="pr-12 w-full"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="h-8 w-8"
+                      >
+                        {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{showApiKey ? "Hide" : "Show"} key</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
