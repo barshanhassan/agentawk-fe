@@ -6,6 +6,8 @@ import PreferencesSection from "@/components/sections/PreferencesSection";
 import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
 import AIAssistantsSection from "@/components/sections/AIAssistantsSection";
 import AgentChatsSection from "@/components/sections/AgentChatsSection";
+import OutOfOfficeSection from "@/components/sections/OutOfOfficeSection";
+import BotToAgentSection from "@/components/sections/BotToAgentSection";
 
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
@@ -151,8 +153,14 @@ export default function SettingsPage() {
           {activeSection === "Agent Chats" && (
             <AgentChatsSection />
           )}
+          {activeSection === "Out of Office" && (
+            <OutOfOfficeSection />
+          )}
+          {activeSection === "Bot to Agent" && (
+            <BotToAgentSection />
+          )}
           {/* Placeholder for other sections */}
-          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && (
+          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && activeSection !== "Out of Office" && activeSection !== "Bot to Agent" && (
             <>
               <CardHeader>
                 <CardTitle className="text-lg">{activeSection}</CardTitle>

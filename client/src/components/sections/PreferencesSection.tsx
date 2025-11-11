@@ -171,7 +171,7 @@ const PreferencesSection = ({
         {/* Email Conversation Transcripts */}
         <div className="space-y-2">
           <h4 className="font-semibold text-base">Email Conversation Transcripts</h4>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">Automatically allow conversation transcripts to be sent to one or more email addresses when a conversation is closed by your agents. For your security, consider only using this feature with trusted email addresses.</p>
             <Switch aria-label="Enable email conversation transcripts" checked={preferences.emailTranscript} onCheckedChange={handleSwitchChange('emailTranscript')} />
           </div>
@@ -192,7 +192,7 @@ const PreferencesSection = ({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <Textarea placeholder="john@example.com, peter@example.com" rows={4} value={preferences.transcriptEmails} onChange={handleTextChange('transcriptEmails')} />
+          <Textarea placeholder="john@example.com, peter@example.com" rows={4} value={preferences.transcriptEmails} onChange={handleTextChange('transcriptEmails')} disabled={!preferences.emailTranscript} />
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
