@@ -227,7 +227,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-4 w-fit">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min-content, 1fr))' }}>
             {daysOfWeek.map(dayString => {
               const day = dayString as keyof BusinessHoursState['perDay'];
               return (

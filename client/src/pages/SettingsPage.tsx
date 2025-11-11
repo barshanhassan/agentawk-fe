@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import ProfileSection from "@/components/sections/ProfileSection";
 import PreferencesSection from "@/components/sections/PreferencesSection";
 import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
+import AIAssistantsSection from "@/components/sections/AIAssistantsSection";
 
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
@@ -144,8 +145,11 @@ export default function SettingsPage() {
                 setBusinessHours={setBusinessHours}
             />
           )}
+          {activeSection === "AI Assistants" && (
+            <AIAssistantsSection />
+          )}
           {/* Placeholder for other sections */}
-          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && (
+          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && (
             <>
               <CardHeader>
                 <CardTitle className="text-lg">{activeSection}</CardTitle>
