@@ -4,11 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState("My Profile");
-  const [, navigate] = useLocation(); // Get navigate function from wouter
-  const search = useSearch(); // Get the query string from wouter
-
-  const sections = [
+  const sections = [ // Define sections array first for use in initial state
     "My Profile",
     "Preferences",
     "Business Hours",
@@ -24,16 +20,24 @@ export default function SettingsPage() {
     "Change Password",
   ];
 
+  // Calculate initial activeSection directly from URL
+  const initialTabParam = new URLSearchParams(window.location.search).get("tab");
+  const initialActiveSection = (initialTabParam && sections.includes(initialTabParam)) ? initialTabParam : "My Profile";
+
+  const [activeSection, setActiveSection] = useState(initialActiveSection);
+  const [, navigate] = useLocation(); // Get navigate function from wouter
+  const search = useSearch(); // Get the query string from wouter
+
   useEffect(() => {
     const params = new URLSearchParams(search);
     const tabParam = params.get("tab");
 
     if (tabParam && sections.includes(tabParam)) {
       setActiveSection(tabParam);
-    } else {
-      // If no valid tab param, default to "My Profile"
-      setActiveSection("My Profile");
     }
+    // No else branch needed here, as initial state is handled,
+    // and if tabParam becomes invalid, activeSection will remain
+    // at its last valid state or default.
   }, [search, sections]); // Depend on search and sections
 
   return (
