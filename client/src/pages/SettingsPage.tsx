@@ -33,9 +33,22 @@ export default function SettingsPage() {
   const initialActiveSection = (initialTabParam && sections.includes(initialTabParam)) ? initialTabParam : "My Profile";
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
-  const [profilePictureUrl, setProfilePictureUrl] = useState("https://via.placeholder.com/150"); // Default profile picture
+  const [profilePictureUrl, setProfilePictureUrl] = useState(""); // Default profile picture
   const [notificationsEnabled, setNotificationsEnabled] = useState(false); // User preference for notifications, off by default
   const [browserNotificationsDenied, setBrowserNotificationsDenied] = useState(Notification.permission === 'denied'); // Initialize based on actual browser permission
+  const [allDaysSelected, setAllDaysSelected] = useState(true); // State for "All days" vs "Per day" radio
+  const [businessHours, setBusinessHours] = useState({
+    allDays: { startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    perDay: {
+      monday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+      tuesday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+      wednesday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+      thursday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+      friday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+      saturday: { enabled: false, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+      sunday: { enabled: false, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    }
+  });
   const [, navigate] = useLocation(); // Get navigate function from wouter
   const search = useSearch(); // Get the query string from wouter
 
