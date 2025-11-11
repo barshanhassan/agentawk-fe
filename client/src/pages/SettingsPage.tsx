@@ -33,6 +33,7 @@ export default function SettingsPage() {
   const initialActiveSection = (initialTabParam && sections.includes(initialTabParam)) ? initialTabParam : "My Profile";
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
+  const [profilePictureUrl, setProfilePictureUrl] = useState("https://via.placeholder.com/150"); // Default profile picture
   const [notificationsEnabled, setNotificationsEnabled] = useState(false); // User preference for notifications, off by default
   const [browserNotificationsDenied, setBrowserNotificationsDenied] = useState(Notification.permission === 'denied'); // Initialize based on actual browser permission
   const [, navigate] = useLocation(); // Get navigate function from wouter
@@ -110,14 +111,38 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <Separator />
                 {/* Profile Info */}
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">AD</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-lg font-semibold">Admin User</p>
-                    <p className="text-sm text-muted-foreground">email@example.com</p>
+                <div className="flex items-center justify-between"> {/* Added justify-between */}
+                  <div className="flex items-center gap-4"> {/* Group Avatar and text */}
+                                      <Avatar className="h-16 w-16">
+                                        {profilePictureUrl && profilePictureUrl !== "https://via.placeholder.com/150" ? (
+                                          <img src={profilePictureUrl} alt="Profile" className="rounded-full object-cover" />
+                                        ) : (
+                                          <AvatarFallback className="bg-primary text-primary-foreground text-xl">AD</AvatarFallback>
+                                        )}
+                                      </Avatar>                    <div>
+                      <p className="text-lg font-semibold">Admin User</p>
+                      <p className="text-sm text-muted-foreground">email@example.com</p>
+                    </div>
                   </div>
+                  <input
+                    type="file"
+                    id="profile-picture-upload"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setProfilePictureUrl(URL.createObjectURL(e.target.files[0]));
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => document.getElementById('profile-picture-upload')?.click()}
+                    className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  >
+                    Change Photo
+                  </Button>
                 </div>
 
                 <Separator />
