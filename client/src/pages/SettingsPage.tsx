@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter"; // Import useLocation and useSearch
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
@@ -67,13 +67,18 @@ export default function SettingsPage() {
         </Card>
 
         {/* Right Content Area */}
-        <Card className="flex-1 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="h-full flex-1 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
           <CardHeader>
             <CardTitle className="text-lg">{activeSection}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">Content for {activeSection} will go here.</p>
           </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+              Save
+            </Button>
+          </CardFooter>
         </Card>
       </div>
     </div>

@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
-import { UploadCloud, Edit2, Check } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
+import { UploadCloud } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
 import { Info } from "lucide-react"; // Add Info icon import
 import { Switch } from "@/components/ui/switch"; // Import Switch component
 
@@ -57,20 +56,6 @@ export default function WhatsAppManagerPage() {
       setProfilePhotoFile(files[0]);
       setProfilePhotoPreviewUrl(URL.createObjectURL(files[0]));
     }
-  };
-
-  const handleSave = () => {
-    // Logic to save business profile data
-    console.log("Saving Business Profile:", {
-      profilePhotoFile,
-      displayName,
-      category,
-      description,
-      about,
-      email,
-      website,
-    });
-    // Add toast notification or API call here
   };
 
   return (
@@ -216,7 +201,7 @@ export default function WhatsAppManagerPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
                     Save
                   </Button>
                 </CardFooter>
@@ -238,7 +223,7 @@ export default function WhatsAppManagerPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled>
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled>
                     Save
                   </Button>
                 </CardFooter>
@@ -308,7 +293,7 @@ export default function WhatsAppManagerPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
                     Save
                   </Button>
                 </CardFooter>
@@ -373,6 +358,11 @@ export default function WhatsAppManagerPage() {
                 </Button>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                Save
+              </Button>
+            </CardFooter>
           </Card>
         )}
 
@@ -432,6 +422,11 @@ export default function WhatsAppManagerPage() {
                 </Button>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                Save
+              </Button>
+            </CardFooter>
           </Card>
         )}
       </div>
