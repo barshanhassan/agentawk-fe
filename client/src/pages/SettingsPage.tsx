@@ -28,15 +28,15 @@ export default function SettingsPage() {
       <div className="flex gap-6">
         {/* Left Sidebar Navigation */}
         <Card className="w-64 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 flex-shrink-0">
-          <CardContent className="space-y-1 p-2">
+          <CardContent className="bg-slate-200/75 rounded-lg p-1 space-y-1">
             {sections.map((section) => (
               <button
                 key={section}
                 onClick={() => setActiveSection(section)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-2 h-10 rounded-lg text-sm font-medium transition-colors ${
                   activeSection === section
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {section}
