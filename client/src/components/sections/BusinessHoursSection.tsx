@@ -7,7 +7,56 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-const TimePicker = ({ hour, minute, period, onHourChange, onMinuteChange, onPeriodChange, isDisabled = false }) => (
+// Define TypeScript interfaces
+interface TimePickerProps {
+  hour: string;
+  minute: string;
+  period: string;
+  onHourChange: (value: string) => void;
+  onMinuteChange: (value: string) => void;
+  onPeriodChange: (value: string) => void;
+  isDisabled?: boolean;
+}
+
+interface DayHours {
+  enabled: boolean;
+  startHour: string;
+  startMinute: string;
+  startPeriod: string;
+  endHour: string;
+  endMinute: string;
+  endPeriod: string;
+}
+
+interface BusinessHoursState {
+  allDays: DayHours;
+  perDay: {
+    monday: DayHours;
+    tuesday: DayHours;
+    wednesday: DayHours;
+    thursday: DayHours;
+    friday: DayHours;
+    saturday: DayHours;
+    sunday: DayHours;
+  };
+}
+
+interface DayRowProps {
+  day: keyof BusinessHoursState['perDay'];
+  label: string;
+  hours: DayHours;
+  onHoursChange: (part: keyof DayHours, value: string) => void;
+  onEnabledChange: (enabled: boolean) => void;
+}
+
+interface BusinessHoursSectionProps {
+  allDaysSelected: boolean;
+  setAllDaysSelected: (selected: boolean) => void;
+  businessHours: BusinessHoursState;
+  setBusinessHours: (hours: BusinessHoursState) => void;
+}
+
+const TimePicker: React.FC<TimePickerProps> = ({ hour, minute, period, onHourChange, onMinuteChange, onPeriodChange, isDisabled = false }) => (
   <div className="flex gap-2">
     <Select value={hour} onValueChange={onHourChange} disabled={isDisabled}>
       <SelectTrigger className="w-[80px]">
@@ -41,7 +90,7 @@ const TimePicker = ({ hour, minute, period, onHourChange, onMinuteChange, onPeri
   </div>
 );
 
-const DayRow = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
+const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
     <div className="p-4 border rounded-lg space-y-4">
         <div className="flex items-center space-x-3">
             <Checkbox
@@ -83,34 +132,48 @@ const DayRow = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
 );
 
 
-const BusinessHoursSection = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours }) => {
+const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours }) => {
 
-    const handleAllDaysHoursChange = (part, value) => {
-        setBusinessHours(prev => ({
-            ...prev,
-            allDays: { ...prev.allDays, [part]: value }
-        }));
+    const handleAllDaysHoursChange = (part: keyof DayHours, value: string) => {
+        const newBusinessHours = {
+            ...businessHours,
+            allDays: {
+                ...businessHours.allDays,
+                [part]: value,
+            },
+        };
+        setBusinessHours(newBusinessHours);
     };
 
-    const handlePerDayHoursChange = (day, part, value) => {
-        setBusinessHours(prev => ({
-            ...prev,
+    const handlePerDayHoursChange = (day: keyof BusinessHoursState['perDay'], part: keyof DayHours, value: string) => {
+        const newBusinessHours = {
+            ...businessHours,
             perDay: {
-                ...prev.perDay,
-                [day]: { ...prev.perDay[day], [part]: value }
-            }
-        }));
+                ...businessHours.perDay,
+                [day]: {
+                    ...businessHours.perDay[day],
+                    [part]: value,
+                },
+            },
+        };
+        setBusinessHours(newBusinessHours);
     };
 
-    const handlePerDayEnabledChange = (day, enabled) => {
-        setBusinessHours(prev => ({
-            ...prev,
+    const handlePerDayEnabledChange = (day: keyof BusinessHoursState['perDay'], enabled: boolean) => {
+        const newBusinessHours = {
+            ...businessHours,
             perDay: {
-                ...prev.perDay,
-                [day]: { ...prev.perDay[day], enabled }
-            }
-        }));
+                ...businessHours.perDay,
+                [day]: {
+                    ...businessHours.perDay[day],
+                    enabled,
+                },
+            },
+        };
+        setBusinessHours(newBusinessHours);
     };
+
+    const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
     <>
@@ -165,16 +228,19 @@ const BusinessHoursSection = ({ allDaysSelected, setAllDaysSelected, businessHou
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-4 w-fit">
-            {Object.keys(businessHours.perDay).map(day => (
-              <DayRow
-                key={day}
-                day={day}
-                label={day}
-                hours={businessHours.perDay[day]}
-                onHoursChange={(part, value) => handlePerDayHoursChange(day, part, value)}
-                onEnabledChange={(enabled) => handlePerDayEnabledChange(day, enabled)}
-              />
-            ))}
+            {daysOfWeek.map(dayString => {
+              const day = dayString as keyof BusinessHoursState['perDay'];
+              return (
+                <DayRow
+                  key={day}
+                  day={day}
+                  label={day.charAt(0).toUpperCase() + day.slice(1)} // Capitalize for display
+                  hours={businessHours.perDay[day]}
+                  onHoursChange={(part, value) => handlePerDayHoursChange(day, part, value)}
+                  onEnabledChange={(enabled) => handlePerDayEnabledChange(day, enabled)}
+                />
+              )
+            })}
           </div>
         )}
       </CardContent>
