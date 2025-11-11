@@ -67,7 +67,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
   const footerMenuItems: MenuItem[] = [
     { icon: <SiWhatsapp size={20} />, label: "WhatsApp Manager", path: "/whatsapp-manager" },
     { icon: <CreditCard size={20} />, label: "Billing", path: "/billing" },
-    { icon: <Settings size={20} />, label: "Settings", path: "/settings-page" },
+    { icon: <Settings size={20} />, label: "Settings", path: "/settings" },
   ];
 
   const isActive = (path: string) => location === path || (path === "/insights" && location === "/"); // Added condition for root path

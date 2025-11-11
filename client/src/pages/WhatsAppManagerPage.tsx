@@ -377,15 +377,67 @@ export default function WhatsAppManagerPage() {
         )}
 
         {activeTab === "calls" && (
-          <>
-          {/* Content for Calls tab */}
-          <Card>
-            <CardHeader><CardTitle>Calls</CardTitle></CardHeader>
-            <CardContent>
-              <p>Content for managing calls will go here.</p>
+          <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+            <CardHeader>
+              <CardTitle className="text-lg">Call Settings</CardTitle>
+              <p className="text-sm text-muted-foreground">Manage your business's call settings and availability.</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Allow voice calls */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Allow voice calls</h4>
+                  <p className="text-sm text-muted-foreground">Make and receive calls with this phone number. Turning on voice calls will allow you to call or request to call people on WhatsApp and send messages that include a call button.</p>
+                </div>
+                <Switch aria-label="Allow voice calls" />
+              </div>
+
+              {/* Allow people to request a callback for missed calls */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Allow people to request a callback for missed calls</h4>
+                  <p className="text-sm text-muted-foreground">If you're unable to answer a call, let people request a call back from you.</p>
+                </div>
+                <Switch aria-label="Allow people to request a callback" />
+              </div>
+
+              {/* Display call buttons */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Display call buttons</h4>
+                  <p className="text-sm text-muted-foreground">Even if this feature is turned off, people could still call this number from a message containing a call button.</p>
+                </div>
+                <Switch aria-label="Display call buttons" />
+              </div>
+
+              {/* Available call hours */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Available call hours</h4>
+                  <p className="text-sm text-muted-foreground">Set regular calling hours for your business. If you don’t set your call hours, people will always be able to call you.</p>
+                </div>
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
+                  Setup
+                </Button>
+              </div>
+
+              {/* Temporarily unavailable call hours */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Temporarily unavailable call hours</h4>
+                  <p className="text-sm text-muted-foreground">Set custom times, like holidays or special events, when your business is unable to receive calls.</p>
+                </div>
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
+                  Create New
+                </Button>
+              </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                Save
+              </Button>
+            </CardFooter>
           </Card>
-          </>
         )}
       </div>
     </div>
