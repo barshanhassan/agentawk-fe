@@ -9,6 +9,8 @@ import AgentChatsSection from "@/components/sections/AgentChatsSection";
 import OutOfOfficeSection from "@/components/sections/OutOfOfficeSection";
 import BotToAgentSection from "@/components/sections/BotToAgentSection";
 import PasswordPolicySection from "@/components/sections/PasswordPolicySection";
+import DeveloperSettingsSection from "@/components/sections/DeveloperSettingsSection";
+import ChangePasswordSection from "@/components/sections/ChangePasswordSection";
 
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
@@ -163,8 +165,14 @@ export default function SettingsPage() {
           {activeSection === "Password Policy" && (
             <PasswordPolicySection />
           )}
+          {activeSection === "Developer Settings" && (
+            <DeveloperSettingsSection />
+          )}
+          {activeSection === "Change Password" && (
+            <ChangePasswordSection />
+          )}
           {/* Placeholder for other sections */}
-          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && activeSection !== "Out of Office" && activeSection !== "Bot to Agent" && activeSection !== "Password Policy" && (
+          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && activeSection !== "Out of Office" && activeSection !== "Bot to Agent" && activeSection !== "Password Policy" && activeSection !== "Developer Settings" && activeSection !== "Change Password" && (
             <>
               <CardHeader>
                 <CardTitle className="text-lg">{activeSection}</CardTitle>
