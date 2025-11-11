@@ -77,12 +77,39 @@ export default function WhatsAppManagerPage() {
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold">WhatsApp Manager</h1>
 
-      <Tabs defaultValue="business-profile" className="space-y-4" onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="business-profile">Business Profile</TabsTrigger>
-          <TabsTrigger value="automations">Automations</TabsTrigger>
-          <TabsTrigger value="calls">Calls</TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setActiveTab("business-profile")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "business-profile"
+                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Business Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("automations")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "automations"
+                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Automations
+          </button>
+          <button
+            onClick={() => setActiveTab("calls")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "calls"
+                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Calls
+          </button>
+        </div>
         {/* WhatsApp Account Status Badges */}
         {activeTab === "business-profile" && (
           <div className="flex items-center space-x-5">
@@ -149,7 +176,7 @@ export default function WhatsAppManagerPage() {
             })()}
           </div>
         )}
-        <TabsContent value="business-profile">
+        {activeTab === "business-profile" && (
           <div className="grid grid-cols-2 flex gap-6">
             {/* Left Side: Business Profile Form */}
             <div className="space-y-6">
@@ -305,13 +332,9 @@ export default function WhatsAppManagerPage() {
                 />                                                            
                 </CardContent>
               </Card>        
-            </div>
-          </div>
+        )}
 
-
-        </TabsContent>
-
-        <TabsContent value="automations">
+        {activeTab === "automations" && (
           <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
             <CardHeader>
               <CardTitle className="text-lg">Conversational Components</CardTitle>
@@ -347,12 +370,10 @@ export default function WhatsAppManagerPage() {
                 <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
                   Edit
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+)
 
-        <TabsContent value="calls">
+        {activeTab === "calls" && (
+          <>
           {/* Content for Calls tab */}
           <Card>
             <CardHeader><CardTitle>Calls</CardTitle></CardHeader>
@@ -360,8 +381,9 @@ export default function WhatsAppManagerPage() {
               <p>Content for managing calls will go here.</p>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+          </>
+        )}
+      </div>
     </div>
   );
 }
