@@ -7,7 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "react-feather";
 
-const PasswordInput = ({ id, label, value, onChange, error }) => {
+interface PasswordInputProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+}
+
+const PasswordInput: React.FC<PasswordInputProps> = ({ id, label, value, onChange, error }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -38,24 +46,30 @@ const PasswordInput = ({ id, label, value, onChange, error }) => {
   );
 };
 
+interface PasswordErrors {
+  currentPassword: string;
+  newPassword: string;
+  retypePassword: string;
+}
+
 const ChangePasswordSection = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [retypePassword, setRetypePassword] = useState('');
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<PasswordErrors>({
     currentPassword: '',
     newPassword: '',
     retypePassword: '',
   });
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
 
-  const validatePassword = (password) => {
-    const errors = [];
-    if (password.length < 8) errors.push("Minimum 8 characters");
-    if (!/[A-Z]/.test(password)) errors.push("Upper case letter [A-Z]");
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("Special character");
-    if (!/\d/.test(password)) errors.push("Number [0-9]");
-    return errors.join(', ');
+  const validatePassword = (password: string): string => {
+    const validationErrors: string[] = [];
+    if (password.length < 8) validationErrors.push("Minimum 8 characters");
+    if (!/[A-Z]/.test(password)) validationErrors.push("Upper case letter [A-Z]");
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) validationErrors.push("Special character");
+    if (!/\d/.test(password)) validationErrors.push("Number [0-9]");
+    return validationErrors.join(', ');
   };
 
   useEffect(() => {
