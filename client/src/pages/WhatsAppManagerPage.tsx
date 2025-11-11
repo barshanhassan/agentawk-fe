@@ -432,11 +432,6 @@ export default function WhatsAppManagerPage() {
                 </Button>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
-                Save
-              </Button>
-            </CardFooter>
           </Card>
         )}
       </div>

@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter"; // Import useLocation and useSearch
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("My Profile");
+  const [, navigate] = useLocation(); // Get navigate function from wouter
+  const search = useSearch(); // Get the query string from wouter
 
   const sections = [
     "My Profile",
@@ -21,6 +24,18 @@ export default function SettingsPage() {
     "Change Password",
   ];
 
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const tabParam = params.get("tab");
+
+    if (tabParam && sections.includes(tabParam)) {
+      setActiveSection(tabParam);
+    } else {
+      // If no valid tab param, default to "My Profile"
+      setActiveSection("My Profile");
+    }
+  }, [search, sections]); // Depend on search and sections
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -32,7 +47,9 @@ export default function SettingsPage() {
             {sections.map((section) => (
               <button
                 key={section}
-                onClick={() => setActiveSection(section)}
+                onClick={() => {
+                  navigate(`/settings?tab=${section}`);
+                }}
                 className={`w-full text-left px-4 py-2 h-10 rounded-lg text-sm font-medium transition-colors ${
                   activeSection === section
                     ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
