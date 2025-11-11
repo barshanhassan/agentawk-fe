@@ -301,6 +301,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             <DropdownMenuItem
               className="hover-elevate"
               data-testid="menu-profile"
+              onClick={() => navigate("/settings?tab=My Profile")}
             >
               <User size={16} className="mr-2" />
               Profile Settings
@@ -308,6 +309,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             <DropdownMenuItem
               className="hover-elevate"
               data-testid="menu-change-password"
+              onClick={() => navigate("/settings?tab=Change Password")}
             >
               <Lock size={16} className="mr-2" />
               Change Password
