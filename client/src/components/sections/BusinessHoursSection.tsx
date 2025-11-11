@@ -42,20 +42,20 @@ const TimePicker = ({ hour, minute, period, onHourChange, onMinuteChange, onPeri
 );
 
 const DayRow = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
-    <div className="space-y-4">
+    <div className="p-4 border rounded-lg space-y-4">
         <div className="flex items-center space-x-3">
             <Checkbox
             id={`checkbox-${day}`}
             checked={hours.enabled}
             onCheckedChange={onEnabledChange}
             />
-            <Label htmlFor={`checkbox-${day}`} className="text-sm font-medium capitalize">
+            <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold capitalize">
             {label}
             </Label>
         </div>
-        <div className="pl-8 space-y-3">
-            <div className="flex items-center justify-between">
-                <Label className="text-sm text-muted-foreground">Start time</Label>
+        <div className="space-y-3">
+            <div className="flex flex-col items-start justify-between space-y-2">
+                <Label className="text-sm text-foreground">Start time</Label>
                 <TimePicker
                     hour={hours.startHour}
                     minute={hours.startMinute}
@@ -66,8 +66,8 @@ const DayRow = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
                     isDisabled={!hours.enabled}
                 />
             </div>
-            <div className="flex items-center justify-between">
-                <Label className="text-sm text-muted-foreground">End time</Label>
+            <div className="flex flex-col items-start justify-between space-y-2">
+                <Label className="text-sm text-foreground">End time</Label>
                 <TimePicker
                     hour={hours.endHour}
                     minute={hours.endMinute}
@@ -138,8 +138,9 @@ const BusinessHoursSection = ({ allDaysSelected, setAllDaysSelected, businessHou
         </RadioGroup>
 
         {allDaysSelected ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="p-4 border rounded-lg space-y-4 w-fit">
+            <Label className="text-sm font-bold">All days</Label>
+            <div className="flex flex-col items-start justify-between space-y-2">
                 <Label className="text-sm">Start time</Label>
                 <TimePicker
                     hour={businessHours.allDays.startHour}
@@ -150,7 +151,7 @@ const BusinessHoursSection = ({ allDaysSelected, setAllDaysSelected, businessHou
                     onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
                 />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col items-start justify-between space-y-2">
                 <Label className="text-sm">End time</Label>
                 <TimePicker
                     hour={businessHours.allDays.endHour}
@@ -163,7 +164,7 @@ const BusinessHoursSection = ({ allDaysSelected, setAllDaysSelected, businessHou
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-4 gap-4 w-fit">
             {Object.keys(businessHours.perDay).map(day => (
               <DayRow
                 key={day}
