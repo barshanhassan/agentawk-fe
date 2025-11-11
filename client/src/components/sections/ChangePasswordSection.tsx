@@ -19,17 +19,19 @@ const PasswordInput = ({ id, label, value, onChange, error }) => {
           type={showPassword ? "text" : "password"}
           value={value}
           onChange={onChange}
-          className={`pr-10 flex-1 ${error ? 'border-red-500' : ''}`}
+          className={`pr-12 w-full ${error ? 'border-red-500' : ''}`}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
-        >
-          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-        </Button>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowPassword(!showPassword)}
+            className="h-8 w-8"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </Button>
+        </div>
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
