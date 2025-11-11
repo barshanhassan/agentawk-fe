@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"; // Import Input component
 import { Textarea } from "@/components/ui/textarea"; // Import Textarea component
 
+import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
+
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
     "My Profile",
@@ -503,8 +505,16 @@ export default function SettingsPage() {
               </CardFooter>
             </>
           )}
+          {activeSection === "Business Hours" && (
+            <BusinessHoursSection
+                allDaysSelected={allDaysSelected}
+                setAllDaysSelected={setAllDaysSelected}
+                businessHours={businessHours}
+                setBusinessHours={setBusinessHours}
+            />
+          )}
           {/* Placeholder for other sections */}
-          {activeSection !== "My Profile" && activeSection !== "Preferences" && (
+          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && (
             <>
               <CardHeader>
                 <CardTitle className="text-lg">{activeSection}</CardTitle>
