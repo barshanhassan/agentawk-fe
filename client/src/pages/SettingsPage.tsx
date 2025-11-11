@@ -8,6 +8,7 @@ import AIAssistantsSection from "@/components/sections/AIAssistantsSection";
 import AgentChatsSection from "@/components/sections/AgentChatsSection";
 import OutOfOfficeSection from "@/components/sections/OutOfOfficeSection";
 import BotToAgentSection from "@/components/sections/BotToAgentSection";
+import PasswordPolicySection from "@/components/sections/PasswordPolicySection";
 
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
@@ -159,8 +160,11 @@ export default function SettingsPage() {
           {activeSection === "Bot to Agent" && (
             <BotToAgentSection />
           )}
+          {activeSection === "Password Policy" && (
+            <PasswordPolicySection />
+          )}
           {/* Placeholder for other sections */}
-          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && activeSection !== "Out of Office" && activeSection !== "Bot to Agent" && (
+          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && activeSection !== "Out of Office" && activeSection !== "Bot to Agent" && activeSection !== "Password Policy" && (
             <>
               <CardHeader>
                 <CardTitle className="text-lg">{activeSection}</CardTitle>

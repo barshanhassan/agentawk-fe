@@ -8,19 +8,35 @@ import { Info } from "react-feather";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const PreferencesSection = ({
+interface Preferences {
+    timezone: string;
+    twoFactorAuth: boolean;
+    autoHide: boolean;
+    disableCSAT: boolean;
+    manualHandoff: boolean;
+    enableTranscript: boolean;
+    emailTranscript: boolean;
+    transcriptEmails: string;
+}
+
+interface PreferencesSectionProps {
+    preferences: Preferences;
+    setPreferences: React.Dispatch<React.SetStateAction<Preferences>>;
+}
+
+const PreferencesSection: React.FC<PreferencesSectionProps> = ({
     preferences,
     setPreferences,
 }) => {
-    const handleSwitchChange = (key) => (checked) => {
+    const handleSwitchChange = (key: keyof Preferences) => (checked: boolean) => {
         setPreferences(prev => ({ ...prev, [key]: checked }));
     };
 
-    const handleSelectChange = (key) => (value) => {
+    const handleSelectChange = (key: keyof Preferences) => (value: string) => {
         setPreferences(prev => ({ ...prev, [key]: value }));
     };
 
-    const handleTextChange = (key) => (event) => {
+    const handleTextChange = (key: keyof Preferences) => (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setPreferences(prev => ({ ...prev, [key]: event.target.value }));
     };
 
