@@ -328,10 +328,11 @@ export default function WhatsAppManagerPage() {
                     about={about}
                     category={category}
                     email={email}
-                    website={website}
-                />                                                            
+                    website={website} />                                                            
                 </CardContent>
               </Card>        
+            </div>
+          </div>
         )}
 
         {activeTab === "automations" && (
@@ -370,7 +371,10 @@ export default function WhatsAppManagerPage() {
                 <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
                   Edit
                 </Button>
-)
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {activeTab === "calls" && (
           <>
