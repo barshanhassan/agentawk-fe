@@ -1228,7 +1228,7 @@ export default function WhatsAppManagerPage() {
             {/* Right: Template Preview */}
             <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
               <div className="flex flex-col h-full">
-                <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
                 <TemplatePreview
                   headerText={selectedTemplate?.header || ""}
                   bodyText={selectedTemplate?.body || ""}
