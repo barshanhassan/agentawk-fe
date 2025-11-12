@@ -37,12 +37,13 @@ interface Tag {
   id: string;
   name: string;
   status: TagStatus;
+  lastEdited: string;
 }
 
 const initialTags: Tag[] = [
-  { id: "TAG001", name: "Sales", status: "Active" },
-  { id: "TAG002", name: "Support", status: "Active" },
-  { id: "TAG003", name: "Billing", status: "Inactive" },
+  { id: "TAG001", name: "Sales", status: "Active", lastEdited: "2025-11-12" },
+  { id: "TAG002", name: "Support", status: "Active", lastEdited: "2025-11-11" },
+  { id: "TAG003", name: "Billing", status: "Inactive", lastEdited: "2025-11-10" },
 ];
 
 export default function TagsSection() {
@@ -168,6 +169,7 @@ export default function TagsSection() {
       id: `TAG${String(tags.length + 1).padStart(3, "0")}`,
       name: newName,
       status: "Active",
+      lastEdited: new Date().toISOString().slice(0, 10), // Set current date
     };
     setTags([...tags, newItem]);
     toast({
@@ -191,7 +193,7 @@ export default function TagsSection() {
       setTags(
         tags.map(item =>
           item.id === editingItem.id
-            ? { ...item, name: editName, status: editStatus }
+            ? { ...item, name: editName, status: editStatus, lastEdited: new Date().toISOString().slice(0, 10) } // Update lastEdited
             : item
         )
       );
@@ -274,13 +276,22 @@ export default function TagsSection() {
                       {renderSortIcon("status")}
                     </div>
                   </th>
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("lastEdited")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Last Edited
+                      {renderSortIcon("lastEdited")}
+                    </div>
+                  </th>
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {getFilteredAndSortedData().length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={4} className="text-center py-8 text-muted-foreground">
                       No tags found.
                     </td>
                   </tr>
@@ -299,6 +310,7 @@ export default function TagsSection() {
                           {item.status}
                         </span>
                       </td>
+                      <td className="py-2 px-3">{item.lastEdited}</td>
                       <td className="py-2 px-3">
                         <div>
                           <DropdownMenu>

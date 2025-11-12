@@ -795,7 +795,7 @@ export default function TeamManagementSection() {
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold">{teamToDelete?.teamName}</span>? This action cannot be undone.
+              Are you sure you want to delete <span className="font-semibold break-all">{teamToDelete?.teamName}</span>? This action cannot be undone.
             </p>
           </div>
 

@@ -941,7 +941,7 @@ export default function UserManagementSection() {
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold">{userToDelete?.firstName} {userToDelete?.lastName}</span>? This action cannot be undone.
+              Are you sure you want to delete <span className="font-semibold break-all">{userToDelete?.firstName} {userToDelete?.lastName}</span>? This action cannot be undone.
             </p>
           </div>
 

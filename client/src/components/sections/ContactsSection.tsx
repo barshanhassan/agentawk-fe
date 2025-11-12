@@ -1347,7 +1347,7 @@ export default function ContactsSection() {
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold">{contactToDelete?.name}</span>? This action cannot be undone.
+              Are you sure you want to delete <span className="font-semibold break-all">{contactToDelete?.name}</span>? This action cannot be undone.
             </p>
           </div>
 

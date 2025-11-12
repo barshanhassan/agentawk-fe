@@ -2566,7 +2566,7 @@ export default function CampaignManager() {
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to archive <span className="font-semibold">{campaignToArchive?.name}</span>? You can restore it from the Archived tab.
+              Are you sure you want to archive <span className="font-semibold break-all">{campaignToArchive?.name}</span>? You can restore it from the Archived tab.
             </p>
           </div>
 
@@ -2598,8 +2598,7 @@ export default function CampaignManager() {
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold">{campaignToDelete?.name}</span>? This action cannot be undone.
-            </p>
+                                Are you sure you want to delete <span className="font-semibold break-all">{campaignToDelete?.name}</span>? This action cannot be undone.            </p>
           </div>
 
           {/* Modal Footer */}
