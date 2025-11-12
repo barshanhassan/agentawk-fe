@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"; // Import Switch component
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
 import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
 import { Label } from "@/components/ui/label"; // Added Label
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // Added RadioGroup imports
 import { useToast } from "@/hooks/use-toast";
 
 export default function WhatsAppManagerPage() {
@@ -34,22 +35,88 @@ export default function WhatsAppManagerPage() {
   const [isConnected, setIsConnected] = useState(Math.random() < 0.5);
   const [accountHealth, setAccountHealth] = useState(Math.random());
 
+  // Helper TimePicker Component
+  interface TimePickerProps {
+    hour: string;
+    minute: string;
+    period: string;
+    onHourChange: (value: string) => void;
+    onMinuteChange: (value: string) => void;
+    onPeriodChange: (value: string) => void;
+    isDisabled?: boolean;
+  }
+
+  const TimePicker: React.FC<TimePickerProps> = ({ hour, minute, period, onHourChange, onMinuteChange, onPeriodChange, isDisabled = false }) => (
+    <div className="flex gap-2">
+      <Select value={hour} onValueChange={onHourChange} disabled={isDisabled}>
+        <SelectTrigger className="w-[80px]">
+          <SelectValue placeholder="HH" />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(h => (
+            <SelectItem key={h} value={h}>{h}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={minute} onValueChange={onMinuteChange} disabled={isDisabled}>
+        <SelectTrigger className="w-[80px]">
+          <SelectValue placeholder="MM" />
+        </SelectTrigger>
+        <SelectContent>
+          {['00', '15', '30', '45'].map(m => (
+            <SelectItem key={m} value={m}>{m}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={period} onValueChange={onPeriodChange} disabled={isDisabled}>
+        <SelectTrigger className="w-[95px]">
+          <SelectValue placeholder="AM/PM" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="AM">AM</SelectItem>
+          <SelectItem value="PM">PM</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   // State for Available Call Hours Modal
   const [showAvailableCallHoursModal, setShowAvailableCallHoursModal] = useState(false);
   const [allDay, setAllDay] = useState(false);
+  const [allDaysSelected, setAllDaysSelected] = useState(true); // Added for radio buttons
+
   interface DailyCallHours {
     enabled: boolean;
-    startTime: string;
-    endTime: string;
+    startHour: string;
+    startMinute: string;
+    startPeriod: string;
+    endHour: string;
+    endMinute: string;
+    endPeriod: string;
   }
+
+  const initialDayHours: DailyCallHours = {
+    enabled: false,
+    startHour: '09', startMinute: '00', startPeriod: 'AM',
+    endHour: '05', endMinute: '00', endPeriod: 'PM',
+  };
+
+  const initialAllCallHours: DailyCallHours = {
+    enabled: true,
+    startHour: '09', startMinute: '00', startPeriod: 'AM',
+    endHour: '05', endMinute: '00', endPeriod: 'PM',
+  };
+
+  const [allCallHours, setAllCallHours] = useState<DailyCallHours>(initialAllCallHours); // For "All days" radio option
+
   const initialDailyCallHours: Record<string, DailyCallHours> = {
-    Monday: { enabled: false, startTime: '09:00', endTime: '17:00' },
-    Tuesday: { enabled: false, startTime: '09:00', endTime: '17:00' },
-    Wednesday: { enabled: false, startTime: '09:00', endTime: '17:00' },
-    Thursday: { enabled: false, startTime: '09:00', endTime: '17:00' },
-    Friday: { enabled: false, startTime: '09:00', endTime: '17:00' },
-    Saturday: { enabled: false, startTime: '09:00', endTime: '17:00' },
-    Sunday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Monday: { ...initialDayHours },
+    Tuesday: { ...initialDayHours },
+    Wednesday: { ...initialDayHours },
+    Thursday: { ...initialDayHours },
+    Friday: { ...initialDayHours },
+    Saturday: { ...initialDayHours },
+    Sunday: { ...initialDayHours },
   };
   const [dailyCallHours, setDailyCallHours] = useState<Record<string, DailyCallHours>>(initialDailyCallHours);
 
@@ -61,6 +128,27 @@ export default function WhatsAppManagerPage() {
   const [unavailableEndTime, setUnavailableEndTime] = useState('23:59');
   const [unavailableReason, setUnavailableReason] = useState('');
 
+  const categoryOptions = [
+    "Automotive", "Beauty", "Apparel", "Education", "Entertainment",
+    "Event Planning", "Finance", "Grocery", "Government", "Hotel",
+    "Health", "Nonprofit", "Professional Services", "Retail", "Travel",
+    "Restaurant", "Other"
+  ];
+
+  // Handle profile photo drag and drop
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files && files[0]) {
+      setProfilePhotoFile(files[0]);
+      setProfilePhotoPreviewUrl(URL.createObjectURL(files[0]));
+    }
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files[0]) {
@@ -69,9 +157,29 @@ export default function WhatsAppManagerPage() {
     }
   };
 
+
   const handleSaveAvailableCallHours = () => {
-    if (!allDay) {
-      const enabledDays = Object.values(dailyCallHours).filter(day => day.enabled);
+    if (allDay) {
+      // If 24/7 is enabled, no further validation needed for specific hours
+      console.log("Saving Available Call Hours (24/7):", { allDay: true });
+    } else if (allDaysSelected) {
+      // Validate "All days" single time range
+      const { startHour, startMinute, startPeriod, endHour, endMinute, endPeriod } = allCallHours;
+      const startTime24 = (parseInt(startHour) % 12) + (startPeriod === 'PM' ? 12 : 0);
+      const endTime24 = (parseInt(endHour) % 12) + (endPeriod === 'PM' ? 12 : 0);
+
+      if (startTime24 > endTime24 || (startTime24 === endTime24 && parseInt(startMinute) >= parseInt(endMinute))) {
+        toast({
+          title: "Invalid Time Range",
+          description: "Start time must be before end time for all days.",
+          variant: "destructive",
+        });
+        return;
+      }
+      console.log("Saving Available Call Hours (All days):", { allDay: false, allDaysSelected: true, allCallHours });
+    } else {
+      // Validate "Per day" time ranges
+      const enabledDays = Object.keys(dailyCallHours).filter(day => dailyCallHours[day].enabled);
       if (enabledDays.length === 0) {
         toast({
           title: "Missing Fields",
@@ -81,9 +189,12 @@ export default function WhatsAppManagerPage() {
         return;
       }
 
-      for (const day of Object.keys(dailyCallHours)) {
+      for (const day of enabledDays) {
         const hours = dailyCallHours[day];
-        if (hours.enabled && hours.startTime >= hours.endTime) {
+        const startTime24 = (parseInt(hours.startHour) % 12) + (hours.startPeriod === 'PM' ? 12 : 0);
+        const endTime24 = (parseInt(hours.endHour) % 12) + (hours.endPeriod === 'PM' ? 12 : 0);
+
+        if (startTime24 > endTime24 || (startTime24 === endTime24 && parseInt(hours.startMinute) >= parseInt(hours.endMinute))) {
           toast({
             title: "Invalid Time Range",
             description: `For ${day}, start time must be before end time.`,
@@ -92,13 +203,9 @@ export default function WhatsAppManagerPage() {
           return;
         }
       }
+      console.log("Saving Available Call Hours (Per day):", { allDay: false, allDaysSelected: false, dailyCallHours });
     }
 
-    // Here you would typically send this data to a backend
-    console.log("Saving Available Call Hours:", {
-      allDay,
-      dailyCallHours: allDay ? "24/7" : dailyCallHours,
-    });
     toast({
       title: "Settings Saved",
       description: "Available call hours have been updated.",
@@ -106,6 +213,8 @@ export default function WhatsAppManagerPage() {
     setShowAvailableCallHoursModal(false);
     // Reset state
     setAllDay(false);
+    setAllDaysSelected(true); // Reset to "All days" radio option
+    setAllCallHours(initialAllCallHours);
     setDailyCallHours(initialDailyCallHours);
   };
 
@@ -560,7 +669,7 @@ export default function WhatsAppManagerPage() {
 
       {/* Available Call Hours Modal */}
       <Dialog open={showAvailableCallHoursModal} onOpenChange={setShowAvailableCallHoursModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className={`${!allDay && !allDaysSelected ? "max-w-[45rem] w-fit" : "max-w-[22.5rem]"}`}>
           <DialogHeader className="mb-2">
             <DialogTitle>Setup Available Call Hours</DialogTitle>
           </DialogHeader>
@@ -577,59 +686,128 @@ export default function WhatsAppManagerPage() {
             </div>
 
             {!allDay && (
-              <div className="space-y-4">
-                {Object.keys(dailyCallHours).map((day) => (
-                  <div key={day} className="p-4 border rounded-lg space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <Checkbox
-                        id={`checkbox-${day}`}
-                        checked={dailyCallHours[day].enabled}
-                        onCheckedChange={(checked) => {
-                          setDailyCallHours((prev) => ({
-                            ...prev,
-                            [day]: { ...prev[day], enabled: checked as boolean },
-                          }));
-                        }}
+              <>
+                <RadioGroup
+                  value={allDaysSelected ? "allDays" : "perDay"}
+                  onValueChange={(value) => setAllDaysSelected(value === "allDays")}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="allDays" id="allDays" />
+                    <Label htmlFor="allDays">All days</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="perDay" id="perDay" />
+                    <Label htmlFor="perDay">Per day</Label>
+                  </div>
+                </RadioGroup>
+
+                {allDaysSelected ? (
+                  <div className="p-4 border rounded-lg space-y-4 w-fit">
+                    <Label className="text-sm font-bold">All days</Label>
+                    <div className="flex flex-col items-start justify-between space-y-2">
+                      <Label className="text-sm">Start time</Label>
+                      <TimePicker
+                        hour={allCallHours.startHour}
+                        minute={allCallHours.startMinute}
+                        period={allCallHours.startPeriod}
+                        onHourChange={(value) => setAllCallHours(prev => ({ ...prev, startHour: value }))}
+                        onMinuteChange={(value) => setAllCallHours(prev => ({ ...prev, startMinute: value }))}
+                        onPeriodChange={(value) => setAllCallHours(prev => ({ ...prev, startPeriod: value }))}
                       />
-                      <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold">
-                        {day}
-                      </Label>
                     </div>
-                    {dailyCallHours[day].enabled && (
-                      <div className="flex gap-4">
-                        <div className="flex-1">
-                          <Label htmlFor={`start-time-${day}`} className="text-sm font-medium text-foreground">Start Time</Label>
-                          <Input
-                            id={`start-time-${day}`}
-                            type="time"
-                            value={dailyCallHours[day].startTime}
-                            onChange={(e) =>
+                    <div className="flex flex-col items-start justify-between space-y-2">
+                      <Label className="text-sm">End time</Label>
+                      <TimePicker
+                        hour={allCallHours.endHour}
+                        minute={allCallHours.endMinute}
+                        period={allCallHours.endPeriod}
+                        onHourChange={(value) => setAllCallHours(prev => ({ ...prev, endHour: value }))}
+                        onMinuteChange={(value) => setAllCallHours(prev => ({ ...prev, endMinute: value }))}
+                        onPeriodChange={(value) => setAllCallHours(prev => ({ ...prev, endPeriod: value }))}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-4 max-h-[40vh] overflow-y-scroll">
+                    {Object.keys(dailyCallHours).map((day) => (
+                      <div key={day} className="p-4 border rounded-lg space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`checkbox-${day}`}
+                            checked={dailyCallHours[day].enabled}
+                            onCheckedChange={(checked) => {
                               setDailyCallHours((prev) => ({
                                 ...prev,
-                                [day]: { ...prev[day], startTime: e.target.value },
-                              }))
-                            }
+                                [day]: { ...prev[day], enabled: checked as boolean },
+                              }));
+                            }}
                           />
+                          <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold">
+                            {day}
+                          </Label>
                         </div>
-                        <div className="flex-1">
-                          <Label htmlFor={`end-time-${day}`} className="text-sm font-medium text-foreground">End Time</Label>
-                          <Input
-                            id={`end-time-${day}`}
-                            type="time"
-                            value={dailyCallHours[day].endTime}
-                            onChange={(e) =>
-                              setDailyCallHours((prev) => ({
-                                ...prev,
-                                [day]: { ...prev[day], endTime: e.target.value },
-                              }))
-                            }
-                          />
+                        <div className="space-y-3">
+                          <div className="flex flex-col items-start justify-between space-y-2">
+                            <Label className="text-sm text-foreground">Start time</Label>
+                            <TimePicker
+                              hour={dailyCallHours[day].startHour}
+                              minute={dailyCallHours[day].startMinute}
+                              period={dailyCallHours[day].startPeriod}
+                              onHourChange={(value) =>
+                                setDailyCallHours((prev) => ({
+                                  ...prev,
+                                  [day]: { ...prev[day], startHour: value },
+                                }))
+                              }
+                              onMinuteChange={(value) =>
+                                setDailyCallHours((prev) => ({
+                                  ...prev,
+                                  [day]: { ...prev[day], startMinute: value },
+                                }))
+                              }
+                              onPeriodChange={(value) =>
+                                setDailyCallHours((prev) => ({
+                                  ...prev,
+                                  [day]: { ...prev[day], startPeriod: value },
+                                }))
+                              }
+                              isDisabled={!dailyCallHours[day].enabled}
+                            />
+                          </div>
+                          <div className="flex flex-col items-start justify-between space-y-2">
+                            <Label className="text-sm text-foreground">End time</Label>
+                            <TimePicker
+                              hour={dailyCallHours[day].endHour}
+                              minute={dailyCallHours[day].endMinute}
+                              period={dailyCallHours[day].endPeriod}
+                              onHourChange={(value) =>
+                                setDailyCallHours((prev) => ({
+                                  ...prev,
+                                  [day]: { ...prev[day], endHour: value },
+                                }))
+                              }
+                              onMinuteChange={(value) =>
+                                setDailyCallHours((prev) => ({
+                                  ...prev,
+                                  [day]: { ...prev[day], endMinute: value },
+                                }))
+                              }
+                              onPeriodChange={(value) =>
+                                setDailyCallHours((prev) => ({
+                                  ...prev,
+                                  [day]: { ...prev[day], endPeriod: value },
+                                }))
+                              }
+                              isDisabled={!dailyCallHours[day].enabled}
+                            />
+                          </div>
                         </div>
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
           <div className="flex gap-2 justify-end mt-2">
