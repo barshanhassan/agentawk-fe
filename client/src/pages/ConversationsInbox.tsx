@@ -1645,7 +1645,7 @@ export default function ConversationsInbox() {
                         key={index}
                         variant="outline"
                         size="sm"
-                        className="rounded-full text-xs h-7"
+                        className="rounded-full text-xs h-7 bg-slate-200/75"
                         onClick={() => setMessageText(reply)}
                       >
                         {reply}
@@ -1868,40 +1868,6 @@ export default function ConversationsInbox() {
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-sm">Custom Attributes</h4>
-                    <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-attribute">
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      const attrs = customAttributesByConv[selectedConversation || 1] || {};
-                      return Object.entries(attrs).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
-                        >
-                          <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
-                          <button
-                            onClick={() => {
-                              const newAttrs = { ...attrs };
-                              delete newAttrs[key];
-                              setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation || 1]: newAttrs });
-                            }}
-                            className="hover:text-blue-900 flex-shrink-0 border rounded"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-sm">Involved Teams</h4>
                     <Button variant="ghost" size="sm" onClick={handleOpenTeamsModal} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-teams">
                       Add
@@ -1971,6 +1937,39 @@ export default function ConversationsInbox() {
                 </div>
 
                 <Separator />
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm">Custom Attributes</h4>
+                    <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-attribute">
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const attrs = customAttributesByConv[selectedConversation || 1] || {};
+                      return Object.entries(attrs).map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                        >
+                          <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
+                          <button
+                            onClick={() => {
+                              const newAttrs = { ...attrs };
+                              delete newAttrs[key];
+                              setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation || 1]: newAttrs });
+                            }}
+                            className="hover:text-blue-900 flex-shrink-0 border rounded"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
+                <Separator />
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -1987,7 +1986,7 @@ export default function ConversationsInbox() {
                     {(() => {
                       const notes = notesByConv[selectedConversation || 1] || [];
                       return notes.map((note, index) => (
-                        <div key={index} className="text-xs bg-gray-100 p-2 rounded">
+                        <div key={index} className="text-xs bg-slate-200/75 p-2 rounded">
                           {note}
                         </div>
                       ));
@@ -2770,12 +2769,36 @@ export default function ConversationsInbox() {
             <DialogHeader>
               <DialogTitle>Add Tags</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
+            <div className="space-y-1 py-2">
+              <label className="text-sm font-medium text-foreground">Select Tags</label>
+              {/* Selected Tags */}
+              {selectedTagsForModal.length > 0 && (
+                <div className="flex flex-wrap gap-2 pb-1">
+                  {selectedTagsForModal.map(tagId => {
+                    const tag = tagOptions.find(t => t.id === tagId);
+                    return (
+                      <div
+                        key={tagId}
+                        className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                      >
+                        {tag?.name}
+                        <button
+                          onClick={() => setSelectedTagsForModal(selectedTagsForModal.filter(t => t !== tagId))}
+                          className="hover:text-blue-900"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
               <CustomDropdown
                 options={tagOptions}
                 selected={selectedTagsForModal}
                 onChange={setSelectedTagsForModal}
                 placeholder="Select tags"
+                width="100%"
               />
             </div>
             <DialogFooter>
@@ -2791,7 +2814,7 @@ export default function ConversationsInbox() {
             <DialogHeader>
               <DialogTitle>Add Note</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
+            <div className="py-2">
               <Textarea
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
