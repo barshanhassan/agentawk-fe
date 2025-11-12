@@ -139,6 +139,7 @@ export default function WhatsAppManagerPage() {
   const [unavailableReason, setUnavailableReason] = useState('');
 
   const [showIceBreakersModal, setShowIceBreakersModal] = useState(false);
+  const [showCommandsModal, setShowCommandsModal] = useState(false);
   const [templatePhoneNumbers, setTemplatePhoneNumbers] = useState<string[]>([""]); // For Ice Breakers recipients
 
   interface UnavailablePeriod {
@@ -636,7 +637,8 @@ export default function WhatsAppManagerPage() {
                   <h4 className="font-semibold text-base mb-1">Commands</h4>
                   <p className="text-sm text-muted-foreground">These are special keywords that tell the WhatsApp bot what to do.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  onClick={() => setShowCommandsModal(true)}>
                   Edit
                 </Button>
               </div>
@@ -1155,6 +1157,7 @@ export default function WhatsAppManagerPage() {
                   selectedMediaFile={null}
                   templateButtons={[]}
                   variableSamples={{}}
+                  showMessage={false}
                   containerClassName="flex-1 flex items-center justify-center min-h-0"
                   phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                 />
@@ -1176,6 +1179,113 @@ export default function WhatsAppManagerPage() {
                 onClick={() => {
                   console.log("Save Ice Breakers");
                   setShowIceBreakersModal(false);
+                }}
+                disabled={templatePhoneNumbers.some(p => p.trim() === "")}
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Commands Modal */}
+      <Dialog open={showCommandsModal} onOpenChange={setShowCommandsModal}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Edit Commands</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex gap-4">
+            {/* Left: Form */}
+            <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
+              <div className="space-y-6 pl-1 pb-1">
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Command Details</h3>
+                  <p className="text-sm text-muted-foreground">Configure your commands here.</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Commands (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
+                  <div className="space-y-2">
+                    {templatePhoneNumbers.map((phone, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Command keyword"
+                          value={phone}
+                          onChange={(e) => {
+                            const newNumbers = [...templatePhoneNumbers];
+                            newNumbers[index] = e.target.value;
+                            setTemplatePhoneNumbers(newNumbers);
+                          }}
+                          className="border-input flex-1"
+                        />
+                        {templatePhoneNumbers.length > 1 && (
+                          <button
+                            onClick={() => {
+                              const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
+                              setTemplatePhoneNumbers(newNumbers);
+                            }}
+                            className="text-muted-foreground hover:text-foreground transition-colors border-[]"
+                          >
+                            <X size={18} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add another command button */}
+                  {templatePhoneNumbers.length < 5 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 text-xs"
+                      disabled={templatePhoneNumbers.some(p => p.trim() === "")}
+                      onClick={() => {
+                        setTemplatePhoneNumbers([...templatePhoneNumbers, ""]);
+                      }}
+                    >
+                      <Plus size={14} className="mr-1" />
+                      Add another command
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Template Preview */}
+            <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
+              <div className="flex flex-col h-full">
+                <h3 className="font-semibold text-lg mb-1">Commands Preview</h3>
+                <TemplatePreview
+                  headerText={""}
+                  bodyText={""}
+                  footerText={""}
+                  selectedMediaFile={null}
+                  templateButtons={[]}
+                  variableSamples={{}}
+                  showMessage={false}
+                  containerClassName="flex-1 flex items-center justify-center min-h-0"
+                  phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCommandsModal(false)}
+                className="border-input [border-color:hsl(var(--input))] font-normal"
+              >
+                Close
+              </Button>
+              <Button
+                className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => {
+                  console.log("Save Commands");
+                  setShowCommandsModal(false);
                 }}
                 disabled={templatePhoneNumbers.some(p => p.trim() === "")}
               >

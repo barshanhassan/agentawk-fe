@@ -18,6 +18,7 @@ interface TemplatePreviewProps {
 
   // Placeholder text
   placeholderText?: string;
+  showMessage?: boolean;
 }
 
 export default function TemplatePreview({
@@ -32,6 +33,7 @@ export default function TemplatePreview({
   chatAreaClassName = "flex-1 bg-[#ECE5DD] px-4 pt-4 pb-4 overflow-y-auto overflow-x-hidden flex flex-col space-y-3 scrollbar-hide",
   messageBoxClassName = "bg-white rounded-2xl rounded-bl-none px-3 py-2 max-w-xs shadow-sm overflow-hidden",
   placeholderText = "Start typing to see your template preview...",
+  showMessage = true,
 }: TemplatePreviewProps) {
   // Helper to split text by newlines and insert <br /> tags
   const splitByNewlines = (text: string, startKey: number) => {
@@ -244,112 +246,115 @@ export default function TemplatePreview({
             msOverflowStyle: 'none'
           }}
         >
-          {/* Spacer to push message to bottom */}
-          <div className="flex-1 min-h-0"></div>
+                    {/* Spacer to push message to bottom */}
+                    <div className="flex-1 min-h-0"></div>
+                    
+                    {showMessage && (
+                      <>
+                        {/* Template message preview */}
+                        <div className="flex justify-start flex-shrink-0">
+                          <div className={messageBoxClassName} style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                            {/* Media Sample */}
+                            {selectedMediaFile && (
+                              <div className="mb-2 mt-1">
+                                {selectedMediaFile.type.startsWith('image/') ? (
+                                  <img
+                                    src={URL.createObjectURL(selectedMediaFile)}
+                                    alt="Media preview"
+                                    className="max-w-full h-auto rounded max-h-48 object-cover"
+                                  />
+                                ) : selectedMediaFile.type.startsWith('video/') ? (
+                                  <video
+                                    src={URL.createObjectURL(selectedMediaFile)}
+                                    className="max-w-full h-auto rounded max-h-48 object-cover"
+                                    controls
+                                  />
+                                ) : (
+                                  <div className="flex items-center gap-2 p-2 bg-[#F0F0F0] rounded">
+                                    <FileText size={20} className="text-[#666666]" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-[#111B21] truncate">{selectedMediaFile.name}</p>
+                                      <p className="text-xs text-[#666666]">({(selectedMediaFile.size / 1024).toFixed(1)}KB)</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
           
-          {/* Template message preview */}
-          <div className="flex justify-start flex-shrink-0">
-            <div className={messageBoxClassName} style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-              {/* Media Sample */}
-              {selectedMediaFile && (
-                <div className="mb-2 mt-1">
-                  {selectedMediaFile.type.startsWith('image/') ? (
-                    <img
-                      src={URL.createObjectURL(selectedMediaFile)}
-                      alt="Media preview"
-                      className="max-w-full h-auto rounded max-h-48 object-cover"
-                    />
-                  ) : selectedMediaFile.type.startsWith('video/') ? (
-                    <video
-                      src={URL.createObjectURL(selectedMediaFile)}
-                      className="max-w-full h-auto rounded max-h-48 object-cover"
-                      controls
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2 p-2 bg-[#F0F0F0] rounded">
-                      <FileText size={20} className="text-[#666666]" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-[#111B21] truncate">{selectedMediaFile.name}</p>
-                        <p className="text-xs text-[#666666]">({(selectedMediaFile.size / 1024).toFixed(1)}KB)</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Header */}
-              {headerText && (
-                <div className="mb-2">
-                  <p className="text-sm font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                    {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
-                      const variableMatch = part.match(/\{\{([^}]+)\}\}/);
-                      if (variableMatch) {
-                        const variableKey = variableMatch[1];
-                        const value = variableSamples[variableKey];
-                        return (
-                          <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
-                            {value || part}
-                          </span>
-                        );
-                      }
-                      return <span key={idx}>{part}</span>;
-                    })}
-                  </p>
-                </div>
-              )}
-
-              {/* Body */}
-              {bodyText && (
-                <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                  {formatTextWithVariables(bodyText)}
-                </p>
-              )}
-
-              {/* Buttons */}
-              {templateButtons.length > 0 && (
-                <div className="mt-1.5 mb-2.5 space-y-2">
-                  {templateButtons.slice(0, 3).map((button) => (
-                    <div
-                      key={button.id}
-                      className="bg-[#EFEFEF] border border-[#DDDDDD] rounded-lg px-3 py-2 text-center"
-                    >
-                      <p className="text-sm text-[#0064FF] font-normal break-words">
-                        {getButtonDisplayText(button)}
-                      </p>
-                    </div>
-                  ))}
-                  {templateButtons.length > 3 && (
-                    <div className="bg-[#EFEFEF] border border-[#DDDDDD] rounded-lg px-3 py-2 text-center flex items-center justify-center gap-2">
-                      <Play size={14} className="text-[#0064FF]" />
-                      <p className="text-sm text-[#0064FF] font-normal">See all options</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Footer */}
-              {footerText && (
-                <>
-                  <div className="w-[calc(100%+1.5rem)] mt-1 -mx-3" style={{borderTopWidth: "1px", borderTopColor: "#000000", transform: "scaleY(0.25)"}}></div>
-                  <div className="mt-1.5">
-                    <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                      {footerText}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* Placeholder when no content */}
-              {!hasContent && (
-                <p className="text-sm text-[#999999] italic">
-                  {placeholderText}
-                </p>
-              )}
-
-              <p className="text-[0.7rem] text-[#999999] text-right">9:41 AM</p>
-            </div>
-          </div>
-        </div>
+                            {/* Header */}
+                            {headerText && (
+                              <div className="mb-2">
+                                <p className="text-sm font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                  {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+                                    const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                                    if (variableMatch) {
+                                      const variableKey = variableMatch[1];
+                                      const value = variableSamples[variableKey];
+                                      return (
+                                        <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                                          {value || part}
+                                        </span>
+                                      );
+                                    }
+                                    return <span key={idx}>{part}</span>;
+                                  })}
+                                </p>
+                              </div>
+                            )}
+          
+                            {/* Body */}
+                            {bodyText && (
+                              <p className="text-sm text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                {formatTextWithVariables(bodyText)}
+                              </p>
+                            )}
+          
+                            {/* Buttons */}
+                            {templateButtons.length > 0 && (
+                              <div className="mt-1.5 mb-2.5 space-y-2">
+                                {templateButtons.slice(0, 3).map((button) => (
+                                  <div
+                                    key={button.id}
+                                    className="bg-[#EFEFEF] border border-[#DDDDDD] rounded-lg px-3 py-2 text-center"
+                                  >
+                                    <p className="text-sm text-[#0064FF] font-normal break-words">
+                                      {getButtonDisplayText(button)}
+                                    </p>
+                                  </div>
+                                ))}
+                                {templateButtons.length > 3 && (
+                                  <div className="bg-[#EFEFEF] border border-[#DDDDDD] rounded-lg px-3 py-2 text-center flex items-center justify-center gap-2">
+                                    <Play size={14} className="text-[#0064FF]" />
+                                    <p className="text-sm text-[#0064FF] font-normal">See all options</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+          
+                            {/* Footer */}
+                            {footerText && (
+                              <>
+                                <div className="w-[calc(100%+1.5rem)] mt-1 -mx-3" style={{borderTopWidth: "1px", borderTopColor: "#000000", transform: "scaleY(0.25)"}}></div>
+                                <div className="mt-1.5">
+                                  <p className="text-xs text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                    {footerText}
+                                  </p>
+                                </div>
+                              </>
+                            )}
+          
+                            {/* Placeholder when no content */}
+                            {!hasContent && (
+                              <p className="text-sm text-[#999999] italic">
+                                {placeholderText}
+                              </p>
+                            )}
+          
+                            <p className="text-[0.7rem] text-[#999999] text-right">9:41 AM</p>
+                          </div>
+                        </div>
+                      </>
+                    )}        </div>
 
         {/* Input area */}
         <div className="bg-[#E8E8E8] rounded-b-2xl px-4 py-2 flex items-center gap-2" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
