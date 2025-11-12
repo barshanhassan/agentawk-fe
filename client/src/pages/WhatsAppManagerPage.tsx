@@ -9,8 +9,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { UploadCloud } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
 import { Info } from "lucide-react"; // Add Info icon import
 import { Switch } from "@/components/ui/switch"; // Import Switch component
+import { useToast } from "@/hooks/use-toast";
 
 export default function WhatsAppManagerPage() {
+  const { toast } = useToast();
   // State for Business Profile fields
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [profilePhotoPreviewUrl, setProfilePhotoPreviewUrl] = useState<string | null>(null);
@@ -201,7 +203,15 @@ export default function WhatsAppManagerPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                  <Button
+                    onClick={() => {
+                      toast({
+                        title: "Settings Saved",
+                        description: "Profile photo settings have been updated.",
+                      });
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                  >
                     Save
                   </Button>
                 </CardFooter>
@@ -223,7 +233,14 @@ export default function WhatsAppManagerPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled>
+                  <Button
+                    onClick={() => {
+                      toast({
+                        title: "Settings Saved",
+                        description: "Display name settings have been updated.",
+                      });
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled>
                     Save
                   </Button>
                 </CardFooter>
@@ -293,7 +310,15 @@ export default function WhatsAppManagerPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+                  <Button
+                    onClick={() => {
+                      toast({
+                        title: "Settings Saved",
+                        description: "Business information settings have been updated.",
+                      });
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                  >
                     Save
                   </Button>
                 </CardFooter>
@@ -359,7 +384,15 @@ export default function WhatsAppManagerPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Settings Saved",
+                    description: "Automation settings have been updated.",
+                  });
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+              >
                 Save
               </Button>
             </CardFooter>
@@ -423,7 +456,15 @@ export default function WhatsAppManagerPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Settings Saved",
+                    description: "Call settings have been updated.",
+                  });
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+              >
                 Save
               </Button>
             </CardFooter>
