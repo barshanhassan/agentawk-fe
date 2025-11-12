@@ -117,7 +117,7 @@ const DeveloperSettingsSection = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h4 className="font-semibold text-base">Webhooks</h4>
             <p className="text-sm text-muted-foreground">Configure webhooks to receive delivery reports of your WhatsApp template messages.</p>

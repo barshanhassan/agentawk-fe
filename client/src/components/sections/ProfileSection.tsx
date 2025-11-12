@@ -33,7 +33,7 @@ const ProfileSection = ({
       <CardContent className="space-y-6">
         <Separator />
         {/* Profile Info */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
               {profilePictureUrl && profilePictureUrl !== "" ? (
@@ -101,7 +101,7 @@ const ProfileSection = ({
               You have actively denied notifications. Please update your browser notification settings.
             </div>
           )}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-foreground">Enable Desktop Notifications</p>
             <div className="flex items-center gap-2">
               <Button

@@ -24,7 +24,7 @@ const AgentChatsSection = () => {
       <CardContent className="space-y-6">
         <Separator />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h4 className="font-semibold text-base">Auto Assign Conversations</h4>
             <p className="text-sm text-muted-foreground">Assign conversations to your agents automatically using round-robin mechanism.</p>
@@ -38,7 +38,7 @@ const AgentChatsSection = () => {
 
         <Separator />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h4 className="font-semibold text-base">Agent Status</h4>
             <p className="text-sm text-muted-foreground">Enable or disable agents to set status as available/away.</p>
@@ -53,7 +53,7 @@ const AgentChatsSection = () => {
         <Separator />
 
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
                 <div>
                     <h4 className="font-semibold text-base">Auto-Assign Capacity</h4>
                     <p className="text-sm text-muted-foreground">Set the default number of maximum conversations an agent can have at a time. New conversations stay unassigned if an agent reach their limit until an agent becomes available.</p>

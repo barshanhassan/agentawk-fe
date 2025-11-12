@@ -134,7 +134,7 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">Enable two-factor authentication for your user login. For certain countries, two-factor authentication via SMS is not available. <br /> Email can be selected as a backup option to receive the login code.</p>
             <Switch aria-label="Enable two-factor authentication" checked={preferences.twoFactorAuth} onCheckedChange={handleSwitchChange('twoFactorAuth')} />
           </div>
@@ -145,7 +145,7 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
         {/* Auto-hide Conversations */}
         <div className="space-y-2">
           <h4 className="font-semibold text-base">Auto-hide Conversations</h4>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">Enable auto-hide for conversation marked closed by your agents.</p>
             <Switch aria-label="Enable auto-hide conversations" checked={preferences.autoHide} onCheckedChange={handleSwitchChange('autoHide')} />
           </div>
@@ -156,7 +156,7 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
         {/* Disable CSAT */}
         <div className="space-y-2">
           <h4 className="font-semibold text-base">Disable CSAT</h4>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">Disable customer feedback templates for pending chats.</p>
             <Switch aria-label="Disable CSAT" checked={preferences.disableCSAT} onCheckedChange={handleSwitchChange('disableCSAT')} />
           </div>
@@ -167,7 +167,7 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
         {/* Manual Bot to Human Handoff */}
         <div className="space-y-2">
           <h4 className="font-semibold text-base">Manual Bot to Human Handoff</h4>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">Enable agents and supervisors to manually take over a conversation from a bot.<br /><span className="font-bold">Note:</span> Agents and Supervisors must relogin for the changes to take effect.</p>
             <Switch aria-label="Enable manual bot to human handoff" checked={preferences.manualHandoff} onCheckedChange={handleSwitchChange('manualHandoff')} />
           </div>
@@ -178,7 +178,7 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
         {/* Enable Conversation Transcript */}
         <div className="space-y-2">
           <h4 className="font-semibold text-base">Enable Conversation Transcript</h4>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">Conversation transcript is a record of a chat between a customer and an agent.</p>
             <Switch aria-label="Enable conversation transcript" checked={preferences.enableTranscript} onCheckedChange={handleSwitchChange('enableTranscript')} />
           </div>

@@ -353,7 +353,7 @@ export default function WhatsAppManagerPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Welcome Message */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Welcome Message</h4>
                   <p className="text-sm text-muted-foreground">Receive a webhook when people start a chat with your business.</p>
@@ -362,7 +362,7 @@ export default function WhatsAppManagerPage() {
               </div>
 
               {/* Ice Breakers */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Ice Breakers</h4>
                   <p className="text-sm text-muted-foreground">These are common questions that people can easily ask you.</p>
@@ -373,7 +373,7 @@ export default function WhatsAppManagerPage() {
               </div>
 
               {/* Commands */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Commands</h4>
                   <p className="text-sm text-muted-foreground">These are special keywords that tell the WhatsApp bot what to do.</p>
@@ -407,7 +407,7 @@ export default function WhatsAppManagerPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Allow voice calls */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Allow voice calls</h4>
                   <p className="text-sm text-muted-foreground">Make and receive calls with this phone number. Turning on voice calls will allow you to call or request to call people on WhatsApp and send messages that include a call button.</p>
@@ -416,7 +416,7 @@ export default function WhatsAppManagerPage() {
               </div>
 
               {/* Allow people to request a callback for missed calls */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Allow people to request a callback for missed calls</h4>
                   <p className="text-sm text-muted-foreground">If you're unable to answer a call, let people request a call back from you.</p>
@@ -425,7 +425,7 @@ export default function WhatsAppManagerPage() {
               </div>
 
               {/* Display call buttons */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Display call buttons</h4>
                   <p className="text-sm text-muted-foreground">Even if this feature is turned off, people could still call this number from a message containing a call button.</p>
@@ -434,7 +434,7 @@ export default function WhatsAppManagerPage() {
               </div>
 
               {/* Available call hours */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Available call hours</h4>
                   <p className="text-sm text-muted-foreground">Set regular calling hours for your business. If you don’t set your call hours, people will always be able to call you.</p>
@@ -445,7 +445,7 @@ export default function WhatsAppManagerPage() {
               </div>
 
               {/* Temporarily unavailable call hours */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-base mb-1">Temporarily unavailable call hours</h4>
                   <p className="text-sm text-muted-foreground">Set custom times, like holidays or special events, when your business is unable to receive calls.</p>

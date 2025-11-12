@@ -21,7 +21,7 @@ const BotToAgentSection = () => {
       <CardContent className="space-y-6">
         <Separator />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium">Enable bot-to-agent message</p>
           <Switch
             checked={messageEnabled}

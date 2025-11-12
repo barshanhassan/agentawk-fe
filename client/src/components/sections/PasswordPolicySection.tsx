@@ -27,7 +27,7 @@ const PasswordPolicySection = () => {
       <CardContent className="space-y-6">
         <Separator />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium">Enable Password Policy</p>
           <Switch
             checked={policyEnabled}

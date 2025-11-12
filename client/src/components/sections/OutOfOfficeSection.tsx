@@ -49,7 +49,7 @@ const OutOfOfficeSection = () => {
 
         {activeTab === 'weekdays' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-medium">Enabled for weekdays</p>
               <Switch
                 checked={weekdaysEnabled}
@@ -68,7 +68,7 @@ const OutOfOfficeSection = () => {
 
         {activeTab === 'weekend' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-medium">Enabled for weekend</p>
               <Switch
                 checked={weekendEnabled}

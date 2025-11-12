@@ -29,7 +29,7 @@ const AIAssistantsSection = () => {
       <CardContent className="space-y-6">
         <Separator />
         <div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div>
               <h4 className="font-semibold text-base">Content Prompts</h4>
               <p className="text-sm text-muted-foreground">Content prompts enables agents to use AI to rewrite and refine responses in real time during customer conversations.</p>
@@ -63,7 +63,7 @@ const AIAssistantsSection = () => {
 
         <Separator />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h4 className="font-semibold text-base">Customer Analysis</h4>
             <p className="text-sm text-muted-foreground">Customer analysis enables agents to use AI to understand customer conversations to generate summaries, perform sentiment analysis and more.</p>
