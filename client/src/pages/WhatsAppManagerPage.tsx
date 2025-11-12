@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Moved this import here
 import { format } from "date-fns";
 import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
+import TemplatePreview from "@/components/TemplatePreview";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
 import {
   Popover,
@@ -34,6 +35,31 @@ export default function WhatsAppManagerPage() {
   const [about, setAbout] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+
+  const whatsappTemplates = [
+    {
+      id: 1,
+      name: "ice_breaker_template_1",
+      body: "Hello! How can I help you today?",
+      header: "Welcome",
+      footer: "Looking forward to assisting you",
+      variables: [],
+      buttons: [],
+      variableSamples: {}
+    },
+    {
+      id: 2,
+      name: "ice_breaker_template_2",
+      body: "What brings you here?",
+      header: "Greetings",
+      footer: "Let's get started",
+      variables: [],
+      buttons: [],
+      variableSamples: {}
+    },
+  ];
+
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(whatsappTemplates[0]);
 
   // State for active tab
   const [activeTab, setActiveTab] = useState("business-profile");
@@ -136,6 +162,8 @@ export default function WhatsAppManagerPage() {
   const [unavailableStartTime, setUnavailableStartTime] = useState({ hour: '', minute: '', period: '' });
   const [unavailableEndTime, setUnavailableEndTime] = useState({ hour: '', minute: '', period: '' });
   const [unavailableReason, setUnavailableReason] = useState('');
+
+  const [showIceBreakersModal, setShowIceBreakersModal] = useState(false);
 
   interface UnavailablePeriod {
     id: number;
@@ -620,7 +648,8 @@ export default function WhatsAppManagerPage() {
                   <h4 className="font-semibold text-base mb-1">Ice Breakers</h4>
                   <p className="text-sm text-muted-foreground">These are common questions that people can easily ask you.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  onClick={() => setShowIceBreakersModal(true)}>
                   Edit
                 </Button>
               </div>
@@ -1070,6 +1099,169 @@ export default function WhatsAppManagerPage() {
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowUnavailableCallHoursModal(false)} variant="outline" className="border-input font-normal [border-color:hsl(var(--input))]">Cancel</Button>
             <Button onClick={handleCreateUnavailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled={!isUnavailablePeriodFormValid()}>Create</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ice Breakers Modal */}
+      <Dialog open={showIceBreakersModal} onOpenChange={setShowIceBreakersModal}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Edit Ice Breakers</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex gap-4">
+            {/* Left: Form */}
+            <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
+              <div className="space-y-6 pl-1 pb-1">
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Ice Breaker Details</h3>
+                  <p className="text-sm text-muted-foreground">Configure your ice breakers here.</p>
+                </div>
+
+                {/* Undefined Field 1 (formerly Campaign Name) */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      placeholder="Enter value..."
+                      value={""} // Placeholder for new state
+                      onChange={(e) => console.log(e.target.value)} // Placeholder for new state handler
+                      className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      0/100
+                    </span>
+                  </div>
+                </div>
+
+                {/* Undefined Field 2 (formerly Campaign Start Date) */}
+                <div className="flex flex-col gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                        >
+                          <div className="flex items-center">
+                            <Calendar size={14} className="mr-2" />
+                            <span>Pick a date</span>
+                          </div>
+                          <ChevronDown size={14} className="text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={undefined}
+                          onSelect={(date) => console.log(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
+                      <div className="flex items-end space-x-2 mt-2">
+                      <Checkbox id="never-ends-icebreaker" checked={false} onCheckedChange={(checked) => console.log(checked)} />
+                      <label
+                        htmlFor="never-ends-icebreaker"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Never end
+                      </label>
+                    </div>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                          disabled={false}
+                        >
+                          <div className="flex items-center">
+                            <Calendar size={14} className="mr-2" />
+                            <span>Pick a date</span>
+                          </div>
+                          <ChevronDown size={14} className="text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={undefined}
+                          onSelect={(date) => console.log(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Undefined Field 3 (formerly WhatsApp Template Dropdown) */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
+                  <Select
+                    value={selectedTemplate?.name || ""}
+                    onValueChange={(value) => {
+                      setSelectedTemplate(whatsappTemplates.find(t => t.name === value) || null);
+                    }}
+                  >
+                    <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
+                      <SelectValue placeholder="Select a template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {whatsappTemplates.map(template => (
+                        <SelectItem key={template.id} value={template.name}>{template.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Template Preview */}
+            <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
+              <div className="flex flex-col h-full">
+                <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                <TemplatePreview
+                  headerText={selectedTemplate?.header || ""}
+                  bodyText={selectedTemplate?.body || ""}
+                  footerText={selectedTemplate?.footer || ""}
+                  selectedMediaFile={null}
+                  templateButtons={selectedTemplate?.buttons || []}
+                  variableSamples={selectedTemplate?.variableSamples || {}}
+                  containerClassName="flex-1 flex items-center justify-center min-h-0"
+                  phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowIceBreakersModal(false)}
+                className="border-input [border-color:hsl(var(--input))] font-normal"
+              >
+                Close
+              </Button>
+              <Button
+                className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => {
+                  console.log("Save Ice Breakers");
+                  setShowIceBreakersModal(false);
+                }}
+              >
+                Save
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
