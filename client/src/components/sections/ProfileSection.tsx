@@ -5,6 +5,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 
+interface ProfileSectionProps {
+  profilePictureUrl: string;
+  setProfilePictureUrl: (url: string) => void;
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  browserNotificationsDenied: boolean;
+  handleTestNotification: () => void;
+}
+
 const ProfileSection = ({
   profilePictureUrl,
   setProfilePictureUrl,
@@ -12,7 +21,7 @@ const ProfileSection = ({
   setNotificationsEnabled,
   browserNotificationsDenied,
   handleTestNotification,
-}) => {
+}: ProfileSectionProps) => {
   return (
     <>
       <CardHeader>

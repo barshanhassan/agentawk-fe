@@ -255,7 +255,7 @@ export default function TagsSection() {
               <thead className="select-none">
                 <tr className="border-b">
                   <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30 max-w-[20rem]"
                     onClick={() => handleColumnSort("name")}
                   >
                     <div className="flex items-center gap-2">
