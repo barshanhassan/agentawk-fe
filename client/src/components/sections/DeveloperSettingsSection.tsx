@@ -5,8 +5,11 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Eye, EyeOff, Copy, RefreshCw } from "react-feather";
+import { Eye, EyeOff, Copy, RefreshCw, Trash2 } from "react-feather"; // Added Trash2
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
+import { Label } from "@/components/ui/label"; // Added Label
 
 // Function to generate a random API key
 const generateApiKey = (length = 40) => {
@@ -18,10 +21,23 @@ const generateApiKey = (length = 40) => {
   return result;
 };
 
+type WebhookEvent = "Sent Message" | "Delivered Message" | "Read Message" | "Failed Message";
+
+interface Webhook {
+  id: string;
+  url: string;
+  events: WebhookEvent[];
+}
+
 const DeveloperSettingsSection = () => {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showWebhookModal, setShowWebhookModal] = useState(false); // State for webhook modal
+  const [webhookUrl, setWebhookUrl] = useState(''); // State for webhook URL input
+  const [webhookUrlError, setWebhookUrlError] = useState(''); // State for webhook URL error
+  const [selectedEvents, setSelectedEvents] = useState<WebhookEvent[]>([]); // State for selected events
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]); // State for configured webhooks
 
   useEffect(() => {
     setApiKey(generateApiKey());
@@ -40,6 +56,53 @@ const DeveloperSettingsSection = () => {
     toast({
       title: "API Key Regenerated",
       description: "A new API Key has been generated.",
+    });
+  };
+
+  const handleCreateWebhook = () => {
+    if (!webhookUrl.trim()) {
+      setWebhookUrlError("Webhook URL cannot be empty.");
+      return;
+    }
+    // Basic URL validation
+    try {
+      new URL(webhookUrl);
+    } catch (_) {
+      setWebhookUrlError("Please enter a valid URL.");
+      return;
+    }
+
+    if (selectedEvents.length === 0) {
+      toast({
+        title: "Missing Fields",
+        description: "Please select at least one event.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newWebhook: Webhook = {
+      id: `webhook-${Date.now()}`, // Simple unique ID
+      url: webhookUrl,
+      events: selectedEvents,
+    };
+
+    setWebhooks([...webhooks, newWebhook]);
+    toast({
+      title: "Webhook Created",
+      description: "Your webhook has been successfully configured.",
+    });
+    setWebhookUrl('');
+    setSelectedEvents([]);
+    setWebhookUrlError('');
+    setShowWebhookModal(false);
+  };
+
+  const handleDeleteWebhook = (id: string) => {
+    setWebhooks(webhooks.filter(webhook => webhook.id !== id));
+    toast({
+      title: "Webhook Deleted",
+      description: "The webhook has been successfully deleted.",
     });
   };
 
@@ -126,10 +189,35 @@ const DeveloperSettingsSection = () => {
             variant="ghost"
             size="sm"
             className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+            onClick={() => setShowWebhookModal(true)}
           >
             Configure
           </Button>
         </div>
+
+        {webhooks.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-semibold text-base">Configured Webhooks</h4>
+            <div className="border rounded-md p-4 space-y-3">
+              {webhooks.map((webhook) => (
+                <div key={webhook.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium break-all">{webhook.url}</p>
+                    <p className="text-xs text-muted-foreground">{webhook.events.join(', ')}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDeleteWebhook(webhook.id)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </CardContent>
       <CardFooter className="flex justify-end">
@@ -146,6 +234,65 @@ const DeveloperSettingsSection = () => {
           Save
         </Button>
       </CardFooter>
+
+      {/* Webhook Configuration Modal */}
+      <Dialog open={showWebhookModal} onOpenChange={setShowWebhookModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Configure Webhook</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="webhook-url" className="text-sm font-medium text-foreground">Webhook URL<span className="text-red-500 pl-0.5">*</span></Label>
+              <p className="text-sm text-muted-foreground mb-2">Please enter a valid URL to configure a callback.</p>
+              <div className="relative">
+                <Input
+                  id="webhook-url"
+                  placeholder="https://example.com/api/webhook"
+                  value={webhookUrl}
+                  onChange={(e) => {
+                    setWebhookUrl(e.target.value);
+                    setWebhookUrlError(''); // Clear error on change
+                  }}
+                  maxLength={2000}
+                  className={`pr-12 ${webhookUrlError ? 'border-red-500' : ''}`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {webhookUrl.length}/2000
+                </span>
+              </div>
+              {webhookUrlError && <p className="text-xs text-red-500 mt-1">{webhookUrlError}</p>}
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium text-foreground mb-2">Events<span className="text-red-500 pl-0.5">*</span></h4>
+              <p className="text-sm text-muted-foreground mb-2">Select events to retrieve message status update.</p>
+              <div className="space-y-2">
+                {["Sent Message", "Delivered Message", "Read Message", "Failed Message"].map((event) => (
+                  <div key={event} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={event}
+                      checked={selectedEvents.includes(event as WebhookEvent)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedEvents([...selectedEvents, event as WebhookEvent]);
+                        } else {
+                          setSelectedEvents(selectedEvents.filter((e) => e !== event));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={event} className="text-sm font-medium">{event}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button onClick={() => setShowWebhookModal(false)} variant="outline" className="border-input font-normal">Cancel</Button>
+            <Button onClick={handleCreateWebhook} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create Webhook</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
