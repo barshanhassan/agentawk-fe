@@ -38,6 +38,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
 import { AlertCircle } from "lucide-react";
 import TemplatePreview from "@/components/TemplatePreview";
+import { Textarea } from "@/components/ui/textarea";
 
 // Generate a color based on the hash of a name
 const getAvatarColor = (name: string) => {
@@ -325,6 +326,24 @@ export default function ConversationsInbox() {
     { id: "team-4", name: "Marketing Team" },
   ];
 
+  // Tags state per conversation
+  const [tagsByConv, setTagsByConv] = useState<Record<number, string[]>>({
+    1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
+  });
+
+  // Tag options
+  const tagOptions = [
+    { id: "tag-1", name: "VIP" },
+    { id: "tag-2", name: "Lead" },
+    { id: "tag-3", name: "Complaint" },
+    { id: "tag-4", name: "Billing Issue" },
+  ];
+
+  // Notes state per conversation
+  const [notesByConv, setNotesByConv] = useState<Record<number, string[]>>({
+    1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
+  });
+
   // Edit basic details modal state
   const [isEditBasicDetailsOpen, setIsEditBasicDetailsOpen] = useState(false);
   const [editedBasicDetails, setEditedBasicDetails] = useState(basicDetailsByConv[selectedConversation || 1] || {});
@@ -378,6 +397,49 @@ export default function ConversationsInbox() {
       setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation]: selectedTeamsForModal });
     }
     setIsAddTeamsModalOpen(false);
+  };
+
+  // Add tags modal state
+  const [isAddTagsModalOpen, setIsAddTagsModalOpen] = useState(false);
+  const [selectedTagsForModal, setSelectedTagsForModal] = useState<string[]>([]);
+
+  const handleOpenTagsModal = () => {
+    setSelectedTagsForModal(tagsByConv[selectedConversation || 1] || []);
+    setIsAddTagsModalOpen(true);
+  };
+
+  const handleSaveTags = () => {
+    if (selectedConversation) {
+      setTagsByConv({ ...tagsByConv, [selectedConversation]: selectedTagsForModal });
+    }
+    setIsAddTagsModalOpen(false);
+  };
+
+  // Add note modal state
+  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
+  const [newNote, setNewNote] = useState("");
+
+  const handleAddNote = () => {
+    if (selectedConversation) {
+      const currentNotes = notesByConv[selectedConversation] || [];
+      let updatedNotes: string[];
+
+      if (newNote.trim()) {
+        // If there's a new note, replace the last one or add it
+        if (currentNotes.length > 0) {
+          updatedNotes = [...currentNotes.slice(0, currentNotes.length - 1), newNote.trim()];
+        } else {
+          updatedNotes = [newNote.trim()];
+        }
+      } else {
+        // If newNote is empty, clear all notes for this conversation
+        updatedNotes = [];
+      }
+
+      setNotesByConv({ ...notesByConv, [selectedConversation]: updatedNotes });
+      setNewNote("");
+      setIsAddNoteModalOpen(false);
+    }
   };
 
   // Filter modal state
@@ -1871,6 +1933,67 @@ export default function ConversationsInbox() {
                     })()}
                   </div>
                 </div>
+
+                <Separator />
+
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm">Tags</h4>
+                    <Button variant="ghost" size="sm" onClick={handleOpenTagsModal} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-tags">
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const tags = tagsByConv[selectedConversation || 1] || [];
+                      return tags.map((tagId) => {
+                        const tag = tagOptions.find(t => t.id === tagId);
+                        return (
+                          <div
+                            key={tagId}
+                            className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs max-w-full"
+                          >
+                            <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
+                            <button
+                              onClick={() => {
+                                const newTags = tags.filter(t => t !== tagId);
+                                setTagsByConv({ ...tagsByConv, [selectedConversation || 1]: newTags });
+                              }}
+                              className="hover:text-green-900 flex-shrink-0 border rounded"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm">Notes</h4>
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      const currentNotes = notesByConv[selectedConversation || 1] || [];
+                      setNewNote(currentNotes[currentNotes.length - 1] || ""); // Prefill with last note
+                      setIsAddNoteModalOpen(true);
+                    }} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-set-note">
+                      Set
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {(() => {
+                      const notes = notesByConv[selectedConversation || 1] || [];
+                      return notes.map((note, index) => (
+                        <div key={index} className="text-xs bg-gray-100 p-2 rounded">
+                          {note}
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -2642,6 +2765,49 @@ export default function ConversationsInbox() {
             </div>
           </div>
         )}
+
+        {/* Add Tags Modal */}
+        <Dialog open={isAddTagsModalOpen} onOpenChange={setIsAddTagsModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Tags</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <CustomDropdown
+                options={tagOptions}
+                selected={selectedTagsForModal}
+                onChange={setSelectedTagsForModal}
+                placeholder="Select tags"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddTagsModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveTags}>Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Note Modal */}
+        <Dialog open={isAddNoteModalOpen} onOpenChange={setIsAddNoteModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Note</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Type your note here..."
+                className="w-full p-2 border rounded"
+                rows={4}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddNoteModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleAddNote}>Save Note</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

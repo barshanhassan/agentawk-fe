@@ -1221,29 +1221,6 @@ export default function ContactsSection() {
                 </div>
               )}
 
-              {/* Tag Input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Create or select tag"
-                  value={newTagInput}
-                  onChange={(e) => setNewTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  className="flex-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none transition-colors"
-                />
-                <Button
-                  onClick={handleAddTag}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 h-9 font-normal"
-                >
-                  Add
-                </Button>
-              </div>
-
               {/* Available Tags */}
               {allTags.length > 0 && (
                 <div className="mt-3">
