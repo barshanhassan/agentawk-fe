@@ -4,10 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Moved this import here
 import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"; // Added Popover imports
 import { UploadCloud } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
-import { Info } from "lucide-react"; // Add Info icon import
+import { Info, Calendar, ChevronDown } from "lucide-react"; // Add Info icon import
 import { Switch } from "@/components/ui/switch"; // Import Switch component
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
 import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
@@ -122,10 +128,12 @@ export default function WhatsAppManagerPage() {
 
   // State for Unavailable Call Hours Modal
   const [showUnavailableCallHoursModal, setShowUnavailableCallHoursModal] = useState(false);
-  const [unavailableStartDate, setUnavailableStartDate] = useState('');
-  const [unavailableEndDate, setUnavailableEndDate] = useState('');
-  const [unavailableStartTime, setUnavailableStartTime] = useState('00:00');
-  const [unavailableEndTime, setUnavailableEndTime] = useState('23:59');
+  const [unavailableStartDate, setUnavailableStartDate] = useState<Date | undefined>(undefined);
+  const [unavailableEndDate, setUnavailableEndDate] = useState<Date | undefined>(undefined);
+  const [unavailableStartDatePickerOpen, setUnavailableStartDatePickerOpen] = useState(false);
+  const [unavailableEndDatePickerOpen, setUnavailableEndDatePickerOpen] = useState(false);
+  const [unavailableStartTime, setUnavailableStartTime] = useState({ hour: '12', minute: '00', period: 'AM' });
+  const [unavailableEndTime, setUnavailableEndTime] = useState({ hour: '11', minute: '59', period: 'PM' });
   const [unavailableReason, setUnavailableReason] = useState('');
 
   const categoryOptions = [
@@ -219,7 +227,7 @@ export default function WhatsAppManagerPage() {
   };
 
   const handleCreateUnavailableCallHours = () => {
-    if (!unavailableStartDate || !unavailableEndDate || !unavailableStartTime || !unavailableEndTime) {
+    if (!unavailableStartDate || !unavailableEndDate || !unavailableStartTime.hour || !unavailableStartTime.minute || !unavailableStartTime.period || !unavailableEndTime.hour || !unavailableEndTime.minute || !unavailableEndTime.period) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields.",
@@ -227,12 +235,38 @@ export default function WhatsAppManagerPage() {
       });
       return;
     }
+
+    // Basic validation for start date not being after end date
+    if (unavailableStartDate && unavailableEndDate && unavailableStartDate > unavailableEndDate) {
+      toast({
+        title: "Invalid Date Range",
+        description: "Start date cannot be after end date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic validation for start time not being after end time if dates are the same
+    if (unavailableStartDate?.toDateString() === unavailableEndDate?.toDateString()) {
+      const startHour24 = (parseInt(unavailableStartTime.hour) % 12) + (unavailableStartTime.period === 'PM' ? 12 : 0);
+      const endHour24 = (parseInt(unavailableEndTime.hour) % 12) + (unavailableEndTime.period === 'PM' ? 12 : 0);
+
+      if (startHour24 > endHour24 || (startHour24 === endHour24 && parseInt(unavailableStartTime.minute) >= parseInt(unavailableEndTime.minute))) {
+        toast({
+          title: "Invalid Time Range",
+          description: "Start time cannot be after or equal to end time on the same day.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     // Here you would typically send this data to a backend
     console.log("Creating Unavailable Call Hours:", {
-      unavailableStartDate,
-      unavailableEndDate,
-      unavailableStartTime,
-      unavailableEndTime,
+      unavailableStartDate: unavailableStartDate?.toLocaleDateString(),
+      unavailableEndDate: unavailableEndDate?.toLocaleDateString(),
+      unavailableStartTime: `${unavailableStartTime.hour}:${unavailableStartTime.minute} ${unavailableStartTime.period}`,
+      unavailableEndTime: `${unavailableEndTime.hour}:${unavailableEndTime.minute} ${unavailableEndTime.period}`,
       unavailableReason,
     });
     toast({
@@ -241,10 +275,10 @@ export default function WhatsAppManagerPage() {
     });
     setShowUnavailableCallHoursModal(false);
     // Reset state
-    setUnavailableStartDate('');
-    setUnavailableEndDate('');
-    setUnavailableStartTime('00:00');
-    setUnavailableEndTime('23:59');
+    setUnavailableStartDate(undefined);
+    setUnavailableEndDate(undefined);
+    setUnavailableStartTime({ hour: '12', minute: '00', period: 'AM' });
+    setUnavailableEndTime({ hour: '11', minute: '59', period: 'PM' });
     setUnavailableReason('');
   };
 
@@ -811,7 +845,7 @@ export default function WhatsAppManagerPage() {
             )}
           </div>
           <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowAvailableCallHoursModal(false)} variant="outline" className="border-input font-normal">Cancel</Button>
+            <Button onClick={() => setShowAvailableCallHoursModal(false)} variant="outline" className="border-input font-normal [border-color:hsl(var(--input))]">Cancel</Button>
             <Button onClick={handleSaveAvailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Save</Button>
           </div>
         </DialogContent>
@@ -819,50 +853,145 @@ export default function WhatsAppManagerPage() {
 
       {/* Unavailable Call Hours Modal */}
       <Dialog open={showUnavailableCallHoursModal} onOpenChange={setShowUnavailableCallHoursModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-[24rem]">
           <DialogHeader>
             <DialogTitle>Create New Unavailable Period</DialogTitle>
-            <p className="text-sm text-muted-foreground">Set a period when your business will be temporarily unavailable for calls.</p>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex-1">
+            <div className="flex flex-col space-y-1">
               <Label htmlFor="unavailable-start-date" className="text-sm font-medium text-foreground">Start Date<span className="text-red-500 pl-0.5">*</span></Label>
-              <Input
-                id="unavailable-start-date"
-                type="date"
-                value={unavailableStartDate}
-                onChange={(e) => setUnavailableStartDate(e.target.value)}
-              />
+              <Popover open={unavailableStartDatePickerOpen} onOpenChange={setUnavailableStartDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                  >
+                    <div className="flex items-center">
+                      <Calendar size={14} className="mr-2" />
+                      {unavailableStartDate ? unavailableStartDate.toLocaleDateString() : <span>Pick a date</span>}
+                    </div>
+                    <ChevronDown size={14} className="text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent
+                    mode="single"
+                    selected={unavailableStartDate}
+                    onSelect={(date: Date | undefined) => {
+                      setUnavailableStartDate(date);
+                      if (unavailableEndDate && date && date > unavailableEndDate) {
+                        setUnavailableEndDate(undefined);
+                      }
+                      setUnavailableStartDatePickerOpen(false);
+                    }}
+                    disabled={unavailableEndDate ? { after: unavailableEndDate } : undefined}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
-            <div className="flex-1">
+            <div className="flex flex-col space-y-1">
               <Label htmlFor="unavailable-start-time" className="text-sm font-medium text-foreground">Start Time<span className="text-red-500 pl-0.5">*</span></Label>
-              <Input
-                id="unavailable-start-time"
-                type="time"
-                value={unavailableStartTime}
-                onChange={(e) => setUnavailableStartTime(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Select value={unavailableStartTime.hour} onValueChange={(value) => setUnavailableStartTime(t => ({ ...t, hour: value }))}>
+                  <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                    <SelectValue placeholder="HH" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
+                      <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={unavailableStartTime.minute} onValueChange={(value) => setUnavailableStartTime(t => ({ ...t, minute: value }))}>
+                  <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                    <SelectValue placeholder="MM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
+                      <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={unavailableStartTime.period} onValueChange={(value) => setUnavailableStartTime(t => ({ ...t, period: value }))}>
+                  <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                    <SelectValue placeholder="AM/PM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="PM">PM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
-            <div className="flex-1">
+            <div className="flex flex-col space-y-1">
               <Label htmlFor="unavailable-end-date" className="text-sm font-medium text-foreground">End Date<span className="text-red-500 pl-0.5">*</span></Label>
-              <Input
-                id="unavailable-end-date"
-                type="date"
-                value={unavailableEndDate}
-                onChange={(e) => setUnavailableEndDate(e.target.value)}
-              />
+              <Popover open={unavailableEndDatePickerOpen} onOpenChange={setUnavailableEndDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
+                  >
+                    <div className="flex items-center">
+                      <Calendar size={14} className="mr-2" />
+                      {unavailableEndDate ? unavailableEndDate.toLocaleDateString() : <span>Pick a date</span>}
+                    </div>
+                    <ChevronDown size={14} className="text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent
+                    mode="single"
+                    selected={unavailableEndDate}
+                    onSelect={(date: Date | undefined) => {
+                      setUnavailableEndDate(date);
+                      if (unavailableStartDate && date && date < unavailableStartDate) {
+                        setUnavailableStartDate(undefined);
+                      }
+                      setUnavailableEndDatePickerOpen(false);
+                    }}
+                    disabled={unavailableStartDate ? { before: unavailableStartDate } : undefined}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            
-            <div className="flex-1">
+
+            <div className="flex flex-col space-y-1">
               <Label htmlFor="unavailable-end-time" className="text-sm font-medium text-foreground">End Time<span className="text-red-500 pl-0.5">*</span></Label>
-              <Input
-                id="unavailable-end-time"
-                type="time"
-                value={unavailableEndTime}
-                onChange={(e) => setUnavailableEndTime(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Select value={unavailableEndTime.hour} onValueChange={(value) => setUnavailableEndTime(t => ({ ...t, hour: value }))}>
+                  <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                    <SelectValue placeholder="HH" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
+                      <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={unavailableEndTime.minute} onValueChange={(value) => setUnavailableEndTime(t => ({ ...t, minute: value }))}>
+                  <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                    <SelectValue placeholder="MM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
+                      <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={unavailableEndTime.period} onValueChange={(value) => setUnavailableEndTime(t => ({ ...t, period: value }))}>
+                  <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                    <SelectValue placeholder="AM/PM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="PM">PM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>
@@ -876,7 +1005,7 @@ export default function WhatsAppManagerPage() {
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowUnavailableCallHoursModal(false)} variant="outline" className="border-input font-normal">Cancel</Button>
+            <Button onClick={() => setShowUnavailableCallHoursModal(false)} variant="outline" className="border-input font-normal [border-color:hsl(var(--input))]">Cancel</Button>
             <Button onClick={handleCreateUnavailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create</Button>
           </div>
         </DialogContent>
