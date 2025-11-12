@@ -140,6 +140,29 @@ export default function WhatsAppManagerPage() {
 
   const [showIceBreakersModal, setShowIceBreakersModal] = useState(false);
   const [showCommandsModal, setShowCommandsModal] = useState(false);
+
+  interface Command {
+    id: number;
+    commandText: string;
+    commandDescription: string;
+  }
+  const [commands, setCommands] = useState<Command[]>([{ id: Date.now(), commandText: "", commandDescription: "" }]);
+
+  const handleCommandChange = (index: number, field: keyof Command, value: string) => {
+    const newCommands = [...commands];
+    newCommands[index] = { ...newCommands[index], [field]: value };
+    setCommands(newCommands);
+  };
+
+  const addCommand = () => {
+    if (commands.length < 5) {
+      setCommands([...commands, { id: Date.now(), commandText: "", commandDescription: "" }]);
+    }
+  };
+
+  const removeCommand = (id: number) => {
+    setCommands(commands.filter(cmd => cmd.id !== id));
+  };
   const [templatePhoneNumbers, setTemplatePhoneNumbers] = useState<string[]>([""]); // For Ice Breakers recipients
 
   interface UnavailablePeriod {
@@ -1205,50 +1228,60 @@ export default function WhatsAppManagerPage() {
                   <p className="text-sm text-muted-foreground">Configure your commands here.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Commands (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
-                  <div className="space-y-2">
-                    {templatePhoneNumbers.map((phone, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <Input
-                          placeholder="Command keyword"
-                          value={phone}
-                          onChange={(e) => {
-                            const newNumbers = [...templatePhoneNumbers];
-                            newNumbers[index] = e.target.value;
-                            setTemplatePhoneNumbers(newNumbers);
-                          }}
-                          className="border-input flex-1"
-                        />
-                        {templatePhoneNumbers.length > 1 && (
-                          <button
-                            onClick={() => {
-                              const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
-                              setTemplatePhoneNumbers(newNumbers);
-                            }}
-                            className="text-muted-foreground hover:text-foreground transition-colors border-[]"
-                          >
-                            <X size={18} />
-                          </button>
-                        )}
+                  <label className="text-sm font-medium block mb-2">Commands (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
+                  <div className="space-y-4">
+                    {commands.map((command, index) => (
+                      <div key={command.id} className="flex flex-col gap-4 p-4 border rounded-lg border border-input [border-color:hsl(var(--input))]">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex justify-between items-end">
+                              <label className="text-sm font-medium text-foreground">Command Text (32 chars)<span className="text-red-500 pl-0.5">*</span></label>
+                              {commands.length > 1 && (
+                                <button onClick={() => removeCommand(command.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
+                                  <X size={18} />
+                                </button>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <Input
+                                placeholder="Enter command text..."
+                                value={command.commandText}
+                                onChange={(e) => handleCommandChange(index, 'commandText', e.target.value.slice(0, 32))}
+                                className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                                {command.commandText.length}/32
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-foreground">Command Description (256 chars)<span className="text-red-500 pl-0.5">*</span></label>
+                          <div className="relative">
+                            <Textarea
+                              placeholder="Enter command description..."
+                              value={command.commandDescription}
+                              onChange={(e) => handleCommandChange(index, 'commandDescription', e.target.value.slice(0, 256))}
+                              className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
+                            />
+                            <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                              {command.commandDescription.length}/256
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Add another command button */}
-                  {templatePhoneNumbers.length < 5 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="mt-2 text-xs"
-                      disabled={templatePhoneNumbers.some(p => p.trim() === "")}
-                      onClick={() => {
-                        setTemplatePhoneNumbers([...templatePhoneNumbers, ""]);
-                      }}
+                      disabled={commands.length >= 5 || commands.some(cmd => !cmd.commandText.trim() || !cmd.commandDescription.trim())}
+                      onClick={addCommand}
                     >
                       <Plus size={14} className="mr-1" />
                       Add another command
                     </Button>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1287,7 +1320,7 @@ export default function WhatsAppManagerPage() {
                   console.log("Save Commands");
                   setShowCommandsModal(false);
                 }}
-                disabled={templatePhoneNumbers.some(p => p.trim() === "")}
+                disabled={commands.some(cmd => !cmd.commandText.trim() || !cmd.commandDescription.trim())}
               >
                 Save
               </Button>

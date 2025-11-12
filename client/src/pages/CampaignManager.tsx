@@ -1539,7 +1539,14 @@ export default function CampaignManager() {
                             <div key={schedule.id} className="flex flex-col gap-6 p-4 border rounded-lg border border-input [border-color:hsl(var(--input))]">
                               <div className="flex items-start justify-between">
                                 <div className="space-y-2 flex-1">
-                                  <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
+                                  <div className="flex justify-between items-end">
+                                    <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
+                                    {schedules.length > 1 && (
+                                    <button onClick={() => removeSchedule(schedule.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
+                                      <X size={16} />
+                                    </button>
+                                    )}
+                                  </div>
                                   <Popover>
                                     <PopoverTrigger asChild>
                                       <Button
@@ -1563,11 +1570,6 @@ export default function CampaignManager() {
                                     </PopoverContent>
                                   </Popover>
                                 </div>
-                                {schedules.length > 1 && (
-                                  <button onClick={() => removeSchedule(schedule.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
-                                    <X size={16} />
-                                  </button>
-                                )}
                               </div>
                               <div className="space-y-2">
                                 <label className="text-sm font-medium text-foreground">Campaign schedule time<span className="text-red-500 pl-0.5">*</span></label>
