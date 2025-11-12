@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar, X, Download } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -678,9 +679,9 @@ export default function ContactsSection() {
               <Calendar size={14} />
               <span>
                 {createdAtRange?.from && createdAtRange?.to
-                  ? `Created At: ${createdAtRange.from.toLocaleDateString()} - ${createdAtRange.to.toLocaleDateString()}`
+                  ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')} - ${format(createdAtRange.to, 'dd/MMM/yyyy')}`
                   : createdAtRange?.from
-                  ? `Created At: ${createdAtRange.from.toLocaleDateString()}`
+                  ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')}`
                   : "Created At"}
               </span>
             </button>
@@ -715,9 +716,9 @@ export default function ContactsSection() {
               <Calendar size={14} />
               <span>
                 {lastActiveRange?.from && lastActiveRange?.to
-                  ? `Last Active: ${lastActiveRange.from.toLocaleDateString()} - ${lastActiveRange.to.toLocaleDateString()}`
+                  ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')} - ${format(lastActiveRange.to, 'dd/MMM/yyyy')}`
                   : lastActiveRange?.from
-                  ? `Last Active: ${lastActiveRange.from.toLocaleDateString()}`
+                  ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')}`
                   : "Last Active"}
               </span>
             </button>

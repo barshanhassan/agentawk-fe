@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "@/components/CustomDropdown";
+import { format } from "date-fns";   
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -1549,8 +1550,8 @@ export default function ConversationsLogs() {
                       <span>
                         {customDateRange
                           ? customDateRange.to
-                            ? `${customDateRange.from?.toLocaleDateString() || ""} - ${customDateRange.to?.toLocaleDateString() || ""}`
-                            : customDateRange.from?.toLocaleDateString() || ""
+                            ? `${(customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")} - ${(customDateRange.to ? format(customDateRange.to, 'dd/MMM/yyyy') : "")}`
+                            : (customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")
                           : "Select Date"}
                       </span>
                     </Button>
@@ -1894,8 +1895,8 @@ export default function ConversationsLogs() {
                       <span>
                         {customDateRange
                           ? customDateRange.to
-                            ? `${customDateRange.from?.toLocaleDateString() || ""} - ${customDateRange.to?.toLocaleDateString() || ""}`
-                            : customDateRange.from?.toLocaleDateString() || ""
+                            ? `${(customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")} - ${(customDateRange.to ? format(customDateRange.to, 'dd/MMM/yyyy') : "")}`
+                            : (customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")
                           : "Select Date"}
                       </span>
                     </Button>

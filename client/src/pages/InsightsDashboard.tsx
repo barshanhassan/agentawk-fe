@@ -17,6 +17,7 @@ import {
 import { Calendar } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 import { DateRangeProvider, useDateRange } from "@/contexts/DateRangeContext";
 import { TabProvider, useTab } from "@/contexts/TabContext";
@@ -66,8 +67,8 @@ function InsightsDashboardContent() {
                   <span>
                     {customDate
                       ? customDate.to
-                        ? `${customDate.from?.toLocaleDateString() || ""} - ${customDate.to?.toLocaleDateString() || ""}`
-                        : customDate.from?.toLocaleDateString() || ""
+                        ? `${(customDate.from ? format(customDate.from, 'dd/MMM/yyyy') : "")} - ${(customDate.to ? format(customDate.to, 'dd/MMM/yyyy') : "")}`
+                        : (customDate.from ? format(customDate.from, 'dd/MMM/yyyy') : "")
                       : "Select Date"}
                   </span>
                 </Button>

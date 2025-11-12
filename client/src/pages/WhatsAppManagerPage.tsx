@@ -719,9 +719,9 @@ export default function WhatsAppManagerPage() {
                     <div key={period.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
                       <div className="flex-1">
                         <p className="text-sm font-medium">
-                                                  {format(period.startDate, 'dd/MMM/yyyy')} {period.startTime.hour}:{period.startTime.minute} {period.startTime.period}
-                                                  {' - '}
-                                                  {format(period.endDate, 'dd/MMM/yyyy')} {period.endTime.hour}:{period.endTime.minute} {period.endTime.period}                        </p>
+                          {format(period.startDate, 'dd/MMM/yyyy')} {period.startTime.hour}:{period.startTime.minute} {period.startTime.period}
+                          {' - '}
+                          {format(period.endDate, 'dd/MMM/yyyy')} {period.endTime.hour}:{period.endTime.minute} {period.endTime.period}                        </p>
                         {period.reason && <p className="text-xs text-muted-foreground mt-1">Reason: {period.reason}</p>}
                       </div>
                       <Button
