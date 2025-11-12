@@ -201,66 +201,70 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
           />
         </div>
 
-        <RadioGroup
-          value={allDaysSelected ? "allDays" : "perDay"}
-          onValueChange={(value) => setAllDaysSelected(value === "allDays")}
-          className="flex space-x-4"
-          disabled={allDayAvailability} // Disable radio group when 24/7 is active
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="allDays" id="allDays" />
-            <Label htmlFor="allDays">All days</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="perDay" id="perDay" />
-            <Label htmlFor="perDay">Per day</Label>
-          </div>
-        </RadioGroup>
+        {!allDayAvailability && ( // Conditional rendering for the RadioGroup and time selection
+          <>
+            <RadioGroup
+              value={allDaysSelected ? "allDays" : "perDay"}
+              onValueChange={(value) => setAllDaysSelected(value === "allDays")}
+              className="flex space-x-4"
+              disabled={allDayAvailability} // Disable radio group when 24/7 is active
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="allDays" id="allDays" />
+                <Label htmlFor="allDays">All days</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="perDay" id="perDay" />
+                <Label htmlFor="perDay">Per day</Label>
+              </div>
+            </RadioGroup>
 
-        {allDaysSelected ? (
-          <div className="p-4 border rounded-lg space-y-4 w-fit">
-            <Label className="text-sm font-bold">All days</Label>
-            <div className="flex flex-col items-start justify-between space-y-2">
-                <Label className="text-sm">Start time</Label>
-                <TimePicker
-                    hour={businessHours.allDays.startHour}
-                    minute={businessHours.allDays.minute}
-                    period={businessHours.allDays.period}
-                    onHourChange={(value) => handleAllDaysHoursChange('startHour', value)}
-                    onMinuteChange={(value) => handleAllDaysHoursChange('startMinute', value)}
-                    onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
-                    isDisabled={allDayAvailability} // Disable when 24/7 is active
-                />
-            </div>
-            <div className="flex flex-col items-start justify-between space-y-2">
-                <Label className="text-sm">End time</Label>
-                <TimePicker
-                    hour={businessHours.allDays.endHour}
-                    minute={businessHours.allDays.endMinute}
-                    period={businessHours.allDays.endPeriod}
-                    onHourChange={(value) => handleAllDaysHoursChange('endHour', value)}
-                    onMinuteChange={(value) => handleAllDaysHoursChange('endMinute', value)}
-                    onPeriodChange={(value) => handleAllDaysHoursChange('endPeriod', value)}
-                    isDisabled={allDayAvailability} // Disable when 24/7 is active
-                />
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-4">
-            {daysOfWeek.map(dayString => {
-              const day = dayString as keyof BusinessHoursState['perDay'];
-              return (
-                <DayRow
-                  key={day}
-                  day={day}
-                  label={day.charAt(0).toUpperCase() + day.slice(1)} // Capitalize for display
-                  hours={businessHours.perDay[day]}
-                  onHoursChange={(part, value) => handlePerDayHoursChange(day, part, value)}
-                  onEnabledChange={(enabled) => handlePerDayEnabledChange(day, enabled)}
-                />
-              )
-            })}
-          </div>
+            {allDaysSelected ? (
+              <div className="p-4 border rounded-lg space-y-4 w-fit">
+                <Label className="text-sm font-bold">All days</Label>
+                <div className="flex flex-col items-start justify-between space-y-2">
+                    <Label className="text-sm">Start time</Label>
+                    <TimePicker
+                        hour={businessHours.allDays.startHour}
+                        minute={businessHours.allDays.startMinute}
+                        period={businessHours.allDays.startPeriod}
+                        onHourChange={(value) => handleAllDaysHoursChange('startHour', value)}
+                        onMinuteChange={(value) => handleAllDaysHoursChange('startMinute', value)}
+                        onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
+                        isDisabled={allDayAvailability} // Disable when 24/7 is active
+                    />
+                </div>
+                <div className="flex flex-col items-start justify-between space-y-2">
+                    <Label className="text-sm">End time</Label>
+                    <TimePicker
+                        hour={businessHours.allDays.endHour}
+                        minute={businessHours.allDays.endMinute}
+                        period={businessHours.allDays.endPeriod}
+                        onHourChange={(value) => handleAllDaysHoursChange('endHour', value)}
+                        onMinuteChange={(value) => handleAllDaysHoursChange('endMinute', value)}
+                        onPeriodChange={(value) => handleAllDaysHoursChange('endPeriod', value)}
+                        isDisabled={allDayAvailability} // Disable when 24/7 is active
+                    />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-4">
+                {daysOfWeek.map(dayString => {
+                  const day = dayString as keyof BusinessHoursState['perDay'];
+                  return (
+                    <DayRow
+                      key={day}
+                      day={day}
+                      label={day.charAt(0).toUpperCase() + day.slice(1)} // Capitalize for display
+                      hours={businessHours.perDay[day]}
+                      onHoursChange={(part, value) => handlePerDayHoursChange(day, part, value)}
+                      onEnabledChange={(enabled) => handlePerDayEnabledChange(day, enabled)}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
       </CardContent>
       <CardFooter className="flex justify-end">

@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [browserNotificationsDenied, setBrowserNotificationsDenied] = useState(Notification.permission === 'denied'); // Initialize based on actual browser permission
   const [allDaysSelected, setAllDaysSelected] = useState(true); // State for "All days" vs "Per day" radio
   const [businessHours, setBusinessHours] = useState({
+    allDayAvailability: false, // Added this line
     allDays: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
     perDay: {
       monday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
@@ -144,12 +145,15 @@ export default function SettingsPage() {
                 setPreferences={setPreferences}
             />
           )}
+
           {activeSection === "Business Hours" && (
             <BusinessHoursSection
-                allDaysSelected={allDaysSelected}
-                setAllDaysSelected={setAllDaysSelected}
-                businessHours={businessHours}
-                setBusinessHours={setBusinessHours}
+              allDaysSelected={allDaysSelected}
+              setAllDaysSelected={setAllDaysSelected}
+              businessHours={businessHours}
+              setBusinessHours={setBusinessHours}
+              allDayAvailability={businessHours.allDayAvailability}
+              setAllDayAvailability={(value: boolean) => setBusinessHours(prev => ({ ...prev, allDayAvailability: value }))}
             />
           )}
           {activeSection === "AI Assistants" && (
