@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Moved this import here
+import { format } from "date-fns";
 import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
 import {
@@ -12,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"; // Added Popover imports
-import { UploadCloud } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
+import { UploadCloud, Trash2 } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
 import { Info, Calendar, ChevronDown } from "lucide-react"; // Add Info icon import
 import { Switch } from "@/components/ui/switch"; // Import Switch component
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
@@ -711,29 +712,30 @@ export default function WhatsAppManagerPage() {
 
             {/* Display Configured Unavailable Periods */}
             {unavailablePeriods.length > 0 && (
-              <>
-                <h4 className="font-semibold text-base mb-1">Configured Unavailable Periods</h4>
-                {unavailablePeriods.map((period) => (
-                  <div key={period.id} className="flex items-center justify-between p-3 border rounded-md">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {period.startDate.toLocaleDateString()} {period.startTime.hour}:{period.startTime.minute} {period.startTime.period}
-                        {' - '}
-                        {period.endDate.toLocaleDateString()} {period.endTime.hour}:{period.endTime.minute} {period.endTime.period}
-                      </p>
-                      {period.reason && <p className="text-xs text-muted-foreground mt-1">Reason: {period.reason}</p>}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-base">Configured Unavailable Periods</h4>
+                <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
+                  {unavailablePeriods.map((period) => (
+                    <div key={period.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                                                  {format(period.startDate, 'dd/MMM/yyyy')} {period.startTime.hour}:{period.startTime.minute} {period.startTime.period}
+                                                  {' - '}
+                                                  {format(period.endDate, 'dd/MMM/yyyy')} {period.endTime.hour}:{period.endTime.minute} {period.endTime.period}                        </p>
+                        {period.reason && <p className="text-xs text-muted-foreground mt-1">Reason: {period.reason}</p>}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteUnavailablePeriod(period.id)}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteUnavailablePeriod(period.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                ))}
-              </>
+                  ))}
+                </div>
+              </div>
             )}
 
 
