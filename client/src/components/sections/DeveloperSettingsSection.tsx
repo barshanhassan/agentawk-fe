@@ -60,29 +60,25 @@ const DeveloperSettingsSection = () => {
 
   const handleCreateWebhook = () => {
     let isValid = true;
-    let errorMessage = "";
 
     if (!webhookUrl.trim()) {
       isValid = false;
-      errorMessage = "Please enter a valid URL.";
     } else {
       try {
         new URL(webhookUrl);
       } catch (_) {
         isValid = false;
-        errorMessage = "Please enter a valid URL.";
       }
     }
 
     if (selectedEvents.length === 0) {
       isValid = false;
-      errorMessage = "Please select at least one event.";
     }
 
     if (!isValid) {
       toast({
         title: "Missing Fields",
-        description: errorMessage,
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -204,9 +200,9 @@ const DeveloperSettingsSection = () => {
         {webhooks.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-semibold text-base">Configured Webhooks</h4>
-            <div className="border rounded-md p-4 space-y-3 max-h-[200px] overflow-y-auto">
+            <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
               {webhooks.map((webhook) => (
-                <div key={webhook.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                <div key={webhook.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
                   <div className="flex-1">
                     <p className="text-sm font-medium break-all">{webhook.url}</p>
                     <p className="text-xs text-muted-foreground">{webhook.events.join(', ')}</p>

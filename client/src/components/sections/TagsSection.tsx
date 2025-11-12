@@ -156,7 +156,7 @@ export default function TagsSection() {
     if (!newName.trim()) {
       toast({
         title: "Missing Fields",
-        description: "Please enter a tag name.",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -180,7 +180,7 @@ export default function TagsSection() {
     if (!editName.trim()) {
       toast({
         title: "Missing Fields",
-        description: "Please enter a tag name.",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -255,10 +255,10 @@ export default function TagsSection() {
               <thead className="select-none">
                 <tr className="border-b">
                   <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30 max-w-[20rem]"
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
                     onClick={() => handleColumnSort("name")}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 max-w-[15rem]" style={{width: "100vw"}}>
                       Name
                       {renderSortIcon("name")}
                     </div>
@@ -294,7 +294,7 @@ export default function TagsSection() {
                 ) : (
                   getFilteredAndSortedData().map((item) => (
                     <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3 max-w-[20rem]">
+                      <td className="py-2 px-3 max-w-[15rem]">
                         <div className="break-all">
                           {item.name}
                         </div>
