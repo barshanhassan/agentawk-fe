@@ -703,7 +703,7 @@ export default function WhatsAppManagerPage() {
                 </RadioGroup>
 
                 {allDaysSelected ? (
-                  <div className="p-4 border rounded-lg space-y-4 w-fit">
+                  <div className="p-4 border rounded-lg space-y-4 w-fit border border-input [border-color:hsl(var(--input))]">
                     <Label className="text-sm font-bold">All days</Label>
                     <div className="flex flex-col items-start justify-between space-y-2">
                       <Label className="text-sm">Start time</Label>
@@ -729,9 +729,9 @@ export default function WhatsAppManagerPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-4 max-h-[40vh] overflow-y-scroll">
+                  <div className="flex flex-wrap gap-4 max-h-[40vh] overflow-y-scroll pt-0.5">
                     {Object.keys(dailyCallHours).map((day) => (
-                      <div key={day} className="p-4 border rounded-lg space-y-4">
+                      <div key={day} className="p-4 border rounded-lg space-y-4 border border-input [border-color:hsl(var(--input))]">
                         <div className="flex items-center space-x-3">
                           <Checkbox
                             id={`checkbox-${day}`}
@@ -820,52 +820,49 @@ export default function WhatsAppManagerPage() {
       {/* Unavailable Call Hours Modal */}
       <Dialog open={showUnavailableCallHoursModal} onOpenChange={setShowUnavailableCallHoursModal}>
         <DialogContent className="max-w-md">
-          <DialogHeader className="mb-2">
+          <DialogHeader>
             <DialogTitle>Create New Unavailable Period</DialogTitle>
+            <p className="text-sm text-muted-foreground">Set a period when your business will be temporarily unavailable for calls.</p>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Set a period when your business will be temporarily unavailable for calls.</p>
-
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="unavailable-start-date" className="text-sm font-medium text-foreground">Start Date<span className="text-red-500 pl-0.5">*</span></Label>
-                <Input
-                  id="unavailable-start-date"
-                  type="date"
-                  value={unavailableStartDate}
-                  onChange={(e) => setUnavailableStartDate(e.target.value)}
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="unavailable-end-date" className="text-sm font-medium text-foreground">End Date<span className="text-red-500 pl-0.5">*</span></Label>
-                <Input
-                  id="unavailable-end-date"
-                  type="date"
-                  value={unavailableEndDate}
-                  onChange={(e) => setUnavailableEndDate(e.target.value)}
-                />
-              </div>
+            <div className="flex-1">
+              <Label htmlFor="unavailable-start-date" className="text-sm font-medium text-foreground">Start Date<span className="text-red-500 pl-0.5">*</span></Label>
+              <Input
+                id="unavailable-start-date"
+                type="date"
+                value={unavailableStartDate}
+                onChange={(e) => setUnavailableStartDate(e.target.value)}
+              />
             </div>
-
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="unavailable-start-time" className="text-sm font-medium text-foreground">Start Time<span className="text-red-500 pl-0.5">*</span></Label>
-                <Input
-                  id="unavailable-start-time"
-                  type="time"
-                  value={unavailableStartTime}
-                  onChange={(e) => setUnavailableStartTime(e.target.value)}
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="unavailable-end-time" className="text-sm font-medium text-foreground">End Time<span className="text-red-500 pl-0.5">*</span></Label>
-                <Input
-                  id="unavailable-end-time"
-                  type="time"
-                  value={unavailableEndTime}
-                  onChange={(e) => setUnavailableEndTime(e.target.value)}
-                />
-              </div>
+            
+            <div className="flex-1">
+              <Label htmlFor="unavailable-start-time" className="text-sm font-medium text-foreground">Start Time<span className="text-red-500 pl-0.5">*</span></Label>
+              <Input
+                id="unavailable-start-time"
+                type="time"
+                value={unavailableStartTime}
+                onChange={(e) => setUnavailableStartTime(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex-1">
+              <Label htmlFor="unavailable-end-date" className="text-sm font-medium text-foreground">End Date<span className="text-red-500 pl-0.5">*</span></Label>
+              <Input
+                id="unavailable-end-date"
+                type="date"
+                value={unavailableEndDate}
+                onChange={(e) => setUnavailableEndDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex-1">
+              <Label htmlFor="unavailable-end-time" className="text-sm font-medium text-foreground">End Time<span className="text-red-500 pl-0.5">*</span></Label>
+              <Input
+                id="unavailable-end-time"
+                type="time"
+                value={unavailableEndTime}
+                onChange={(e) => setUnavailableEndTime(e.target.value)}
+              />
             </div>
 
             <div>

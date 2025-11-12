@@ -96,7 +96,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ hour, minute, period, onHourCha
 );
 
 const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
-    <div className="p-4 border rounded-lg space-y-4">
+    <div className="p-4 border rounded-lg space-y-4 border border-input [border-color:hsl(var(--input))]">
         <div className="flex items-center space-x-3">
             <Checkbox
             id={`checkbox-${day}`}
@@ -220,7 +220,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
             </RadioGroup>
 
             {allDaysSelected ? (
-              <div className="p-4 border rounded-lg space-y-4 w-fit">
+              <div className="p-4 border rounded-lg space-y-4 w-fit border border-input [border-color:hsl(var(--input))]">
                 <Label className="text-sm font-bold">All days</Label>
                 <div className="flex flex-col items-start justify-between space-y-2">
                     <Label className="text-sm">Start time</Label>

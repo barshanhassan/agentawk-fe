@@ -1536,7 +1536,7 @@ export default function CampaignManager() {
                       {broadcastCampaignType === 'Scheduled' && (
                         <div className="space-y-4 pt-2">
                           {schedules.map((schedule, index) => (
-                            <div key={schedule.id} className="flex flex-col gap-6 p-4 border rounded-lg">
+                            <div key={schedule.id} className="flex flex-col gap-6 p-4 border rounded-lg border border-input [border-color:hsl(var(--input))]">
                               <div className="flex items-start justify-between">
                                 <div className="space-y-2 flex-1">
                                   <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
