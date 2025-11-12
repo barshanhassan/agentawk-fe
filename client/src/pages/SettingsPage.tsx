@@ -11,6 +11,8 @@ import BotToAgentSection from "@/components/sections/BotToAgentSection";
 import PasswordPolicySection from "@/components/sections/PasswordPolicySection";
 import DeveloperSettingsSection from "@/components/sections/DeveloperSettingsSection";
 import ChangePasswordSection from "@/components/sections/ChangePasswordSection";
+import QuickRepliesSection from "@/components/sections/QuickRepliesSection";
+import TagsSection from "@/components/sections/TagsSection";
 
 export default function SettingsPage() {
   const sections = [ // Define sections array first for use in initial state
@@ -162,6 +164,12 @@ export default function SettingsPage() {
           {activeSection === "Bot to Agent" && (
             <BotToAgentSection />
           )}
+          {activeSection === "Quick Replies" && (
+            <QuickRepliesSection />
+          )}
+          {activeSection === "Tags" && (
+            <TagsSection />
+          )}
           {activeSection === "Password Policy" && (
             <PasswordPolicySection />
           )}
@@ -170,17 +178,6 @@ export default function SettingsPage() {
           )}
           {activeSection === "Change Password" && (
             <ChangePasswordSection />
-          )}
-          {/* Placeholder for other sections */}
-          {activeSection !== "My Profile" && activeSection !== "Preferences" && activeSection !== "Business Hours" && activeSection !== "AI Assistants" && activeSection !== "Agent Chats" && activeSection !== "Out of Office" && activeSection !== "Bot to Agent" && activeSection !== "Password Policy" && activeSection !== "Developer Settings" && activeSection !== "Change Password" && (
-            <>
-              <CardHeader>
-                <CardTitle className="text-lg">{activeSection}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Content for {activeSection} will go here.</p>
-              </CardContent>
-            </>
           )}
         </Card>
       </div>
