@@ -287,7 +287,7 @@ const DeveloperSettingsSection = () => {
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowWebhookModal(false)} variant="outline" className="border-input font-normal">Cancel</Button>
+            <Button onClick={() => setShowWebhookModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
             <Button onClick={handleCreateWebhook} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create Webhook</Button>
           </div>
         </DialogContent>

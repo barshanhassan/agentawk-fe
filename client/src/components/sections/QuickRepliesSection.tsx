@@ -528,7 +528,7 @@ export default function QuickRepliesSection() {
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowEditModal(false)} variant="outline" className="border-input">Cancel</Button>
+            <Button onClick={() => setShowEditModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
             <Button onClick={handleSaveEdit} className="bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
           </div>
         </DialogContent>
