@@ -135,14 +135,6 @@ export default function TagsSection() {
     setShowEditModal(true);
   };
 
-  const handleCopy = (item: Tag) => {
-    navigator.clipboard.writeText(item.name);
-    toast({
-      title: "Copied to clipboard",
-      description: item.name,
-    });
-  };
-
   const handleDelete = (item: Tag) => {
     setItemToDelete(item);
     setShowDeleteModal(true);
@@ -302,7 +294,7 @@ export default function TagsSection() {
                 ) : (
                   getFilteredAndSortedData().map((item) => (
                     <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3 max-w-[10rem]">
+                      <td className="py-2 px-3 max-w-[20rem]">
                         <div className="break-all">
                           {item.name}
                         </div>
@@ -327,10 +319,6 @@ export default function TagsSection() {
                               <DropdownMenuItem onClick={() => handleEdit(item)}>
                                 <Edit2 size={14} className="mr-2" />
                                 Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleCopy(item)}>
-                                <Copy size={14} className="mr-2" />
-                                Copy
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive">
                                 <Trash2 size={14} className="mr-2" />
@@ -424,7 +412,17 @@ export default function TagsSection() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <Input placeholder="Enter tag name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <div className="relative">
+                <Input
+                  placeholder="Enter tag name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value.slice(0, 100))}
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {newName.length}/100
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
@@ -442,7 +440,17 @@ export default function TagsSection() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <Input placeholder="Enter tag name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+              <div className="relative">
+                <Input
+                  placeholder="Enter tag name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value.slice(0, 100))}
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {editName.length}/100
+                </span>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Status<span className="text-red-500 pl-0.5">*</span></label>
