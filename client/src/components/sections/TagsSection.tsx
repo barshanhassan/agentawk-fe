@@ -453,10 +453,14 @@ export default function TagsSection() {
           <DialogHeader className="mb-2">
             <DialogTitle>Delete Tag</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete <span className="font-semibold">{itemToDelete?.name}</span>?</p>
+          <div className="space-y-4">
+            <p className="text-sm text-foreground">
+              Are you sure you want to delete <span className="font-semibold break-all">{itemToDelete?.name}</span>? This action cannot be undone.
+            </p>
+          </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowDeleteModal(false)} variant="outline" className="border-input">Cancel</Button>
-            <Button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 text-white">Delete</Button>
+            <Button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 border-red-600 text-white">Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
