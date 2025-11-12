@@ -2170,8 +2170,6 @@ export default function ConversationsInbox() {
           </DialogContent>
         </Dialog>
 
-
-
         {/* Add Teams Modal */}
         <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
           <DialogContent className="sm:max-w-md">

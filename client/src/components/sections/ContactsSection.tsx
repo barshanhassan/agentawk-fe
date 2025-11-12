@@ -77,6 +77,13 @@ const initialContacts: Contact[] = [
   },
 ];
 
+const contactTagOptions = [
+  { id: "VIP", name: "VIP" },
+  { id: "Lead", name: "Lead" },
+  { id: "Active", name: "Active" },
+  { id: "Inactive", name: "Inactive" },
+];
+
 export default function ContactsSection() {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
@@ -657,7 +664,7 @@ export default function ContactsSection() {
 
         {/* Tags Dropdown */}
         <CustomDropdown
-          options={allTags.map(tag => ({ id: tag, name: tag }))}
+          options={contactTagOptions}
           selected={selectedTags}
           onChange={setSelectedTags}
           placeholder="Tags"
@@ -1068,8 +1075,8 @@ export default function ContactsSection() {
                       </td>
                       <td className="py-2 px-3">{contact.name}</td>
                       <td className="py-2 px-3">{contact.phoneNumber}</td>
-                      <td className="py-2 px-3">
-                        <div className="flex gap-1">
+                      <td className="py-2 px-3 max-w-lg">
+                        <div className="flex flex-wrap gap-1">
                           {contact.tags.map((tag) => (
                             <span key={tag} className="px-2 py-1 bg-muted rounded text-xs">
                               {tag}
@@ -1198,12 +1205,11 @@ export default function ContactsSection() {
             </div>
 
             {/* Tags Section */}
-            <div>
+            <div className="space-y-1">
               <label className="text-sm font-medium text-foreground">Tags</label>
-
               {/* Selected Tags */}
               {newContactTags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                <div className="flex flex-wrap gap-2 pb-1">
                   {newContactTags.map(tag => (
                     <div
                       key={tag}
@@ -1220,28 +1226,13 @@ export default function ContactsSection() {
                   ))}
                 </div>
               )}
-
-              {/* Available Tags */}
-              {allTags.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs text-muted-foreground mb-2">Available tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.map(tag => (
-                      <button
-                        key={tag}
-                        onClick={() => handleToggleTag(tag)}
-                        className={`px-2 py-1 text-xs rounded-full border transition-colors ${
-                          newContactTags.includes(tag)
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-white text-foreground border-input hover:bg-muted"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <CustomDropdown
+                options={contactTagOptions}
+                selected={newContactTags}
+                onChange={setNewContactTags}
+                placeholder="Select tags"
+                width="100%"
+              />
             </div>
           </div>
 
@@ -1297,67 +1288,34 @@ export default function ContactsSection() {
             </div>
 
             {/* Tags Section */}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Tags</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  placeholder="Add or select tag"
-                  value={editTagInput}
-                  onChange={(e) => setEditTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddEditTag();
-                    }
-                  }}
-                  className="flex-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none transition-colors"
-                />
-                <Button
-                  onClick={handleAddEditTag}
-                  size="sm"
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  Add
-                </Button>
-              </div>
-
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">Tags</label>
               {/* Selected Tags */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                {editContactTags.map((tag) => (
-                  <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs flex items-center gap-1">
-                    {tag}
-                    <button
-                      onClick={() => handleRemoveEditTag(tag)}
-                      className="hover:text-blue-900"
+              {editContactTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 pb-1">
+                  {editContactTags.map(tag => (
+                    <div
+                      key={tag}
+                      className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-
-              {/* Available Tags */}
-              {allTags.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Available tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag) => (
+                      {tag}
                       <button
-                        key={tag}
-                        onClick={() => handleToggleEditTag(tag)}
-                        className={`px-2 py-1 rounded text-xs transition-colors ${
-                          editContactTags.includes(tag)
-                            ? "bg-blue-500 text-white"
-                            : "bg-muted text-foreground hover:bg-muted/80"
-                        }`}
+                        onClick={() => handleRemoveEditTag(tag)}
+                        className="hover:text-blue-900"
                       >
-                        {tag}
+                        <X size={14} />
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               )}
+              <CustomDropdown
+                options={contactTagOptions}
+                selected={editContactTags}
+                onChange={setEditContactTags}
+                placeholder="Select tags"
+                width="100%"
+              />
             </div>
           </div>
 
