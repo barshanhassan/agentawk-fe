@@ -981,7 +981,19 @@ export default function ConversationsInbox() {
     ],
   });
 
+  // Quick replies state
+  const [quickReplies, setQuickReplies] = useState([
+    "Hi, how can I help you?",
+    "What is your order number?",
+    "Can I assist you with anything else?",
+    "Thank you for contacting us.",
+  ]);
 
+  // Function to check if there are any agent messages in the current conversation
+  const hasAgentMessages = (convId: number) => {
+    const messages = conversationMessagesData[convId] || [];
+    return messages.some((msg: any) => msg.from === "agent");
+  };
 
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
@@ -1563,6 +1575,23 @@ export default function ConversationsInbox() {
                   </div>
                 )}
 
+                {/* Quick Replies */}
+                {selectedConversation && !hasAgentMessages(selectedConversation) && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {quickReplies.map((reply, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full text-xs h-7"
+                        onClick={() => setMessageText(reply)}
+                      >
+                        {reply}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex gap-2 items-center">
                   <Input
                     placeholder="Type a message..."
@@ -1777,7 +1806,7 @@ export default function ConversationsInbox() {
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-sm">Customer Tags</h4>
+                    <h4 className="font-semibold text-sm">Custom Attributes</h4>
                     <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-attribute">
                       Add
                     </Button>
