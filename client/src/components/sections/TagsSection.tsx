@@ -74,7 +74,11 @@ export default function TagsSection() {
 
   const handleColumnSort = (column: string) => {
     if (sort?.column === column) {
-      setSort({ column, direction: sort.direction === "asc" ? "desc" : "asc" });
+      if (sort.direction === "asc") {
+        setSort({ column, direction: "desc" });
+      } else {
+        setSort(null); // Unsort
+      }
     } else {
       setSort({ column, direction: "asc" });
     }
