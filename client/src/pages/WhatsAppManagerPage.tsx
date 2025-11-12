@@ -132,8 +132,8 @@ export default function WhatsAppManagerPage() {
   const [unavailableEndDate, setUnavailableEndDate] = useState<Date | undefined>(undefined);
   const [unavailableStartDatePickerOpen, setUnavailableStartDatePickerOpen] = useState(false);
   const [unavailableEndDatePickerOpen, setUnavailableEndDatePickerOpen] = useState(false);
-  const [unavailableStartTime, setUnavailableStartTime] = useState({ hour: '12', minute: '00', period: 'AM' });
-  const [unavailableEndTime, setUnavailableEndTime] = useState({ hour: '11', minute: '59', period: 'PM' });
+  const [unavailableStartTime, setUnavailableStartTime] = useState({ hour: '', minute: '', period: '' });
+  const [unavailableEndTime, setUnavailableEndTime] = useState({ hour: '', minute: '', period: '' });
   const [unavailableReason, setUnavailableReason] = useState('');
 
   const categoryOptions = [
@@ -226,24 +226,14 @@ export default function WhatsAppManagerPage() {
     setDailyCallHours(initialDailyCallHours);
   };
 
-  const handleCreateUnavailableCallHours = () => {
+  const isUnavailablePeriodFormValid = () => {
     if (!unavailableStartDate || !unavailableEndDate || !unavailableStartTime.hour || !unavailableStartTime.minute || !unavailableStartTime.period || !unavailableEndTime.hour || !unavailableEndTime.minute || !unavailableEndTime.period) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
+      return false;
     }
 
     // Basic validation for start date not being after end date
     if (unavailableStartDate && unavailableEndDate && unavailableStartDate > unavailableEndDate) {
-      toast({
-        title: "Invalid Date Range",
-        description: "Start date cannot be after end date.",
-        variant: "destructive",
-      });
-      return;
+      return false;
     }
 
     // Basic validation for start time not being after end time if dates are the same
@@ -252,13 +242,20 @@ export default function WhatsAppManagerPage() {
       const endHour24 = (parseInt(unavailableEndTime.hour) % 12) + (unavailableEndTime.period === 'PM' ? 12 : 0);
 
       if (startHour24 > endHour24 || (startHour24 === endHour24 && parseInt(unavailableStartTime.minute) >= parseInt(unavailableEndTime.minute))) {
-        toast({
-          title: "Invalid Time Range",
-          description: "Start time cannot be after or equal to end time on the same day.",
-          variant: "destructive",
-        });
-        return;
+        return false;
       }
+    }
+    return true;
+  };
+
+  const handleCreateUnavailableCallHours = () => {
+    if (!isUnavailablePeriodFormValid()) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all required fields and ensure valid date/time ranges.",
+        variant: "destructive",
+      });
+      return;
     }
 
     // Here you would typically send this data to a backend
@@ -996,17 +993,23 @@ export default function WhatsAppManagerPage() {
 
             <div>
               <Label htmlFor="unavailable-reason" className="text-sm font-medium text-foreground">Reason (optional)</Label>
-              <Textarea
-                id="unavailable-reason"
-                value={unavailableReason}
-                onChange={(e) => setUnavailableReason(e.target.value)}
-                placeholder="e.g., Public Holiday, Team Meeting"
-              />
+              <div className="relative">
+                <Textarea
+                  id="unavailable-reason"
+                  value={unavailableReason}
+                  onChange={(e) => setUnavailableReason(e.target.value.slice(0, 100))}
+                  placeholder="e.g., Public Holiday, Team Meeting"
+                  className="pr-12"
+                />
+                <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                  {unavailableReason.length}/100
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowUnavailableCallHoursModal(false)} variant="outline" className="border-input font-normal [border-color:hsl(var(--input))]">Cancel</Button>
-            <Button onClick={handleCreateUnavailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create</Button>
+            <Button onClick={handleCreateUnavailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled={!isUnavailablePeriodFormValid()}>Create</Button>
           </div>
         </DialogContent>
       </Dialog>
