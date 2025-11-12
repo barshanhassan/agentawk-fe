@@ -99,7 +99,12 @@ export default function WhatsAppManagerPage() {
         </div>
         {/* WhatsApp Account Status Badges */}
         {activeTab === "business-profile" && (
-          <div className="flex items-center space-x-5">
+          <div className="flex items-center gap-x-5 gap-y-2 flex-wrap">
+            {/* WhatsApp Number Badge */}
+            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
+              <span className="text-sm font-medium text-foreground">WhatsApp Number:</span>
+              <span className="text-sm text-foreground">+1 (555) 123-4567</span>
+            </div>
             <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
               <span className="text-sm font-medium text-foreground">Message limit:</span>
               <span className="text-sm text-foreground">1K Customers/24hr</span>
