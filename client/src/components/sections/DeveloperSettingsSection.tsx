@@ -35,7 +35,6 @@ const DeveloperSettingsSection = () => {
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookModal, setShowWebhookModal] = useState(false); // State for webhook modal
   const [webhookUrl, setWebhookUrl] = useState(''); // State for webhook URL input
-  const [webhookUrlError, setWebhookUrlError] = useState(''); // State for webhook URL error
   const [selectedEvents, setSelectedEvents] = useState<WebhookEvent[]>([]); // State for selected events
   const [webhooks, setWebhooks] = useState<Webhook[]>([]); // State for configured webhooks
 
@@ -60,22 +59,30 @@ const DeveloperSettingsSection = () => {
   };
 
   const handleCreateWebhook = () => {
+    let isValid = true;
+    let errorMessage = "";
+
     if (!webhookUrl.trim()) {
-      setWebhookUrlError("Webhook URL cannot be empty.");
-      return;
-    }
-    // Basic URL validation
-    try {
-      new URL(webhookUrl);
-    } catch (_) {
-      setWebhookUrlError("Please enter a valid URL.");
-      return;
+      isValid = false;
+      errorMessage = "Please enter a valid URL.";
+    } else {
+      try {
+        new URL(webhookUrl);
+      } catch (_) {
+        isValid = false;
+        errorMessage = "Please enter a valid URL.";
+      }
     }
 
     if (selectedEvents.length === 0) {
+      isValid = false;
+      errorMessage = "Please select at least one event.";
+    }
+
+    if (!isValid) {
       toast({
         title: "Missing Fields",
-        description: "Please select at least one event.",
+        description: errorMessage,
         variant: "destructive",
       });
       return;
@@ -94,7 +101,6 @@ const DeveloperSettingsSection = () => {
     });
     setWebhookUrl('');
     setSelectedEvents([]);
-    setWebhookUrlError('');
     setShowWebhookModal(false);
   };
 
@@ -198,7 +204,7 @@ const DeveloperSettingsSection = () => {
         {webhooks.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-semibold text-base">Configured Webhooks</h4>
-            <div className="border rounded-md p-4 space-y-3">
+            <div className="border rounded-md p-4 space-y-3 max-h-[200px] overflow-y-auto">
               {webhooks.map((webhook) => (
                 <div key={webhook.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
                   <div className="flex-1">
@@ -244,7 +250,6 @@ const DeveloperSettingsSection = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="webhook-url" className="text-sm font-medium text-foreground">Webhook URL<span className="text-red-500 pl-0.5">*</span></Label>
-              <p className="text-sm text-muted-foreground mb-2">Please enter a valid URL to configure a callback.</p>
               <div className="relative">
                 <Input
                   id="webhook-url"
@@ -252,16 +257,14 @@ const DeveloperSettingsSection = () => {
                   value={webhookUrl}
                   onChange={(e) => {
                     setWebhookUrl(e.target.value);
-                    setWebhookUrlError(''); // Clear error on change
                   }}
                   maxLength={2000}
-                  className={`pr-12 ${webhookUrlError ? 'border-red-500' : ''}`}
+                  className={`pr-12`}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                   {webhookUrl.length}/2000
                 </span>
               </div>
-              {webhookUrlError && <p className="text-xs text-red-500 mt-1">{webhookUrlError}</p>}
             </div>
 
             <div>
