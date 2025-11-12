@@ -1617,7 +1617,11 @@ export default function TemplateManager() {
                                 data-testid={`checkbox-template-${template.id}`}
                               />
                             </td>
-                            <td className="py-2 px-3">{template.name}</td>
+                            <td className="py-2 px-3 max-w-[10rem]">
+                              <div className="break-all">
+                                {template.name}
+                              </div>
+                            </td>
                             <td className="py-2 px-3">{template.category}</td>
                             <td className="py-2 px-3">{template.language}</td>
                             <td className="py-2 px-3">
@@ -1625,8 +1629,10 @@ export default function TemplateManager() {
                                 {template.status}
                               </span>
                             </td>
-                            <td className="py-2 px-3">
-                              {template.topBlockReason || "No blocks!"}
+                            <td className="py-2 px-3 max-w-[10rem]">
+                              <div className="break-all">
+                                {template.topBlockReason || "No blocks!"}
+                              </div>
                             </td>
                             <td className="py-2 px-3">{template.lastEdited}</td>
                             <td className="py-2 px-3 flex justify-start">

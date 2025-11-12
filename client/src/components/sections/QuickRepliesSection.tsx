@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
+import { Textarea } from "@/components/ui/textarea";
 
 type QuickReplyStatus = "Active" | "Inactive";
 
@@ -38,12 +39,13 @@ interface QuickReply {
   name: string;
   message: string;
   status: QuickReplyStatus;
+  lastEdited: string;
 }
 
 const initialQuickReplies: QuickReply[] = [
-  { id: "QR001", name: "Greeting", message: "Hello! How can I help you today?", status: "Active" },
-  { id: "QR002", name: "Pricing", message: "You can find our pricing details here: [Link]", status: "Active" },
-  { id: "QR003", name: "Support", message: "Please describe your issue, and I'll connect you with a support agent.", status: "Inactive" },
+  { id: "QR001", name: "Greeting", message: "Hello! How can I help you today?", status: "Active", lastEdited: "2025-11-12" },
+  { id: "QR002", name: "Pricing", message: "You can find our pricing details here: [Link]", status: "Active", lastEdited: "2025-11-11" },
+  { id: "QR003", name: "Support", message: "Please describe your issue, and I'll connect you with a support agent.", status: "Inactive", lastEdited: "2025-11-10" },
 ];
 
 export default function QuickRepliesSection() {
@@ -224,7 +226,10 @@ export default function QuickRepliesSection() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Quick Replies</h2>
+        <div>
+          <h2 className="text-lg font-semibold mb-1">Quick Replies</h2>
+          <p className="text-sm text-muted-foreground">You can create your pre-written replies here to enable your agents to reply instantly to customers.</p>
+        </div>
         <Button
           onClick={() => setShowCreateModal(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"
@@ -300,8 +305,16 @@ export default function QuickRepliesSection() {
                 ) : (
                   getFilteredAndSortedData().map((item) => (
                     <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3">{item.name}</td>
-                      <td className="py-2 px-3">{item.message}</td>
+                      <td className="py-2 px-3 max-w-[10rem]">
+                        <div className="break-all">
+                          {item.name}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 max-w-xs">
+                        <div className="break-all">
+                          {item.message}
+                        </div>
+                      </td>
                       <td className="py-2 px-3">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           item.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
@@ -418,11 +431,31 @@ export default function QuickRepliesSection() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <Input placeholder="Enter name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <div className="relative">
+                <Input
+                  placeholder="Enter name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value.slice(0, 100))}
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {newName.length}/100
+                </span>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Message<span className="text-red-500 pl-0.5">*</span></label>
-              <Input placeholder="Enter message" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} />
+              <div className="relative">
+                <Textarea
+                  placeholder="Enter message"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value.slice(0, 500))}
+                  className="pr-12"
+                />
+                <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                  {newMessage.length}/500
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
@@ -440,11 +473,31 @@ export default function QuickRepliesSection() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <Input placeholder="Enter name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+              <div className="relative">
+                <Input
+                  placeholder="Enter name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value.slice(0, 100))}
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {editName.length}/100
+                </span>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Message<span className="text-red-500 pl-0.5">*</span></label>
-              <Input placeholder="Enter message" value={editMessage} onChange={(e) => setEditMessage(e.target.value)} />
+              <div className="relative">
+                <Textarea
+                  placeholder="Enter message"
+                  value={editMessage}
+                  onChange={(e) => setEditMessage(e.target.value.slice(0, 500))}
+                  className="pr-12"
+                />
+                <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                  {editMessage.length}/500
+                </span>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">Status<span className="text-red-500 pl-0.5">*</span></label>

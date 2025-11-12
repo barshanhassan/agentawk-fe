@@ -1119,7 +1119,11 @@ export default function CampaignManager() {
                           data-testid={`checkbox-campaign-${campaign.id}`}
                         />
                       </td>
-                      <td className="py-2 px-3 font-medium">{campaign.name}</td>
+                      <td className="py-2 px-3 max-w-[10rem]">
+                        <div className="break-all">
+                          {campaign.name}
+                        </div>
+                      </td>
                       <td className="py-2 px-3">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeBadgeClasses(campaign.type)}`}>
                           {campaign.type}

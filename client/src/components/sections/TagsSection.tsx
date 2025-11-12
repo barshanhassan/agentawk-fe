@@ -217,7 +217,10 @@ export default function TagsSection() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Tags</h2>
+        <div>
+          <h2 className="text-lg font-semibold mb-1">Tags</h2>
+          <p className="text-sm text-muted-foreground">You can create tags here to categorize your conversations.</p>
+        </div>
         <Button
           onClick={() => setShowCreateModal(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"
@@ -284,7 +287,11 @@ export default function TagsSection() {
                 ) : (
                   getFilteredAndSortedData().map((item) => (
                     <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3">{item.name}</td>
+                      <td className="py-2 px-3 max-w-[10rem]">
+                        <div className="break-all">
+                          {item.name}
+                        </div>
+                      </td>
                       <td className="py-2 px-3">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           item.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
