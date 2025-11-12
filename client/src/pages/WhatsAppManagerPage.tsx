@@ -1235,7 +1235,7 @@ export default function WhatsAppManagerPage() {
                         <div className="flex items-start justify-between">
                           <div className="space-y-2 flex-1">
                             <div className="flex justify-between items-end">
-                              <label className="text-sm font-medium text-foreground">Command Text (32 chars)<span className="text-red-500 pl-0.5">*</span></label>
+                              <label className="text-sm font-medium text-foreground">Command Text<span className="text-red-500 pl-0.5">*</span></label>
                               {commands.length > 1 && (
                                 <button onClick={() => removeCommand(command.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
                                   <X size={18} />
@@ -1256,7 +1256,7 @@ export default function WhatsAppManagerPage() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-foreground">Command Description (256 chars)<span className="text-red-500 pl-0.5">*</span></label>
+                          <label className="text-sm font-medium text-foreground">Command Description<span className="text-red-500 pl-0.5">*</span></label>
                           <div className="relative">
                             <Textarea
                               placeholder="Enter command description..."
