@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch"; // Added Switch import
 import { useToast } from "@/hooks/use-toast";
 
 // Define TypeScript interfaces
@@ -30,6 +31,7 @@ interface DayHours {
 }
 
 interface BusinessHoursState {
+  allDayAvailability: boolean; // Added
   allDays: DayHours;
   perDay: {
     monday: DayHours;
@@ -55,6 +57,8 @@ interface BusinessHoursSectionProps {
   setAllDaysSelected: (selected: boolean) => void;
   businessHours: BusinessHoursState;
   setBusinessHours: (hours: BusinessHoursState) => void;
+  allDayAvailability: boolean; // Added
+  setAllDayAvailability: (selected: boolean) => void; // Added
 }
 
 const TimePicker: React.FC<TimePickerProps> = ({ hour, minute, period, onHourChange, onMinuteChange, onPeriodChange, isDisabled = false }) => (
@@ -133,7 +137,7 @@ const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEna
 );
 
 
-const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours }) => {
+const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours, allDayAvailability, setAllDayAvailability }) => {
     const { toast } = useToast();
 
     const handleAllDaysHoursChange = (part: keyof DayHours, value: string) => {
@@ -187,10 +191,21 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
       </CardHeader>
       <CardContent className="space-y-6">
         <Separator />
+
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="all-day-availability-toggle">Enable 24/7 availability for all days</Label>
+          <Switch
+            id="all-day-availability-toggle"
+            checked={allDayAvailability}
+            onCheckedChange={setAllDayAvailability}
+          />
+        </div>
+
         <RadioGroup
           value={allDaysSelected ? "allDays" : "perDay"}
           onValueChange={(value) => setAllDaysSelected(value === "allDays")}
           className="flex space-x-4"
+          disabled={allDayAvailability} // Disable radio group when 24/7 is active
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="allDays" id="allDays" />
@@ -209,11 +224,12 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
                 <Label className="text-sm">Start time</Label>
                 <TimePicker
                     hour={businessHours.allDays.startHour}
-                    minute={businessHours.allDays.startMinute}
-                    period={businessHours.allDays.startPeriod}
+                    minute={businessHours.allDays.minute}
+                    period={businessHours.allDays.period}
                     onHourChange={(value) => handleAllDaysHoursChange('startHour', value)}
                     onMinuteChange={(value) => handleAllDaysHoursChange('startMinute', value)}
                     onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
+                    isDisabled={allDayAvailability} // Disable when 24/7 is active
                 />
             </div>
             <div className="flex flex-col items-start justify-between space-y-2">
@@ -225,6 +241,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
                     onHourChange={(value) => handleAllDaysHoursChange('endHour', value)}
                     onMinuteChange={(value) => handleAllDaysHoursChange('endMinute', value)}
                     onPeriodChange={(value) => handleAllDaysHoursChange('endPeriod', value)}
+                    isDisabled={allDayAvailability} // Disable when 24/7 is active
                 />
             </div>
           </div>
@@ -249,7 +266,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
       <CardFooter className="flex justify-end">
         <Button
           onClick={() => {
-            console.log("Save Business Hours", businessHours);
+            console.log("Save Business Hours", { ...businessHours, allDayAvailability });
             toast({
               title: "Settings Saved",
               description: "Business hours settings have been updated.",

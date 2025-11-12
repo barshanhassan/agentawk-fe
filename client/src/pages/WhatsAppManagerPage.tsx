@@ -9,6 +9,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { UploadCloud } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
 import { Info } from "lucide-react"; // Add Info icon import
 import { Switch } from "@/components/ui/switch"; // Import Switch component
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
+import { Label } from "@/components/ui/label"; // Added Label
 import { useToast } from "@/hooks/use-toast";
 
 export default function WhatsAppManagerPage() {
@@ -31,26 +34,32 @@ export default function WhatsAppManagerPage() {
   const [isConnected, setIsConnected] = useState(Math.random() < 0.5);
   const [accountHealth, setAccountHealth] = useState(Math.random());
 
-  const categoryOptions = [
-    "Automotive", "Beauty", "Apparel", "Education", "Entertainment",
-    "Event Planning", "Finance", "Grocery", "Government", "Hotel",
-    "Health", "Nonprofit", "Professional Services", "Retail", "Travel",
-    "Restaurant", "Other"
-  ];
-
-  // Handle profile photo drag and drop
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
+  // State for Available Call Hours Modal
+  const [showAvailableCallHoursModal, setShowAvailableCallHoursModal] = useState(false);
+  const [allDay, setAllDay] = useState(false);
+  interface DailyCallHours {
+    enabled: boolean;
+    startTime: string;
+    endTime: string;
+  }
+  const initialDailyCallHours: Record<string, DailyCallHours> = {
+    Monday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Tuesday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Wednesday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Thursday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Friday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Saturday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    Sunday: { enabled: false, startTime: '09:00', endTime: '17:00' },
   };
+  const [dailyCallHours, setDailyCallHours] = useState<Record<string, DailyCallHours>>(initialDailyCallHours);
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
-    if (files && files[0]) {
-      setProfilePhotoFile(files[0]);
-      setProfilePhotoPreviewUrl(URL.createObjectURL(files[0]));
-    }
-  };
+  // State for Unavailable Call Hours Modal
+  const [showUnavailableCallHoursModal, setShowUnavailableCallHoursModal] = useState(false);
+  const [unavailableStartDate, setUnavailableStartDate] = useState('');
+  const [unavailableEndDate, setUnavailableEndDate] = useState('');
+  const [unavailableStartTime, setUnavailableStartTime] = useState('00:00');
+  const [unavailableEndTime, setUnavailableEndTime] = useState('23:59');
+  const [unavailableReason, setUnavailableReason] = useState('');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -58,6 +67,76 @@ export default function WhatsAppManagerPage() {
       setProfilePhotoFile(files[0]);
       setProfilePhotoPreviewUrl(URL.createObjectURL(files[0]));
     }
+  };
+
+  const handleSaveAvailableCallHours = () => {
+    if (!allDay) {
+      const enabledDays = Object.values(dailyCallHours).filter(day => day.enabled);
+      if (enabledDays.length === 0) {
+        toast({
+          title: "Missing Fields",
+          description: "Please select at least one day or enable 24/7 availability.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      for (const day of Object.keys(dailyCallHours)) {
+        const hours = dailyCallHours[day];
+        if (hours.enabled && hours.startTime >= hours.endTime) {
+          toast({
+            title: "Invalid Time Range",
+            description: `For ${day}, start time must be before end time.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
+    // Here you would typically send this data to a backend
+    console.log("Saving Available Call Hours:", {
+      allDay,
+      dailyCallHours: allDay ? "24/7" : dailyCallHours,
+    });
+    toast({
+      title: "Settings Saved",
+      description: "Available call hours have been updated.",
+    });
+    setShowAvailableCallHoursModal(false);
+    // Reset state
+    setAllDay(false);
+    setDailyCallHours(initialDailyCallHours);
+  };
+
+  const handleCreateUnavailableCallHours = () => {
+    if (!unavailableStartDate || !unavailableEndDate || !unavailableStartTime || !unavailableEndTime) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Here you would typically send this data to a backend
+    console.log("Creating Unavailable Call Hours:", {
+      unavailableStartDate,
+      unavailableEndDate,
+      unavailableStartTime,
+      unavailableEndTime,
+      unavailableReason,
+    });
+    toast({
+      title: "Unavailable Period Created",
+      description: "Temporarily unavailable call hours have been set.",
+    });
+    setShowUnavailableCallHoursModal(false);
+    // Reset state
+    setUnavailableStartDate('');
+    setUnavailableEndDate('');
+    setUnavailableStartTime('00:00');
+    setUnavailableEndTime('23:59');
+    setUnavailableReason('');
   };
 
   return (
@@ -444,7 +523,8 @@ export default function WhatsAppManagerPage() {
                   <h4 className="font-semibold text-base mb-1">Available call hours</h4>
                   <p className="text-sm text-muted-foreground">Set regular calling hours for your business. If you don’t set your call hours, people will always be able to call you.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  onClick={() => setShowAvailableCallHoursModal(true)}>
                   Setup
                 </Button>
               </div>
@@ -455,7 +535,8 @@ export default function WhatsAppManagerPage() {
                   <h4 className="font-semibold text-base mb-1">Temporarily unavailable call hours</h4>
                   <p className="text-sm text-muted-foreground">Set custom times, like holidays or special events, when your business is unable to receive calls.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]">
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  onClick={() => setShowUnavailableCallHoursModal(true)}>
                   Create New
                 </Button>
               </div>
@@ -476,6 +557,155 @@ export default function WhatsAppManagerPage() {
           </Card>
         )}
       </div>
+
+      {/* Available Call Hours Modal */}
+      <Dialog open={showAvailableCallHoursModal} onOpenChange={setShowAvailableCallHoursModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Setup Available Call Hours</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Configure the days and times your business is available for calls.</p>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="all-day-toggle"
+                checked={allDay}
+                onCheckedChange={setAllDay}
+              />
+              <Label htmlFor="all-day-toggle">24/7 Availability</Label>
+            </div>
+
+            {!allDay && (
+              <div className="space-y-4">
+                {Object.keys(dailyCallHours).map((day) => (
+                  <div key={day} className="p-4 border rounded-lg space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id={`checkbox-${day}`}
+                        checked={dailyCallHours[day].enabled}
+                        onCheckedChange={(checked) => {
+                          setDailyCallHours((prev) => ({
+                            ...prev,
+                            [day]: { ...prev[day], enabled: checked as boolean },
+                          }));
+                        }}
+                      />
+                      <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold">
+                        {day}
+                      </Label>
+                    </div>
+                    {dailyCallHours[day].enabled && (
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <Label htmlFor={`start-time-${day}`} className="text-sm font-medium text-foreground">Start Time</Label>
+                          <Input
+                            id={`start-time-${day}`}
+                            type="time"
+                            value={dailyCallHours[day].startTime}
+                            onChange={(e) =>
+                              setDailyCallHours((prev) => ({
+                                ...prev,
+                                [day]: { ...prev[day], startTime: e.target.value },
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Label htmlFor={`end-time-${day}`} className="text-sm font-medium text-foreground">End Time</Label>
+                          <Input
+                            id={`end-time-${day}`}
+                            type="time"
+                            value={dailyCallHours[day].endTime}
+                            onChange={(e) =>
+                              setDailyCallHours((prev) => ({
+                                ...prev,
+                                [day]: { ...prev[day], endTime: e.target.value },
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button onClick={() => setShowAvailableCallHoursModal(false)} variant="outline" className="border-input font-normal">Cancel</Button>
+            <Button onClick={handleSaveAvailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unavailable Call Hours Modal */}
+      <Dialog open={showUnavailableCallHoursModal} onOpenChange={setShowUnavailableCallHoursModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Create New Unavailable Period</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Set a period when your business will be temporarily unavailable for calls.</p>
+
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="unavailable-start-date" className="text-sm font-medium text-foreground">Start Date<span className="text-red-500 pl-0.5">*</span></Label>
+                <Input
+                  id="unavailable-start-date"
+                  type="date"
+                  value={unavailableStartDate}
+                  onChange={(e) => setUnavailableStartDate(e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="unavailable-end-date" className="text-sm font-medium text-foreground">End Date<span className="text-red-500 pl-0.5">*</span></Label>
+                <Input
+                  id="unavailable-end-date"
+                  type="date"
+                  value={unavailableEndDate}
+                  onChange={(e) => setUnavailableEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="unavailable-start-time" className="text-sm font-medium text-foreground">Start Time<span className="text-red-500 pl-0.5">*</span></Label>
+                <Input
+                  id="unavailable-start-time"
+                  type="time"
+                  value={unavailableStartTime}
+                  onChange={(e) => setUnavailableStartTime(e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="unavailable-end-time" className="text-sm font-medium text-foreground">End Time<span className="text-red-500 pl-0.5">*</span></Label>
+                <Input
+                  id="unavailable-end-time"
+                  type="time"
+                  value={unavailableEndTime}
+                  onChange={(e) => setUnavailableEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="unavailable-reason" className="text-sm font-medium text-foreground">Reason (optional)</Label>
+              <Textarea
+                id="unavailable-reason"
+                value={unavailableReason}
+                onChange={(e) => setUnavailableReason(e.target.value)}
+                placeholder="e.g., Public Holiday, Team Meeting"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button onClick={() => setShowUnavailableCallHoursModal(false)} variant="outline" className="border-input font-normal">Cancel</Button>
+            <Button onClick={handleCreateUnavailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
