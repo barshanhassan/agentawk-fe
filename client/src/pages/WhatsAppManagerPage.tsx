@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"; // Added Popover imports
-import { UploadCloud, Trash2 } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
+import { UploadCloud, Trash2, Plus, X } from "react-feather"; // For drag and drop icon, Edit2 icon, and Check icon
 import { Info, Calendar, ChevronDown } from "lucide-react"; // Add Info icon import
 import { Switch } from "@/components/ui/switch"; // Import Switch component
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
@@ -35,31 +35,6 @@ export default function WhatsAppManagerPage() {
   const [about, setAbout] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
-
-  const whatsappTemplates = [
-    {
-      id: 1,
-      name: "ice_breaker_template_1",
-      body: "Hello! How can I help you today?",
-      header: "Welcome",
-      footer: "Looking forward to assisting you",
-      variables: [],
-      buttons: [],
-      variableSamples: {}
-    },
-    {
-      id: 2,
-      name: "ice_breaker_template_2",
-      body: "What brings you here?",
-      header: "Greetings",
-      footer: "Let's get started",
-      variables: [],
-      buttons: [],
-      variableSamples: {}
-    },
-  ];
-
-  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(whatsappTemplates[0]);
 
   // State for active tab
   const [activeTab, setActiveTab] = useState("business-profile");
@@ -164,6 +139,7 @@ export default function WhatsAppManagerPage() {
   const [unavailableReason, setUnavailableReason] = useState('');
 
   const [showIceBreakersModal, setShowIceBreakersModal] = useState(false);
+  const [templatePhoneNumbers, setTemplatePhoneNumbers] = useState<string[]>([""]); // For Ice Breakers recipients
 
   interface UnavailablePeriod {
     id: number;
@@ -1118,110 +1094,53 @@ export default function WhatsAppManagerPage() {
                   <h3 className="font-semibold text-lg mb-1">Ice Breaker Details</h3>
                   <p className="text-sm text-muted-foreground">Configure your ice breakers here.</p>
                 </div>
-
-                {/* Undefined Field 1 (formerly Campaign Name) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      placeholder="Enter value..."
-                      value={""} // Placeholder for new state
-                      onChange={(e) => console.log(e.target.value)} // Placeholder for new state handler
-                      className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                      0/100
-                    </span>
-                  </div>
-                </div>
-
-                {/* Undefined Field 2 (formerly Campaign Start Date) */}
-                <div className="flex flex-col gap-6">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Icebreakers (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
-                        >
-                          <div className="flex items-center">
-                            <Calendar size={14} className="mr-2" />
-                            <span>Pick a date</span>
-                          </div>
-                          <ChevronDown size={14} className="text-muted-foreground" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={undefined}
-                          onSelect={(date) => console.log(date)}
-                          initialFocus
+                    {templatePhoneNumbers.map((phone, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="Where are you located?"
+                          value={phone}
+                          onChange={(e) => {
+                            const newNumbers = [...templatePhoneNumbers];
+                            newNumbers[index] = e.target.value;
+                            setTemplatePhoneNumbers(newNumbers);
+                          }}
+                          className="border-input flex-1"
                         />
-                      </PopoverContent>
-                    </Popover>
+                        {templatePhoneNumbers.length > 1 && (
+                          <button
+                            onClick={() => {
+                              const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
+                              setTemplatePhoneNumbers(newNumbers);
+                            }}
+                            className="text-muted-foreground hover:text-foreground transition-colors border-[]"
+                          >
+                            <X size={18} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
-                      <div className="flex items-end space-x-2 mt-2">
-                      <Checkbox id="never-ends-icebreaker" checked={false} onCheckedChange={(checked) => console.log(checked)} />
-                      <label
-                        htmlFor="never-ends-icebreaker"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Never end
-                      </label>
-                    </div>
-                    </div>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className="w-full justify-between text-left font-normal border-input [border-color:hsl(var(--input))] hover-elevate"
-                          disabled={false}
-                        >
-                          <div className="flex items-center">
-                            <Calendar size={14} className="mr-2" />
-                            <span>Pick a date</span>
-                          </div>
-                          <ChevronDown size={14} className="text-muted-foreground" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={undefined}
-                          onSelect={(date) => console.log(date)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+
+                  {/* Add another recipient button */}
+                  {templatePhoneNumbers.length < 5 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 text-xs"
+                      disabled={templatePhoneNumbers.some(p => p.trim() === "")}
+                      onClick={() => {
+                        setTemplatePhoneNumbers([...templatePhoneNumbers, ""]);
+                      }}
+                    >
+                      <Plus size={14} className="mr-1" />
+                      Add another icebreaker
+                    </Button>
+                  )}
                 </div>
 
-                {/* Undefined Field 3 (formerly WhatsApp Template Dropdown) */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Undefined field<span className="text-red-500 pl-0.5">*</span></label>
-                  <Select
-                    value={selectedTemplate?.name || ""}
-                    onValueChange={(value) => {
-                      setSelectedTemplate(whatsappTemplates.find(t => t.name === value) || null);
-                    }}
-                  >
-                    <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate">
-                      <SelectValue placeholder="Select a template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {whatsappTemplates.map(template => (
-                        <SelectItem key={template.id} value={template.name}>{template.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
 
@@ -1230,12 +1149,12 @@ export default function WhatsAppManagerPage() {
               <div className="flex flex-col h-full">
                 <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
                 <TemplatePreview
-                  headerText={selectedTemplate?.header || ""}
-                  bodyText={selectedTemplate?.body || ""}
-                  footerText={selectedTemplate?.footer || ""}
+                  headerText={""}
+                  bodyText={""}
+                  footerText={""}
                   selectedMediaFile={null}
-                  templateButtons={selectedTemplate?.buttons || []}
-                  variableSamples={selectedTemplate?.variableSamples || {}}
+                  templateButtons={[]}
+                  variableSamples={{}}
                   containerClassName="flex-1 flex items-center justify-center min-h-0"
                   phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                 />
@@ -1258,6 +1177,7 @@ export default function WhatsAppManagerPage() {
                   console.log("Save Ice Breakers");
                   setShowIceBreakersModal(false);
                 }}
+                disabled={templatePhoneNumbers.some(p => p.trim() === "")}
               >
                 Save
               </Button>
