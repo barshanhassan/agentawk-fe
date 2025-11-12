@@ -31,8 +31,8 @@ export default function VoiceOfCustomerSummary() {
           <p className="text-sm font-medium">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2">
-              <span className="text-xs">{entry.name}:</span>
-              <span className="text-xs font-medium" style={{ color: entry.color }}>
+              <span className="text-sm">{entry.name}:</span>
+              <span className="text-sm font-medium" style={{ color: entry.color }}>
                 {entry.value}
               </span>
             </div>

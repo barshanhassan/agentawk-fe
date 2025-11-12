@@ -1,13 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
-
-// Utility function to abbreviate large numbers
-const abbreviateNumber = (num: number): string => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-  return num.toString();
-};
 
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -16,9 +8,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-background border border-border rounded-md p-2 shadow-md">
         <p className="text-sm font-medium">{label}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ color: entry.color }} className="text-xs">
-            {entry.name}: {entry.value}
-          </p>
+          <div key={index} className="flex items-center gap-2">
+            <span className="text-sm">{entry.name}:</span>
+            <span className="text-sm font-medium" style={{ color: entry.color }}>
+              {entry.value}
+            </span>
+          </div>
         ))}
       </div>
     );
