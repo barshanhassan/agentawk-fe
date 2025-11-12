@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "react-feather";
+import { useToast } from "@/hooks/use-toast";
 
 const PasswordPolicySection = () => {
+  const { toast } = useToast();
   const [policyEnabled, setPolicyEnabled] = useState(false); // New state for the toggle switch
   const [policyName, setPolicyName] = useState('');
   const [expirationDays, setExpirationDays] = useState(90);
@@ -128,7 +130,16 @@ const PasswordPolicySection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Password Policy Settings")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Password Policy Settings");
+            toast({
+              title: "Settings Saved",
+              description: "Password policy settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

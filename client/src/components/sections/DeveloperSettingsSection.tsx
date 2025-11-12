@@ -133,7 +133,16 @@ const DeveloperSettingsSection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Developer Settings")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Developer Settings");
+            toast({
+              title: "Settings Saved",
+              description: "Developer settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

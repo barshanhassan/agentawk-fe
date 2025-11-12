@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "react-feather";
+import { useToast } from "@/hooks/use-toast";
 
 interface PasswordInputProps {
   id: string;
@@ -53,6 +54,7 @@ interface PasswordErrors {
 }
 
 const ChangePasswordSection = () => {
+  const { toast } = useToast();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [retypePassword, setRetypePassword] = useState('');
@@ -100,6 +102,14 @@ const ChangePasswordSection = () => {
     }
     console.log("Validation successful. Saving password...");
     // Add actual save logic here
+    toast({
+      title: "Password Changed",
+      description: "Your password has been successfully updated.",
+    });
+    // Optionally clear fields after successful save
+    setCurrentPassword('');
+    setNewPassword('');
+    setRetypePassword('');
   };
 
   return (

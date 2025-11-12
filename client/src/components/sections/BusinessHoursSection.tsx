@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // Define TypeScript interfaces
 interface TimePickerProps {
@@ -133,6 +134,7 @@ const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEna
 
 
 const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours }) => {
+    const { toast } = useToast();
 
     const handleAllDaysHoursChange = (part: keyof DayHours, value: string) => {
         const newBusinessHours = {
@@ -245,7 +247,16 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
         )}
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Business Hours", businessHours)} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Business Hours", businessHours);
+            toast({
+              title: "Settings Saved",
+              description: "Business hours settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

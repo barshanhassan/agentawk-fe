@@ -5,8 +5,10 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const BotToAgentSection = () => {
+  const { toast } = useToast();
   const [messageEnabled, setMessageEnabled] = useState(false);
   const [messageContent, setMessageContent] = useState('');
 
@@ -37,7 +39,16 @@ const BotToAgentSection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Bot to Agent Settings")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Bot to Agent Settings");
+            toast({
+              title: "Settings Saved",
+              description: "Bot to Agent settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

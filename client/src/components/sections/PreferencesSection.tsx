@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info } from "react-feather";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 interface Preferences {
     timezone: string;
@@ -28,6 +29,7 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
     preferences,
     setPreferences,
 }) => {
+    const { toast } = useToast();
     const handleSwitchChange = (key: keyof Preferences) => (checked: boolean) => {
         setPreferences(prev => ({ ...prev, [key]: checked }));
     };
@@ -212,7 +214,16 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Preferences", preferences)} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Preferences", preferences);
+            toast({
+              title: "Settings Saved",
+              description: "Preferences have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

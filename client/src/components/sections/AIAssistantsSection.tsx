@@ -5,8 +5,10 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 
 const AIAssistantsSection = () => {
+  const { toast } = useToast();
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [contentPrompts, setContentPrompts] = useState(false);
 
@@ -70,6 +72,12 @@ const AIAssistantsSection = () => {
             variant="ghost"
             size="sm"
             className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+            onClick={() => {
+              toast({
+                title: "Request Sent",
+                description: "Your request for access has been sent.",
+              });
+            }}
           >
             Request access
           </Button>
@@ -84,7 +92,16 @@ const AIAssistantsSection = () => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save AI Assistants Settings")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save AI Assistants Settings");
+            toast({
+              title: "Settings Saved",
+              description: "AI Assistants settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

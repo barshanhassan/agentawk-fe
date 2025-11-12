@@ -6,8 +6,10 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const AgentChatsSection = () => {
+  const { toast } = useToast();
   const [autoAssign, setAutoAssign] = useState(false);
   const [agentStatus, setAgentStatus] = useState(false);
   const [autoAssignCapacity, setAutoAssignCapacity] = useState(false);
@@ -79,7 +81,16 @@ const AgentChatsSection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Agent Chats Settings")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Agent Chats Settings");
+            toast({
+              title: "Settings Saved",
+              description: "Agent chat settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

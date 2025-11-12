@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileSectionProps {
   profilePictureUrl: string;
@@ -22,6 +23,7 @@ const ProfileSection = ({
   browserNotificationsDenied,
   handleTestNotification,
 }: ProfileSectionProps) => {
+  const { toast } = useToast();
   return (
     <>
       <CardHeader>
@@ -34,7 +36,7 @@ const ProfileSection = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              {profilePictureUrl && profilePictureUrl !== "https://via.placeholder.com/150" ? (
+              {profilePictureUrl && profilePictureUrl !== "" ? (
                 <img src={profilePictureUrl} alt="Profile" className="rounded-full object-cover" />
               ) : (
                 <AvatarFallback className="bg-primary text-primary-foreground text-xl">AD</AvatarFallback>
@@ -53,6 +55,10 @@ const ProfileSection = ({
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
                 setProfilePictureUrl(URL.createObjectURL(e.target.files[0]));
+                toast({
+                  title: "Profile Picture Updated",
+                  description: "Your profile picture has been successfully updated.",
+                });
               }
             }}
           />
@@ -118,7 +124,16 @@ const ProfileSection = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save My Profile")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save My Profile");
+            toast({
+              title: "Profile Saved",
+              description: "Your profile settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>

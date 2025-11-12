@@ -5,8 +5,10 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const OutOfOfficeSection = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('weekdays');
   const [weekdaysMessage, setWeekdaysMessage] = useState('');
   const [weekdaysEnabled, setWeekdaysEnabled] = useState(false);
@@ -85,7 +87,16 @@ const OutOfOfficeSection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={() => console.log("Save Out of Office Settings")} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button
+          onClick={() => {
+            console.log("Save Out of Office Settings");
+            toast({
+              title: "Settings Saved",
+              description: "Out of Office settings have been updated.",
+            });
+          }}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+        >
           Save
         </Button>
       </CardFooter>
