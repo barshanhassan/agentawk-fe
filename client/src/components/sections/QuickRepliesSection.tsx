@@ -176,6 +176,7 @@ export default function QuickRepliesSection() {
       name: newName,
       message: newMessage,
       status: "Active",
+      lastEdited: new Date().toISOString().slice(0, 10), // Set current date
     };
     setQuickReplies([...quickReplies, newItem]);
     toast({
@@ -200,7 +201,7 @@ export default function QuickRepliesSection() {
       setQuickReplies(
         quickReplies.map(item =>
           item.id === editingItem.id
-            ? { ...item, name: editName, message: editMessage, status: editStatus }
+            ? { ...item, name: editName, message: editMessage, status: editStatus, lastEdited: new Date().toISOString().slice(0, 10) } // Update lastEdited
             : item
         )
       );
@@ -292,13 +293,22 @@ export default function QuickRepliesSection() {
                       {renderSortIcon("status")}
                     </div>
                   </th>
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("lastEdited")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Last Edited
+                      {renderSortIcon("lastEdited")}
+                    </div>
+                  </th>
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {getFilteredAndSortedData().length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={5} className="text-center py-8 text-muted-foreground">
                       No quick replies found.
                     </td>
                   </tr>
@@ -322,6 +332,7 @@ export default function QuickRepliesSection() {
                           {item.status}
                         </span>
                       </td>
+                      <td className="py-2 px-3">{item.lastEdited}</td>
                       <td className="py-2 px-3">
                         <div>
                           <DropdownMenu>
