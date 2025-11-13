@@ -145,53 +145,6 @@ export default function TemplatePreview({
     return parts.length > 0 ? parts : text;
   };
 
-  // WhatsApp-style text formatter with nested formatting support
-  const formatWhatsAppText = (text: string): React.ReactNode => {
-    const parts: React.ReactNode[] = [];
-    let currentIndex = 0;
-    let key = 0;
-
-    // Process text character by character to handle WhatsApp formatting
-    // WhatsApp uses: *bold*, _italic_, ~strikethrough~
-    const regex = /(\*[^*]+\*|_[^_]+_|~[^~]+~)/g;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      // Add text before the match
-      if (match.index > currentIndex) {
-        const beforeText = text.substring(currentIndex, match.index);
-        parts.push(...splitByNewlines(beforeText, key));
-        key += beforeText.split('\n').length;
-      }
-
-      const matchedText = match[0];
-      const innerText = matchedText.substring(1, matchedText.length - 1);
-      const formatChar = matchedText[0];
-
-      // Recursively format the inner text to support nested formatting
-      const formattedInner = formatWhatsAppText(innerText);
-
-      // Apply formatting based on WhatsApp syntax
-      if (formatChar === '*') {
-        parts.push(<strong key={key++}>{formattedInner}</strong>);
-      } else if (formatChar === '_') {
-        parts.push(<em key={key++}>{formattedInner}</em>);
-      } else if (formatChar === '~') {
-        parts.push(<s key={key++}>{formattedInner}</s>);
-      }
-
-      currentIndex = match.index + matchedText.length;
-    }
-
-    // Add remaining text
-    if (currentIndex < text.length) {
-      const remainingText = text.substring(currentIndex);
-      parts.push(...splitByNewlines(remainingText, key));
-    }
-
-    return parts.length > 0 ? parts : text;
-  };
-
   // Get button display text with emoji mapping
   const getButtonDisplayText = (button: any): string => {
     const emojiMap: Record<string, string> = {

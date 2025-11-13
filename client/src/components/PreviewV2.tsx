@@ -1,10 +1,14 @@
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical } from 'react-feather';
+import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play } from 'react-feather';
 
 type Mode = "template" | "profile";
 
 interface PreviewV2Props {
-  // Optional Template content
+  // Optional Template content:
+  showPlaceholderMessageInTemplate?: boolean;
+  showTopBar?: boolean;
+  showBottomBar?: boolean;
+  
   // Optional Message Related
   headerText?: string;
   bodyText?: string;
@@ -21,24 +25,175 @@ interface PreviewV2Props {
 
   mode?: Mode;
   showMobile?: boolean;
-  showPlaceholderMessageInTemplate?: boolean
+  profileName?: string;
+  profileSubText?: string;
+  profilePfpUrl?: string;
 }
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
-  headerText = "",
-  bodyText = "",
-  footerText = "",
+  headerText = "Welcome to {{company}}",
+  bodyText = "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
+  footerText = "Thank you for choosing us",
   selectedMediaFile = null,
-  templateButtons = [],
-  variableSamples = {},
+  templateButtons = [
+    { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
+    { id: 2, type: "quick-reply", buttonText: "Learn More" }
+  ],
+  variableSamples = {
+    company: "Acme Corp"
+  },
   showPlaceholderMessageInTemplate = true, 
   showMobile = true,
+  profileName = "Name",
+  profileSubText = "Chat Support",
+  profilePfpUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='50' fill='%23DFE5E7'/%3E%3Cg fill='white'%3E%3Ccircle cx='50' cy='40' r='15'/%3E%3Cpath d='M50,60 C30,60 20,80 20,100 L80,100 C80,80 70,60 50,60 Z'/%3E%3C/g%3E%3C/svg%3E",
+  showTopBar = true,
+  showBottomBar = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scaleWrapperRef = useRef<HTMLDivElement>(null);
 
   const baseWidth = 450;
   const baseHeight = 900;
+
+  const splitByNewlines = (text: string, startKey: number) => {
+    const lines = text.split('\n');
+    const result: React.ReactNode[] = [];
+
+    lines.forEach((line, index) => {
+      // Check if line starts with "- " for bullet points
+      if (line.trim().startsWith('- ')) {
+        const bulletText = line.replace(/^\s*-\s/, '');
+        result.push(
+          <span key={startKey + index * 2}>
+            <span className="inline-block mr-[4px]">•</span>
+            {bulletText}
+          </span>
+        );
+      } else {
+        result.push(<span key={startKey + index * 2}>{line}</span>);
+      }
+
+      if (index < lines.length - 1) {
+        result.push(<br key={startKey + index * 2 + 1} />);
+      }
+    });
+
+    return result;
+  };
+
+  // Format text with variables - handles formatting that wraps variables like *{{1}}*
+  const formatTextWithVariables = (text: string): React.ReactNode => {
+    const parts: React.ReactNode[] = [];
+    let currentIndex = 0;
+    let key = 0;
+
+    // Match formatting patterns that may contain variables: *...*,  _..._,  ~...~
+    const regex = /(\*[^*]*\*|_[^_]*_|~[^~]*~)/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > currentIndex) {
+        const beforeText = text.substring(currentIndex, match.index);
+        // Split by variables and format
+        beforeText.split(/(\{\{[^}]+\}\})/).forEach((part) => {
+          if (part.match(/\{\{[^}]+\}\}/)) {
+            const variableKey = part.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+            const value = variableSamples[variableKey];
+            parts.push(
+              <span key={key++} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                {value || part}
+              </span>
+            );
+          } else if (part) {
+            parts.push(...splitByNewlines(part, key));
+            key += part.split('\n').length;
+          }
+        });
+      }
+
+      const matchedText = match[0];
+      const innerText = matchedText.substring(1, matchedText.length - 1);
+      const formatChar = matchedText[0];
+
+      // Process inner text for variables
+      const innerContent = innerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+        if (part.match(/\{\{[^}]+\}\}/)) {
+          const variableKey = part.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+          const value = variableSamples[variableKey];
+          return (
+            <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+              {value || part}
+            </span>
+          );
+        }
+        return <span key={idx}>{part}</span>;
+      });
+
+      // Apply formatting based on WhatsApp syntax
+      if (formatChar === '*') {
+        parts.push(<strong key={key++}>{innerContent}</strong>);
+      } else if (formatChar === '_') {
+        parts.push(<em key={key++}>{innerContent}</em>);
+      } else if (formatChar === '~') {
+        parts.push(<s key={key++}>{innerContent}</s>);
+      }
+
+      currentIndex = match.index + matchedText.length;
+    }
+
+    // Add remaining text
+    if (currentIndex < text.length) {
+      const remainingText = text.substring(currentIndex);
+      remainingText.split(/(\{\{[^}]+\}\})/).forEach((part) => {
+        if (part.match(/\{\{[^}]+\}\}/)) {
+          const variableKey = part.match(/\{\{([^}]+)\}\}/)?.[1] || "";
+          const value = variableSamples[variableKey];
+          parts.push(
+            <span key={key++} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+              {value || part}
+            </span>
+          );
+        } else if (part) {
+          parts.push(...splitByNewlines(part, key));
+          key += part.split('\n').length;
+        }
+      });
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
+  // Get button display text with emoji mapping
+  const getButtonDisplayText = (button: any): string => {
+    const emojiMap: Record<string, string> = {
+      "copy-offer": "💻",
+      "complete-flow": "📋",
+      "call-phone": "📞",
+      "call-whatsapp": "📞",
+      "visit-website": "↗️",
+      "quick-reply": ""
+    };
+
+    let emoji = emojiMap[button.type] || "";
+
+    if (button.type === "complete-flow") {
+      const flowEmojiMap: Record<string, string> = {
+        "default": "📋",
+        "document": "📄",
+        "promotion": "🎁",
+        "review": "⭐"
+      };
+      const flowEmoji = flowEmojiMap[button.flowButton] || "📋";
+      emoji = `📋 ${flowEmoji}`;
+    }
+
+    const text = button.buttonText || "Button";
+    return emoji ? `${emoji} ${text}` : text;
+  };
+
+  const hasContent = headerText || bodyText || footerText || templateButtons.length > 0 || selectedMediaFile;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -78,32 +233,144 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
   const whiteContentDiv = (
     <div className='flex flex-col flex-grow rounded-[14px] -m-px'>
-      <div className='w-full h-[35px] bg-gray-900 rounded-t-[14px] flex items-center justify-between px-4 text-white'>
-        <span className="text-sm font-semibold">9:41</span>
-        <div className="flex items-center space-x-1">
-          <Wifi size={16} />
-          <Battery size={16} />
-        </div>
-      </div>
-      <div className='w-full h-[68px] bg-white -mt-px flex items-center justify-between px-4'>
-        <div className="flex items-center space-x-2">
-          <ArrowLeft size={24} className="text-gray-600" />
-          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-          <div className="flex flex-col">
-            <span className="text-base font-semibold text-gray-800">Name</span>
-            <span className="text-xs text-gray-500">Chat Support</span>
+      {showTopBar && (
+        <div className='w-full h-[35px] bg-gray-900 rounded-t-[14px] flex items-center justify-between px-[16px] text-white'>
+          <span className="text-[14px] font-semibold">9:41</span>
+          <div className="flex items-center space-x-[4px]">
+            <Wifi size={16} />
+            <Battery size={16} fill="white" />
           </div>
         </div>
-        <MoreVertical size={24} className="text-gray-600" />
+      )}
+      <div className={`w-full h-[68px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
+        <div className="flex items-center space-x-[8px]">
+          <ArrowLeft size={24}/>
+          <img src={profilePfpUrl} className="w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
+          <div className="flex flex-col">
+            <span className="text-[16px] font-semibold">{profileName}</span>
+            <span className="text-[14px] mt-[-5px]">{profileSubText}</span>
+          </div>
+        </div>
+        <MoreVertical size={24} />
       </div>
-      <div className='w-full h-full bg-green-500 -mt-px'>
-        
+      <div 
+        className={`w-full h-full bg-[#ECE5DD] -mt-px px-[17px] pt-[16px] pb-[16px] overflow-y-auto overflow-x-hidden flex flex-col space-y-[12px] scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}
+        style={{
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+      >
+        <div className="flex-1 min-h-0"></div>
+        {showPlaceholderMessageInTemplate && (
+          <>
+            <div className="flex justify-start flex-shrink-0">
+              <div className="bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+                {selectedMediaFile && (
+                  <div className="mb-[8px] mt-[4px]">
+                    {selectedMediaFile.type.startsWith('image/') ? (
+                      <img
+                        src={URL.createObjectURL(selectedMediaFile)}
+                        alt="Media preview"
+                        className="max-w-full h-auto rounded max-h-[192px] object-cover"
+                      />
+                    ) : selectedMediaFile.type.startsWith('video/') ? (
+                      <video
+                        src={URL.createObjectURL(selectedMediaFile)}
+                        className="max-w-full h-auto rounded max-h-[192px] object-cover"
+                        controls
+                      />
+                    ) : (
+                      <div className="flex items-center gap-[8px] p-[8px] bg-[#F0F0F0] rounded">
+                        <FileText size={20} className="text-[#666666]" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-medium text-[#111B21] truncate">{selectedMediaFile.name}</p>
+                          <p className="text-[12px] text-[#666666]">({(selectedMediaFile.size / 1024).toFixed(1)}KB)</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className='flex flex-col space-y-[6px]'>
+                  {headerText && (
+                    <div>
+                      <p className="text-[16.5px] font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                        {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
+                          const variableMatch = part.match(/\{\{([^}]+)\}\}/);
+                          if (variableMatch) {
+                            const variableKey = variableMatch[1];
+                            const value = variableSamples[variableKey];
+                            return (
+                              <span key={idx} className={value ? "text-[#111B21]" : "text-[#0084FF] font-medium"}>
+                                {value || part}
+                              </span>
+                            );
+                          }
+                          return <span key={idx}>{part}</span>;
+                        })}
+                      </p>
+                    </div>
+                  )}
+
+                  {bodyText && (
+                    <p className="leading-[24px] text-[16px] text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                      {formatTextWithVariables(bodyText)}
+                    </p>
+                  )}
+
+                  {footerText && (
+                    <p className="text-[14px] text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                      {footerText}
+                    </p>
+                  )}
+  
+                </div>
+
+                <p className="text-[11px] text-[#999999] text-right">9:41 AM</p>
+
+                {templateButtons.length > 0 && (
+                  <div className="mt-[2px] space-y-[4px]">
+                    {templateButtons.slice(0, 3).map((button) => (
+                      <>
+                        <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{borderTopWidth: "2px", borderTopColor: "#e7e7e7ff"}}></div>
+                        <div key={button.id} className="px-[12px] py-[8px] text-center">
+                          <p className="text-[16px] text-[#0064FF] font-normal break-words">
+                            {getButtonDisplayText(button)}
+                          </p>
+                        </div>
+                      </>
+                    ))}
+                    {templateButtons.length > 3 && (
+                      <>
+                        <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{borderTopWidth: "2px", borderTopColor: "#e7e7e7ff"}}></div>
+                        <div className="px-[12px] py-[8px] text-center">
+                          <Play size={14} className="text-[#0064FF]" />
+                          <p className="text-[16px] text-[#0064FF] font-normal">See all options</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {!hasContent && (
+                  <p className="text-[16px] text-[#999999] italic">
+                    Start typing to see your template preview...
+                  </p>
+                )}
+
+              </div>
+            </div>
+          </>
+        )}
       </div>
-      <div className='w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
-        <ChevronLeft size={28} />
-        <Circle size={20} />
-        <Square size={20} />
-      </div>
+      {showBottomBar && (
+        <div className='w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
+          <ChevronLeft size={28} />
+          <Circle size={20} />
+          <Square size={20} />
+        </div>
+      )}
     </div>
   );
 
