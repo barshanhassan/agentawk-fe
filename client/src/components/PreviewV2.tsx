@@ -32,7 +32,8 @@ interface PreviewV2Props {
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
   headerText = "",
-  bodyText = "",
+  bodyText = "ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ",
+  // bodyText = "",
   footerText = "",
   selectedMediaFile = "",
   templateButtons = [],
@@ -227,7 +228,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   }, []);
 
   const whiteContentDiv = (
-    <div className='flex flex-col flex-grow rounded-[14px] -m-px'>
+    <div className='flex flex-col flex-grow rounded-[14px] -m-px'
+      style={{
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}
+    >
       {showTopBar && (
         <div className='w-full h-[35px] bg-gray-900 rounded-t-[14px] flex items-center justify-between px-[16px] text-white'>
           <span className="text-[14px] font-semibold">9:41</span>
@@ -238,9 +245,9 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         </div>
       )}
       <div className={`w-full h-[68px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
-        <div className="flex items-center space-x-[8px]">
+        <div className="flex items-center">
           <ArrowLeft size={24}/>
-          <img src={profilePfpUrl} className="w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
+          <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
           <div className="flex flex-col">
             <span className="text-[16px] font-semibold">{profileName}</span>
             <span className="text-[14px] mt-[-5px]">{profileSubText}</span>
@@ -249,18 +256,14 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         <MoreVertical size={24} />
       </div>
       <div 
-        className={`w-full h-full bg-[#ECE5DD] -mt-px px-[17px] pt-[16px] pb-[16px] overflow-y-auto overflow-x-hidden flex flex-col space-y-[12px] scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}
-        style={{
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
-      >
-        <div className="flex-1 min-h-0"></div>
+        className={`w-full h-full bg-[#ECE5DD] -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
         {showPlaceholderMessageInTemplate && (
           <>
-            <div className="flex justify-start flex-shrink-0">
-              <div className="bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+            <div className="flex-1 min-h-0"></div>
+            <div className="relative flex justify-start flex-shrink-0">
+              <div className="absolute w-[25px] h-[30px] left-[-10px] top-[0px] bg-white" style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}></div>       
+              <div className="z-10 bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden">
+                {/* Horn */}
                 {selectedMediaFile && (
                   <div className="mb-[8px] mt-[4px]">
                     {typeof selectedMediaFile === 'string' ? (
@@ -365,7 +368,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         )}
       </div>
       {showBottomBar && (
-        <div className='w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
+        <div className='z-20 w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
           <ChevronLeft size={28} />
           <Circle size={20} />
           <Square size={20} />
