@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
-import { MdMic, MdAttachFile } from 'react-icons/md';
+import { MdMic, MdAttachFile, MdSend } from 'react-icons/md';
 
 type Mode = "chat" | "profile";
 
@@ -22,6 +22,7 @@ interface PreviewV2Props {
   // Optional Command related
 
   // Optional Ice Breaker content
+  icebreakers?: string[];
 
   // Optional profile content
 
@@ -33,19 +34,14 @@ interface PreviewV2Props {
 }
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
-  headerText = "Hello",
-  bodyText = "ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ",
-  // bodyText = "Hello",
+  headerText = "",
+  bodyText = "",
   placeholderText = "Start typing to see your template preview...",
-  footerText = "Hello",
+  footerText = "",
   selectedMediaFile = "",
-  templateButtons = [
-    { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
-    { id: 2, type: "quick-reply", buttonText: "Learn More" }
-  ],
-  variableSamples = {
-    company: "Acme Corp"
-  },
+  templateButtons = [],
+  icebreakers = [],
+  variableSamples = {},
   showPlaceholderMessageInTemplate = true, 
   showMobile = true,
   profileName = "Business Name",
@@ -393,7 +389,22 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
       <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-end pt-[12px] pb-[10px] px-[8px]">
         <div className="flex-1 bg-white w-full rounded-[29px] flex flex-col items-center">
-          {/* <div className="w-full"></div> */}
+          <div className="w-full">
+            {icebreakers.length > 0 && (
+              <div className="py-[16px] pl-[12px] pr-[16px]">
+                {icebreakers.map((icebreaker) => (
+                  <div className='flex justify-between items-center '>
+                    <div className="p-[8px] text-gray-700 text-[18px]">
+                      {icebreaker}
+                    </div>
+                    <div className='h-[22px] w-[22px]'>
+                      <MdSend size={22} fill='#36AD60'/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="w-full h-[45px] flex items-center px-[15px]">
             <Smile size={24} className="text-gray-500" />
             <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px] placeholder:text-[19px] placeholder:text-gray-500" disabled />
@@ -401,7 +412,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
             <Camera size={22} className="text-gray-500 ml-[10px]" />
           </div>
         </div>
-        <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-green-600/85 rounded-full">
+        <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-[#36AD60] rounded-full">
           <MdMic color='white' size={24} />
         </button>
       </div>

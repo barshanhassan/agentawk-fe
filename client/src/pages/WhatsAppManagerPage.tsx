@@ -162,7 +162,7 @@ export default function WhatsAppManagerPage() {
   const removeCommand = (id: number) => {
     setCommands(commands.filter(cmd => cmd.id !== id));
   };
-  const [templatePhoneNumbers, setTemplatePhoneNumbers] = useState<string[]>([""]); // For Ice Breakers recipients
+  const [icebreakers, setIcebreakers] = useState<string[]>([""]); // For Ice Breakers recipients
 
   interface UnavailablePeriod {
     id: number;
@@ -605,7 +605,7 @@ export default function WhatsAppManagerPage() {
               </Card>
             </div>
 
-            {/* Right Side: WhatsApp Template Preview */}
+            {/* Right Side: WhatsApp Preview */}
             <div className="max-h-[69.5vh] w-full">
               <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full flex flex-col">
                 <CardHeader>
@@ -1117,23 +1117,23 @@ export default function WhatsAppManagerPage() {
                 <div>
                   <label className="text-sm font-medium mb-2 block">Icebreakers (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
                   <div className="space-y-2">
-                    {templatePhoneNumbers.map((phone, index) => (
+                    {icebreakers.map((phone, index) => (
                       <div key={index} className="flex gap-2 items-center">
                         <Input
                           placeholder="Where are you located?"
                           value={phone}
                           onChange={(e) => {
-                            const newNumbers = [...templatePhoneNumbers];
+                            const newNumbers = [...icebreakers];
                             newNumbers[index] = e.target.value;
-                            setTemplatePhoneNumbers(newNumbers);
+                            setIcebreakers(newNumbers);
                           }}
                           className="border-input flex-1"
                         />
-                        {templatePhoneNumbers.length > 1 && (
+                        {icebreakers.length > 1 && (
                           <button
                             onClick={() => {
-                              const newNumbers = templatePhoneNumbers.filter((_, i) => i !== index);
-                              setTemplatePhoneNumbers(newNumbers);
+                              const newNumbers = icebreakers.filter((_, i) => i !== index);
+                              setIcebreakers(newNumbers);
                             }}
                             className="text-muted-foreground hover:text-foreground transition-colors border-[]"
                           >
@@ -1145,14 +1145,14 @@ export default function WhatsAppManagerPage() {
                   </div>
 
                   {/* Add another recipient button */}
-                  {templatePhoneNumbers.length < 5 && (
+                  {icebreakers.length < 5 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="mt-2 text-xs"
-                      disabled={templatePhoneNumbers.some(p => p.trim() === "")}
+                      disabled={icebreakers.some(p => p.trim() === "")}
                       onClick={() => {
-                        setTemplatePhoneNumbers([...templatePhoneNumbers, ""]);
+                        setIcebreakers([...icebreakers, ""]);
                       }}
                     >
                       <Plus size={14} className="mr-1" />
@@ -1164,18 +1164,13 @@ export default function WhatsAppManagerPage() {
               </div>
             </div>
 
-            {/* Right: Template Preview */}
+            {/* Right: Icebreakers Preview */}
             <div>
               <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
               <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                 <PreviewV2
                   mode="chat"
-                  headerText={""}
-                  bodyText={""}
-                  footerText={""}
-                  selectedMediaFile={null}
-                  templateButtons={[]}
-                  variableSamples={{}}
+                  icebreakers={icebreakers}
                   showPlaceholderMessageInTemplate={false}
                 />
               </div>
@@ -1197,7 +1192,7 @@ export default function WhatsAppManagerPage() {
                   console.log("Save Ice Breakers");
                   setShowIceBreakersModal(false);
                 }}
-                disabled={templatePhoneNumbers.some(p => p.trim() === "")}
+                disabled={icebreakers.some(p => p.trim() === "")}
               >
                 Save
               </Button>
@@ -1280,18 +1275,12 @@ export default function WhatsAppManagerPage() {
               </div>
             </div>
 
-            {/* Right: Template Preview */}
+            {/* Right: Commands Preview */}
             <div>
               <h3 className="font-semibold text-lg mb-1">Commands Preview</h3>
               <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                 <PreviewV2
                   mode="chat"
-                  headerText={""}
-                  bodyText={""}
-                  footerText={""}
-                  selectedMediaFile={null}
-                  templateButtons={[]}
-                  variableSamples={{}}
                   showPlaceholderMessageInTemplate={false}
                 />
               </div>
