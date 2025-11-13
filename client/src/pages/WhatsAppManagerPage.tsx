@@ -145,6 +145,7 @@ export default function WhatsAppManagerPage() {
     commandText: string;
     commandDescription: string;
   }
+  
   const [commands, setCommands] = useState<Command[]>([{ id: Date.now(), commandText: "", commandDescription: "" }]);
 
   const handleCommandChange = (index: number, field: keyof Command, value: string) => {
@@ -1286,6 +1287,7 @@ export default function WhatsAppManagerPage() {
               <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                 <PreviewV2
                   mode="chat"
+                  commands={commands}
                   showPlaceholderMessageInTemplate={false}
                 />
               </div>

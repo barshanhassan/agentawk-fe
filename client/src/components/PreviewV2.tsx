@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
-import { MdMic, MdAttachFile, MdSend } from 'react-icons/md';
+import { MdMic, MdAttachFile, MdSend, MdDoneAll } from 'react-icons/md';
 
 type Mode = "chat" | "profile";
 
@@ -20,6 +20,7 @@ interface PreviewV2Props {
   variableSamples?: Record<string, string>;
  
   // Optional Command related
+  commands?: { commandText: string; commandDescription: string; }[];
 
   // Optional Ice Breaker content
   icebreakers?: string[];
@@ -41,6 +42,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   selectedMediaFile = "",
   templateButtons = [],
   icebreakers = [],
+  commands = [],
   variableSamples = {},
   showPlaceholderMessageInTemplate = true, 
   showMobile = true,
@@ -254,7 +256,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       }}
     >
       {showTopBar && (
-        <div className='w-full h-[35px] bg-gray-900 rounded-t-[14px] flex items-center justify-between px-[16px] text-white'>
+        <div className='w-full max-h-[35px] h-full bg-gray-900 rounded-t-[14px] flex items-center justify-between px-[16px] text-white'>
           <span className="text-[14.5px] font-semibold">9:41</span>
           <div className="flex items-center space-x-[4px]">
             <Wifi size={17} />
@@ -262,13 +264,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           </div>
         </div>
       )}
-      <div className={`w-full h-[78px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
+      <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
         <div className="flex items-center">
           <ArrowLeft size={24}/>
           <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
           <div className="flex flex-col">
-            <span className="text-[17px] font-semibold">{profileName}</span>
-            <span className="text-[15px] mt-[-5px]">{profileSubText}</span>
+            <span className="text-[19px] font-semibold">{profileName}</span>
+            <span className="text-[15px] mt-[-3px]">{profileSubText}</span>
           </div>
         </div>
         <MoreVertical size={24} />
@@ -355,7 +357,10 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   </p>
                 )}
 
-                <p className="text-[14px] text-[#999999] text-right font-semibold">9:41 AM</p>
+                <div className='flex w-full justify-end gap-[2px]'>
+                  <p className="text-[14px] text-[#999999] font-medium">9:41 AM</p>
+                  <MdDoneAll size={22} fill='#999999'/>
+                </div>
 
                 {templateButtons.length > 0 && (
                   <div className="mt-[2px] space-y-[4px]">
@@ -388,12 +393,16 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       </div>
 
       <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-end pt-[12px] pb-[10px] px-[8px]">
-        <div className="flex-1 bg-white w-full rounded-[29px] flex flex-col items-center">
+        <div className="flex-1 bg-white w-full rounded-[24px] flex flex-col items-center">
           <div className="w-full">
             {icebreakers.length > 0 && (
-              <div className="py-[16px] pl-[12px] pr-[16px]">
-                {icebreakers.filter(icebreaker => icebreaker.trim() !== "").map((icebreaker) => (
-                  <div className='flex justify-between items-center '>
+              <div className="pt-[12px] pb-[4px] pl-[12px] pr-[16px] max-h-[500px] overflow-y-auto"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}>
+                {icebreakers.filter(icebreaker => icebreaker.trim() !== "").map((icebreaker, index) => (
+                  <div key={index} className='flex justify-between items-center '>
                     <div className="p-[8px] text-gray-700 text-[18px] break-all">
                       {icebreaker}
                     </div>
@@ -404,21 +413,43 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 ))}
               </div>
             )}
+            {commands.length > 0 && (
+              <div className="pt-[10px] pb-[4px] pl-[5px] pr-[16px] max-h-[500px] overflow-y-auto"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}>
+                {commands.map((command, index) => (
+                  <div key={index} className="flex items-start p-[8px] bg-gray-100">
+                    <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full" alt="Profile Picture" />
+                    <div className="flex flex-col">
+                      <span className="text-[16px] font-semibold text-[#111B21] break-all">{command.commandText}</span>
+                      <span className="text-[14.5px] text-[#666666] break-all">{command.commandDescription}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="w-full h-[45px] flex items-center px-[15px]">
-            <Smile size={24} className="text-gray-500" />
-            <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px] placeholder:text-[19px] placeholder:text-gray-500" disabled />
-            <MdAttachFile size={24} className="text-gray-500" />
-            <Camera size={22} className="text-gray-500 ml-[10px]" />
+          <div className="w-full min-h-[50px] flex items-center px-[15px]">
+            <Smile size={25} className="text-gray-500" />
+            <input
+              type="text"
+              placeholder={commands.length > 0 ? "\\" : "Message"}
+              className={`flex-1 bg-transparent outline-none px-[10px] placeholder:text-[19px] ${commands.length > 0 ? 'placeholder:text-[#111B21]' : 'placeholder:text-gray-500'}`}
+              disabled
+            />
+            <MdAttachFile size={25} className="text-gray-500" />
+            <Camera size={24} className="text-gray-500 ml-[10px]" />
           </div>
         </div>
-        <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-[#36AD60] rounded-full">
-          <MdMic color='white' size={24} />
+        <button className="flex items-center justify-center h-[50px] w-[50px] ml-[8px] bg-[#36AD60] rounded-full">
+          <MdMic color='white' size={28} />
         </button>
       </div>
 
       {showBottomBar && (
-        <div className='z-20 w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
+        <div className='z-20 w-full max-h-[55px] h-full bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
           <ChevronLeft size={28} />
           <Circle size={20} />
           <Square size={20} />
