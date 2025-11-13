@@ -498,19 +498,25 @@ export default function WhatsAppManagerPage() {
                 </CardFooter>
               </Card>
 
-              {/* Display Name */}
+              {/* Business Name */}
               <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
                 <CardHeader>
-                  <CardTitle className="text-lg">Display Name</CardTitle>
+                  <CardTitle className="text-lg">Business Name</CardTitle>
                   <p className="text-sm text-muted-foreground">The WhatsApp Business display name is your business name that customers see on your WhatsApp Business profile. Ensure that your name follows WhatsApp's regulations.</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground">Display Name</label>
-                    <Input
-                      value={displayName}
-                      disabled
-                    />
+                    <label className="text-sm font-medium text-foreground">Business Name</label>
+                    <div className="relative">
+                      <Input
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value.slice(0, 75))}
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        {displayName.length}/75
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
@@ -521,7 +527,9 @@ export default function WhatsAppManagerPage() {
                         description: "Display name settings have been updated.",
                       });
                     }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled>
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                    disabled={!displayName.trim()}
+                  >
                     Save
                   </Button>
                 </CardFooter>
@@ -549,45 +557,75 @@ export default function WhatsAppManagerPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground">Description (optional)</label>
-                    <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Tell us about your business"
-                    />
+                    <div className="relative">
+                      <Textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value.slice(0, 512))}
+                        placeholder="Tell us about your business"
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                        {description.length}/512
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground">Address (optional)</label>
-                    <Textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="The address of your business"
-                    />
+                    <div className="relative">
+                      <Textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value.slice(0, 512))}
+                        placeholder="The address of your business"
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                        {address.length}/512
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground">About (optional)</label>
-                    <Textarea
-                      value={about}
-                      onChange={(e) => setAbout(e.target.value)}
-                      placeholder="A short description about your business"
-                    />
+                    <div className="relative">
+                      <Textarea
+                        value={about}
+                        onChange={(e) => setAbout(e.target.value.slice(0, 139))}
+                        placeholder="A short description about your business"
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
+                        {about.length}/139
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground">Email</label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="business@example.com"
-                    />
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value.slice(0, 128))}
+                        placeholder="business@example.com"
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        {email.length}/128
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground">Website</label>
-                    <Input
-                      type="url"
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                      placeholder="https://www.yourbusiness.com"
-                    />
+                    <div className="relative">
+                      <Input
+                        type="url"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value.slice(0, 256))}
+                        placeholder="https://www.yourbusiness.com"
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        {website.length}/256
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
