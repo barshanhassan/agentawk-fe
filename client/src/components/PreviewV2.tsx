@@ -39,8 +39,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   placeholderText = "Start typing to see your template preview...",
   footerText = "Hello",
   selectedMediaFile = "",
-  templateButtons = [],
-  variableSamples = {},
+  templateButtons = [
+    { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
+    { id: 2, type: "quick-reply", buttonText: "Learn More" }
+  ],
+  variableSamples = {
+    company: "Acme Corp"
+  },
   showPlaceholderMessageInTemplate = true, 
   showMobile = true,
   profileName = "Business Name",
@@ -233,17 +238,23 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   }, []);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTo({
+        top: chatAreaRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, [bodyText, headerText, footerText, selectedMediaFile, templateButtons]);
+
+  const mobilePadding = 28;
 
   const whiteContentDiv = (
     <div className='flex flex-col flex-grow rounded-[14px] -m-px'
       style={{
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         scrollbarWidth: 'none',
-        msOverflowStyle: 'none'
+        msOverflowStyle: 'none',
+        width: `${baseWidth - (showMobile ? mobilePadding * 2 : 0)}px`
       }}
     >
       {showTopBar && (
@@ -275,7 +286,6 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
             <div className="relative flex justify-start flex-shrink-0">
               <div className="absolute w-[25px] h-[30px] left-[-10px] top-[0px] bg-white" style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}></div>       
               <div className="z-10 bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden">
-                {/* Horn */}
                 {selectedMediaFile && (
                   <div className="mb-[8px] mt-[4px]">
                     {typeof selectedMediaFile === 'string' ? (
@@ -336,7 +346,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   )}
 
                   {footerText && (
-                    <p className="text-[15.6px] text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                    <p className="text-[16.5px] text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                       {footerText}
                     </p>
                   )}
@@ -381,12 +391,15 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         )}
       </div>
 
-      <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-center pt-[12px] pb-[10px] px-[8px]">
-        <div className="flex-1 bg-white w-full h-[45px] rounded-full flex items-center px-[15px]">
-          <Smile size={24} className="text-gray-500" />
-          <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px] text-[17px] placeholder:text-[19px]" disabled />
-          <MdAttachFile size={24} className="text-gray-500" />
-          <Camera size={22} className="text-gray-500 ml-[10px]" />
+      <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-end pt-[12px] pb-[10px] px-[8px]">
+        <div className="flex-1 bg-white w-full rounded-[29px] flex flex-col items-center">
+          {/* <div className="w-full"></div> */}
+          <div className="w-full h-[45px] flex items-center px-[15px]">
+            <Smile size={24} className="text-gray-500" />
+            <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px] placeholder:text-[19px] placeholder:text-gray-500" disabled />
+            <MdAttachFile size={24} className="text-gray-500" />
+            <Camera size={22} className="text-gray-500 ml-[10px]" />
+          </div>
         </div>
         <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-green-600/85 rounded-full">
           <MdMic color='white' size={24} />
@@ -411,7 +424,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       >
         <div className='flex p-[0px] h-full w-full'>
           {showMobile ? (
-            <div className='flex flex-grow bg-black rounded-[24px] p-[28px]'>
+            <div className={`flex flex-grow bg-black rounded-[24px] p-[${mobilePadding}px]`}>
               {whiteContentDiv}
             </div>
           ) : (
