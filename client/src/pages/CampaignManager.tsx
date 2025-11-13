@@ -1423,10 +1423,11 @@ export default function CampaignManager() {
                 </div>
 
                 {/* Right: Template Preview */}
-                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Templdate Preview</h3>
+                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
+                      mode="chat"
                       headerText={selectedTemplate?.header || ""}
                       bodyText={selectedTemplate?.body || ""}
                       footerText={selectedTemplate?.footer || ""}
@@ -1948,10 +1949,11 @@ export default function CampaignManager() {
                 </div>
 
                 {/* Right: Template Preview */}
-                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
+                      mode="chat"
                       headerText={selectedTemplate?.header || ""}
                       bodyText={selectedTemplate?.body || ""}
                       footerText={selectedTemplate?.footer || ""}
@@ -2285,10 +2287,11 @@ export default function CampaignManager() {
                   </div>
 
                   {/* Right: Template Preview */}
-                  <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-                    <div className="flex flex-col h-full">
-                      <label className="text-sm font-medium text-foreground mb-1">Template Preview</label>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1">Template Preview</label>
+                    <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                       <PreviewV2
+                        mode="chat"
                         headerText={selectedTemplate?.header || ""}
                         bodyText={selectedTemplate?.body || ""}
                         footerText={selectedTemplate?.footer || ""}

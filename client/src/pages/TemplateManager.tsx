@@ -1754,14 +1754,17 @@ export default function TemplateManager() {
               if (!previewTemplate) return null;
 
               return (
-                <PreviewV2
-                  headerText={previewTemplate.header || ""}
-                  bodyText={previewTemplate.body || ""}
-                  footerText={previewTemplate.footer || ""}
-                  selectedMediaFile={previewTemplate.mediaFile || null}
-                  templateButtons={previewTemplate.buttons || []}
-                  variableSamples={previewTemplate.variableSamples || {}}
-                />
+                <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+                  <PreviewV2
+                    mode="chat"
+                    headerText={previewTemplate.header || ""}
+                    bodyText={previewTemplate.body || ""}
+                    footerText={previewTemplate.footer || ""}
+                    selectedMediaFile={previewTemplate.mediaFile || null}
+                    templateButtons={previewTemplate.buttons || []}
+                    variableSamples={previewTemplate.variableSamples || {}}
+                  />
+                </div>
               );
             })()}
           </div>
@@ -2897,10 +2900,11 @@ export default function TemplateManager() {
                 </div>
 
                 {/* Right: Template Preview */}
-                <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
+                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
+                      mode="chat"
                       headerText={headerText}
                       bodyText={bodyText}
                       footerText={footerText}

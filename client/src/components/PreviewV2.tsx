@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
 import { MdMic, MdAttachFile } from 'react-icons/md';
 
-type Mode = "template" | "profile";
+type Mode = "chat" | "profile";
 
 interface PreviewV2Props {
   // Optional Template content:
@@ -25,7 +25,7 @@ interface PreviewV2Props {
 
   // Optional profile content
 
-  mode?: Mode;
+  mode: Mode;
   showMobile?: boolean;
   profileName?: string;
   profileSubText?: string;
@@ -33,11 +33,11 @@ interface PreviewV2Props {
 }
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
-  headerText = "",
-  // bodyText = "ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ",
-  bodyText = "",
+  headerText = "Hello",
+  bodyText = "ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ",
+  // bodyText = "Hello",
   placeholderText = "Start typing to see your template preview...",
-  footerText = "",
+  footerText = "Hello",
   selectedMediaFile = "",
   templateButtons = [],
   variableSamples = {},
@@ -248,10 +248,10 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
     >
       {showTopBar && (
         <div className='w-full h-[35px] bg-gray-900 rounded-t-[14px] flex items-center justify-between px-[16px] text-white'>
-          <span className="text-[14px] font-semibold">9:41</span>
+          <span className="text-[14.5px] font-semibold">9:41</span>
           <div className="flex items-center space-x-[4px]">
-            <Wifi size={16} />
-            <Battery size={16} fill="white" />
+            <Wifi size={17} />
+            <Battery size={17} fill="white" />
           </div>
         </div>
       )}
@@ -260,8 +260,8 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           <ArrowLeft size={24}/>
           <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
           <div className="flex flex-col">
-            <span className="text-[16px] font-semibold">{profileName}</span>
-            <span className="text-[14px] mt-[-5px]">{profileSubText}</span>
+            <span className="text-[17px] font-semibold">{profileName}</span>
+            <span className="text-[15px] mt-[-5px]">{profileSubText}</span>
           </div>
         </div>
         <MoreVertical size={24} />
@@ -311,7 +311,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 <div className='flex flex-col space-y-[6px]'>
                   {headerText && (
                     <div>
-                      <p className="text-[16.5px] font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                      <p className="text-[19px] font-semibold text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                         {headerText.split(/(\{\{[^}]+\}\})/).map((part, idx) => {
                           const variableMatch = part.match(/\{\{([^}]+)\}\}/);
                           if (variableMatch) {
@@ -330,13 +330,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   )}
 
                   {bodyText && (
-                    <p className="leading-[24px] text-[16px] text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                    <p className="leading-[25px] text-[18px] text-[#111B21] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                       {formatTextWithVariables(bodyText)}
                     </p>
                   )}
 
                   {footerText && (
-                    <p className="text-[14px] text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                    <p className="text-[15.6px] text-[#666666] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                       {footerText}
                     </p>
                   )}
@@ -344,12 +344,12 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 </div>
 
                 {!hasContent && (
-                  <p className="text-[16px] text-[#999999] italic">
+                  <p className="text-[17.5px] text-[#999999] italic">
                     {placeholderText}
                   </p>
                 )}
 
-                <p className="text-[11px] text-[#999999] text-right font-semibold">9:41 AM</p>
+                <p className="text-[14px] text-[#999999] text-right font-semibold">9:41 AM</p>
 
                 {templateButtons.length > 0 && (
                   <div className="mt-[2px] space-y-[4px]">
@@ -357,7 +357,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                       <>
                         <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{borderTopWidth: "2px", borderTopColor: "#e7e7e7ff"}}></div>
                         <div key={button.id} className="px-[12px] py-[8px] text-center">
-                          <p className="text-[16px] text-[#0064FF] font-normal break-words">
+                          <p className="text-[18px] text-[#0064FF] font-normal break-words">
                             {getButtonDisplayText(button)}
                           </p>
                         </div>
@@ -368,7 +368,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                         <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{borderTopWidth: "2px", borderTopColor: "#e7e7e7ff"}}></div>
                         <div className="px-[12px] py-[8px] text-center">
                           <Play size={14} className="text-[#0064FF]" />
-                          <p className="text-[16px] text-[#0064FF] font-normal">See all options</p>
+                          <p className="text-[18px] text-[#0064FF] font-normal">See all options</p>
                         </div>
                       </>
                     )}
@@ -384,7 +384,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-center pt-[12px] pb-[10px] px-[8px]">
         <div className="flex-1 bg-white w-full h-[45px] rounded-full flex items-center px-[15px]">
           <Smile size={24} className="text-gray-500" />
-          <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px] text-[17px] placeholder:text-[17px]" disabled />
+          <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px] text-[17px] placeholder:text-[19px]" disabled />
           <MdAttachFile size={24} className="text-gray-500" />
           <Camera size={22} className="text-gray-500 ml-[10px]" />
         </div>

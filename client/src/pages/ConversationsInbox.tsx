@@ -2501,7 +2501,7 @@ export default function ConversationsInbox() {
 
         {/* Send Template Message Modal */}
         <Dialog open={isTemplateMessageModalOpen} onOpenChange={setIsTemplateMessageModalOpen}>
-          <DialogContent className="sm:max-w-3xl min-h-[35rem] flex flex-col">
+          <DialogContent className="sm:max-w-3xl flex flex-col">
             <DialogHeader className="mb-2">
               <DialogTitle>Send Template Message</DialogTitle>
             </DialogHeader>
@@ -2618,10 +2618,11 @@ export default function ConversationsInbox() {
                 </div>
 
                 {/* Right: Template Preview */}
-                <div className="space-y-4 flex flex-col">
-                  <div className="flex-1 flex flex-col">
-                    <label className="text-sm font-medium mb-3 block">Template Preview</label>
+                <div>
+                  <label className="text-sm font-medium mb-3 block">Template Preview</label>
+                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
+                      mode="chat"
                       headerText={selectedTemplate?.header || ""}
                       bodyText={selectedTemplate?.body || ""}
                       footerText={selectedTemplate?.footer || ""}

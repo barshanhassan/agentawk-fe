@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Moved this import here
 import { format } from "date-fns";
-import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
 import {
   Popover,
@@ -607,19 +606,15 @@ export default function WhatsAppManagerPage() {
             </div>
 
             {/* Right Side: WhatsApp Template Preview */}
-            <div className="max-h-[70vh] w-full">
+            <div className="max-h-[69.5vh] w-full">
               <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-lg">WhatsApp Profile Preview</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col h-full flex-1">
-                  <ProfilePreview
-                    profilePhotoUrl={profilePhotoPreviewUrl}
-                    displayName={displayName}
-                    about={about}
-                    category={category}
-                    email={email}
-                    website={website} />                                                            
+                <CardContent className="h-full max-h-[62vh] w-full">
+                  <PreviewV2
+                    mode="profile"
+                  />                                         
                 </CardContent>
               </Card>        
             </div>
@@ -1170,10 +1165,11 @@ export default function WhatsAppManagerPage() {
             </div>
 
             {/* Right: Template Preview */}
-            <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-              <div className="flex flex-col h-full">
-                <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
+            <div>
+              <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
+              <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                 <PreviewV2
+                  mode="chat"
                   headerText={""}
                   bodyText={""}
                   footerText={""}
@@ -1285,10 +1281,11 @@ export default function WhatsAppManagerPage() {
             </div>
 
             {/* Right: Template Preview */}
-            <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
-              <div className="flex flex-col h-full">
-                <h3 className="font-semibold text-lg mb-1">Commands Preview</h3>
+            <div>
+              <h3 className="font-semibold text-lg mb-1">Commands Preview</h3>
+              <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                 <PreviewV2
+                  mode="chat"
                   headerText={""}
                   bodyText={""}
                   footerText={""}
