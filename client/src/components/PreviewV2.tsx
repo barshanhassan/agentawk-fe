@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Mic, Smile, Paperclip, Camera } from 'react-feather';
+import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
+import { MdMic, MdAttachFile } from 'react-icons/md';
 
 type Mode = "template" | "profile";
 
@@ -379,9 +380,14 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       </div>
 
       <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-center pt-[12px] pb-[10px] px-[8px]">
-        <input type="text" placeholder="Message" className="flex-1 bg-white w-full h-[45px] outline-none rounded-full px-[20px]" disabled />
+        <div className="flex-1 bg-white w-full h-[45px] rounded-full flex items-center px-[15px]">
+          <Smile size={24} className="text-gray-500" />
+          <input type="text" placeholder="Message" className="flex-1 bg-transparent outline-none px-[10px]" disabled />
+          <MdAttachFile size={24} className="text-gray-500" />
+          <Camera size={22} className="text-gray-500 ml-[10px]" />
+        </div>
         <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-green-600/85 rounded-full">
-          <Mic stroke='#ffffff' fill='#ffffff' size={24} />
+          <MdMic color='white' size={24} />
         </button>
       </div>
 
