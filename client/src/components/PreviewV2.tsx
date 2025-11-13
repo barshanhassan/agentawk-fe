@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Mic } from 'react-feather';
+import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Mic, Smile, Paperclip, Camera } from 'react-feather';
 
 type Mode = "template" | "profile";
 
@@ -346,7 +346,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   </p>
                 )}
 
-                <p className="text-[11px] text-[#999999] text-right">9:41 AM</p>
+                <p className="text-[11px] text-[#999999] text-right font-semibold">9:41 AM</p>
 
                 {templateButtons.length > 0 && (
                   <div className="mt-[2px] space-y-[4px]">
@@ -378,7 +378,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         )}
       </div>
 
-      <div className="bg-[#ECE5DD] -mt-px w-full flex items-center py-[10px] px-[8px]">
+      <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-center pt-[12px] pb-[10px] px-[8px]">
         <input type="text" placeholder="Message" className="flex-1 bg-white w-full h-[45px] outline-none rounded-full px-[20px]" disabled />
         <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-green-600/85 rounded-full">
           <Mic stroke='#ffffff' fill='#ffffff' size={24} />
