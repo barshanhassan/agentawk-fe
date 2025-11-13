@@ -242,7 +242,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
     }
   }, [bodyText, headerText, footerText, selectedMediaFile, templateButtons]);
 
-  const mobilePadding = 28;
+  const mobilePadding = 30;
 
   const whiteContentDiv = (
     <div className='flex flex-col flex-grow rounded-[14px] -m-px'

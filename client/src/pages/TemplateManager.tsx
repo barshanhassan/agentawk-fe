@@ -1929,13 +1929,13 @@ export default function TemplateManager() {
                             value={templateName}
                             onChange={(e) => {
                               // Auto-decapitalize and allow only lowercase, numbers, underscores
-                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 100);
+                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 512);
                               setTemplateName(value);
                             }}
                             className="pr-12"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                            {templateName.length}/100
+                            {templateName.length}/512
                           </span>
                         </div>
                       </div>
@@ -2960,11 +2960,11 @@ export default function TemplateManager() {
                 <Input
                   placeholder="Enter template name..."
                   value={cloneTemplateName}
-                  onChange={(e) => setCloneTemplateName(e.target.value.slice(0, 100))}
+                  onChange={(e) => setCloneTemplateName(e.target.value.slice(0, 512))}
                   className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  {cloneTemplateName.length}/100
+                  {cloneTemplateName.length}/512
                 </span>
               </div>
             </div>

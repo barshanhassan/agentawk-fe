@@ -1305,11 +1305,11 @@ export default function CampaignManager() {
                         <Input
                           placeholder="Enter campaign name..."
                           value={campaignName}
-                          onChange={(e) => setCampaignName(e.target.value.slice(0, 100))}
+                          onChange={(e) => setCampaignName(e.target.value.slice(0, 512))}
                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {campaignName.length}/100
+                          {campaignName.length}/512
                         </span>
                       </div>
                     </div>
@@ -1509,11 +1509,11 @@ export default function CampaignManager() {
                         <Input
                           placeholder="Enter campaign name..."
                           value={campaignName}
-                          onChange={(e) => setCampaignName(e.target.value.slice(0, 100))}
+                          onChange={(e) => setCampaignName(e.target.value.slice(0, 512))}
                           className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                          {campaignName.length}/100
+                          {campaignName.length}/512
                         </span>
                       </div>
                     </div>
@@ -2533,11 +2533,11 @@ export default function CampaignManager() {
                 <Input
                   placeholder="Enter campaign name..."
                   value={cloneCampaignName}
-                  onChange={(e) => setCloneCampaignName(e.target.value.slice(0, 100))}
+                  onChange={(e) => setCloneCampaignName(e.target.value.slice(0, 512))}
                   className="pr-12 border border-input [border-color:hsl(var(--input))] hover-elevate"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  {cloneCampaignName.length}/100
+                  {cloneCampaignName.length}/512
                 </span>
               </div>
             </div>
