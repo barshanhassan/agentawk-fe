@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import TemplatePreview from "@/components/TemplatePreview";
+import PreviewV2 from "@/components/PreviewV2";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -1754,15 +1754,13 @@ export default function TemplateManager() {
               if (!previewTemplate) return null;
 
               return (
-                <TemplatePreview
+                <PreviewV2
                   headerText={previewTemplate.header || ""}
                   bodyText={previewTemplate.body || ""}
                   footerText={previewTemplate.footer || ""}
                   selectedMediaFile={previewTemplate.mediaFile || null}
                   templateButtons={previewTemplate.buttons || []}
                   variableSamples={previewTemplate.variableSamples || {}}
-                  containerClassName="flex-1 flex items-center justify-center"
-                  phoneClassName="h-full max-h-[80vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                 />
               );
             })()}
@@ -2902,15 +2900,13 @@ export default function TemplateManager() {
                 <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
                   <div className="flex flex-col h-full">
                     <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                    <TemplatePreview
+                    <PreviewV2
                       headerText={headerText}
                       bodyText={bodyText}
                       footerText={footerText}
                       selectedMediaFile={selectedMediaFile}
                       templateButtons={templateButtons}
                       variableSamples={variableSamples}
-                      containerClassName="flex-1 flex items-center justify-center min-h-0"
-                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                     />
                   </div>
                 </div>

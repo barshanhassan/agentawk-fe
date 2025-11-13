@@ -37,7 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import Breadcrumb from "@/components/Breadcrumb";
 import CustomDropdown from "@/components/CustomDropdown";
 import { AlertCircle } from "lucide-react";
-import TemplatePreview from "@/components/TemplatePreview";
+import PreviewV2 from "@/components/PreviewV2";
 import { Textarea } from "@/components/ui/textarea";
 
 // Generate a color based on the hash of a name
@@ -2621,14 +2621,12 @@ export default function ConversationsInbox() {
                 <div className="space-y-4 flex flex-col">
                   <div className="flex-1 flex flex-col">
                     <label className="text-sm font-medium mb-3 block">Template Preview</label>
-                    <TemplatePreview
+                    <PreviewV2
                       headerText={selectedTemplate?.header || ""}
                       bodyText={selectedTemplate?.body || ""}
                       footerText={selectedTemplate?.footer || ""}
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={templateVariables}
-                      containerClassName="flex-1 flex items-center justify-center min-h-0"
-                      phoneClassName="h-full max-h-[70vh] aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                       placeholderText="Select a template to see preview..."
                     />
                   </div>

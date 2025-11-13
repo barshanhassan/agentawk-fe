@@ -33,7 +33,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import TemplatePreview from "@/components/TemplatePreview";
+import PreviewV2 from "@/components/PreviewV2";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import {
@@ -1426,15 +1426,13 @@ export default function CampaignManager() {
                 <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
                   <div className="flex flex-col h-full">
                     <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                    <TemplatePreview
+                    <PreviewV2
                       headerText={selectedTemplate?.header || ""}
                       bodyText={selectedTemplate?.body || ""}
                       footerText={selectedTemplate?.footer || ""}
                       selectedMediaFile={null}
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={selectedTemplate?.variableSamples || {}}
-                      containerClassName="flex-1 flex items-center justify-center min-h-0"
-                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                     />
                   </div>
                 </div>
@@ -1953,15 +1951,13 @@ export default function CampaignManager() {
                 <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
                   <div className="flex flex-col h-full">
                     <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                    <TemplatePreview
+                    <PreviewV2
                       headerText={selectedTemplate?.header || ""}
                       bodyText={selectedTemplate?.body || ""}
                       footerText={selectedTemplate?.footer || ""}
                       selectedMediaFile={null}
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={selectedTemplate?.variableSamples || {}}
-                      containerClassName="flex-1 flex items-center justify-center min-h-0"
-                      phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                     />
                   </div>
                 </div>
@@ -2292,15 +2288,13 @@ export default function CampaignManager() {
                   <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
                     <div className="flex flex-col h-full">
                       <label className="text-sm font-medium text-foreground mb-1">Template Preview</label>
-                      <TemplatePreview
+                      <PreviewV2
                         headerText={selectedTemplate?.header || ""}
                         bodyText={selectedTemplate?.body || ""}
                         footerText={selectedTemplate?.footer || ""}
                         selectedMediaFile={null}
                         templateButtons={selectedTemplate?.buttons || []}
                         variableSamples={selectedTemplate?.variableSamples || {}}
-                        containerClassName="flex-1 flex items-center justify-center min-h-0"
-                        phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
                       />
                     </div>
                   </div>

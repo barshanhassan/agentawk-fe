@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"; // Moved this import here
 import { format } from "date-fns";
 import ProfilePreview from "@/components/ProfilePreview"; // Import the new ProfilePreview component
-import TemplatePreview from "@/components/TemplatePreview";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip imports
 import {
   Popover,
@@ -22,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
 import { Label } from "@/components/ui/label"; // Added Label
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // Added RadioGroup imports
 import { useToast } from "@/hooks/use-toast";
+import PreviewV2 from "@/components/PreviewV2";
 
 export default function WhatsAppManagerPage() {
   const { toast } = useToast();
@@ -1173,16 +1173,14 @@ export default function WhatsAppManagerPage() {
             <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
               <div className="flex flex-col h-full">
                 <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
-                <TemplatePreview
+                <PreviewV2
                   headerText={""}
                   bodyText={""}
                   footerText={""}
                   selectedMediaFile={null}
                   templateButtons={[]}
                   variableSamples={{}}
-                  showMessage={false}
-                  containerClassName="flex-1 flex items-center justify-center min-h-0"
-                  phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                  showPlaceholderMessageInTemplate={false}
                 />
               </div>
             </div>
@@ -1290,16 +1288,14 @@ export default function WhatsAppManagerPage() {
             <div className="!max-h-[62vh] flex-shrink-0 !max-w-[31vh] w-full">
               <div className="flex flex-col h-full">
                 <h3 className="font-semibold text-lg mb-1">Commands Preview</h3>
-                <TemplatePreview
+                <PreviewV2
                   headerText={""}
                   bodyText={""}
                   footerText={""}
                   selectedMediaFile={null}
                   templateButtons={[]}
                   variableSamples={{}}
-                  showMessage={false}
-                  containerClassName="flex-1 flex items-center justify-center min-h-0"
-                  phoneClassName="h-full aspect-[9/18] bg-black rounded-3xl p-3 shadow-lg flex flex-col overflow-hidden"
+                  showPlaceholderMessageInTemplate={false}
                 />
               </div>
             </div>
