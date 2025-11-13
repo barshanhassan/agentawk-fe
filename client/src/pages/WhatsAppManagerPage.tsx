@@ -1115,25 +1115,30 @@ export default function WhatsAppManagerPage() {
                   <p className="text-sm text-muted-foreground">Configure your ice breakers here.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Icebreakers (up to 5)<span className="text-red-500 pl-0.5">*</span></label>
+                  <label className="text-sm font-medium mb-2 block">Icebreakers (up to 4)<span className="text-red-500 pl-0.5">*</span></label>
                   <div className="space-y-2">
-                    {icebreakers.map((phone, index) => (
+                    {icebreakers.map((icebreaker, index) => (
                       <div key={index} className="flex gap-2 items-center">
-                        <Input
-                          placeholder="Where are you located?"
-                          value={phone}
-                          onChange={(e) => {
-                            const newNumbers = [...icebreakers];
-                            newNumbers[index] = e.target.value;
-                            setIcebreakers(newNumbers);
-                          }}
-                          className="border-input flex-1"
-                        />
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder="Where are you located?"
+                            value={icebreaker}
+                            onChange={(e) => {
+                              const newIcebreakers = [...icebreakers];
+                              newIcebreakers[index] = e.target.value.slice(0, 80);
+                              setIcebreakers(newIcebreakers);
+                            }}
+                            className="border-input pr-12"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                            {icebreaker.length}/80
+                          </span>
+                        </div>
                         {icebreakers.length > 1 && (
                           <button
                             onClick={() => {
-                              const newNumbers = icebreakers.filter((_, i) => i !== index);
-                              setIcebreakers(newNumbers);
+                              const newIcebreakers = icebreakers.filter((_, i) => i !== index);
+                              setIcebreakers(newIcebreakers);
                             }}
                             className="text-muted-foreground hover:text-foreground transition-colors border-[]"
                           >
@@ -1145,7 +1150,7 @@ export default function WhatsAppManagerPage() {
                   </div>
 
                   {/* Add another recipient button */}
-                  {icebreakers.length < 5 && (
+                  {icebreakers.length < 4 && (
                     <Button
                       variant="ghost"
                       size="sm"

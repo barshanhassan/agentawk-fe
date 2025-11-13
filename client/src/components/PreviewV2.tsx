@@ -394,7 +394,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
               <div className="py-[16px] pl-[12px] pr-[16px]">
                 {icebreakers.filter(icebreaker => icebreaker.trim() !== "").map((icebreaker) => (
                   <div className='flex justify-between items-center '>
-                    <div className="p-[8px] text-gray-700 text-[18px]">
+                    <div className="p-[8px] text-gray-700 text-[18px] break-all">
                       {icebreaker}
                     </div>
                     <div className='h-[22px] w-[22px]'>
