@@ -32,8 +32,7 @@ interface PreviewV2Props {
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
   headerText = "",
-  bodyText = "ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ",
-  // bodyText = "",
+  bodyText = "",
   footerText = "",
   selectedMediaFile = "",
   templateButtons = [],
@@ -48,6 +47,8 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scaleWrapperRef = useRef<HTMLDivElement>(null);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const baseWidth = 450;
   const baseHeight = 900;
@@ -227,6 +228,12 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [bodyText, headerText, footerText, selectedMediaFile, templateButtons]);
+
   const whiteContentDiv = (
     <div className='flex flex-col flex-grow rounded-[14px] -m-px'
       style={{
@@ -244,7 +251,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           </div>
         </div>
       )}
-      <div className={`w-full h-[68px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
+      <div className={`w-full h-[68px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -2px 0 0 #dddddd' }}>
         <div className="flex items-center">
           <ArrowLeft size={24}/>
           <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
@@ -256,6 +263,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         <MoreVertical size={24} />
       </div>
       <div 
+        ref={chatAreaRef}
         className={`w-full h-full bg-[#ECE5DD] -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
         {showPlaceholderMessageInTemplate && (
           <>
@@ -364,6 +372,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 )}
               </div>
             </div>
+            <div ref={messagesEndRef} />
           </>
         )}
       </div>
