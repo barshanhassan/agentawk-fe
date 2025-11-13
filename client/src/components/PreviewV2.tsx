@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play } from 'react-feather';
+import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Mic } from 'react-feather';
 
 type Mode = "template" | "profile";
 
@@ -32,7 +32,8 @@ interface PreviewV2Props {
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
   headerText = "",
-  bodyText = "",
+  bodyText = "ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC ",
+  // bodyText = "",
   footerText = "",
   selectedMediaFile = "",
   templateButtons = [],
@@ -251,7 +252,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           </div>
         </div>
       )}
-      <div className={`w-full h-[68px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -2px 0 0 #dddddd' }}>
+      <div className={`w-full h-[78px] bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
         <div className="flex items-center">
           <ArrowLeft size={24}/>
           <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
@@ -267,7 +268,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         className={`w-full h-full bg-[#ECE5DD] -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
         {showPlaceholderMessageInTemplate && (
           <>
-            <div className="flex-1 min-h-0"></div>
+            <div className="flex-1 min-h-0 pb-[16px]"></div>
             <div className="relative flex justify-start flex-shrink-0">
               <div className="absolute w-[25px] h-[30px] left-[-10px] top-[0px] bg-white" style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}></div>       
               <div className="z-10 bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden">
@@ -376,6 +377,14 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           </>
         )}
       </div>
+
+      <div className="bg-[#ECE5DD] -mt-px w-full flex items-center py-[10px] px-[8px]">
+        <input type="text" placeholder="Message" className="flex-1 bg-white w-full h-[45px] outline-none rounded-full px-[20px]" disabled />
+        <button className="flex items-center justify-center h-[45px] w-[45px] ml-[8px] bg-green-600/85 rounded-full">
+          <Mic stroke='#ffffff' fill='#ffffff' size={24} />
+        </button>
+      </div>
+
       {showBottomBar && (
         <div className='z-20 w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
           <ChevronLeft size={28} />
