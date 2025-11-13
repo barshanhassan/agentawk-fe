@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical } from 'react-feather';
 
 type Mode = "template" | "profile";
 
@@ -76,18 +77,32 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   }, []);
 
   const whiteContentDiv = (
-    <div className='flex flex-col flex-grow bg-white rounded-[14px] -m-px'>
-      <div className='w-full h-[35px] bg-blue-500 rounded-t-[14px]'>
-
+    <div className='flex flex-col flex-grow rounded-[14px] -m-px'>
+      <div className='w-full h-[35px] bg-gray-900 rounded-t-[14px] flex items-center justify-between px-4 text-white'>
+        <span className="text-sm font-semibold">9:41</span>
+        <div className="flex items-center space-x-1">
+          <Wifi size={16} />
+          <Battery size={16} />
+        </div>
       </div>
-      <div className='w-full h-[60px] bg-red-500 -mt-px'>
-        
+      <div className='w-full h-[68px] bg-white -mt-px flex items-center justify-between px-4'>
+        <div className="flex items-center space-x-2">
+          <ArrowLeft size={24} className="text-gray-600" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+          <div className="flex flex-col">
+            <span className="text-base font-semibold text-gray-800">Name</span>
+            <span className="text-xs text-gray-500">Chat Support</span>
+          </div>
+        </div>
+        <MoreVertical size={24} className="text-gray-600" />
       </div>
       <div className='w-full h-full bg-green-500 -mt-px'>
         
       </div>
-      <div className='w-full h-[55px] bg-blue-500 rounded-b-[14px] -mt-px'>
-        
+      <div className='w-full h-[55px] bg-gray-900 rounded-b-[14px] -mt-px flex items-center justify-around text-white'>
+        <ChevronLeft size={28} />
+        <Circle size={20} />
+        <Square size={20} />
       </div>
     </div>
   );
