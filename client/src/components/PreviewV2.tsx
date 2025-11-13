@@ -13,7 +13,7 @@ interface PreviewV2Props {
   headerText?: string;
   bodyText?: string;
   footerText?: string;
-  selectedMediaFile?: File | null;
+  selectedMediaFile?: File | string | null;
   templateButtons?: Array<any>;
   variableSamples?: Record<string, string>;
  
@@ -31,20 +31,15 @@ interface PreviewV2Props {
 }
 
 const PreviewV2: React.FC<PreviewV2Props> = ({
-  headerText = "Welcome to {{company}}",
-  bodyText = "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
-  footerText = "Thank you for choosing us",
-  selectedMediaFile = null,
-  templateButtons = [
-    { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
-    { id: 2, type: "quick-reply", buttonText: "Learn More" }
-  ],
-  variableSamples = {
-    company: "Acme Corp"
-  },
+  headerText = "",
+  bodyText = "",
+  footerText = "",
+  selectedMediaFile = "",
+  templateButtons = [],
+  variableSamples = {},
   showPlaceholderMessageInTemplate = true, 
   showMobile = true,
-  profileName = "Name",
+  profileName = "Business Name",
   profileSubText = "Chat Support",
   profilePfpUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='50' fill='%23DFE5E7'/%3E%3Cg fill='white'%3E%3Ccircle cx='50' cy='40' r='15'/%3E%3Cpath d='M50,60 C30,60 20,80 20,100 L80,100 C80,80 70,60 50,60 Z'/%3E%3C/g%3E%3C/svg%3E",
   showTopBar = true,
@@ -268,7 +263,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
               <div className="bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
                 {selectedMediaFile && (
                   <div className="mb-[8px] mt-[4px]">
-                    {selectedMediaFile.type.startsWith('image/') ? (
+                    {typeof selectedMediaFile === 'string' ? (
+                      <img
+                        src={selectedMediaFile}
+                        alt="Media preview"
+                        className="max-w-full h-auto rounded max-h-[192px] object-cover"
+                      />
+                    ) : selectedMediaFile.type.startsWith('image/') ? (
                       <img
                         src={URL.createObjectURL(selectedMediaFile)}
                         alt="Media preview"
@@ -327,6 +328,12 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   
                 </div>
 
+                {!hasContent && (
+                  <p className="text-[16px] text-[#999999] italic">
+                    Start typing to see your template preview...
+                  </p>
+                )}
+
                 <p className="text-[11px] text-[#999999] text-right">9:41 AM</p>
 
                 {templateButtons.length > 0 && (
@@ -352,13 +359,6 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                     )}
                   </div>
                 )}
-
-                {!hasContent && (
-                  <p className="text-[16px] text-[#999999] italic">
-                    Start typing to see your template preview...
-                  </p>
-                )}
-
               </div>
             </div>
           </>
@@ -395,3 +395,4 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 };
 
 export default PreviewV2;
+
