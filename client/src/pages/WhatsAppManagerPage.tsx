@@ -28,7 +28,7 @@ export default function WhatsAppManagerPage() {
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [profilePhotoPreviewUrl, setProfilePhotoPreviewUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("My business name"); // Default value as per requirement
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("Other");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [about, setAbout] = useState("");
