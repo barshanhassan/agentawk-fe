@@ -34,6 +34,7 @@ export default function WhatsAppManagerPage() {
   const [about, setAbout] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [whatsAppNumber, setWhatsAppNumber] = useState("+1 (555) 123-4567");
 
   // State for active tab
   const [activeTab, setActiveTab] = useState("business-profile");
@@ -379,7 +380,7 @@ export default function WhatsAppManagerPage() {
             {/* WhatsApp Number Badge */}
             <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
               <span className="text-sm font-medium text-foreground">WhatsApp Number:</span>
-              <span className="text-sm text-foreground">+1 (555) 123-4567</span>
+              <span className="text-sm text-foreground">{whatsAppNumber}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
               <span className="text-sm font-medium text-foreground">Message limit:</span>
@@ -653,6 +654,15 @@ export default function WhatsAppManagerPage() {
                 <CardContent className="h-full max-h-[62vh] w-full">
                   <PreviewV2
                     mode="profile"
+                    profilePfpUrl={profilePhotoPreviewUrl ? profilePhotoPreviewUrl : undefined}
+                    profileName={displayName}
+                    profileDescription={description}
+                    profileCategory={category}
+                    profileAddress={address}
+                    profileEmail={email}
+                    profileWebsite={website}
+                    profileAbout={about}
+                    profilePhoneNumber={whatsAppNumber}
                   />                                         
                 </CardContent>
               </Card>        

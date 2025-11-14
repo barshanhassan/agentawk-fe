@@ -22,6 +22,7 @@ import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import TestPage from "./pages/TestPage";
 
 function Router() {
   return (
@@ -90,6 +91,11 @@ function Router() {
       <Route path="/settings">
         <ProtectedRoute>
           <SettingsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/test">
+        <ProtectedRoute>
+          <TestPage />
         </ProtectedRoute>
       </Route>
       
