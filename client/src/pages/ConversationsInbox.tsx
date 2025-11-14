@@ -2631,7 +2631,7 @@ export default function ConversationsInbox() {
                       placeholderText="Select a template to see preview..."
                     />
                   </div>
-                  <p className="text-[10px] py-1">This experience may look different across devices</p>
+                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                 </div>
               </div>
             </div>

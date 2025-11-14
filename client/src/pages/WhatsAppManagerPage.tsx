@@ -664,7 +664,7 @@ export default function WhatsAppManagerPage() {
                     profileAbout={about}
                     profilePhoneNumber={whatsAppNumber}
                   />
-                  <p className="text-[10px] py-1">This experience may look different across devices</p>                                     
+                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>                                     
                 </CardContent>
               </Card>        
             </div>
@@ -1228,7 +1228,7 @@ export default function WhatsAppManagerPage() {
                   icebreakers={icebreakers}
                   showPlaceholderMessageInTemplate={false}
                 />
-                <p className="text-[10px] py-1">This experience may look different across devices</p>
+                <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
               </div>
             </div>
           </div>
@@ -1340,7 +1340,7 @@ export default function WhatsAppManagerPage() {
                   commands={commands}
                   showPlaceholderMessageInTemplate={false}
                 />
-                <p className="text-[10px] py-1">This experience may look different across devices</p>
+                <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
               </div>
             </div>
           </div>

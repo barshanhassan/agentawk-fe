@@ -1764,7 +1764,7 @@ export default function TemplateManager() {
                     templateButtons={previewTemplate.buttons || []}
                     variableSamples={previewTemplate.variableSamples || {}}
                   />
-                  <p className="text-[10px] py-1">This experience may look different across devices</p>
+                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                 </div>
               );
             })()}
@@ -2913,7 +2913,7 @@ export default function TemplateManager() {
                       templateButtons={templateButtons}
                       variableSamples={variableSamples}
                     />
-                    <p className="text-[10px] py-1">This experience may look different across devices</p>
+                    <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                   </div>
                 </div>
               </div>

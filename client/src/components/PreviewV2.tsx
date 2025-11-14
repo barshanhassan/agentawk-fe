@@ -462,7 +462,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 <Smile size={25} className="text-gray-500" />
                 <input
                   type="text"
-                  placeholder={commands.length > 0 ? "\\" : "Message"}
+                  placeholder={commands.length > 0 && commands.some(commands => commands.commandText.trim() !== "") ? "\\" : "Message"}
                   className={`flex-1 bg-transparent outline-none px-[10px] placeholder:text-[19px] ${commands.length > 0 ? 'placeholder:text-[#111B21]' : 'placeholder:text-gray-500'}`}
                   disabled
                 />

@@ -1435,7 +1435,7 @@ export default function CampaignManager() {
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={selectedTemplate?.variableSamples || {}}
                     />
-                    <p className="text-[10px] py-1">This experience may look different across devices</p>
+                    <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                   </div>
                 </div>
               </div>
@@ -1962,7 +1962,7 @@ export default function CampaignManager() {
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={selectedTemplate?.variableSamples || {}}
                     />
-                    <p className="text-[10px] py-1">This experience may look different across devices</p>
+                    <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                   </div>
                 </div>
               </div>
@@ -2301,7 +2301,7 @@ export default function CampaignManager() {
                         templateButtons={selectedTemplate?.buttons || []}
                         variableSamples={selectedTemplate?.variableSamples || {}}
                       />
-                      <p className="text-[10px] py-1">This experience may look different across devices</p>
+                      <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                     </div>
                   </div>
                 </div>
