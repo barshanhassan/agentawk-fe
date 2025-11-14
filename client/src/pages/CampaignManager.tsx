@@ -1424,7 +1424,7 @@ export default function CampaignManager() {
 
                 {/* Right: Template Preview */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Templdate Preview</h3>
+                  <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
                   <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
                       mode="chat"

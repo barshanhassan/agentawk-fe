@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
-import { Forward } from 'lucide-react';
+import { Forward, Briefcase, Shapes, MapPin, Mail, Globe, MessageSquare } from 'lucide-react';
 import { MdMic, MdAttachFile, MdSend, MdDoneAll } from 'react-icons/md';
+import { format } from 'date-fns';
 
 type Mode = "chat" | "profile";
 
@@ -444,7 +445,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                     {commands.map((command, index) => (
                       <>
                         { command.commandText.trim() !== "" && (
-                          <div key={index} className="flex items-start p-[8px] bg-gray-100">
+                          <div key={index} className="flex items-start p-[8px]">
                             <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
                             <div className="flex flex-col">
                               <span className="text-[16px] font-semibold text-[#111B21] break-all">{command.commandText}</span>
@@ -478,35 +479,67 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
       {mode === 'profile' && (
         <>
-          <div className='relative flex justify-center'>
-            <img src={profilePfpUrl} className="absolute w-[130px] top-[24px] h-[130px] rounded-full z-10 object-cover" alt="Profile" />
-          </div>
-          <div className={`relative z-0 w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
-            <ArrowLeft size={24}/>
-            <MoreVertical size={24} />
-          </div>
-          <div className={`pt-[90px] pb-[30px] w-full h-full bg-white -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
-            <div className="h-[70px]" />
+          <div className={`pb-[30px] w-full h-full bg-white -mt-px px-[16px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
+            <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
+              <ArrowLeft size={24}/>
+              <img src={profilePfpUrl} className="w-[130px] h-[130px] rounded-full object-cover" alt="Profile" />
+              <MoreVertical size={24} />
+            </div>
+
             {/* Profile Picture, Name, ~Phone Number, Share Button */}
-            <div className="flex flex-col items-center text-center mb-[2px]">
-              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7">{profileName}</h2>
-              {profilePhoneNumber && <p className="mt-[4px] text-[19px] text-gray-500 max-w-[300px]">{profilePhoneNumber}</p>}
+            <div className="flex flex-col items-center text-center pt-[10px] mb-[2px]">
+              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7 break-all">{profileName}</h2>
+              {profilePhoneNumber && <p className="mt-[4px] text-[20px] text-gray-500 max-w-[300px] break-all">{profilePhoneNumber}</p>}
               <div className="mt-[24px] py-[6px] px-[44px] flex flex-col items-center justify-center border rounded-[10px] shadow-xs border-[var(--button-outline)]">
                 <Forward size={24} color="#36AD60" />
-                <h3>Share</h3>
+                <h3 className='font-medium'>Share</h3>
               </div>
             </div>
 
             {/* Description, Category, Address, Email, Website*/}
             {(profileDescription || profileCategory || profileAddress || profileEmail || profileWebsite) && (
               <>
-                <div className='my-[22px] border-t-[2px] border-[#e7e7e7ff] w-[calc(100% + 16px)] ml-[16px]'/>
-                <div>
-                  {profileDescription && <p className="text-gray-700 mb-2">{profileDescription}</p>}
-                  {profileCategory && <p className="text-gray-500 mb-2">{profileCategory}</p>}
-                  {profileAddress && <p className="text-gray-500 mb-2">{profileAddress}</p>}
-                  {profileEmail && <p className="text-blue-500 mb-2">{profileEmail}</p>}
-                  {profileWebsite && <p className="text-blue-500">{profileWebsite}</p>}
+                <div
+                  className='my-[22px] border-t-[2px] border-[#e7e7e7ff]'
+                  style={{
+                    width: "calc(100% + 32px)",
+                    marginLeft: "-16px"
+                  }}
+                />
+                <div
+                  className="flex flex-col"
+                  style={{gap: "16px"}}
+                >
+                  {profileDescription && 
+                    <div style={{gap: "18px"}} className="flex items-start">
+                      <Briefcase size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
+                      <p className="text-gray-700 text-[20px] font-medium break-all">{profileDescription}</p>
+                    </div>
+                  }
+                  {profileCategory &&
+                    <div style={{gap: "18px"}} className="flex items-start">
+                      <Shapes size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
+                      <p className="text-gray-500 text-[20px] font-medium break-all">{profileCategory}</p>
+                    </div>
+                  }
+                  {profileAddress &&
+                    <div style={{gap: "18px"}} className="flex items-start">
+                      <MapPin size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
+                      <p className="text-gray-500 text-[20px] font-medium break-all">{profileAddress}</p>
+                    </div>
+                  }
+                  {profileEmail &&
+                    <div style={{gap: "18px"}} className="flex items-start">
+                      <Mail size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
+                      <p className="text-blue-500 text-[20px] font-medium break-all">{profileEmail}</p>
+                    </div>
+                  }
+                  {profileWebsite &&
+                    <div style={{gap: "18px"}} className="flex items-start">
+                      <Globe size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
+                      <p className="text-blue-500 text-[20px] font-medium break-all">{profileWebsite}</p>
+                    </div>
+                  }
                 </div>
               </>
             )}
@@ -514,23 +547,43 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
             {/* About and phonenumber */}
             {(profileAbout || profilePhoneNumber) && (
               <>
-                <div className='my-[22px] border-t-[2px] border-[#e7e7e7ff] w-[calc(100% + 16px)] ml-[16px]'/>
+                <div
+                  className='my-[22px] border-t-[2px] border-[#e7e7e7ff]'
+                  style={{
+                    width: "calc(100% + 32px)",
+                    marginLeft: "-16px"
+                  }}
+                />
+                <h3 className="text-gray-500 font-semibold mb-[4px]">
+                  { profileAbout ? "About" : "" }
+                  { profileAbout && profilePhoneNumber ? " and phone number" : "" }
+                  { profilePhoneNumber && !profileAbout ? "Phone number" : "" }
+                </h3>
                 <div>
                   {profileAbout && (
-                    <div>
-                      <h3 className="font-semibold mb-1">About</h3>
-                      <p className="text-gray-700">{profileAbout}</p>
+                    <div className="mt-[4px] mb-[20px]">
+                      <p className="text-gray-900 break-all text-[20px] font-medium">{profileAbout}</p>
+                      {/* Date placeholder */}
+                      <p className="mt-[2px] text-gray-500 font-medium">{format(Date.now(), 'MMM dd, yyyy')}</p>
                     </div>
                   )}
                   {profilePhoneNumber && (
-                    <div className="mt-2">
-                      <h3 className="font-semibold mb-1">Phone Number</h3>
-                      <p className="text-gray-700">{profilePhoneNumber}</p>
+                    <div className="mt-[4px] flex items-center justify-between">
+                      <p className="text-gray-900 break-all text-[20px] font-medium">{profilePhoneNumber}</p>
+                      <MessageSquare size={28} color="#36AD60" />
                     </div>
                   )}
                 </div>
               </>
             )}
+
+            <div
+              className='my-[22px] border-t-[2px] border-[#e7e7e7ff]'
+              style={{
+                width: "calc(100% + 32px)",
+                marginLeft: "-16px"
+              }}
+            />
           </div>
         </>
       )}
