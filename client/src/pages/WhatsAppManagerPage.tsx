@@ -651,7 +651,7 @@ export default function WhatsAppManagerPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">WhatsApp Profile Preview</CardTitle>
                 </CardHeader>
-                <CardContent className="h-full max-h-[62vh] w-full">
+                <CardContent className="h-full max-h-[62vh] w-full flex flex-col items-center">
                   <PreviewV2
                     mode="profile"
                     profilePfpUrl={profilePhotoPreviewUrl ? profilePhotoPreviewUrl : undefined}
@@ -663,7 +663,8 @@ export default function WhatsAppManagerPage() {
                     profileWebsite={website}
                     profileAbout={about}
                     profilePhoneNumber={whatsAppNumber}
-                  />                                         
+                  />
+                  <p className="text-[10px] py-1">This experience may look different across devices</p>                                     
                 </CardContent>
               </Card>        
             </div>
@@ -1221,12 +1222,13 @@ export default function WhatsAppManagerPage() {
             {/* Right: Icebreakers Preview */}
             <div>
               <h3 className="font-semibold text-lg mb-1">Icebreakers Preview</h3>
-              <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+              <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                 <PreviewV2
                   mode="chat"
                   icebreakers={icebreakers}
                   showPlaceholderMessageInTemplate={false}
                 />
+                <p className="text-[10px] py-1">This experience may look different across devices</p>
               </div>
             </div>
           </div>
@@ -1332,12 +1334,13 @@ export default function WhatsAppManagerPage() {
             {/* Right: Commands Preview */}
             <div>
               <h3 className="font-semibold text-lg mb-1">Commands Preview</h3>
-              <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+              <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                 <PreviewV2
                   mode="chat"
                   commands={commands}
                   showPlaceholderMessageInTemplate={false}
                 />
+                <p className="text-[10px] py-1">This experience may look different across devices</p>
               </div>
             </div>
           </div>

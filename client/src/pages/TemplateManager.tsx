@@ -1754,7 +1754,7 @@ export default function TemplateManager() {
               if (!previewTemplate) return null;
 
               return (
-                <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+                <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                   <PreviewV2
                     mode="chat"
                     headerText={previewTemplate.header || ""}
@@ -1764,6 +1764,7 @@ export default function TemplateManager() {
                     templateButtons={previewTemplate.buttons || []}
                     variableSamples={previewTemplate.variableSamples || {}}
                   />
+                  <p className="text-[10px] py-1">This experience may look different across devices</p>
                 </div>
               );
             })()}
@@ -2902,7 +2903,7 @@ export default function TemplateManager() {
                 {/* Right: Template Preview */}
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+                  <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                     <PreviewV2
                       mode="chat"
                       headerText={headerText}
@@ -2912,6 +2913,7 @@ export default function TemplateManager() {
                       templateButtons={templateButtons}
                       variableSamples={variableSamples}
                     />
+                    <p className="text-[10px] py-1">This experience may look different across devices</p>
                   </div>
                 </div>
               </div>

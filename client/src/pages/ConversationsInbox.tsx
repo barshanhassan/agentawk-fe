@@ -2618,8 +2618,8 @@ export default function ConversationsInbox() {
                 </div>
 
                 {/* Right: Template Preview */}
-                <div>
-                  <label className="text-sm font-medium mb-3 block">Template Preview</label>
+                <div className="flex flex-col items-center">
+                  <label className="text-sm font-medium mb-3 block self-start">Template Preview</label>
                   <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
                       mode="chat"
@@ -2631,6 +2631,7 @@ export default function ConversationsInbox() {
                       placeholderText="Select a template to see preview..."
                     />
                   </div>
+                  <p className="text-[10px] py-1">This experience may look different across devices</p>
                 </div>
               </div>
             </div>

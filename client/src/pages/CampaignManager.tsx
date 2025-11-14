@@ -1425,7 +1425,7 @@ export default function CampaignManager() {
                 {/* Right: Template Preview */}
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+                  <div className="flex flex-col items-center h-full max-h-[62vh] w-full max-w-[31vh]">
                     <PreviewV2
                       mode="chat"
                       headerText={selectedTemplate?.header || ""}
@@ -1435,6 +1435,7 @@ export default function CampaignManager() {
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={selectedTemplate?.variableSamples || {}}
                     />
+                    <p className="text-[10px] py-1">This experience may look different across devices</p>
                   </div>
                 </div>
               </div>
@@ -1951,7 +1952,7 @@ export default function CampaignManager() {
                 {/* Right: Template Preview */}
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Template Preview</h3>
-                  <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+                  <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                     <PreviewV2
                       mode="chat"
                       headerText={selectedTemplate?.header || ""}
@@ -1961,6 +1962,7 @@ export default function CampaignManager() {
                       templateButtons={selectedTemplate?.buttons || []}
                       variableSamples={selectedTemplate?.variableSamples || {}}
                     />
+                    <p className="text-[10px] py-1">This experience may look different across devices</p>
                   </div>
                 </div>
               </div>
@@ -2289,7 +2291,7 @@ export default function CampaignManager() {
                   {/* Right: Template Preview */}
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1">Template Preview</label>
-                    <div className="h-full max-h-[62vh] w-full max-w-[31vh]">
+                    <div className="h-full max-h-[62vh] w-full max-w-[31vh] flex flex-col items-center">
                       <PreviewV2
                         mode="chat"
                         headerText={selectedTemplate?.header || ""}
@@ -2299,6 +2301,7 @@ export default function CampaignManager() {
                         templateButtons={selectedTemplate?.buttons || []}
                         variableSamples={selectedTemplate?.variableSamples || {}}
                       />
+                      <p className="text-[10px] py-1">This experience may look different across devices</p>
                     </div>
                   </div>
                 </div>
