@@ -422,7 +422,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           <div className="bg-[#ECE5DD] -mt-[2px] w-full flex items-end pt-[12px] pb-[10px] px-[8px]">
             <div className="flex-1 bg-white w-full rounded-[24px] flex flex-col items-center">
               <div className="w-full">
-                {icebreakers.length > 0 && (
+                {icebreakers.length > 0 && icebreakers.some(icebreaker => icebreaker.trim() !== "") && (
                   <div className="pt-[12px] pb-[4px] pl-[12px] pr-[16px] max-h-[500px] overflow-y-auto"
                   style={{
                     scrollbarWidth: 'none',
@@ -440,20 +440,24 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                     ))}
                   </div>
                 )}
-                {commands.length > 0 && (
+                {commands.length > 0  && commands.some(commands => commands.commandText.trim() !== "") && (
                   <div className="pt-[10px] pb-[4px] pl-[5px] pr-[16px] max-h-[500px] overflow-y-auto"
                   style={{
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
                   }}>
                     {commands.map((command, index) => (
-                      <div key={index} className="flex items-start p-[8px] bg-gray-100">
-                        <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
-                        <div className="flex flex-col">
-                          <span className="text-[16px] font-semibold text-[#111B21] break-all">{command.commandText}</span>
-                          <span className="text-[14.5px] text-[#666666] break-all">{command.commandDescription}</span>
-                        </div>
-                      </div>
+                      <>
+                        { command.commandText.trim() !== "" && (
+                          <div key={index} className="flex items-start p-[8px] bg-gray-100">
+                            <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
+                            <div className="flex flex-col">
+                              <span className="text-[16px] font-semibold text-[#111B21] break-all">{command.commandText}</span>
+                              <span className="text-[14.5px] text-[#666666] break-all">{command.commandDescription}</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     ))}
                   </div>
                 )}
