@@ -293,10 +293,10 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
             <div className="flex items-center">
               <ArrowLeft size={24}/>
-              <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full" alt="Profile Picture" />
+              <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
               <div className="flex flex-col">
-                <span className="text-[19px] font-semibold truncate w-[200px]">{profileName}</span>
-                <span className="text-[15px] mt-[-3.5px] truncate w-[200px]">{profileSubText}</span>
+                <span className="text-[19px] font-semibold truncate w-[230px]">{profileName}</span>
+                <span className="text-[15px] mt-[-3.5px] truncate w-[230px]">{profileSubText}</span>
               </div>
             </div>
             <MoreVertical size={24} />
@@ -448,7 +448,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   }}>
                     {commands.map((command, index) => (
                       <div key={index} className="flex items-start p-[8px] bg-gray-100">
-                        <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full" alt="Profile Picture" />
+                        <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
                         <div className="flex flex-col">
                           <span className="text-[16px] font-semibold text-[#111B21] break-all">{command.commandText}</span>
                           <span className="text-[14.5px] text-[#666666] break-all">{command.commandDescription}</span>
@@ -486,7 +486,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
           <div className={`w-full h-full bg-white -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
             {/* Profile Picture, Name, ~Phone Number, Share Button */}
             <div className="flex flex-col items-center text-center py-4">
-              <img src={profilePfpUrl} className="w-24 h-24 rounded-full mb-2" alt="Profile" />
+              <img src={profilePfpUrl} className="w-24 h-24 rounded-full mb-2 object-cover" alt="Profile" />
               <h2 className="text-2xl font-bold">{profileName}</h2>
               {profilePhoneNumber && <p className="text-gray-500">{profilePhoneNumber}</p>}
               <button className="mt-2 px-4 py-2 text-blue-500 font-semibold rounded-lg">Share</button>
@@ -542,7 +542,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       >
         <div className='flex p-[0px] h-full w-full'>
           {showMobile ? (
-            <div className={`flex flex-grow bg-black rounded-[24px] p-[${mobilePadding}px]`}>
+            <div className={`flex flex-grow bg-black rounded-[24px]`} style={{padding: `${mobilePadding}px`}}>
               {whiteContentDiv}
             </div>
           ) : (
