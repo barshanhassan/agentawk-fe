@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { ChevronLeft, Wifi, Battery, ArrowLeft, Square, Circle, MoreVertical, FileText, Play, Smile, Camera } from 'react-feather';
+import { Forward } from 'lucide-react';
 import { MdMic, MdAttachFile, MdSend, MdDoneAll } from 'react-icons/md';
 
 type Mode = "chat" | "profile";
@@ -284,7 +285,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
       {mode === 'chat' && (
         <>
-          <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
+          <div className={`z-0 w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
             <div className="flex items-center">
               <ArrowLeft size={24}/>
               <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
@@ -477,48 +478,57 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
       {mode === 'profile' && (
         <>
-          <div className='relative flex justify-center'>
-            <img src={profilePfpUrl} className="absolute w-[130px] top-[24px] h-[130px] rounded-full mb-2 object-cover" alt="Profile" />
-          </div>
-          <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
+          <div className={`relative z-0 w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
             <ArrowLeft size={24}/>
             <MoreVertical size={24} />
           </div>
-          <div className={`pt-[90px] w-full h-full bg-white -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
+          <div className={`pt-[90px] pb-[30px] w-full h-full bg-white -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
+            <div className='relative flex justify-center'>
+              <img src={profilePfpUrl} className="absolute z-10 w-[130px] top-[-154px] h-[130px] rounded-full mb-[8px] object-cover" alt="Profile" />
+            </div>
             {/* Profile Picture, Name, ~Phone Number, Share Button */}
-            <div className="flex flex-col items-center text-center space-y-[4px]">
-              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7">{profileName}</h2>
-              {profilePhoneNumber && <p className="text-gray-500 max-w-[150px]">{profilePhoneNumber}</p>}
-              <button className="px-4 text-blue-500 font-semibold rounded-lg">Share</button>
+            <div className="flex flex-col items-center text-center mb-[2px]">
+              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7 break-all">{profileName}</h2>
+              {profilePhoneNumber && <p className="mt-[4px] text-[19px] text-gray-500 max-w-[300px] break-all">{profilePhoneNumber}</p>}
+              <div className="mt-[24px] py-[6px] px-[44px] flex flex-col items-center justify-center border rounded-[10px] shadow-xs border-[var(--button-outline)]">
+                <Forward size={24} color="#36AD60" />
+                <h3>Share</h3>
+              </div>
             </div>
 
             {/* Description, Category, Address, Email, Website*/}
             {(profileDescription || profileCategory || profileAddress || profileEmail || profileWebsite) && (
-              <div className="py-4 border-t border-b">
-                {profileDescription && <p className="text-gray-700 mb-2">{profileDescription}</p>}
-                {profileCategory && <p className="text-gray-500 mb-2">{profileCategory}</p>}
-                {profileAddress && <p className="text-gray-500 mb-2">{profileAddress}</p>}
-                {profileEmail && <p className="text-blue-500 mb-2">{profileEmail}</p>}
-                {profileWebsite && <p className="text-blue-500">{profileWebsite}</p>}
-              </div>
+              <>
+                <div className='my-[22px] border-t-[2px] border-[#e7e7e7ff] w-[calc(100% + 16px)] ml-[16px]'/>
+                <div>
+                  {profileDescription && <p className="text-gray-700 mb-2 break-all">{profileDescription}</p>}
+                  {profileCategory && <p className="text-gray-500 mb-2">{profileCategory}</p>}
+                  {profileAddress && <p className="text-gray-500 mb-2 break-all">{profileAddress}</p>}
+                  {profileEmail && <p className="text-blue-500 mb-2 break-all">{profileEmail}</p>}
+                  {profileWebsite && <p className="text-blue-500 break-all">{profileWebsite}</p>}
+                </div>
+              </>
             )}
 
             {/* About and phonenumber */}
             {(profileAbout || profilePhoneNumber) && (
-              <div className="py-4 border-t border-b">
-                {profileAbout && (
-                  <div>
-                    <h3 className="font-semibold mb-1">About</h3>
-                    <p className="text-gray-700">{profileAbout}</p>
-                  </div>
-                )}
-                {profilePhoneNumber && (
-                  <div className="mt-2">
-                    <h3 className="font-semibold mb-1">Phone Number</h3>
-                    <p className="text-gray-700">{profilePhoneNumber}</p>
-                  </div>
-                )}
-              </div>
+              <>
+                <div className='my-[22px] border-t-[2px] border-[#e7e7e7ff] w-[calc(100% + 16px)] ml-[16px]'/>
+                <div>
+                  {profileAbout && (
+                    <div>
+                      <h3 className="font-semibold mb-1">About</h3>
+                      <p className="text-gray-700 break-all">{profileAbout}</p>
+                    </div>
+                  )}
+                  {profilePhoneNumber && (
+                    <div className="mt-2">
+                      <h3 className="font-semibold mb-1">Phone Number</h3>
+                      <p className="text-gray-700 break-all">{profilePhoneNumber}</p>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </>
