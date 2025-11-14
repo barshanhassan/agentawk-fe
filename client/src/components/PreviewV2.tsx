@@ -289,8 +289,8 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
               <ArrowLeft size={24}/>
               <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
               <div className="flex flex-col">
-                <span className="text-[19px] font-semibold truncate w-[230px]">{profileName}</span>
-                <span className="text-[15px] mt-[-3.5px] truncate w-[230px]">{profileSubText}</span>
+                <span className="text-[19px] font-semibold truncate max-w-[230px]">{profileName}</span>
+                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px]">{profileSubText}</span>
               </div>
             </div>
             <MoreVertical size={24} />
@@ -477,17 +477,19 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
       {mode === 'profile' && (
         <>
+          <div className='relative flex justify-center'>
+            <img src={profilePfpUrl} className="absolute w-[130px] top-[24px] h-[130px] rounded-full mb-2 object-cover" alt="Profile" />
+          </div>
           <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
             <ArrowLeft size={24}/>
             <MoreVertical size={24} />
           </div>
-          <div className={`w-full h-full bg-white -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
+          <div className={`pt-[90px] w-full h-full bg-white -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
             {/* Profile Picture, Name, ~Phone Number, Share Button */}
-            <div className="flex flex-col items-center text-center py-4">
-              <img src={profilePfpUrl} className="w-24 h-24 rounded-full mb-2 object-cover" alt="Profile" />
-              <h2 className="text-2xl font-bold">{profileName}</h2>
-              {profilePhoneNumber && <p className="text-gray-500">{profilePhoneNumber}</p>}
-              <button className="mt-2 px-4 py-2 text-blue-500 font-semibold rounded-lg">Share</button>
+            <div className="flex flex-col items-center text-center space-y-[4px]">
+              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7">{profileName}</h2>
+              {profilePhoneNumber && <p className="text-gray-500 max-w-[150px]">{profilePhoneNumber}</p>}
+              <button className="px-4 text-blue-500 font-semibold rounded-lg">Share</button>
             </div>
 
             {/* Description, Category, Address, Email, Website*/}
