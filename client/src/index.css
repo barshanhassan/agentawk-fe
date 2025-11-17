@@ -359,3 +359,24 @@
     inset: -1px;
   }
 }
+
+/* Custom styles for the range input thumb */
+.slider-thumb-blue-round::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: hsl(var(--primary)); /* Using Tailwind's primary color variable */
+  cursor: pointer;
+  border: 2px solid hsl(var(--primary));
+}
+
+.slider-thumb-blue-round::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: hsl(var(--primary)); /* Using Tailwind's primary color variable */
+  cursor: pointer;
+  border: 2px solid hsl(var(--primary));
+}

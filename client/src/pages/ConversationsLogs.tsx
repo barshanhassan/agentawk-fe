@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, RefreshCw, MoreVertical, Download, FileText } from "react-feather";
-import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic, Play, Pause, SkipForward, SkipBack } from "lucide-react";
+import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic, Play, Pause, SkipForward, SkipBack, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1038,8 +1038,8 @@ export default function ConversationsLogs() {
       }
     } else {
       // If a different call is clicked, or no call is expanded
-      if (currentPlayingCallId && isPlaying) {
-        pauseAudio(); // Pause current playing audio
+      if (currentPlayingCallId) { // Check if any call was playing/expanded
+        resetPlayerState(); // Reset everything for the previous call
       }
       setExpandedCallId(call.id); // Expand the new call's sub-row
       playAudio(call.id); // Play the new call
@@ -1110,6 +1110,16 @@ export default function ConversationsLogs() {
     if (audio) {
       audio.currentTime = parseFloat(e.target.value);
       setCurrentTime(audio.currentTime);
+    }
+  };
+
+  const resetPlayerState = () => {
+    pauseAudio();
+    setCurrentPlayingCallId(null);
+    setExpandedCallId(null);
+    setCurrentTime(0);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
     }
   };
 
@@ -2251,15 +2261,15 @@ export default function ConversationsLogs() {
                                 {call.recording && (
                                   <button
                                     className="p-1 hover:bg-muted rounded"
-                                    onClick={() => handlePlayPauseClick(call)}
-                                    title={expandedCallId === call.id && isPlaying ? "Pause" : "Play"}
+                                    onClick={() => expandedCallId === call.id ? resetPlayerState() : handlePlayPauseClick(call)}
+                                    title={expandedCallId === call.id ? "Close Player" : "Play"}
                                   >
-                                    {expandedCallId === call.id && isPlaying ? (
-                                      <Pause size={14} className="text-muted-foreground" />
+                                    {expandedCallId === call.id ? (
+                                      <X size={14} className="text-muted-foreground" />
                                     ) : (
                                       <Play size={14} className="text-muted-foreground" />
                                     )}
-                                  </button>
+                                  </button>                                
                                 )}
                               </div>
                             </td>
@@ -2342,7 +2352,7 @@ export default function ConversationsLogs() {
                                       max={duration}
                                       value={currentTime}
                                       onChange={handleSeek}
-                                      className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                                      className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary slider-thumb-blue-round"
                                     />
                                     <span className="text-sm text-muted-foreground">{formatTime(duration)}</span>
                                   </div>
