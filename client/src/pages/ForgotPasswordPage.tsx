@@ -66,7 +66,7 @@ const ForgotPasswordPage: React.FC = () => {
           </div>
 
           <div className="text-center text-sm text-muted-foreground pt-8">
-            <p>&copy; 2025 CommPlatform. <a href="#" className="hover:underline text-primary">Privacy Policy</a> | <a href="#" className="hover:underline text-primary">Terms of Service</a></p>
+            <p>&copy; 2025 CommPlatform. <a href="https://ezauq.com/privacy-and-policy" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Privacy Policy</a> | <a href="https://ezauq.com/terms-of-service" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Terms of Service</a></p>
           </div>
         </div>
       </div>
