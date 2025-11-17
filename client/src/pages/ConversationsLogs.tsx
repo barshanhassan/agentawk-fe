@@ -872,6 +872,8 @@ export default function ConversationsLogs() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [speedDropdownOpen, setSpeedDropdownOpen] = useState(false);
+  const speedDropdownRef = useRef<HTMLDivElement>(null);
   const [conversationDetailsOpen, setConversationDetailsOpen] = useState(false);
   const [callDetailsOpen, setCallDetailsOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -966,6 +968,9 @@ export default function ConversationsLogs() {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setRowsDropdownOpen(false);
+      }
+      if (speedDropdownRef.current && !speedDropdownRef.current.contains(event.target as Node)) {
+        setSpeedDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -2358,16 +2363,34 @@ export default function ConversationsLogs() {
                                   </div>
 
                                   <div className="flex items-center gap-4">
-                                    <Select value={playbackSpeed.toString()} onValueChange={(value) => handleSpeedChange(parseFloat(value))}>
-                                      <SelectTrigger className="w-[85px] hover-elevate">
-                                        <SelectValue placeholder="Speed" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
-                                          <SelectItem key={speed} value={speed.toString()}>{speed}x</SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                    <div className="relative w-[78px]" ref={speedDropdownRef}>
+                                      <button
+                                        type="button"
+                                        className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                                        onClick={() => setSpeedDropdownOpen(!speedDropdownOpen)}
+                                      >
+                                        <span className="truncate text-xs font-normal">{playbackSpeed}x</span>
+                                        <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                                      </button>
+                                      {speedDropdownOpen && (
+                                        <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                          <ul className="py-1">
+                                            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(option => (
+                                              <li
+                                                key={option}
+                                                className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
+                                                onClick={() => {
+                                                  handleSpeedChange(option);
+                                                  setSpeedDropdownOpen(false);
+                                                }}
+                                              >
+                                                {option}x
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </td>
