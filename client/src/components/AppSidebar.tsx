@@ -83,12 +83,12 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
         <Link href="/">
           {collapsed ? (
             <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold absolute" data-testid="logo-icon">
-              CM
+              EC
             </div>
           ) : (
             <div className="flex items-center gap-2" data-testid="logo-full">
               <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                CM
+                EC
               </div>
               <span className="font-bold text-lg text-sidebar-foreground">EZCONN</span>
             </div>
