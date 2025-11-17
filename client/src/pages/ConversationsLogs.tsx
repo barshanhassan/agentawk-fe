@@ -2212,7 +2212,7 @@ export default function ConversationsLogs() {
                     ) : (
                       paginatedCallLogs.map((call) => (
                         <React.Fragment key={call.id}>
-                          <tr className="border-b hover:bg-muted/50">
+                          <tr className={`${expandedCallId === call.id ? '' : 'border-b'} hover:bg-muted/50`}>
                             <td className="py-2 px-3">
                               <Checkbox
                                 checked={selectedRows.has(call.id)}
@@ -2298,13 +2298,13 @@ export default function ConversationsLogs() {
                             </td>
                           </tr>
                           {expandedCallId === call.id && (
-                            <tr className="bg-muted/20">
-                              <td colSpan={10} className="py-2 px-3">
+                            <tr className="border-b bg-muted/20">
+                              <td colSpan={10} className="pb-2 px-3">
                                 <div className="flex items-center justify-between w-full">
                                   <div className="flex items-center gap-4">
                                     <button
                                       onClick={handlePrevious}
-                                      className="p-2 hover:bg-muted rounded-full disabled:opacity-50"
+                                      className="p-1 hover:bg-muted rounded-full disabled:opacity-50"
                                       disabled={
                                         (() => {
                                           const currentCallLogs = getFilteredAndSortedCallLogs();
@@ -2321,13 +2321,13 @@ export default function ConversationsLogs() {
                                     </button>
                                     <button
                                       onClick={() => handlePlayPauseClick(call)}
-                                      className="p-2 hover:bg-muted rounded-full"
+                                      className="p-1 hover:bg-muted rounded-full"
                                     >
-                                      {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                                      {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                                     </button>
                                     <button
                                       onClick={handleNext}
-                                      className="p-2 hover:bg-muted rounded-full disabled:opacity-50"
+                                      className="p-1 hover:bg-muted rounded-full disabled:opacity-50"
                                       disabled={
                                         (() => {
                                           const currentCallLogs = getFilteredAndSortedCallLogs();
@@ -2359,7 +2359,7 @@ export default function ConversationsLogs() {
 
                                   <div className="flex items-center gap-4">
                                     <Select value={playbackSpeed.toString()} onValueChange={(value) => handleSpeedChange(parseFloat(value))}>
-                                      <SelectTrigger className="w-[100px] hover-elevate">
+                                      <SelectTrigger className="w-[85px] hover-elevate">
                                         <SelectValue placeholder="Speed" />
                                       </SelectTrigger>
                                       <SelectContent>
