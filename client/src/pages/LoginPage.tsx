@@ -31,7 +31,7 @@ const LoginPage: React.FC = () => {
         <div className="w-full max-w-md space-y-6">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-primary">Welcome to</h1>
-            <h1 className="text-4xl font-bold text-primary">CommPlatform!</h1>
+            <h1 className="text-4xl font-bold text-primary">EZCONN!</h1>
             <p className="mt-4 text-lg text-muted-foreground">Login into your account to continue</p>
           </div>
 
@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
           </form>
 
           <div className="text-center text-sm text-muted-foreground pt-8">
-            <p>&copy; 2025 CommPlatform. <a href="https://ezauq.com/privacy-and-policy" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Privacy Policy</a> | <a href="https://ezauq.com/terms-of-service" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Terms of Service</a></p>
+            <p>&copy; 2025 EZCONN. <a href="https://ezauq.com/privacy-and-policy" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Privacy Policy</a> | <a href="https://ezauq.com/terms-of-service" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Terms of Service</a></p>
           </div>
         </div>
       </div>

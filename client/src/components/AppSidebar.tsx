@@ -90,7 +90,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
               <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold">
                 CM
               </div>
-              <span className="font-bold text-lg text-sidebar-foreground">CommPlatform</span>
+              <span className="font-bold text-lg text-sidebar-foreground">EZCONN</span>
             </div>
           )}
         </Link>
