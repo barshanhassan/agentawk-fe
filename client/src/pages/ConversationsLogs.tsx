@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, RefreshCw, MoreVertical, Download, FileText } from "react-feather";
-import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic } from "lucide-react";
+import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic, Play, Pause, SkipForward, SkipBack } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,8 +30,7 @@ import {
 } from "@/components/ui/select";
 import CustomDropdown from "@/components/CustomDropdown";
 import { format } from "date-fns";   
-
-type SortDirection = "asc" | "desc" | "default";
+import React from "react";
 
 interface SortEntry {
   id: string;
@@ -878,6 +877,18 @@ export default function ConversationsLogs() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [selectedCallLog, setSelectedCallLog] = useState<CallLog | null>(null);
 
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentPlayingCallId, setCurrentPlayingCallId] = useState<string | null>(null);
+  const [expandedCallId, setExpandedCallId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const getAudioUrl = (callId: string) => {
+    return "https://index-tts.github.io/examples_part2/IndexTTS/Speaker_2.wav";
+  };
+
   const statusOptions = [
     { id: "Active", name: "Active" },
     { id: "Queued", name: "Queued" },
@@ -960,6 +971,153 @@ export default function ConversationsLogs() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    const setAudioData = () => {
+      setDuration(audio.duration);
+      setCurrentTime(audio.currentTime);
+    };
+
+    const setAudioTime = () => {
+      setCurrentTime(audio.currentTime);
+    };
+    const setAudioEnded = () => {
+      setIsPlaying(false);
+    };
+
+    audio.addEventListener('loadedmetadata', setAudioData);
+    audio.addEventListener('timeupdate', setAudioTime);
+    audio.addEventListener('ended', setAudioEnded);
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', setAudioData);
+      audio.removeEventListener('timeupdate', setAudioTime);
+      audio.removeEventListener('ended', setAudioEnded);
+    };
+  }, []);
+
+  const playAudio = (callId: string) => {
+    const audio = audioRef.current;
+    if (audio) {
+      const url = getAudioUrl(callId);
+      if (audio.src !== url) {
+        audio.src = url;
+        audio.load();
+      }
+      audio.playbackRate = playbackSpeed;
+      audio.play().then(() => {
+        setIsPlaying(true);
+        setCurrentPlayingCallId(callId);
+      }).catch(error => {
+        console.error("Error playing audio:", error);
+        setIsPlaying(false);
+      });
+    }
+  };
+
+  const pauseAudio = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handlePlayPauseClick = (call: CallLog) => {
+    if (expandedCallId === call.id) {
+      // If the same call is clicked again
+      if (isPlaying) {
+        pauseAudio();
+      } else {
+        playAudio(call.id);
+      }
+    } else {
+      // If a different call is clicked, or no call is expanded
+      if (currentPlayingCallId && isPlaying) {
+        pauseAudio(); // Pause current playing audio
+      }
+      setExpandedCallId(call.id); // Expand the new call's sub-row
+      playAudio(call.id); // Play the new call
+    }
+  };
+
+  const handleNext = () => {
+    const currentCallLogs = getFilteredAndSortedCallLogs();
+    const currentIndex = currentCallLogs.findIndex(call => call.id === currentPlayingCallId);
+    if (currentIndex !== -1 && currentIndex < currentCallLogs.length - 1) {
+      const nextCall = currentCallLogs[currentIndex + 1];
+      if (nextCall.recording) {
+        playAudio(nextCall.id);
+      } else {
+        // Find next available recording
+        for (let i = currentIndex + 1; i < currentCallLogs.length; i++) {
+          if (currentCallLogs[i].recording) {
+            playAudio(currentCallLogs[i].id);
+            return;
+          }
+        }
+        // If no next recording, stop playback
+        pauseAudio();
+        setCurrentPlayingCallId(null);
+      }
+    } else {
+      // If at the end, stop playback
+      pauseAudio();
+      setCurrentPlayingCallId(null);
+    }
+  };
+
+  const handlePrevious = () => {
+    const currentCallLogs = getFilteredAndSortedCallLogs();
+    const currentIndex = currentCallLogs.findIndex(call => call.id === currentPlayingCallId);
+    if (currentIndex > 0) {
+      const prevCall = currentCallLogs[currentIndex - 1];
+      if (prevCall.recording) {
+        playAudio(prevCall.id);
+      } else {
+        // Find previous available recording
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          if (currentCallLogs[i].recording) {
+            playAudio(currentCallLogs[i].id);
+            return;
+          }
+        }
+        // If no previous recording, stop playback
+        pauseAudio();
+        setCurrentPlayingCallId(null);
+      }
+    } else {
+      // If at the beginning, stop playback
+      pauseAudio();
+      setCurrentPlayingCallId(null);
+    }
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = parseFloat(e.target.value);
+      setCurrentTime(audio.currentTime);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
 
   const handleColumnSort = (column: string) => {
     const existingSort = sorts.find(s => s.column === column);
@@ -1410,6 +1568,7 @@ export default function ConversationsLogs() {
 
   return (
     <div className="p-6 space-y-6">
+      <audio ref={audioRef} className="hidden" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Logs</h1>
@@ -1854,22 +2013,21 @@ export default function ConversationsLogs() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Filters */}
-          <div className="flex items-center justify-between gap-3">
-            {/* Left side: Search, Date Range, Direction, Status */}
-            <div className="flex items-center gap-3 flex-1">
-              <div className="relative w-80" style={{ height: "38px" }}>
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search calls..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color h-full"
-                />
-              </div>
-
+                    </div>
+          
+                    {/* Filters */}
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Left side: Search, Date Range, Direction, Status */}
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="relative w-80" style={{ height: "38px" }}>
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                          <Input
+                            placeholder="Search calls..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color h-full"
+                          />
+                        </div>
               {/* Date Range Preset */}
               <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
                 <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
@@ -2043,76 +2201,169 @@ export default function ConversationsLogs() {
                       </tr>
                     ) : (
                       paginatedCallLogs.map((call) => (
-                        <tr key={call.id} className="border-b hover:bg-muted/50">
-                          <td className="py-2 px-3">
-                            <Checkbox
-                              checked={selectedRows.has(call.id)}
-                              onCheckedChange={() => toggleRowSelection(call.id)}
-                            />
-                          </td>
-                          <td className="py-2 px-3">{call.contact}</td>
-                          <td className="py-2 px-3">{call.agent}</td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              call.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
-                            }`}>
-                              {call.direction}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3">{call.startTime}</td>
-                          <td className="py-2 px-3">{call.duration}</td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              call.status === "Completed" ? "bg-green-100 text-green-700" :
-                              call.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                              call.status === "Missed" ? "bg-red-100 text-red-700" :
-                              call.status === "Declined" ? "bg-red-100 text-red-700" :
-                              call.status === "Failed" ? "bg-red-100 text-red-700" :
-                              "bg-gray-100 text-gray-700"
-                            }`}>
-                              {call.status}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              call.sentiment === "Positive" ? "bg-green-100 text-green-700" :
-                              call.sentiment === "Negative" ? "bg-red-100 text-red-700" :
-                              "bg-yellow-100 text-yellow-700"
-                            }`}>
-                              {call.sentiment}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              call.recording ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                            }`}>
-                              {call.recording ? "Yes" : "No"}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3 flex justify-start">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1 hover:bg-muted rounded">
-                                  <MoreVertical size={14} className="text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>
-                                  <FileText size={14} className="mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
-                                  <Download size={14} className="mr-2" />
-                                  Export Log
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Mic size={14} className="mr-2" />
-                                  Export Recording
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
+                        <React.Fragment key={call.id}>
+                          <tr className="border-b hover:bg-muted/50">
+                            <td className="py-2 px-3">
+                              <Checkbox
+                                checked={selectedRows.has(call.id)}
+                                onCheckedChange={() => toggleRowSelection(call.id)}
+                              />
+                            </td>
+                            <td className="py-2 px-3">{call.contact}</td>
+                            <td className="py-2 px-3">{call.agent}</td>
+                            <td className="py-2 px-3">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                call.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                              }`}>
+                                {call.direction}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">{call.startTime}</td>
+                            <td className="py-2 px-3">{call.duration}</td>
+                            <td className="py-2 px-3">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                call.status === "Completed" ? "bg-green-100 text-green-700" :
+                                call.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                                call.status === "Missed" ? "bg-red-100 text-red-700" :
+                                call.status === "Declined" ? "bg-red-100 text-red-700" :
+                                call.status === "Failed" ? "bg-red-100 text-red-700" :
+                                "bg-gray-100 text-gray-700"
+                              }`}>
+                                {call.status}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                call.sentiment === "Positive" ? "bg-green-100 text-green-700" :
+                                call.sentiment === "Negative" ? "bg-red-100 text-red-700" :
+                                "bg-yellow-100 text-yellow-700"
+                              }`}>
+                                {call.sentiment}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  call.recording ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                }`}>
+                                  {call.recording ? "Yes" : "No"}
+                                </span>
+                                {call.recording && (
+                                  <button
+                                    className="p-1 hover:bg-muted rounded"
+                                    onClick={() => handlePlayPauseClick(call)}
+                                    title={expandedCallId === call.id && isPlaying ? "Pause" : "Play"}
+                                  >
+                                    {expandedCallId === call.id && isPlaying ? (
+                                      <Pause size={14} className="text-muted-foreground" />
+                                    ) : (
+                                      <Play size={14} className="text-muted-foreground" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-2 px-3 flex justify-start">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 hover:bg-muted rounded">
+                                    <MoreVertical size={14} className="text-muted-foreground" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>
+                                    <FileText size={14} className="mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
+                                    <Download size={14} className="mr-2" />
+                                    Export Log
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Mic size={14} className="mr-2" />
+                                    Export Recording
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                          {expandedCallId === call.id && (
+                            <tr className="bg-muted/20">
+                              <td colSpan={10} className="py-2 px-3">
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="flex items-center gap-4">
+                                    <button
+                                      onClick={handlePrevious}
+                                      className="p-2 hover:bg-muted rounded-full disabled:opacity-50"
+                                      disabled={
+                                        (() => {
+                                          const currentCallLogs = getFilteredAndSortedCallLogs();
+                                          const currentIndex = currentCallLogs.findIndex(c => c.id === currentPlayingCallId);
+                                          if (currentIndex <= 0) return true;
+                                          for (let i = currentIndex - 1; i >= 0; i--) {
+                                            if (currentCallLogs[i].recording) return false;
+                                          }
+                                          return true;
+                                        })()
+                                      }
+                                    >
+                                      <SkipBack size={20} />
+                                    </button>
+                                    <button
+                                      onClick={() => handlePlayPauseClick(call)}
+                                      className="p-2 hover:bg-muted rounded-full"
+                                    >
+                                      {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                                    </button>
+                                    <button
+                                      onClick={handleNext}
+                                      className="p-2 hover:bg-muted rounded-full disabled:opacity-50"
+                                      disabled={
+                                        (() => {
+                                          const currentCallLogs = getFilteredAndSortedCallLogs();
+                                          const currentIndex = currentCallLogs.findIndex(c => c.id === currentPlayingCallId);
+                                          if (currentIndex === -1 || currentIndex >= currentCallLogs.length - 1) return true;
+                                          for (let i = currentIndex + 1; i < currentCallLogs.length; i++) {
+                                            if (currentCallLogs[i].recording) return false;
+                                          }
+                                          return true;
+                                        })()
+                                      }
+                                    >
+                                      <SkipForward size={20} />
+                                    </button>
+                                  </div>
+
+                                  <div className="flex items-center gap-4 flex-1 mx-8">
+                                    <span className="text-sm text-muted-foreground">{formatTime(currentTime)}</span>
+                                    <input
+                                      type="range"
+                                      min="0"
+                                      max={duration}
+                                      value={currentTime}
+                                      onChange={handleSeek}
+                                      className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                                    />
+                                    <span className="text-sm text-muted-foreground">{formatTime(duration)}</span>
+                                  </div>
+
+                                  <div className="flex items-center gap-4">
+                                    <Select value={playbackSpeed.toString()} onValueChange={(value) => handleSpeedChange(parseFloat(value))}>
+                                      <SelectTrigger className="w-[100px] hover-elevate">
+                                        <SelectValue placeholder="Speed" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                                          <SelectItem key={speed} value={speed.toString()}>{speed}x</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))
                     )}
                   </tbody>
