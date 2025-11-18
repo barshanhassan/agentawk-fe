@@ -85,7 +85,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
             <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold">
               EC
             </div>
-            <span className="font-bold text-lg text-sidebar-foreground">EZCONN</span>
+            <span className="font-bold text-lg text-sidebar-foreground">EZCONNZ</span>
           </div>
         </Link>
       </div>
