@@ -71,6 +71,12 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
   ];
 
   const isActive = (path: string) => location === path || (path === "/insights" && location === "/"); // Added condition for root path
+  const isParentActive = (item: MenuItem) => {
+    if (!item.children) {
+      return false;
+    }
+    return item.children.some(child => location.startsWith(child.path));
+  }
 
   return (
     <div
@@ -109,7 +115,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
                             className={`w-full justify-start gap-3 hover-elevate ${
                               collapsed ? "px-2" : "px-3"
                             } ${
-                              location.startsWith(item.path)
+                              isParentActive(item)
                                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                                 : "text-sidebar-foreground"
                             }`}
@@ -135,7 +141,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
                         className={`w-full justify-start gap-3 hover-elevate ${
                           collapsed ? "px-2" : "px-3"
                         } ${
-                          location.startsWith(item.path)
+                          isParentActive(item)
                             ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                             : "text-sidebar-foreground"
                         }`}
