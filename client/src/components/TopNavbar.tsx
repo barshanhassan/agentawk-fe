@@ -25,6 +25,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface TopNavbarProps {
   onToggleSidebar: () => void;
@@ -115,6 +122,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
         <Menu size={20} />
       </Button>
 
+
       <div className="flex items-center gap-3">
         {/* Agent Status */}
         <button
@@ -138,6 +146,18 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             </>
           )}
         </button>
+        
+        {/* Workspace Dropdown */}
+        <Select defaultValue="workspace-a">
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Select workspace" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="workspace-a">Workspace A</SelectItem>
+            <SelectItem value="workspace-b">Workspace B</SelectItem>
+            <SelectItem value="workspace-c">Workspace C</SelectItem>
+          </SelectContent>
+        </Select>
 
         <DropdownMenu
           open={notificationsOpen}
@@ -266,7 +286,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             </Tabs>
           </DropdownMenuContent>
         </DropdownMenu>
-
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
