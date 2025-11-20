@@ -62,6 +62,7 @@ export default function AppSidebar({ collapsed }: AppSidebarProps) {
     { icon: <Users size={20} />, label: "Contacts", path: "/contacts" },
     { icon: <Settings size={20} />, label: "User Management", path: "/users" },
     { icon: <UserPlus size={20} />, label: "Team Management", path: "/teams" },
+    { icon: <Grid size={20} />, label: "Workspace Management", path: "/workspaces" },
   ];
 
   const footerMenuItems: MenuItem[] = [

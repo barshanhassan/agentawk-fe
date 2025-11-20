@@ -398,14 +398,11 @@ export default function TeamManagementSection() {
       {/* Table Card */}
       <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
         <CardContent className="pt-2">
-
-
           {/* Table */}
           <div className="overflow-x-auto mt-6">
             <table className="w-full text-xs">
               <thead className="select-none">
                 <tr className="border-b">
-
                   <th
                     className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
                     onClick={() => handleColumnSort("teamName")}
@@ -445,59 +442,60 @@ export default function TeamManagementSection() {
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
-                            <tbody>
-                              {getFilteredAndSortedData().length === 0 ? (
-                                <tr>
-                                  <td colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No teams found.
-                                  </td>
-                                </tr>
-                              ) : (
-                                getFilteredAndSortedData().map((team) => {
-                                  const supervisor = initialEmployees.find(emp => emp.id === team.supervisorId);
-                                  return (
-                                    <tr key={team.id} className="border-b hover:bg-muted/50">
-                                      <td className="py-2 px-3">{team.teamName}</td>
-                                      <td className="py-2 px-3">{supervisor?.name || "N/A"}</td>
-                                      <td className="py-2 px-3">{team.agents.length}</td>
-                                      <td className="py-2 px-3">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                          team.status === "Active" ? "bg-green-100 text-green-700" :
-                                          "bg-red-100 text-red-700"
-                                        }`}>
-                                          {team.status}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 px-3">
-                                        <div>
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <button className="p-1 hover:bg-muted rounded">
-                                                <MoreVertical size={14} className="text-muted-foreground" />
-                                              </button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                              <DropdownMenuItem onClick={() => handleEditTeam(team)}>
-                                                <Edit2 size={14} className="mr-2" />
-                                                Edit
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem onClick={() => handleCopyTeam(team)}>
-                                                <Copy size={14} className="mr-2" />
-                                                Copy
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem onClick={() => handleDeleteTeam(team)} className="text-destructive">
-                                                <Trash2 size={14} className="mr-2" />
-                                                Delete
-                                              </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>            </table>
+                <tbody>
+                  {getFilteredAndSortedData().length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No teams found.
+                      </td>
+                    </tr>
+                  ) : (
+                    getFilteredAndSortedData().map((team) => {
+                      const supervisor = initialEmployees.find(emp => emp.id === team.supervisorId);
+                      return (
+                        <tr key={team.id} className="border-b hover:bg-muted/50">
+                          <td className="py-2 px-3">{team.teamName}</td>
+                          <td className="py-2 px-3">{supervisor?.name || "N/A"}</td>
+                          <td className="py-2 px-3">{team.agents.length}</td>
+                          <td className="py-2 px-3">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              team.status === "Active" ? "bg-green-100 text-green-700" :
+                              "bg-red-100 text-red-700"
+                            }`}>
+                              {team.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3">
+                            <div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 hover:bg-muted rounded">
+                                    <MoreVertical size={14} className="text-muted-foreground" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditTeam(team)}>
+                                    <Edit2 size={14} className="mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleCopyTeam(team)}>
+                                    <Copy size={14} className="mr-2" />
+                                    Copy
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDeleteTeam(team)} className="text-destructive">
+                                    <Trash2 size={14} className="mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
           </div>
 
           {/* Pagination */}
@@ -569,223 +567,222 @@ export default function TeamManagementSection() {
           </div>
         </CardContent>
       </Card>
-
-            {/* Create Team Modal */}
-            <Dialog open={showCreateTeamModal} onOpenChange={setShowCreateTeamModal}>
-              <DialogContent className="max-w-md">
-                <DialogHeader className="mb-2">
-                  <DialogTitle>Create Team</DialogTitle>
-                </DialogHeader>
-      
-                <div className="space-y-4">
-                  {/* Team Name Input */}
+        {/* Create Team Modal */}
+        <Dialog open={showCreateTeamModal} onOpenChange={setShowCreateTeamModal}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader className="mb-2">
+              <DialogTitle>Create Team</DialogTitle>
+            </DialogHeader>
+  
+            <div className="space-y-4">
+              {/* Team Name Input */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Team Name<span className="text-red-500 pl-0.5">*</span></label>
+                <div className="relative">
+                  <Input
+                    placeholder="Enter team name"
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    maxLength={50}
+                    className="pr-12"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    {newTeamName.length}/50
+                  </span>
+                </div>
+              </div>
+  
+              {/* Team Supervisor Dropdown */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Team Supervisor<span className="text-red-500 pl-0.5">*</span></label>
+                <CustomDropdown
+                  options={initialEmployees.map(emp => ({ id: emp.id, name: emp.name }))}
+                  selected={newSupervisorId ? [newSupervisorId] : []}
+                  onChange={(selectedIds) => setNewSupervisorId(selectedIds[0] || "")}
+                  placeholder="Select a supervisor"
+                  showSelectedOption={true}
+                  width="100%"
+                />
+              </div>
+  
+              {/* Agent Assignment */}
+              <div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground">Team Name<span className="text-red-500 pl-0.5">*</span></label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Enter team name"
-                        value={newTeamName}
-                        onChange={(e) => setNewTeamName(e.target.value)}
-                        maxLength={50}
-                        className="pr-12"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                        {newTeamName.length}/50
-                      </span>
+                    <h4 className="text-sm font-medium mb-2">Available Agents</h4>
+                    <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                      {initialEmployees
+                        .filter(emp => emp.id !== newSupervisorId && !newAgents.includes(emp.id))
+                        .map(emp => (
+                          <div key={emp.id} className="flex items-center justify-between py-1">
+                            <span className="text-sm">{emp.name}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon" // Changed from "default" to "icon"
+                              onClick={() => setNewAgents([...newAgents, emp.id])}
+                            >
+                              <PlusCircle size={16} />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </div>
-      
-                  {/* Team Supervisor Dropdown */}
                   <div>
-                    <label className="text-sm font-medium text-foreground">Team Supervisor<span className="text-red-500 pl-0.5">*</span></label>
-                    <CustomDropdown
-                      options={initialEmployees.map(emp => ({ id: emp.id, name: emp.name }))}
-                      selected={newSupervisorId ? [newSupervisorId] : []}
-                      onChange={(selectedIds) => setNewSupervisorId(selectedIds[0] || "")}
-                      placeholder="Select a supervisor"
-                      showSelectedOption={true}
-                      width="100%"
-                    />
-                  </div>
-      
-                  {/* Agent Assignment */}
-                  <div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Available Agents</h4>
-                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                          {initialEmployees
-                            .filter(emp => emp.id !== newSupervisorId && !newAgents.includes(emp.id))
-                            .map(emp => (
-                              <div key={emp.id} className="flex items-center justify-between py-1">
-                                <span className="text-sm">{emp.name}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon" // Changed from "default" to "icon"
-                                  onClick={() => setNewAgents([...newAgents, emp.id])}
-                                >
-                                  <PlusCircle size={16} />
-                                </Button>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Assigned Agents<span className="text-red-500 pl-0.5">*</span></h4>
-                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                          {initialEmployees
-                            .filter(emp => newAgents.includes(emp.id))
-                            .map(emp => (
-                              <div key={emp.id} className="flex items-center justify-between py-1">
-                                <span className="text-sm">{emp.name}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon" // Changed from "default" to "icon"
-                                  onClick={() => setNewAgents(newAgents.filter(id => id !== emp.id))}
-                                >
-                                  <MinusCircle size={16} />
-                                </Button>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
+                    <h4 className="text-sm font-medium mb-2">Assigned Agents<span className="text-red-500 pl-0.5">*</span></h4>
+                    <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                      {initialEmployees
+                        .filter(emp => newAgents.includes(emp.id))
+                        .map(emp => (
+                          <div key={emp.id} className="flex items-center justify-between py-1">
+                            <span className="text-sm">{emp.name}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon" // Changed from "default" to "icon"
+                              onClick={() => setNewAgents(newAgents.filter(id => id !== emp.id))}
+                            >
+                              <MinusCircle size={16} />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 </div>
-      
-                {/* Modal Footer */}
-                <div className="flex gap-2 justify-end mt-2">
-                  <Button
-                    onClick={() => setShowCreateTeamModal(false)}
-                    variant="outline"
-                    className="border-input [border-color:hsl(var(--input))] font-normal"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateTeam}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
-                  >
-                    Create Team
-                  </Button>
+              </div>
+            </div>
+  
+            {/* Modal Footer */}
+            <div className="flex gap-2 justify-end mt-2">
+              <Button
+                onClick={() => setShowCreateTeamModal(false)}
+                variant="outline"
+                className="border-input [border-color:hsl(var(--input))] font-normal"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateTeam}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+              >
+                Create Team
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        {/* Edit Team Modal */}
+        <Dialog open={showEditTeamModal} onOpenChange={setShowEditTeamModal}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader className="mb-2">
+              <DialogTitle>Edit Team</DialogTitle>
+            </DialogHeader>
+  
+            <div className="space-y-4">
+              {/* Team Name Input */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Team Name<span className="text-red-500 pl-0.5">*</span></label>
+                <div className="relative">
+                  <Input
+                    placeholder="Enter team name"
+                    value={editTeamName}
+                    onChange={(e) => setEditTeamName(e.target.value)}
+                    maxLength={50}
+                    className="pr-12"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    {editTeamName.length}/50
+                  </span>
                 </div>
-              </DialogContent>
-            </Dialog>
-            {/* Edit Team Modal */}
-            <Dialog open={showEditTeamModal} onOpenChange={setShowEditTeamModal}>
-              <DialogContent className="max-w-md">
-                <DialogHeader className="mb-2">
-                  <DialogTitle>Edit Team</DialogTitle>
-                </DialogHeader>
-      
-                <div className="space-y-4">
-                  {/* Team Name Input */}
+              </div>
+  
+              {/* Team Supervisor Dropdown */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Team Supervisor<span className="text-red-500 pl-0.5">*</span></label>
+                <CustomDropdown
+                  options={initialEmployees.map(emp => ({ id: emp.id, name: emp.name }))}
+                  selected={editSupervisorId ? [editSupervisorId] : []}
+                  onChange={(selectedIds) => setEditSupervisorId(selectedIds[0] || "")}
+                  placeholder="Select a supervisor"
+                  showSelectedOption={true}
+                  width="100%"
+                />
+              </div>
+  
+              {/* Agent Assignment */}
+              <div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground">Team Name<span className="text-red-500 pl-0.5">*</span></label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Enter team name"
-                        value={editTeamName}
-                        onChange={(e) => setEditTeamName(e.target.value)}
-                        maxLength={50}
-                        className="pr-12"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                        {editTeamName.length}/50
-                      </span>
+                    <h4 className="text-sm font-medium mb-2">Available Agents</h4>
+                    <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                      {initialEmployees
+                        .filter(emp => emp.id !== editSupervisorId && !assignedAgents.includes(emp.id))
+                        .map(emp => (
+                          <div key={emp.id} className="flex items-center justify-between py-1">
+                            <span className="text-sm">{emp.name}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon" // Changed from "default" to "icon"
+                              onClick={() => setAssignedAgents([...assignedAgents, emp.id])}
+                            >
+                              <PlusCircle size={16} />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </div>
-      
-                  {/* Team Supervisor Dropdown */}
                   <div>
-                    <label className="text-sm font-medium text-foreground">Team Supervisor<span className="text-red-500 pl-0.5">*</span></label>
-                    <CustomDropdown
-                      options={initialEmployees.map(emp => ({ id: emp.id, name: emp.name }))}
-                      selected={editSupervisorId ? [editSupervisorId] : []}
-                      onChange={(selectedIds) => setEditSupervisorId(selectedIds[0] || "")}
-                      placeholder="Select a supervisor"
-                      showSelectedOption={true}
-                      width="100%"
-                    />
-                  </div>
-      
-                  {/* Agent Assignment */}
-                  <div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Available Agents</h4>
-                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                          {initialEmployees
-                            .filter(emp => emp.id !== editSupervisorId && !assignedAgents.includes(emp.id))
-                            .map(emp => (
-                              <div key={emp.id} className="flex items-center justify-between py-1">
-                                <span className="text-sm">{emp.name}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon" // Changed from "default" to "icon"
-                                  onClick={() => setAssignedAgents([...assignedAgents, emp.id])}
-                                >
-                                  <PlusCircle size={16} />
-                                </Button>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Assigned Agents<span className="text-red-500 pl-0.5">*</span></h4>
-                        <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                          {initialEmployees
-                            .filter(emp => assignedAgents.includes(emp.id))
-                            .map(emp => (
-                              <div key={emp.id} className="flex items-center justify-between py-1">
-                                <span className="text-sm">{emp.name}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon" // Changed from "default" to "icon"
-                                  onClick={() => setAssignedAgents(assignedAgents.filter(id => id !== emp.id))}
-                                >
-                                  <MinusCircle size={16} />
-                                </Button>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
+                    <h4 className="text-sm font-medium mb-2">Assigned Agents<span className="text-red-500 pl-0.5">*</span></h4>
+                    <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                      {initialEmployees
+                        .filter(emp => assignedAgents.includes(emp.id))
+                        .map(emp => (
+                          <div key={emp.id} className="flex items-center justify-between py-1">
+                            <span className="text-sm">{emp.name}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon" // Changed from "default" to "icon"
+                              onClick={() => setAssignedAgents(assignedAgents.filter(id => id !== emp.id))}
+                            >
+                              <MinusCircle size={16} />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </div>
-      
-                  {/* Status Select */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Status<span className="text-red-500 pl-0.5">*</span></label>
-                    <Select value={editStatus} onValueChange={(value: TeamStatus) => setEditStatus(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
-      
-                {/* Modal Footer */}
-                <div className="flex gap-2 justify-end mt-2">
-                  <Button
-                    onClick={() => setShowEditTeamModal(false)}
-                    variant="outline"
-                    className="border-input [border-color:hsl(var(--input))] font-normal"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveEditTeam}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+              </div>
+  
+              {/* Status Select */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Status<span className="text-red-500 pl-0.5">*</span></label>
+                <Select value={editStatus} onValueChange={(value: TeamStatus) => setEditStatus(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+  
+            {/* Modal Footer */}
+            <div className="flex gap-2 justify-end mt-2">
+              <Button
+                onClick={() => setShowEditTeamModal(false)}
+                variant="outline"
+                className="border-input [border-color:hsl(var(--input))] font-normal"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEditTeam}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       {/* Delete Team Modal */}
       <Dialog open={showDeleteTeamModal} onOpenChange={setShowDeleteTeamModal}>
         <DialogContent className="max-w-sm">

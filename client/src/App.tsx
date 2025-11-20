@@ -18,6 +18,7 @@ import BillingPage from "@/pages/BillingPage";
 import WhatsAppManagerPage from "@/pages/WhatsAppManagerPage";
 import SettingsPage from "@/pages/SettingsPage"; // Import the new SettingsPage
 import TeamManagementSection from "@/components/sections/TeamManagementSection";
+import WorkspaceManagementPage from "@/pages/WorkspaceManagementPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
@@ -75,6 +76,11 @@ function Router() {
           <div className="p-6">
             <TeamManagementSection />
           </div>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/workspaces">
+        <ProtectedRoute>
+          <WorkspaceManagementPage />
         </ProtectedRoute>
       </Route>
       <Route path="/billing">
