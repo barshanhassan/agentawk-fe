@@ -640,7 +640,7 @@ export default function ContactsSection() {
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Contacts</h2>
+        <h2 className="text-[20px] font-[700]">Contacts</h2>
         <Button
           onClick={() => setShowAddContactModal(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"

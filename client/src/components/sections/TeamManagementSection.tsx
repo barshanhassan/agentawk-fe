@@ -357,7 +357,7 @@ export default function TeamManagementSection() {
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Team Management</h2>
+        <h2 className="text-[20px] font-[700]">Team Management</h2>
         <Button
           onClick={() => setShowCreateTeamModal(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"

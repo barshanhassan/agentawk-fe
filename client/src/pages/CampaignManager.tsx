@@ -863,7 +863,7 @@ export default function CampaignManager() {
     <div className="p-6 space-y-6" data-testid="campaign-manager">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Campaign Manager</h1>
+        <h1 className="text-[20px] font-[700]">Campaign Manager</h1>
         <Button className="gap-2 font-normal" onClick={() => setCreateOpen(true)} data-testid="button-create-campaign">
           <Plus size={16} />
           Create Campaign

@@ -4,7 +4,7 @@ export default function BillingPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Billing</h1>
+        <h1 className="text-[20px] font-[700]">Billing</h1>
         <p className="text-sm text-muted-foreground mt-1">Billing occurs on the 1st of every month</p>
       </div>
 

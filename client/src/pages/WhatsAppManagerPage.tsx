@@ -338,8 +338,8 @@ export default function WhatsAppManagerPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">WhatsApp Manager</h1>
+    <div className="p-4 space-y-4">
+      <h1 className="text-[16.5px] font-bold">WhatsApp Manager</h1>
 
       <div className="space-y-4">
         <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">

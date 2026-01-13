@@ -505,7 +505,7 @@ export default function UserManagementSection() {
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">User Management</h2>
+        <h2 className="text-[20px] font-[700]">User Management</h2>
         <Button
           onClick={() => setShowCreateUserModal(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"

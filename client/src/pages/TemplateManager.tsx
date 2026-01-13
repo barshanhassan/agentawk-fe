@@ -1116,7 +1116,7 @@ export default function TemplateManager() {
     <div className="p-6 space-y-6" data-testid="template-manager">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Template Manager</h1>
+        <h1 className="text-[20px] font-[700]">Template Manager</h1>
         <div className="flex items-center gap-3">
           <Button className="gap-2 font-normal h-10 text-sm" onClick={() => setCreateTemplateOpen(true)} data-testid="button-create-template">
             <Plus size={16} />
