@@ -32,7 +32,7 @@ jobs:
           channelId: live
           projectId: product-one-4d742
 
-      # Deploy Update1 Branch to update-one-5fdce (site in comm-platform-5fdce)
+      # Deploy Update1 Branch to comm-platform-update (site in comm-platform-5fdce)
       - if: github.ref == 'refs/heads/update1'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

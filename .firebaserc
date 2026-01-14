@@ -7,7 +7,7 @@
     "comm-platform-5fdce": {
       "hosting": {
         "update-site": [
-          "update-one-5fdce"
+          "comm-platform-update"
         ]
       }
     }
