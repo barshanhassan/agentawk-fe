@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, BarChart3 } from "lucide-react";
 
@@ -93,10 +94,10 @@ export default function AgentConversion() {
 
   // Dummy data for Tags
   const tagsData = [
-    { name: "Urgent", count: 24, color: "bg-red-100 text-red-700" },
-    { name: "Follow-up", count: 18, color: "bg-blue-100 text-blue-700" },
-    { name: "Resolved", count: 156, color: "bg-green-100 text-green-700" },
-    { name: "Pending", count: 42, color: "bg-yellow-100 text-yellow-700" },
+    { name: "Urgent", count: 24, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" },
+    { name: "Follow-up", count: 18, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" },
+    { name: "Resolved", count: 156, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" },
+    { name: "Pending", count: 42, color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800" },
   ];
 
   return (
@@ -233,9 +234,9 @@ export default function AgentConversion() {
           <CardContent>
             <div className="flex flex-col gap-2">
               {tagsData.map((tag, idx) => (
-                <div key={idx} className={`px-2 py-1 rounded text-xs font-medium ${tag.color}`}>
+                <Badge variant="outline" key={idx} className={`font-medium ${tag.color}`}>
                   {tag.name} ({tag.count})
-                </div>
+                </Badge>
               ))}
             </div>
           </CardContent>

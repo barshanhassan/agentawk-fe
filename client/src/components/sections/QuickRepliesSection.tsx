@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import StatusBadge from "@/components/StatusBadge";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -331,10 +332,7 @@ export default function QuickRepliesSection() {
                         </div>
                       </td>
                       <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                          }`}>
-                          {item.status}
-                        </span>
+                        <StatusBadge status={item.status} type={item.status === "Active" ? "success" : "danger"} />
                       </td>
                       <td className="py-2 px-3">{item.lastEdited}</td>
                       <td className="py-2 px-3">

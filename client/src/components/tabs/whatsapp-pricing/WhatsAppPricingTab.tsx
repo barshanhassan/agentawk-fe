@@ -76,8 +76,8 @@ export default function WhatsAppPricingTab() {
         </div>
 
         {/* Alert Banner */}
-        <div className="bg-blue-50 dark:bg-blue-800 border border-blue-200 dark:border-blue-600 rounded-lg p-2.5 flex items-center gap-3">
-          <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-200 flex-shrink-0" />
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-2.5 flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
           <p className="text-sm text-blue-800 dark:text-blue-200">
             <strong>Note:</strong> All insights data is approximate and may differ from what's shown on your invoices due to small variations in data processing.
           </p>

@@ -1160,7 +1160,7 @@ export default function ConversationsInbox() {
                             </AvatarFallback>
                           </Avatar>
                           {getPendingMessagesCount(conv.id) > 0 && (
-                            <Badge variant="default" className="absolute h-5 w-5 -top-1.5 left-7 flex items-center justify-center p-0 text-xs rounded-full">
+                            <Badge variant="default" className="absolute h-5 w-5 -top-1.5 left-7 flex items-center justify-center p-0 text-xs rounded-full bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700 border-0">
                               {getPendingMessagesCount(conv.id)}
                             </Badge>
                           )}
@@ -1172,10 +1172,10 @@ export default function ConversationsInbox() {
                               {activeTab === "all" && (
                                 <Badge
                                   variant="outline"
-                                  className={`text-xs flex-shrink-0 ${conv.status === "queued" ? "bg-yellow-50 text-yellow-700 border-yellow-200" :
-                                    conv.status === "active" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                      conv.status === "completed" ? "bg-green-50 text-green-700 border-green-200" :
-                                        "bg-red-50 text-red-700 border-red-200"
+                                  className={`text-xs flex-shrink-0 ${conv.status === "queued" ? "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800" :
+                                    conv.status === "active" ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
+                                      conv.status === "completed" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
+                                        "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
                                     }`}
                                 >
                                   {conv.status}
@@ -1369,10 +1369,10 @@ export default function ConversationsInbox() {
 
                 if (status === "completed") {
                   return (
-                    <div className="bg-green-50 border-b border-green-200 px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800/50 px-4 py-3 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                        <p className="text-sm text-green-800">
+                        <AlertCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                        <p className="text-sm text-green-800 dark:text-green-100">
                           <strong>Chat marked as Completed!</strong>
                         </p>
                       </div>
@@ -1403,10 +1403,10 @@ export default function ConversationsInbox() {
 
                 if (status === "active" && assignedAgent && assignedAgent !== "self") {
                   return (
-                    <div className="bg-purple-50 border-b border-purple-200 px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800/50 px-4 py-3 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                        <p className="text-sm text-purple-800">
+                        <AlertCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                        <p className="text-sm text-purple-800 dark:text-purple-100">
                           <strong>Chat assigned to {getAgentName(assignedAgent)}!</strong>
                         </p>
                       </div>
@@ -1437,10 +1437,10 @@ export default function ConversationsInbox() {
 
                 if (!assignedAgent) {
                   return (
-                    <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 px-4 py-3 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                        <p className="text-sm text-amber-800">
+                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                        <p className="text-sm text-amber-800 dark:text-amber-100">
                           <strong>Chat not assigned!</strong>
                         </p>
                       </div>
@@ -1476,7 +1476,7 @@ export default function ConversationsInbox() {
                 <div className="space-y-4">
                   {(conversationMessagesData[selectedConversation!] || []).map((msg: any) => (
                     <div key={msg.id} className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100" : "bg-gray-200 text-gray-900"}`} data-testid={`message-${msg.id}`}>
+                      <div className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
                         {msg.text && <p className="text-sm">{msg.text}</p>}
 
                         {/* Images */}
@@ -1489,7 +1489,7 @@ export default function ConversationsInbox() {
                                   alt={image.name}
                                   className="max-w-full h-auto rounded max-h-64 object-cover"
                                 />
-                                <div className="flex items-center justify-between gap-2 text-xs bg-black/10 rounded p-2">
+                                <div className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
                                   <div className="flex items-center gap-1 flex-1 min-w-0">
                                     <span className="truncate">{image.name}</span>
                                     <span className="opacity-70 flex-shrink-0">({(image.size / 1024).toFixed(1)}KB)</span>
@@ -1516,7 +1516,7 @@ export default function ConversationsInbox() {
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className="mt-2 space-y-1">
                             {msg.attachments.map((attachment: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 rounded p-2">
+                              <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <Paperclip size={12} className="flex-shrink-0" />
                                   <span className="truncate">{attachment.name}</span>
@@ -1542,7 +1542,7 @@ export default function ConversationsInbox() {
                         {/* Voice message */}
                         {msg.audio && (
                           <div className="mt-2 space-y-2">
-                            <div className="bg-black/10 rounded p-3 max-w-sm">
+                            <div className="bg-black/10 dark:bg-white/10 rounded p-3 max-w-sm">
                               <audio
                                 controls
                                 className="h-12 rounded"
@@ -1573,7 +1573,7 @@ export default function ConversationsInbox() {
                           </div>
                         )}
 
-                        <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700"}`}>{msg.time}</p>
+                        <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700 dark:text-slate-400"}`}>{msg.time}</p>
                       </div>
                     </div>
                   ))}

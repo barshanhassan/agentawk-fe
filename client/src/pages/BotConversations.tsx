@@ -940,9 +940,9 @@ export default function BotConversations() {
                               {activeTab === "all" && (
                                 <Badge
                                   variant="outline"
-                                  className={`text-xs flex-shrink-0 ${conv.status === "active" ? "bg-green-50 text-green-700 border-green-200" :
-                                    conv.status === "expired" ? "bg-red-50 text-red-700 border-red-200" :
-                                      "bg-gray-50 text-gray-700 border-gray-200"
+                                  className={`text-xs flex-shrink-0 ${conv.status === "active" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
+                                    conv.status === "expired" ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" :
+                                      "bg-gray-50 text-gray-700 border-gray-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
                                     }`}
                                 >
                                   {conv.status}
@@ -1073,10 +1073,10 @@ export default function BotConversations() {
             <Separator />
 
             {/* Bot Conversation Banner and Assignment UI */}
-            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-4">
+            <div className="bg-gray-50 dark:bg-slate-900/20 border-b border-gray-200 dark:border-slate-800/50 px-4 py-3 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-1">
-                <AlertCircle className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                <p className="text-sm text-gray-800">
+                <AlertCircle className="w-4 h-4 text-gray-600 dark:text-slate-400 flex-shrink-0" />
+                <p className="text-sm text-gray-800 dark:text-slate-200">
                   <strong>This is a bot conversation!</strong>
                 </p>
               </div>
@@ -1109,7 +1109,7 @@ export default function BotConversations() {
               <div className="space-y-4">
                 {(conversationMessagesData[selectedConversation!] || []).map((msg: any) => (
                   <div key={msg.id} className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100" : "bg-gray-200 text-gray-900"}`} data-testid={`message-${msg.id}`}>
+                    <div className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
                       {msg.text && <p className="text-sm">{msg.text}</p>}
 
                       {/* Images */}
@@ -1122,7 +1122,7 @@ export default function BotConversations() {
                                 alt={image.name}
                                 className="max-w-full h-auto rounded max-h-64 object-cover"
                               />
-                              <div className="flex items-center justify-between gap-2 text-xs bg-black/10 rounded p-2">
+                              <div className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
                                 <div className="flex items-center gap-1 flex-1 min-w-0">
                                   <span className="truncate">{image.name}</span>
                                   <span className="opacity-70 flex-shrink-0">({(image.size / 1024).toFixed(1)}KB)</span>
@@ -1149,7 +1149,7 @@ export default function BotConversations() {
                       {msg.attachments && msg.attachments.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {msg.attachments.map((attachment: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 rounded p-2">
+                            <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <Paperclip size={12} className="flex-shrink-0" />
                                 <span className="truncate">{attachment.name}</span>
@@ -1175,7 +1175,7 @@ export default function BotConversations() {
                       {/* Voice message */}
                       {msg.audio && (
                         <div className="mt-2 space-y-2">
-                          <div className="bg-black/10 rounded p-3 max-w-sm">
+                          <div className="bg-black/10 dark:bg-white/10 rounded p-3 max-w-sm">
                             <audio
                               controls
                               className="h-12 rounded"
@@ -1206,7 +1206,7 @@ export default function BotConversations() {
                         </div>
                       )}
 
-                      <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700"}`}>{msg.time}</p>
+                      <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700 dark:text-slate-400"}`}>{msg.time}</p>
                     </div>
                   </div>
                 ))}

@@ -375,11 +375,11 @@ export default function WhatsAppManagerPage() {
         {activeTab === "business-profile" && (
           <div className="flex items-center gap-x-5 gap-y-2 flex-wrap">
             {/* WhatsApp Number Badge */}
-            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
+            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
               <span className="text-sm font-medium text-foreground">WhatsApp Number:</span>
               <span className="text-sm text-foreground">{whatsAppNumber}</span>
             </div>
-            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
+            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
               <span className="text-sm font-medium text-foreground">Message limit:</span>
               <span className="text-sm text-foreground">1K Customers/24hr</span>
               <Tooltip>
@@ -392,13 +392,13 @@ export default function WhatsAppManagerPage() {
               </Tooltip>
             </div>
             {(() => {
-              const bgColor = isConnected ? 'bg-green-100' : 'bg-red-100';
-              const textColor = isConnected ? 'text-green-800' : 'text-red-800';
+              const bgColor = isConnected ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30';
+              const textColor = isConnected ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300';
               const statusText = isConnected ? 'Connected' : 'Disconnected';
               return (
                 <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
                   <span className="text-sm font-medium text-foreground">Account Status:</span>
-                  <span className={`text-sm text-foreground`}>{statusText}</span>
+                  <span className={`text-sm ${textColor}`}>{statusText}</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="h-3 w-3" />
@@ -414,21 +414,21 @@ export default function WhatsAppManagerPage() {
               let healthStatus, bgColor, textColor;
               if (accountHealth < 0.33) {
                 healthStatus = "Green";
-                bgColor = "bg-green-100";
-                textColor = "text-green-800";
+                bgColor = "bg-green-100 dark:bg-green-900/30";
+                textColor = "text-green-800 dark:text-green-300";
               } else if (accountHealth < 0.66) {
                 healthStatus = "Yellow";
-                bgColor = "bg-yellow-100";
-                textColor = "text-yellow-800";
+                bgColor = "bg-yellow-100 dark:bg-yellow-900/30";
+                textColor = "text-yellow-800 dark:text-yellow-300";
               } else {
                 healthStatus = "Red";
-                bgColor = "bg-red-100";
-                textColor = "text-red-800";
+                bgColor = "bg-red-100 dark:bg-red-900/30";
+                textColor = "text-red-800 dark:text-red-300";
               }
               return (
                 <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
                   <span className="text-sm font-medium text-foreground">Account Health:</span>
-                  <span className={`text-sm text-foreground`}>{healthStatus}</span>
+                  <span className={`text-sm ${textColor}`}>{healthStatus}</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="h-3 w-3" />

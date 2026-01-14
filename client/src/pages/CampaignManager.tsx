@@ -4,6 +4,8 @@ import { ChartContainer } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import StatusBadge from "@/components/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -1123,13 +1125,25 @@ export default function CampaignManager() {
                         </div>
                       </td>
                       <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeBadgeClasses(campaign.type)}`}>
+                        <Badge variant="outline" className={`font-medium ${campaign.type === "Broadcast" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800" :
+                          campaign.type === "API Triggered" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
+                            "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+                          }`}>
                           {campaign.type}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="py-2 px-3">{campaign.messageType}</td>
                       {activeTab === "all" && (
-                        <td className="py-2 px-3 capitalize text-xs">{campaign.status}</td>
+                        <td className="py-2 px-3 capitalize text-xs">
+                          <StatusBadge
+                            status={campaign.status}
+                            type={
+                              campaign.status === "delivered" ? "success" :
+                                campaign.status === "scheduled" ? "warning" :
+                                  "neutral"
+                            }
+                          />
+                        </td>
                       )}
                       <td className="py-2 px-3">{campaign.sent.toLocaleString()}</td>
                       <td className="py-2 px-3">{campaign.delivered.toLocaleString()}</td>
@@ -2462,10 +2476,10 @@ export default function CampaignManager() {
                                   <td className="py-2 px-3 font-medium">{recipient.name}</td>
                                   <td className="py-2 px-3">{recipient.phone}</td>
                                   <td className="py-2 px-3">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${recipient.status === "Viewed" ? "bg-green-100 text-green-700" :
-                                      recipient.status === "Delivered" ? "bg-blue-100 text-blue-700" :
-                                        recipient.status === "Sent" ? "bg-yellow-100 text-yellow-700" :
-                                          "bg-red-100 text-red-700"
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${recipient.status === "Viewed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                                      recipient.status === "Delivered" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
+                                        recipient.status === "Sent" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                                          "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                                       }`}>
                                       {recipient.status}
                                     </span>

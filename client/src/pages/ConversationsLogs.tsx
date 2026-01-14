@@ -1859,15 +1859,15 @@ export default function ConversationsLogs() {
                             <td className="py-2 px-3">{conv.startTime}</td>
                             <td className="py-2 px-3">{conv.duration}</td>
                             <td className="py-2 px-3">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${conv.status === "Completed" ? "bg-green-100 text-green-700" :
-                                conv.status === "Active" ? "bg-blue-100 text-blue-700" :
-                                  conv.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                                    conv.status === "Queued" ? "bg-yellow-100 text-yellow-700" :
-                                      conv.status === "Pending" ? "bg-yellow-100 text-yellow-700" :
-                                        conv.status === "Forwarded" ? "bg-yellow-100 text-yellow-700" :
-                                          conv.status === "Expired" ? "bg-red-100 text-red-700" :
-                                            conv.status === "Spammed" ? "bg-red-100 text-red-700" :
-                                              "bg-gray-100 text-gray-700"
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${conv.status === "Completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                                conv.status === "Active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
+                                  conv.status === "In Progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
+                                    conv.status === "Queued" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                                      conv.status === "Pending" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                                        conv.status === "Forwarded" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                                          conv.status === "Expired" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                            conv.status === "Spammed" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                              "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300"
                                 }`}>
                                 {conv.status}
                               </span>
@@ -2228,7 +2228,7 @@ export default function ConversationsLogs() {
                               <td className="py-2 px-3">{call.contact}</td>
                               <td className="py-2 px-3">{call.agent}</td>
                               <td className="py-2 px-3">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.direction === "Inbound" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
                                   }`}>
                                   {call.direction}
                                 </span>
@@ -2236,27 +2236,27 @@ export default function ConversationsLogs() {
                               <td className="py-2 px-3">{call.startTime}</td>
                               <td className="py-2 px-3">{call.duration}</td>
                               <td className="py-2 px-3">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.status === "Completed" ? "bg-green-100 text-green-700" :
-                                  call.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                                    call.status === "Missed" ? "bg-red-100 text-red-700" :
-                                      call.status === "Declined" ? "bg-red-100 text-red-700" :
-                                        call.status === "Failed" ? "bg-red-100 text-red-700" :
-                                          "bg-gray-100 text-gray-700"
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.status === "Completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                                  call.status === "In Progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
+                                    call.status === "Missed" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                      call.status === "Declined" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                        call.status === "Failed" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                          "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300"
                                   }`}>
                                   {call.status}
                                 </span>
                               </td>
                               <td className="py-2 px-3">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.sentiment === "Positive" ? "bg-green-100 text-green-700" :
-                                  call.sentiment === "Negative" ? "bg-red-100 text-red-700" :
-                                    "bg-yellow-100 text-yellow-700"
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.sentiment === "Positive" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                                  call.sentiment === "Negative" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                                   }`}>
                                   {call.sentiment}
                                 </span>
                               </td>
                               <td className="py-2 px-3">
                                 <div className="flex items-center gap-2">
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${call.recording ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${call.recording ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                                     }`}>
                                     {call.recording ? "Yes" : "No"}
                                   </span>
