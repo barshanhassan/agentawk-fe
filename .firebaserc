@@ -1,5 +1,15 @@
 {
   "projects": {
-    "default": "product-one-4d742"
+    "default": "product-one-4d742",
+    "comm-platform": "comm-platform-5fdce"
+  },
+  "targets": {
+    "comm-platform-5fdce": {
+      "hosting": {
+        "update-site": [
+          "update-one-5fdce"
+        ]
+      }
+    }
   }
 }
