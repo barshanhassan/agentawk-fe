@@ -188,9 +188,9 @@ const DeveloperSettingsSection = () => {
             <p className="text-sm text-muted-foreground">Configure webhooks to receive delivery reports of your WhatsApp template messages.</p>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+            className="btn-outline-primary h-7 text-xs"
             onClick={() => setShowWebhookModal(true)}
           >
             Configure
@@ -231,7 +231,8 @@ const DeveloperSettingsSection = () => {
               description: "Developer settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>
@@ -288,7 +289,7 @@ const DeveloperSettingsSection = () => {
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowWebhookModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleCreateWebhook} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create Webhook</Button>
+            <Button onClick={handleCreateWebhook} className="btn-outline-primary font-normal" variant="outline">Create Webhook</Button>
           </div>
         </DialogContent>
       </Dialog>

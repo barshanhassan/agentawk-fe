@@ -24,24 +24,22 @@ const OutOfOfficeSection = () => {
       <CardContent className="space-y-6">
         <Separator />
 
-        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab('weekdays')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'weekdays'
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'weekdays'
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Weekdays
           </button>
           <button
             onClick={() => setActiveTab('weekend')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'weekend'
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'weekend'
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Weekend
           </button>
@@ -95,7 +93,8 @@ const OutOfOfficeSection = () => {
               description: "Out of Office settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

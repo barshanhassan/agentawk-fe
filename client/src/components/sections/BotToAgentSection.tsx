@@ -47,7 +47,8 @@ const BotToAgentSection = () => {
               description: "Bot to Agent settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

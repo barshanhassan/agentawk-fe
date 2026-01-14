@@ -146,7 +146,7 @@ export default function WhatsAppManagerPage() {
     commandText: string;
     commandDescription: string;
   }
-  
+
   const [commands, setCommands] = useState<Command[]>([{ id: Date.now(), commandText: "", commandDescription: "" }]);
 
   const handleCommandChange = (index: number, field: keyof Command, value: string) => {
@@ -338,38 +338,35 @@ export default function WhatsAppManagerPage() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-[16.5px] font-bold">WhatsApp Manager</h1>
+    <div className="p-6 space-y-6">
+      <h1 className="text-3xl font-bold">WhatsApp Manager</h1>
 
-      <div className="space-y-4">
-        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+      <div className="space-y-6">
+        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab("business-profile")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === "business-profile"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "business-profile"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Business Profile
           </button>
           <button
             onClick={() => setActiveTab("automations")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === "automations"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "automations"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Automations
           </button>
           <button
             onClick={() => setActiveTab("calls")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === "calls"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "calls"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Calls
           </button>
@@ -492,7 +489,8 @@ export default function WhatsAppManagerPage() {
                         description: "Profile photo settings have been updated.",
                       });
                     }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                    className="btn-outline-primary font-normal"
+                    variant="outline"
                   >
                     Save
                   </Button>
@@ -528,8 +526,9 @@ export default function WhatsAppManagerPage() {
                         description: "Display name settings have been updated.",
                       });
                     }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                    className="btn-outline-primary font-normal"
                     disabled={!displayName.trim()}
+                    variant="outline"
                   >
                     Save
                   </Button>
@@ -637,7 +636,8 @@ export default function WhatsAppManagerPage() {
                         description: "Business information settings have been updated.",
                       });
                     }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                    className="btn-outline-primary font-normal"
+                    variant="outline"
                   >
                     Save
                   </Button>
@@ -664,9 +664,9 @@ export default function WhatsAppManagerPage() {
                     profileAbout={about}
                     profilePhoneNumber={whatsAppNumber}
                   />
-                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>                                     
+                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
                 </CardContent>
-              </Card>        
+              </Card>
             </div>
           </div>
         )}
@@ -693,7 +693,7 @@ export default function WhatsAppManagerPage() {
                   <h4 className="font-semibold text-base mb-1">Ice Breakers</h4>
                   <p className="text-sm text-muted-foreground">These are common questions that people can easily ask you.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                <Button variant="ghost" size="sm" className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs"
                   onClick={() => setShowIceBreakersModal(true)}>
                   Edit
                 </Button>
@@ -719,7 +719,8 @@ export default function WhatsAppManagerPage() {
                     description: "Automation settings have been updated.",
                   });
                 }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+                className="btn-outline-primary font-normal"
+                variant="outline"
               >
                 Save
               </Button>
@@ -729,107 +730,108 @@ export default function WhatsAppManagerPage() {
 
         {activeTab === "calls" && (
           <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader>
-            <CardTitle className="text-lg">Call Settings</CardTitle>
-            <p className="text-sm text-muted-foreground">Manage your business's call settings and availability.</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Allow voice calls */}
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h4 className="font-semibold text-base mb-1">Allow voice calls</h4>
-                <p className="text-sm text-muted-foreground">Make and receive calls with this phone number. Turning on voice calls will allow you to call or request to call people on WhatsApp and send messages that include a call button.</p>
-              </div>
-              <Switch aria-label="Allow voice calls" />
-            </div>
-
-            {/* Allow people to request a callback for missed calls */}
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h4 className="font-semibold text-base mb-1">Allow people to request a callback for missed calls</h4>
-                <p className="text-sm text-muted-foreground">If you're unable to answer a call, let people request a call back from you.</p>
-              </div>
-              <Switch aria-label="Allow people to request a callback" />
-            </div>
-
-            {/* Display call buttons */}
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h4 className="font-semibold text-base mb-1">Display call buttons</h4>
-                <p className="text-sm text-muted-foreground">Even if this feature is turned off, people could still call this number from a message containing a call button.</p>
-              </div>
-              <Switch aria-label="Display call buttons" />
-            </div>
-
-            {/* Available call hours */}
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h4 className="font-semibold text-base mb-1">Available call hours</h4>
-                <p className="text-sm text-muted-foreground">Set regular calling hours for your business. If you don’t set your call hours, people will always be able to call you.</p>
-              </div>
-              <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
-                onClick={() => setShowAvailableCallHoursModal(true)}>
-                Setup
-              </Button>
-            </div>
-
-            {/* Temporarily unavailable call hours */}
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h4 className="font-semibold text-base mb-1">Temporarily unavailable call hours</h4>
-                <p className="text-sm text-muted-foreground">Set custom times, like holidays or special events, when your business is unable to receive calls.</p>
-              </div>
-              <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
-                onClick={() => setShowUnavailableCallHoursModal(true)}>
-                Create New
-              </Button>
-            </div>
-
-            {/* Display Configured Unavailable Periods */}
-            {unavailablePeriods.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-base">Configured Unavailable Periods</h4>
-                <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
-                  {unavailablePeriods.map((period) => (
-                    <div key={period.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {format(period.startDate, 'dd/MMM/yyyy')} {period.startTime.hour}:{period.startTime.minute} {period.startTime.period}
-                          {' - '}
-                          {format(period.endDate, 'dd/MMM/yyyy')} {period.endTime.hour}:{period.endTime.minute} {period.endTime.period}                        </p>
-                        {period.reason && <p className="text-xs text-muted-foreground mt-1">Reason: {period.reason}</p>}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteUnavailablePeriod(period.id)}
-                        className="text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  ))}
+            <CardHeader>
+              <CardTitle className="text-lg">Call Settings</CardTitle>
+              <p className="text-sm text-muted-foreground">Manage your business's call settings and availability.</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Allow voice calls */}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Allow voice calls</h4>
+                  <p className="text-sm text-muted-foreground">Make and receive calls with this phone number. Turning on voice calls will allow you to call or request to call people on WhatsApp and send messages that include a call button.</p>
                 </div>
+                <Switch aria-label="Allow voice calls" />
               </div>
-            )}
+
+              {/* Allow people to request a callback for missed calls */}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Allow people to request a callback for missed calls</h4>
+                  <p className="text-sm text-muted-foreground">If you're unable to answer a call, let people request a call back from you.</p>
+                </div>
+                <Switch aria-label="Allow people to request a callback" />
+              </div>
+
+              {/* Display call buttons */}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Display call buttons</h4>
+                  <p className="text-sm text-muted-foreground">Even if this feature is turned off, people could still call this number from a message containing a call button.</p>
+                </div>
+                <Switch aria-label="Display call buttons" />
+              </div>
+
+              {/* Available call hours */}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Available call hours</h4>
+                  <p className="text-sm text-muted-foreground">Set regular calling hours for your business. If you don’t set your call hours, people will always be able to call you.</p>
+                </div>
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  onClick={() => setShowAvailableCallHoursModal(true)}>
+                  Setup
+                </Button>
+              </div>
+
+              {/* Temporarily unavailable call hours */}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Temporarily unavailable call hours</h4>
+                  <p className="text-sm text-muted-foreground">Set custom times, like holidays or special events, when your business is unable to receive calls.</p>
+                </div>
+                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                  onClick={() => setShowUnavailableCallHoursModal(true)}>
+                  Create New
+                </Button>
+              </div>
+
+              {/* Display Configured Unavailable Periods */}
+              {unavailablePeriods.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-base">Configured Unavailable Periods</h4>
+                  <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
+                    {unavailablePeriods.map((period) => (
+                      <div key={period.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {format(period.startDate, 'dd/MMM/yyyy')} {period.startTime.hour}:{period.startTime.minute} {period.startTime.period}
+                            {' - '}
+                            {format(period.endDate, 'dd/MMM/yyyy')} {period.endTime.hour}:{period.endTime.minute} {period.endTime.period}                        </p>
+                          {period.reason && <p className="text-xs text-muted-foreground mt-1">Reason: {period.reason}</p>}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteUnavailablePeriod(period.id)}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
 
-          </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button
-              onClick={() => {
-                toast({
-                  title: "Settings Saved",
-                  description: "Call settings have been updated.",
-                });
-              }}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
-            >
-              Save
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Settings Saved",
+                    description: "Call settings have been updated.",
+                  });
+                }}
+                className="btn-outline-primary font-normal"
+                variant="outline"
+              >
+                Save
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
 
       </div> {/* Closes the div with className="space-y-4" */}
 
@@ -978,7 +980,7 @@ export default function WhatsAppManagerPage() {
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowAvailableCallHoursModal(false)} variant="outline" className="border-input font-normal [border-color:hsl(var(--input))]">Cancel</Button>
-            <Button onClick={handleSaveAvailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Save</Button>
+            <Button onClick={handleSaveAvailableCallHours} className="btn-outline-primary font-normal" variant="outline">Save</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1022,7 +1024,7 @@ export default function WhatsAppManagerPage() {
                 </PopoverContent>
               </Popover>
             </div>
-            
+
             <div className="flex flex-col space-y-1">
               <Label htmlFor="unavailable-start-time" className="text-sm font-medium text-foreground">Start Time<span className="text-red-500 pl-0.5">*</span></Label>
               <div className="flex gap-2">
@@ -1057,7 +1059,7 @@ export default function WhatsAppManagerPage() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="flex flex-col space-y-1">
               <Label htmlFor="unavailable-end-date" className="text-sm font-medium text-foreground">End Date<span className="text-red-500 pl-0.5">*</span></Label>
               <Popover open={unavailableEndDatePickerOpen} onOpenChange={setUnavailableEndDatePickerOpen}>
@@ -1144,7 +1146,7 @@ export default function WhatsAppManagerPage() {
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowUnavailableCallHoursModal(false)} variant="outline" className="border-input font-normal [border-color:hsl(var(--input))]">Cancel</Button>
-            <Button onClick={handleCreateUnavailableCallHours} className="bg-blue-500 hover:bg-blue-600 text-white font-normal" disabled={!isUnavailablePeriodFormValid()}>Create</Button>
+            <Button onClick={handleCreateUnavailableCallHours} className="btn-outline-primary font-normal" variant="outline" disabled={!isUnavailablePeriodFormValid()}>Create</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1243,12 +1245,13 @@ export default function WhatsAppManagerPage() {
                 Close
               </Button>
               <Button
-                className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                className="gap-2 font-normal btn-outline-primary"
                 onClick={() => {
                   console.log("Save Ice Breakers");
                   setShowIceBreakersModal(false);
                 }}
                 disabled={icebreakers.some(p => p.trim() === "")}
+                variant="outline"
               >
                 Save
               </Button>
@@ -1355,12 +1358,13 @@ export default function WhatsAppManagerPage() {
                 Close
               </Button>
               <Button
-                className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                className="gap-2 font-normal btn-outline-primary"
                 onClick={() => {
                   console.log("Save Commands");
                   setShowCommandsModal(false);
                 }}
                 disabled={commands.some(cmd => !cmd.commandText.trim() || !cmd.commandDescription.trim())}
+                variant="outline"
               >
                 Save
               </Button>

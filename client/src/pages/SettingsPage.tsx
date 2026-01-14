@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useSearch } from "wouter"; // Import useLocation and useSearch
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { useLocation, useSearch } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  User,
+  Settings,
+  Clock,
+  Bot,
+  MessageCircle,
+  CalendarX,
+  UserCog,
+  MessageSquare,
+  Tag,
+  ShieldCheck,
+  Code,
+  Lock
+} from "lucide-react";
 import ProfileSection from "@/components/sections/ProfileSection";
 import PreferencesSection from "@/components/sections/PreferencesSection";
 import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
@@ -15,24 +29,24 @@ import QuickRepliesSection from "@/components/sections/QuickRepliesSection";
 import TagsSection from "@/components/sections/TagsSection";
 
 export default function SettingsPage() {
-  const sections = [ // Define sections array first for use in initial state
-    "My Profile",
-    "Preferences",
-    "Business Hours",
-    "AI Assistants",
-    "Agent Chats",
-    "Out of Office",
-    "Bot to Agent",
-    "Quick Replies",
-    "Tags",
-    "Password Policy",
-    "Developer Settings",
-    "Change Password",
+  const sections = [
+    { name: "My Profile", icon: User },
+    { name: "Preferences", icon: Settings },
+    { name: "Business Hours", icon: Clock },
+    { name: "AI Assistants", icon: Bot },
+    { name: "Agent Chats", icon: MessageCircle },
+    { name: "Out of Office", icon: CalendarX },
+    { name: "Bot to Agent", icon: UserCog },
+    { name: "Quick Replies", icon: MessageSquare },
+    { name: "Tags", icon: Tag },
+    { name: "Password Policy", icon: ShieldCheck },
+    { name: "Developer Settings", icon: Code },
+    { name: "Change Password", icon: Lock },
   ];
 
   // Calculate initial activeSection directly from URL
   const initialTabParam = new URLSearchParams(window.location.search).get("tab");
-  const initialActiveSection = (initialTabParam && sections.includes(initialTabParam)) ? initialTabParam : "My Profile";
+  const initialActiveSection = (initialTabParam && sections.some(s => s.name === initialTabParam)) ? initialTabParam : "My Profile";
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
   const [profilePictureUrl, setProfilePictureUrl] = useState(""); // Default profile picture
@@ -69,13 +83,10 @@ export default function SettingsPage() {
     const params = new URLSearchParams(search);
     const tabParam = params.get("tab");
 
-    if (tabParam && sections.includes(tabParam)) {
+    if (tabParam && sections.some(s => s.name === tabParam)) {
       setActiveSection(tabParam);
     }
-    // No else branch needed here, as initial state is handled,
-    // and if tabParam becomes invalid, activeSection will remain
-    // at its last valid state or default.
-  }, [search, sections]); // Depend on search and sections
+  }, [search]); // Depend on search and sections
 
   const handleTestNotification = () => {
     if (!("Notification" in window)) {
@@ -106,22 +117,26 @@ export default function SettingsPage() {
 
       <div className="flex gap-6">
         {/* Left Sidebar Navigation */}
-        <Card className="h-full w-64 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 flex-shrink-0">
-          <CardContent className="bg-slate-200/75 rounded-lg p-1 space-y-1">
-            {sections.map((section) => (
-              <button
-                key={section}
-                onClick={() => {
-                  navigate(`/settings?tab=${section}`);
-                }}
-                className={`w-full text-left px-4 py-2 h-10 rounded-lg text-sm font-medium transition-colors ${
-                  activeSection === section
-                    ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {section}
-              </button>
+        <Card className="h-full w-64 bg-white dark:bg-background border-0 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] flex-shrink-0">
+          <CardContent className="p-1 flex flex-col">
+            {sections.map((section, index) => (
+              <React.Fragment key={section.name}>
+                <button
+                  onClick={() => {
+                    navigate(`/settings?tab=${section.name}`);
+                  }}
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                    }`}
+                >
+                  <section.icon size={16} className="mr-2" />
+                  {section.name}
+                </button>
+                {index < sections.length - 1 && (
+                  <div className="mx-1 my-1 h-px bg-slate-200 dark:bg-slate-800" />
+                )}
+              </React.Fragment>
             ))}
           </CardContent>
         </Card>
@@ -141,8 +156,8 @@ export default function SettingsPage() {
 
           {activeSection === "Preferences" && (
             <PreferencesSection
-                preferences={preferences}
-                setPreferences={setPreferences}
+              preferences={preferences}
+              setPreferences={setPreferences}
             />
           )}
 

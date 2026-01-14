@@ -77,7 +77,7 @@ const ChangePasswordSection = () => {
   useEffect(() => {
     const newPasswordError = newPassword ? validatePassword(newPassword) : '';
     const retypePasswordError = retypePassword && newPassword !== retypePassword ? "Passwords do not match" : '';
-    
+
     setErrors(prev => ({
       ...prev,
       newPassword: newPasswordError,
@@ -85,10 +85,10 @@ const ChangePasswordSection = () => {
     }));
 
     setIsSaveDisabled(
-      !currentPassword || 
-      !newPassword || 
-      !retypePassword || 
-      newPasswordError !== '' || 
+      !currentPassword ||
+      !newPassword ||
+      !retypePassword ||
+      newPasswordError !== '' ||
       retypePasswordError !== ''
     );
 
@@ -157,7 +157,7 @@ const ChangePasswordSection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaveDisabled} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">
+        <Button onClick={handleSave} disabled={isSaveDisabled} className="btn-outline-primary font-normal" variant="outline">
           Save
         </Button>
       </CardFooter>

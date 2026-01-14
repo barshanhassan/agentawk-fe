@@ -511,12 +511,12 @@ export default function ContactsSection() {
         contacts.map(c =>
           c.id === editingContact.id
             ? {
-                ...c,
-                name: editContactName,
-                phoneNumber: editContactPhone,
-                tags: editContactTags,
-                updatedBy: currentUserName,
-              }
+              ...c,
+              name: editContactName,
+              phoneNumber: editContactPhone,
+              tags: editContactTags,
+              updatedBy: currentUserName,
+            }
             : c
         )
       );
@@ -640,10 +640,11 @@ export default function ContactsSection() {
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[20px] font-[700]">Contacts</h2>
+        <h1 className="text-3xl font-bold">Contacts</h1>
         <Button
           onClick={() => setShowAddContactModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"
+          className="btn-outline-primary gap-2 h-9 font-normal"
+          variant="outline"
         >
           <Plus size={16} />
           Add Contact
@@ -675,14 +676,14 @@ export default function ContactsSection() {
         {/* Created At Calendar */}
         <Popover open={createdAtOpen} onOpenChange={setCreatedAtOpen}>
           <PopoverTrigger asChild>
-            <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors">
+            <button className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors">
               <Calendar size={14} />
               <span>
                 {createdAtRange?.from && createdAtRange?.to
                   ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')} - ${format(createdAtRange.to, 'dd/MMM/yyyy')}`
                   : createdAtRange?.from
-                  ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')}`
-                  : "Created At"}
+                    ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')}`
+                    : "Created At"}
               </span>
             </button>
           </PopoverTrigger>
@@ -712,14 +713,14 @@ export default function ContactsSection() {
         {/* Last Active Calendar */}
         <Popover open={lastActiveOpen} onOpenChange={setLastActiveOpen}>
           <PopoverTrigger asChild>
-            <button className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors">
+            <button className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors">
               <Calendar size={14} />
               <span>
                 {lastActiveRange?.from && lastActiveRange?.to
                   ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')} - ${format(lastActiveRange.to, 'dd/MMM/yyyy')}`
                   : lastActiveRange?.from
-                  ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')}`
-                  : "Last Active"}
+                    ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')}`
+                    : "Last Active"}
               </span>
             </button>
           </PopoverTrigger>
@@ -751,7 +752,7 @@ export default function ContactsSection() {
           <div className="relative" ref={sortDropdownRef}>
             <button
               onClick={() => setShowSort(!showSort)}
-              className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors"
+              className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors"
             >
               <ArrowUpDown size={14} />
               <span>Sort {sorts.length > 0 && `(${sorts.length})`}</span>
@@ -759,14 +760,14 @@ export default function ContactsSection() {
 
             {/* Sort Popover */}
             {showSort && (
-              <div className="absolute z-50 bg-white border border-border rounded-md shadow-lg p-3 top-full mt-2 right-0" style={{
+              <div className="absolute z-50 bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 right-0" style={{
                 minWidth: '320px'
               }}>
                 {sorts.length === 0 ? (
                   <div className="text-center py-6">
                     <h3 className="font-semibold text-sm mb-1">No sorting applied</h3>
                     <p className="text-xs text-muted-foreground mb-4">Add sorting to organize your rows.</p>
-                    <Button onClick={addSort} className="bg-blue-500 hover:bg-blue-600 text-white">Add sort</Button>
+                    <Button onClick={addSort} className="btn-outline-primary" variant="outline">Add sort</Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -783,13 +784,13 @@ export default function ContactsSection() {
                           <button
                             type="button"
                             onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)}
-                            className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                            className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
                           >
                             <span className="truncate text-sm font-normal">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
                             <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                           </button>
                           {openSortColumnDropdown === sort.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                               <ul className="py-1">
                                 {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
                                   const isCurrentOption = option === sort.column;
@@ -817,13 +818,13 @@ export default function ContactsSection() {
                           <button
                             type="button"
                             onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
-                            className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                            className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
                           >
                             <span className="truncate text-sm font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
                             <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                           </button>
                           {openSortDirectionDropdown === sort.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                               <ul className="py-1">
                                 {["asc", "desc"].map(option => (
                                   <li
@@ -849,7 +850,8 @@ export default function ContactsSection() {
                       <Button
                         onClick={addSort}
                         disabled={sorts.length >= 5}
-                        className="bg-blue-500 hover:bg-blue-600 text-white flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-outline-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        variant="outline"
                       >
                         Add sort
                       </Button>
@@ -865,7 +867,7 @@ export default function ContactsSection() {
           <div className="relative" ref={filterDropdownRef}>
             <button
               onClick={() => setShowFilter(!showFilter)}
-              className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors"
+              className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors"
             >
               <Filter size={14} />
               <span>Filter {filters.length > 0 && `(${filters.length})`}</span>
@@ -873,14 +875,14 @@ export default function ContactsSection() {
 
             {/* Filter Popover */}
             {showFilter && (
-              <div className="absolute z-50 bg-white border border-border rounded-md shadow-lg p-3 top-full mt-2 right-0" style={{
+              <div className="absolute z-50 bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 right-0" style={{
                 minWidth: '320px'
               }}>
                 {filters.length === 0 ? (
                   <div className="text-center py-6">
                     <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
                     <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
-                    <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white">Add filter</Button>
+                    <Button onClick={addFilter} className="btn-outline-primary" variant="outline">Add filter</Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -897,13 +899,13 @@ export default function ContactsSection() {
                           <button
                             type="button"
                             onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
-                            className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                            className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
                           >
                             <span className="truncate text-sm font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
                             <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                           </button>
                           {openFilterColumnDropdown === filter.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                               <ul className="py-1">
                                 {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
                                   const isCurrentOption = option === filter.column;
@@ -930,13 +932,13 @@ export default function ContactsSection() {
                           <button
                             type="button"
                             onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
-                            className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                            className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
                           >
                             <span className="truncate text-sm font-normal">{filter.operator}</span>
                             <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                           </button>
                           {openFilterOperatorDropdown === filter.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                               <ul className="py-1">
                                 {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
                                   <li
@@ -966,7 +968,7 @@ export default function ContactsSection() {
                       </div>
                     ))}
                     <div className="flex gap-2 pt-2 border-t">
-                      <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white flex-1">Add filter</Button>
+                      <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">Add filter</Button>
                       <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset filters</Button>
                     </div>
                   </div>
@@ -985,14 +987,14 @@ export default function ContactsSection() {
             <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
               <span className="text-sm text-foreground">{selectedRows.size} selected</span>
               <div className="flex gap-2 ml-auto">
-                <button onClick={handleOpenBulkEdit} className="p-1 hover:bg-blue-100 rounded" title="Edit">
-                  <Edit2 size={14} className="text-blue-600" />
+                <button onClick={handleOpenBulkEdit} className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded" title="Edit">
+                  <Edit2 size={14} className="text-blue-600 dark:text-blue-400" />
                 </button>
-                <button onClick={handleExportSelectedAsCSV} className="p-1 hover:bg-blue-100 rounded" title="Export as CSV">
-                  <Download size={14} className="text-blue-600" />
+                <button onClick={handleExportSelectedAsCSV} className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded" title="Export as CSV">
+                  <Download size={14} className="text-blue-600 dark:text-blue-400" />
                 </button>
-                <button onClick={handleOpenBulkDelete} className="p-1 hover:bg-blue-100 rounded" title="Delete">
-                  <Trash2 size={14} className="text-red-600" />
+                <button onClick={handleOpenBulkDelete} className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded" title="Delete">
+                  <Trash2 size={14} className="text-red-600 dark:text-red-400" />
                 </button>
               </div>
             </div>
@@ -1096,7 +1098,7 @@ export default function ContactsSection() {
                                 <MoreVertical size={14} className="text-muted-foreground" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                               <DropdownMenuItem onClick={() => handleEditContact(contact)}>
                                 <Edit2 size={14} className="mr-2" />
                                 Edit
@@ -1128,14 +1130,14 @@ export default function ContactsSection() {
               <div className="relative w-15" ref={dropdownRef}>
                 <button
                   type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
                   onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">{rowsPerPage}</span>
                   <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                 </button>
                 {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                     <ul className="py-1">
                       {[10, 25, 50].map(option => (
                         <li
@@ -1248,7 +1250,8 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleSaveContact}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+              className="btn-outline-primary font-normal"
+              variant="outline"
             >
               Save Contact
             </Button>
@@ -1331,7 +1334,8 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleSaveEditContact}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="btn-outline-primary"
+              variant="outline"
             >
               Save Changes
             </Button>
@@ -1363,7 +1367,8 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleConfirmDelete}
-              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
+              className="btn-outline-destructive"
+              variant="outline"
             >
               Delete
             </Button>
@@ -1399,7 +1404,8 @@ export default function ContactsSection() {
                 <Button
                   onClick={handleAddBulkTag}
                   size="sm"
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  variant="outline"
+                  className="btn-outline-primary"
                 >
                   Add
                 </Button>
@@ -1429,11 +1435,10 @@ export default function ContactsSection() {
                       <button
                         key={tag}
                         onClick={() => handleToggleBulkTag(tag)}
-                        className={`px-2 py-1 rounded text-xs transition-colors ${
-                          bulkEditTags.includes(tag)
-                            ? "bg-blue-500 text-white"
-                            : "bg-muted text-foreground hover:bg-muted/80"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs transition-colors ${bulkEditTags.includes(tag)
+                          ? "bg-blue-500 text-white"
+                          : "bg-muted text-foreground hover:bg-muted/80"
+                          }`}
                       >
                         {tag}
                       </button>
@@ -1455,7 +1460,8 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleSaveBulkEdit}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="btn-outline-primary"
+              variant="outline"
             >
               Save Changes
             </Button>
@@ -1487,7 +1493,8 @@ export default function ContactsSection() {
             </Button>
             <Button
               onClick={handleConfirmBulkDelete}
-              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
+              className="btn-outline-destructive"
+              variant="outline"
             >
               Delete
             </Button>

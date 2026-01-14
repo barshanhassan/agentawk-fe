@@ -39,12 +39,12 @@ interface Workspace {
 }
 
 const allUsers: User[] = [
-    { id: "U001", name: "Alice Johnson", email: "alice.j@example.com" },
-    { id: "U002", name: "Bob Smith", email: "bob.s@example.com" },
-    { id: "U003", name: "Carol White", email: "carol.w@example.com" },
-    { id: "U004", name: "David Brown", email: "david.b@example.com" },
-    { id: "U005", name: "Eve Davis", email: "eve.d@example.com" },
-    { id: "U006", name: "Frank Miller", email: "frank.m@example.com" },
+  { id: "U001", name: "Alice Johnson", email: "alice.j@example.com" },
+  { id: "U002", name: "Bob Smith", email: "bob.s@example.com" },
+  { id: "U003", name: "Carol White", email: "carol.w@example.com" },
+  { id: "U004", name: "David Brown", email: "david.b@example.com" },
+  { id: "U005", name: "Eve Davis", email: "eve.d@example.com" },
+  { id: "U006", name: "Frank Miller", email: "frank.m@example.com" },
 ];
 
 const initialWorkspaces: Workspace[] = [
@@ -117,17 +117,17 @@ export default function WorkspaceManagementSection() {
       data = data.filter(ws => filterStatus.includes(ws.status));
     }
     if (sort) {
-        data.sort((a, b) => {
-            const aVal = sort.column === 'users' ? a.users.length : a[sort.column as keyof Omit<Workspace, 'users'>];
-            const bVal = sort.column === 'users' ? b.users.length : b[sort.column as keyof Omit<Workspace, 'users'>];
-            const comparison = typeof aVal === 'number' && typeof bVal === 'number' ? aVal - bVal : String(aVal).localeCompare(String(bVal));
-            return sort.direction === "asc" ? comparison : -comparison;
-        });
+      data.sort((a, b) => {
+        const aVal = sort.column === 'users' ? a.users.length : a[sort.column as keyof Omit<Workspace, 'users'>];
+        const bVal = sort.column === 'users' ? b.users.length : b[sort.column as keyof Omit<Workspace, 'users'>];
+        const comparison = typeof aVal === 'number' && typeof bVal === 'number' ? aVal - bVal : String(aVal).localeCompare(String(bVal));
+        return sort.direction === "asc" ? comparison : -comparison;
+      });
     }
     const startIndex = (page - 1) * rowsPerPage;
     return data.slice(startIndex, startIndex + rowsPerPage);
   };
-  
+
   const totalFilteredWorkspaces = () => {
     let data = [...workspaces];
     if (search) data = data.filter(ws => ws.name.toLowerCase().includes(search.toLowerCase()));
@@ -154,7 +154,7 @@ export default function WorkspaceManagementSection() {
     setNewWorkspaceUsers([]);
     setShowCreateWorkspaceModal(false);
   };
-  
+
   const handleEditWorkspace = (workspace: Workspace) => {
     setEditingWorkspace(workspace);
     setEditWorkspaceName(workspace.name);
@@ -195,7 +195,7 @@ export default function WorkspaceManagementSection() {
       setWorkspaceToDelete(null);
     }
   };
-  
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -209,8 +209,8 @@ export default function WorkspaceManagementSection() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-[20px] font-[700]">Workspace Management</h2>
-        <Button onClick={() => setShowCreateWorkspaceModal(true)} className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal">
+        <h1 className="text-3xl font-bold">Workspace Management</h1>
+        <Button onClick={() => setShowCreateWorkspaceModal(true)} className="btn-outline-primary gap-2 h-9 font-normal" variant="outline">
           <Plus size={16} />
           Create Workspace
         </Button>
@@ -271,7 +271,7 @@ export default function WorkspaceManagementSection() {
                         <div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild><button className="p-1 hover:bg-muted rounded"><MoreVertical size={14} className="text-muted-foreground" /></button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                               <DropdownMenuItem onClick={() => handleEditWorkspace(ws)}><Edit2 size={14} className="mr-2" />Edit</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDeleteWorkspace(ws)} className="text-destructive"><Trash2 size={14} className="mr-2" />Delete</DropdownMenuItem>
                             </DropdownMenuContent>
@@ -290,12 +290,12 @@ export default function WorkspaceManagementSection() {
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Rows per page:</span>
               <div className="relative w-15" ref={dropdownRef}>
-                <button type="button" className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors" onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}>
+                <button type="button" className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors" onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}>
                   <span className="truncate text-xs font-normal">{rowsPerPage}</span>
                   <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                 </button>
                 {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
                     <ul className="py-1">
                       {[10, 25, 50].map(option => (
                         <li key={option} className="px-3 py-2 text-xs cursor-pointer hover:bg-muted" onClick={() => { setRowsPerPage(option); setPage(1); setRowsDropdownOpen(false); }}>{option}</li>
@@ -315,7 +315,7 @@ export default function WorkspaceManagementSection() {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* --- Modals --- */}
       <Dialog open={showCreateWorkspaceModal} onOpenChange={setShowCreateWorkspaceModal}>
         <DialogContent className="max-w-xl">
@@ -337,33 +337,33 @@ export default function WorkspaceManagementSection() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 pt-2">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Available Users</h4>
-                  <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                    {allUsers.filter(user => !newWorkspaceUsers.includes(user.id)).map(user => (
-                      <div key={user.id} className="flex items-center justify-between py-1">
-                        <span className="text-sm">{user.name}</span>
-                        <Button variant="ghost" size="icon" onClick={() => setNewWorkspaceUsers([...newWorkspaceUsers, user.id])}><PlusCircle size={16} /></Button>
-                      </div>
-                    ))}
-                  </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Available Users</h4>
+                <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                  {allUsers.filter(user => !newWorkspaceUsers.includes(user.id)).map(user => (
+                    <div key={user.id} className="flex items-center justify-between py-1">
+                      <span className="text-sm">{user.name}</span>
+                      <Button variant="ghost" size="icon" onClick={() => setNewWorkspaceUsers([...newWorkspaceUsers, user.id])}><PlusCircle size={16} /></Button>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Assigned Users</h4>
-                  <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                    {allUsers.filter(user => newWorkspaceUsers.includes(user.id)).map(user => (
-                      <div key={user.id} className="flex items-center justify-between py-1">
-                        <span className="text-sm">{user.name}</span>
-                        <Button variant="ghost" size="icon" onClick={() => setNewWorkspaceUsers(newWorkspaceUsers.filter(id => id !== user.id))}><MinusCircle size={16} /></Button>
-                      </div>
-                    ))}
-                  </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Assigned Users</h4>
+                <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                  {allUsers.filter(user => newWorkspaceUsers.includes(user.id)).map(user => (
+                    <div key={user.id} className="flex items-center justify-between py-1">
+                      <span className="text-sm">{user.name}</span>
+                      <Button variant="ghost" size="icon" onClick={() => setNewWorkspaceUsers(newWorkspaceUsers.filter(id => id !== user.id))}><MinusCircle size={16} /></Button>
+                    </div>
+                  ))}
                 </div>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowCreateWorkspaceModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleCreateWorkspace} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Create Workspace</Button>
+            <Button onClick={handleCreateWorkspace} className="btn-outline-primary font-normal" variant="outline">Create Workspace</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -392,38 +392,38 @@ export default function WorkspaceManagementSection() {
               <Select value={editStatus} onValueChange={(value: WorkspaceStatus) => setEditStatus(value)}><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger><SelectContent><SelectItem value="Active">Active</SelectItem><SelectItem value="Inactive">Inactive</SelectItem></SelectContent></Select>
             </div>
             <div className="grid grid-cols-2 gap-4 pt-2">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Available Users</h4>
-                  <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                    {allUsers.filter(user => !editAssignedUsers.includes(user.id)).map(user => (
-                      <div key={user.id} className="flex items-center justify-between py-1">
-                        <span className="text-sm">{user.name}</span>
-                        <Button variant="ghost" size="icon" onClick={() => setEditAssignedUsers([...editAssignedUsers, user.id])}><PlusCircle size={16} /></Button>
-                      </div>
-                    ))}
-                  </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Available Users</h4>
+                <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                  {allUsers.filter(user => !editAssignedUsers.includes(user.id)).map(user => (
+                    <div key={user.id} className="flex items-center justify-between py-1">
+                      <span className="text-sm">{user.name}</span>
+                      <Button variant="ghost" size="icon" onClick={() => setEditAssignedUsers([...editAssignedUsers, user.id])}><PlusCircle size={16} /></Button>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Assigned Users</h4>
-                  <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
-                    {allUsers.filter(user => editAssignedUsers.includes(user.id)).map(user => (
-                      <div key={user.id} className="flex items-center justify-between py-1">
-                        <span className="text-sm">{user.name}</span>
-                        <Button variant="ghost" size="icon" onClick={() => setEditAssignedUsers(editAssignedUsers.filter(id => id !== user.id))}><MinusCircle size={16} /></Button>
-                      </div>
-                    ))}
-                  </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Assigned Users</h4>
+                <div className="border rounded-md pl-3 pr-1 py-2 h-40 overflow-y-auto">
+                  {allUsers.filter(user => editAssignedUsers.includes(user.id)).map(user => (
+                    <div key={user.id} className="flex items-center justify-between py-1">
+                      <span className="text-sm">{user.name}</span>
+                      <Button variant="ghost" size="icon" onClick={() => setEditAssignedUsers(editAssignedUsers.filter(id => id !== user.id))}><MinusCircle size={16} /></Button>
+                    </div>
+                  ))}
                 </div>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowEditWorkspaceModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleSaveEditWorkspace} className="bg-blue-500 hover:bg-blue-600 text-white font-normal">Save Changes</Button>
+            <Button onClick={handleSaveEditWorkspace} className="btn-outline-primary font-normal" variant="outline">Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteWorkspaceModal} onOpenChange={setShowDeleteWorkspaceModal}><DialogContent className="max-w-sm"><DialogHeader className="mb-2"><DialogTitle>Delete Workspace</DialogTitle></DialogHeader><div className="space-y-4"><p className="text-sm text-foreground">Are you sure you want to delete <span className="font-semibold break-all">{workspaceToDelete?.name}</span>? This action cannot be undone.</p></div><div className="flex gap-2 justify-end mt-2"><Button onClick={() => setShowDeleteWorkspaceModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))]">Cancel</Button><Button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600 border-red-600 text-white">Delete</Button></div></DialogContent></Dialog>
+      <Dialog open={showDeleteWorkspaceModal} onOpenChange={setShowDeleteWorkspaceModal}><DialogContent className="max-w-sm"><DialogHeader className="mb-2"><DialogTitle>Delete Workspace</DialogTitle></DialogHeader><div className="space-y-4"><p className="text-sm text-foreground">Are you sure you want to delete <span className="font-semibold break-all">{workspaceToDelete?.name}</span>? This action cannot be undone.</p></div><div className="flex gap-2 justify-end mt-2"><Button onClick={() => setShowDeleteWorkspaceModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))]">Cancel</Button><Button onClick={handleConfirmDelete} className="btn-outline-destructive" variant="outline">Delete</Button></div></DialogContent></Dialog>
     </div>
   );
 }

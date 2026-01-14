@@ -85,7 +85,7 @@ export default function TemplateManager() {
   const [headerText, setHeaderText] = useState<string>("");
   const [bodyText, setBodyText] = useState<string>("");
   const [footerText, setFooterText] = useState<string>("");
-  const [variableSamples, setVariableSamples] = useState<{[key: string]: string}>({});
+  const [variableSamples, setVariableSamples] = useState<{ [key: string]: string }>({});
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [templateButtons, setTemplateButtons] = useState<Array<{
     id: number;
@@ -506,7 +506,7 @@ export default function TemplateManager() {
       title: "Template Cloned",
       description: `The template "${templateToClone.name}" has been cloned to "${cloneTemplateName}" successfully.`,
     });
-    
+
     handleCancelCloneDialog();
   };
 
@@ -610,198 +610,198 @@ export default function TemplateManager() {
   const [originalTemplate, setOriginalTemplate] = useState<any>(null);
 
   const [whatsappTemplates, setWhatappTemplates] = useState<Array<any>>(
-  [
-    {
-      id: 1,
-      name: "welcome_message",
-      category: "Marketing",
-      type: "marketing-default",
-      language: "English",
-      status: "Active - HQ",
-      statusTypeColor: "success" as const,
-      topBlockReason: "Reported as Spam",
-      lastEdited: "2025-11-03",
-      body:"Hi there! Welcome to our platform. We're excited to have you here! 🎉",
-      header: "Welcome to {{company}}",
-      footer: "Thank you for choosing us",
-      variables: ["company"],
-      buttons: [
-        { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
-        { id: 2, type: "quick-reply", buttonText: "Learn More" }
-      ],
-      variableSamples: {
-        company: "Acme Corp"
-      }
-    },
-    {
-      id: 2,
-      name: "order_confirmation",
-      category: "Utility",
-      type: "utility-default",
-      language: "English",
-      status: "Active - HQ",
-      statusTypeColor: "success" as const,
-      topBlockReason: "",
-      lastEdited: "2025-11-01",
-      body:"Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
-    },
-    {
-      id: 3,
-      name: "promotional_offer",
-      category: "Marketing",
-      type: "marketing-default",
-      language: "English",
-      status: "Quality Pending",
-      statusTypeColor: "success" as const,
-      topBlockReason: "Blocked Business",
-      lastEdited: "2025-10-28",
-      body:"🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
-    },
-    {
-      id: 4,
-      name: "cart_abandonment",
-      category: "Marketing",
-      type: "marketing-default",
-      language: "English",
-      status: "Pending",
-      statusTypeColor: "warning" as const,
-      topBlockReason: "",
-      lastEdited: "2025-10-25",
-      body:"You left something in your cart! 🛒 Complete your purchase now and get free shipping on orders over $50. Don't miss out!",
-    },
-    {
-      id: 5,
-      name: "shipping_update",
-      category: "Utility",
-      type: "utility-default",
-      language: "English",
-      status: "Active - HQ",
-      statusTypeColor: "success" as const,
-      topBlockReason: "",
-      lastEdited: "2025-10-20",
-      body:"📦 Your package is on its way! Track your order with code ABC123. Expected delivery: Tomorrow by 6 PM.",
-    },
-    {
-      id: 6,
-      name: "payment_reminder",
-      category: "Utility",
-      type: "utility-default",
-      language: "Spanish",
-      status: "Approved",
-      statusTypeColor: "success" as const,
-      topBlockReason: "Sent Too Frequently",
-      lastEdited: "2025-10-15",
-      body:"Recordatorio de pago: Su factura de $150 vence mañana. Pague ahora para evitar cargos adicionales. Gracias! 💳",
-    },
-    {
-      id: 7,
-      name: "flash_sale_alert",
-      category: "Marketing",
-      type: "marketing-default",
-      language: "English",
-      status: "Rejected",
-      statusTypeColor: "danger" as const,
-      topBlockReason: "",
-      lastEdited: "2025-10-10",
-      body:"⚡ FLASH SALE ALERT! 50% OFF everything for the next 2 hours only! Use code FLASH50. Hurry, limited time!",
-    },
-    {
-      id: 8,
-      name: "account_verification",
-      category: "Authentication",
-      type: "auth-account",
-      language: "English",
-      status: "Active - HQ",
-      statusTypeColor: "success" as const,
-      topBlockReason: "Reported as Suspicious",
-      lastEdited: "2025-10-05",
-      body:"Please verify your account by clicking this link: verify.com/abc123. This link expires in 24 hours. 🔐",
-    },
-    {
-      id: 9,
-      name: "password_reset",
-      category: "Authentication",
-      type: "auth-account",
-      language: "English",
-      status: "Quality Pending",
-      statusTypeColor: "success" as const,
-      topBlockReason: "",
-      lastEdited: "2025-09-30",
-      body:"Reset your password by clicking here: reset.com/xyz789. If you didn't request this, please ignore this message. 🔑",
-    },
-    {
-      id: 10,
-      name: "appointment_reminder",
-      category: "Utility",
-      type: "utility-default",
-      language: "French",
-      status: "Active - HQ",
-      statusTypeColor: "success" as const,
-      topBlockReason: "",
-      lastEdited: "2025-09-25",
-      body:"Rappel de rendez-vous: Votre rendez-vous est demain à 14h00. Confirmez votre présence en répondant OUI. 📅",
-    },
-    {
-      id: 11,
-      name: "survey_request",
-      category: "Marketing",
-      type: "marketing-flows",
-      language: "English",
-      status: "Pending",
-      statusTypeColor: "warning" as const,
-      topBlockReason: "",
-      lastEdited: "2025-09-20",
-      body:"Help us improve! Take our 2-minute survey and get a 10% discount on your next order. Your feedback matters! 📝",
-    },
-    {
-      id: 12,
-      name: "delivery_notification",
-      category: "Utility",
-      type: "utility-default",
-      language: "English",
-      status: "Approved",
-      statusTypeColor: "success" as const,
-      topBlockReason: "Blocked Business",
-      lastEdited: "2025-09-15",
-      body:"📦 Package delivered! Your order has been successfully delivered to your address. Thank you for choosing us!",
-    },
-    {
-      id: 13,
-      name: "limited_time_offer",
-      category: "Marketing",
-      type: "marketing-default",
-      language: "German",
-      status: "Rejected",
-      statusTypeColor: "danger" as const,
-      topBlockReason: "",
-      lastEdited: "2025-09-10",
-      body:"🎯 Zeitlich begrenztes Angebot! 30% Rabatt auf alle Artikel. Code: SAVE30German. Nur heute gültig!",
-    },
-    {
-      id: 14,
-      name: "support_ticket_update",
-      category: "Utility",
-      type: "utility-issue",
-      language: "English",
-      status: "Quality Pending",
-      statusTypeColor: "success" as const,
-      topBlockReason: "Irrelevant Content",
-      lastEdited: "2025-08-30",
-      body:"Support Update: Your ticket #12345 has been resolved. If you need further assistance, please reply to this message. 🎧",
-    },
-    {
-      id: 15,
-      name: "new_feature_announcement",
-      category: "Marketing",
-      type: "marketing-default",
-      language: "English",
-      status: "Active - HQ",
-      statusTypeColor: "success" as const,
-      topBlockReason: "",
-      lastEdited: "2025-08-25",
-      body:"🚀 New Feature Alert! We've just launched dark mode! Update your app now to try this exciting new feature.",
-    },
-  ]);
+    [
+      {
+        id: 1,
+        name: "welcome_message",
+        category: "Marketing",
+        type: "marketing-default",
+        language: "English",
+        status: "Active - HQ",
+        statusTypeColor: "success" as const,
+        topBlockReason: "Reported as Spam",
+        lastEdited: "2025-11-03",
+        body: "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
+        header: "Welcome to {{company}}",
+        footer: "Thank you for choosing us",
+        variables: ["company"],
+        buttons: [
+          { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
+          { id: 2, type: "quick-reply", buttonText: "Learn More" }
+        ],
+        variableSamples: {
+          company: "Acme Corp"
+        }
+      },
+      {
+        id: 2,
+        name: "order_confirmation",
+        category: "Utility",
+        type: "utility-default",
+        language: "English",
+        status: "Active - HQ",
+        statusTypeColor: "success" as const,
+        topBlockReason: "",
+        lastEdited: "2025-11-01",
+        body: "Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
+      },
+      {
+        id: 3,
+        name: "promotional_offer",
+        category: "Marketing",
+        type: "marketing-default",
+        language: "English",
+        status: "Quality Pending",
+        statusTypeColor: "success" as const,
+        topBlockReason: "Blocked Business",
+        lastEdited: "2025-10-28",
+        body: "🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
+      },
+      {
+        id: 4,
+        name: "cart_abandonment",
+        category: "Marketing",
+        type: "marketing-default",
+        language: "English",
+        status: "Pending",
+        statusTypeColor: "warning" as const,
+        topBlockReason: "",
+        lastEdited: "2025-10-25",
+        body: "You left something in your cart! 🛒 Complete your purchase now and get free shipping on orders over $50. Don't miss out!",
+      },
+      {
+        id: 5,
+        name: "shipping_update",
+        category: "Utility",
+        type: "utility-default",
+        language: "English",
+        status: "Active - HQ",
+        statusTypeColor: "success" as const,
+        topBlockReason: "",
+        lastEdited: "2025-10-20",
+        body: "📦 Your package is on its way! Track your order with code ABC123. Expected delivery: Tomorrow by 6 PM.",
+      },
+      {
+        id: 6,
+        name: "payment_reminder",
+        category: "Utility",
+        type: "utility-default",
+        language: "Spanish",
+        status: "Approved",
+        statusTypeColor: "success" as const,
+        topBlockReason: "Sent Too Frequently",
+        lastEdited: "2025-10-15",
+        body: "Recordatorio de pago: Su factura de $150 vence mañana. Pague ahora para evitar cargos adicionales. Gracias! 💳",
+      },
+      {
+        id: 7,
+        name: "flash_sale_alert",
+        category: "Marketing",
+        type: "marketing-default",
+        language: "English",
+        status: "Rejected",
+        statusTypeColor: "danger" as const,
+        topBlockReason: "",
+        lastEdited: "2025-10-10",
+        body: "⚡ FLASH SALE ALERT! 50% OFF everything for the next 2 hours only! Use code FLASH50. Hurry, limited time!",
+      },
+      {
+        id: 8,
+        name: "account_verification",
+        category: "Authentication",
+        type: "auth-account",
+        language: "English",
+        status: "Active - HQ",
+        statusTypeColor: "success" as const,
+        topBlockReason: "Reported as Suspicious",
+        lastEdited: "2025-10-05",
+        body: "Please verify your account by clicking this link: verify.com/abc123. This link expires in 24 hours. 🔐",
+      },
+      {
+        id: 9,
+        name: "password_reset",
+        category: "Authentication",
+        type: "auth-account",
+        language: "English",
+        status: "Quality Pending",
+        statusTypeColor: "success" as const,
+        topBlockReason: "",
+        lastEdited: "2025-09-30",
+        body: "Reset your password by clicking here: reset.com/xyz789. If you didn't request this, please ignore this message. 🔑",
+      },
+      {
+        id: 10,
+        name: "appointment_reminder",
+        category: "Utility",
+        type: "utility-default",
+        language: "French",
+        status: "Active - HQ",
+        statusTypeColor: "success" as const,
+        topBlockReason: "",
+        lastEdited: "2025-09-25",
+        body: "Rappel de rendez-vous: Votre rendez-vous est demain à 14h00. Confirmez votre présence en répondant OUI. 📅",
+      },
+      {
+        id: 11,
+        name: "survey_request",
+        category: "Marketing",
+        type: "marketing-flows",
+        language: "English",
+        status: "Pending",
+        statusTypeColor: "warning" as const,
+        topBlockReason: "",
+        lastEdited: "2025-09-20",
+        body: "Help us improve! Take our 2-minute survey and get a 10% discount on your next order. Your feedback matters! 📝",
+      },
+      {
+        id: 12,
+        name: "delivery_notification",
+        category: "Utility",
+        type: "utility-default",
+        language: "English",
+        status: "Approved",
+        statusTypeColor: "success" as const,
+        topBlockReason: "Blocked Business",
+        lastEdited: "2025-09-15",
+        body: "📦 Package delivered! Your order has been successfully delivered to your address. Thank you for choosing us!",
+      },
+      {
+        id: 13,
+        name: "limited_time_offer",
+        category: "Marketing",
+        type: "marketing-default",
+        language: "German",
+        status: "Rejected",
+        statusTypeColor: "danger" as const,
+        topBlockReason: "",
+        lastEdited: "2025-09-10",
+        body: "🎯 Zeitlich begrenztes Angebot! 30% Rabatt auf alle Artikel. Code: SAVE30German. Nur heute gültig!",
+      },
+      {
+        id: 14,
+        name: "support_ticket_update",
+        category: "Utility",
+        type: "utility-issue",
+        language: "English",
+        status: "Quality Pending",
+        statusTypeColor: "success" as const,
+        topBlockReason: "Irrelevant Content",
+        lastEdited: "2025-08-30",
+        body: "Support Update: Your ticket #12345 has been resolved. If you need further assistance, please reply to this message. 🎧",
+      },
+      {
+        id: 15,
+        name: "new_feature_announcement",
+        category: "Marketing",
+        type: "marketing-default",
+        language: "English",
+        status: "Active - HQ",
+        statusTypeColor: "success" as const,
+        topBlockReason: "",
+        lastEdited: "2025-08-25",
+        body: "🚀 New Feature Alert! We've just launched dark mode! Update your app now to try this exciting new feature.",
+      },
+    ]);
 
   const toggleTemplate = (id: number) => {
     setSelectedTemplates((prev) =>
@@ -1084,7 +1084,7 @@ export default function TemplateManager() {
           const bVal = b[sort.column as keyof typeof b];
 
           let comparison = 0;
-          
+
           // Special handling for status column
           if (sort.column === "status" && typeof aVal === "string" && typeof bVal === "string") {
             const aOrder = statusOrder[aVal as keyof typeof statusOrder] ?? 999;
@@ -1116,18 +1116,18 @@ export default function TemplateManager() {
     <div className="p-6 space-y-6" data-testid="template-manager">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] font-[700]">Template Manager</h1>
+        <h1 className="text-3xl font-bold">Template Manager</h1>
         <div className="flex items-center gap-3">
-          <Button className="gap-2 font-normal h-10 text-sm" onClick={() => setCreateTemplateOpen(true)} data-testid="button-create-template">
+          <Button className="gap-2 btn-outline-primary font-normal h-10 text-sm" variant="outline" onClick={() => setCreateTemplateOpen(true)} data-testid="button-create-template">
             <Plus size={16} />
             Create Template
           </Button>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="h-10 w-10 p-0 border hover-elevate [border-color:hsl(var(--input))]"
+                className="h-10 w-10 p-0 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                 data-testid="button-refresh"
               >
                 <RefreshCw size={16} />
@@ -1203,544 +1203,545 @@ export default function TemplateManager() {
 
       {/* WhatsApp Templates Content */}
       <div className="space-y-6">
-            {/* Search and Filtering Controls */}
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Search Input */}
-              <div className="relative w-80">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search templates..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 text-sm"
-                  data-testid="input-search"
-                />
-              </div>
+        {/* Search and Filtering Controls */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Search Input */}
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-10 text-sm"
+              data-testid="input-search"
+            />
+          </div>
 
-              {/* Category Filter */}
-              <CustomDropdown
-                options={[
-                  { id: "marketing", name: "Marketing" },
-                  { id: "utility", name: "Utility" },
-                  { id: "authentication", name: "Authentication" },
-                ]}
-                selected={selectedCategories}
-                onChange={setSelectedCategories}
-                placeholder="Categories"
-                width="170px"
-              />
+          {/* Category Filter */}
+          <CustomDropdown
+            options={[
+              { id: "marketing", name: "Marketing" },
+              { id: "utility", name: "Utility" },
+              { id: "authentication", name: "Authentication" },
+            ]}
+            selected={selectedCategories}
+            onChange={setSelectedCategories}
+            placeholder="Categories"
+            width="170px"
+          />
 
-              {/* Language Filter */}
-              <CustomDropdown
-                options={[
-                  { id: "english", name: "English" },
-                  { id: "spanish", name: "Spanish" },
-                  { id: "french", name: "French" },
-                  { id: "german", name: "German" },
-                  { id: "portuguese", name: "Portuguese" },
-                  { id: "italian", name: "Italian" },
-                ]}
-                selected={selectedLanguages}
-                onChange={setSelectedLanguages}
-                placeholder="Languages"
-                width="150px"
-              />
+          {/* Language Filter */}
+          <CustomDropdown
+            options={[
+              { id: "english", name: "English" },
+              { id: "spanish", name: "Spanish" },
+              { id: "french", name: "French" },
+              { id: "german", name: "German" },
+              { id: "portuguese", name: "Portuguese" },
+              { id: "italian", name: "Italian" },
+            ]}
+            selected={selectedLanguages}
+            onChange={setSelectedLanguages}
+            placeholder="Languages"
+            width="150px"
+          />
 
-              {/* Status Filter */}
-              <CustomDropdown
-                options={[
-                  { id: "active-hq", name: "Active - HQ" },
-                  { id: "quality-pending", name: "Quality Pending" },
-                  { id: "approved", name: "Approved" },
-                  { id: "pending", name: "Pending" },
-                  { id: "rejected", name: "Rejected" },
-                ]}
-                selected={selectedStatuses}
-                onChange={setSelectedStatuses}
-                placeholder="Status"
-                width="180px"
-              />
+          {/* Status Filter */}
+          <CustomDropdown
+            options={[
+              { id: "active-hq", name: "Active - HQ" },
+              { id: "quality-pending", name: "Quality Pending" },
+              { id: "approved", name: "Approved" },
+              { id: "pending", name: "Pending" },
+              { id: "rejected", name: "Rejected" },
+            ]}
+            selected={selectedStatuses}
+            onChange={setSelectedStatuses}
+            placeholder="Status"
+            width="180px"
+          />
 
-              <div className="flex gap-3 ml-auto">
-                {/* Sort Button */}
-                <div className="relative" ref={sortDropdownRef}>
-                  <button
-                    onClick={() => setShowSort(!showSort)}
-                    className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors"
-                  >
-                    <ArrowUpDown size={14} />
-                    <span>Sort {sorts.length > 0 && `(${sorts.length})`}</span>
-                  </button>
+          <div className="flex gap-3 ml-auto">
+            {/* Sort Button */}
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                onClick={() => setShowSort(!showSort)}
+                className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors"
+              >
+                <ArrowUpDown size={14} />
+                <span>Sort {sorts.length > 0 && `(${sorts.length})`}</span>
+              </button>
 
-                  {/* Sort Popover */}
-                  {showSort && (
-                    <div className="absolute z-50 bg-white border border-border rounded-md shadow-lg p-3 top-full mt-2 right-0" style={{
-                      minWidth: '320px'
-                    }}>
-                      {sorts.length === 0 ? (
-                        <div className="text-center py-6">
-                          <h3 className="font-semibold text-sm mb-1">No sorting applied</h3>
-                          <p className="text-xs text-muted-foreground mb-4">Add sorting to organize your rows.</p>
-                          <Button onClick={addSort} className="bg-blue-500 hover:bg-blue-600 text-white">Add sort</Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {sorts.map((sort) => (
-                            <div
-                              key={sort.id}
-                              className="flex gap-2 items-center"
-                              draggable
-                              onDragStart={() => handleSortDragStart(sort.id)}
-                              onDragOver={handleSortDragOver}
-                              onDrop={() => handleSortDrop(sort.id)}
+              {/* Sort Popover */}
+              {showSort && (
+                <div className="absolute z-50 bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 right-0" style={{
+                  minWidth: '320px'
+                }}>
+                  {sorts.length === 0 ? (
+                    <div className="text-center py-6">
+                      <h3 className="font-semibold text-sm mb-1">No sorting applied</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Add sorting to organize your rows.</p>
+                      <Button onClick={addSort} className="btn-outline-primary font-normal" variant="outline">Add sort</Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sorts.map((sort) => (
+                        <div
+                          key={sort.id}
+                          className="flex gap-2 items-center"
+                          draggable
+                          onDragStart={() => handleSortDragStart(sort.id)}
+                          onDragOver={handleSortDragOver}
+                          onDrop={() => handleSortDrop(sort.id)}
+                        >
+                          <div className="relative flex-1">
+                            <button
+                              type="button"
+                              onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)}
+                              className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
                             >
-                              <div className="relative flex-1">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)}
-                                  className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
-                                >
-                                  <span className="truncate text-sm font-normal">
-                                    {sort.column === "name" ? "Template Name" :
-                                     sort.column === "category" ? "Category" :
-                                     sort.column === "language" ? "Language" :
-                                     sort.column === "status" ? "Status" :
-                                     sort.column === "topBlockReason" ? "Top Block Reason" :
-                                     "Last Edited"}
-                                  </span>
-                                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                </button>
-                                {openSortColumnDropdown === sort.id && (
-                                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                                    <ul className="py-1">
-                                      {["name", "category", "language", "status", "topBlockReason", "lastEdited"].map(option => {
-                                        const isCurrentOption = option === sort.column;
-                                        const isDisabled = !canAddSort(option) && option !== sort.column;
-                                        return (
-                                          <li
-                                            key={option}
-                                            className={`px-3 py-2 text-sm ${isCurrentOption || isDisabled ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
-                                            onClick={() => {
-                                              if (!isDisabled && !isCurrentOption) {
-                                                updateSort(sort.id, option, sort.direction);
-                                                setOpenSortColumnDropdown(null);
-                                              }
-                                            }}
-                                          >
-                                            {option === "name" ? "Template Name" :
-                                             option === "category" ? "Category" :
-                                             option === "language" ? "Language" :
-                                             option === "status" ? "Status" :
-                                             option === "topBlockReason" ? "Top Block Reason" :
-                                             "Last Edited"}
-                                          </li>
-                                        );
-                                      })}
-                                    </ul>
-                                  </div>
-                                )}
+                              <span className="truncate text-sm font-normal">
+                                {sort.column === "name" ? "Template Name" :
+                                  sort.column === "category" ? "Category" :
+                                    sort.column === "language" ? "Language" :
+                                      sort.column === "status" ? "Status" :
+                                        sort.column === "topBlockReason" ? "Top Block Reason" :
+                                          "Last Edited"}
+                              </span>
+                              <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                            </button>
+                            {openSortColumnDropdown === sort.id && (
+                              <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
+                                <ul className="py-1">
+                                  {["name", "category", "language", "status", "topBlockReason", "lastEdited"].map(option => {
+                                    const isCurrentOption = option === sort.column;
+                                    const isDisabled = !canAddSort(option) && option !== sort.column;
+                                    return (
+                                      <li
+                                        key={option}
+                                        className={`px-3 py-2 text-sm ${isCurrentOption || isDisabled ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
+                                        onClick={() => {
+                                          if (!isDisabled && !isCurrentOption) {
+                                            updateSort(sort.id, option, sort.direction);
+                                            setOpenSortColumnDropdown(null);
+                                          }
+                                        }}
+                                      >
+                                        {option === "name" ? "Template Name" :
+                                          option === "category" ? "Category" :
+                                            option === "language" ? "Language" :
+                                              option === "status" ? "Status" :
+                                                option === "topBlockReason" ? "Top Block Reason" :
+                                                  "Last Edited"}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
                               </div>
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
-                                  className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                                >
-                                  <span className="truncate text-sm font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
-                                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                </button>
-                                {openSortDirectionDropdown === sort.id && (
-                                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                                    <ul className="py-1">
-                                      {["asc", "desc"].map(option => (
-                                        <li
-                                          key={option}
-                                          className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
-                                          onClick={() => {
-                                            updateSort(sort.id, sort.column, option as "asc" | "desc");
-                                            setOpenSortDirectionDropdown(null);
-                                          }}
-                                        >
-                                          {option === "asc" ? "Asc" : "Desc"}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                              <button onClick={() => removeSort(sort.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
-                              <GripVertical size={14} className="text-muted-foreground cursor-grab" />
-                            </div>
-                          ))}
-                          <div className="flex gap-2 pt-2 border-t">
-                            <Button
-                              onClick={addSort}
-                              disabled={sorts.length >= 6}
-                              className="bg-blue-500 hover:bg-blue-600 text-white flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Add sort
-                            </Button>
-                            <Button onClick={() => setSorts([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset sorts</Button>
+                            )}
                           </div>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
+                              className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                            >
+                              <span className="truncate text-sm font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
+                              <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                            </button>
+                            {openSortDirectionDropdown === sort.id && (
+                              <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                <ul className="py-1">
+                                  {["asc", "desc"].map(option => (
+                                    <li
+                                      key={option}
+                                      className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
+                                      onClick={() => {
+                                        updateSort(sort.id, sort.column, option as "asc" | "desc");
+                                        setOpenSortDirectionDropdown(null);
+                                      }}
+                                    >
+                                      {option === "asc" ? "Asc" : "Desc"}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                          <button onClick={() => removeSort(sort.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                          <GripVertical size={14} className="text-muted-foreground cursor-grab" />
                         </div>
-                      )}
+                      ))}
+                      <div className="flex gap-2 pt-2 border-t">
+                        <Button
+                          onClick={addSort}
+                          disabled={sorts.length >= 6}
+                          className="btn-outline-primary font-normal flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                          variant="outline"
+                        >
+                          Add sort
+                        </Button>
+                        <Button onClick={() => setSorts([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset sorts</Button>
+                      </div>
                     </div>
                   )}
                 </div>
-
-                {/* Filter Button */}
-                <div className="relative" ref={filterDropdownRef}>
-                  <button
-                    onClick={() => setShowFilter(!showFilter)}
-                    className="px-3 py-2 text-sm border border-input rounded-md hover:bg-accent focus:outline-none  flex items-center gap-2 transition-colors"
-                  >
-                    <Filter size={14} />
-                    <span>Filter {filters.length > 0 && `(${filters.length})`}</span>
-                  </button>
-
-                  {/* Filter Popover */}
-                  {showFilter && (
-                    <div className="absolute z-50 bg-white border border-border rounded-md shadow-lg p-3 top-full mt-2 right-0" style={{
-                      minWidth: '320px'
-                    }}>
-                      {filters.length === 0 ? (
-                        <div className="text-center py-6">
-                          <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
-                          <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
-                          <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white">Add filter</Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {filters.map((filter) => (
-                            <div
-                              key={filter.id}
-                              className="flex gap-2 items-center"
-                              draggable
-                              onDragStart={() => handleFilterDragStart(filter.id)}
-                              onDragOver={handleFilterDragOver}
-                              onDrop={() => handleFilterDrop(filter.id)}
-                            >
-                              <div className="relative flex-1">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
-                                  className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
-                                >
-                                  <span className="truncate text-sm font-normal">
-                                    {filter.column === "name" ? "Template Name" :
-                                     filter.column === "category" ? "Category" :
-                                     filter.column === "language" ? "Language" :
-                                     filter.column === "status" ? "Status" :
-                                     filter.column === "topBlockReason" ? "Top Block Reason" :
-                                     "Last Edited"}
-                                  </span>
-                                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                </button>
-                                {openFilterColumnDropdown === filter.id && (
-                                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                                    <ul className="py-1">
-                                      {["name", "category", "language", "status", "topBlockReason", "lastEdited"].map(option => {
-                                        const isCurrentOption = option === filter.column;
-                                        return (
-                                          <li
-                                            key={option}
-                                            className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
-                                            onClick={() => {
-                                              if (!isCurrentOption) {
-                                                updateFilter(filter.id, option, filter.operator, filter.value);
-                                                setOpenFilterColumnDropdown(null);
-                                              }
-                                            }}
-                                          >
-                                            {option === "name" ? "Template Name" :
-                                             option === "category" ? "Category" :
-                                             option === "language" ? "Language" :
-                                             option === "status" ? "Status" :
-                                             option === "topBlockReason" ? "Top Block Reason" :
-                                             "Last Edited"}
-                                          </li>
-                                        );
-                                      })}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
-                                  className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                                >
-                                  <span className="truncate text-sm font-normal">{filter.operator}</span>
-                                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                </button>
-                                {openFilterOperatorDropdown === filter.id && (
-                                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                                    <ul className="py-1">
-                                      {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
-                                        <li
-                                          key={option}
-                                          className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
-                                          onClick={() => {
-                                            updateFilter(filter.id, filter.column, option, filter.value);
-                                            setOpenFilterOperatorDropdown(null);
-                                          }}
-                                        >
-                                          {option}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                              <input
-                                type="text"
-                                placeholder="Value..."
-                                value={filter.value}
-                                onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                                className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors"
-                              />
-                              <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
-                              <GripVertical size={14} className="text-muted-foreground cursor-grab" />
-                            </div>
-                          ))}
-                          <div className="flex gap-2 pt-2 border-t">
-                            <Button onClick={addFilter} className="bg-blue-500 hover:bg-blue-600 text-white flex-1">Add filter</Button>
-                            <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset filters</Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
+              )}
             </div>
 
-            {/* Table */}
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-2">
-                {/* Bulk Actions Toolbar */}
-                {selectedTemplates.length > 0 && (
-                  <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-                    <span className="text-sm text-foreground">{selectedTemplates.length} selected</span>
-                    <div className="flex gap-2 ml-auto">
-                      <button onClick={handleOpenBulkDeleteModal} className="p-1 hover:bg-blue-100 rounded" title="Delete">
-                        <Trash2 size={14} className="text-destructive" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+            {/* Filter Button */}
+            <div className="relative" ref={filterDropdownRef}>
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors"
+              >
+                <Filter size={14} />
+                <span>Filter {filters.length > 0 && `(${filters.length})`}</span>
+              </button>
 
-                <div className={`overflow-x-auto ${selectedTemplates.length > 0 ? 'mt-3' : 'mt-6'}`}>
-                  <table className="w-full text-xs">
-                    <thead className="select-none">
-                      <tr className="border-b">
-                        <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                          <Checkbox
-                            checked={filteredAndSortedTemplates.length > 0 && filteredAndSortedTemplates.every(t => selectedTemplates.includes(t.id))}
-                            onCheckedChange={toggleAll}
-                            data-testid="checkbox-select-all"
-                          />
-                        </th>
-                        <th
-                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                          onClick={() => handleColumnSort("name")}
+              {/* Filter Popover */}
+              {showFilter && (
+                <div className="absolute z-50 bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 right-0" style={{
+                  minWidth: '320px'
+                }}>
+                  {filters.length === 0 ? (
+                    <div className="text-center py-6">
+                      <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
+                      <Button onClick={addFilter} className="btn-outline-primary font-normal" variant="outline">Add filter</Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filters.map((filter) => (
+                        <div
+                          key={filter.id}
+                          className="flex gap-2 items-center"
+                          draggable
+                          onDragStart={() => handleFilterDragStart(filter.id)}
+                          onDragOver={handleFilterDragOver}
+                          onDrop={() => handleFilterDrop(filter.id)}
                         >
-                          <div className="flex items-center gap-2">
-                            Template Name
-                            {renderSortIcon("name")}
-                          </div>
-                        </th>
-                        <th
-                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                          onClick={() => handleColumnSort("category")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Category
-                            {renderSortIcon("category")}
-                          </div>
-                        </th>
-                        <th
-                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                          onClick={() => handleColumnSort("language")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Language
-                            {renderSortIcon("language")}
-                          </div>
-                        </th>
-                        <th
-                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                          onClick={() => handleColumnSort("status")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Status
-                            {renderSortIcon("status")}
-                          </div>
-                        </th>
-                        <th
-                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                          onClick={() => handleColumnSort("topBlockReason")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Top Block Reason
-                            {renderSortIcon("topBlockReason")}
-                          </div>
-                        </th>
-                        <th
-                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                          onClick={() => handleColumnSort("lastEdited")}
-                        >
-                          <div className="flex items-center gap-2">
-                            Last Edited
-                            {renderSortIcon("lastEdited")}
-                          </div>
-                        </th>
-                        <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedTemplates.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="text-center py-8 text-muted-foreground">
-                            No results
-                          </td>
-                        </tr>
-                      ) : (
-                        paginatedTemplates.map((template) => (
-                          <tr key={template.id} className="border-b hover:bg-muted/50" data-testid={`template-row-${template.id}`}>
-                            <td className="py-2 px-3">
-                              <Checkbox
-                                checked={selectedTemplates.includes(template.id)}
-                                onCheckedChange={() => toggleTemplate(template.id)}
-                                data-testid={`checkbox-template-${template.id}`}
-                              />
-                            </td>
-                            <td className="py-2 px-3 max-w-[10rem]">
-                              <div className="break-all">
-                                {template.name}
-                              </div>
-                            </td>
-                            <td className="py-2 px-3">{template.category}</td>
-                            <td className="py-2 px-3">{template.language}</td>
-                            <td className="py-2 px-3">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClasses(template.statusTypeColor)}`}>
-                                {template.status}
+                          <div className="relative flex-1">
+                            <button
+                              type="button"
+                              onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
+                              className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
+                            >
+                              <span className="truncate text-sm font-normal">
+                                {filter.column === "name" ? "Template Name" :
+                                  filter.column === "category" ? "Category" :
+                                    filter.column === "language" ? "Language" :
+                                      filter.column === "status" ? "Status" :
+                                        filter.column === "topBlockReason" ? "Top Block Reason" :
+                                          "Last Edited"}
                               </span>
-                            </td>
-                            <td className="py-2 px-3 max-w-[10rem]">
-                              <div className="break-all">
-                                {template.topBlockReason || "No blocks!"}
+                              <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                            </button>
+                            {openFilterColumnDropdown === filter.id && (
+                              <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
+                                <ul className="py-1">
+                                  {["name", "category", "language", "status", "topBlockReason", "lastEdited"].map(option => {
+                                    const isCurrentOption = option === filter.column;
+                                    return (
+                                      <li
+                                        key={option}
+                                        className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
+                                        onClick={() => {
+                                          if (!isCurrentOption) {
+                                            updateFilter(filter.id, option, filter.operator, filter.value);
+                                            setOpenFilterColumnDropdown(null);
+                                          }
+                                        }}
+                                      >
+                                        {option === "name" ? "Template Name" :
+                                          option === "category" ? "Category" :
+                                            option === "language" ? "Language" :
+                                              option === "status" ? "Status" :
+                                                option === "topBlockReason" ? "Top Block Reason" :
+                                                  "Last Edited"}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
                               </div>
-                            </td>
-                            <td className="py-2 px-3">{template.lastEdited}</td>
-                            <td className="py-2 px-3 flex justify-start">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1 hover:bg-muted rounded">
-                                    <MoreVertical size={14} className="text-muted-foreground" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleOpenEditTemplate(template.id)} data-testid={`button-edit-${template.id}`}>
-                                    <Edit2 size={14} className="mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => {
-                                    setPreviewTemplateId(template.id);
-                                    setPreviewOpen(true);
-                                  }} data-testid={`button-preview-${template.id}`}>
-                                    <Eye size={14} className="mr-2" />
-                                    Preview
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleOpenCloneDialog(template.id)} data-testid={`button-clone-${template.id}`}>
-                                    <Copy size={14} className="mr-2" />
-                                    Clone
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(template)} data-testid={`button-delete-${template.id}`}>
-                                    <Trash2 size={14} className="mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4 text-xs">
-                  <span className="text-muted-foreground">{filteredAndSortedTemplates.length} results</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Rows per page:</span>
-                    <div className="relative w-15" ref={dropdownRef}>
-                      <button
-                        type="button"
-                        className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                        onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                      >
-                        <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                        <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                      </button>
-                      {rowsDropdownOpen && (
-                        <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                          <ul className="py-1">
-                            {[10, 25, 50].map(option => (
-                              <li
-                                key={option}
-                                className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                                onClick={() => {
-                                  setRowsPerPage(option);
-                                  setRowsDropdownOpen(false);
-                                  setPage(1);
-                                }}
-                              >
-                                {option}
-                              </li>
-                            ))}
-                          </ul>
+                            )}
+                          </div>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
+                              className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
+                            >
+                              <span className="truncate text-sm font-normal">{filter.operator}</span>
+                              <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                            </button>
+                            {openFilterOperatorDropdown === filter.id && (
+                              <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
+                                <ul className="py-1">
+                                  {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
+                                    <li
+                                      key={option}
+                                      className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
+                                      onClick={() => {
+                                        updateFilter(filter.id, filter.column, option, filter.value);
+                                        setOpenFilterOperatorDropdown(null);
+                                      }}
+                                    >
+                                      {option}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Value..."
+                            value={filter.value}
+                            onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
+                            className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors"
+                          />
+                          <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                          <GripVertical size={14} className="text-muted-foreground cursor-grab" />
                         </div>
-                      )}
+                      ))}
+                      <div className="flex gap-2 pt-2 border-t">
+                        <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">Add filter</Button>
+                        <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset filters</Button>
+                      </div>
                     </div>
-                    <span className="text-muted-foreground">Page {page} of {totalPages || 1}</span>
-                    <div className="flex gap-1">
-                      <button
-                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                        disabled={page === 1}
-                        onClick={() => setPage(1)}
-                      >
-                        <ChevronsLeft size={16} />
-                      </button>
-                      <button
-                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                        disabled={page === 1}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      <button
-                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                      <button
-                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(totalPages)}
-                      >
-                        <ChevronsRight size={16} />
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Table */}
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+          <CardContent className="pt-2">
+            {/* Bulk Actions Toolbar */}
+            {selectedTemplates.length > 0 && (
+              <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                <span className="text-sm text-foreground">{selectedTemplates.length} selected</span>
+                <div className="flex gap-2 ml-auto">
+                  <button onClick={handleOpenBulkDeleteModal} className="p-1 hover:bg-blue-100 rounded" title="Delete">
+                    <Trash2 size={14} className="text-destructive" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className={`overflow-x-auto ${selectedTemplates.length > 0 ? 'mt-3' : 'mt-6'}`}>
+              <table className="w-full text-xs">
+                <thead className="select-none">
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                      <Checkbox
+                        checked={filteredAndSortedTemplates.length > 0 && filteredAndSortedTemplates.every(t => selectedTemplates.includes(t.id))}
+                        onCheckedChange={toggleAll}
+                        data-testid="checkbox-select-all"
+                      />
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("name")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Template Name
+                        {renderSortIcon("name")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("category")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Category
+                        {renderSortIcon("category")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("language")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Language
+                        {renderSortIcon("language")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("status")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Status
+                        {renderSortIcon("status")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("topBlockReason")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Top Block Reason
+                        {renderSortIcon("topBlockReason")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("lastEdited")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Last Edited
+                        {renderSortIcon("lastEdited")}
+                      </div>
+                    </th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedTemplates.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No results
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedTemplates.map((template) => (
+                      <tr key={template.id} className="border-b hover:bg-muted/50" data-testid={`template-row-${template.id}`}>
+                        <td className="py-2 px-3">
+                          <Checkbox
+                            checked={selectedTemplates.includes(template.id)}
+                            onCheckedChange={() => toggleTemplate(template.id)}
+                            data-testid={`checkbox-template-${template.id}`}
+                          />
+                        </td>
+                        <td className="py-2 px-3 max-w-[10rem]">
+                          <div className="break-all">
+                            {template.name}
+                          </div>
+                        </td>
+                        <td className="py-2 px-3">{template.category}</td>
+                        <td className="py-2 px-3">{template.language}</td>
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClasses(template.statusTypeColor)}`}>
+                            {template.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 max-w-[10rem]">
+                          <div className="break-all">
+                            {template.topBlockReason || "No blocks!"}
+                          </div>
+                        </td>
+                        <td className="py-2 px-3">{template.lastEdited}</td>
+                        <td className="py-2 px-3 flex justify-start">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 hover:bg-muted rounded">
+                                <MoreVertical size={14} className="text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-white dark:bg-background">
+                              <DropdownMenuItem onClick={() => handleOpenEditTemplate(template.id)} data-testid={`button-edit-${template.id}`}>
+                                <Edit2 size={14} className="mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setPreviewTemplateId(template.id);
+                                setPreviewOpen(true);
+                              }} data-testid={`button-preview-${template.id}`}>
+                                <Eye size={14} className="mr-2" />
+                                Preview
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenCloneDialog(template.id)} data-testid={`button-clone-${template.id}`}>
+                                <Copy size={14} className="mr-2" />
+                                Clone
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(template)} data-testid={`button-delete-${template.id}`}>
+                                <Trash2 size={14} className="mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4 text-xs">
+              <span className="text-muted-foreground">{filteredAndSortedTemplates.length} results</span>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Rows per page:</span>
+                <div className="relative w-15" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between px-3 py-2 text-left bg-background dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
+                    onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                  >
+                    <span className="truncate text-xs font-normal">{rowsPerPage}</span>
+                    <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                  </button>
+                  {rowsDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-2 bg-background dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
+                      <ul className="py-1">
+                        {[10, 25, 50].map(option => (
+                          <li
+                            key={option}
+                            className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
+                            onClick={() => {
+                              setRowsPerPage(option);
+                              setRowsDropdownOpen(false);
+                              setPage(1);
+                            }}
+                          >
+                            {option}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <span className="text-muted-foreground">Page {page} of {totalPages || 1}</span>
+                <div className="flex gap-1">
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    disabled={page === 1}
+                    onClick={() => setPage(1)}
+                  >
+                    <ChevronsLeft size={16} />
+                  </button>
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(totalPages)}
+                  >
+                    <ChevronsRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
@@ -1789,9 +1790,8 @@ export default function TemplateManager() {
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
                         key={index}
-                        className={`flex-1 h-2 rounded-full transition-colors ${
-                          index < 1 ? "bg-primary" : "bg-muted"
-                        }`}
+                        className={`flex-1 h-2 rounded-full transition-colors ${index < 1 ? "bg-primary" : "bg-muted"
+                          }`}
                       />
                     ))}
                   </div>
@@ -1876,7 +1876,8 @@ export default function TemplateManager() {
                   <Button
                     onClick={handleNextFromCategory}
                     disabled={!selectedCategory}
-                    className="gap-2 font-normal"
+                    className="gap-2 font-normal btn-outline-primary"
+                    variant="outline"
                   >
                     Next
                   </Button>
@@ -1898,9 +1899,8 @@ export default function TemplateManager() {
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
                         key={index}
-                        className={`flex-1 h-2 rounded-full transition-colors ${
-                          index < 2 ? "bg-primary" : "bg-muted"
-                        }`}
+                        className={`flex-1 h-2 rounded-full transition-colors ${index < 2 ? "bg-primary" : "bg-muted"
+                          }`}
                       />
                     ))}
                   </div>
@@ -1960,12 +1960,12 @@ export default function TemplateManager() {
                           </SelectContent>
                         </Select>
                       </div>
-                    
+
                     </div>
-                      {/* Template Name Guidelines */}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Lowercase letters, numbers and underscores only.
-                      </p>
+                    {/* Template Name Guidelines */}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Lowercase letters, numbers and underscores only.
+                    </p>
                   </div>
 
                   {/* Template Type */}
@@ -1977,213 +1977,199 @@ export default function TemplateManager() {
                     {/* Template Type Cards */}
                     <div>
                       <div className="max-h-[calc(100vh-30rem)] overflow-y-auto space-y-2">
-                      {selectedCategory === "Utility" && (
-                        <>
-                          <div
-                            onClick={() => setTemplateType("utility-default")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-default"
+                        {selectedCategory === "Utility" && (
+                          <>
+                            <div
+                              onClick={() => setTemplateType("utility-default")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-default"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Default</h4>
-                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Default</h4>
+                                <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("utility-appointment")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-appointment"
+                            <div
+                              onClick={() => setTemplateType("utility-appointment")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-appointment"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Appointment Update</h4>
-                              <p className="text-xs text-muted-foreground">Appointment confirmations and reminders.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Appointment Update</h4>
+                                <p className="text-xs text-muted-foreground">Appointment confirmations and reminders.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("utility-issue")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-issue"
+                            <div
+                              onClick={() => setTemplateType("utility-issue")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-issue"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Issue Resolution</h4>
-                              <p className="text-xs text-muted-foreground">Support and issue updates.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Issue Resolution</h4>
+                                <p className="text-xs text-muted-foreground">Support and issue updates.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("utility-payment")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-payment"
+                            <div
+                              onClick={() => setTemplateType("utility-payment")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-payment"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Payment Update</h4>
-                              <p className="text-xs text-muted-foreground">Payment confirmations and receipts.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Payment Update</h4>
+                                <p className="text-xs text-muted-foreground">Payment confirmations and receipts.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("utility-shipping")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-shipping"
+                            <div
+                              onClick={() => setTemplateType("utility-shipping")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-shipping"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Shipping Update</h4>
-                              <p className="text-xs text-muted-foreground">Delivery and shipping notifications.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Shipping Update</h4>
+                                <p className="text-xs text-muted-foreground">Delivery and shipping notifications.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("utility-reservation")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-reservation"
+                            <div
+                              onClick={() => setTemplateType("utility-reservation")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-reservation"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Reservation Update</h4>
-                              <p className="text-xs text-muted-foreground">Booking confirmations and changes.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Reservation Update</h4>
+                                <p className="text-xs text-muted-foreground">Booking confirmations and changes.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("utility-account")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "utility-account"
+                            <div
+                              onClick={() => setTemplateType("utility-account")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "utility-account"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
-                              <p className="text-xs text-muted-foreground">Account changes and notifications.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Account Update</h4>
+                                <p className="text-xs text-muted-foreground">Account changes and notifications.</p>
+                              </div>
                             </div>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
 
-                      {selectedCategory === "Marketing" && (
-                        <>
-                          <div
-                            onClick={() => setTemplateType("marketing-default")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-default"
+                        {selectedCategory === "Marketing" && (
+                          <>
+                            <div
+                              onClick={() => setTemplateType("marketing-default")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "marketing-default"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Default</h4>
-                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Default</h4>
+                                <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("marketing-catalog")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-catalog"
+                            <div
+                              onClick={() => setTemplateType("marketing-catalog")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "marketing-catalog"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Catalog</h4>
-                              <p className="text-xs text-muted-foreground">Send messages that drive sales by connecting your product catalog.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Catalog</h4>
+                                <p className="text-xs text-muted-foreground">Send messages that drive sales by connecting your product catalog.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("marketing-flows")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-flows"
+                            <div
+                              onClick={() => setTemplateType("marketing-flows")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "marketing-flows"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Flows</h4>
-                              <p className="text-xs text-muted-foreground">Send a form to capture customer interests, appointment requests, or run surveys.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Flows</h4>
+                                <p className="text-xs text-muted-foreground">Send a form to capture customer interests, appointment requests, or run surveys.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("marketing-calling")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "marketing-calling"
+                            <div
+                              onClick={() => setTemplateType("marketing-calling")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "marketing-calling"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Calling permissions request</h4>
-                              <p className="text-xs text-muted-foreground">Ask customers if you can call them on WhatsApp.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Calling permissions request</h4>
+                                <p className="text-xs text-muted-foreground">Ask customers if you can call them on WhatsApp.</p>
+                              </div>
                             </div>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
 
-                      {selectedCategory === "Authentication" && (
-                        <>
-                          <div
-                            onClick={() => setTemplateType("auth-default")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "auth-default"
+                        {selectedCategory === "Authentication" && (
+                          <>
+                            <div
+                              onClick={() => setTemplateType("auth-default")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "auth-default"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Default</h4>
-                              <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Default</h4>
+                                <p className="text-xs text-muted-foreground">Send messages with media and customized buttons to engage your customers.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("auth-account")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "auth-account"
+                            <div
+                              onClick={() => setTemplateType("auth-account")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "auth-account"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Account Update</h4>
-                              <p className="text-xs text-muted-foreground">Security and account notifications.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Account Update</h4>
+                                <p className="text-xs text-muted-foreground">Security and account notifications.</p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div
-                            onClick={() => setTemplateType("auth-alert")}
-                            className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                              templateType === "auth-alert"
+                            <div
+                              onClick={() => setTemplateType("auth-alert")}
+                              className={`px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${templateType === "auth-alert"
                                 ? "border-primary bg-primary/10"
                                 : "border-input"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Alert Update</h4>
-                              <p className="text-xs text-muted-foreground">Security alerts and warnings.</p>
+                                }`}
+                            >
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">Alert Update</h4>
+                                <p className="text-xs text-muted-foreground">Security alerts and warnings.</p>
+                              </div>
                             </div>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2201,7 +2187,8 @@ export default function TemplateManager() {
                   <Button
                     onClick={handleNextFromForm}
                     disabled={!templateName.trim() || !templateType.trim()}
-                    className="gap-2 font-normal"
+                    className="gap-2 font-normal btn-outline-primary"
+                    variant="outline"
                   >
                     Next
                   </Button>
@@ -2223,15 +2210,14 @@ export default function TemplateManager() {
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
                         key={index}
-                        className={`flex-1 h-2 rounded-full transition-colors ${
-                          index < 3 ? "bg-primary" : "bg-muted"
-                        }`}
+                        className={`flex-1 h-2 rounded-full transition-colors ${index < 3 ? "bg-primary" : "bg-muted"
+                          }`}
                       />
                     ))}
                   </div>
                 </div>
               </DialogHeader>
-              
+
               <div className="flex gap-4">
                 {/* Left: Template Form */}
                 <div className="flex-1 !max-h-[62vh] overflow-y-auto pr-2 -ml-1">
@@ -2312,8 +2298,8 @@ export default function TemplateManager() {
                                 const input = document.createElement('input');
                                 input.type = 'file';
                                 input.accept = mediaSample === 'image' ? 'image/*' :
-                                              mediaSample === 'video' ? 'video/*' :
-                                              mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
+                                  mediaSample === 'video' ? 'video/*' :
+                                    mediaSample === 'document' ? '.pdf,.doc,.docx,.txt' : '*/*';
                                 input.onchange = (e) => {
                                   const file = (e.target as HTMLInputElement).files?.[0];
                                   if (file) {
@@ -2456,7 +2442,7 @@ export default function TemplateManager() {
                                   key={`${variable}-input`}
                                   placeholder={`Sample text for ${variable}`}
                                   value={variableSamples[variableKey] || ""}
-                                  onChange={(e) => setVariableSamples({...variableSamples, [variableKey]: e.target.value})}
+                                  onChange={(e) => setVariableSamples({ ...variableSamples, [variableKey]: e.target.value })}
                                   className="border border-input [border-color:hsl(var(--input))] hover-elevate"
                                 />
                               </>
@@ -2871,10 +2857,10 @@ export default function TemplateManager() {
                                   )}
                                 </div>
 
-                                </div>
-                                );
-                              }
-                              )}
+                              </div>
+                            );
+                          }
+                          )}
                         </div>
                       )}
                     </div>
@@ -2928,7 +2914,8 @@ export default function TemplateManager() {
                 </Button>
                 <div className="flex gap-2">
                   <Button
-                    className="gap-2 font-normal"
+                    className="gap-2 font-normal btn-outline-primary"
+                    variant="outline"
                     disabled={
                       editingTemplateId === null
                         ? !isTemplateFormValid()

@@ -96,90 +96,90 @@ const TimePicker: React.FC<TimePickerProps> = ({ hour, minute, period, onHourCha
 );
 
 const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEnabledChange }) => (
-    <div className="p-4 border rounded-lg space-y-4 border border-input [border-color:hsl(var(--input))]">
-        <div className="flex items-center space-x-3">
-            <Checkbox
-            id={`checkbox-${day}`}
-            checked={hours.enabled}
-            onCheckedChange={onEnabledChange}
-            />
-            <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold capitalize">
-            {label}
-            </Label>
-        </div>
-        <div className="space-y-3">
-            <div className="flex flex-col items-start justify-between space-y-2">
-                <Label className="text-sm text-foreground">Start time</Label>
-                <TimePicker
-                    hour={hours.startHour}
-                    minute={hours.startMinute}
-                    period={hours.startPeriod}
-                    onHourChange={(value) => onHoursChange('startHour', value)}
-                    onMinuteChange={(value) => onHoursChange('startMinute',value)}
-                    onPeriodChange={(value) => onHoursChange('startPeriod',value)}
-                    isDisabled={!hours.enabled}
-                />
-            </div>
-            <div className="flex flex-col items-start justify-between space-y-2">
-                <Label className="text-sm text-foreground">End time</Label>
-                <TimePicker
-                    hour={hours.endHour}
-                    minute={hours.endMinute}
-                    period={hours.endPeriod}
-                    onHourChange={(value) => onHoursChange('endHour', value)}
-                    onMinuteChange={(value) => onHoursChange('endMinute', value)}
-                    onPeriodChange={(value) => onHoursChange('endPeriod', value)}
-                    isDisabled={!hours.enabled}
-                />
-            </div>
-        </div>
+  <div className="p-4 border rounded-lg space-y-4 border border-input [border-color:hsl(var(--input))]">
+    <div className="flex items-center space-x-3">
+      <Checkbox
+        id={`checkbox-${day}`}
+        checked={hours.enabled}
+        onCheckedChange={onEnabledChange}
+      />
+      <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold capitalize">
+        {label}
+      </Label>
     </div>
+    <div className="space-y-3">
+      <div className="flex flex-col items-start justify-between space-y-2">
+        <Label className="text-sm text-foreground">Start time</Label>
+        <TimePicker
+          hour={hours.startHour}
+          minute={hours.startMinute}
+          period={hours.startPeriod}
+          onHourChange={(value) => onHoursChange('startHour', value)}
+          onMinuteChange={(value) => onHoursChange('startMinute', value)}
+          onPeriodChange={(value) => onHoursChange('startPeriod', value)}
+          isDisabled={!hours.enabled}
+        />
+      </div>
+      <div className="flex flex-col items-start justify-between space-y-2">
+        <Label className="text-sm text-foreground">End time</Label>
+        <TimePicker
+          hour={hours.endHour}
+          minute={hours.endMinute}
+          period={hours.endPeriod}
+          onHourChange={(value) => onHoursChange('endHour', value)}
+          onMinuteChange={(value) => onHoursChange('endMinute', value)}
+          onPeriodChange={(value) => onHoursChange('endPeriod', value)}
+          isDisabled={!hours.enabled}
+        />
+      </div>
+    </div>
+  </div>
 );
 
 
 const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours, allDayAvailability, setAllDayAvailability }) => {
-    const { toast } = useToast();
+  const { toast } = useToast();
 
-    const handleAllDaysHoursChange = (part: keyof DayHours, value: string) => {
-        const newBusinessHours = {
-            ...businessHours,
-            allDays: {
-                ...businessHours.allDays,
-                [part]: value,
-            },
-        };
-        setBusinessHours(newBusinessHours);
+  const handleAllDaysHoursChange = (part: keyof DayHours, value: string) => {
+    const newBusinessHours = {
+      ...businessHours,
+      allDays: {
+        ...businessHours.allDays,
+        [part]: value,
+      },
     };
+    setBusinessHours(newBusinessHours);
+  };
 
-    const handlePerDayHoursChange = (day: keyof BusinessHoursState['perDay'], part: keyof DayHours, value: string) => {
-        const newBusinessHours = {
-            ...businessHours,
-            perDay: {
-                ...businessHours.perDay,
-                [day]: {
-                    ...businessHours.perDay[day],
-                    [part]: value,
-                },
-            },
-        };
-        setBusinessHours(newBusinessHours);
+  const handlePerDayHoursChange = (day: keyof BusinessHoursState['perDay'], part: keyof DayHours, value: string) => {
+    const newBusinessHours = {
+      ...businessHours,
+      perDay: {
+        ...businessHours.perDay,
+        [day]: {
+          ...businessHours.perDay[day],
+          [part]: value,
+        },
+      },
     };
+    setBusinessHours(newBusinessHours);
+  };
 
-    const handlePerDayEnabledChange = (day: keyof BusinessHoursState['perDay'], enabled: boolean) => {
-        const newBusinessHours = {
-            ...businessHours,
-            perDay: {
-                ...businessHours.perDay,
-                [day]: {
-                    ...businessHours.perDay[day],
-                    enabled,
-                },
-            },
-        };
-        setBusinessHours(newBusinessHours);
+  const handlePerDayEnabledChange = (day: keyof BusinessHoursState['perDay'], enabled: boolean) => {
+    const newBusinessHours = {
+      ...businessHours,
+      perDay: {
+        ...businessHours.perDay,
+        [day]: {
+          ...businessHours.perDay[day],
+          enabled,
+        },
+      },
     };
+    setBusinessHours(newBusinessHours);
+  };
 
-    const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
     <>
@@ -223,28 +223,28 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
               <div className="p-4 border rounded-lg space-y-4 w-fit border border-input [border-color:hsl(var(--input))]">
                 <Label className="text-sm font-bold">All days</Label>
                 <div className="flex flex-col items-start justify-between space-y-2">
-                    <Label className="text-sm">Start time</Label>
-                    <TimePicker
-                        hour={businessHours.allDays.startHour}
-                        minute={businessHours.allDays.startMinute}
-                        period={businessHours.allDays.startPeriod}
-                        onHourChange={(value) => handleAllDaysHoursChange('startHour', value)}
-                        onMinuteChange={(value) => handleAllDaysHoursChange('startMinute', value)}
-                        onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
-                        isDisabled={allDayAvailability} // Disable when 24/7 is active
-                    />
+                  <Label className="text-sm">Start time</Label>
+                  <TimePicker
+                    hour={businessHours.allDays.startHour}
+                    minute={businessHours.allDays.startMinute}
+                    period={businessHours.allDays.startPeriod}
+                    onHourChange={(value) => handleAllDaysHoursChange('startHour', value)}
+                    onMinuteChange={(value) => handleAllDaysHoursChange('startMinute', value)}
+                    onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
+                    isDisabled={allDayAvailability} // Disable when 24/7 is active
+                  />
                 </div>
                 <div className="flex flex-col items-start justify-between space-y-2">
-                    <Label className="text-sm">End time</Label>
-                    <TimePicker
-                        hour={businessHours.allDays.endHour}
-                        minute={businessHours.allDays.endMinute}
-                        period={businessHours.allDays.endPeriod}
-                        onHourChange={(value) => handleAllDaysHoursChange('endHour', value)}
-                        onMinuteChange={(value) => handleAllDaysHoursChange('endMinute', value)}
-                        onPeriodChange={(value) => handleAllDaysHoursChange('endPeriod', value)}
-                        isDisabled={allDayAvailability} // Disable when 24/7 is active
-                    />
+                  <Label className="text-sm">End time</Label>
+                  <TimePicker
+                    hour={businessHours.allDays.endHour}
+                    minute={businessHours.allDays.endMinute}
+                    period={businessHours.allDays.endPeriod}
+                    onHourChange={(value) => handleAllDaysHoursChange('endHour', value)}
+                    onMinuteChange={(value) => handleAllDaysHoursChange('endMinute', value)}
+                    onPeriodChange={(value) => handleAllDaysHoursChange('endPeriod', value)}
+                    isDisabled={allDayAvailability} // Disable when 24/7 is active
+                  />
                 </div>
               </div>
             ) : (
@@ -276,7 +276,8 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
               description: "Business hours settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

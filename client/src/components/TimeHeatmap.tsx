@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 export interface TimeHeatmapData {
   time: string;
@@ -50,8 +50,24 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
     value: number;
   } | null>(null);
 
+  // Detect dark mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    };
+    checkTheme();
+
+    // Observer for class changes on html element
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    return () => observer.disconnect();
+  }, []);
+
   // Calculate min and max values from data
-  const { minValue, maxValue, getColor, legendValues } = useMemo(() => {
+  const { minValue, maxValue, getColor, legendValues, colors } = useMemo(() => {
     let min = Infinity;
     let max = -Infinity;
 
@@ -65,8 +81,8 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
       });
     });
 
-    const lightBlue = "#dbeafe";
-    const darkBlue = "#1e40af";
+    const lightBlue = isDarkMode ? "#3B82F6" : "#dbeafe";
+    const darkBlue = isDarkMode ? "#00267e" : "#1e40af";
 
     const colorFn = (value: number) => {
       if (min === max) return lightBlue;
@@ -85,8 +101,10 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
       maxValue: max,
       getColor: colorFn,
       legendValues: legendVals,
+      colors: { start: lightBlue, end: darkBlue }
     };
-  }, [data, days]);
+  }, [data, days, isDarkMode]);
+
   // Get day names starting from startDay
   const dayNames = [
     "Sunday",
@@ -177,7 +195,7 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
           <div
             className="h-6 rounded"
             style={{
-              background: `linear-gradient(to right, #dbeafe, #93c5fd, #60a5fa, #3b82f6, #1e40af)`,
+              background: `linear-gradient(to right, ${colors.start}, ${colors.end})`,
             }}
           />
           <div className="flex justify-between text-xs text-muted-foreground mt-1">

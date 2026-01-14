@@ -131,7 +131,7 @@ export default function CampaignManager() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [isViewCsvModalOpen, setIsViewCsvModalOpen] = useState(false);
   const [schedules, setSchedules] = useState<Schedule[]>([{ id: Date.now(), date: undefined, hour: "", minute: "", period: "" }]);
-  
+
   // For Recurring Broadcast
   const [recurringStartDate, setRecurringStartDate] = useState<Date | undefined>(undefined);
   const [recurringEndDate, setRecurringEndDate] = useState<Date | undefined>(undefined);
@@ -360,7 +360,7 @@ export default function CampaignManager() {
   // Get sorted CSV data based on current sort state
   const getSortedCsvData = () => {
     if (!csvSort) return csvData;
-    
+
     const sortedData = [...csvData].sort((a, b) => {
       const aVal = a[csvSort.column as keyof typeof a];
       const bVal = b[csvSort.column as keyof typeof b];
@@ -380,7 +380,7 @@ export default function CampaignManager() {
 
   const getSortedLocalCsvData = () => {
     if (!csvSort) return localCsvData;
-    
+
     const sortedData = [...localCsvData].sort((a, b) => {
       const aVal = a[csvSort.column as keyof typeof a];
       const bVal = b[csvSort.column as keyof typeof b];
@@ -660,7 +660,7 @@ export default function CampaignManager() {
     let data = [...(selectedCampaignForPerformance?.recipients || [])];
 
     if (recipientSearchQuery) {
-        data = data.filter(r => r.name.toLowerCase().includes(recipientSearchQuery.toLowerCase()) || r.phone.toLowerCase().includes(recipientSearchQuery.toLowerCase()));
+      data = data.filter(r => r.name.toLowerCase().includes(recipientSearchQuery.toLowerCase()) || r.phone.toLowerCase().includes(recipientSearchQuery.toLowerCase()));
     }
 
     if (recipientSort) {
@@ -749,11 +749,10 @@ export default function CampaignManager() {
   };
 
   const handleCreateBroadcastCampaign = (status: "draft" | "scheduled") => {
-    if (broadcastCampaignType === 'Immediate')
-    {
+    if (broadcastCampaignType === 'Immediate') {
       setDeliverInTimezone(false);
     }
-    
+
     const campaignData: Campaign = {
       id: editingCampaignId || Date.now(), // Preserve ID if editing, otherwise generate new
       name: campaignName,
@@ -811,7 +810,7 @@ export default function CampaignManager() {
   };
 
   const toggleWeeklyDay = (day: string) => {
-    setWeeklyRepeatDays(prev => 
+    setWeeklyRepeatDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
   };
@@ -863,8 +862,8 @@ export default function CampaignManager() {
     <div className="p-6 space-y-6" data-testid="campaign-manager">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] font-[700]">Campaign Manager</h1>
-        <Button className="gap-2 font-normal" onClick={() => setCreateOpen(true)} data-testid="button-create-campaign">
+        <h1 className="text-3xl font-bold">Campaign Manager</h1>
+        <Button className="gap-2 font-normal btn-outline-primary" variant="outline" onClick={() => setCreateOpen(true)} data-testid="button-create-campaign">
           <Plus size={16} />
           Create Campaign
         </Button>
@@ -872,7 +871,7 @@ export default function CampaignManager() {
 
       {/* Tabs */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
           {[
             { label: "All Campaigns", value: "all" },
             { label: "Draft", value: "draft" },
@@ -883,11 +882,10 @@ export default function CampaignManager() {
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.value
-                  ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.value
+                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
               data-testid={`tab-${tab.value}`}
             >
               {tab.label}
@@ -895,7 +893,7 @@ export default function CampaignManager() {
           ))}
         </div>
       </div>
-      
+
       {/* WhatsApp Account Status */}
       <div className="flex items-center space-x-5">
         <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
@@ -1012,20 +1010,20 @@ export default function CampaignManager() {
               <div className="flex gap-2 ml-auto">
                 {getArchivableCampaigns().length > 0 && (
                   <button
-                    className="p-1 hover:bg-blue-100 rounded"
+                    className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded transition-colors"
                     title="Archive"
                     onClick={() => setShowBulkArchiveModal(true)}
                   >
-                    <Archive size={14} className="text-blue-600" />
+                    <Archive size={14} className="text-blue-600 dark:text-blue-400" />
                   </button>
                 )}
                 {getDeletableCampaigns().length > 0 && (
                   <button
-                    className="p-1 hover:bg-blue-100 rounded"
+                    className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded transition-colors"
                     title="Delete"
                     onClick={() => setShowBulkDeleteModal(true)}
                   >
-                    <Trash2 size={14} className="text-red-600" />
+                    <Trash2 size={14} className="text-red-600 dark:text-red-400" />
                   </button>
                 )}
               </div>
@@ -1142,17 +1140,17 @@ export default function CampaignManager() {
                               <MoreVertical size={14} className="text-muted-foreground" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                             <DropdownMenuItem onClick={() => {
-                                setSelectedCampaignForPerformance(campaign);
-                                setDetailsOpen(true);
+                              setSelectedCampaignForPerformance(campaign);
+                              setDetailsOpen(true);
                             }} data-testid={`button-performance-${campaign.id}`}>
                               <BarChart2 size={14} className="mr-2" />
                               View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
-                                setEditingCampaignId(campaign.id);
-                                setCreateOpen(true);
+                              setEditingCampaignId(campaign.id);
+                              setCreateOpen(true);
                             }} data-testid={`button-edit-${campaign.id}`}>
                               <Edit2 size={14} className="mr-2" />
                               Edit
@@ -1190,19 +1188,19 @@ export default function CampaignManager() {
               <div className="relative w-15" ref={dropdownRef}>
                 <button
                   type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                  className="flex items-center justify-between px-3 py-2 text-left bg-background dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground transition-colors"
                   onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">{rowsPerPage}</span>
                   <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                 </button>
                 {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                  <div className="absolute z-10 w-full mt-2 bg-background dark:bg-background rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border border-border dark:border-slate-700 overflow-hidden">
                     <ul className="py-1">
                       {[10, 25, 50].map(option => (
                         <li
                           key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
+                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted dark:hover:bg-slate-700"
                           onClick={() => {
                             setRowsPerPage(option);
                             setRowsDropdownOpen(false);
@@ -1217,16 +1215,16 @@ export default function CampaignManager() {
               </div>
               <span className="text-muted-foreground">Page 1 of 1</span>
               <div className="flex gap-1">
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
+                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
                   <ChevronsLeft size={16} />
                 </button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
+                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
                   <ChevronLeft size={16} />
                 </button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
+                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
                   <ChevronRight size={16} />
                 </button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
+                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
                   <ChevronsRight size={16} />
                 </button>
               </div>
@@ -1252,8 +1250,8 @@ export default function CampaignManager() {
               <div className="grid grid-cols-2 gap-4">
                 <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-api-triggered" onClick={() => setCampaignCreationStep("apiTriggeredForm")}>
                   <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Zap size={24} className="text-primary" />
+                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                      <Zap size={24} className="text-primary dark:text-primary/80" />
                     </div>
                     <CardTitle className="text-base">API Triggered</CardTitle>
                   </CardHeader>
@@ -1263,8 +1261,8 @@ export default function CampaignManager() {
                 </Card>
                 <Card className="cursor-pointer hover-elevate active-elevate-2 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="card-broadcast" onClick={() => setCampaignCreationStep("broadcastForm")}>
                   <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Send size={24} className="text-blue-600" />
+                    <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                      <Send size={24} className="text-primary dark:text-primary/80" />
                     </div>
                     <CardTitle className="text-base">Broadcast</CardTitle>
                   </CardHeader>
@@ -1352,19 +1350,19 @@ export default function CampaignManager() {
                         <div className="flex items-center justify-between">
                           <label className="text-sm font-medium text-foreground">Campaign end date<span className="text-red-500 pl-0.5">*</span></label>
                           <div className="flex items-end space-x-2 mt-2">
-                          <Checkbox id="never-ends" checked={neverEnds} onCheckedChange={(checked) => {
-                            setNeverEnds(checked as boolean);
-                            if (checked) {
-                              setCampaignEndDate(undefined);
-                            }
-                          }} />
-                          <label
-                            htmlFor="never-ends"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Never end
-                          </label>
-                        </div>
+                            <Checkbox id="never-ends" checked={neverEnds} onCheckedChange={(checked) => {
+                              setNeverEnds(checked as boolean);
+                              if (checked) {
+                                setCampaignEndDate(undefined);
+                              }
+                            }} />
+                            <label
+                              htmlFor="never-ends"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              Never end
+                            </label>
+                          </div>
                         </div>
                         <Popover open={endDatePickerOpen} onOpenChange={setEndDatePickerOpen}>
                           <PopoverTrigger asChild>
@@ -1462,7 +1460,7 @@ export default function CampaignManager() {
                   {!editingCampaignId && (
                     <Button
                       variant="outline"
-                      className="border-input [border-color:hsl(var(--input))] font-normal"
+                      className="btn-outline-primary font-normal"
                       disabled={!campaignName}
                       onClick={() => handleCreateCampaign("draft")}
                     >
@@ -1470,7 +1468,8 @@ export default function CampaignManager() {
                     </Button>
                   )}
                   <Button
-                    className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                    className="gap-2 font-normal btn-outline-primary"
+                    variant="outline"
                     disabled={!campaignName || !campaignStartDate || (!campaignEndDate && !neverEnds) || !selectedWhatsAppTemplate}
                     onClick={() => handleCreateCampaign("scheduled")}
                   >
@@ -1542,9 +1541,9 @@ export default function CampaignManager() {
                                   <div className="flex justify-between items-end">
                                     <label className="text-sm font-medium text-foreground">Campaign schedule date<span className="text-red-500 pl-0.5">*</span></label>
                                     {schedules.length > 1 && (
-                                    <button onClick={() => removeSchedule(schedule.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
-                                      <X size={16} />
-                                    </button>
+                                      <button onClick={() => removeSchedule(schedule.id)} className="text-muted-foreground hover:text-foreground transition-colors ml-4 mt-1">
+                                        <X size={16} />
+                                      </button>
                                     )}
                                   </div>
                                   <Popover>
@@ -1617,7 +1616,7 @@ export default function CampaignManager() {
                             <Plus size={14} className="mr-1" />
                             Add another schedule
                           </Button>
-                    
+
                           {/* Timezone Checkbox */}
                           <div className="flex items-center space-x-2">
                             <Checkbox id="timezone-delivery" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
@@ -1645,9 +1644,9 @@ export default function CampaignManager() {
                           { display: 'S', value: 'sun' }
                         ];
                         return (
-                        <div className="space-y-4 pt-2">
-                          {/* Start and End Date */}
-                          <div className="space-y-2">
+                          <div className="space-y-4 pt-2">
+                            {/* Start and End Date */}
+                            <div className="space-y-2">
                               <label className="text-sm font-medium text-foreground">Start date<span className="text-red-500 pl-0.5">*</span></label>
                               <Popover open={recurringStartPickerOpen} onOpenChange={setRecurringStartPickerOpen}>
                                 <PopoverTrigger asChild>
@@ -1702,135 +1701,136 @@ export default function CampaignManager() {
                               </Popover>
                             </div>
 
-                          {/* Time Picker */}
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">At<span className="text-red-500 pl-0.5">*</span></label>
-                            <div className="flex gap-2">
-                              <Select value={recurringTime.hour} onValueChange={(value) => setRecurringTime(t => ({ ...t, hour: value }))}>
-                                <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                  <SelectValue placeholder="HH" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
-                                    <SelectItem key={hour} value={hour}>{hour}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Select value={recurringTime.minute} onValueChange={(value) => setRecurringTime(t => ({ ...t, minute: value }))}>
-                                <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                  <SelectValue placeholder="MM" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
-                                    <SelectItem key={minute} value={minute}>{minute}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Select value={recurringTime.period} onValueChange={(value) => setRecurringTime(t => ({ ...t, period: value }))}>
-                                <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
-                                  <SelectValue placeholder="AM/PM" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="AM">AM</SelectItem>
-                                  <SelectItem value="PM">PM</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-
-                          {/* Repeat Row */}
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-foreground">Repeat<span className="text-red-500 pl-0.5">*</span></label>
-                            <div className="flex items-center gap-2">
-                              <Select value={repeatFrequency} onValueChange={setRepeatFrequency}>
-                                <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="daily">Daily</SelectItem>
-                                  <SelectItem value="weekly">Weekly</SelectItem>
-                                  <SelectItem value="monthly">Monthly</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              {repeatFrequency && (
-                                <>
-                                  <span className="text-sm text-muted-foreground">every</span>
-                                  <Select
-                                    value={repeatFrequency === 'daily' ? dailyRepeatInterval : ''}
-                                    onValueChange={setDailyRepeatInterval}
-                                    disabled={repeatFrequency !== 'daily'}
-                                  >
-                                    <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
-                                      <SelectValue placeholder={
-                                        repeatFrequency === 'weekly' ? "Single Week" :
-                                        repeatFrequency === 'monthly' ? "Single Month" :
-                                        "Select interval"
-                                      } />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="1">Single Day</SelectItem>
-                                      {Array.from({ length: 5 }, (_, i) => i + 2).map(day => (
-                                        <SelectItem key={day} value={String(day)}>{day} Days</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Conditional Multi-select */}
-                          {repeatFrequency === 'weekly' && (
+                            {/* Time Picker */}
                             <div className="space-y-2">
-                              <div className="flex gap-1">
-                                {weekDays.map(day => (
-                                  <Button
-                                    key={day.value}
-                                    variant={weeklyRepeatDays.includes(day.value) ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => toggleWeeklyDay(day.value)}
-                                    className="flex-1"
-                                  >
-                                    {day.display}
-                                  </Button>
-                                ))}
+                              <label className="text-sm font-medium text-foreground">At<span className="text-red-500 pl-0.5">*</span></label>
+                              <div className="flex gap-2">
+                                <Select value={recurringTime.hour} onValueChange={(value) => setRecurringTime(t => ({ ...t, hour: value }))}>
+                                  <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                    <SelectValue placeholder="HH" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => `${i + 1}`.padStart(2, '0')).map(hour => (
+                                      <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select value={recurringTime.minute} onValueChange={(value) => setRecurringTime(t => ({ ...t, minute: value }))}>
+                                  <SelectTrigger className="w-[80px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                    <SelectValue placeholder="MM" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 60 }, (_, i) => `${i}`.padStart(2, '0')).map(minute => (
+                                      <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select value={recurringTime.period} onValueChange={(value) => setRecurringTime(t => ({ ...t, period: value }))}>
+                                  <SelectTrigger className="w-[95px] border border-input [border-color:hsl(var(--input))] hover-elevate">
+                                    <SelectValue placeholder="AM/PM" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="AM">AM</SelectItem>
+                                    <SelectItem value="PM">PM</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </div>
-                          )}
 
-                          {repeatFrequency === 'monthly' && (
+                            {/* Repeat Row */}
                             <div className="space-y-2">
-                              <div className="grid grid-cols-7 gap-1">
-                                {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
-                                  <Button
-                                    key={date}
-                                    variant={monthlyRepeatDates.includes(date) ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => toggleMonthlyDate(date)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    {date}
-                                  </Button>
-                                ))}
+                              <label className="text-sm font-medium text-foreground">Repeat<span className="text-red-500 pl-0.5">*</span></label>
+                              <div className="flex items-center gap-2">
+                                <Select value={repeatFrequency} onValueChange={setRepeatFrequency}>
+                                  <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="daily">Daily</SelectItem>
+                                    <SelectItem value="weekly">Weekly</SelectItem>
+                                    <SelectItem value="monthly">Monthly</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {repeatFrequency && (
+                                  <>
+                                    <span className="text-sm text-muted-foreground">every</span>
+                                    <Select
+                                      value={repeatFrequency === 'daily' ? dailyRepeatInterval : ''}
+                                      onValueChange={setDailyRepeatInterval}
+                                      disabled={repeatFrequency !== 'daily'}
+                                    >
+                                      <SelectTrigger className="border border-input [border-color:hsl(var(--input))] hover-elevate flex-1">
+                                        <SelectValue placeholder={
+                                          repeatFrequency === 'weekly' ? "Single Week" :
+                                            repeatFrequency === 'monthly' ? "Single Month" :
+                                              "Select interval"
+                                        } />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="1">Single Day</SelectItem>
+                                        {Array.from({ length: 5 }, (_, i) => i + 2).map(day => (
+                                          <SelectItem key={day} value={String(day)}>{day} Days</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </>
+                                )}
                               </div>
                             </div>
-                          )}
-                          
-                          {/* Timezone Checkbox */}
-                          <div className="flex items-center space-x-2 pt-2">
-                            <Checkbox id="timezone-delivery-Recurring" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
-                            <label htmlFor="timezone-delivery-Recurring" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="h-4 w-4" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="break-normal w-[16rem] whitespace-normal">You can send campaign messages to the user as per their local time zone. i.e. If you schedule your campaign for 9:30 am Singapore time, we will deliver to users in Singapore at 9:30 am (UTC/GMT +8 hours) and to users in Dubai at 9:30 am (UTC/GMT +4 hours). Note that the Campaign Start Time is always the timezone of your Digital Connect Account.</p>
-                              </TooltipContent>
-                            </Tooltip>
+
+                            {/* Conditional Multi-select */}
+                            {repeatFrequency === 'weekly' && (
+                              <div className="space-y-2">
+                                <div className="flex gap-1">
+                                  {weekDays.map(day => (
+                                    <Button
+                                      key={day.value}
+                                      variant={weeklyRepeatDays.includes(day.value) ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => toggleWeeklyDay(day.value)}
+                                      className="flex-1"
+                                    >
+                                      {day.display}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {repeatFrequency === 'monthly' && (
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-7 gap-1">
+                                  {Array.from({ length: 31 }, (_, i) => i + 1).map(date => (
+                                    <Button
+                                      key={date}
+                                      variant={monthlyRepeatDates.includes(date) ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => toggleMonthlyDate(date)}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {date}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Timezone Checkbox */}
+                            <div className="flex items-center space-x-2 pt-2">
+                              <Checkbox id="timezone-delivery-Recurring" checked={deliverInTimezone} onCheckedChange={(checked) => setDeliverInTimezone(checked as boolean)} />
+                              <label htmlFor="timezone-delivery-Recurring" className="text-sm font-medium leading-none">Deliver in user's timezone</label>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="h-4 w-4" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="break-normal w-[16rem] whitespace-normal">You can send campaign messages to the user as per their local time zone. i.e. If you schedule your campaign for 9:30 am Singapore time, we will deliver to users in Singapore at 9:30 am (UTC/GMT +8 hours) and to users in Dubai at 9:30 am (UTC/GMT +4 hours). Note that the Campaign Start Time is always the timezone of your Digital Connect Account.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
                           </div>
-                        </div>
-                      )})()}
+                        )
+                      })()}
                     </div>
 
                     {/* WhatsApp Template Dropdown */}
@@ -1911,13 +1911,13 @@ export default function CampaignManager() {
                           setCsvData([]);
                         };
                         reader.readAsText(file);
-                        
-                        if(e.target) {
+
+                        if (e.target) {
                           e.target.value = ''
                         }
                       }} />
                       {!csvFile ? (
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => document.getElementById('csv-upload')?.click()}>
+                        <Button className="btn-outline-primary font-normal" variant="outline" onClick={() => document.getElementById('csv-upload')?.click()}>
                           Browse
                         </Button>
                       ) : (
@@ -1989,7 +1989,7 @@ export default function CampaignManager() {
                   {!editingCampaignId && (
                     <Button
                       variant="outline"
-                      className="border-input [border-color:hsl(var(--input))] font-normal"
+                      className="btn-outline-primary font-normal"
                       disabled={!campaignName}
                       onClick={() => handleCreateBroadcastCampaign("draft")}
                     >
@@ -1997,7 +1997,8 @@ export default function CampaignManager() {
                     </Button>
                   )}
                   <Button
-                    className="gap-2 font-normal bg-blue-600 hover:bg-blue-700 text-white"
+                    className="gap-2 font-normal btn-outline-primary"
+                    variant="outline"
                     disabled={
                       !campaignName ||
                       !broadcastCampaignType ||
@@ -2046,7 +2047,7 @@ export default function CampaignManager() {
                       </div>
                     </th>
                     <th className="w-10">
-                      <Button variant="ghost" size="sm" onClick={() => setLocalCsvData([...localCsvData, { name: "", number: "" }])}><Plus/></Button>
+                      <Button variant="ghost" size="sm" onClick={() => setLocalCsvData([...localCsvData, { name: "", number: "" }])}><Plus /></Button>
                     </th>
                   </tr>
                 </thead>
@@ -2057,7 +2058,7 @@ export default function CampaignManager() {
                         <Input
                           value={row.name}
                           onChange={(e) => {
-                            const newData = localCsvData.map(originalRow => 
+                            const newData = localCsvData.map(originalRow =>
                               originalRow === row ? { ...originalRow, name: e.target.value } : originalRow
                             );
                             setLocalCsvData(newData);
@@ -2069,7 +2070,7 @@ export default function CampaignManager() {
                         <Input
                           value={row.number}
                           onChange={(e) => {
-                            const newData = localCsvData.map(originalRow => 
+                            const newData = localCsvData.map(originalRow =>
                               originalRow === row ? { ...originalRow, number: e.target.value } : originalRow
                             );
                             setLocalCsvData(newData);
@@ -2080,7 +2081,7 @@ export default function CampaignManager() {
                       <td>
                         <Button variant="ghost" size="sm" onClick={() => {
                           setLocalCsvData(localCsvData.filter(originalRow => originalRow !== row));
-                        }}><X/></Button>
+                        }}><X /></Button>
                       </td>
                     </tr>
                   ))}
@@ -2096,6 +2097,8 @@ export default function CampaignManager() {
                 Cancel
               </Button>
               <Button
+                className="btn-outline-primary"
+                variant="outline"
                 onClick={() => {
                   const filteredData = localCsvData.filter(row => row.name?.trim() || row.number?.trim());
                   setCsvData(filteredData);
@@ -2114,50 +2117,46 @@ export default function CampaignManager() {
       <Dialog open={detailsOpen} onOpenChange={(isOpen) => {
         setDetailsOpen(isOpen);
         if (!isOpen) {
-            setSelectedCampaignForPerformance(null);
+          setSelectedCampaignForPerformance(null);
         }
       }}>
-        <DialogContent className={`max-w-5xl ${
-          activeDetailsTab === "details" ? "max-w-2xl" :
+        <DialogContent className={`max-w-5xl ${activeDetailsTab === "details" ? "max-w-2xl" :
           activeDetailsTab === "performance" ? "max-w-4xl" :
-          activeDetailsTab === "recipients" ? "max-w-3xl" : ""
-        }`} data-testid="dialog-details">
+            activeDetailsTab === "recipients" ? "max-w-3xl" : ""
+          }`} data-testid="dialog-details">
           <DialogHeader className="mb-2">
             <DialogTitle>Campaign Performance - {selectedCampaignForPerformance?.name}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Tabs */}
-            <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+            <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
               <button
                 onClick={() => setActiveDetailsTab("details")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeDetailsTab === "details"
-                    ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeDetailsTab === "details"
+                  ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                  : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
                 data-testid="tab-details"
               >
                 Details
               </button>
               <button
                 onClick={() => setActiveDetailsTab("performance")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeDetailsTab === "performance"
-                    ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeDetailsTab === "performance"
+                  ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                  : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
                 data-testid="tab-performance"
               >
                 Performance
               </button>
               <button
                 onClick={() => setActiveDetailsTab("recipients")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeDetailsTab === "recipients"
-                    ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeDetailsTab === "recipients"
+                  ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+                  : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
                 data-testid="tab-recipients"
               >
                 Recipients
@@ -2463,12 +2462,11 @@ export default function CampaignManager() {
                                   <td className="py-2 px-3 font-medium">{recipient.name}</td>
                                   <td className="py-2 px-3">{recipient.phone}</td>
                                   <td className="py-2 px-3">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                      recipient.status === "Viewed" ? "bg-green-100 text-green-700" :
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${recipient.status === "Viewed" ? "bg-green-100 text-green-700" :
                                       recipient.status === "Delivered" ? "bg-blue-100 text-blue-700" :
-                                      recipient.status === "Sent" ? "bg-yellow-100 text-yellow-700" :
-                                      "bg-red-100 text-red-700"
-                                    }`}>
+                                        recipient.status === "Sent" ? "bg-yellow-100 text-yellow-700" :
+                                          "bg-red-100 text-red-700"
+                                      }`}>
                                       {recipient.status}
                                     </span>
                                   </td>
@@ -2499,16 +2497,16 @@ export default function CampaignManager() {
                           </Select>
                           <span className="text-muted-foreground">Page {recipientPage} of {totalRecipientPages || 1}</span>
                           <div className="flex gap-1">
-                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === 1} onClick={() => setRecipientPage(1)}>
+                            <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled={recipientPage === 1} onClick={() => setRecipientPage(1)}>
                               <ChevronsLeft size={16} />
                             </button>
-                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === 1} onClick={() => setRecipientPage(p => p - 1)}>
+                            <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled={recipientPage === 1} onClick={() => setRecipientPage(p => p - 1)}>
                               <ChevronLeft size={16} />
                             </button>
-                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === totalRecipientPages} onClick={() => setRecipientPage(p => p + 1)}>
+                            <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled={recipientPage === totalRecipientPages} onClick={() => setRecipientPage(p => p + 1)}>
                               <ChevronRight size={16} />
                             </button>
-                            <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled={recipientPage === totalRecipientPages} onClick={() => setRecipientPage(totalRecipientPages)}>
+                            <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled={recipientPage === totalRecipientPages} onClick={() => setRecipientPage(totalRecipientPages)}>
                               <ChevronsRight size={16} />
                             </button>
                           </div>
@@ -2549,6 +2547,8 @@ export default function CampaignManager() {
                 Cancel
               </Button>
               <Button
+                className="btn-outline-primary"
+                variant="outline"
                 onClick={handleCloneCampaign}
                 disabled={!cloneCampaignName.trim()}
               >
@@ -2600,7 +2600,7 @@ export default function CampaignManager() {
 
           <div className="space-y-4">
             <p className="text-sm text-foreground">
-                                Are you sure you want to delete <span className="font-semibold break-all">{campaignToDelete?.name}</span>? This action cannot be undone.            </p>
+              Are you sure you want to delete <span className="font-semibold break-all">{campaignToDelete?.name}</span>? This action cannot be undone.            </p>
           </div>
 
           {/* Modal Footer */}

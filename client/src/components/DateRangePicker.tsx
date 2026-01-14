@@ -16,7 +16,7 @@ export default function DateRangePicker() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-2 hover-elevate" data-testid="button-date-range">
+        <Button variant="outline" className="gap-2 hover-elevate dark:bg-background" data-testid="button-date-range">
           <Calendar size={16} />
           <span>{format(date, "MMM dd, yyyy")} - {format(date, "MMM dd, yyyy")}</span>
         </Button>

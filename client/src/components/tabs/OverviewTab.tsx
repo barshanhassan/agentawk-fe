@@ -125,21 +125,21 @@ export default function OverviewTab() {
           <CardContent className="space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Daily</span>
-              <span className="text-xs text-green-600 pl-1">+{kpiData.dailyNewUsersChange}%</span>
+              <span className="text-xs text-green-500 pl-1">+{kpiData.dailyNewUsersChange}%</span>
               <div className="flex items-center justify-end flex-1 ml-4">
                 <span className="text-sm font-semibold ml-auto">{abbreviateNumber(kpiData.dailyNewUsers)}</span>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Weekly</span>
-              <span className="text-xs text-green-600 pl-1">+{kpiData.weeklyNewUsersChange}%</span>
+              <span className="text-xs text-green-500 pl-1">+{kpiData.weeklyNewUsersChange}%</span>
               <div className="flex items-center justify-end flex-1 ml-4">
                 <span className="text-sm font-semibold ml-auto">{abbreviateNumber(kpiData.weeklyNewUsers)}</span>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Monthly</span>
-              <span className="text-xs text-green-600 pl-1">+{kpiData.monthlyNewUsersChange}%</span>
+              <span className="text-xs text-green-500 pl-1">+{kpiData.monthlyNewUsersChange}%</span>
               <div className="flex items-center justify-end flex-1 ml-4">
                 <span className="text-sm font-semibold ml-auto">{abbreviateNumber(kpiData.monthlyNewUsers)}</span>
               </div>

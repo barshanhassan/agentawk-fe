@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { getAvatarColor } from '@/lib/avatar-utils';
 
 interface ProfileSectionProps {
   profilePictureUrl: string;
@@ -39,7 +40,7 @@ const ProfileSection = ({
               {profilePictureUrl && profilePictureUrl !== "" ? (
                 <img src={profilePictureUrl} alt="Profile" className="rounded-full object-cover" />
               ) : (
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl">AD</AvatarFallback>
+                <AvatarFallback className={`${getAvatarColor("Admin User")} text-xl`}>AD</AvatarFallback>
               )}
             </Avatar>
             <div>
@@ -63,10 +64,10 @@ const ProfileSection = ({
             }}
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => document.getElementById('profile-picture-upload')?.click()}
-            className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+            className="btn-outline-primary h-7 text-xs"
           >
             Change Photo
           </Button>
@@ -105,11 +106,11 @@ const ProfileSection = ({
             <p className="text-sm font-medium text-foreground">Enable Desktop Notifications</p>
             <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 disabled={!notificationsEnabled || browserNotificationsDenied}
                 onClick={handleTestNotification}
-                className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                className="btn-outline-primary h-7 text-xs"
               >
                 Test
               </Button>
@@ -132,7 +133,8 @@ const ProfileSection = ({
               description: "Your profile settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

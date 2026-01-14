@@ -37,7 +37,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import CustomDropdown from "@/components/CustomDropdown";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getAvatarColor } from "@/lib/avatar-utils";
 
 export default function AppSidebar() {
   const [location] = useLocation();
@@ -46,19 +48,46 @@ export default function AppSidebar() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [status, setStatus] = useState<"available" | "unavailable">("available");
   const [searchQuery, setSearchQuery] = useState("");
+  const [language, setLanguage] = useState<string[]>(["en-us"]);
+
+  const statusOptions = [
+    { id: "available", name: "Available", icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
+    { id: "unavailable", name: "Unavailable", icon: <Circle size={12} className="text-gray-400" /> },
+  ];
+
+  const themeOptions = [
+    { id: "light", name: "Light", icon: <Sun size={14} /> },
+    { id: "dark", name: "Dark", icon: <Moon size={14} /> },
+  ];
+
+  const languageOptions = [
+    {
+      id: "en-us",
+      name: "English (U.S)",
+      icon: (
+        <img
+          src="https://flagcdn.com/w40/us.png"
+          alt="US Flag"
+          className="w-4 h-4 object-cover rounded-sm"
+        />
+      ),
+    },
+  ];
+
+  // ... (keeping existing functions)
 
   const isActive = (path: string) => {
     if (path === "/insights") return location === "/" || location === "/insights";
     return location.startsWith(path);
   };
 
- const hoverClass ="hover:bg-blue-500 hover:text-white data-[highlighted]:bg-blue-500 data-[highlighted]:text-white";
- const activeClass = "bg-blue-500 text-white";
+  const hoverClass = "hover:bg-blue-500 hover:text-white data-[highlighted]:bg-blue-500 data-[highlighted]:text-white";
+  const activeClass = "bg-blue-500 text-white";
 
- const subTriggerClass =
-  "hover:bg-blue-500 hover:text-white " +
-  "data-[highlighted]:bg-blue-500 data-[highlighted]:text-white " +
-  "data-[state=open]:bg-blue-500 data-[state=open]:text-white";
+  const subTriggerClass =
+    "hover:bg-blue-500 hover:text-white " +
+    "data-[highlighted]:bg-blue-500 data-[highlighted]:text-white " +
+    "data-[state=open]:bg-blue-500 data-[state=open]:text-white";
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -97,7 +126,7 @@ export default function AppSidebar() {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-slate-900 text-white shadow-lg border-b border-slate-800">
+    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-[0_-3px_6px_rgba(0,0,0,0.03),-3px_0_6px_rgba(0,0,0,0.03),3px_0_6px_rgba(0,0,0,0.03),0_4px_6px_rgba(0,0,0,0.07)] border-b border-slate-200 dark:border-slate-800">
       <div className="flex items-center justify-between h-full px-5">
         {/* Left: Logo + EZCONN + Menu + Search */}
         <div className="flex items-center gap-6">
@@ -107,20 +136,20 @@ export default function AppSidebar() {
               <div className="w-9 h-9 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
                 EC
               </div>
-            <span className="font-bold text-xl tracking-wide uppercase hidden md:block" style={{ fontFamily: 'Poppins, sans-serif' }}>
-  EZCONN
-</span>
+              <span className="font-bold text-xl tracking-wide uppercase hidden md:block" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                EZCONN
+              </span>
             </div>
           </Link>
 
           {/* Menu with "Menu" text */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-           {/* Custom 3x3 Grid Menu Icon */}
-<button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800 rounded-md transition text-sm">
-  <BsGrid3X3GapFill size={14} className="text-white" />
-  <span className="hidden md:block text-[14px] font-[500] font-[Roboto, sans-serif]">Menu</span>
-</button>
+              {/* Custom 3x3 Grid Menu Icon */}
+              <button className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md shadow-sm transition text-sm">
+                <BsGrid3X3GapFill size={14} className="text-slate-700 dark:text-white" />
+                <span className="hidden md:block text-[14px] font-[500] font-[Roboto, sans-serif]">Menu</span>
+              </button>
 
 
             </DropdownMenuTrigger>
@@ -128,7 +157,7 @@ export default function AppSidebar() {
               side="bottom"
               align="start"
               sideOffset={6}
-              className="w-60  bg-slate-800 border-slate-700 text-white text-[14px] font-[Roboto, sans-serif] mt-2 rounded-md shadow-lg"
+              className="w-60 bg-white dark:bg-background border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-[14px] font-[Roboto, sans-serif] mt-2 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]"
             >
               <DropdownMenuItem asChild>
                 <Link
@@ -145,22 +174,22 @@ export default function AppSidebar() {
                 >
                   <MessageSquare size={18} /> Conversations
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-slate-800 border-slate-700">
+                <DropdownMenuSubContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                   <DropdownMenuItem asChild>
                     <Link
                       href="/conversations/inbox"
-                      className={`px-2 py-1 text-white ${hoverClass} ${isActive("/conversations/inbox") ? activeClass : ""}`}
+                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/inbox") ? activeClass : ""}`}
                     >
-                      <Mail size={18} /> 
+                      <Mail size={18} />
                       Inbox
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
                       href="/conversations/logs"
-                      className={`px-2 py-1 text-white ${hoverClass} ${isActive("/conversations/logs") ? activeClass : ""}`}
+                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/logs") ? activeClass : ""}`}
                     >
-                      <FileText size={18} /> 
+                      <FileText size={18} />
                       Logs
                     </Link>
                   </DropdownMenuItem>
@@ -190,6 +219,7 @@ export default function AppSidebar() {
                   href="/campaigns"
                   className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/campaigns") ? activeClass : ""}`}
                 >
+                  {/* ... */}
                   <Send size={18} /> Campaign Manager
                 </Link>
               </DropdownMenuItem>
@@ -230,7 +260,7 @@ export default function AppSidebar() {
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="bg-slate-700" />
+              <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
 
               <DropdownMenuItem asChild>
                 <Link
@@ -261,99 +291,99 @@ export default function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-         {/* Search Bar Dropdown */}
-         
-<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    
-  {/* Search Bar */}
-<div className="relative flex items-center">
-  {/* Search Icon */}
-  <button
-    onClick={() => setIsSearchOpen(true)}
-    className={`p-2 hover:bg-slate-800 rounded-md transition
-      ${isSearchOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-  >
-    <Search size={16} />
-  </button>
+          {/* Search Bar Dropdown */}
 
-  {/* Expanding Search Bar (to the RIGHT) */}
-  <div
-    className={`
-      ml-2 flex items-center
-      bg-[#1f2a3a] border border-[#2c3a4f]
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+
+              {/* Search Bar */}
+              <div className="relative flex items-center">
+                {/* Search Icon */}
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition
+      ${isSearchOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+                >
+                  <Search size={16} />
+                </button>
+
+                {/* Expanding Search Bar (to the RIGHT) */}
+                <div
+                  className={`
+      absolute left-0 z-20 flex items-center
+      bg-slate-100 dark:bg-[#1f2a3a] border border-slate-200 dark:border-[#2c3a4f]
       rounded-md px-3 py-2 text-sm
       overflow-hidden
-      transition-all duration-300 ease-out
-     ${isSearchOpen ? "w-[420px] opacity-100" : "w-0 opacity-0"}
+      transition-[width,opacity] duration-300 ease-out
+      ${isSearchOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 pointer-events-none"}
 
     `}
-  >
-    {/* Search Icon */}
-    <Search size={14} className="text-gray-400 mr-2 shrink-0" />
+                >
+                  {/* Search Icon */}
+                  <Search size={14} className="text-gray-400 mr-2 shrink-0" />
 
-    {/* Dropdown Label */}
-    <span className="flex items-center gap-1 text-white font-medium mr-3 whitespace-nowrap">
-      WhatsApp number
-      <ChevronDown size={14} className="text-gray-400" />
-    </span>
+                  {/* Dropdown Label */}
+                  <span className="flex items-center gap-1 text-slate-700 dark:text-white font-medium mr-3 whitespace-nowrap">
+                    WhatsApp number
+                    <ChevronDown size={14} className="text-gray-400" />
+                  </span>
 
-    {/* Divider */}
-    <span className="h-4 w-px bg-gray-500/40 mr-3 shrink-0"></span>
+                  {/* Divider */}
+                  <span className="h-4 w-px bg-gray-500/40 mr-3 shrink-0"></span>
 
-    {/* REAL INPUT */}
-    <input
-      type="text"
-      value={searchValue}
-      onChange={(e) => setSearchValue(e.target.value)}
-      placeholder="Search..."
-      autoFocus
-      className="
-        flex-1 bg-transparent text-white placeholder-gray-400
+                  {/* REAL INPUT */}
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Search..."
+                    autoFocus
+                    className="
+        flex-1 bg-transparent text-slate-900 dark:text-white placeholder-gray-400
         outline-none border-none text-sm
       "
-    />
+                  />
 
-    {/* Close */}
-    <button
-      onClick={() => {
-        setIsSearchOpen(false);
-        setSearchValue("");
-      }}
-      className="ml-2 text-gray-400 hover:text-white shrink-0"
-    >
-      ✕
-    </button>
-  </div>
-</div>
+                  {/* Close */}
+                  <button
+                    onClick={() => {
+                      setIsSearchOpen(false);
+                      setSearchValue("");
+                    }}
+                    className="ml-2 text-gray-400 hover:text-slate-900 dark:hover:text-white shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
 
-          </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
           </DropdownMenu>
-     </div>
+        </div>
         {/* Right Section */}
         <div className="flex items-center gap-6">
-          
-             
+
+
 
           {/* Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="relative hover:text-teal-400 transition">
                 <Bell size={20} />
-                
+
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end"
-            sideOffset={6}
-            className="w-80  bg-slate-800 border-slate-700 text-white mt-5">
-              <div className="p-4 border-b border-slate-700">
+              sideOffset={6}
+              className="w-80 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white mt-5">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 className="font-semibold">Notifications</h3>
               </div>
               <div className="max-h-96 overflow-y-auto">
                 <DropdownMenuItem
                   onSelect={() => window.location.href = "/conversations/inbox"}
-                  className="p-4 hover:bg-slate-700 cursor-pointer"
+                  className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">New message from John Doe</p>
@@ -362,7 +392,7 @@ export default function AppSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => window.location.href = "/campaigns"}
-                  className="p-4 hover:bg-slate-700 cursor-pointer"
+                  className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">Campaign "Summer Sale" completed</p>
@@ -371,7 +401,7 @@ export default function AppSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => window.location.href = "/templates"}
-                  className="p-4 hover:bg-slate-700 cursor-pointer"
+                  className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">Template approved</p>
@@ -379,7 +409,7 @@ export default function AppSidebar() {
                   </div>
                 </DropdownMenuItem>
               </div>
-              <DropdownMenuSeparator className="bg-slate-700" />
+              <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
               <DropdownMenuItem
                 onSelect={() => window.location.href = "/notifications"}
                 className="justify-center text-teal-400 py-2 cursor-pointer"
@@ -394,20 +424,22 @@ export default function AppSidebar() {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 hover:opacity-80 transition">
                 {/* Avatar */}
-                <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white font-[400] text-[10px] shadow-md">
-                AD
-                </div>
+                <Avatar className="w-7 h-7">
+                  <AvatarFallback className={`${getAvatarColor("Admin User")} text-[10px] font-[600]`}>
+                    AD
+                  </AvatarFallback>
+                </Avatar>
 
                 {/* Name + Status Below */}
                 <div className="text-left">
                   <p className="font-[400] text-[12px]">Admin User</p>
                   <div className="flex items-center gap-1.5 -mt-0.5">
                     {status === "available" ? (
-                      <div className="w-2.5 h-2.5 bg-green-400 rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
                     ) : (
                       <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
                     )}
-                    <span className={`text-[12px] ${status === "available" ? "text-green-400" : "text-gray-400"}`}>
+                    <span className={`text-[12px] ${status === "available" ? "text-green-500" : "text-gray-400"}`}>
                       {status === "available" ? "Available" : "Unavailable"}
                     </span>
                   </div>
@@ -423,16 +455,18 @@ export default function AppSidebar() {
               {/* Header */}
               <DropdownMenuItem asChild>
                 <div
-                  className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-blue-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 transition"
-                  onClick={() => window.location.href = "/profile"}
+                  className="flex items-center gap-3 p-5 border-b border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 transition"
+                  onClick={() => window.location.href = "/settings?tab=My%20Profile"}
                 >
-                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-bold text-[80%] uppercase leading-none">
-                AD
-                </div>
-                <div>
+                  <Avatar className="w-8 h-8 my-1">
+                    <AvatarFallback className={`${getAvatarColor("Admin User")} text-xs font-bold`}>
+                      AD
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
                     <p className="font-semibold text-sm text-gray-900 dark:text-white">Profile</p>
                     <div className="flex items-center gap-2 text-sm">
-                     
+
                     </div>
                   </div>
                 </div>
@@ -440,82 +474,48 @@ export default function AppSidebar() {
 
               {/* Online Status Selector */}
               <div className="p-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Your Online Status</p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-between bg-gray-100 dark:bg-slate-800 rounded-lg px-3 py-2 text-left">
-                      <div className="flex items-center gap-2">
-                        {status === "available" ? (
-                          <div className="w-3 h-3 bg-green-500 rounded-full" />
-                        ) : (
-                          <Circle size={12} className="text-gray-400" />
-                        )}
-                        <span className="text-sm font-medium capitalize">{status}</span>
-                      </div>
-                      <ChevronDown size={16} className="text-gray-500" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full">
-                    <DropdownMenuRadioGroup value={status} onValueChange={(value) => setStatus(value as "available" | "unavailable")}>
-                      <DropdownMenuRadioItem value="available" className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full" />
-                        Available
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="unavailable" className="flex items-center gap-2">
-                        <Circle size={12} className="text-gray-400" />
-                        Unavailable
-                      </DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Online Status</p>
+                <CustomDropdown
+                  options={statusOptions}
+                  selected={[status]}
+                  onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
+                  placeholder="Select Status"
+                  width="100%"
+                  showSelectedOption={true}
+                  showSearch={false}
+                />
               </div>
 
               {/* Theme Selector */}
               <div className="px-4 pb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Theme</p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-between bg-gray-100 dark:bg-slate-800 rounded-lg px-3 py-2 text-left">
-                      <div className="flex items-center gap-2">
-                        {theme === "light" ? <Sun size={18} /> : <Moon size={18} />}
-                        <span className="text-sm font-medium capitalize">{theme}</span>
-                      </div>
-                      <ChevronDown size={16} className="text-gray-500" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full">
-                    <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as "light" | "dark")}>
-                      <DropdownMenuRadioItem value="light" className="flex items-center gap-2">
-                        <Sun size={18} /> Light
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="dark" className="flex items-center gap-2">
-                        <Moon size={18} /> Dark
-                      </DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Theme</p>
+                <CustomDropdown
+                  options={themeOptions}
+                  selected={[theme]}
+                  onChange={(val) => setTheme(val[0] as "light" | "dark")}
+                  placeholder="Select Theme"
+                  width="100%"
+                  showSelectedOption={true}
+                  showSearch={false}
+                />
               </div>
 
               {/* Language */}
               <div className="px-4 pb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Language</p>
-                <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-800 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-3">
-                    {/* US Flag Image */}
-                    <img
-                      src="https://flagcdn.com/w40/us.png"
-                      alt="US Flag"
-                      className="w-4 h-4 object-cover rounded-sm"
-                    />
-                    {/* Text: English (U.S) */}
-                    <span className="text-sm font-medium">English (U.S)</span>
-                  </div>
-                  <ChevronDown size={16} className="text-gray-500" />
-                </div>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</p>
+                <CustomDropdown
+                  options={languageOptions}
+                  selected={language}
+                  onChange={(val) => setLanguage(val)}
+                  placeholder="Select Language"
+                  width="100%"
+                  showSelectedOption={true}
+                  showSearch={false}
+                />
               </div>
 
               {/* Sign Out */}
-              <div className="border-t border-gray-200 dark:border-slate-700 px-4 py-3">
+              <div className="border-t border-gray-200 dark:border-slate-700 px-4 py-1">
                 <button
                   onClick={() => {
                     document.cookie = "demoLogin=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";

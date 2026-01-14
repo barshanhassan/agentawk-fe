@@ -31,7 +31,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
-      
+
       <Route path="/insights">
         <ProtectedRoute><InsightsDashboard /></ProtectedRoute>
       </Route>
@@ -73,7 +73,7 @@ function Router() {
       <Route path="/settings">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>
       </Route>
-      
+
       <Route path="/">
         <ProtectedRoute><InsightsDashboard /></ProtectedRoute>
       </Route>
@@ -110,7 +110,7 @@ function App() {
           {isLoggedIn && <AppSidebar />}
 
           {/* Main content area - now full width, with top padding */}
-          <main className="flex-1 overflow-auto bg-accent/30 pt-16">
+          <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn ? "mt-16" : ""}`}>
             <Router />
           </main>
 

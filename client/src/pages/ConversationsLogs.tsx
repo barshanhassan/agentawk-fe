@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "@/components/CustomDropdown";
-import { format } from "date-fns";   
+import { format } from "date-fns";
 import React from "react";
 
 interface SortEntry {
@@ -1583,9 +1583,9 @@ export default function ConversationsLogs() {
 
   return (
     <div className="p-6 space-y-6">
-      <audio ref={audioRef} className="hidden" />
       {/* Header */}
       <div className="flex items-center justify-between">
+        <audio ref={audioRef} className="hidden" />
         <h1 className="text-3xl font-bold">Logs</h1>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -1606,24 +1606,22 @@ export default function ConversationsLogs() {
 
       {/* Tabs */}
       <div className="space-y-6">
-        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1 w-fit">
+        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab("conversations")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === "conversations"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "conversations"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Conversation Logs
           </button>
           <button
             onClick={() => setActiveTab("calls")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === "calls"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "calls"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Call Logs
           </button>
@@ -1631,653 +1629,250 @@ export default function ConversationsLogs() {
 
         {/* Conversation Logs Tab */}
         {activeTab === "conversations" && (
-        <div className="space-y-6">
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Total Conversations</p>
-                  <p className="text-2xl font-bold">{kpiData.totalConversations}</p>
-                  <p className="text-xs text-muted-foreground">Conversations</p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="space-y-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Total Conversations</p>
+                    <p className="text-2xl font-bold">{kpiData.totalConversations}</p>
+                    <p className="text-xs text-muted-foreground">Conversations</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Queued</p>
-                  <p className="text-2xl font-bold">{kpiData.queued}</p>
-                  <p className="text-xs text-muted-foreground">Waiting</p>
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Queued</p>
+                    <p className="text-2xl font-bold">{kpiData.queued}</p>
+                    <p className="text-xs text-muted-foreground">Waiting</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Active</p>
-                  <p className="text-2xl font-bold">{kpiData.active}</p>
-                  <p className="text-xs text-muted-foreground">In progress</p>
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Active</p>
+                    <p className="text-2xl font-bold">{kpiData.active}</p>
+                    <p className="text-xs text-muted-foreground">In progress</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{kpiData.completed}</p>
-                  <p className="text-xs text-muted-foreground">Resolved</p>
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Completed</p>
+                    <p className="text-2xl font-bold">{kpiData.completed}</p>
+                    <p className="text-xs text-muted-foreground">Resolved</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Resolution Rate</p>
-                  <p className="text-2xl font-bold">{kpiData.resolutionRate}</p>
-                  <p className="text-xs text-muted-foreground">Success rate</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Resolution Rate</p>
+                    <p className="text-2xl font-bold">{kpiData.resolutionRate}</p>
+                    <p className="text-xs text-muted-foreground">Success rate</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Filters */}
-          <div className="flex items-center justify-between gap-3">
-            {/* Left side: Search, Date Range, and Status */}
-            <div className="flex items-center gap-3 flex-1">
-              <div className="relative w-80" style={{ height: "38px" }}>
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search conversations..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color h-full"
+            {/* Filters */}
+            <div className="flex items-center justify-between gap-3">
+              {/* Left side: Search, Date Range, and Status */}
+              <div className="flex items-center gap-3 flex-1">
+                <div className="relative w-80" style={{ height: "38px" }}>
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Search conversations..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color h-full"
+                  />
+                </div>
+
+                {/* Date Range Preset */}
+                <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
+                  <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
+                    <SelectItem value="last-7-days">Last 7 Days</SelectItem>
+                    <SelectItem value="last-14-days">Last 14 Days</SelectItem>
+                    <SelectItem value="last-30-days">Last 30 Days</SelectItem>
+                    <SelectItem value="this-month">This Month</SelectItem>
+                    <SelectItem value="this-quarter">This Quarter</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Custom Date Range */}
+                {dateRangePreset === "custom" && (
+                  <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))]">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {customDateRange
+                            ? customDateRange.to
+                              ? `${(customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")} - ${(customDateRange.to ? format(customDateRange.to, 'dd/MMM/yyyy') : "")}`
+                              : (customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")
+                            : "Select Date"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <CalendarComponent
+                        initialFocus
+                        mode="range"
+                        defaultMonth={customDateRange?.from}
+                        selected={customDateRange}
+                        onSelect={setCustomDateRange}
+                        numberOfMonths={1}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {/* Status Filter */}
+                <CustomDropdown
+                  options={statusOptions}
+                  selected={selectedStatus}
+                  onChange={setSelectedStatus}
+                  placeholder="Status"
+                  width="160px"
                 />
               </div>
-
-              {/* Date Range Preset */}
-              <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
-                <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
-                  <SelectItem value="last-7-days">Last 7 Days</SelectItem>
-                  <SelectItem value="last-14-days">Last 14 Days</SelectItem>
-                  <SelectItem value="last-30-days">Last 30 Days</SelectItem>
-                  <SelectItem value="this-month">This Month</SelectItem>
-                  <SelectItem value="this-quarter">This Quarter</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Custom Date Range */}
-              {dateRangePreset === "custom" && (
-                <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))]">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {customDateRange
-                          ? customDateRange.to
-                            ? `${(customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")} - ${(customDateRange.to ? format(customDateRange.to, 'dd/MMM/yyyy') : "")}`
-                            : (customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")
-                          : "Select Date"}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <CalendarComponent
-                      initialFocus
-                      mode="range"
-                      defaultMonth={customDateRange?.from}
-                      selected={customDateRange}
-                      onSelect={setCustomDateRange}
-                      numberOfMonths={1}
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-
-              {/* Status Filter */}
-              <CustomDropdown
-                options={statusOptions}
-                selected={selectedStatus}
-                onChange={setSelectedStatus}
-                placeholder="Status"
-                width="160px"
-              />
             </div>
-          </div>
 
-          {/* Table */}
-          <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-            <CardContent className="pt-2">
-              {/* Bulk Actions Toolbar */}
-              {selectedRows.size > 0 && (
-                <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-                  <span className="text-sm text-foreground">{selectedRows.size} selected</span>
-                  <div className="flex gap-2 ml-auto">
-                    <button onClick={handleExportSelectedAsCSV} className="p-1 hover:bg-blue-100 rounded" title="Export as CSV">
-                      <Download size={14} className="text-blue-600" />
-                    </button>
+            {/* Table */}
+            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+              <CardContent className="pt-2">
+                {/* Bulk Actions Toolbar */}
+                {selectedRows.size > 0 && (
+                  <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                    <span className="text-sm text-foreground">{selectedRows.size} selected</span>
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        onClick={handleExportSelectedAsCSV}
+                        className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded transition-colors"
+                        title="Export as CSV"
+                      >
+                        <Download size={14} className="text-blue-600 dark:text-blue-400" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
-                <table className="w-full text-xs">
-                  <thead className="select-none">
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                        <Checkbox
-                          checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
-                          onCheckedChange={toggleAllRows}
-                        />
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleColumnSort("customer")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Customer
-                          {renderSortIcon("customer")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleColumnSort("agent")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Agent
-                          {renderSortIcon("agent")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleColumnSort("startTime")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Start Time
-                          {renderSortIcon("startTime")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleColumnSort("duration")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Duration
-                          {renderSortIcon("duration")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleColumnSort("status")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Status
-                          {renderSortIcon("status")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleColumnSort("messages")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Messages
-                          {renderSortIcon("messages")}
-                        </div>
-                      </th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedData.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} className="text-center py-8 text-muted-foreground">
-                          No results
-                        </td>
+                <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
+                  <table className="w-full text-xs">
+                    <thead className="select-none">
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                          <Checkbox
+                            checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
+                            onCheckedChange={toggleAllRows}
+                          />
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleColumnSort("customer")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Customer
+                            {renderSortIcon("customer")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleColumnSort("agent")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Agent
+                            {renderSortIcon("agent")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleColumnSort("startTime")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Start Time
+                            {renderSortIcon("startTime")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleColumnSort("duration")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Duration
+                            {renderSortIcon("duration")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleColumnSort("status")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Status
+                            {renderSortIcon("status")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleColumnSort("messages")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Messages
+                            {renderSortIcon("messages")}
+                          </div>
+                        </th>
+                        <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                       </tr>
-                    ) : (
-                      paginatedData.map((conv) => (
-                        <tr key={conv.id} className="border-b hover:bg-muted/50">
-                          <td className="py-2 px-3">
-                            <Checkbox
-                              checked={selectedRows.has(conv.id)}
-                              onCheckedChange={() => toggleRowSelection(conv.id)}
-                            />
-                          </td>
-                          <td className="py-2 px-3">{conv.customer}</td>
-                          <td className="py-2 px-3">{conv.agent}</td>
-                          <td className="py-2 px-3">{conv.startTime}</td>
-                          <td className="py-2 px-3">{conv.duration}</td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              conv.status === "Completed" ? "bg-green-100 text-green-700" :
-                              conv.status === "Active" ? "bg-blue-100 text-blue-700" :
-                              conv.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                              conv.status === "Queued" ? "bg-yellow-100 text-yellow-700" :
-                              conv.status === "Pending" ? "bg-yellow-100 text-yellow-700" :
-                              conv.status === "Forwarded" ? "bg-yellow-100 text-yellow-700" :
-                              conv.status === "Expired" ? "bg-red-100 text-red-700" :
-                              conv.status === "Spammed" ? "bg-red-100 text-red-700" :
-                              "bg-gray-100 text-gray-700"
-                            }`}>
-                              {conv.status}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3">{conv.messages}</td>
-                          <td className="py-2 px-3 flex justify-start">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1 hover:bg-muted rounded">
-                                  <MoreVertical size={14} className="text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewConversationDetails(conv)}>
-                                  <FileText size={14} className="mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleExportSingleAsCSV(conv)}>
-                                  <Download size={14} className="mr-2" />
-                                  Export Log
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <MessageSquare size={14} className="mr-2" />
-                                  Export Chat
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                    </thead>
+                    <tbody>
+                      {paginatedData.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="text-center py-8 text-muted-foreground">
+                            No results
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-4 text-xs">
-                <span className="text-muted-foreground">{getFilteredAndSortedData().length} results</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Rows per page:</span>
-                  <div className="relative w-15" ref={dropdownRef}>
-                    <button
-                      type="button"
-                      className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                      onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                    >
-                      <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                      <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                    </button>
-                    {rowsDropdownOpen && (
-                      <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                        <ul className="py-1">
-                          {[10, 25, 50].map(option => (
-                            <li
-                              key={option}
-                              className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                              onClick={() => {
-                                setRowsPerPage(option);
-                                setRowsDropdownOpen(false);
-                                setPage(1);
-                              }}
-                            >
-                              {option}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-muted-foreground">Page {page} of {totalPages || 1}</span>
-                  <div className="flex gap-1">
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === 1}
-                      onClick={() => setPage(1)}
-                    >
-                      <ChevronsLeft size={16} />
-                    </button>
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === totalPages}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === totalPages}
-                      onClick={() => setPage(totalPages)}
-                    >
-                      <ChevronsRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        )}
-
-        {/* Call Logs Tab */}
-        {activeTab === "calls" && (
-        <div className="space-y-6">
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Total Calls</p>
-                  <p className="text-2xl font-bold">{callKpiData.totalCalls}</p>
-                  <p className="text-xs text-muted-foreground">All calls</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{callKpiData.completed}</p>
-                  <p className="text-xs text-muted-foreground">Successful</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Inbound Calls</p>
-                  <p className="text-2xl font-bold">{callKpiData.inboundCalls}</p>
-                  <p className="text-xs text-muted-foreground">Received</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Outbound Calls</p>
-                  <p className="text-2xl font-bold">{callKpiData.outboundCalls}</p>
-                  <p className="text-xs text-muted-foreground">Initiated</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Avg. Duration</p>
-                  <p className="text-2xl font-bold">{callKpiData.avgDuration}</p>
-                  <p className="text-xs text-muted-foreground">Per call</p>
-                </div>
-              </CardContent>
-            </Card>
-                    </div>
-          
-                    {/* Filters */}
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Left side: Search, Date Range, Direction, Status */}
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="relative w-80" style={{ height: "38px" }}>
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                          <Input
-                            placeholder="Search calls..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color h-full"
-                          />
-                        </div>
-              {/* Date Range Preset */}
-              <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
-                <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
-                  <SelectItem value="last-7-days">Last 7 Days</SelectItem>
-                  <SelectItem value="last-14-days">Last 14 Days</SelectItem>
-                  <SelectItem value="last-30-days">Last 30 Days</SelectItem>
-                  <SelectItem value="this-month">This Month</SelectItem>
-                  <SelectItem value="this-quarter">This Quarter</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Custom Date Range */}
-              {dateRangePreset === "custom" && (
-                <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))]">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {customDateRange
-                          ? customDateRange.to
-                            ? `${(customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")} - ${(customDateRange.to ? format(customDateRange.to, 'dd/MMM/yyyy') : "")}`
-                            : (customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")
-                          : "Select Date"}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <CalendarComponent
-                      initialFocus
-                      mode="range"
-                      defaultMonth={customDateRange?.from}
-                      selected={customDateRange}
-                      onSelect={setCustomDateRange}
-                      numberOfMonths={1}
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-
-              {/* Direction Filter */}
-              <CustomDropdown
-                options={directionOptions}
-                selected={selectedDirection}
-                onChange={setSelectedDirection}
-                placeholder="Direction"
-                width="160px"
-              />
-
-              {/* Status Filter */}
-              <CustomDropdown
-                options={callStatusOptions}
-                selected={selectedStatus}
-                onChange={setSelectedStatus}
-                placeholder="Status"
-                width="160px"
-              />
-            </div>
-          </div>
-
-          {/* Table */}
-          <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-            <CardContent className="pt-2">
-              {/* Bulk Actions Toolbar */}
-              {selectedRows.size > 0 && (
-                <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-                  <span className="text-sm text-foreground">{selectedRows.size} selected</span>
-                  <div className="flex gap-2 ml-auto">
-                    <button onClick={handleExportSelectedCallLogsAsCSV} className="p-1 hover:bg-blue-100 rounded" title="Export as CSV">
-                      <Download size={14} className="text-blue-600" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
-                <table className="w-full text-xs">
-                  <thead className="select-none">
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                        <Checkbox
-                          checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedCallLogs().length}
-                          onCheckedChange={toggleAllRows}
-                        />
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("contact")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Contact
-                          {renderCallSortIcon("contact")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("agent")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Agent
-                          {renderCallSortIcon("agent")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("direction")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Direction
-                          {renderCallSortIcon("direction")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("startTime")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Start Time
-                          {renderCallSortIcon("startTime")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("duration")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Duration
-                          {renderCallSortIcon("duration")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("status")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Status
-                          {renderCallSortIcon("status")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("sentiment")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Sentiment
-                          {renderCallSortIcon("sentiment")}
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                        onClick={() => handleCallColumnSort("recording")}
-                      >
-                        <div className="flex items-center gap-2">
-                          Recording
-                          {renderCallSortIcon("recording")}
-                        </div>
-                      </th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedCallLogs.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="text-center py-8 text-muted-foreground">
-                          No results
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedCallLogs.map((call) => (
-                        <React.Fragment key={call.id}>
-                          <tr className={`${expandedCallId === call.id ? '' : 'border-b'} hover:bg-muted/50`}>
+                      ) : (
+                        paginatedData.map((conv) => (
+                          <tr key={conv.id} className="border-b hover:bg-muted/50">
                             <td className="py-2 px-3">
                               <Checkbox
-                                checked={selectedRows.has(call.id)}
-                                onCheckedChange={() => toggleRowSelection(call.id)}
+                                checked={selectedRows.has(conv.id)}
+                                onCheckedChange={() => toggleRowSelection(conv.id)}
                               />
                             </td>
-                            <td className="py-2 px-3">{call.contact}</td>
-                            <td className="py-2 px-3">{call.agent}</td>
+                            <td className="py-2 px-3">{conv.customer}</td>
+                            <td className="py-2 px-3">{conv.agent}</td>
+                            <td className="py-2 px-3">{conv.startTime}</td>
+                            <td className="py-2 px-3">{conv.duration}</td>
                             <td className="py-2 px-3">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                call.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
-                              }`}>
-                                {call.direction}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3">{call.startTime}</td>
-                            <td className="py-2 px-3">{call.duration}</td>
-                            <td className="py-2 px-3">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                call.status === "Completed" ? "bg-green-100 text-green-700" :
-                                call.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                                call.status === "Missed" ? "bg-red-100 text-red-700" :
-                                call.status === "Declined" ? "bg-red-100 text-red-700" :
-                                call.status === "Failed" ? "bg-red-100 text-red-700" :
-                                "bg-gray-100 text-gray-700"
-                              }`}>
-                                {call.status}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                call.sentiment === "Positive" ? "bg-green-100 text-green-700" :
-                                call.sentiment === "Negative" ? "bg-red-100 text-red-700" :
-                                "bg-yellow-100 text-yellow-700"
-                              }`}>
-                                {call.sentiment}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3">
-                              <div className="flex items-center gap-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                  call.recording ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${conv.status === "Completed" ? "bg-green-100 text-green-700" :
+                                conv.status === "Active" ? "bg-blue-100 text-blue-700" :
+                                  conv.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                                    conv.status === "Queued" ? "bg-yellow-100 text-yellow-700" :
+                                      conv.status === "Pending" ? "bg-yellow-100 text-yellow-700" :
+                                        conv.status === "Forwarded" ? "bg-yellow-100 text-yellow-700" :
+                                          conv.status === "Expired" ? "bg-red-100 text-red-700" :
+                                            conv.status === "Spammed" ? "bg-red-100 text-red-700" :
+                                              "bg-gray-100 text-gray-700"
                                 }`}>
-                                  {call.recording ? "Yes" : "No"}
-                                </span>
-                                {call.recording && (
-                                  <button
-                                    className="p-1 hover:bg-muted rounded"
-                                    onClick={() => expandedCallId === call.id ? resetPlayerState() : handlePlayPauseClick(call)}
-                                    title={expandedCallId === call.id ? "Close Player" : "Play"}
-                                  >
-                                    {expandedCallId === call.id ? (
-                                      <X size={14} className="text-muted-foreground" />
-                                    ) : (
-                                      <Play size={14} className="text-muted-foreground" />
-                                    )}
-                                  </button>                                
-                                )}
-                              </div>
+                                {conv.status}
+                              </span>
                             </td>
+                            <td className="py-2 px-3">{conv.messages}</td>
                             <td className="py-2 px-3 flex justify-start">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -2285,194 +1880,596 @@ export default function ConversationsLogs() {
                                     <MoreVertical size={14} className="text-muted-foreground" />
                                   </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleViewConversationDetails(conv)}>
                                     <FileText size={14} className="mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
+                                  <DropdownMenuItem onClick={() => handleExportSingleAsCSV(conv)}>
                                     <Download size={14} className="mr-2" />
                                     Export Log
                                   </DropdownMenuItem>
                                   <DropdownMenuItem>
-                                    <Mic size={14} className="mr-2" />
-                                    Export Recording
+                                    <MessageSquare size={14} className="mr-2" />
+                                    Export Chat
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </td>
                           </tr>
-                          {expandedCallId === call.id && (
-                            <tr className="border-b bg-muted/20">
-                              <td colSpan={10} className="pb-2 px-3">
-                                <div className="flex items-center justify-between w-full">
-                                  <div className="flex items-center gap-4">
-                                    <button
-                                      onClick={handlePrevious}
-                                      className="p-1 hover:bg-muted rounded-full disabled:opacity-50"
-                                      disabled={
-                                        (() => {
-                                          const currentCallLogs = getFilteredAndSortedCallLogs();
-                                          const currentIndex = currentCallLogs.findIndex(c => c.id === currentPlayingCallId);
-                                          if (currentIndex <= 0) return true;
-                                          for (let i = currentIndex - 1; i >= 0; i--) {
-                                            if (currentCallLogs[i].recording) return false;
-                                          }
-                                          return true;
-                                        })()
-                                      }
-                                    >
-                                      <SkipBack size={20} />
-                                    </button>
-                                    <button
-                                      onClick={() => handlePlayPauseClick(call)}
-                                      className="p-1 hover:bg-muted rounded-full"
-                                    >
-                                      {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                                    </button>
-                                    <button
-                                      onClick={handleNext}
-                                      className="p-1 hover:bg-muted rounded-full disabled:opacity-50"
-                                      disabled={
-                                        (() => {
-                                          const currentCallLogs = getFilteredAndSortedCallLogs();
-                                          const currentIndex = currentCallLogs.findIndex(c => c.id === currentPlayingCallId);
-                                          if (currentIndex === -1 || currentIndex >= currentCallLogs.length - 1) return true;
-                                          for (let i = currentIndex + 1; i < currentCallLogs.length; i++) {
-                                            if (currentCallLogs[i].recording) return false;
-                                          }
-                                          return true;
-                                        })()
-                                      }
-                                    >
-                                      <SkipForward size={20} />
-                                    </button>
-                                  </div>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-                                  <div className="flex items-center gap-4 flex-1 mx-8">
-                                    <span className="text-sm text-muted-foreground">{formatTime(currentTime)}</span>
-                                    <input
-                                      type="range"
-                                      min="0"
-                                      max={duration}
-                                      value={currentTime}
-                                      onChange={handleSeek}
-                                      className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary slider-thumb-blue-round"
-                                    />
-                                    <span className="text-sm text-muted-foreground">{formatTime(duration)}</span>
-                                  </div>
-
-                                  <div className="flex items-center gap-4">
-                                    <div className="relative w-[78px]" ref={speedDropdownRef}>
-                                      <button
-                                        type="button"
-                                        className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
-                                        onClick={() => setSpeedDropdownOpen(!speedDropdownOpen)}
-                                      >
-                                        <span className="truncate text-xs font-normal">{playbackSpeed}x</span>
-                                        <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                                      </button>
-                                      {speedDropdownOpen && (
-                                        <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                                          <ul className="py-1">
-                                            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(option => (
-                                              <li
-                                                key={option}
-                                                className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                                                onClick={() => {
-                                                  handleSpeedChange(option);
-                                                  setSpeedDropdownOpen(false);
-                                                }}
-                                              >
-                                                {option}x
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-4 text-xs">
-                <span className="text-muted-foreground">{callLogsTotal} results</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Rows per page:</span>
-                  <div className="relative w-15" ref={dropdownRef}>
-                    <button
-                      type="button"
-                      className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                      onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                    >
-                      <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                      <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                    </button>
-                    {rowsDropdownOpen && (
-                      <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
-                        <ul className="py-1">
-                          {[10, 25, 50].map(option => (
-                            <li
-                              key={option}
-                              className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                              onClick={() => {
-                                setRowsPerPage(option);
-                                setRowsDropdownOpen(false);
-                                setPage(1);
-                              }}
-                            >
-                              {option}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-muted-foreground">Page {page} of {Math.ceil(callLogsTotal / rowsPerPage) || 1}</span>
-                  <div className="flex gap-1">
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === 1}
-                      onClick={() => setPage(1)}
-                    >
-                      <ChevronsLeft size={16} />
-                    </button>
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === Math.ceil(callLogs.length / rowsPerPage)}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                    <button
-                      className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                      disabled={page === Math.ceil(callLogs.length / rowsPerPage)}
-                      onClick={() => setPage(Math.ceil(callLogs.length / rowsPerPage))}
-                    >
-                      <ChevronsRight size={16} />
-                    </button>
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-4 text-xs">
+                  <span className="text-muted-foreground">{getFilteredAndSortedData().length} results</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Rows per page:</span>
+                    <div className="relative w-15" ref={dropdownRef}>
+                      <button
+                        type="button"
+                        className="flex items-center justify-between px-3 py-2 text-left bg-background dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground transition-colors"
+                        onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                      >
+                        <span className="truncate text-xs font-normal">{rowsPerPage}</span>
+                        <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                      </button>
+                      {rowsDropdownOpen && (
+                        <div className="absolute z-10 w-full mt-2 bg-background dark:bg-background rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border border-border dark:border-slate-700 overflow-hidden">
+                          <ul className="py-1">
+                            {[10, 25, 50].map(option => (
+                              <li
+                                key={option}
+                                className="px-3 py-2 text-xs cursor-pointer hover:bg-muted dark:hover:bg-slate-700"
+                                onClick={() => {
+                                  setRowsPerPage(option);
+                                  setRowsDropdownOpen(false);
+                                  setPage(1);
+                                }}
+                              >
+                                {option}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground">Page {page} of {totalPages || 1}</span>
+                    <div className="flex gap-1">
+                      <button
+                        className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors"
+                        disabled={page === 1}
+                        onClick={() => setPage(1)}
+                      >
+                        <ChevronsLeft size={16} />
+                      </button>
+                      <button
+                        className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors"
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                      <button
+                        className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(totalPages)}
+                      >
+                        <ChevronsRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Call Logs Tab */}
+        {activeTab === "calls" && (
+          <div className="space-y-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Total Calls</p>
+                    <p className="text-2xl font-bold">{callKpiData.totalCalls}</p>
+                    <p className="text-xs text-muted-foreground">All calls</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Completed</p>
+                    <p className="text-2xl font-bold">{callKpiData.completed}</p>
+                    <p className="text-xs text-muted-foreground">Successful</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Inbound Calls</p>
+                    <p className="text-2xl font-bold">{callKpiData.inboundCalls}</p>
+                    <p className="text-xs text-muted-foreground">Received</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Outbound Calls</p>
+                    <p className="text-2xl font-bold">{callKpiData.outboundCalls}</p>
+                    <p className="text-xs text-muted-foreground">Initiated</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Avg. Duration</p>
+                    <p className="text-2xl font-bold">{callKpiData.avgDuration}</p>
+                    <p className="text-xs text-muted-foreground">Per call</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters */}
+            <div className="flex items-center justify-between gap-3">
+              {/* Left side: Search, Date Range, Direction, Status */}
+              <div className="flex items-center gap-3 flex-1">
+                <div className="relative w-80" style={{ height: "38px" }}>
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Search calls..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 text-sm w-full border border-input rounded-md bg-background focus:outline-none transition-color h-full"
+                  />
+                </div>
+                {/* Date Range Preset */}
+                <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
+                  <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
+                    <SelectItem value="last-7-days">Last 7 Days</SelectItem>
+                    <SelectItem value="last-14-days">Last 14 Days</SelectItem>
+                    <SelectItem value="last-30-days">Last 30 Days</SelectItem>
+                    <SelectItem value="this-month">This Month</SelectItem>
+                    <SelectItem value="this-quarter">This Quarter</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Custom Date Range */}
+                {dateRangePreset === "custom" && (
+                  <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))]">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {customDateRange
+                            ? customDateRange.to
+                              ? `${(customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")} - ${(customDateRange.to ? format(customDateRange.to, 'dd/MMM/yyyy') : "")}`
+                              : (customDateRange.from ? format(customDateRange.from, 'dd/MMM/yyyy') : "")
+                            : "Select Date"}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <CalendarComponent
+                        initialFocus
+                        mode="range"
+                        defaultMonth={customDateRange?.from}
+                        selected={customDateRange}
+                        onSelect={setCustomDateRange}
+                        numberOfMonths={1}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {/* Direction Filter */}
+                <CustomDropdown
+                  options={directionOptions}
+                  selected={selectedDirection}
+                  onChange={setSelectedDirection}
+                  placeholder="Direction"
+                  width="160px"
+                />
+
+                {/* Status Filter */}
+                <CustomDropdown
+                  options={callStatusOptions}
+                  selected={selectedStatus}
+                  onChange={setSelectedStatus}
+                  placeholder="Status"
+                  width="160px"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            {/* Table */}
+            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+              <CardContent className="pt-2">
+                {/* Bulk Actions Toolbar */}
+                {selectedRows.size > 0 && (
+                  <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                    <span className="text-sm text-foreground">{selectedRows.size} selected</span>
+                    <div className="flex gap-2 ml-auto">
+                      <button onClick={handleExportSelectedCallLogsAsCSV} className="p-1 hover:bg-blue-100 rounded" title="Export as CSV">
+                        <Download size={14} className="text-blue-600" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
+                  <table className="w-full text-xs">
+                    <thead className="select-none">
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                          <Checkbox
+                            checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedCallLogs().length}
+                            onCheckedChange={toggleAllRows}
+                          />
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("contact")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Contact
+                            {renderCallSortIcon("contact")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("agent")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Agent
+                            {renderCallSortIcon("agent")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("direction")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Direction
+                            {renderCallSortIcon("direction")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("startTime")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Start Time
+                            {renderCallSortIcon("startTime")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("duration")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Duration
+                            {renderCallSortIcon("duration")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("status")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Status
+                            {renderCallSortIcon("status")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("sentiment")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Sentiment
+                            {renderCallSortIcon("sentiment")}
+                          </div>
+                        </th>
+                        <th
+                          className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                          onClick={() => handleCallColumnSort("recording")}
+                        >
+                          <div className="flex items-center gap-2">
+                            Recording
+                            {renderCallSortIcon("recording")}
+                          </div>
+                        </th>
+                        <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedCallLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={10} className="text-center py-8 text-muted-foreground">
+                            No results
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedCallLogs.map((call) => (
+                          <React.Fragment key={call.id}>
+                            <tr className={`${expandedCallId === call.id ? '' : 'border-b'} hover:bg-muted/50`}>
+                              <td className="py-2 px-3">
+                                <Checkbox
+                                  checked={selectedRows.has(call.id)}
+                                  onCheckedChange={() => toggleRowSelection(call.id)}
+                                />
+                              </td>
+                              <td className="py-2 px-3">{call.contact}</td>
+                              <td className="py-2 px-3">{call.agent}</td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                                  }`}>
+                                  {call.direction}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3">{call.startTime}</td>
+                              <td className="py-2 px-3">{call.duration}</td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.status === "Completed" ? "bg-green-100 text-green-700" :
+                                  call.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                                    call.status === "Missed" ? "bg-red-100 text-red-700" :
+                                      call.status === "Declined" ? "bg-red-100 text-red-700" :
+                                        call.status === "Failed" ? "bg-red-100 text-red-700" :
+                                          "bg-gray-100 text-gray-700"
+                                  }`}>
+                                  {call.status}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${call.sentiment === "Positive" ? "bg-green-100 text-green-700" :
+                                  call.sentiment === "Negative" ? "bg-red-100 text-red-700" :
+                                    "bg-yellow-100 text-yellow-700"
+                                  }`}>
+                                  {call.sentiment}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${call.recording ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                                    }`}>
+                                    {call.recording ? "Yes" : "No"}
+                                  </span>
+                                  {call.recording && (
+                                    <button
+                                      className="p-1 hover:bg-muted rounded"
+                                      onClick={() => expandedCallId === call.id ? resetPlayerState() : handlePlayPauseClick(call)}
+                                      title={expandedCallId === call.id ? "Close Player" : "Play"}
+                                    >
+                                      {expandedCallId === call.id ? (
+                                        <X size={14} className="text-muted-foreground" />
+                                      ) : (
+                                        <Play size={14} className="text-muted-foreground" />
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-2 px-3 flex justify-start">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="p-1 hover:bg-muted rounded">
+                                      <MoreVertical size={14} className="text-muted-foreground" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem onClick={() => handleViewCallDetails(call)}>
+                                      <FileText size={14} className="mr-2" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExportSingleCallLogAsCSV(call)}>
+                                      <Download size={14} className="mr-2" />
+                                      Export Log
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Mic size={14} className="mr-2" />
+                                      Export Recording
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                            {expandedCallId === call.id && (
+                              <tr className="border-b bg-muted/20">
+                                <td colSpan={10} className="pb-2 px-3">
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-4">
+                                      <button
+                                        onClick={handlePrevious}
+                                        className="p-1 hover:bg-muted rounded-full disabled:opacity-50"
+                                        disabled={
+                                          (() => {
+                                            const currentCallLogs = getFilteredAndSortedCallLogs();
+                                            const currentIndex = currentCallLogs.findIndex(c => c.id === currentPlayingCallId);
+                                            if (currentIndex <= 0) return true;
+                                            for (let i = currentIndex - 1; i >= 0; i--) {
+                                              if (currentCallLogs[i].recording) return false;
+                                            }
+                                            return true;
+                                          })()
+                                        }
+                                      >
+                                        <SkipBack size={20} />
+                                      </button>
+                                      <button
+                                        onClick={() => handlePlayPauseClick(call)}
+                                        className="p-1 hover:bg-muted rounded-full"
+                                      >
+                                        {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                                      </button>
+                                      <button
+                                        onClick={handleNext}
+                                        className="p-1 hover:bg-muted rounded-full disabled:opacity-50"
+                                        disabled={
+                                          (() => {
+                                            const currentCallLogs = getFilteredAndSortedCallLogs();
+                                            const currentIndex = currentCallLogs.findIndex(c => c.id === currentPlayingCallId);
+                                            if (currentIndex === -1 || currentIndex >= currentCallLogs.length - 1) return true;
+                                            for (let i = currentIndex + 1; i < currentCallLogs.length; i++) {
+                                              if (currentCallLogs[i].recording) return false;
+                                            }
+                                            return true;
+                                          })()
+                                        }
+                                      >
+                                        <SkipForward size={20} />
+                                      </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 flex-1 mx-8">
+                                      <span className="text-sm text-muted-foreground">{formatTime(currentTime)}</span>
+                                      <input
+                                        type="range"
+                                        min="0"
+                                        max={duration}
+                                        value={currentTime}
+                                        onChange={handleSeek}
+                                        className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary slider-thumb-blue-round"
+                                      />
+                                      <span className="text-sm text-muted-foreground">{formatTime(duration)}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                      <div className="relative w-[78px]" ref={speedDropdownRef}>
+                                        <button
+                                          type="button"
+                                          className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors w-full"
+                                          onClick={() => setSpeedDropdownOpen(!speedDropdownOpen)}
+                                        >
+                                          <span className="truncate text-xs font-normal">{playbackSpeed}x</span>
+                                          <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                                        </button>
+                                        {speedDropdownOpen && (
+                                          <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                                            <ul className="py-1">
+                                              {[0.5, 0.75, 1, 1.25, 1.5, 2].map(option => (
+                                                <li
+                                                  key={option}
+                                                  className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
+                                                  onClick={() => {
+                                                    handleSpeedChange(option);
+                                                    setSpeedDropdownOpen(false);
+                                                  }}
+                                                >
+                                                  {option}x
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-4 text-xs">
+                  <span className="text-muted-foreground">{callLogsTotal} results</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Rows per page:</span>
+                    <div className="relative w-15" ref={dropdownRef}>
+                      <button
+                        type="button"
+                        className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                        onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                      >
+                        <span className="truncate text-xs font-normal">{rowsPerPage}</span>
+                        <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                      </button>
+                      {rowsDropdownOpen && (
+                        <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
+                          <ul className="py-1">
+                            {[10, 25, 50].map(option => (
+                              <li
+                                key={option}
+                                className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
+                                onClick={() => {
+                                  setRowsPerPage(option);
+                                  setRowsDropdownOpen(false);
+                                  setPage(1);
+                                }}
+                              >
+                                {option}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground">Page {page} of {Math.ceil(callLogsTotal / rowsPerPage) || 1}</span>
+                    <div className="flex gap-1">
+                      <button
+                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                        disabled={page === 1}
+                        onClick={() => setPage(1)}
+                      >
+                        <ChevronsLeft size={16} />
+                      </button>
+                      <button
+                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                        disabled={page === Math.ceil(callLogs.length / rowsPerPage)}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                      <button
+                        className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                        disabled={page === Math.ceil(callLogs.length / rowsPerPage)}
+                        onClick={() => setPage(Math.ceil(callLogs.length / rowsPerPage))}
+                      >
+                        <ChevronsRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
@@ -2506,17 +2503,16 @@ export default function ConversationsLogs() {
                   <div>
                     <label className="text-sm font-medium text-foreground">Status</label>
                     <p className="mt-1">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        selectedConversation.status === "Completed" ? "bg-green-100 text-green-700" :
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${selectedConversation.status === "Completed" ? "bg-green-100 text-green-700" :
                         selectedConversation.status === "Active" ? "bg-blue-100 text-blue-700" :
-                        selectedConversation.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                        selectedConversation.status === "Queued" ? "bg-yellow-100 text-yellow-700" :
-                        selectedConversation.status === "Pending" ? "bg-yellow-100 text-yellow-700" :
-                        selectedConversation.status === "Forwarded" ? "bg-yellow-100 text-yellow-700" :
-                        selectedConversation.status === "Expired" ? "bg-red-100 text-red-700" :
-                        selectedConversation.status === "Spammed" ? "bg-red-100 text-red-700" :
-                        "bg-gray-100 text-gray-700"
-                      }`}>
+                          selectedConversation.status === "In Progress" ? "bg-blue-100 text-blue-700" :
+                            selectedConversation.status === "Queued" ? "bg-yellow-100 text-yellow-700" :
+                              selectedConversation.status === "Pending" ? "bg-yellow-100 text-yellow-700" :
+                                selectedConversation.status === "Forwarded" ? "bg-yellow-100 text-yellow-700" :
+                                  selectedConversation.status === "Expired" ? "bg-red-100 text-red-700" :
+                                    selectedConversation.status === "Spammed" ? "bg-red-100 text-red-700" :
+                                      "bg-gray-100 text-gray-700"
+                        }`}>
                         {selectedConversation.status}
                       </span>
                     </p>
@@ -2528,11 +2524,10 @@ export default function ConversationsLogs() {
                   <div>
                     <label className="text-sm font-medium text-foreground">Sentiment</label>
                     <p className="mt-1">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        selectedConversation.sentiment === "Positive" ? "bg-green-100 text-green-700" :
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${selectedConversation.sentiment === "Positive" ? "bg-green-100 text-green-700" :
                         selectedConversation.sentiment === "Negative" ? "bg-red-100 text-red-700" :
-                        "bg-yellow-100 text-yellow-700"
-                      }`}>
+                          "bg-yellow-100 text-yellow-700"
+                        }`}>
                         {selectedConversation.sentiment}
                       </span>
                     </p>
@@ -2552,7 +2547,7 @@ export default function ConversationsLogs() {
                   <div className="relative pl-6">
                     {/* Timeline line */}
                     <div className="absolute left-[0.45rem] top-2 bottom-0 w-0.5 bg-gray-200"></div>
-                    
+
                     {/* Timeline Events */}
                     <div className="space-y-6">
                       {/* Conversation Started */}
@@ -2658,9 +2653,8 @@ export default function ConversationsLogs() {
                 <div>
                   <label className="text-sm font-medium text-foreground">Direction</label>
                   <p className="mt-1">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      selectedCallLog.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${selectedCallLog.direction === "Inbound" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                      }`}>
                       {selectedCallLog.direction}
                     </span>
                   </p>
@@ -2676,14 +2670,13 @@ export default function ConversationsLogs() {
                 <div>
                   <label className="text-sm font-medium text-foreground">Status</label>
                   <p className="mt-1">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      selectedCallLog.status === "Completed" ? "bg-green-100 text-green-700" :
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${selectedCallLog.status === "Completed" ? "bg-green-100 text-green-700" :
                       selectedCallLog.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                      selectedCallLog.status === "Missed" ? "bg-red-100 text-red-700" :
-                      selectedCallLog.status === "Declined" ? "bg-red-100 text-red-700" :
-                      selectedCallLog.status === "Failed" ? "bg-red-100 text-red-700" :
-                      "bg-gray-100 text-gray-700"
-                    }`}>
+                        selectedCallLog.status === "Missed" ? "bg-red-100 text-red-700" :
+                          selectedCallLog.status === "Declined" ? "bg-red-100 text-red-700" :
+                            selectedCallLog.status === "Failed" ? "bg-red-100 text-red-700" :
+                              "bg-gray-100 text-gray-700"
+                      }`}>
                       {selectedCallLog.status}
                     </span>
                   </p>
@@ -2691,11 +2684,10 @@ export default function ConversationsLogs() {
                 <div>
                   <label className="text-sm font-medium text-foreground">Sentiment</label>
                   <p className="mt-1">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      selectedCallLog.sentiment === "Positive" ? "bg-green-100 text-green-700" :
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${selectedCallLog.sentiment === "Positive" ? "bg-green-100 text-green-700" :
                       selectedCallLog.sentiment === "Negative" ? "bg-red-100 text-red-700" :
-                      "bg-yellow-100 text-yellow-700"
-                    }`}>
+                        "bg-yellow-100 text-yellow-700"
+                      }`}>
                       {selectedCallLog.sentiment}
                     </span>
                   </p>
@@ -2709,8 +2701,8 @@ export default function ConversationsLogs() {
                   <div className="mt-2">
                     {/* 50/50 chance to show available vs unavailable recording */}
                     {Math.random() > 0 ? (
-                      <audio 
-                        controls 
+                      <audio
+                        controls
                         className="w-full h-12"
                         style={{ maxWidth: '100%' }}
                       >

@@ -35,15 +35,15 @@ function InsightsDashboardContent() {
   const [localActiveTab, setLocalActiveTab] = useState(activeTab);
 
   return (
-    <div className="p-3 space-y-6" data-testid="insights-dashboard">
+    <div className="p-6 space-y-6" data-testid="insights-dashboard">
       {/* Header with Title on left and everything else on right */}
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] font-bold" style={{ fontFamily: "Roboto, sans-serif" }}>Insights Dashboard</h1> 
+        <h1 className="text-3xl font-bold">Insights Dashboard</h1>
 
         <div className="flex items-center gap-4">
           {/* Date Range Selector */}
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[160px] hover-elevate" style={{ height: "38px" }}>
+            <SelectTrigger className="w-[160px]" style={{ height: "38px" }}>
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -61,7 +61,7 @@ function InsightsDashboardContent() {
           {dateRange === "custom" && (
             <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))]">
+                <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))] bg-white dark:bg-background">
                   <Calendar className="h-4 w-4" />
                   <span>
                     {customDate
@@ -89,7 +89,7 @@ function InsightsDashboardContent() {
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
-            className="gap-2 hover-elevate [border-color:hsl(var(--input))] font-normal"
+            className="gap-2 hover-elevate font-normal btn-outline-primary"
             data-testid="export-button"
           >
             <Download size={16} />
@@ -99,18 +99,17 @@ function InsightsDashboardContent() {
       </div>
 
       {/* Tabs moved to top-right - now placed directly under the header, aligned right */}
-      <div className="flex justify-end">
-        <div className="bg-blue-50 rounded-lg p-1 flex gap-0 overflow-x-auto max-w-full">
+      <div className="flex justify-start">
+        <div className="bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 flex gap-0 overflow-x-auto max-w-full">
           <button
             onClick={() => {
               setLocalActiveTab("overview");
               setActiveTab("overview");
             }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${
-              localActiveTab === "overview"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "overview"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             data-testid="tab-overview"
           >
             Overview
@@ -129,11 +128,10 @@ function InsightsDashboardContent() {
               setLocalActiveTab("agent-performance");
               setActiveTab("agentPerformance");
             }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${
-              localActiveTab === "agent-performance"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "agent-performance"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             data-testid="tab-agent-performance"
           >
             Agent Performance
@@ -152,11 +150,10 @@ function InsightsDashboardContent() {
               setLocalActiveTab("whatsapp-pricing");
               setActiveTab("whatsapp");
             }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${
-              localActiveTab === "whatsapp-pricing"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "whatsapp-pricing"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             data-testid="tab-whatsapp-pricing"
           >
             WhatsApp Pricing
@@ -175,11 +172,10 @@ function InsightsDashboardContent() {
               setLocalActiveTab("bot-dashboard");
               setActiveTab("botDashboard");
             }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${
-              localActiveTab === "bot-dashboard"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "bot-dashboard"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             data-testid="tab-bot-dashboard"
           >
             Bot Dashboard
@@ -198,11 +194,10 @@ function InsightsDashboardContent() {
               setLocalActiveTab("voice-of-customer");
               setActiveTab("voiceOfCustomer");
             }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${
-              localActiveTab === "voice-of-customer"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "voice-of-customer"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             data-testid="tab-voice-of-customer"
           >
             Voice of Customer
@@ -221,11 +216,10 @@ function InsightsDashboardContent() {
               setLocalActiveTab("csat-dashboard");
               setActiveTab("csatDashboard");
             }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${
-              localActiveTab === "csat-dashboard"
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "csat-dashboard"
+              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
+              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             data-testid="tab-csat-dashboard"
           >
             CSAT Dashboard

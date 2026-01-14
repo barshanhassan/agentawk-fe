@@ -468,11 +468,11 @@ export default function UserManagementSection() {
         users.map(u =>
           u.id === editingUser.id
             ? {
-                ...u,
-                role: editRole,
-                status: editStatus,
-                phoneNumber: `${editCountryCode}-${editPhoneNumber}`,
-              }
+              ...u,
+              role: editRole,
+              status: editStatus,
+              phoneNumber: `${editCountryCode}-${editPhoneNumber}`,
+            }
             : u
         )
       );
@@ -505,10 +505,11 @@ export default function UserManagementSection() {
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[20px] font-[700]">User Management</h2>
+        <h1 className="text-3xl font-bold">User Management</h1>
         <Button
           onClick={() => setShowCreateUserModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 font-normal"
+          className="btn-outline-primary gap-2 h-9 font-normal"
+          variant="outline"
         >
           <Plus size={16} />
           Create User
@@ -593,58 +594,57 @@ export default function UserManagementSection() {
                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
-                            <tbody>
-                              {getFilteredAndSortedData().length === 0 ? (
-                                <tr>
-                                  <td colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No users found.
-                                  </td>
-                                </tr>
-                              ) : (
-                                getFilteredAndSortedData().map((user) => (
-                                  <tr key={user.id} className="border-b hover:bg-muted/50">
+              <tbody>
+                {getFilteredAndSortedData().length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                      No users found.
+                    </td>
+                  </tr>
+                ) : (
+                  getFilteredAndSortedData().map((user) => (
+                    <tr key={user.id} className="border-b hover:bg-muted/50">
 
-                                    <td className="py-2 px-3">{user.firstName} {user.lastName}</td>
-                                    <td className="py-2 px-3">{user.email}</td>
-                                    <td className="py-2 px-3">{user.role}</td>
-                                    <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                        user.status === "Active" ? "bg-green-100 text-green-700" :
-                                        user.status === "Invited" ? "bg-yellow-100 text-yellow-700" :
-                                        "bg-red-100 text-red-700"
-                                      }`}>
-                                        {user.status}
-                                      </span>
-                                    </td>
-                                    <td className="py-2 px-3">
-                                      <div>
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <button className="p-1 hover:bg-muted rounded">
-                                              <MoreVertical size={14} className="text-muted-foreground" />
-                                            </button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                              <Edit2 size={14} className="mr-2" />
-                                              Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleCopyUser(user)}>
-                                              <Copy size={14} className="mr-2" />
-                                              Copy
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-destructive">
-                                              <Trash2 size={14} className="mr-2" />
-                                              Delete
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>            </table>
+                      <td className="py-2 px-3">{user.firstName} {user.lastName}</td>
+                      <td className="py-2 px-3">{user.email}</td>
+                      <td className="py-2 px-3">{user.role}</td>
+                      <td className="py-2 px-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === "Active" ? "bg-green-100 text-green-700" :
+                          user.status === "Invited" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-red-100 text-red-700"
+                          }`}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 hover:bg-muted rounded">
+                                <MoreVertical size={14} className="text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-white dark:bg-background">
+                              <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                <Edit2 size={14} className="mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCopyUser(user)}>
+                                <Copy size={14} className="mr-2" />
+                                Copy
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-destructive">
+                                <Trash2 size={14} className="mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>            </table>
           </div>
 
           {/* Pagination */}
@@ -655,14 +655,14 @@ export default function UserManagementSection() {
               <div className="relative w-15" ref={dropdownRef}>
                 <button
                   type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
                   onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">{rowsPerPage}</span>
                   <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                 </button>
                 {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
                     <ul className="py-1">
                       {[10, 25, 50].map(option => (
                         <li
@@ -717,221 +717,223 @@ export default function UserManagementSection() {
         </CardContent>
       </Card>
 
-            {/* Create User Modal */}
-            <Dialog open={showCreateUserModal} onOpenChange={setShowCreateUserModal}>
-              <DialogContent className="max-w-md">
-                <DialogHeader className="mb-2">
-                  <DialogTitle>Create User</DialogTitle>
-                </DialogHeader>
-      
-                <div className="space-y-4">
-                  {/* First Name Input */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">First Name<span className="text-red-500 pl-0.5">*</span></label>
-                    <Input
-                      placeholder="Enter first name"
-                      value={newFirstName}
-                      onChange={(e) => setNewFirstName(e.target.value)}
-                    />
-                  </div>
-      
-                  {/* Last Name Input */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Last Name<span className="text-red-500 pl-0.5">*</span></label>
-                    <Input
-                      placeholder="Enter last name"
-                      value={newLastName}
-                      onChange={(e) => setNewLastName(e.target.value)}
-                    />
-                  </div>
-      
-                  {/* Email Input */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Email Address<span className="text-red-500 pl-0.5">*</span></label>
-                    <Input
-                      type="email"
-                      placeholder="Enter email address"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                    />
-                  </div>
-      
-                  {/* Role Select */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Role<span className="text-red-500 pl-0.5">*</span></label>
-                    <Select value={newRole} onValueChange={(value: UserRole) => setNewRole(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Administrator">Administrator</SelectItem>
-                        <SelectItem value="Agent">Agent</SelectItem>
-                        <SelectItem value="Chatbot User">Chatbot User</SelectItem>
-                        <SelectItem value="Marketer">Marketer</SelectItem>
-                        <SelectItem value="Team Supervisor">Team Supervisor</SelectItem>
-                        <SelectItem value="Viewer">Viewer</SelectItem>
-                        <SelectItem value="WABA Manager">WABA Manager</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-      
-                  {/* Phone Number Input with Country Code */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Phone Number<span className="text-red-500 pl-0.5">*</span></label>
-                    <div className="flex gap-2">
-                      <Select value={newCountryCode} onValueChange={setNewCountryCode}>
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="+1" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="+1">+1 (US)</SelectItem>
-                          <SelectItem value="+44">+44 (UK)</SelectItem>
-                          <SelectItem value="+91">+91 (IN)</SelectItem>
-                          <SelectItem value="+61">+61 (AU)</SelectItem>
-                          <SelectItem value="+81">+81 (JP)</SelectItem>
-                          <SelectItem value="+49">+49 (DE)</SelectItem>
-                          <SelectItem value="+33">+33 (FR)</SelectItem>
-                          <SelectItem value="+86">+86 (CN)</SelectItem>
-                          <SelectItem value="+55">+55 (BR)</SelectItem>
-                          <SelectItem value="+27">+27 (ZA)</SelectItem>
-                          {/* Add more country codes as needed */}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="tel"
-                        placeholder="Enter phone number"
-                        value={newPhoneNumber}
-                        onChange={(e) => setNewPhoneNumber(e.target.value)}
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-      
-                {/* Modal Footer */}
-                <div className="flex gap-2 justify-end mt-2">
-                  <Button
-                    onClick={() => setShowCreateUserModal(false)}
-                    variant="outline"
-                    className="border-input [border-color:hsl(var(--input))] font-normal"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleInviteUser}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
-                  >
-                    Invite User
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            {/* Edit User Modal */}
-            <Dialog open={showEditUserModal} onOpenChange={setShowEditUserModal}>
-              <DialogContent className="max-w-md">
-                <DialogHeader className="mb-2">
-                  <DialogTitle>Edit User</DialogTitle>
-                </DialogHeader>
-      
-                <div className="space-y-4">
-                  {/* Full Name Input (Uneditable) */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Full Name</label>
-                    <Input value={editFullName} disabled />
-                  </div>
-      
-                  {/* Email Input (Uneditable) */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Email Address</label>
-                    <Input value={editEmail} disabled />
-                  </div>
-      
-                  {/* Role Select */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Role<span className="text-red-500 pl-0.5">*</span></label>
-                    <Select value={editRole} onValueChange={(value: UserRole) => setEditRole(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Administrator">Administrator</SelectItem>
-                        <SelectItem value="Agent">Agent</SelectItem>
-                        <SelectItem value="Chatbot User">Chatbot User</SelectItem>
-                        <SelectItem value="Marketer">Marketer</SelectItem>
-                        <SelectItem value="Team Supervisor">Team Supervisor</SelectItem>
-                        <SelectItem value="Viewer">Viewer</SelectItem>
-                        <SelectItem value="WABA Manager">WABA Manager</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-      
-                  {/* Status Select */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Status{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
-                    <Select value={editStatus} onValueChange={(value: UserStatus) => setEditStatus(value)} disabled={isInvitedUserEditing}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        {isInvitedUserEditing && <SelectItem value="Invited">Invited</SelectItem>}
-                      </SelectContent>
-                    </Select>
-                  </div>
-      
-                  {/* Phone Number Input with Country Code */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Phone Number{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
-                    <div className="flex gap-2">
-                      <Select value={editCountryCode} onValueChange={setEditCountryCode} disabled={isInvitedUserEditing}>
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="+1" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="+1">+1 (US)</SelectItem>
-                          <SelectItem value="+44">+44 (UK)</SelectItem>
-                          <SelectItem value="+91">+91 (IN)</SelectItem>
-                          <SelectItem value="+61">+61 (AU)</SelectItem>
-                          <SelectItem value="+81">+81 (JP)</SelectItem>
-                          <SelectItem value="+49">+49 (DE)</SelectItem>
-                          <SelectItem value="+33">+33 (FR)</SelectItem>
-                          <SelectItem value="+86">+86 (CN)</SelectItem>
-                          <SelectItem value="+55">+55 (BR)</SelectItem>
-                          <SelectItem value="+27">+27 (ZA)</SelectItem>
-                          {/* Add more country codes as needed */}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="tel"
-                        placeholder="Enter phone number"
-                        value={editPhoneNumber}
-                        onChange={(e) => setEditPhoneNumber(e.target.value)}
-                        className="flex-1"
-                        disabled={isInvitedUserEditing}
-                      />
-                    </div>
-                  </div>
-                </div>
-      
-                {/* Modal Footer */}
-                <div className="flex gap-2 justify-end mt-2">
-                  <Button
-                    onClick={() => setShowEditUserModal(false)}
-                    variant="outline"
-                    className="border-input [border-color:hsl(var(--input))] font-normal"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveEditUser}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
-                  >
-                    Save
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+      {/* Create User Modal */}
+      <Dialog open={showCreateUserModal} onOpenChange={setShowCreateUserModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Create User</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* First Name Input */}
+            <div>
+              <label className="text-sm font-medium text-foreground">First Name<span className="text-red-500 pl-0.5">*</span></label>
+              <Input
+                placeholder="Enter first name"
+                value={newFirstName}
+                onChange={(e) => setNewFirstName(e.target.value)}
+              />
+            </div>
+
+            {/* Last Name Input */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Last Name<span className="text-red-500 pl-0.5">*</span></label>
+              <Input
+                placeholder="Enter last name"
+                value={newLastName}
+                onChange={(e) => setNewLastName(e.target.value)}
+              />
+            </div>
+
+            {/* Email Input */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Email Address<span className="text-red-500 pl-0.5">*</span></label>
+              <Input
+                type="email"
+                placeholder="Enter email address"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+            </div>
+
+            {/* Role Select */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Role<span className="text-red-500 pl-0.5">*</span></label>
+              <Select value={newRole} onValueChange={(value: UserRole) => setNewRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Administrator">Administrator</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
+                  <SelectItem value="Chatbot User">Chatbot User</SelectItem>
+                  <SelectItem value="Marketer">Marketer</SelectItem>
+                  <SelectItem value="Team Supervisor">Team Supervisor</SelectItem>
+                  <SelectItem value="Viewer">Viewer</SelectItem>
+                  <SelectItem value="WABA Manager">WABA Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Phone Number Input with Country Code */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Phone Number<span className="text-red-500 pl-0.5">*</span></label>
+              <div className="flex gap-2">
+                <Select value={newCountryCode} onValueChange={setNewCountryCode}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="+1" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+1">+1 (US)</SelectItem>
+                    <SelectItem value="+44">+44 (UK)</SelectItem>
+                    <SelectItem value="+91">+91 (IN)</SelectItem>
+                    <SelectItem value="+61">+61 (AU)</SelectItem>
+                    <SelectItem value="+81">+81 (JP)</SelectItem>
+                    <SelectItem value="+49">+49 (DE)</SelectItem>
+                    <SelectItem value="+33">+33 (FR)</SelectItem>
+                    <SelectItem value="+86">+86 (CN)</SelectItem>
+                    <SelectItem value="+55">+55 (BR)</SelectItem>
+                    <SelectItem value="+27">+27 (ZA)</SelectItem>
+                    {/* Add more country codes as needed */}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={newPhoneNumber}
+                  onChange={(e) => setNewPhoneNumber(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button
+              onClick={() => setShowCreateUserModal(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))] font-normal"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleInviteUser}
+              className="btn-outline-primary font-normal"
+              variant="outline"
+            >
+              Invite User
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Edit User Modal */}
+      <Dialog open={showEditUserModal} onOpenChange={setShowEditUserModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="mb-2">
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Full Name Input (Uneditable) */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Full Name</label>
+              <Input value={editFullName} disabled />
+            </div>
+
+            {/* Email Input (Uneditable) */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Email Address</label>
+              <Input value={editEmail} disabled />
+            </div>
+
+            {/* Role Select */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Role<span className="text-red-500 pl-0.5">*</span></label>
+              <Select value={editRole} onValueChange={(value: UserRole) => setEditRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Administrator">Administrator</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
+                  <SelectItem value="Chatbot User">Chatbot User</SelectItem>
+                  <SelectItem value="Marketer">Marketer</SelectItem>
+                  <SelectItem value="Team Supervisor">Team Supervisor</SelectItem>
+                  <SelectItem value="Viewer">Viewer</SelectItem>
+                  <SelectItem value="WABA Manager">WABA Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status Select */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Status{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
+              <Select value={editStatus} onValueChange={(value: UserStatus) => setEditStatus(value)} disabled={isInvitedUserEditing}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  {isInvitedUserEditing && <SelectItem value="Invited">Invited</SelectItem>}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Phone Number Input with Country Code */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Phone Number{isInvitedUserEditing ? null : <span className="text-red-500 pl-0.5">*</span>}</label>
+              <div className="flex gap-2">
+                <Select value={editCountryCode} onValueChange={setEditCountryCode} disabled={isInvitedUserEditing}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="+1" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+1">+1 (US)</SelectItem>
+                    <SelectItem value="+44">+44 (UK)</SelectItem>
+                    <SelectItem value="+91">+91 (IN)</SelectItem>
+                    <SelectItem value="+61">+61 (AU)</SelectItem>
+                    <SelectItem value="+81">+81 (JP)</SelectItem>
+                    <SelectItem value="+49">+49 (DE)</SelectItem>
+                    <SelectItem value="+33">+33 (FR)</SelectItem>
+                    <SelectItem value="+86">+86 (CN)</SelectItem>
+                    <SelectItem value="+55">+55 (BR)</SelectItem>
+                    <SelectItem value="+27">+27 (ZA)</SelectItem>
+                    {/* Add more country codes as needed */}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={editPhoneNumber}
+                  onChange={(e) => setEditPhoneNumber(e.target.value)}
+                  className="flex-1"
+                  disabled={isInvitedUserEditing}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button
+              onClick={() => setShowEditUserModal(false)}
+              variant="outline"
+              className="border-input [border-color:hsl(var(--input))] font-normal"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditUser}
+              className="btn-outline-primary font-normal"
+              variant="outline"
+            >
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Delete User Modal */}
       <Dialog open={showDeleteUserModal} onOpenChange={setShowDeleteUserModal}>
         <DialogContent className="max-w-sm">
@@ -956,7 +958,8 @@ export default function UserManagementSection() {
             </Button>
             <Button
               onClick={handleConfirmDelete}
-              className="bg-red-500 hover:bg-red-600 border-red-600 text-white"
+              className="btn-outline-destructive"
+              variant="outline"
             >
               Delete
             </Button>
@@ -964,7 +967,7 @@ export default function UserManagementSection() {
         </DialogContent>
       </Dialog>
 
-      
+
 
     </div>
   );

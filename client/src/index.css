@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -23,7 +23,7 @@
 
   --border: 214 32% 91%;
 
-  --card: 0 0% 98%;
+  --card: 0 0% 100%;
 
   --card-foreground: 222 47% 11%;
 
@@ -79,7 +79,7 @@
   --chart-4: 24 94% 50%;
   --chart-5: 339 90% 51%;
 
-  --font-sans: Montserrat, "Open Sans", sans-serif;
+  --font-sans: "Inter", sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
@@ -288,9 +288,13 @@
   /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
    * buttons/badges can remove the automatic brightness adjustment on interactions
    * and program their own. */
-  .no-default-hover-elevate {}
+  .no-default-hover-elevate {
+    /* intended empty */
+  }
 
-  .no-default-active-elevate {}
+  .no-default-active-elevate {
+    /* intended empty */
+  }
 
 
   /**
@@ -384,4 +388,35 @@
   /* Using Tailwind's primary color variable */
   cursor: pointer;
   border: 2px solid hsl(var(--primary));
+}
+
+/* Custom Global Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+}
+
+.btn-outline-primary {
+  @apply border border-primary text-primary bg-white dark:bg-background hover:bg-primary hover:text-white transition-colors;
+}
+
+.btn-outline-destructive {
+  @apply border border-destructive text-destructive bg-white dark:bg-background hover:bg-destructive hover:text-white transition-colors;
 }

@@ -43,24 +43,22 @@ export default function CSATDashboardTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         {/* Left side - Tabs */}
-        <div className="flex items-center space-x-1 bg-slate-200/75 rounded-lg p-1">
+        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1">
           <button
             onClick={() => handleTabChange("summary")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              csatDashboardTab === "summary"
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${csatDashboardTab === "summary"
                 ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Summary
           </button>
           <button
             onClick={() => handleTabChange("details")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              csatDashboardTab === "details"
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${csatDashboardTab === "details"
                 ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
           >
             Details
           </button>

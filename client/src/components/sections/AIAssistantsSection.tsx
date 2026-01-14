@@ -69,9 +69,9 @@ const AIAssistantsSection = () => {
             <p className="text-sm text-muted-foreground">Customer analysis enables agents to use AI to understand customer conversations to generate summaries, perform sentiment analysis and more.</p>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+            className="btn-outline-primary h-7 text-xs"
             onClick={() => {
               toast({
                 title: "Request Sent",
@@ -100,7 +100,8 @@ const AIAssistantsSection = () => {
               description: "AI Assistants settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

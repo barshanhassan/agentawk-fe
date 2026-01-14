@@ -239,18 +239,18 @@ export default function VoiceOfCustomerDetails() {
               <div className="relative w-15" ref={agentDropdownRef}>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
                   onClick={() => setAgentDropdownOpen(!agentDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">
                     {rowsPerPageAgent}
                   </span>
                   <span className="ml-2 text-muted-foreground">
-                    <ChevronDown className="h-3 w-3"/>
+                    <ChevronDown className="h-3 w-3" />
                   </span>
                 </button>
                 {agentDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] animate-in fade-in-80">
+                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] animate-in fade-in-80">
                     <ul className="py-1">
                       {[10, 25, 50].map(option => (
                         <li
@@ -389,14 +389,14 @@ export default function VoiceOfCustomerDetails() {
                               item.sentiment === "Positive"
                                 ? "#dcfce7"
                                 : item.sentiment === "Neutral"
-                                ? "#fed7aa"
-                                : "#fee2e2",
+                                  ? "#fed7aa"
+                                  : "#fee2e2",
                             color:
                               item.sentiment === "Positive"
                                 ? "#166534"
                                 : item.sentiment === "Neutral"
-                                ? "#92400e"
-                                : "#991b1b",
+                                  ? "#92400e"
+                                  : "#991b1b",
                           }}
                         >
                           {item.sentiment}
@@ -419,18 +419,18 @@ export default function VoiceOfCustomerDetails() {
               <div className="relative w-15" ref={conversationDropdownRef}>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
                   onClick={() => setConversationDropdownOpen(!conversationDropdownOpen)}
                 >
                   <span className="truncate text-xs font-normal">
                     {rowsPerPageConversation}
                   </span>
                   <span className="ml-2 text-muted-foreground">
-                    <ChevronDown className="h-3 w-3"/>
+                    <ChevronDown className="h-3 w-3" />
                   </span>
                 </button>
                 {conversationDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] animate-in fade-in-80">
+                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] animate-in fade-in-80">
                     <ul className="py-1">
                       {[10, 25, 50].map(option => (
                         <li

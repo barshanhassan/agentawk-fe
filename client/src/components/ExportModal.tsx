@@ -52,18 +52,18 @@ export default function ExportModal() {
 
   const renderCheckboxes = () => {
     const tabOptions = exportOptions[activeTab as keyof typeof exportOptions];
-    
+
     if (!tabOptions) return null;
 
     // For tabs with sub-tabs
     if (typeof tabOptions === 'object' && !Array.isArray(tabOptions)) {
       const firstValue = Object.values(tabOptions)[0];
-      
+
       if (typeof firstValue === 'object' && !Array.isArray(firstValue)) {
         // Has sub-tabs
         const subTabKey = activeSubTab[activeTab as keyof typeof activeSubTab];
         const subTabOptions = (tabOptions as any)[subTabKey];
-        
+
         if (subTabOptions) {
           return Object.entries(subTabOptions).map(([key, value]) => (
             <div className="flex items-center space-x-2" key={key}>
@@ -142,6 +142,8 @@ export default function ExportModal() {
           <Button
             onClick={handleExport}
             data-testid="export-button-modal"
+            className="btn-outline-primary font-normal"
+            variant="outline"
           >
             Export
           </Button>

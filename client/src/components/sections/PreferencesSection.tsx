@@ -10,37 +10,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 interface Preferences {
-    timezone: string;
-    twoFactorAuth: boolean;
-    autoHide: boolean;
-    disableCSAT: boolean;
-    manualHandoff: boolean;
-    enableTranscript: boolean;
-    emailTranscript: boolean;
-    transcriptEmails: string;
+  timezone: string;
+  twoFactorAuth: boolean;
+  autoHide: boolean;
+  disableCSAT: boolean;
+  manualHandoff: boolean;
+  enableTranscript: boolean;
+  emailTranscript: boolean;
+  transcriptEmails: string;
 }
 
 interface PreferencesSectionProps {
-    preferences: Preferences;
-    setPreferences: React.Dispatch<React.SetStateAction<Preferences>>;
+  preferences: Preferences;
+  setPreferences: React.Dispatch<React.SetStateAction<Preferences>>;
 }
 
 const PreferencesSection: React.FC<PreferencesSectionProps> = ({
-    preferences,
-    setPreferences,
+  preferences,
+  setPreferences,
 }) => {
-    const { toast } = useToast();
-    const handleSwitchChange = (key: keyof Preferences) => (checked: boolean) => {
-        setPreferences(prev => ({ ...prev, [key]: checked }));
-    };
+  const { toast } = useToast();
+  const handleSwitchChange = (key: keyof Preferences) => (checked: boolean) => {
+    setPreferences(prev => ({ ...prev, [key]: checked }));
+  };
 
-    const handleSelectChange = (key: keyof Preferences) => (value: string) => {
-        setPreferences(prev => ({ ...prev, [key]: value }));
-    };
+  const handleSelectChange = (key: keyof Preferences) => (value: string) => {
+    setPreferences(prev => ({ ...prev, [key]: value }));
+  };
 
-    const handleTextChange = (key: keyof Preferences) => (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setPreferences(prev => ({ ...prev, [key]: event.target.value }));
-    };
+  const handleTextChange = (key: keyof Preferences) => (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPreferences(prev => ({ ...prev, [key]: event.target.value }));
+  };
 
   return (
     <>
@@ -222,7 +222,8 @@ const PreferencesSection: React.FC<PreferencesSectionProps> = ({
               description: "Preferences have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

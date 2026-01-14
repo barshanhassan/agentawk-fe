@@ -32,6 +32,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { getAvatarColor } from "@/lib/avatar-utils";
 
 interface TopNavbarProps {
   onToggleSidebar: () => void;
@@ -127,11 +128,10 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
         {/* Agent Status */}
         <button
           onClick={() => setAgentStatus(agentStatus === "available" ? "away" : "available")}
-          className={`group flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-            agentStatus === "available"
-              ? "bg-green-100 text-green-700 hover:bg-green-200"
-              : "bg-gray-300 text-gray-700 hover:bg-gray-400 hover:text-white"
-          }`}
+          className={`group flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${agentStatus === "available"
+            ? "bg-green-100 text-green-700 hover:bg-green-200"
+            : "bg-gray-300 text-gray-700 hover:bg-gray-400 hover:text-white"
+            }`}
         >
           <div className={`w-2 h-2 rounded-full transition-colors ${agentStatus === "available" ? "bg-green-500" : "bg-gray-400 group-hover:bg-white"}`}></div>
           {agentStatus === "available" ? (
@@ -146,7 +146,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             </>
           )}
         </button>
-        
+
         {/* Workspace Dropdown */}
         <Select defaultValue="workspace-a">
           <SelectTrigger className="w-[150px]">
@@ -170,7 +170,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
               className="relative hover-elevate flex items-center justify-center"
               data-testid="button-notifications"
             >
-              {notificationsMuted ? <BellOff className="absolute" transform="scale(1.1)" /> : <Bell className="absolute" transform="scale(1.1)"/>}
+              {notificationsMuted ? <BellOff className="absolute" transform="scale(1.1)" /> : <Bell className="absolute" transform="scale(1.1)" />}
               {!notificationsMuted && unreadCount > 0 && (
                 <Badge
                   variant="destructive"
@@ -201,10 +201,10 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                     >
                       <CheckCircle size={16} />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className={`h-8 w-8 ${notificationsMuted ? "text-blue-500" : ""}`} 
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ${notificationsMuted ? "text-blue-500" : ""}`}
                       title={notificationsMuted ? "Unmute notifications" : "Mute notifications"}
                       onClick={() => setNotificationsMuted(!notificationsMuted)}
                     >
@@ -212,7 +212,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                     </Button>
                   </div>
                 </div>
-                <TabsList className="grid w-full grid-cols-4 bg-slate-200/75 mb-2">
+                <TabsList className="grid w-full grid-cols-4 bg-slate-200/75 dark:bg-slate-800 mb-2">
                   <TabsTrigger
                     value="all"
                     className="text-xs"
@@ -250,22 +250,20 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
                       {mockNotifications[tab].map((notif) => (
                         <div
                           key={notif.id}
-                          className={`p-4 hover-elevate cursor-pointer transition-colors ${
-                            notif.read
-                              ? "bg-background"
-                              : "bg-blue-50 dark:bg-blue-950/20"
-                          }`}
+                          className={`p-4 hover-elevate cursor-pointer transition-colors ${notif.read
+                            ? "bg-background"
+                            : "bg-blue-50 dark:bg-blue-950/20"
+                            }`}
                           onClick={() => handleMarkAsRead(notif.id)}
                           data-testid={`notification-${notif.id}`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <p
-                                className={`text-sm ${
-                                  notif.read
-                                    ? "text-muted-foreground"
-                                    : "font-semibold text-foreground"
-                                }`}
+                                className={`text-sm ${notif.read
+                                  ? "text-muted-foreground"
+                                  : "font-semibold text-foreground"
+                                  }`}
                               >
                                 {notif.message}
                               </p>
@@ -286,7 +284,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
             </Tabs>
           </DropdownMenuContent>
         </DropdownMenu>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -295,7 +293,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
               data-testid="button-user-menu"
             >
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
+                <AvatarFallback className={getAvatarColor("Admin User")}>
                   AD
                 </AvatarFallback>
               </Avatar>

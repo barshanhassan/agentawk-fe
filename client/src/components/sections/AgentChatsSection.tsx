@@ -53,30 +53,30 @@ const AgentChatsSection = () => {
         <Separator />
 
         <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
-                <div>
-                    <h4 className="font-semibold text-base">Auto-Assign Capacity</h4>
-                    <p className="text-sm text-muted-foreground">Set the default number of maximum conversations an agent can have at a time. New conversations stay unassigned if an agent reach their limit until an agent becomes available.</p>
-                </div>
-                <Switch
-                    aria-label="Toggle Auto-Assign Capacity"
-                    checked={autoAssignCapacity}
-                    onCheckedChange={setAutoAssignCapacity}
-                />
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h4 className="font-semibold text-base">Auto-Assign Capacity</h4>
+              <p className="text-sm text-muted-foreground">Set the default number of maximum conversations an agent can have at a time. New conversations stay unassigned if an agent reach their limit until an agent becomes available.</p>
             </div>
-            {autoAssignCapacity && (
-              <div>
-                  <Label htmlFor="capacity-input" className="text-sm font-medium">Maximum Conversations</Label>
-                  <Input
-                      id="capacity-input"
-                      type="number"
-                      value={capacity}
-                      onChange={(e) => setCapacity(Number(e.target.value))}
-                      className="mt-1.5 w-20"
-                      min="1"
-                  />
-              </div>
-            )}
+            <Switch
+              aria-label="Toggle Auto-Assign Capacity"
+              checked={autoAssignCapacity}
+              onCheckedChange={setAutoAssignCapacity}
+            />
+          </div>
+          {autoAssignCapacity && (
+            <div>
+              <Label htmlFor="capacity-input" className="text-sm font-medium">Maximum Conversations</Label>
+              <Input
+                id="capacity-input"
+                type="number"
+                value={capacity}
+                onChange={(e) => setCapacity(Number(e.target.value))}
+                className="mt-1.5 w-20"
+                min="1"
+              />
+            </div>
+          )}
         </div>
 
       </CardContent>
@@ -89,7 +89,8 @@ const AgentChatsSection = () => {
               description: "Agent chat settings have been updated.",
             });
           }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-normal"
+          className="btn-outline-primary font-normal"
+          variant="outline"
         >
           Save
         </Button>

@@ -849,134 +849,130 @@ export default function BotConversations() {
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
           <Card className="flex flex-col overflow-hidden shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
-          <CardHeader className="space-y-3 pb-3 flex-shrink-0">
-            {/* Tabs */}
-            <div className="flex justify-between border-b pb-0 w-full">
-              {["All", "Active", "Expired"].map((tab) => {
-                const tabKey = tab.toLowerCase();
-                const count = tabKey === "all"
-                  ? conversations.length
-                  : tabKey === "active"
-                  ? conversations.filter(c => c.status === "active").length
-                  : conversations.filter(c => c.status === "expired").length;
-                return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tabKey)}
-                  className={`flex flex-col items-center flex-1 px-2 py-2 text-xs font-medium border-b-2 transition-colors ${
-                    activeTab === tabKey
-                      ? "border-b-primary text-foreground"
-                      : "border-b-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <span>{tab}</span>
-                  <span className="text-[10px] opacity-60">{count}</span>
-                </button>
-                );
-              })}
-            </div>
-
-            {/* Search and Sort Only */}
-            <div className="flex gap-1 items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                <Input
-                  placeholder="Search name..."
-                  className="pl-10 border-input h-9 text-xs"
-                  data-testid="input-search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+            <CardHeader className="space-y-3 pb-3 flex-shrink-0">
+              {/* Tabs */}
+              <div className="flex justify-between border-b pb-0 w-full">
+                {["All", "Active", "Expired"].map((tab) => {
+                  const tabKey = tab.toLowerCase();
+                  const count = tabKey === "all"
+                    ? conversations.length
+                    : tabKey === "active"
+                      ? conversations.filter(c => c.status === "active").length
+                      : conversations.filter(c => c.status === "expired").length;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tabKey)}
+                      className={`flex flex-col items-center flex-1 px-2 py-2 text-xs font-medium border-b-2 transition-colors ${activeTab === tabKey
+                        ? "border-b-primary text-foreground"
+                        : "border-b-transparent text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+                        }`}
+                    >
+                      <span>{tab}</span>
+                      <span className="text-[10px] opacity-60">{count}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 [border-color:hsl(var(--input))]"
-                    onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                  >
-                    <ArrowUp size={16} style={{ transform: sortOrder === "asc" ? "rotate(0deg)" : "rotate(180deg)" }} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Sort by time</TooltipContent>
-              </Tooltip>
-            </div>
-          </CardHeader>
 
-          <ScrollArea className="flex-1 overflow-auto">
-            <div className="space-y-1 px-2 pb-4">
-              {getFilteredConversations().length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Search className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No conversations found</p>
+              {/* Search and Sort Only */}
+              <div className="flex gap-1 items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                  <Input
+                    placeholder="Search name..."
+                    className="pl-10 border-input h-9 text-xs"
+                    data-testid="input-search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
-              ) : (
-                getFilteredConversations().map((conv: any) => (
-                  <div
-                    key={conv.id}
-                    className={`p-3 rounded-md cursor-pointer transition-colors ${
-                      selectedConversation === conv.id ? "bg-accent" : "hover:bg-muted/50"
-                    }`}
-                    onClick={() => handleSelectConversation(conv.id)}
-                    data-testid={`conversation-${conv.id}`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 relative">
-                        <Avatar className="absolute">
-                          <AvatarFallback className={getAvatarColor(getDisplayName(conv))}>
-                            {(() => {
-                              const displayName = getDisplayName(conv);
-                              const parts = displayName.trim().split(/\s+/).filter((p: string) => p.length > 0);
-                              if (parts.length === 0) return "U";
-                              if (parts.length === 1) return parts[0][0].toUpperCase();
-                              return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                            })()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1 gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`text-sm truncate ${getPendingMessagesCount(conv.id) > 0 ? "font-bold" : " font-semibold"}`}>{getDisplayName(conv)}</span>
-                            {activeTab === "all" && (
-                              <Badge
-                                variant="outline"
-                                className={`text-xs flex-shrink-0 ${
-                                  conv.status === "active" ? "bg-green-50 text-green-700 border-green-200" :
-                                  conv.status === "expired" ? "bg-red-50 text-red-700 border-red-200" :
-                                  "bg-gray-50 text-gray-700 border-gray-200"
-                                }`}
-                              >
-                                {conv.status}
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                      onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+                    >
+                      <ArrowUp size={16} style={{ transform: sortOrder === "asc" ? "rotate(0deg)" : "rotate(180deg)" }} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Sort by time</TooltipContent>
+                </Tooltip>
+              </div>
+            </CardHeader>
+
+            <ScrollArea className="flex-1 overflow-auto">
+              <div className="space-y-1 px-2 pb-4">
+                {getFilteredConversations().length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Search className="w-8 h-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No conversations found</p>
+                  </div>
+                ) : (
+                  getFilteredConversations().map((conv: any) => (
+                    <div
+                      key={conv.id}
+                      className={`p-3 rounded-md cursor-pointer transition-colors ${selectedConversation === conv.id ? "bg-accent" : "hover:bg-muted/50"
+                        }`}
+                      onClick={() => handleSelectConversation(conv.id)}
+                      data-testid={`conversation-${conv.id}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 relative">
+                          <Avatar className="absolute">
+                            <AvatarFallback className={getAvatarColor(getDisplayName(conv))}>
+                              {(() => {
+                                const displayName = getDisplayName(conv);
+                                const parts = displayName.trim().split(/\s+/).filter((p: string) => p.length > 0);
+                                if (parts.length === 0) return "U";
+                                if (parts.length === 1) return parts[0][0].toUpperCase();
+                                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                              })()}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
-                        <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{getLastMessage(conv.id)}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1 gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`text-sm truncate ${getPendingMessagesCount(conv.id) > 0 ? "font-bold" : " font-semibold"}`}>{getDisplayName(conv)}</span>
+                              {activeTab === "all" && (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs flex-shrink-0 ${conv.status === "active" ? "bg-green-50 text-green-700 border-green-200" :
+                                    conv.status === "expired" ? "bg-red-50 text-red-700 border-red-200" :
+                                      "bg-gray-50 text-gray-700 border-gray-200"
+                                    }`}
+                                >
+                                  {conv.status}
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
+                          </div>
+                          <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{getLastMessage(conv.id)}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </Card>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </Card>
 
-        {/* Resize Handle Pill */}
-        <button
-          onMouseDown={handleMouseDown}
-          className={`absolute top-1/2 flex items-center justify-center py-3 rounded-full transition-all z-10 ${
-            isDragging
+          {/* Resize Handle Pill */}
+          <button
+            onMouseDown={handleMouseDown}
+            className={`absolute top-1/2 flex items-center justify-center py-3 rounded-full transition-all z-10 ${isDragging
               ? "bg-primary text-primary-foreground shadow-md"
               : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
-          }`}
-          style={{ cursor: "col-resize", right: "-8px", top: "50%", transform: "translateY(-50%)" }}
-          title="Drag to resize sidebar"
-        >
-          <GripVertical size={16} />
-        </button>
+              }`}
+            style={{ cursor: "col-resize", right: "-8px", top: "50%", transform: "translateY(-50%)" }}
+            title="Drag to resize sidebar"
+          >
+            <GripVertical size={16} />
+          </button>
         </div>
 
         {/* Main Content Area */}
@@ -1003,7 +999,7 @@ export default function BotConversations() {
               <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover-elevate" data-testid="button-refresh">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background hover:bg-accent dark:hover:bg-slate-700 hover-elevate" data-testid="button-refresh">
                       <RefreshCw size={18} />
                     </Button>
                   </TooltipTrigger>
@@ -1011,7 +1007,7 @@ export default function BotConversations() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover-elevate" onClick={handleToggleContactPanel} data-testid="button-view-contact">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background hover:bg-accent dark:hover:bg-slate-700 hover-elevate" onClick={handleToggleContactPanel} data-testid="button-view-contact">
                       {showContactPanel ? <EyeOff size={18} /> : <Eye size={18} />}
                     </Button>
                   </TooltipTrigger>
@@ -1021,14 +1017,14 @@ export default function BotConversations() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hover-elevate" data-testid="button-export">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background hover:bg-accent dark:hover:bg-slate-700 hover-elevate" data-testid="button-export">
                           <Download size={18} />
                         </Button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <TooltipContent>Export</TooltipContent>
                   </Tooltip>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                     <DropdownMenuItem onClick={handleExportConversations}>Export as CSV</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1040,7 +1036,7 @@ export default function BotConversations() {
                         <MoreVertical size={18} />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                       <DropdownMenuItem
                         onClick={() => {
                           const conv = conversations.find(c => c.id === selectedConversation);
@@ -1087,6 +1083,8 @@ export default function BotConversations() {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Button
                   onClick={() => handleAssignAgent("self")}
+                  className="btn-outline-primary font-normal"
+                  variant="outline"
                 >
                   Assign to Me
                 </Button>
@@ -1328,7 +1326,7 @@ export default function BotConversations() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-sm">Customer Tags</h4>
-                    <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-attribute">
+                    <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-attribute">
                       Add
                     </Button>
                   </div>
@@ -1362,7 +1360,7 @@ export default function BotConversations() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-sm">Involved Teams</h4>
-                    <Button variant="ghost" size="sm" onClick={handleOpenTeamsModal} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-add-teams">
+                    <Button variant="ghost" size="sm" onClick={handleOpenTeamsModal} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-teams">
                       Add
                     </Button>
                   </div>
@@ -1431,7 +1429,7 @@ export default function BotConversations() {
                     value={editedBasicDetails.number}
                     disabled
                     placeholder="Enter number"
-                    className="bg-muted text-muted-foreground cursor-not-allowed"
+                    className="bg-muted text-muted-foreground cursor-not-allowed mr-6"
                   />
                 </div>
               </div>
@@ -1521,7 +1519,7 @@ export default function BotConversations() {
               <Button variant="outline" onClick={() => setIsEditBasicDetailsOpen(false)} className="[border-color:hsl(var(--input))]">
                 Close
               </Button>
-              <Button onClick={handleSaveBasicDetails}>
+              <Button onClick={handleSaveBasicDetails} className="btn-outline-primary font-normal" variant="outline">
                 Save
               </Button>
             </DialogFooter>
@@ -1561,7 +1559,7 @@ export default function BotConversations() {
               <Button variant="outline" onClick={() => setIsAddAttributeModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Close
               </Button>
-              <Button onClick={handleAddAttribute} disabled={!newAttributeKey || !newAttributeValue}>
+              <Button onClick={handleAddAttribute} disabled={!newAttributeKey || !newAttributeValue} className="btn-outline-primary font-normal" variant="outline">
                 Add Attribute
               </Button>
             </DialogFooter>
@@ -1594,8 +1592,8 @@ export default function BotConversations() {
               <Button variant="outline" onClick={() => setIsAddTeamsModalOpen(false)} className="[border-color:hsl(var(--input))]">
                 Cancel
               </Button>
-              <Button onClick={handleSaveTeams}>
-                Save Teams
+              <Button onClick={handleSaveTeams} className="btn-outline-primary font-normal" variant="outline">
+                Save
               </Button>
             </DialogFooter>
           </DialogContent>
