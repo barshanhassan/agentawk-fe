@@ -376,15 +376,15 @@ export default function WhatsAppManagerPage() {
           <div className="flex items-center gap-x-5 gap-y-2 flex-wrap">
             {/* WhatsApp Number Badge */}
             <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
-              <span className="text-sm font-medium text-foreground">WhatsApp Number:</span>
-              <span className="text-sm text-foreground">{whatsAppNumber}</span>
+              <span className="text-sm font-medium text-foreground dark:text-blue-300">WhatsApp Number:</span>
+              <span className="text-sm text-foreground dark:text-blue-300">{whatsAppNumber}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
-              <span className="text-sm font-medium text-foreground">Message limit:</span>
-              <span className="text-sm text-foreground">1K Customers/24hr</span>
+              <span className="text-sm font-medium text-foreground dark:text-blue-300">Message limit:</span>
+              <span className="text-sm text-foreground dark:text-blue-300">1K Customers/24hr</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-3 w-3" />
+                  <Info className="h-3 w-3 dark:text-blue-300" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
@@ -397,11 +397,11 @@ export default function WhatsAppManagerPage() {
               const statusText = isConnected ? 'Connected' : 'Disconnected';
               return (
                 <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-                  <span className="text-sm font-medium text-foreground">Account Status:</span>
+                  <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Status:</span>
                   <span className={`text-sm ${textColor}`}>{statusText}</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Info className="h-3 w-3" />
+                      <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="break-normal w-[16rem] whitespace-normal">Phone number is associated with this account and working properly</p>
@@ -427,11 +427,11 @@ export default function WhatsAppManagerPage() {
               }
               return (
                 <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-                  <span className="text-sm font-medium text-foreground">Account Health:</span>
+                  <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Health:</span>
                   <span className={`text-sm ${textColor}`}>{healthStatus}</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Info className="h-3 w-3" />
+                      <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="break-normal w-[16rem] whitespace-normal">Account health is based on how messages have been received by the recipients over the last 7 days. It is determined by a combination of quality signals from conversations between business and users. Examples include user feedback signals like blocks, reports and the reasons users provide when they block a business.</p>
@@ -455,7 +455,7 @@ export default function WhatsAppManagerPage() {
                 <CardContent className="flex flex-col items-center">
                   <div className="flex flex-col space-y-4 items-center max-w-md">
                     <div
-                      className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                      className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700"
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
                       onClick={() => document.getElementById('profilePhotoInput')?.click()}
@@ -465,7 +465,7 @@ export default function WhatsAppManagerPage() {
                       ) : (
                         <>
                           <UploadCloud className="w-10 h-10 text-gray-400" />
-                          <p className="text-sm text-gray-500">Drag or drop picture</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Drag or drop picture</p>
                         </>
                       )}
                       <input

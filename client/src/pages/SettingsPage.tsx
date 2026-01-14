@@ -126,7 +126,7 @@ export default function SettingsPage() {
                     navigate(`/settings?tab=${section.name}`);
                   }}
                   className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-primary text-white shadow-sm"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
                     }`}
                 >

@@ -898,12 +898,12 @@ export default function CampaignManager() {
 
       {/* WhatsApp Account Status */}
       <div className="flex items-center space-x-5">
-        <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 rounded-md w-fit">
-          <span className="text-sm font-medium text-foreground">Message limit:</span>
-          <span className="text-sm text-foreground">1K Customers/24hr</span>
+        <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
+          <span className="text-sm font-medium text-foreground dark:text-blue-300">Message limit:</span>
+          <span className="text-sm text-foreground dark:text-blue-300">1K Customers/24hr</span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Info className="h-3 w-3" />
+              <Info className="h-3 w-3 dark:text-blue-300" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
@@ -912,16 +912,16 @@ export default function CampaignManager() {
         </div>
         {(() => {
           const isConnected = Math.random() < 0.5;
-          const bgColor = isConnected ? 'bg-green-100' : 'bg-red-100';
-          const textColor = isConnected ? 'text-green-800' : 'text-red-800';
+          const bgColor = isConnected ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30';
+          const textColor = isConnected ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300';
           const statusText = isConnected ? 'Connected' : 'Disconnected';
           return (
             <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-              <span className="text-sm font-medium text-foreground">Account Status:</span>
-              <span className={`text-sm text-foreground`}>{statusText}</span>
+              <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Status:</span>
+              <span className={`text-sm ${textColor}`}>{statusText}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-3 w-3" />
+                  <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="break-normal w-[16rem] whitespace-normal">Phone number is associated with this account and working properly</p>
@@ -935,24 +935,24 @@ export default function CampaignManager() {
           let healthStatus, bgColor, textColor;
           if (health < 0.33) {
             healthStatus = "Green";
-            bgColor = "bg-green-100";
-            textColor = "text-green-800";
+            bgColor = "bg-green-100 dark:bg-green-900/30";
+            textColor = "text-green-800 dark:text-green-300";
           } else if (health < 0.66) {
             healthStatus = "Yellow";
-            bgColor = "bg-yellow-100";
-            textColor = "text-yellow-800";
+            bgColor = "bg-yellow-100 dark:bg-yellow-900/30";
+            textColor = "text-yellow-800 dark:text-yellow-300";
           } else {
             healthStatus = "Red";
-            bgColor = "bg-red-100";
-            textColor = "text-red-800";
+            bgColor = "bg-red-100 dark:bg-red-900/30";
+            textColor = "text-red-800 dark:text-red-300";
           }
           return (
             <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-              <span className="text-sm font-medium text-foreground">Account Health:</span>
-              <span className={`text-sm text-foreground`}>{healthStatus}</span>
+              <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Health:</span>
+              <span className={`text-sm ${textColor}`}>{healthStatus}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-3 w-3" />
+                  <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="break-normal w-[16rem] whitespace-normal">Account health is based on how messages have been received by the recipients over the last 7 days. It is determined by a combination of quality signals from conversations between business and users. Examples include user feedback signals like blocks, reports and the reasons users provide when they block a business.</p>
