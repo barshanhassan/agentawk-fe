@@ -315,7 +315,7 @@ export default function AppSidebar() {
       rounded-md px-3 py-2 text-sm
       overflow-hidden
       transition-[width,opacity] duration-300 ease-out
-      ${isSearchOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 pointer-events-none"}
+      ${isSearchOpen ? "w-[550px] opacity-100" : "w-0 opacity-0 pointer-events-none"}
 
     `}
                 >

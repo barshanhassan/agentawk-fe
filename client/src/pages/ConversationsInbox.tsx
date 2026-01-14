@@ -1160,7 +1160,7 @@ export default function ConversationsInbox() {
                             </AvatarFallback>
                           </Avatar>
                           {getPendingMessagesCount(conv.id) > 0 && (
-                            <Badge variant="default" className="absolute h-5 w-5 -top-1.5 left-7 flex items-center justify-center p-0 text-xs rounded-full bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700 border-0">
+                            <Badge variant="default" className="absolute h-5 w-5 -top-1.5 left-7 flex items-center justify-center p-0 text-xs rounded-full bg-primary hover:bg-primary/90 text-white dark:text-white border-0">
                               {getPendingMessagesCount(conv.id)}
                             </Badge>
                           )}
