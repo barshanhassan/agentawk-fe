@@ -13,7 +13,7 @@ interface PreviewV2Props {
   showPlaceholderMessageInTemplate?: boolean;
   showTopBar?: boolean;
   showBottomBar?: boolean;
-  
+
   // Optional Message Related
   headerText?: string;
   bodyText?: string;
@@ -22,7 +22,7 @@ interface PreviewV2Props {
   selectedMediaFile?: File | string | null;
   templateButtons?: Array<any>;
   variableSamples?: Record<string, string>;
- 
+
   // Optional Command related
   commands?: { commandText: string; commandDescription: string; }[];
 
@@ -56,7 +56,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
   icebreakers = [],
   commands = [],
   variableSamples = {},
-  showPlaceholderMessageInTemplate = true, 
+  showPlaceholderMessageInTemplate = true,
   showMobile = true,
   profileName = "Your Business Name",
   profileSubText = "Business Account",
@@ -288,16 +288,16 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         <>
           <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] ${!showTopBar ? 'rounded-t-[14px]' : ''}`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
             <div className="flex items-center">
-              <ArrowLeft size={24}/>
+              <ArrowLeft size={24} color="#111B21" />
               <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
               <div className="flex flex-col">
-                <span className="text-[19px] font-semibold truncate max-w-[230px]">{profileName}</span>
-                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px]">{profileSubText}</span>
+                <span className="text-[19px] font-semibold truncate max-w-[230px] text-[#111B21]">{profileName}</span>
+                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px] text-[#111B21]">{profileSubText}</span>
               </div>
             </div>
             <MoreVertical size={24} />
           </div>
-          <div 
+          <div
             ref={chatAreaRef}
             className={`w-full h-full bg-[#ECE5DD] -mt-px px-[17px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}
           >
@@ -305,7 +305,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
               <>
                 <div className="flex-1 min-h-0 pb-[16px]"></div>
                 <div className="relative flex justify-start flex-shrink-0">
-                  <div className="absolute w-[25px] h-[30px] left-[-10px] top-[0px] bg-white" style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}></div>       
+                  <div className="absolute w-[25px] h-[30px] left-[-10px] top-[0px] bg-white" style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}></div>
                   <div className="z-10 bg-white rounded-[16px] px-[12px] py-[8px] max-w-[300px] shadow-sm overflow-hidden">
                     {selectedMediaFile && (
                       <div className="mb-[8px] mt-[4px]">
@@ -371,7 +371,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                           {footerText}
                         </p>
                       )}
-      
+
                     </div>
 
                     {!hasContent && (
@@ -382,14 +382,14 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
                     <div className='flex w-full justify-end gap-[2px]'>
                       <p className="text-[14px] text-[#999999] font-medium">9:41 AM</p>
-                      <MdDoneAll size={22} fill='#999999'/>
+                      <MdDoneAll size={22} fill='#999999' />
                     </div>
 
                     {templateButtons.length > 0 && (
                       <div className="mt-[2px] space-y-[4px]">
                         {templateButtons.slice(0, 3).map((button) => (
                           <>
-                            <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{borderTopWidth: "2px", borderTopColor: "#e7e7e7ff"}}></div>
+                            <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{ borderTopWidth: "2px", borderTopColor: "#e7e7e7ff" }}></div>
                             <div key={button.id} className="px-[12px] py-[8px] text-center">
                               <p className="text-[18px] text-[#0064FF] font-normal break-words">
                                 {getButtonDisplayText(button)}
@@ -399,7 +399,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                         ))}
                         {templateButtons.length > 3 && (
                           <>
-                            <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{borderTopWidth: "2px", borderTopColor: "#e7e7e7ff"}}></div>
+                            <div className="w-[calc(100% + 24px)] -mx-[12px]" style={{ borderTopWidth: "2px", borderTopColor: "#e7e7e7ff" }}></div>
                             <div className="px-[12px] py-[8px] text-center">
                               <Play size={14} className="text-[#0064FF]" />
                               <p className="text-[18px] text-[#0064FF] font-normal">See all options</p>
@@ -420,31 +420,31 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
               <div className="w-full">
                 {icebreakers.length > 0 && icebreakers.some(icebreaker => icebreaker.trim() !== "") && (
                   <div className="pt-[12px] pb-[4px] pl-[12px] pr-[16px] max-h-[500px] overflow-y-auto"
-                  style={{
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                  }}>
+                    style={{
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                    }}>
                     {icebreakers.filter(icebreaker => icebreaker.trim() !== "").map((icebreaker, index) => (
                       <div key={index} className='flex justify-between items-center '>
                         <div className="p-[8px] text-gray-700 text-[18px] break-all">
                           {icebreaker}
                         </div>
                         <div className='h-[22px] w-[22px]'>
-                          <MdSend size={22} fill='#36AD60'/>
+                          <MdSend size={22} fill='#36AD60' />
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-                {commands.length > 0  && commands.some(commands => commands.commandText.trim() !== "") && (
+                {commands.length > 0 && commands.some(commands => commands.commandText.trim() !== "") && (
                   <div className="pt-[10px] pb-[4px] pl-[5px] pr-[16px] max-h-[500px] overflow-y-auto"
-                  style={{
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                  }}>
+                    style={{
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                    }}>
                     {commands.map((command, index) => (
                       <>
-                        { command.commandText.trim() !== "" && (
+                        {command.commandText.trim() !== "" && (
                           <div key={index} className="flex items-start p-[8px]">
                             <img src={profilePfpUrl} className="w-[28px] mr-[10px] h-[28px] bg-gray-300 rounded-full object-cover" alt="Profile Picture" />
                             <div className="flex flex-col">
@@ -481,18 +481,18 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
         <>
           <div className={`pb-[30px] w-full h-full bg-white -mt-px px-[16px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
             <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between ${!showTopBar ? 'rounded-t-[14px]' : ''}`}>
-              <ArrowLeft size={24}/>
+              <ArrowLeft size={24} />
               <img src={profilePfpUrl} className="w-[130px] h-[130px] rounded-full object-cover" alt="Profile" />
               <MoreVertical size={24} />
             </div>
 
             {/* Profile Picture, Name, ~Phone Number, Share Button */}
             <div className="flex flex-col items-center text-center pt-[10px] mb-[2px]">
-              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7 break-all">{profileName}</h2>
+              <h2 className="text-[24px] font-semibold max-w-[300px] leading-7 break-all text-[#111B21]">{profileName}</h2>
               {profilePhoneNumber && <p className="mt-[4px] text-[20px] text-gray-500 max-w-[300px] break-all">{profilePhoneNumber}</p>}
-              <div className="mt-[24px] py-[6px] px-[44px] flex flex-col items-center justify-center border rounded-[10px] shadow-xs border-[var(--button-outline)]">
+              <div className="mt-[24px] py-[6px] px-[44px] flex flex-col items-center justify-center border rounded-[10px] shadow-xs border-[#0000001A]">
                 <Forward size={24} color="#36AD60" />
-                <h3 className='font-medium'>Share</h3>
+                <h3 className='font-medium text-[#111B21]'>Share</h3>
               </div>
             </div>
 
@@ -508,34 +508,34 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                 />
                 <div
                   className="flex flex-col"
-                  style={{gap: "16px"}}
+                  style={{ gap: "16px" }}
                 >
-                  {profileDescription && 
-                    <div style={{gap: "18px"}} className="flex items-start">
+                  {profileDescription &&
+                    <div style={{ gap: "18px" }} className="flex items-start">
                       <Briefcase size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
                       <p className="text-gray-700 text-[20px] font-medium break-all">{profileDescription}</p>
                     </div>
                   }
                   {profileCategory &&
-                    <div style={{gap: "18px"}} className="flex items-start">
+                    <div style={{ gap: "18px" }} className="flex items-start">
                       <Shapes size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
                       <p className="text-gray-500 text-[20px] font-medium break-all">{profileCategory}</p>
                     </div>
                   }
                   {profileAddress &&
-                    <div style={{gap: "18px"}} className="flex items-start">
+                    <div style={{ gap: "18px" }} className="flex items-start">
                       <MapPin size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
                       <p className="text-gray-500 text-[20px] font-medium break-all">{profileAddress}</p>
                     </div>
                   }
                   {profileEmail &&
-                    <div style={{gap: "18px"}} className="flex items-start">
+                    <div style={{ gap: "18px" }} className="flex items-start">
                       <Mail size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
                       <p className="text-blue-500 text-[20px] font-medium break-all">{profileEmail}</p>
                     </div>
                   }
                   {profileWebsite &&
-                    <div style={{gap: "18px"}} className="flex items-start">
+                    <div style={{ gap: "18px" }} className="flex items-start">
                       <Globe size={24} className="mt-[4px] flex-shrink-0 text-gray-500" />
                       <p className="text-blue-500 text-[20px] font-medium break-all">{profileWebsite}</p>
                     </div>
@@ -555,9 +555,9 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
                   }}
                 />
                 <h3 className="text-gray-500 font-semibold mb-[4px]">
-                  { profileAbout ? "About" : "" }
-                  { profileAbout && profilePhoneNumber ? " and phone number" : "" }
-                  { profilePhoneNumber && !profileAbout ? "Phone number" : "" }
+                  {profileAbout ? "About" : ""}
+                  {profileAbout && profilePhoneNumber ? " and phone number" : ""}
+                  {profilePhoneNumber && !profileAbout ? "Phone number" : ""}
                 </h3>
                 <div>
                   {profileAbout && (
@@ -600,13 +600,13 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
 
   return (
     <div ref={containerRef} className='w-full h-full flex items-center justify-center'>
-      <div 
-        ref={scaleWrapperRef} 
+      <div
+        ref={scaleWrapperRef}
         style={{ width: `${baseWidth}px`, height: `${baseHeight}px`, transformOrigin: 'center center' }}
       >
         <div className='flex p-[0px] h-full w-full'>
           {showMobile ? (
-            <div className={`flex flex-grow bg-black rounded-[24px]`} style={{padding: `${mobilePadding}px`}}>
+            <div className={`flex flex-grow bg-black rounded-[24px]`} style={{ padding: `${mobilePadding}px` }}>
               {whiteContentDiv}
             </div>
           ) : (

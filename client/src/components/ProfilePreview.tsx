@@ -54,7 +54,7 @@ export default function ProfilePreview({
         >
           {/* Spacer to push message to bottom */}
           <div className="flex-1 min-h-0"></div>
-          
+
           {/* Profile preview content */}
           <div className="flex justify-start flex-shrink-0">
             <div className={messageBoxClassName} style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
