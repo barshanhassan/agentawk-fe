@@ -961,7 +961,7 @@ export default function ContactsSection() {
                           placeholder="Value..."
                           value={filter.value}
                           onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                          className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors"
+                          className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors bg-card"
                         />
                         <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
                         <GripVertical size={14} className="text-muted-foreground cursor-grab" />
@@ -1300,7 +1300,7 @@ export default function ContactsSection() {
                   {editContactTags.map(tag => (
                     <div
                       key={tag}
-                      className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                      className="flex items-center gap-1 px-2 py-1 bg-muted rounded-full text-xs"
                     >
                       {tag}
                       <button

@@ -11,7 +11,9 @@ import AppSidebar from "@/components/AppSidebar";  // Now our horizontal top bar
 import InsightsDashboard from "@/pages/InsightsDashboard";
 import ConversationsInbox from "@/pages/ConversationsInbox";
 import BotConversations from "@/pages/BotConversations";
-import ConversationsLogs from "@/pages/ConversationsLogs";
+import ConversationLogsPage from "@/pages/ConversationLogsPage";
+import CallLogsPage from "@/pages/CallLogsPage";
+import NotificationsPage from "@/pages/NotificationsPage";
 import TemplateManager from "@/pages/TemplateManager";
 import CampaignManager from "@/pages/CampaignManager";
 import UserManagementPage from "@/pages/UserManagementPage";
@@ -25,6 +27,7 @@ import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 function Router() {
   return (
@@ -41,8 +44,11 @@ function Router() {
       <Route path="/conversations/bot">
         <ProtectedRoute><BotConversations /></ProtectedRoute>
       </Route>
-      <Route path="/conversations/logs">
-        <ProtectedRoute><ConversationsLogs /></ProtectedRoute>
+      <Route path="/conversations/conversation-logs">
+        <ProtectedRoute><ConversationLogsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/conversations/call-logs">
+        <ProtectedRoute><CallLogsPage /></ProtectedRoute>
       </Route>
       <Route path="/templates">
         <ProtectedRoute><TemplateManager /></ProtectedRoute>
@@ -72,6 +78,9 @@ function Router() {
       </Route>
       <Route path="/settings">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/notifications">
+        <ProtectedRoute><NotificationsPage /></ProtectedRoute>
       </Route>
 
       <Route path="/">
@@ -104,19 +113,21 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="flex flex-col h-screen overflow-hidden bg-background">
-          {/* New: Horizontal Top Bar (only shown when logged in) */}
-          {isLoggedIn && <AppSidebar />}
+      <ThemeProvider>
+        <TooltipProvider>
+          <div className="flex flex-col h-screen overflow-hidden bg-background">
+            {/* New: Horizontal Top Bar (only shown when logged in) */}
+            {isLoggedIn && <AppSidebar />}
 
-          {/* Main content area - now full width, with top padding */}
-          <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn ? "mt-16" : ""}`}>
-            <Router />
-          </main>
+            {/* Main content area - now full width, with top padding */}
+            <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn ? "mt-16" : ""}`}>
+              <Router />
+            </main>
 
-          <Toaster />
-        </div>
-      </TooltipProvider>
+            <Toaster />
+          </div>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

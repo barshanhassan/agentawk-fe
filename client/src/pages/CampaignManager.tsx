@@ -106,7 +106,7 @@ export default function CampaignManager() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [activeDetailsTab, setActiveDetailsTab] = useState("details");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
@@ -483,15 +483,9 @@ export default function CampaignManager() {
   const getFilteredCampaigns = () => {
     let filtered = campaigns;
 
-    // Filter by tab
-    if (activeTab === "draft") {
-      filtered = campaigns.filter(c => c.status === "draft");
-    } else if (activeTab === "scheduled") {
-      filtered = campaigns.filter(c => c.status === "scheduled");
-    } else if (activeTab === "delivered") {
-      filtered = campaigns.filter(c => c.status === "delivered");
-    } else if (activeTab === "archived") {
-      filtered = campaigns.filter(c => c.status === "archived");
+    // Filter by status
+    if (selectedStatus.length > 0) {
+      filtered = filtered.filter(c => selectedStatus.includes(c.status));
     }
 
     // Filter by search query
@@ -871,33 +865,10 @@ export default function CampaignManager() {
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
-          {[
-            { label: "All Campaigns", value: "all" },
-            { label: "Draft", value: "draft" },
-            { label: "Scheduled", value: "scheduled" },
-            { label: "Delivered", value: "delivered" },
-            { label: "Archived", value: "archived" },
-          ].map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.value
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-              data-testid={`tab-${tab.value}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       {/* WhatsApp Account Status */}
-      <div className="flex items-center space-x-5">
+      {/* <div className="flex items-center space-x-5">
         <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
           <span className="text-sm font-medium text-foreground dark:text-blue-300">Message limit:</span>
           <span className="text-sm text-foreground dark:text-blue-300">1K Customers/24hr</span>
@@ -961,7 +932,7 @@ export default function CampaignManager() {
             </div>
           );
         })()}
-      </div>
+      </div> */}
 
       {/* Search and Filters Section */}
       <div className="flex items-center gap-3">
@@ -975,6 +946,20 @@ export default function CampaignManager() {
             className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
           />
         </div>
+
+        {/* Status Dropdown */}
+        <CustomDropdown
+          options={[
+            { id: "draft", name: "Draft" },
+            { id: "scheduled", name: "Scheduled" },
+            { id: "delivered", name: "Delivered" },
+            { id: "archived", name: "Archived" },
+          ]}
+          selected={selectedStatus}
+          onChange={setSelectedStatus}
+          placeholder="Status"
+          width="150px"
+        />
 
         {/* Campaign Type Dropdown */}
         <CustomDropdown
@@ -1070,17 +1055,15 @@ export default function CampaignManager() {
                       {renderSortIcon("messageType")}
                     </div>
                   </th>
-                  {activeTab === "all" && (
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleColumnSort("status")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Status
-                        {renderSortIcon("status")}
-                      </div>
-                    </th>
-                  )}
+                  <th
+                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleColumnSort("status")}
+                  >
+                    <div className="flex items-center gap-2">
+                      Status
+                      {renderSortIcon("status")}
+                    </div>
+                  </th>
                   <th
                     className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
                     onClick={() => handleColumnSort("sent")}
@@ -1105,7 +1088,7 @@ export default function CampaignManager() {
               <tbody>
                 {getFilteredCampaigns().length === 0 ? (
                   <tr>
-                    <td colSpan={activeTab === "all" ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={8} className="text-center py-8 text-muted-foreground">
                       No results
                     </td>
                   </tr>
@@ -1133,18 +1116,16 @@ export default function CampaignManager() {
                         </Badge>
                       </td>
                       <td className="py-2 px-3">{campaign.messageType}</td>
-                      {activeTab === "all" && (
-                        <td className="py-2 px-3 capitalize text-xs">
-                          <StatusBadge
-                            status={campaign.status}
-                            type={
-                              campaign.status === "delivered" ? "success" :
-                                campaign.status === "scheduled" ? "warning" :
-                                  "neutral"
-                            }
-                          />
-                        </td>
-                      )}
+                      <td className="py-2 px-3 capitalize text-xs">
+                        <StatusBadge
+                          status={campaign.status}
+                          type={
+                            campaign.status === "delivered" ? "success" :
+                              campaign.status === "scheduled" ? "warning" :
+                                "neutral"
+                          }
+                        />
+                      </td>
                       <td className="py-2 px-3">{campaign.sent.toLocaleString()}</td>
                       <td className="py-2 px-3">{campaign.delivered.toLocaleString()}</td>
                       <td className="py-2 px-3 flex justify-start">

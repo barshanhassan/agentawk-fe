@@ -1234,10 +1234,7 @@ export default function BotConversations() {
 
         {showContactPanel && (
           <Card className="w-72 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="contact-panel">
-            <CardHeader>
-              <CardTitle>Contact Profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pt-8">
               <div className="flex flex-col items-center gap-3">
                 {selectedConversation && (() => {
                   const selectedConv = conversations.find(c => c.id === selectedConversation);
@@ -1256,7 +1253,7 @@ export default function BotConversations() {
                       </Avatar>
                       <div className="text-center">
                         <h3 className="font-semibold text-lg">{displayName}</h3>
-                        <p className="text-sm text-muted-foreground">Customer</p>
+                        <p className="text-sm text-muted-foreground">{selectedConv?.phoneNumber}</p>
                       </div>
                     </>
                   );

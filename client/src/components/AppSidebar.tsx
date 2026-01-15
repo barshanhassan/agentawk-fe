@@ -21,7 +21,9 @@ import {
   Sun,
   Moon,
   Circle,
+  Phone,
 } from "react-feather";
+import { useTheme } from "@/contexts/ThemeContext";
 import { BsGrid3X3GapFill } from "react-icons/bs";
 
 import { SiWhatsapp } from "react-icons/si";
@@ -45,10 +47,17 @@ export default function AppSidebar() {
   const [location] = useLocation();
 
   // State for Theme and Online Status
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { mode: theme, setMode: setTheme } = useTheme();
   const [status, setStatus] = useState<"available" | "unavailable">("available");
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState<string[]>(["en-us"]);
+  const [workspace, setWorkspace] = useState<string[]>(["workspace-a"]);
+
+  const workspaceOptions = [
+    { id: "workspace-a", name: "Workspace A" },
+    { id: "workspace-b", name: "Workspace B" },
+    { id: "workspace-c", name: "Workspace C" },
+  ];
 
   const statusOptions = [
     { id: "available", name: "Available", icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
@@ -96,15 +105,10 @@ export default function AppSidebar() {
 
   const isConversationsParentActive =
     location.startsWith("/conversations/inbox") ||
-    location.startsWith("/conversations/logs");
+    location.startsWith("/conversations/conversation-logs") ||
+    location.startsWith("/conversations/call-logs");
 
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
+  // Removed local theme effect as it's handled in ThemeContext
 
   // Menu items for search filtering
   const menuItems = [
@@ -186,11 +190,20 @@ export default function AppSidebar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/conversations/logs"
-                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/logs") ? activeClass : ""}`}
+                      href="/conversations/conversation-logs"
+                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/conversation-logs") ? activeClass : ""}`}
                     >
                       <FileText size={18} />
-                      Logs
+                      Conversation Logs
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/conversations/call-logs"
+                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/call-logs") ? activeClass : ""}`}
+                    >
+                      <Phone size={18} />
+                      Call Logs
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
@@ -480,6 +493,20 @@ export default function AppSidebar() {
                   selected={[status]}
                   onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
                   placeholder="Select Status"
+                  width="100%"
+                  showSelectedOption={true}
+                  showSearch={false}
+                />
+              </div>
+
+              {/* Workspace Selector */}
+              <div className="px-4 pb-4">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Workspace</p>
+                <CustomDropdown
+                  options={workspaceOptions}
+                  selected={workspace}
+                  onChange={(val) => setWorkspace(val)}
+                  placeholder="Select Workspace"
                   width="100%"
                   showSelectedOption={true}
                   showSearch={false}

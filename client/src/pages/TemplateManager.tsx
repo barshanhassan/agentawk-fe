@@ -1117,7 +1117,7 @@ export default function TemplateManager() {
     <div className="p-6 space-y-6" data-testid="template-manager">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Template Manager</h1>
+        <h1 className="text-3xl font-bold">Whatsapp Templates</h1>
         <div className="flex items-center gap-3">
           <Button className="gap-2 btn-outline-primary font-normal h-10 text-sm" variant="outline" onClick={() => setCreateTemplateOpen(true)} data-testid="button-create-template">
             <Plus size={16} />
@@ -1345,13 +1345,13 @@ export default function TemplateManager() {
                             <button
                               type="button"
                               onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
-                              className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                              className="w-[90px] flex items-center justify-between px-3 py-2 text-left border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
                             >
                               <span className="truncate text-sm font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
                               <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                             </button>
                             {openSortDirectionDropdown === sort.id && (
-                              <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md border border-border">
+                              <div className="absolute z-10 w-full mt-2 rounded-md shadow-md border border-border">
                                 <ul className="py-1">
                                   {["asc", "desc"].map(option => (
                                     <li
@@ -1500,7 +1500,7 @@ export default function TemplateManager() {
                             placeholder="Value..."
                             value={filter.value}
                             onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                            className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors"
+                            className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors bg-card"
                           />
                           <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
                           <GripVertical size={14} className="text-muted-foreground cursor-grab" />
@@ -1852,11 +1852,10 @@ export default function TemplateManager() {
                     </CardContent>
                   </Card>
                 </div>
-
                 {/* Category Guidelines Banner */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-base text-blue-800 mb-2">Category Guidelines:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
+                  <h4 className="font-semibold text-base text-blue-800 mb-2 dark:text-blue-300">Category Guidelines:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5 dark:text-blue-300">
                     <li><strong>Marketing:</strong> Requires opt-in from customers and has a 24-hour messaging window</li>
                     <li><strong>Utility:</strong> For transactional messages like confirmations, alerts, and updates</li>
                     <li><strong>Authentication:</strong> For security codes, login verifications, and account alerts</li>

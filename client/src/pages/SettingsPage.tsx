@@ -13,9 +13,11 @@ import {
   Tag,
   ShieldCheck,
   Code,
-  Lock
+  Lock,
+  PaintBucket,
 } from "lucide-react";
 import ProfileSection from "@/components/sections/ProfileSection";
+import ThemeSection from "@/components/sections/ThemeSection";
 import PreferencesSection from "@/components/sections/PreferencesSection";
 import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
 import AIAssistantsSection from "@/components/sections/AIAssistantsSection";
@@ -31,6 +33,7 @@ import TagsSection from "@/components/sections/TagsSection";
 export default function SettingsPage() {
   const sections = [
     { name: "My Profile", icon: User },
+    { name: "Theme", icon: PaintBucket },
     { name: "Preferences", icon: Settings },
     { name: "Business Hours", icon: Clock },
     { name: "AI Assistants", icon: Bot },
@@ -152,6 +155,10 @@ export default function SettingsPage() {
               browserNotificationsDenied={browserNotificationsDenied}
               handleTestNotification={handleTestNotification}
             />
+          )}
+
+          {activeSection === "Theme" && (
+            <ThemeSection />
           )}
 
           {activeSection === "Preferences" && (

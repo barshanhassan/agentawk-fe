@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, BarChart3 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Utility function to abbreviate large numbers
 const abbreviateNumber = (num: number): string => {
@@ -56,6 +57,26 @@ const CallEngagementTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function AgentConversion() {
+  const { mode } = useTheme();
+
+  // Color palette
+  const colors = {
+    light: {
+      red: "#f87171",
+      orange: "#fb923c",
+      purple: "#c084fc",
+      blue: "#60a5fa",
+    },
+    dark: {
+      red: "#ef4444",
+      orange: "#f97316",
+      purple: "#a855f7",
+      blue: "#3b82f6",
+    },
+  };
+
+  const currentColors = mode === "dark" ? colors.dark : colors.light;
+
   // Mock KPI data
   const kpiData = {
     conversionStatus: {
@@ -188,10 +209,10 @@ export default function AgentConversion() {
                 wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
                 iconType="circle"
               />
-              <Bar dataKey="queued" stackId="a" fill="#f87171" name="Queued" />
-              <Bar dataKey="active" stackId="a" fill="#fb923c" name="Active" />
-              <Bar dataKey="pending" stackId="a" fill="#c084fc" name="Pending" />
-              <Bar dataKey="resolved" stackId="a" fill="#60a5fa" name="Resolved" />
+              <Bar dataKey="queued" stackId="a" fill={currentColors.red} name="Queued" />
+              <Bar dataKey="active" stackId="a" fill={currentColors.orange} name="Active" />
+              <Bar dataKey="pending" stackId="a" fill={currentColors.purple} name="Pending" />
+              <Bar dataKey="resolved" stackId="a" fill={currentColors.blue} name="Resolved" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -216,10 +237,10 @@ export default function AgentConversion() {
                     wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
                     iconType="circle"
                   />
-                  <Bar dataKey="inbound" stackId="a" fill="#f87171" name="Inbound Calls" />
-                  <Bar dataKey="outbound" stackId="a" fill="#fb923c" name="Outbound Calls" />
-                  <Bar dataKey="messagesReceived" stackId="a" fill="#c084fc" name="Messages Received" />
-                  <Bar dataKey="messagesSent" stackId="a" fill="#60a5fa" name="Messages Sent" />
+                  <Bar dataKey="inbound" stackId="a" fill={currentColors.red} name="Inbound Calls" />
+                  <Bar dataKey="outbound" stackId="a" fill={currentColors.orange} name="Outbound Calls" />
+                  <Bar dataKey="messagesReceived" stackId="a" fill={currentColors.purple} name="Messages Received" />
+                  <Bar dataKey="messagesSent" stackId="a" fill={currentColors.blue} name="Messages Sent" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

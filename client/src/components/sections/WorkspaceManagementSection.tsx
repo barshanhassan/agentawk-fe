@@ -369,7 +369,7 @@ export default function WorkspaceManagementSection() {
 
       <Dialog open={showEditWorkspaceModal} onOpenChange={setShowEditWorkspaceModal}>
         <DialogContent className="max-w-xl">
-          <DialogHeader className="mb-2"><DialogTitle>Edit</DialogTitle></DialogHeader>
+          <DialogHeader className="mb-2"><DialogTitle>Edit Workspace</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">Workspace Name<span className="text-red-500 pl-0.5">*</span></label>
