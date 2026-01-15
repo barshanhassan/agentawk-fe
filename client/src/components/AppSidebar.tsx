@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Mail,
@@ -127,6 +127,13 @@ export default function AppSidebar() {
     location.startsWith("/conversations/call-logs");
 
   // Removed local theme effect as it's handled in ThemeContext
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
 
   // Menu items for search filtering
   const menuItems = [
@@ -148,7 +155,7 @@ export default function AppSidebar() {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-[0_-3px_6px_rgba(0,0,0,0.03),-3px_0_6px_rgba(0,0,0,0.03),3px_0_6px_rgba(0,0,0,0.03),0_4px_6px_rgba(0,0,0,0.07)] border-b border-slate-200 dark:border-slate-800">
+    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-[0_-3px_6px_rgba(0,0,0,0.03),-3px_0_6px_rgba(0,0,0,0.03),3px_0_6px_rgba(0,0,0,0.03),0_4px_6px_rgba(0,0,0,0.07)] border-b border-slate-200 dark:border-slate-800 no-focus-outline">
       <div className="flex items-center justify-between h-full px-5">
         {/* Left: Logo + EZCONN + Menu + Search */}
         <div className="flex items-center gap-6">
@@ -179,7 +186,7 @@ export default function AppSidebar() {
               side="bottom"
               align="start"
               sideOffset={6}
-              className="w-60 bg-white dark:bg-background border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-[14px] font-[Roboto, sans-serif] mt-2 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]"
+              className="w-60 bg-white dark:bg-background border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-[14px] font-[Roboto, sans-serif] mt-2 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] no-focus-outline"
             >
               <DropdownMenuItem asChild>
                 <Link
@@ -361,7 +368,7 @@ export default function AppSidebar() {
                         <ChevronDown size={14} className="text-gray-400" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="mt-2 ml-[-2.2rem] bg-card border-slate-200 dark:border-[#2c3a4f]">
+                    <DropdownMenuContent align="start" className="mt-2 ml-[-2.2rem] bg-card border-slate-200 dark:border-[#2c3a4f] no-focus-outline">
                       {searchOptions.map((option) => (
                         <DropdownMenuItem
                           key={option.label}
@@ -385,11 +392,11 @@ export default function AppSidebar() {
 
                   {/* REAL INPUT */}
                   <input
+                    ref={searchInputRef}
                     type="text"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
                     placeholder="Search..."
-                    autoFocus
                     className="
         flex-1 bg-transparent text-slate-900 dark:text-white placeholder-gray-400
         outline-none !border-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 text-sm
@@ -428,7 +435,7 @@ export default function AppSidebar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end"
               sideOffset={6}
-              className="w-80 bg-card text-card-foreground border-slate-200 dark:border-slate-700 mt-5 shadow-xl">
+              className="w-80 bg-card text-card-foreground border-slate-200 dark:border-slate-700 mt-5 shadow-xl no-focus-outline">
               <div className="p-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 className="font-semibold">Notifications</h3>
               </div>
@@ -503,7 +510,7 @@ export default function AppSidebar() {
             </DropdownMenuTrigger>
 
             {/* Dropdown Content */}
-            <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-xl rounded-lg mt-4">
+            <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-xl rounded-lg mt-4 no-focus-outline">
               {/* Header */}
               <DropdownMenuItem asChild>
                 <div

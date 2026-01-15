@@ -43,11 +43,11 @@ function InsightsDashboardContent() {
         <div className="flex items-center gap-4">
           {/* Date Range Selector */}
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[160px]" style={{ height: "38px" }}>
+            <SelectTrigger className="w-[160px] no-focus-outline" style={{ height: "38px" }}>
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)]">
+            <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] no-focus-outline">
               <SelectItem value="last-7-days">Last 7 Days</SelectItem>
               <SelectItem value="last-14-days">Last 14 Days</SelectItem>
               <SelectItem value="last-30-days">Last 30 Days</SelectItem>
