@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
-import StatusBadge from "@/components/StatusBadge";
+
 
 type TeamStatus = "Active" | "Inactive";
 
@@ -460,7 +460,10 @@ export default function TeamManagementSection() {
                         <td className="py-2 px-3">{supervisor?.name || "N/A"}</td>
                         <td className="py-2 px-3">{team.agents.length}</td>
                         <td className="py-2 px-3">
-                          <StatusBadge status={team.status} type={team.status === "Active" ? "success" : "danger"} />
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${team.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                            }`}>
+                            {team.status}
+                          </span>
                         </td>
                         <td className="py-2 px-3">
                           <div>

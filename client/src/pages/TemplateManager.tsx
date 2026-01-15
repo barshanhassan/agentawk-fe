@@ -31,7 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import PreviewV2 from "@/components/PreviewV2";
-import StatusBadge from "@/components/StatusBadge";
+
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -1627,7 +1627,13 @@ export default function TemplateManager() {
                         <td className="py-2 px-3">{template.category}</td>
                         <td className="py-2 px-3">{template.language}</td>
                         <td className="py-2 px-3">
-                          <StatusBadge status={template.status} type={template.statusTypeColor as any} />
+                          <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${template.statusTypeColor === "success" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                            template.statusTypeColor === "warning" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                              template.statusTypeColor === "danger" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
+                                "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            }`}>
+                            {template.status}
+                          </span>
                         </td>
                         <td className="py-2 px-3 max-w-[10rem]">
                           <div className="break-all">

@@ -5,7 +5,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsToolti
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import StatusBadge from "@/components/StatusBadge";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -1117,14 +1117,12 @@ export default function CampaignManager() {
                       </td>
                       <td className="py-2 px-3">{campaign.messageType}</td>
                       <td className="py-2 px-3 capitalize text-xs">
-                        <StatusBadge
-                          status={campaign.status}
-                          type={
-                            campaign.status === "delivered" ? "success" :
-                              campaign.status === "scheduled" ? "warning" :
-                                "neutral"
-                          }
-                        />
+                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${campaign.status === "delivered" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                          campaign.status === "scheduled" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                            "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          }`}>
+                          {campaign.status}
+                        </span>
                       </td>
                       <td className="py-2 px-3">{campaign.sent.toLocaleString()}</td>
                       <td className="py-2 px-3">{campaign.delivered.toLocaleString()}</td>

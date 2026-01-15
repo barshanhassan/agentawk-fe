@@ -87,7 +87,7 @@ export default function NotificationsPage() {
                 </Badge>
             </div>
 
-            <Card className="border-0 shadow-lg bg-white dark:bg-slate-900">
+            <Card className="border-0 shadow-lg">
                 <CardHeader className="border-b border-gray-100 dark:border-slate-800 pb-4">
                     <CardTitle className="text-lg">Recent Activity</CardTitle>
                 </CardHeader>
@@ -100,7 +100,7 @@ export default function NotificationsPage() {
                                     className={`flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${!notification.read ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
                                         }`}
                                 >
-                                    <div className="mt-1 bg-white dark:bg-slate-800 p-2 rounded-full shadow-sm border border-gray-100 dark:border-slate-700">
+                                    <div className="mt-1 bg-secondary p-2 rounded-full shadow-sm border border-gray-100 dark:border-slate-700">
                                         {getIcon(notification.type)}
                                     </div>
                                     <div className="flex-1 space-y-1">

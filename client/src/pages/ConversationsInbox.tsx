@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile } from "react-feather";
-import { GripVertical, MoreVertical } from "lucide-react";
+import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
+import { GripVertical, MoreVertical, ChevronDown, User, ListFilter } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +40,7 @@ import { AlertCircle } from "lucide-react";
 import PreviewV2 from "@/components/PreviewV2";
 import { Textarea } from "@/components/ui/textarea";
 import { getAvatarColor } from "@/lib/avatar-utils";
+import ContactProfileSidebar from "@/components/ContactProfileSidebar";
 
 
 // Helper function to get display name - defaults to phone number if displayName not set
@@ -58,6 +59,58 @@ export default function ConversationsInbox() {
   const [assignedAgent, setAssignedAgent] = useState<string | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Filter State
+  const [showFilter, setShowFilter] = useState(false);
+  const [filters, setFilters] = useState<any[]>([]);
+  const [draggedFilterId, setDraggedFilterId] = useState<string | null>(null);
+  const [openFilterColumnDropdown, setOpenFilterColumnDropdown] = useState<string | null>(null);
+  const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+  // New Header Dropdowns State
+  const [selectedFilterAgents, setSelectedFilterAgents] = useState<string[]>([]);
+  const [selectedFilterChannels, setSelectedFilterChannels] = useState<string[]>([]);
+
+  const channelOptions = [
+    { id: "whatsapp", name: "Whatsapp" },
+    { id: "instagram", name: "Instagram" },
+    { id: "messenger", name: "Messenger" },
+  ];
+
+  // Filter Handlers
+  const addFilter = () => {
+    setFilters([...filters, { id: Date.now().toString(), column: "name", operator: "contains", value: "" }]);
+  };
+
+  const removeFilter = (id: string) => {
+    setFilters(filters.filter(f => f.id !== id));
+  };
+
+  const updateFilter = (id: string, column: string, operator: string, value: string) => {
+    setFilters(filters.map(f => f.id === id ? { ...f, column, operator, value } : f));
+  };
+
+  const handleFilterDragStart = (id: string) => {
+    setDraggedFilterId(id);
+  };
+
+  const handleFilterDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleFilterDrop = (targetId: string) => {
+    if (!draggedFilterId || draggedFilterId === targetId) return;
+
+    const draggedIndex = filters.findIndex(f => f.id === draggedFilterId);
+    const targetIndex = filters.findIndex(f => f.id === targetId);
+
+    const newFilters = [...filters];
+    [newFilters[draggedIndex], newFilters[targetIndex]] = [newFilters[targetIndex], newFilters[draggedIndex]];
+    setFilters(newFilters);
+    setDraggedFilterId(null);
+  };
 
   // Current user
   const currentUser = { id: "self", name: "Admin User" };
@@ -80,8 +133,35 @@ export default function ConversationsInbox() {
 
   // Toggle contact panel visibility
   const handleToggleContactPanel = () => {
-    setShowContactPanel(!showContactPanel);
+    const newShowState = !showContactPanel;
+    setShowContactPanel(newShowState);
+
+    if (selectedConversation) {
+      const closedProfiles = JSON.parse(localStorage.getItem('closed_contact_profiles') || '[]');
+      if (!newShowState) {
+        // User closed it, remember this
+        if (!closedProfiles.includes(selectedConversation)) {
+          closedProfiles.push(selectedConversation);
+          localStorage.setItem('closed_contact_profiles', JSON.stringify(closedProfiles));
+        }
+      } else {
+        // User opened it, remove from closed list
+        const newClosedProfiles = closedProfiles.filter((id: any) => id !== selectedConversation);
+        localStorage.setItem('closed_contact_profiles', JSON.stringify(newClosedProfiles));
+      }
+    }
   };
+
+  // Restore profile state when conversation changes
+  useEffect(() => {
+    if (selectedConversation) {
+      const closedProfiles = JSON.parse(localStorage.getItem('closed_contact_profiles') || '[]');
+      // Default is OPEN (true), so if it's in the closed list, set to false.
+      setShowContactPanel(!closedProfiles.includes(selectedConversation));
+    } else {
+      setShowContactPanel(false);
+    }
+  }, [selectedConversation]);
 
   // Get the actual last message from conversation messages
   const getLastMessage = (convId: number): string => {
@@ -140,7 +220,47 @@ export default function ConversationsInbox() {
       );
     }
 
-    // Filter by teams
+    // Filter by Select Agents Dropdown
+    if (selectedFilterAgents.length > 0) {
+      filtered = filtered.filter(conv => selectedFilterAgents.includes(conv.assignedAgent || ""));
+    }
+
+    // Filter by Select Channels Dropdown
+    if (selectedFilterChannels.length > 0) {
+      filtered = filtered.filter(conv => selectedFilterChannels.includes(conv.channel || ""));
+    }
+
+    // Advanced Filters
+    if (filters.length > 0) {
+      filtered = filtered.filter(conv => {
+        return filters.every(filter => {
+          let itemValue = "";
+          if (filter.column === "name") {
+            itemValue = getDisplayName(conv);
+          } else if (filter.column === "phoneNumber") {
+            itemValue = conv.phoneNumber || "";
+          } else if (filter.column === "tags") {
+            const tags = tagsByConv[conv.id] || [];
+            itemValue = tags.join(" ");
+          }
+
+          const filterValue = (filter.value || "").toLowerCase();
+          const checkValue = itemValue.toLowerCase();
+
+          switch (filter.operator) {
+            case "contains": return checkValue.includes(filterValue);
+            case "does not contain": return !checkValue.includes(filterValue);
+            case "is": return checkValue === filterValue;
+            case "is not": return checkValue !== filterValue;
+            case "is empty": return !itemValue || itemValue.trim() === "";
+            case "is not empty": return itemValue && itemValue.trim() !== "";
+            default: return true;
+          }
+        });
+      });
+    }
+
+    // Filter by teams (Legacy/Existing)
     if (filterTeams.length > 0) {
       filtered = filtered.filter(conv => {
         const convTeams = involvedTeamsByConv[conv.id] || [];
@@ -148,7 +268,7 @@ export default function ConversationsInbox() {
       });
     }
 
-    // Filter by agents
+    // Filter by agents (Legacy/Existing - usually superceded by Select Agents above)
     if (filterAgents.length > 0) {
       filtered = filtered.filter(conv => {
         return filterAgents.includes(conv.assignedAgent || "");
@@ -322,101 +442,43 @@ export default function ConversationsInbox() {
     1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
   });
 
-  // Edit basic details modal state
-  const [isEditBasicDetailsOpen, setIsEditBasicDetailsOpen] = useState(false);
-  const [editedBasicDetails, setEditedBasicDetails] = useState(basicDetailsByConv[selectedConversation || 1] || {});
-
-  const handleSaveBasicDetails = () => {
+  // Update handlers for ContactProfileSidebar
+  const handleUpdateBasicDetails = (details: any) => {
     if (selectedConversation) {
-      setBasicDetailsByConv({ ...basicDetailsByConv, [selectedConversation]: editedBasicDetails });
+      setBasicDetailsByConv({ ...basicDetailsByConv, [selectedConversation]: details });
 
       // Update the conversation's displayName if it was changed
-      if (editedBasicDetails.displayName !== undefined) {
+      if (details.displayName !== undefined) {
         setConversations(conversations.map(conv =>
           conv.id === selectedConversation
-            ? { ...conv, displayName: editedBasicDetails.displayName }
+            ? { ...conv, displayName: details.displayName }
             : conv
         ));
       }
     }
-    setIsEditBasicDetailsOpen(false);
   };
 
-  const handleClearField = (field: string) => {
-    setEditedBasicDetails({ ...editedBasicDetails, [field]: "" });
-  };
-
-  // Add custom attribute modal state
-  const [isAddAttributeModalOpen, setIsAddAttributeModalOpen] = useState(false);
-  const [newAttributeKey, setNewAttributeKey] = useState("");
-  const [newAttributeValue, setNewAttributeValue] = useState("");
-
-  const handleAddAttribute = () => {
-    if (newAttributeKey.trim() && newAttributeValue.trim() && selectedConversation) {
-      const currentAttrs = customAttributesByConv[selectedConversation] || {};
-      setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation]: { ...currentAttrs, [newAttributeKey]: newAttributeValue } });
-      setNewAttributeKey("");
-      setNewAttributeValue("");
-      setIsAddAttributeModalOpen(false);
+  const handleUpdateInvolvedTeams = (teams: string[]) => {
+    if (selectedConversation) {
+      setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation]: teams });
     }
   };
 
-  // Add teams modal state
-  const [isAddTeamsModalOpen, setIsAddTeamsModalOpen] = useState(false);
-  const [selectedTeamsForModal, setSelectedTeamsForModal] = useState<string[]>([]);
-
-  const handleOpenTeamsModal = () => {
-    setSelectedTeamsForModal(involvedTeamsByConv[selectedConversation || 1] || []);
-    setIsAddTeamsModalOpen(true);
-  };
-
-  const handleSaveTeams = () => {
+  const handleUpdateTags = (tags: string[]) => {
     if (selectedConversation) {
-      setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation]: selectedTeamsForModal });
+      setTagsByConv({ ...tagsByConv, [selectedConversation]: tags });
     }
-    setIsAddTeamsModalOpen(false);
   };
 
-  // Add tags modal state
-  const [isAddTagsModalOpen, setIsAddTagsModalOpen] = useState(false);
-  const [selectedTagsForModal, setSelectedTagsForModal] = useState<string[]>([]);
-
-  const handleOpenTagsModal = () => {
-    setSelectedTagsForModal(tagsByConv[selectedConversation || 1] || []);
-    setIsAddTagsModalOpen(true);
-  };
-
-  const handleSaveTags = () => {
+  const handleUpdateCustomAttributes = (attributes: Record<string, string>) => {
     if (selectedConversation) {
-      setTagsByConv({ ...tagsByConv, [selectedConversation]: selectedTagsForModal });
+      setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation]: attributes });
     }
-    setIsAddTagsModalOpen(false);
   };
 
-  // Add note modal state
-  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
-  const [newNote, setNewNote] = useState("");
-
-  const handleAddNote = () => {
+  const handleUpdateNotes = (notes: string[]) => {
     if (selectedConversation) {
-      const currentNotes = notesByConv[selectedConversation] || [];
-      let updatedNotes: string[];
-
-      if (newNote.trim()) {
-        // If there's a new note, replace the last one or add it
-        if (currentNotes.length > 0) {
-          updatedNotes = [...currentNotes.slice(0, currentNotes.length - 1), newNote.trim()];
-        } else {
-          updatedNotes = [newNote.trim()];
-        }
-      } else {
-        // If newNote is empty, clear all notes for this conversation
-        updatedNotes = [];
-      }
-
-      setNotesByConv({ ...notesByConv, [selectedConversation]: updatedNotes });
-      setNewNote("");
-      setIsAddNoteModalOpen(false);
+      setNotesByConv({ ...notesByConv, [selectedConversation]: notes });
     }
   };
 
@@ -467,6 +529,20 @@ export default function ConversationsInbox() {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showEmojiPicker]);
+
+  // Close filter popout when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setShowFilter(false);
+      }
+    };
+
+    if (showFilter) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showFilter]);
 
   // Handle emoji selection from emoji-mart
   const handleEmojiSelect = (emoji: any) => {
@@ -1041,11 +1117,11 @@ export default function ConversationsInbox() {
       <div className="flex-1 flex gap-4 px-6 py-6 max-h-full">
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
-          <Card className="flex flex-col overflow-hidden shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
-            <CardHeader className="space-y-3 pb-3 flex-shrink-0">
+          <Card className="flex flex-col shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
+            <CardHeader className="px-3 space-y-3 pb-3 flex-shrink-0">
               {/* Tabs */}
-              <div className="flex justify-between border-b pb-0 w-full">
-                {["All", "queued", "Active", "Completed", "Spam"].map((tab) => {
+              <div className="px-3 flex justify-between border-b pb-0 w-full">
+                {["All", "Queued", "Active", "Completed", "Spam"].map((tab) => {
                   const tabKey = tab.toLowerCase();
                   const count = tabKey === "all"
                     ? conversations.length
@@ -1073,60 +1149,228 @@ export default function ConversationsInbox() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                   <Input
-                    placeholder="Search name..."
+                    placeholder="Search"
                     className="pl-10 border-input h-9 text-xs"
                     data-testid="input-search"
+                    onFocus={() => setIsSearchFocused(true)}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700" onClick={() => setIsFilterModalOpen(true)}>
-                      <Filter size={16} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Filter</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
-                      onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                    >
-                      <ArrowUp size={16} style={{ transform: sortOrder === "asc" ? "rotate(0deg)" : "rotate(180deg)" }} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Sort by time</TooltipContent>
-                </Tooltip>
-                <DropdownMenu open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
+
+                {!isSearchFocused && (
+                  <>
+                    {/* Select Agents Dropdown */}
+                    <div className="relative">
+                      <CustomDropdown
+                        options={agentOptions.map(a => ({ id: a.id, name: a.name }))}
+                        selected={selectedFilterAgents}
+                        onChange={setSelectedFilterAgents}
+                        placeholder="Agents"
+                        width="auto"
+                        className="h-9 w-9 px-[0.5rem] justify-center bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                        triggerContent={<User size={16} />}
+                        popoutWidth="200px"
+                        popoutAlign="left"
+                      />
+                    </div>
+
+                    {/* Select Channels Dropdown */}
+                    <div className="relative">
+                      <CustomDropdown
+                        options={channelOptions}
+                        selected={selectedFilterChannels}
+                        onChange={setSelectedFilterChannels}
+                        placeholder="Channels"
+                        width="auto"
+                        className="h-9 w-9 px-[0.5rem] justify-center bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                        triggerContent={<ListFilter size={16} />}
+                        popoutWidth="200px"
+                        popoutAlign="right"
+                      />
+                    </div>
+
+                    {/* Advanced Filter Popout */}
+                    <div className="relative" ref={filterDropdownRef}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 ${showFilter ? 'bg-accent dark:bg-slate-700' : ''}`}
+                            onClick={() => setShowFilter(!showFilter)}
+                          >
+                            <Filter size={16} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Filter</TooltipContent>
+                      </Tooltip>
+
+                      {/* Filter Popover Content */}
+                      {showFilter && (
+                        <div className="absolute z-[10] bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 left-0" style={{
+                          minWidth: '320px',
+                          marginLeft: '-140px' // Center align somewhat or adjust to keep on screen
+                        }}>
+                          {filters.length === 0 ? (
+                            <div className="text-center py-6">
+                              <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
+                              <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
+                              <Button onClick={addFilter} className="btn-outline-primary" variant="outline">Add filter</Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {filters.map((filter) => (
+                                <div
+                                  key={filter.id}
+                                  className="flex gap-2 items-center"
+                                  draggable
+                                  onDragStart={() => handleFilterDragStart(filter.id)}
+                                  onDragOver={handleFilterDragOver}
+                                  onDrop={() => handleFilterDrop(filter.id)}
+                                >
+                                  <div className="relative flex-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
+                                      className="w-[140px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
+                                    >
+                                      <span className="truncate text-sm font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone" : "Tags"}</span>
+                                      <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                                    </button>
+                                    {openFilterColumnDropdown === filter.id && (
+                                      <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
+                                        <ul className="py-1">
+                                          {["name", "phoneNumber", "tags"].map(option => {
+                                            const isCurrentOption = option === filter.column;
+                                            return (
+                                              <li
+                                                key={option}
+                                                className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
+                                                onClick={() => {
+                                                  if (!isCurrentOption) {
+                                                    updateFilter(filter.id, option, filter.operator, filter.value);
+                                                    setOpenFilterColumnDropdown(null);
+                                                  }
+                                                }}
+                                              >
+                                                {option === "name" ? "Name" : option === "phoneNumber" ? "Phone" : "Tags"}
+                                              </li>
+                                            );
+                                          })}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
+                                      className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
+                                    >
+                                      <span className="truncate text-sm font-normal">{filter.operator}</span>
+                                      <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                                    </button>
+                                    {openFilterOperatorDropdown === filter.id && (
+                                      <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
+                                        <ul className="py-1">
+                                          {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
+                                            <li
+                                              key={option}
+                                              className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
+                                              onClick={() => {
+                                                updateFilter(filter.id, filter.column, option, filter.value);
+                                                setOpenFilterOperatorDropdown(null);
+                                              }}
+                                            >
+                                              {option}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    placeholder="Value..."
+                                    value={filter.value}
+                                    onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
+                                    className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none transition-colors bg-card"
+                                  />
+                                  <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
+                                  <GripVertical size={14} className="text-muted-foreground cursor-grab" />
+                                </div>
+                              ))}
+                              <div className="flex gap-2 pt-2 border-t">
+                                <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">Add filter</Button>
+                                <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset</Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                          onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+                        >
+                          <ArrowUp size={16} style={{ transform: sortOrder === "asc" ? "rotate(0deg)" : "rotate(180deg)" }} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Sort by time</TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+
+                {isSearchFocused ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700">
-                          <Plus size={16} />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setIsSearchFocused(false);
+                        }}
+                      >
+                        <X size={16} />
+                      </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Call or Message</TooltipContent>
+                    <TooltipContent>Clear Search</TooltipContent>
                   </Tooltip>
-                  <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                    <DropdownMenuItem onClick={() => {
-                      setIsMakeCallModalOpen(true);
-                      setIsAddMenuOpen(false);
-                    }}>
-                      Make Call
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setIsTemplateMessageModalOpen(true);
-                      setIsAddMenuOpen(false);
-                    }}>
-                      Send Template Message
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                ) : (
+                  <DropdownMenu open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700">
+                            <Plus size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>Call or Message</TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end" className="bg-white dark:bg-background">
+                      <DropdownMenuItem onClick={() => {
+                        setIsMakeCallModalOpen(true);
+                        setIsAddMenuOpen(false);
+                      }}>
+                        Make Call
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        setIsTemplateMessageModalOpen(true);
+                        setIsAddMenuOpen(false);
+                      }}>
+                        Send Template Message
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </CardHeader>
 
@@ -1177,6 +1421,11 @@ export default function ConversationsInbox() {
                                       conv.status === "completed" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
                                         "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
                                     }`}
+                                // className={`text-xs flex-shrink-0 ${conv.status === "queued" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800" :
+                                //   conv.status === "active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
+                                //     conv.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
+                                //       "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
+                                //   }`}
                                 >
                                   {conv.status}
                                 </Badge>
@@ -1229,8 +1478,8 @@ export default function ConversationsInbox() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">{getDisplayName(conversations.find(c => c.id === selectedConversation) || {})}</h3>
-                    <p className="text-sm text-muted-foreground">Active now</p>
+                    <h3 className="text-sm font-semibold">{getDisplayName(conversations.find(c => c.id === selectedConversation) || {})}</h3>
+                    <p className="text-xs text-muted-foreground">Active now</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1328,149 +1577,7 @@ export default function ConversationsInbox() {
               </CardHeader>
               <Separator />
 
-              {/* Chat Status Notification */}
-              {selectedConversation && (() => {
-                const selectedConv = conversations.find(c => c.id === selectedConversation);
-                const status = selectedConv?.status;
 
-                if (status === "spam") {
-                  return (
-                    <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                        <p className="text-sm text-red-800">
-                          <strong>Chat marked as Spam!</strong>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          className="btn-outline-primary font-normal"
-                          onClick={() => handleAssignAgent("self")}
-                        >
-                          Reassign to Me
-                        </Button>
-                        <CustomDropdown
-                          options={agentOptions.filter(a => a.id !== "self")}
-                          selected={selectedAgents}
-                          onChange={(selected) => {
-                            if (selected.length > 0) {
-                              handleAssignAgent(selected[0]);
-                              setSelectedAgents([]);
-                            }
-                          }}
-                          placeholder="Reassign to Agent"
-                          width="180px"
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (status === "completed") {
-                  return (
-                    <div className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800/50 px-4 py-3 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                        <p className="text-sm text-green-800 dark:text-green-100">
-                          <strong>Chat marked as Completed!</strong>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          className="btn-outline-primary font-normal"
-                          onClick={() => handleAssignAgent("self")}
-                        >
-                          Reassign to Me
-                        </Button>
-                        <CustomDropdown
-                          options={agentOptions.filter(a => a.id !== "self")}
-                          selected={selectedAgents}
-                          onChange={(selected) => {
-                            if (selected.length > 0) {
-                              handleAssignAgent(selected[0]);
-                              setSelectedAgents([]);
-                            }
-                          }}
-                          placeholder="Reassign to Agent"
-                          width="180px"
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (status === "active" && assignedAgent && assignedAgent !== "self") {
-                  return (
-                    <div className="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800/50 px-4 py-3 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                        <p className="text-sm text-purple-800 dark:text-purple-100">
-                          <strong>Chat assigned to {getAgentName(assignedAgent)}!</strong>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          className="btn-outline-primary font-normal"
-                          onClick={() => handleAssignAgent("self")}
-                        >
-                          Reassign to Me
-                        </Button>
-                        <CustomDropdown
-                          options={agentOptions.filter(a => a.id !== "self")}
-                          selected={selectedAgents}
-                          onChange={(selected) => {
-                            if (selected.length > 0) {
-                              handleAssignAgent(selected[0]);
-                              setSelectedAgents([]);
-                            }
-                          }}
-                          placeholder="Reassign to Agent"
-                          width="180px"
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (!assignedAgent) {
-                  return (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 px-4 py-3 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                        <p className="text-sm text-amber-800 dark:text-amber-100">
-                          <strong>Chat not assigned!</strong>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          className="btn-outline-primary font-normal"
-                          onClick={() => handleAssignAgent("self")}
-                        >
-                          Assign to Me
-                        </Button>
-                        <CustomDropdown
-                          options={agentOptions.filter(a => a.id !== "self")}
-                          selected={selectedAgents}
-                          onChange={(selected) => {
-                            if (selected.length > 0) {
-                              handleAssignAgent(selected[0]);
-                              setSelectedAgents([]);
-                            }
-                          }}
-                          placeholder="Assign to Agent"
-                          width="180px"
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-
-                return null;
-              })()}
 
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
@@ -1744,7 +1851,7 @@ export default function ConversationsInbox() {
                   <AlertCircle className="w-6 h-6 text-muted-foreground" />
                   <div className="text-center">
                     <p className="text-sm font-medium text-foreground">Assign this chat to start messaging</p>
-                    <p className="text-xs text-muted-foreground mt-1">Use the assignment options above to get started</p>
+                    <p className="text-xs text-muted-foreground mt-1">Use the assignment options in the contact profile to get started</p>
                   </div>
                 </div>
               )}
@@ -1761,427 +1868,33 @@ export default function ConversationsInbox() {
 
         {
           showContactPanel && (
-            <Card className="w-72 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="contact-panel">
-              <CardContent className="space-y-6 pt-8">
-                <div className="flex flex-col items-center gap-3">
-                  {selectedConversation && (() => {
-                    const selectedConv = conversations.find(c => c.id === selectedConversation);
-                    const displayName = getDisplayName(selectedConv || {});
-                    const getInitials = (name: string) => {
-                      const parts = name.trim().split(/\s+/).filter((p: string) => p.length > 0);
-                      if (parts.length === 0) return "U";
-                      if (parts.length === 1) return parts[0][0].toUpperCase();
-                      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                    };
-                    const initials = getInitials(displayName);
-                    return (
-                      <>
-                        <Avatar className="h-20 w-20">
-                          <AvatarFallback className={`text-2xl ${getAvatarColor(displayName)}`}>{initials}</AvatarFallback>
-                        </Avatar>
-                        <div className="text-center">
-                          <h3 className="font-semibold text-lg">{displayName}</h3>
-                          <p className="text-sm text-muted-foreground">{selectedConv?.phoneNumber}</p>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-sm">Basic Details</h4>
-                      <Button variant="ghost" size="sm" onClick={() => {
-                        setEditedBasicDetails(basicDetailsByConv[selectedConversation || 1] || {});
-                        setIsEditBasicDetailsOpen(true);
-                      }} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-edit-basic-details">
-                        Edit
-                      </Button>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      {(() => {
-                        const details = basicDetailsByConv[selectedConversation || 1] || {};
-                        return (
-                          <>
-                            {details.displayName && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-muted-foreground">Name</span>
-                                <span className="text-sm font-semibold truncate">{details.displayName}</span>
-                              </div>
-                            )}
-                            {details.number && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-muted-foreground">Number</span>
-                                <span className="text-sm font-semibold truncate">{details.number}</span>
-                              </div>
-                            )}
-                            {details.email && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-muted-foreground">Email</span>
-                                <span className="text-sm font-semibold truncate">{details.email}</span>
-                              </div>
-                            )}
-                            {details.gender && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-muted-foreground">Gender</span>
-                                <span className="text-sm font-semibold truncate">{details.gender}</span>
-                              </div>
-                            )}
-                            {details.whatsappOptOut && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-muted-foreground">WhatsApp Opt-out</span>
-                                <span className="text-sm font-semibold truncate">{details.whatsappOptOut}</span>
-                              </div>
-                            )}
-                            {details.address && (
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-muted-foreground">Address</span>
-                                <span className="text-sm font-semibold truncate">{details.address}</span>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-sm">Involved Teams</h4>
-                      <Button variant="ghost" size="sm" onClick={handleOpenTeamsModal} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-teams">
-                        Add
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(() => {
-                        const teams = involvedTeamsByConv[selectedConversation || 1] || [];
-                        return teams.map((teamId) => {
-                          const team = teamOptions.find(t => t.id === teamId);
-                          return (
-                            <div
-                              key={teamId}
-                              className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs max-w-full"
-                            >
-                              <span className="truncate max-w-[calc(100%-20px)]">{team?.name}</span>
-                              <button
-                                onClick={() => {
-                                  const newTeams = teams.filter(t => t !== teamId);
-                                  setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation || 1]: newTeams });
-                                }}
-                                className="hover:text-purple-900 flex-shrink-0 border rounded"
-                              >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-sm">Tags</h4>
-                      <Button variant="ghost" size="sm" onClick={handleOpenTagsModal} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-tags">
-                        Add
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(() => {
-                        const tags = tagsByConv[selectedConversation || 1] || [];
-                        return tags.map((tagId) => {
-                          const tag = tagOptions.find(t => t.id === tagId);
-                          return (
-                            <div
-                              key={tagId}
-                              className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs max-w-full"
-                            >
-                              <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
-                              <button
-                                onClick={() => {
-                                  const newTags = tags.filter(t => t !== tagId);
-                                  setTagsByConv({ ...tagsByConv, [selectedConversation || 1]: newTags });
-                                }}
-                                className="hover:text-green-900 flex-shrink-0 border rounded"
-                              >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-
-                  <Separator />
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-sm">Custom Attributes</h4>
-                      <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-attribute">
-                        Add
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(() => {
-                        const attrs = customAttributesByConv[selectedConversation || 1] || {};
-                        return Object.entries(attrs).map(([key, value]) => (
-                          <div
-                            key={key}
-                            className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
-                          >
-                            <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
-                            <button
-                              onClick={() => {
-                                const newAttrs = { ...attrs };
-                                delete newAttrs[key];
-                                setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation || 1]: newAttrs });
-                              }}
-                              className="hover:text-blue-900 flex-shrink-0 border rounded"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-sm">Notes</h4>
-                      <Button variant="ghost" size="sm" onClick={() => {
-                        const currentNotes = notesByConv[selectedConversation || 1] || [];
-                        setNewNote(currentNotes[currentNotes.length - 1] || ""); // Prefill with last note
-                        setIsAddNoteModalOpen(true);
-                      }} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-set-note">
-                        Set
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {(() => {
-                        const notes = notesByConv[selectedConversation || 1] || [];
-                        return notes.map((note, index) => (
-                          <div key={index} className="text-xs bg-slate-200/75 dark:bg-slate-800 p-2 rounded">
-                            {note}
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ContactProfileSidebar
+              conversation={conversations.find(c => c.id === selectedConversation)}
+              conversations={conversations}
+              basicDetails={basicDetailsByConv[selectedConversation || 0]}
+              onUpdateBasicDetails={handleUpdateBasicDetails}
+              assignedAgent={assignedAgent}
+              onAssignAgent={handleAssignAgent}
+              agentOptions={agentOptions}
+              involvedTeams={involvedTeamsByConv[selectedConversation || 0]}
+              onUpdateInvolvedTeams={handleUpdateInvolvedTeams}
+              teamOptions={teamOptions}
+              tags={tagsByConv[selectedConversation || 0]}
+              onUpdateTags={handleUpdateTags}
+              tagOptions={tagOptions}
+              customAttributes={customAttributesByConv[selectedConversation || 0]}
+              onUpdateCustomAttributes={handleUpdateCustomAttributes}
+              notes={notesByConv[selectedConversation || 0]}
+              onUpdateNotes={handleUpdateNotes}
+            />
           )
         }
 
-        {/* Edit Basic Details Modal */}
-        <Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen}>
-          <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-            <DialogHeader className="px-1 mb-2">
-              <DialogTitle>Edit Basic Details</DialogTitle>
-            </DialogHeader>
 
-            <div className="px-1 space-y-4 overflow-y-auto flex-1">
-              {/* Name */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Name</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={editedBasicDetails.displayName || ""}
-                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, displayName: e.target.value })}
-                    placeholder="Enter name"
-                  />
-                  <button
-                    onClick={() => handleClearField("displayName")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
 
-              {/* Number */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Number</label>
-                <div className="flex gap-2">
-                  <Input
-                    value={editedBasicDetails.number}
-                    disabled
-                    placeholder="Enter number"
-                    className="bg-muted text-muted-foreground cursor-not-allowed mr-6"
-                  />
-                </div>
-              </div>
 
-              {/* Email */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Email</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={editedBasicDetails.email}
-                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, email: e.target.value })}
-                    placeholder="Enter email"
-                  />
-                  <button
-                    onClick={() => handleClearField("email")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
 
-              {/* Gender */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Gender</label>
-                <div className="flex gap-2 items-center">
-                  <Select value={editedBasicDetails.gender} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, gender: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <button
-                    onClick={() => handleClearField("gender")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
 
-              {/* WhatsApp Opt-out */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">WhatsApp Opt-out</label>
-                <div className="flex gap-2 items-center">
-                  <Select value={editedBasicDetails.whatsappOptOut} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, whatsappOptOut: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <button
-                    onClick={() => handleClearField("whatsappOptOut")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Address</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={editedBasicDetails.address}
-                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, address: e.target.value })}
-                    placeholder="Enter address"
-                  />
-                  <button
-                    onClick={() => handleClearField("address")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="px-1 mt-2">
-              <Button variant="ghost" onClick={() => setIsEditBasicDetailsOpen(false)} className="bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 font-normal">
-                Close
-              </Button>
-              <Button onClick={handleSaveBasicDetails} className="btn-outline-primary font-normal" variant="outline">
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Custom Attribute Modal */}
-        <Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="mb-2">
-              <DialogTitle>Add Custom Attribute</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Attribute Name</label>
-                <Input
-                  placeholder="e.g., Loyalty Status"
-                  value={newAttributeKey}
-                  onChange={(e) => setNewAttributeKey(e.target.value)}
-                  data-testid="input-attribute-key"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Attribute Value</label>
-                <Input
-                  placeholder="e.g., Gold Member"
-                  value={newAttributeValue}
-                  onChange={(e) => setNewAttributeValue(e.target.value)}
-                  data-testid="input-attribute-value"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="mt-2">
-              <Button variant="ghost" onClick={() => setIsAddAttributeModalOpen(false)} className="bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 font-normal">
-                Close
-              </Button>
-              <Button onClick={handleAddAttribute} disabled={!newAttributeKey || !newAttributeValue} className="btn-outline-primary font-normal" variant="outline">
-                Add Attribute
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Teams Modal */}
-        <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="mb-2">
-              <DialogTitle>Add Teams</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Select Teams</label>
-                <CustomDropdown
-                  options={teamOptions}
-                  selected={selectedTeamsForModal}
-                  onChange={setSelectedTeamsForModal}
-                  placeholder="Select teams"
-                  width="100%"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="mt-2">
-              <Button variant="ghost" onClick={() => setIsAddTeamsModalOpen(false)} className="bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 font-normal">
-                Cancel
-              </Button>
-              <Button onClick={handleSaveTeams} className="btn-outline-primary font-normal" variant="outline">
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Filter Modal */}
         <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
@@ -2746,72 +2459,9 @@ export default function ConversationsInbox() {
           )
         }
 
-        {/* Add Tags Modal */}
-        <Dialog open={isAddTagsModalOpen} onOpenChange={setIsAddTagsModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Tags</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-1 py-2">
-              <label className="text-sm font-medium text-foreground">Select Tags</label>
-              {/* Selected Tags */}
-              {selectedTagsForModal.length > 0 && (
-                <div className="flex flex-wrap gap-2 pb-1">
-                  {selectedTagsForModal.map(tagId => {
-                    const tag = tagOptions.find(t => t.id === tagId);
-                    return (
-                      <div
-                        key={tagId}
-                        className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
-                      >
-                        {tag?.name}
-                        <button
-                          onClick={() => setSelectedTagsForModal(selectedTagsForModal.filter(t => t !== tagId))}
-                          className="hover:text-blue-900"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              <CustomDropdown
-                options={tagOptions}
-                selected={selectedTagsForModal}
-                onChange={setSelectedTagsForModal}
-                placeholder="Select tags"
-                width="100%"
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddTagsModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSaveTags} className="btn-outline-primary font-normal" variant="outline">Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
-        {/* Add Note Modal */}
-        <Dialog open={isAddNoteModalOpen} onOpenChange={setIsAddNoteModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Note</DialogTitle>
-            </DialogHeader>
-            <div className="py-2">
-              <Textarea
-                value={newNote}
-                onChange={(e) => setNewNote(e.target.value)}
-                placeholder="Type your note here..."
-                className="w-full p-2 border rounded"
-                rows={4}
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddNoteModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleAddNote} className="btn-outline-primary font-normal" variant="outline">Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
+
       </div>
     </div >
   );

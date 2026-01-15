@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
+import ContactDetailsModal from "@/components/ContactDetailsModal";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -106,6 +107,10 @@ export default function ContactsSection() {
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
+
+  // Contact Details Modal State
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedContactForDetails, setSelectedContactForDetails] = useState<Contact | null>(null);
 
   // Add Contact Modal State
   const [showAddContactModal, setShowAddContactModal] = useState(false);
@@ -1076,7 +1081,17 @@ export default function ContactsSection() {
                           onCheckedChange={() => toggleRowSelection(contact.id)}
                         />
                       </td>
-                      <td className="py-2 px-3">{contact.name}</td>
+                      <td className="py-2 px-3">
+                        <button
+                          className="hover:underline font-medium text-left focus:outline-none"
+                          onClick={() => {
+                            setSelectedContactForDetails(contact);
+                            setShowDetailsModal(true);
+                          }}
+                        >
+                          {contact.name}
+                        </button>
+                      </td>
                       <td className="py-2 px-3">{contact.phoneNumber}</td>
                       <td className="py-2 px-3 max-w-lg">
                         <div className="flex flex-wrap gap-1">
@@ -1501,6 +1516,12 @@ export default function ContactsSection() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ContactDetailsModal
+        open={showDetailsModal}
+        onOpenChange={setShowDetailsModal}
+        contact={selectedContactForDetails}
+      />
     </div>
   );
 }

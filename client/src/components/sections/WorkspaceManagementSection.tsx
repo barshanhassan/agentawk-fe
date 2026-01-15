@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
-import StatusBadge from "@/components/StatusBadge";
+
 
 // --- Data Structures ---
 
@@ -264,7 +264,10 @@ export default function WorkspaceManagementSection() {
                       <td className="py-2 px-3">{ws.name}</td>
                       <td className="py-2 px-3">{ws.users.length}</td>
                       <td className="py-2 px-3">
-                        <StatusBadge status={ws.status} type={ws.status === "Active" ? "success" : "danger"} />
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${ws.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                          }`}>
+                          {ws.status}
+                        </span>
                       </td>
                       <td className="py-2 px-3">
                         <div>

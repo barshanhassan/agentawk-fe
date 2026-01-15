@@ -22,6 +22,12 @@ import {
   Moon,
   Circle,
   Phone,
+  Check,
+  User,
+  Hash,
+  Instagram,
+  MessageCircle,
+  LifeBuoy
 } from "react-feather";
 import { useTheme } from "@/contexts/ThemeContext";
 import { BsGrid3X3GapFill } from "react-icons/bs";
@@ -44,7 +50,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarColor } from "@/lib/avatar-utils";
 
 export default function AppSidebar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // State for Theme and Online Status
   const { mode: theme, setMode: setTheme } = useTheme();
@@ -52,6 +58,20 @@ export default function AppSidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState<string[]>(["en-us"]);
   const [workspace, setWorkspace] = useState<string[]>(["workspace-a"]);
+  const [searchType, setSearchType] = useState("WhatsApp Number");
+
+  const searchOptions = [
+    { label: "WhatsApp Number", icon: <SiWhatsapp size={14} /> },
+    { label: "Email", icon: <Mail size={14} /> },
+    { label: "Phone Number", icon: <Phone size={14} /> },
+    { label: "First Name", icon: <User size={14} /> },
+    { label: "Last Name", icon: <User size={14} /> },
+    { label: "Full Name", icon: <Users size={14} /> },
+    { label: "Support Ticket", icon: <LifeBuoy size={14} /> },
+    { label: "Instagram Handle", icon: <Instagram size={14} /> },
+    { label: "Messenger Username", icon: <MessageCircle size={14} /> },
+    { label: "Contact ID", icon: <Hash size={14} /> }
+  ];
 
   const workspaceOptions = [
     { id: "workspace-a", name: "Workspace A" },
@@ -90,18 +110,16 @@ export default function AppSidebar() {
     return location.startsWith(path);
   };
 
-  const hoverClass = "hover:bg-blue-500 hover:text-white data-[highlighted]:bg-blue-500 data-[highlighted]:text-white";
-  const activeClass = "bg-blue-500 text-white";
+  const hoverClass = "hover:bg-primary hover:text-white data-[highlighted]:bg-primary data-[highlighted]:text-white";
+  const activeClass = "bg-primary text-white";
 
   const subTriggerClass =
-    "hover:bg-blue-500 hover:text-white " +
-    "data-[highlighted]:bg-blue-500 data-[highlighted]:text-white " +
-    "data-[state=open]:bg-blue-500 data-[state=open]:text-white";
+    "hover:bg-primary hover:text-white " +
+    "data-[highlighted]:bg-primary data-[highlighted]:text-white " +
+    "data-[state=open]:bg-primary data-[state=open]:text-white";
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-
-
 
   const isConversationsParentActive =
     location.startsWith("/conversations/inbox") ||
@@ -323,23 +341,44 @@ export default function AppSidebar() {
                 {/* Expanding Search Bar (to the RIGHT) */}
                 <div
                   className={`
-      absolute left-0 z-20 flex items-center
-      bg-slate-100 dark:bg-[#1f2a3a] border border-slate-200 dark:border-[#2c3a4f]
-      rounded-md px-3 py-2 text-sm
-      overflow-hidden
-      transition-[width,opacity] duration-300 ease-out
-      ${isSearchOpen ? "w-[550px] opacity-100" : "w-0 opacity-0 pointer-events-none"}
+                    absolute left-0 z-20 flex items-center
+                    bg-card border border-input
+                    rounded-md px-3 py-2 text-sm
+                    overflow-hidden
+                    transition-[width,opacity] duration-300 ease-out
+                    ${isSearchOpen ? "w-[550px] opacity-100" : "w-0 opacity-0 pointer-events-none"}
 
-    `}
+                  `}
                 >
                   {/* Search Icon */}
-                  <Search size={14} className="text-gray-400 mr-2 shrink-0" />
+                  <Search size={16} className="text-gray-400 mr-2 ml-[-0.25rem] shrink-0" />
 
                   {/* Dropdown Label */}
-                  <span className="flex items-center gap-1 text-slate-700 dark:text-white font-medium mr-3 whitespace-nowrap">
-                    WhatsApp number
-                    <ChevronDown size={14} className="text-gray-400" />
-                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1 text-slate-700 dark:text-white font-medium mr-3 whitespace-nowrap outline-none">
+                        {searchType}
+                        <ChevronDown size={14} className="text-gray-400" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="mt-2 ml-[-2.2rem] bg-card border-slate-200 dark:border-[#2c3a4f]">
+                      {searchOptions.map((option) => (
+                        <DropdownMenuItem
+                          key={option.label}
+                          onClick={() => setSearchType(option.label)}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <div className="w-4 flex items-center justify-center shrink-0">
+                            {searchType === option.label && <Check size={14} className="text-primary" />}
+                          </div>
+                          <div className="text-muted-foreground flex items-center justify-center w-5">
+                            {option.icon}
+                          </div>
+                          <span>{option.label}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
                   {/* Divider */}
                   <span className="h-4 w-px bg-gray-500/40 mr-3 shrink-0"></span>
@@ -353,7 +392,7 @@ export default function AppSidebar() {
                     autoFocus
                     className="
         flex-1 bg-transparent text-slate-900 dark:text-white placeholder-gray-400
-        outline-none border-none text-sm
+        outline-none !border-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 text-sm
       "
                   />
 
@@ -382,50 +421,50 @@ export default function AppSidebar() {
           {/* Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="relative hover:text-teal-400 transition">
+              <button className="relative hover:text-primary transition">
                 <Bell size={20} />
 
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end"
               sideOffset={6}
-              className="w-80 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white mt-5">
+              className="w-80 bg-card text-card-foreground border-slate-200 dark:border-slate-700 mt-5 shadow-xl">
               <div className="p-4 border-b border-slate-200 dark:border-slate-700">
                 <h3 className="font-semibold">Notifications</h3>
               </div>
               <div className="max-h-96 overflow-y-auto">
                 <DropdownMenuItem
-                  onSelect={() => window.location.href = "/conversations/inbox"}
+                  onSelect={() => setLocation("/conversations/inbox")}
                   className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">New message from John Doe</p>
-                    <p className="text-sm text-gray-400">2 minutes ago</p>
+                    <p className="text-sm text-muted-foreground">2 minutes ago</p>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() => window.location.href = "/campaigns"}
+                  onSelect={() => setLocation("/campaigns")}
                   className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">Campaign "Summer Sale" completed</p>
-                    <p className="text-sm text-gray-400">1 hour ago</p>
+                    <p className="text-sm text-muted-foreground">1 hour ago</p>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() => window.location.href = "/templates"}
+                  onSelect={() => setLocation("/templates")}
                   className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">Template approved</p>
-                    <p className="text-sm text-gray-400">3 hours ago</p>
+                    <p className="text-sm text-muted-foreground">3 hours ago</p>
                   </div>
                 </DropdownMenuItem>
               </div>
               <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
               <DropdownMenuItem
-                onSelect={() => window.location.href = "/notifications"}
-                className="justify-center text-teal-400 py-2 cursor-pointer"
+                onSelect={() => setLocation("/notifications")}
+                className="justify-center text-primary py-2 cursor-pointer"
               >
                 View All Notifications
               </DropdownMenuItem>
@@ -469,7 +508,7 @@ export default function AppSidebar() {
               <DropdownMenuItem asChild>
                 <div
                   className="flex items-center gap-3 p-5 border-b border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 transition"
-                  onClick={() => window.location.href = "/settings?tab=My%20Profile"}
+                  onClick={() => setLocation("/settings?tab=My%20Profile")}
                 >
                   <Avatar className="w-8 h-8 my-1">
                     <AvatarFallback className={`${getAvatarColor("Admin User")} text-xs font-bold`}>

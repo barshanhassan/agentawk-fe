@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, RefreshCw, Eye, EyeOff, Download, ArrowUp, X, Paperclip } from "react-feather";
-import { GripVertical, MoreVertical } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import CustomDropdown from "@/components/CustomDropdown";
 import { AlertCircle } from "lucide-react";
+import ContactProfileSidebar from "@/components/ContactProfileSidebar";
 
 // Generate a color based on the hash of a name
 const getAvatarColor = (name: string) => {
@@ -89,8 +90,35 @@ export default function BotConversations() {
 
   // Toggle contact panel visibility
   const handleToggleContactPanel = () => {
-    setShowContactPanel(!showContactPanel);
+    const newShowState = !showContactPanel;
+    setShowContactPanel(newShowState);
+
+    if (selectedConversation) {
+      const closedProfiles = JSON.parse(localStorage.getItem('closed_contact_profiles') || '[]');
+      if (!newShowState) {
+        // User closed it, remember this
+        if (!closedProfiles.includes(selectedConversation)) {
+          closedProfiles.push(selectedConversation);
+          localStorage.setItem('closed_contact_profiles', JSON.stringify(closedProfiles));
+        }
+      } else {
+        // User opened it, remove from closed list
+        const newClosedProfiles = closedProfiles.filter((id: any) => id !== selectedConversation);
+        localStorage.setItem('closed_contact_profiles', JSON.stringify(newClosedProfiles));
+      }
+    }
   };
+
+  // Restore profile state when conversation changes
+  useEffect(() => {
+    if (selectedConversation) {
+      const closedProfiles = JSON.parse(localStorage.getItem('closed_contact_profiles') || '[]');
+      // Default is OPEN (true), so if it's in the closed list, set to false.
+      setShowContactPanel(!closedProfiles.includes(selectedConversation));
+    } else {
+      setShowContactPanel(false);
+    }
+  }, [selectedConversation]);
 
   // Get the actual last message from conversation messages
   const getLastMessage = (convId: number): string => {
@@ -296,59 +324,67 @@ export default function BotConversations() {
     { id: "team-4", name: "Marketing Team" },
   ];
 
-  // Edit basic details modal state
-  const [isEditBasicDetailsOpen, setIsEditBasicDetailsOpen] = useState(false);
-  const [editedBasicDetails, setEditedBasicDetails] = useState(basicDetailsByConv[selectedConversation || 1] || {});
+  // Tags state per conversation
+  const [tagsByConv, setTagsByConv] = useState<Record<number, string[]>>({
+    1: ["VIP", "Potential Scale"],
+    2: ["Support Ticket"],
+    3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
+  });
 
-  const handleSaveBasicDetails = () => {
+  // Tag options
+  const tagOptions = [
+    { id: "tag-1", name: "VIP" },
+    { id: "tag-2", name: "New Customer" },
+    { id: "tag-3", name: "Support Ticket" },
+    { id: "tag-4", name: "Potential Scale" },
+    { id: "tag-5", name: "Churn Risk" },
+  ];
+
+  // Notes state per conversation
+  const [notesByConv, setNotesByConv] = useState<Record<number, string[]>>({
+    1: ["Customer is interested in the enterprise plan.", "Scheduled a follow-up call."],
+    2: ["Issue resolved, waiting for confirmation."],
+    3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
+  });
+
+  // Update handlers for ContactProfileSidebar
+  const handleUpdateBasicDetails = (details: any) => {
     if (selectedConversation) {
-      setBasicDetailsByConv({ ...basicDetailsByConv, [selectedConversation]: editedBasicDetails });
+      setBasicDetailsByConv({ ...basicDetailsByConv, [selectedConversation]: details });
 
       // Update the conversation's displayName if it was changed
-      if (editedBasicDetails.displayName !== undefined) {
+      if (details.displayName !== undefined) {
         setConversations(conversations.map(conv =>
           conv.id === selectedConversation
-            ? { ...conv, displayName: editedBasicDetails.displayName }
+            ? { ...conv, displayName: details.displayName }
             : conv
         ));
       }
     }
-    setIsEditBasicDetailsOpen(false);
   };
 
-  const handleClearField = (field: string) => {
-    setEditedBasicDetails({ ...editedBasicDetails, [field]: "" });
-  };
-
-  // Add custom attribute modal state
-  const [isAddAttributeModalOpen, setIsAddAttributeModalOpen] = useState(false);
-  const [newAttributeKey, setNewAttributeKey] = useState("");
-  const [newAttributeValue, setNewAttributeValue] = useState("");
-
-  const handleAddAttribute = () => {
-    if (newAttributeKey.trim() && newAttributeValue.trim() && selectedConversation) {
-      const currentAttrs = customAttributesByConv[selectedConversation] || {};
-      setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation]: { ...currentAttrs, [newAttributeKey]: newAttributeValue } });
-      setNewAttributeKey("");
-      setNewAttributeValue("");
-      setIsAddAttributeModalOpen(false);
-    }
-  };
-
-  // Add teams modal state
-  const [isAddTeamsModalOpen, setIsAddTeamsModalOpen] = useState(false);
-  const [selectedTeamsForModal, setSelectedTeamsForModal] = useState<string[]>([]);
-
-  const handleOpenTeamsModal = () => {
-    setSelectedTeamsForModal(involvedTeamsByConv[selectedConversation || 1] || []);
-    setIsAddTeamsModalOpen(true);
-  };
-
-  const handleSaveTeams = () => {
+  const handleUpdateInvolvedTeams = (teams: string[]) => {
     if (selectedConversation) {
-      setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation]: selectedTeamsForModal });
+      setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation]: teams });
     }
-    setIsAddTeamsModalOpen(false);
+  };
+
+  const handleUpdateTags = (tags: string[]) => {
+    if (selectedConversation) {
+      setTagsByConv({ ...tagsByConv, [selectedConversation]: tags });
+    }
+  };
+
+  const handleUpdateCustomAttributes = (attributes: Record<string, string>) => {
+    if (selectedConversation) {
+      setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation]: attributes });
+    }
+  };
+
+  const handleUpdateNotes = (notes: string[]) => {
+    if (selectedConversation) {
+      setNotesByConv({ ...notesByConv, [selectedConversation]: notes });
+    }
   };
 
   // Filter modal state
@@ -841,17 +877,15 @@ export default function BotConversations() {
     ],
   });
 
-
-
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
       <div className="flex-1 flex gap-4 px-6 py-6 max-h-full">
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
           <Card className="flex flex-col overflow-hidden shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
-            <CardHeader className="space-y-3 pb-3 flex-shrink-0">
+            <CardHeader className="px-3 space-y-3 pb-3 flex-shrink-0">
               {/* Tabs */}
-              <div className="flex justify-between border-b pb-0 w-full">
+              <div className="px-3 flex justify-between border-b pb-0 w-full">
                 {["All", "Active", "Expired"].map((tab) => {
                   const tabKey = tab.toLowerCase();
                   const count = tabKey === "all"
@@ -944,6 +978,10 @@ export default function BotConversations() {
                                     conv.status === "expired" ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" :
                                       "bg-gray-50 text-gray-700 border-gray-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
                                     }`}
+                                // className={`text-xs flex-shrink-0 ${conv.status === "active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
+                                // conv.status === "expired" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" :
+                                //   "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
+                                // }`}
                                 >
                                   {conv.status}
                                 </Badge>
@@ -992,8 +1030,8 @@ export default function BotConversations() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">{getDisplayName(conversations.find(c => c.id === selectedConversation) || {})}</h3>
-                  <p className="text-sm text-muted-foreground">Active now</p>
+                  <h3 className="text-sm font-semibold">{getDisplayName(conversations.find(c => c.id === selectedConversation) || {})}</h3>
+                  <p className="text-xs text-muted-foreground">Active now</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1072,36 +1110,7 @@ export default function BotConversations() {
             </CardHeader>
             <Separator />
 
-            {/* Bot Conversation Banner and Assignment UI */}
-            <div className="bg-gray-50 dark:bg-slate-900/20 border-b border-gray-200 dark:border-slate-800/50 px-4 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 flex-1">
-                <AlertCircle className="w-4 h-4 text-gray-600 dark:text-slate-400 flex-shrink-0" />
-                <p className="text-sm text-gray-800 dark:text-slate-200">
-                  <strong>This is a bot conversation!</strong>
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Button
-                  onClick={() => handleAssignAgent("self")}
-                  className="btn-outline-primary font-normal"
-                  variant="outline"
-                >
-                  Assign to Me
-                </Button>
-                <CustomDropdown
-                  options={agentOptions.filter(a => a.id !== "self")}
-                  selected={selectedAgents}
-                  onChange={(selected) => {
-                    if (selected.length > 0) {
-                      handleAssignAgent(selected[0]);
-                      setSelectedAgents([]);
-                    }
-                  }}
-                  placeholder="Assign to Agent"
-                  width="180px"
-                />
-              </div>
-            </div>
+
 
             {/* Chat Status Notification - Removed for bot conversations */}
 
@@ -1219,7 +1228,7 @@ export default function BotConversations() {
               <AlertCircle className="w-6 h-6 text-muted-foreground" />
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">Assign this chat to start messaging</p>
-                <p className="text-xs text-muted-foreground mt-1">Use the assignment options above to get started</p>
+                <p className="text-xs text-muted-foreground mt-1">Use the assignment options in the contact profile to get started</p>
               </div>
             </div>
           </Card>
@@ -1232,369 +1241,31 @@ export default function BotConversations() {
           </Card>
         )}
 
-        {showContactPanel && (
-          <Card className="w-72 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="contact-panel">
-            <CardContent className="space-y-6 pt-8">
-              <div className="flex flex-col items-center gap-3">
-                {selectedConversation && (() => {
-                  const selectedConv = conversations.find(c => c.id === selectedConversation);
-                  const displayName = getDisplayName(selectedConv || {});
-                  const getInitials = (name: string) => {
-                    const parts = name.trim().split(/\s+/).filter((p: string) => p.length > 0);
-                    if (parts.length === 0) return "U";
-                    if (parts.length === 1) return parts[0][0].toUpperCase();
-                    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                  };
-                  const initials = getInitials(displayName);
-                  return (
-                    <>
-                      <Avatar className="h-20 w-20">
-                        <AvatarFallback className={`text-2xl ${getAvatarColor(displayName)}`}>{initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-center">
-                        <h3 className="font-semibold text-lg">{displayName}</h3>
-                        <p className="text-sm text-muted-foreground">{selectedConv?.phoneNumber}</p>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-sm">Basic Details</h4>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      setEditedBasicDetails(basicDetailsByConv[selectedConversation || 1] || {});
-                      setIsEditBasicDetailsOpen(true);
-                    }} className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]" data-testid="button-edit-basic-details">
-                      Edit
-                    </Button>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    {(() => {
-                      const details = basicDetailsByConv[selectedConversation || 1] || {};
-                      return (
-                        <>
-                          {details.displayName && (
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">Name</span>
-                              <span className="text-sm font-semibold truncate">{details.displayName}</span>
-                            </div>
-                          )}
-                          {details.number && (
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">Number</span>
-                              <span className="text-sm font-semibold truncate">{details.number}</span>
-                            </div>
-                          )}
-                          {details.email && (
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">Email</span>
-                              <span className="text-sm font-semibold truncate">{details.email}</span>
-                            </div>
-                          )}
-                          {details.gender && (
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">Gender</span>
-                              <span className="text-sm font-semibold truncate">{details.gender}</span>
-                            </div>
-                          )}
-                          {details.whatsappOptOut && (
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">WhatsApp Opt-out</span>
-                              <span className="text-sm font-semibold truncate">{details.whatsappOptOut}</span>
-                            </div>
-                          )}
-                          {details.address && (
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs text-muted-foreground">Address</span>
-                              <span className="text-sm font-semibold truncate">{details.address}</span>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-sm">Customer Tags</h4>
-                    <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-attribute">
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      const attrs = customAttributesByConv[selectedConversation || 1] || {};
-                      return Object.entries(attrs).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
-                        >
-                          <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
-                          <button
-                            onClick={() => {
-                              const newAttrs = { ...attrs };
-                              delete newAttrs[key];
-                              setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation || 1]: newAttrs });
-                            }}
-                            className="hover:text-blue-900 flex-shrink-0 border rounded"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-sm">Involved Teams</h4>
-                    <Button variant="ghost" size="sm" onClick={handleOpenTeamsModal} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-teams">
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      const teams = involvedTeamsByConv[selectedConversation || 1] || [];
-                      return teams.map((teamId) => {
-                        const team = teamOptions.find(t => t.id === teamId);
-                        return (
-                          <div
-                            key={teamId}
-                            className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs max-w-full"
-                          >
-                            <span className="truncate max-w-[calc(100%-20px)]">{team?.name}</span>
-                            <button
-                              onClick={() => {
-                                const newTeams = teams.filter(t => t !== teamId);
-                                setInvolvedTeamsByConv({ ...involvedTeamsByConv, [selectedConversation || 1]: newTeams });
-                              }}
-                              className="hover:text-purple-900 flex-shrink-0 border rounded"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Edit Basic Details Modal */}
-        <Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen}>
-          <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-            <DialogHeader className="px-1 mb-2">
-              <DialogTitle>Edit Basic Details</DialogTitle>
-            </DialogHeader>
-
-            <div className="px-1 space-y-4 overflow-y-auto flex-1">
-              {/* Name */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Name</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={editedBasicDetails.displayName || ""}
-                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, displayName: e.target.value })}
-                    placeholder="Enter name"
-                  />
-                  <button
-                    onClick={() => handleClearField("displayName")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Number */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Number</label>
-                <div className="flex gap-2">
-                  <Input
-                    value={editedBasicDetails.number}
-                    disabled
-                    placeholder="Enter number"
-                    className="bg-muted text-muted-foreground cursor-not-allowed mr-6"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Email</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={editedBasicDetails.email}
-                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, email: e.target.value })}
-                    placeholder="Enter email"
-                  />
-                  <button
-                    onClick={() => handleClearField("email")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Gender</label>
-                <div className="flex gap-2 items-center">
-                  <Select value={editedBasicDetails.gender} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, gender: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <button
-                    onClick={() => handleClearField("gender")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* WhatsApp Opt-out */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">WhatsApp Opt-out</label>
-                <div className="flex gap-2 items-center">
-                  <Select value={editedBasicDetails.whatsappOptOut} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, whatsappOptOut: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <button
-                    onClick={() => handleClearField("whatsappOptOut")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Address</label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    value={editedBasicDetails.address}
-                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, address: e.target.value })}
-                    placeholder="Enter address"
-                  />
-                  <button
-                    onClick={() => handleClearField("address")}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="px-1 mt-2">
-              <Button variant="outline" onClick={() => setIsEditBasicDetailsOpen(false)} className="[border-color:hsl(var(--input))]">
-                Close
-              </Button>
-              <Button onClick={handleSaveBasicDetails} className="btn-outline-primary font-normal" variant="outline">
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Custom Attribute Modal */}
-        <Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="mb-2">
-              <DialogTitle>Add Custom Attribute</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Attribute Name</label>
-                <Input
-                  placeholder="e.g., Loyalty Status"
-                  value={newAttributeKey}
-                  onChange={(e) => setNewAttributeKey(e.target.value)}
-                  data-testid="input-attribute-key"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Attribute Value</label>
-                <Input
-                  placeholder="e.g., Gold Member"
-                  value={newAttributeValue}
-                  onChange={(e) => setNewAttributeValue(e.target.value)}
-                  data-testid="input-attribute-value"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="mt-2">
-              <Button variant="outline" onClick={() => setIsAddAttributeModalOpen(false)} className="[border-color:hsl(var(--input))]">
-                Close
-              </Button>
-              <Button onClick={handleAddAttribute} disabled={!newAttributeKey || !newAttributeValue} className="btn-outline-primary font-normal" variant="outline">
-                Add Attribute
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {
+          showContactPanel && (
+            <ContactProfileSidebar
+              conversation={conversations.find(c => c.id === selectedConversation)}
+              conversations={conversations}
+              basicDetails={basicDetailsByConv[selectedConversation || 0]}
+              onUpdateBasicDetails={handleUpdateBasicDetails}
+              assignedAgent={assignedAgent}
+              onAssignAgent={handleAssignAgent}
+              agentOptions={agentOptions}
+              involvedTeams={involvedTeamsByConv[selectedConversation || 0]}
+              onUpdateInvolvedTeams={handleUpdateInvolvedTeams}
+              teamOptions={teamOptions}
+              tags={tagsByConv[selectedConversation || 0]}
+              onUpdateTags={handleUpdateTags}
+              tagOptions={tagOptions}
+              customAttributes={customAttributesByConv[selectedConversation || 0]}
+              onUpdateCustomAttributes={handleUpdateCustomAttributes}
+              notes={notesByConv[selectedConversation || 0]}
+              onUpdateNotes={handleUpdateNotes}
+            />
+          )
+        }
 
 
-
-        {/* Add Teams Modal */}
-        <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="mb-2">
-              <DialogTitle>Add Teams</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Select Teams</label>
-                <CustomDropdown
-                  options={teamOptions}
-                  selected={selectedTeamsForModal}
-                  onChange={setSelectedTeamsForModal}
-                  placeholder="Select teams"
-                  width="100%"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="mt-2">
-              <Button variant="outline" onClick={() => setIsAddTeamsModalOpen(false)} className="[border-color:hsl(var(--input))]">
-                Cancel
-              </Button>
-              <Button onClick={handleSaveTeams} className="btn-outline-primary font-normal" variant="outline">
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

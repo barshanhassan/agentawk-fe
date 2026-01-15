@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
-import StatusBadge from "@/components/StatusBadge";
+
 
 type UserRole = "Administrator" | "Agent" | "Chatbot User" | "Marketer" | "Team Supervisor" | "Viewer" | "WABA Manager";
 type UserStatus = "Active" | "Invited" | "Inactive";
@@ -610,14 +610,12 @@ export default function UserManagementSection() {
                       <td className="py-2 px-3">{user.email}</td>
                       <td className="py-2 px-3">{user.role}</td>
                       <td className="py-2 px-3">
-                        <StatusBadge
-                          status={user.status}
-                          type={
-                            user.status === "Active" ? "success" :
-                              user.status === "Invited" ? "warning" :
-                                "danger"
-                          }
-                        />
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                          user.status === "Invited" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                          }`}>
+                          {user.status}
+                        </span>
                       </td>
                       <td className="py-2 px-3">
                         <div>
