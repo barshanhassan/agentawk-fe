@@ -279,10 +279,22 @@ export default function ConversationsInbox() {
 
     // Sort by time
     filtered.sort((a, b) => {
-      // Simple timestamp comparison (descending)
+      // Get dynamic time from messages if available, relative to NOW.
+      // Note: We use the *latest* message time.
+      const getLastTime = (convId: number, defaultTime: string) => {
+        const msgs = conversationMessagesData[convId];
+        if (msgs && msgs.length > 0) {
+          return msgs[msgs.length - 1].time;
+        }
+        return defaultTime;
+      };
+
+      const timeA = getLastTime(a.id, a.time);
+      const timeB = getLastTime(b.id, b.time);
+
       return sortOrder === "desc"
-        ? new Date(b.time).getTime() - new Date(a.time).getTime()
-        : new Date(a.time).getTime() - new Date(b.time).getTime();
+        ? new Date(timeB).getTime() - new Date(timeA).getTime()
+        : new Date(timeA).getTime() - new Date(timeB).getTime();
     });
 
     return filtered;
@@ -660,7 +672,7 @@ export default function ConversationsInbox() {
       id: Math.random(),
       from: "agent",
       text: messageText,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toISOString(),
       images: imageFiles.length > 0 ? imageFiles : undefined,
       attachments: otherFiles.length > 0 ? otherFiles : undefined,
       audio: recordedAudio ? {
@@ -1522,7 +1534,7 @@ export default function ConversationsInbox() {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time)}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conversationMessagesData[conv.id]?.slice(-1)[0]?.time || conv.time)}</span>
                           </div>
                           <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{getLastMessage(conv.id)}</p>
                           {conv.assignedAgent && conv.assignedAgent !== "self" && (
@@ -1842,7 +1854,7 @@ export default function ConversationsInbox() {
                   )}
 
                   {/* Quick Replies */}
-                  {selectedConversation && !hasAgentMessages(selectedConversation) && (
+                  {selectedConversation && (
                     <div className="mb-3 flex flex-wrap gap-2">
                       {quickReplies.map((reply, index) => (
                         <Button

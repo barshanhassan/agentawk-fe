@@ -208,11 +208,21 @@ export default function BotConversations() {
         return 999999;
       };
 
-      const valA = getTimeInMinutes(a.time);
-      const valB = getTimeInMinutes(b.time);
+      // Get dynamic time from messages if available
+      const getLastTime = (convId: number, defaultTime: string) => {
+        const msgs = conversationMessagesData[convId];
+        if (msgs && msgs.length > 0) {
+          return msgs[msgs.length - 1].time;
+        }
+        return defaultTime;
+      };
 
-      // If sortOrder is 'desc' (default), we want newest first (smallest "minutes ago")
-      return sortOrder === "desc" ? valA - valB : valB - valA;
+      const timeA = getLastTime(a.id, a.time);
+      const timeB = getLastTime(b.id, b.time);
+
+      return sortOrder === "desc"
+        ? new Date(timeB).getTime() - new Date(timeA).getTime()
+        : new Date(timeA).getTime() - new Date(timeB).getTime();
     });
 
     return filtered;
@@ -572,7 +582,7 @@ export default function BotConversations() {
       id: Math.random(),
       from: "agent",
       text: messageText,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toISOString(),
       images: imageFiles.length > 0 ? imageFiles : undefined,
       attachments: otherFiles.length > 0 ? otherFiles : undefined,
       audio: recordedAudio ? {
@@ -1147,7 +1157,7 @@ export default function BotConversations() {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conversationMessagesData[conv.id]?.slice(-1)[0]?.time || conv.time)}</span>
                           </div>
                           <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{getLastMessage(conv.id)}</p>
                         </div>
