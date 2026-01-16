@@ -1,5 +1,7 @@
 
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,7 +28,12 @@ import {
     NotebookPen,
     BarChart3,
     Tag,
-    ClipboardList
+    ClipboardList,
+    Headset,
+    RefreshCw,
+    PauseCircle,
+    StopCircle,
+    Plus
 } from "lucide-react";
 import {
     Tooltip,
@@ -126,6 +133,58 @@ export default function ContactProfileSidebar({
 
     // Active Tab State
     const [activeTab, setActiveTab] = useState("details");
+
+    // Pause Smart Flow State
+    const [isFlowPaused, setIsFlowPaused] = useState(false);
+    const [flowPauseTimer, setFlowPauseTimer] = useState(900); // 15 minutes
+    const [maxTime, setMaxTime] = useState(900); // Track max time for progress circle
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isFlowPaused && flowPauseTimer > 0) {
+            interval = setInterval(() => {
+                setFlowPauseTimer((prev) => prev - 1);
+            }, 1000);
+        } else if (flowPauseTimer === 0) {
+            setIsFlowPaused(false);
+            setFlowPauseTimer(900);
+            setMaxTime(900);
+        }
+        return () => clearInterval(interval);
+    }, [isFlowPaused, flowPauseTimer]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleAdd15Minutes = () => {
+        const maxLimit = 9999 * 60; // 9999 minutes in seconds
+        const addedAmount = 900;
+
+        let amountToAdd = addedAmount;
+        if (flowPauseTimer + addedAmount > maxLimit) {
+            amountToAdd = maxLimit - flowPauseTimer;
+        }
+
+        if (amountToAdd > 0) {
+            setFlowPauseTimer((prev) => prev + amountToAdd);
+            setMaxTime((prevMax) => prevMax + amountToAdd);
+        }
+    };
+
+    const handleStopPause = () => {
+        setIsFlowPaused(false);
+        setFlowPauseTimer(900);
+        setMaxTime(900);
+    };
+
+    const handleStartPause = () => {
+        setIsFlowPaused(true);
+        // Reset max time if starting a new session (though timer state handles initial 900)
+        setMaxTime(Math.max(900, flowPauseTimer));
+    };
 
     const handleSaveBasicDetails = () => {
         onUpdateBasicDetails(editedBasicDetails);
@@ -252,45 +311,148 @@ export default function ContactProfileSidebar({
 
                         {/* Chat Assignment Section - Only visible in "details" tab */}
                         {activeTab === "details" && (
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="font-semibold text-sm">Chat Assignment</h4>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-1">
-                                        {(!assignedAgent || assignedAgent !== "self") ? (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1 h-8 text-xs btn-outline-primary font-normal"
-                                                onClick={() => onAssignAgent("self")}
-                                            >
-                                                {assignedAgent ? "Reassign to Me" : "Assign to Me"}
-                                            </Button>
-                                        ) : (
-                                            <div className="flex-1 text-xs text-muted-foreground p-2 bg-muted rounded text-center h-8 flex items-center justify-center">
-                                                Assigned to You
-                                            </div>
-                                        )}
+                            <>
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-semibold text-sm">Chat Assignment</h4>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-1">
+                                            {(!assignedAgent || assignedAgent !== "self") ? (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1 h-8 text-xs btn-outline-primary font-normal"
+                                                    onClick={() => onAssignAgent("self")}
+                                                >
+                                                    {assignedAgent ? "Reassign to Me" : "Assign to Me"}
+                                                </Button>
+                                            ) : (
+                                                <div className="flex-1 text-xs text-muted-foreground p-2 bg-muted rounded text-center h-8 flex items-center justify-center">
+                                                    Assigned to You
+                                                </div>
+                                            )}
 
-                                        <CustomDropdown
-                                            options={agentOptions.filter(a => a.id !== "self")}
-                                            selected={assignedAgent && assignedAgent !== "self" ? [assignedAgent] : []}
-                                            onChange={(selected) => {
-                                                if (selected.length > 0) {
-                                                    onAssignAgent(selected[0]);
-                                                }
-                                            }}
-                                            placeholder=""
-                                            width="auto"
-                                            className="h-8 w-8 px-[0.5rem] justify-center btn-outline-primary border-primary text-primary hover:bg-primary hover:text-white dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-white"
-                                            triggerContent={<ChevronDown size={14} />}
-                                            popoutWidth="220px"
-                                            popoutAlign="right"
-                                        />
+                                            <CustomDropdown
+                                                options={agentOptions.filter(a => a.id !== "self")}
+                                                selected={assignedAgent && assignedAgent !== "self" ? [assignedAgent] : []}
+                                                onChange={(selected) => {
+                                                    if (selected.length > 0) {
+                                                        onAssignAgent(selected[0]);
+                                                    }
+                                                }}
+                                                placeholder=""
+                                                width="auto"
+                                                className="h-8 w-8 px-[0.5rem] justify-center btn-outline-primary border-primary text-primary hover:bg-primary hover:text-white dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-white"
+                                                triggerContent={<ChevronDown size={14} />}
+                                                popoutWidth="220px"
+                                                popoutAlign="right"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+
+                                <Separator className="my-4" />
+
+                                {/* Support Number */}
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-3">Support Number</h4>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Headset size={16} />
+                                        <span>0123-123</span>
+                                    </div>
+                                </div>
+
+                                <Separator className="my-4" />
+
+                                {/* In Smart Flow */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-semibold text-sm">In Smart Flow</h4>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                            <RefreshCw size={14} />
+                                        </Button>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        This contact is not currently part of any Smart Flow.
+                                    </p>
+                                </div>
+
+                                <Separator className="my-4" />
+
+                                {/* Pause Automated Messages */}
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-3">Pause Automated Messages</h4>
+                                    {!isFlowPaused ? (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start gap-2 btn-outline-primary"
+                                            onClick={handleStartPause}
+                                        >
+                                            <PauseCircle size={16} />
+                                            Pause Smart Flow
+                                        </Button>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-4 py-2">
+                                            {/* Timer Circle */}
+                                            <div className="relative h-32 w-32 flex items-center justify-center">
+                                                {/* Ensure transform is applied correctly to reverse direction */}
+                                                <svg
+                                                    className="h-full w-full"
+                                                    viewBox="0 0 100 100"
+                                                    style={{ transform: "rotate(90deg) scaleX(-1)" }}
+                                                >
+                                                    {/* Background circle */}
+                                                    <circle
+                                                        className="text-muted/20"
+                                                        strokeWidth="8"
+                                                        stroke="currentColor"
+                                                        fill="transparent"
+                                                        r="42"
+                                                        cx="50"
+                                                        cy="50"
+                                                    />
+                                                    {/* Progress circle */}
+                                                    <circle
+                                                        className="text-green-500 transition-all duration-1000 ease-linear"
+                                                        strokeWidth="8"
+                                                        strokeDasharray={264}
+                                                        strokeDashoffset={264 - (264 * flowPauseTimer) / maxTime}
+                                                        strokeLinecap="round"
+                                                        stroke="currentColor"
+                                                        fill="transparent"
+                                                        r="42"
+                                                        cx="50"
+                                                        cy="50"
+                                                    />
+                                                </svg>
+                                                <span className="absolute text-xl font-bold font-mono">
+                                                    {formatTime(flowPauseTimer)}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex gap-2 w-full">
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1 gap-2 btn-outline-destructive"
+                                                    onClick={handleStopPause}
+                                                >
+                                                    <StopCircle size={16} />
+                                                    Stop
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1 gap-2 btn-outline-primary"
+                                                    onClick={handleAdd15Minutes}
+                                                >
+                                                    <Plus size={16} />
+                                                    15 Minutes
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         )}
 
                         {/* Media Tab Content */}
@@ -394,6 +556,106 @@ export default function ContactProfileSidebar({
                                         </div>
                                     );
                                 })()}
+                            </div>
+                        )}
+
+                        {/* Custom Fields Tab */}
+                        {activeTab === "custom-fields" && (
+                            <div className="space-y-4">
+                                <Button variant="outline" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="w-full btn-outline-primary">
+                                    <Plus size={14} className="mr-2" /> Add Custom Attribute
+                                </Button>
+                                {customAttributes && Object.keys(customAttributes).length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {Object.entries(customAttributes).map(([key, value]) => (
+                                            <div
+                                                key={key}
+                                                className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                                            >
+                                                <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newAttrs = { ...customAttributes };
+                                                        delete newAttrs[key];
+                                                        onUpdateCustomAttributes(newAttrs);
+                                                    }}
+                                                    className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                        <NotebookPen size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm">No custom fields found.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Opportunities Tab */}
+                        {activeTab === "opportunities" && (
+                            <div className="space-y-4">
+                                <Button variant="outline" size="sm" className="w-full btn-outline-primary">
+                                    <Plus size={14} className="mr-2" /> Add Opportunity
+                                </Button>
+                                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                    <BarChart3 size={32} className="mb-2 opacity-50" />
+                                    <p className="text-sm">No opportunities found.</p>
+                                </div>
+                            </div>
+                        )}
+
+
+                        {/* Assigned Tags Tab */}
+                        {activeTab === "tags" && (
+                            <div className="space-y-4">
+                                <CustomDropdown
+                                    options={tagOptions}
+                                    selected={tags || []}
+                                    onChange={onUpdateTags}
+                                    placeholder="Select tags"
+                                    width="100%"
+                                />
+                                {tags && tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 pb-1">
+                                        {tags.map((tagId) => {
+                                            const tag = tagOptions.find(t => t.id === tagId);
+                                            return (
+                                                <div
+                                                    key={tagId}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                                                >
+                                                    <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newTags = tags.filter(t => t !== tagId);
+                                                            onUpdateTags(newTags);
+                                                        }}
+                                                        className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Create Task Tab */}
+                        {activeTab === "tasks" && (
+                            <div className="space-y-4">
+                                <Button variant="outline" size="sm" className="w-full btn-outline-primary">
+                                    <Plus size={14} className="mr-2" /> Add Task
+                                </Button>
+                                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                    <ClipboardList size={32} className="mb-2 opacity-50" />
+                                    <p className="text-sm">No tasks found.</p>
+                                </div>
                             </div>
                         )}
 
@@ -578,10 +840,10 @@ export default function ContactProfileSidebar({
                         */}
                     </div>
                 </CardContent>
-            </Card>
+            </Card >
 
             {/* Edit Basic Details Modal */}
-            <Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen}>
+            < Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen} >
                 <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
                     <DialogHeader className="px-1 mb-2">
                         <DialogTitle>Edit Basic Details</DialogTitle>
@@ -703,10 +965,10 @@ export default function ContactProfileSidebar({
                         <Button onClick={handleSaveBasicDetails}>Save Changes</Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Add Teams Modal */}
-            <Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen}>
+            < Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Update Involved Teams</DialogTitle>
@@ -739,10 +1001,10 @@ export default function ContactProfileSidebar({
                         <Button onClick={handleSaveTeams}>Save Changes</Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Add Tags Modal */}
-            <Dialog open={isAddTagsModalOpen} onOpenChange={setIsAddTagsModalOpen}>
+            < Dialog open={isAddTagsModalOpen} onOpenChange={setIsAddTagsModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Update Tags</DialogTitle>
@@ -775,10 +1037,10 @@ export default function ContactProfileSidebar({
                         <Button onClick={handleSaveTags}>Save Changes</Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Add Custom Attribute Modal */}
-            <Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen}>
+            < Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Add Custom Attribute</DialogTitle>
@@ -807,10 +1069,10 @@ export default function ContactProfileSidebar({
                         </Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Add Note Modal */}
-            <Dialog open={isAddNoteModalOpen} onOpenChange={setIsAddNoteModalOpen}>
+            < Dialog open={isAddNoteModalOpen} onOpenChange={setIsAddNoteModalOpen} >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Set Current Note</DialogTitle>
