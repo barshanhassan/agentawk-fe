@@ -79,7 +79,7 @@ export default function BotConversations() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Current user
-  const currentUser = { id: "self", name: "Admin User" };
+  const currentUser = { id: "self", name: "Demo User" };
 
   // Mock agent list
   const agentOptions = [

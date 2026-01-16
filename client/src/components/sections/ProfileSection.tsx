@@ -40,11 +40,11 @@ const ProfileSection = ({
               {profilePictureUrl && profilePictureUrl !== "" ? (
                 <img src={profilePictureUrl} alt="Profile" className="rounded-full object-cover" />
               ) : (
-                <AvatarFallback className={`${getAvatarColor("Admin User")} text-xl`}>AD</AvatarFallback>
+                <AvatarFallback className={`${getAvatarColor("Demo User")} text-xl`}>DU</AvatarFallback>
               )}
             </Avatar>
             <div>
-              <p className="text-lg font-semibold">Admin User</p>
+              <p className="text-lg font-semibold">Demo User</p>
               <p className="text-sm text-muted-foreground">email@example.com</p>
             </div>
           </div>

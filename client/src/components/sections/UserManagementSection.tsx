@@ -234,7 +234,7 @@ const initialUsers: User[] = [
 export default function UserManagementSection() {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const currentUserName = "Admin User"; // TODO: Get from auth context
+  const currentUserName = "Demo User"; // TODO: Get from auth context
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);

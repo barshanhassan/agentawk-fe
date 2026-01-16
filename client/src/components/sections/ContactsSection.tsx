@@ -89,7 +89,7 @@ const contactTagOptions = [
 export default function ContactsSection() {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
-  const currentUserName = "Admin User"; // TODO: Get from auth context
+  const currentUserName = "Demo User"; // TODO: Get from auth context
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);

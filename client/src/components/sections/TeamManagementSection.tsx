@@ -92,7 +92,7 @@ const initialTeams: Team[] = [
 export default function TeamManagementSection() {
   const { toast } = useToast();
   const [teams, setTeams] = useState<Team[]>(initialTeams);
-  const currentUserName = "Admin User"; // TODO: Get from auth context
+  const currentUserName = "Demo User"; // TODO: Get from auth context
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);

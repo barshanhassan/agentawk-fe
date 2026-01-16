@@ -293,12 +293,12 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
               data-testid="button-user-menu"
             >
               <Avatar className="h-8 w-8">
-                <AvatarFallback className={getAvatarColor("Admin User")}>
-                  AD
+                <AvatarFallback className={getAvatarColor("Demo User")}>
+                  DU
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium hidden md:inline">
-                Admin User
+                Demo User
               </span>
             </Button>
           </DropdownMenuTrigger>
@@ -309,7 +309,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
           >
             <DropdownMenuLabel>
               <div>
-                <p className="font-semibold">Admin User</p>
+                <p className="font-semibold">Demo User</p>
                 <p className="text-xs text-muted-foreground font-normal">
                   admin@example.com
                 </p>

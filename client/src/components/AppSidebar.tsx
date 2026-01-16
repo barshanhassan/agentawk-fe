@@ -484,14 +484,14 @@ export default function AppSidebar() {
               <button className="flex items-center gap-3 hover:opacity-80 transition">
                 {/* Avatar */}
                 <Avatar className="w-7 h-7">
-                  <AvatarFallback className={`${getAvatarColor("Admin User")} text-[10px] font-[600]`}>
-                    AD
+                  <AvatarFallback className={`${getAvatarColor("Demo User")} text-[10px] font-[600]`}>
+                    DU
                   </AvatarFallback>
                 </Avatar>
 
                 {/* Name + Status Below */}
                 <div className="text-left">
-                  <p className="font-[400] text-[12px]">Admin User</p>
+                  <p className="font-[400] text-[12px]">Demo User</p>
                   <div className="flex items-center gap-1.5 -mt-0.5">
                     {status === "available" ? (
                       <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
@@ -518,8 +518,8 @@ export default function AppSidebar() {
                   onClick={() => setLocation("/settings?tab=My%20Profile")}
                 >
                   <Avatar className="w-8 h-8 my-1">
-                    <AvatarFallback className={`${getAvatarColor("Admin User")} text-xs font-bold`}>
-                      AD
+                    <AvatarFallback className={`${getAvatarColor("Demo User")} text-xs font-bold`}>
+                      DU
                     </AvatarFallback>
                   </Avatar>
                   <div>
