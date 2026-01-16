@@ -14,25 +14,7 @@ export interface TimeHeatmapProps {
   valueLabel?: string; // Label for the value (e.g., "Messages")
 }
 
-// Interpolate between two colors
-const interpolateColor = (color1: string, color2: string, factor: number): string => {
-  const c1 = parseInt(color1.slice(1), 16);
-  const c2 = parseInt(color2.slice(1), 16);
 
-  const r1 = (c1 >> 16) & 255;
-  const g1 = (c1 >> 8) & 255;
-  const b1 = c1 & 255;
-
-  const r2 = (c2 >> 16) & 255;
-  const g2 = (c2 >> 8) & 255;
-  const b2 = c2 & 255;
-
-  const r = Math.round(r1 + (r2 - r1) * factor);
-  const g = Math.round(g1 + (g2 - g1) * factor);
-  const b = Math.round(b1 + (b2 - b1) * factor);
-
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-};
 
 const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
   data,
@@ -81,13 +63,19 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
       });
     });
 
-    const lightBlue = isDarkMode ? "#3B82F6" : "#dbeafe";
-    const darkBlue = isDarkMode ? "#00267e" : "#1e40af";
+    const lightBlue = isDarkMode
+      ? "hsl(from hsl(var(--primary)) h 91% 60%)"
+      : "hsl(from hsl(var(--primary)) h 95% 93%)";
+
+    const darkBlue = isDarkMode
+      ? "hsl(from hsl(var(--primary)) h 100% 25%)"
+      : "hsl(from hsl(var(--primary)) h 71% 40%)";
 
     const colorFn = (value: number) => {
       if (min === max) return lightBlue;
       const factor = (value - min) / (max - min);
-      return interpolateColor(lightBlue, darkBlue, factor);
+      const p = Math.round((1 - factor) * 100);
+      return `color-mix(in srgb, ${lightBlue} ${p}%, ${darkBlue})`;
     };
 
     // Generate 8 legend values
@@ -219,7 +207,7 @@ const TimeHeatmap: React.FC<TimeHeatmapProps> = ({
           <p className="text-sm font-medium">{tooltip.day}, {tooltip.time}</p>
           <div className="flex items-center gap-2">
             <span className="text-sm">{valueLabel}:</span>
-            <span className="text-sm font-medium text-blue-500">{tooltip.value}</span>
+            <span className="text-sm font-medium text-primary">{tooltip.value}</span>
           </div>
         </div>
       )}

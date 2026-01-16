@@ -6,6 +6,8 @@ import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn, formatConversationTime, formatMessageDate, formatMessageTime } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -277,9 +279,10 @@ export default function ConversationsInbox() {
 
     // Sort by time
     filtered.sort((a, b) => {
-      const timeA = parseInt(a.time.match(/\d+/)?.[0] || "0");
-      const timeB = parseInt(b.time.match(/\d+/)?.[0] || "0");
-      return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+      // Simple timestamp comparison (descending)
+      return sortOrder === "desc"
+        ? new Date(b.time).getTime() - new Date(a.time).getTime()
+        : new Date(a.time).getTime() - new Date(b.time).getTime();
     });
 
     return filtered;
@@ -486,7 +489,11 @@ export default function ConversationsInbox() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filterTeams, setFilterTeams] = useState<string[]>([]);
   const [filterAgents, setFilterAgents] = useState<string[]>([]);
+  const [selectedTeamsForModal, setSelectedTeamsForModal] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
+
+  // Image Preview State
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Add conversation modals
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
@@ -670,7 +677,7 @@ export default function ConversationsInbox() {
     // Update last message in conversation list
     setConversations(conversations.map(conv =>
       conv.id === selectedConversation
-        ? { ...conv, lastMessage: messageText || (imageFiles.length > 0 ? "📷 Photo" : otherFiles.length > 0 ? "📎 Attachment" : "🎤 Voice message"), time: "now" }
+        ? { ...conv, lastMessage: messageText || (imageFiles.length > 0 ? "📷 Photo" : otherFiles.length > 0 ? "📎 Attachment" : "🎤 Voice message"), time: new Date().toISOString() }
         : conv
     ));
 
@@ -870,7 +877,7 @@ export default function ConversationsInbox() {
         phoneNumber: phoneNumber,
         displayName: "", // Will default to phoneNumber via getDisplayName()
         lastMessage: messageText,
-        time: "now",
+        time: new Date().toISOString(),
         unread: 0,
         channel: "whatsapp",
         status: "queued",
@@ -1024,76 +1031,91 @@ export default function ConversationsInbox() {
     return conversation.displayName || conversation.phoneNumber || conversation.name || "Unknown";
   };
 
+  const { toast } = useToast();
+  // State to trigger re-renders every minute for time updates
+  const [_, setTimeUpdateTrigger] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeUpdateTrigger(prev => prev + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [conversations, setConversations] = useState([
     // queued (Unassigned)
-    { id: 1, phoneNumber: "+1 234 567 8900", displayName: "John Doe", lastMessage: "Hi, I need help with my order", time: "2m ago", unread: 2, channel: "whatsapp", status: "queued", assignedAgent: null },
-    { id: 2, phoneNumber: "+1 234 567 8901", displayName: "Jane Smith", lastMessage: "Can you send me the invoice?", time: "5m ago", unread: 3, channel: "whatsapp", status: "queued", assignedAgent: null },
-    { id: 3, phoneNumber: "+1 234 567 8902", displayName: "Michael Chen", lastMessage: "I have a billing question", time: "8m ago", unread: 1, channel: "whatsapp", status: "queued", assignedAgent: null },
+    { id: 1, phoneNumber: "+1 234 567 8900", displayName: "John Doe", lastMessage: "Hi, I need help with my order", time: new Date(Date.now() - 2 * 60000).toISOString(), unread: 2, channel: "whatsapp", status: "queued", assignedAgent: null },
+    { id: 2, phoneNumber: "+1 234 567 8901", displayName: "Jane Smith", lastMessage: "Can you send me the invoice?", time: new Date(Date.now() - 5 * 60000).toISOString(), unread: 3, channel: "whatsapp", status: "queued", assignedAgent: null },
+    { id: 3, phoneNumber: "+1 234 567 8902", displayName: "Michael Chen", lastMessage: "I have a billing question", time: new Date(Date.now() - 8 * 60000).toISOString(), unread: 1, channel: "whatsapp", status: "queued", assignedAgent: null },
 
     // Active (Assigned)
-    { id: 4, phoneNumber: "+1 234 567 8903", displayName: "Sarah Wilson", lastMessage: "Thank you for resolving this!", time: "1m ago", unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-1" },
-    { id: 5, phoneNumber: "+1 234 567 8904", displayName: "Bob Johnson", lastMessage: "Order received, thank you!", time: "3m ago", unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-2" },
-    { id: 6, phoneNumber: "+1 234 567 8905", displayName: "Emma Davis", lastMessage: "When will my refund be processed?", time: "12m ago", unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-3" },
+    { id: 4, phoneNumber: "+1 234 567 8903", displayName: "Sarah Wilson", lastMessage: "Thank you for resolving this!", time: new Date(Date.now() - 1 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-1" },
+    { id: 5, phoneNumber: "+1 234 567 8904", displayName: "Bob Johnson", lastMessage: "Order received, thank you!", time: new Date(Date.now() - 3 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-2" },
+    { id: 6, phoneNumber: "+1 234 567 8905", displayName: "Emma Davis", lastMessage: "When will my refund be processed?", time: new Date(Date.now() - 12 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-3" },
 
     // Completed (No assignments)
-    { id: 7, phoneNumber: "+1 234 567 8906", displayName: "Alex Rodriguez", lastMessage: "Issue resolved successfully", time: "45m ago", unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
-    { id: 8, phoneNumber: "+1 234 567 8907", displayName: "Lisa Anderson", lastMessage: "Thanks for your help!", time: "2h ago", unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
-    { id: 9, phoneNumber: "+1 234 567 8908", displayName: "David Martinez", lastMessage: "Perfect, all set!", time: "3h ago", unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
+    { id: 7, phoneNumber: "+1 234 567 8906", displayName: "Alex Rodriguez", lastMessage: "Issue resolved successfully", time: new Date(Date.now() - 45 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
+    { id: 8, phoneNumber: "+1 234 567 8907", displayName: "Lisa Anderson", lastMessage: "Thanks for your help!", time: new Date(Date.now() - 2 * 3600000).toISOString(), unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
+    { id: 9, phoneNumber: "+1 234 567 8908", displayName: "David Martinez", lastMessage: "Perfect, all set!", time: new Date(Date.now() - 3 * 3600000).toISOString(), unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
 
     // Spam (No assignments)
-    { id: 10, phoneNumber: "+1 234 567 8909", displayName: "", lastMessage: "Click here for free money!!!", time: "30m ago", unread: 0, channel: "whatsapp", status: "spam", assignedAgent: null },
-    { id: 11, phoneNumber: "+1 234 567 8910", displayName: "", lastMessage: "Limited time offer - 90% off!", time: "1h ago", unread: 0, channel: "whatsapp", status: "spam", assignedAgent: null },
+    { id: 10, phoneNumber: "+1 234 567 8909", displayName: "", lastMessage: "Click here for free money!!!", time: new Date(Date.now() - 30 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "spam", assignedAgent: null },
+    { id: 11, phoneNumber: "+1 234 567 8910", displayName: "", lastMessage: "Limited time offer - 90% off!", time: new Date(Date.now() - 24 * 3600000).toISOString(), unread: 0, channel: "whatsapp", status: "spam", assignedAgent: null },
   ]);
 
   // Messages per conversation
   const [conversationMessagesData, setConversationMessagesData] = useState<Record<number, any[]>>({
     1: [
-      { id: 1, from: "user", text: "Hi, I need help with my order", time: "10:30 AM" },
-      { id: 2, from: "agent", text: "Hello! I'd be happy to help. What's your order number?", time: "10:31 AM" },
-      { id: 3, from: "user", text: "It's #ORD-12345", time: "10:32 AM" },
-      { id: 4, from: "agent", text: "Let me check that for you...", time: "10:33 AM" },
-      { id: 5, from: "user", text: "Thanks for the help!", time: "10:35 AM" },
+      { id: 1, from: "user", text: "Hi, I need help with my order", time: new Date(Date.now() - 60 * 60000).toISOString() },
+      { id: 2, from: "agent", text: "Hello! I'd be happy to help. What's your order number?", time: new Date(Date.now() - 59 * 60000).toISOString() },
+      { id: 3, from: "user", text: "It's #ORD-12345", time: new Date(Date.now() - 58 * 60000).toISOString() },
+      { id: 4, from: "agent", text: "Let me check that for you...", time: new Date(Date.now() - 57 * 60000).toISOString() },
+      { id: 5, from: "user", text: "", time: new Date(Date.now() - 56 * 60000).toISOString(), images: [{ name: "issue.jpg", url: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?auto=format&fit=crop&w=1000&q=80", size: 1024 * 500 }] },
+      { id: 6, from: "user", text: "", time: new Date(Date.now() - 55 * 60000).toISOString(), audio: { url: "https://index-tts.github.io/examples_part2/IndexTTS/Speaker_2.wav", duration: "0:15", size: 1024 * 200 } },
+      { id: 7, from: "agent", text: "I see, here is a guide.", time: new Date(Date.now() - 54 * 60000).toISOString(), attachments: [{ name: "guide.pdf", url: "https://pdfobject.com/pdf/sample.pdf", size: 1024 * 1024 }] },
+      { id: 8, from: "user", text: "", time: new Date(Date.now() - 53 * 60000).toISOString(), video: { url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg", name: "screen_recording.mp4", size: 1024 * 5000 } },
+      { id: 9, from: "user", text: "Thanks for the help!", time: new Date(Date.now() - 50 * 60000).toISOString() },
     ],
     2: [
-      { id: 1, from: "user", text: "Can you send me the invoice?", time: "2:15 PM" },
-      { id: 2, from: "agent", text: "Of course! Let me find that for you.", time: "2:16 PM" },
-      { id: 3, from: "user", text: "Thank you!", time: "2:17 PM" },
+      { id: 1, from: "user", text: "Can you send me the invoice?", time: new Date(Date.now() - 125 * 60000).toISOString() },
+      { id: 2, from: "agent", text: "Of course! Let me find that for you.", time: new Date(Date.now() - 122 * 60000).toISOString() },
+      { id: 3, from: "user", text: "Thank you!", time: new Date(Date.now() - 120 * 60000).toISOString() },
     ],
     3: [
-      { id: 1, from: "user", text: "I have a billing question", time: "3:45 PM" },
-      { id: 2, from: "user", text: "Are you there?", time: "3:50 PM" },
+      { id: 1, from: "user", text: "I have a billing question", time: new Date(Date.now() - 365 * 60000).toISOString() },
+      { id: 2, from: "user", text: "Are you there?", time: new Date(Date.now() - 360 * 60000).toISOString() },
     ],
     4: [
-      { id: 1, from: "user", text: "This is amazing!", time: "11:00 AM" },
-      { id: 2, from: "agent", text: "Glad I could help!", time: "11:01 AM" },
-      { id: 3, from: "user", text: "Thank you for resolving this!", time: "11:02 AM" },
+      { id: 1, from: "user", text: "This is amazing!", time: new Date(Date.now() - 5 * 60000).toISOString() },
+      { id: 2, from: "agent", text: "Glad I could help!", time: new Date(Date.now() - 3 * 60000).toISOString() },
+      { id: 3, from: "user", text: "Thank you for resolving this!", time: new Date(Date.now() - 1 * 60000).toISOString() },
     ],
     5: [
-      { id: 1, from: "user", text: "Order received, thank you!", time: "9:30 AM" },
+      { id: 1, from: "user", text: "Order received, thank you!", time: new Date(Date.now() - 3 * 60000).toISOString() },
     ],
     6: [
-      { id: 1, from: "user", text: "When will my refund be processed?", time: "1:20 PM" },
-      { id: 2, from: "agent", text: "It should be processed within 3-5 business days.", time: "1:21 PM" },
+      { id: 1, from: "user", text: "When will my refund be processed?", time: new Date(Date.now() - 15 * 60000).toISOString() },
+      { id: 2, from: "agent", text: "It should be processed within 3-5 business days.", time: new Date(Date.now() - 12 * 60000).toISOString() },
     ],
     7: [
-      { id: 1, from: "user", text: "Great service!", time: "10:00 AM" },
-      { id: 2, from: "agent", text: "Thank you! We appreciate your business.", time: "10:01 AM" },
-      { id: 3, from: "user", text: "Issue resolved successfully", time: "10:02 AM" },
+      { id: 1, from: "user", text: "Great service!", time: new Date(Date.now() - 48 * 60000).toISOString() },
+      { id: 2, from: "agent", text: "Thank you! We appreciate your business.", time: new Date(Date.now() - 47 * 60000).toISOString() },
+      { id: 3, from: "user", text: "Issue resolved successfully", time: new Date(Date.now() - 45 * 60000).toISOString() },
     ],
     8: [
-      { id: 1, from: "user", text: "Thanks for your help!", time: "4:30 PM" },
-      { id: 2, from: "agent", text: "You're welcome! Have a great day.", time: "4:31 PM" },
+      { id: 1, from: "user", text: "Thanks for your help!", time: new Date(Date.now() - 3 * 3600000).toISOString() },
+      { id: 2, from: "agent", text: "You're welcome! Have a great day.", time: new Date(Date.now() - 2 * 3600000).toISOString() },
     ],
     9: [
-      { id: 1, from: "user", text: "Perfect, all set!", time: "2:00 PM" },
+      { id: 1, from: "user", text: "Perfect, all set!", time: new Date(Date.now() - 3 * 3600000).toISOString() },
     ],
     10: [
-      { id: 1, from: "user", text: "Click here for free money!!!", time: "3:15 PM" },
-      { id: 2, from: "user", text: "Limited offer - act now!", time: "3:16 PM" },
+      { id: 1, from: "user", text: "Click here for free money!!!", time: new Date(Date.now() - 35 * 60000).toISOString() },
+      { id: 2, from: "user", text: "Limited offer - act now!", time: new Date(Date.now() - 30 * 60000).toISOString() },
     ],
     11: [
-      { id: 1, from: "user", text: "Limited time offer - 90% off!", time: "5:45 PM" },
-      { id: 2, from: "user", text: "Don't miss out!", time: "5:46 PM" },
+      { id: 1, from: "user", text: "Limited time offer - 90% off!", time: new Date(Date.now() - 25 * 3600000).toISOString() },
+      { id: 2, from: "user", text: "Don't miss out!", time: new Date(Date.now() - 24 * 3600000).toISOString() },
     ],
   });
 
@@ -1105,10 +1127,79 @@ export default function ConversationsInbox() {
     "Thank you for contacting us.",
   ]);
 
+  // Helper to handle file downloads
+  const handleDownload = async (url: string, filename: string) => {
+    toast({
+      description: "Downloading...",
+      duration: 2000,
+    });
+
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback
+      window.open(url, '_blank');
+    }
+  };
+
   // Function to check if there are any agent messages in the current conversation
   const hasAgentMessages = (convId: number) => {
     const messages = conversationMessagesData[convId] || [];
     return messages.some((msg: any) => msg.from === "agent");
+  };
+
+  // Handle scroll to message from Contact Profile Sidebar
+  const handleScrollToMessage = (messageId: number) => {
+    // Find the message element
+    const element = document.getElementById(`message-${messageId}`);
+
+    if (element) {
+      // Try standard scrollIntoView first
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Additional fallback/refinement: target the specific scroll container
+      // We look for the ScrollArea's viewport or the nearest scrollable ancestor
+      const container = element.closest('[data-radix-scroll-area-viewport]') || element.closest('.overflow-y-auto');
+
+      if (container && container instanceof HTMLElement) {
+        // Calculate position to center the element
+        const elementRect = element.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const relativeTop = elementRect.top - containerRect.top;
+        const currentScroll = container.scrollTop;
+
+        // Center the element: newScrollTop = currentScroll + relativeTop - (containerHeight / 2) + (elementHeight / 2)
+        const targetScroll = currentScroll + relativeTop - (container.clientHeight / 2) + (element.clientHeight / 2);
+
+        container.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+      }
+
+      // Optional: Add a highlight effect
+      element.style.transition = 'background-color 0.5s';
+
+      // Add a temporary highlight class or inline style
+      element.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+
+      setTimeout(() => {
+        element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+      }, 2000);
+    } else {
+      console.warn(`Message with ID message-${messageId} not found`);
+    }
   };
 
   return (
@@ -1431,7 +1522,7 @@ export default function ConversationsInbox() {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time)}</span>
                           </div>
                           <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{getLastMessage(conv.id)}</p>
                           {conv.assignedAgent && conv.assignedAgent !== "self" && (
@@ -1581,109 +1672,132 @@ export default function ConversationsInbox() {
 
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {(conversationMessagesData[selectedConversation!] || []).map((msg: any) => (
-                    <div key={msg.id} className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
-                        {msg.text && <p className="text-sm">{msg.text}</p>}
+                  {(conversationMessagesData[selectedConversation!] || []).map((msg: any, index: number, allMessages: any[]) => {
+                    const showDateDivider = index === 0 || formatMessageDate(msg.time) !== formatMessageDate(allMessages[index - 1].time);
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {showDateDivider && (
+                          <div className="flex justify-center my-4">
+                            <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">{formatMessageDate(msg.time)}</span>
+                          </div>
+                        )}
+                        <div className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
+                          <div id={`message-${msg.id}`} className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
+                            {msg.text && <p className="text-sm">{msg.text}</p>}
 
-                        {/* Images */}
-                        {msg.images && msg.images.length > 0 && (
-                          <div className="mt-2 space-y-2">
-                            {msg.images.map((image: any, idx: number) => (
-                              <div key={idx} className="space-y-1">
-                                <img
-                                  src={image.url}
-                                  alt={image.name}
-                                  className="max-w-full h-auto rounded max-h-64 object-cover"
-                                />
-                                <div className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
-                                  <div className="flex items-center gap-1 flex-1 min-w-0">
-                                    <span className="truncate">{image.name}</span>
-                                    <span className="opacity-70 flex-shrink-0">({(image.size / 1024).toFixed(1)}KB)</span>
+                            {/* Images */}
+                            {msg.images && msg.images.length > 0 && (
+                              <div className="mt-2 space-y-2">
+                                {msg.images.map((image: any, idx: number) => (
+                                  <div key={idx} className="space-y-1">
+                                    <img
+                                      src={image.url}
+                                      alt={image.name}
+                                      className="max-w-full h-auto rounded max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                      onClick={() => setPreviewImage(image.url)}
+                                    />
+                                    <div className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
+                                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                                        <span className="truncate">{image.name}</span>
+                                        <span className="opacity-70 flex-shrink-0">({(image.size / 1024).toFixed(1)}KB)</span>
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDownload(image.url, image.name);
+                                        }}
+                                        className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                        title="Download image"
+                                      >
+                                        <Download size={14} />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <button
-                                    onClick={() => {
-                                      const link = document.createElement("a");
-                                      link.href = image.url;
-                                      link.download = image.name;
-                                      link.click();
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Attachments */}
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {msg.attachments.map((attachment: any, idx: number) => (
+                                  <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <Paperclip size={12} className="flex-shrink-0" />
+                                      <span className="truncate">{attachment.name}</span>
+                                      <span className="opacity-70 flex-shrink-0">({(attachment.size / 1024).toFixed(1)}KB)</span>
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownload(attachment.url, attachment.name);
+                                      }}
+                                      className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                      title="Download file"
+                                    >
+                                      <Download size={14} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Video */}
+                            {msg.video && (
+                              <div className="mt-2 text-xs bg-black/10 dark:bg-white/10 rounded overflow-hidden">
+                                <video src={msg.video.url} controls className="p-1 w-full max-h-64 object-contain bg-black/5" poster={msg.video.thumbnail} />
+                                <div className="flex items-center gap-2 p-2">
+                                  <div className="flex items-center gap-1 flex-1 min-w-0">
+                                    <div className="p-1 bg-black/10 rounded-full">
+                                      <div className="ml-0.5 w-0 h-0 border-t-[3px] border-t-transparent border-l-[6px] border-l-current border-b-[3px] border-b-transparent"></div>
+                                    </div>
+                                    <span className="truncate">{msg.video.name}</span>
+                                    <span className="opacity-70 flex-shrink-0">({(msg.video.size / 1024 / 1024).toFixed(1)}MB)</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Voice message */}
+                            {msg.audio && (
+                              <div className="mt-2 space-y-2">
+                                <div className="bg-black/10 dark:bg-white/10 rounded p-3 max-w-sm">
+                                  <audio
+                                    controls
+                                    className="h-12 rounded"
+                                    style={{
+                                      accentColor: "hsl(var(--primary))",
                                     }}
-                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                    title="Download image"
+                                    controlsList="nodownload"
                                   >
-                                    <Download size={14} />
-                                  </button>
+                                    <source src={msg.audio.url} type="audio/webm" />
+                                    Your browser does not support the audio element.
+                                  </audio>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <p className="text-xs font-medium">Voice message</p>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownload(msg.audio.url, `voice-message-${msg.id}.webm`);
+                                      }}
+                                      className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                      title="Download voice message"
+                                    >
+                                      <Download size={14} />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
+                            )}
 
-                        {/* Attachments */}
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {msg.attachments.map((attachment: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <Paperclip size={12} className="flex-shrink-0" />
-                                  <span className="truncate">{attachment.name}</span>
-                                  <span className="opacity-70 flex-shrink-0">({(attachment.size / 1024).toFixed(1)}KB)</span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    const link = document.createElement("a");
-                                    link.href = attachment.url;
-                                    link.download = attachment.name;
-                                    link.click();
-                                  }}
-                                  className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                  title="Download file"
-                                >
-                                  <Download size={14} />
-                                </button>
-                              </div>
-                            ))}
+                            <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700 dark:text-slate-400"}`}>{formatMessageTime(msg.time)}</p>
                           </div>
-                        )}
-
-                        {/* Voice message */}
-                        {msg.audio && (
-                          <div className="mt-2 space-y-2">
-                            <div className="bg-black/10 dark:bg-white/10 rounded p-3 max-w-sm">
-                              <audio
-                                controls
-                                className="h-12 rounded"
-                                style={{
-                                  accentColor: "hsl(var(--primary))",
-                                }}
-                                controlsList="nodownload"
-                              >
-                                <source src={msg.audio.url} type="audio/webm" />
-                                Your browser does not support the audio element.
-                              </audio>
-                              <div className="flex items-center justify-between mt-2">
-                                <p className="text-xs font-medium">Voice message</p>
-                                <button
-                                  onClick={() => {
-                                    const link = document.createElement("a");
-                                    link.href = msg.audio.url;
-                                    link.download = `voice-message-${msg.id}.webm`;
-                                    link.click();
-                                  }}
-                                  className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                                  title="Download voice message"
-                                >
-                                  <Download size={14} />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700 dark:text-slate-400"}`}>{msg.time}</p>
-                      </div>
-                    </div>
-                  ))}
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                  {/* Invisible div to scroll to */}
+                  <div id="scroll-target" />
                 </div>
               </ScrollArea>
               <Separator />
@@ -1866,6 +1980,27 @@ export default function ConversationsInbox() {
           )
         }
 
+        {/* Image Preview Modal */}
+        <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+          <DialogContent className="[&>button]:hidden w-auto h-auto max-w-none p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+            {previewImage && (
+              <div className="relative">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="max-w-[80vw] max-h-[80vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+                />
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {
           showContactPanel && (
             <ContactProfileSidebar
@@ -1879,13 +2014,15 @@ export default function ConversationsInbox() {
               involvedTeams={involvedTeamsByConv[selectedConversation || 0]}
               onUpdateInvolvedTeams={handleUpdateInvolvedTeams}
               teamOptions={teamOptions}
-              tags={tagsByConv[selectedConversation || 0]}
+              tags={tagsByConv[conversations.find(c => c.id === selectedConversation)?.id || 0] || []}
               onUpdateTags={handleUpdateTags}
               tagOptions={tagOptions}
-              customAttributes={customAttributesByConv[selectedConversation || 0]}
+              customAttributes={customAttributesByConv[conversations.find(c => c.id === selectedConversation)?.id || 0] || {}}
               onUpdateCustomAttributes={handleUpdateCustomAttributes}
-              notes={notesByConv[selectedConversation || 0]}
+              notes={notesByConv[conversations.find(c => c.id === selectedConversation)?.id || 0] || []}
               onUpdateNotes={handleUpdateNotes}
+              messages={conversationMessagesData[selectedConversation!] || []}
+              onScrollToMessage={handleScrollToMessage}
             />
           )
         }

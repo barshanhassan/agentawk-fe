@@ -241,7 +241,7 @@ export default function BotDashboardContent() {
               <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" angle={-45} textAnchor="end" height={80} />
               <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip content={<CustomTooltip />} cursor={false} />
-              <Bar dataKey="sentiment" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -262,7 +262,7 @@ export default function BotDashboardContent() {
                 <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                 <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }} iconType="circle" />
-                <Line type="monotone" dataKey="triggered" stroke="#3b82f6" strokeWidth={2} dot={false} name="Triggered" />
+                <Line type="monotone" dataKey="triggered" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Triggered" />
                 <Line type="monotone" dataKey="escalated" stroke="#ef4444" strokeWidth={2} dot={false} name="Escalated to Human" />
               </LineChart>
             </ResponsiveContainer>

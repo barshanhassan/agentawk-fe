@@ -69,6 +69,10 @@ interface ContactProfileSidebarProps {
     // Notes
     notes: string[];
     onUpdateNotes: (notes: string[]) => void;
+
+    // Messages for Media Tab
+    messages?: any[];
+    onScrollToMessage?: (messageId: number) => void;
 }
 
 // Helper function to get display name - defaults to phone number if displayName not set
@@ -94,6 +98,8 @@ export default function ContactProfileSidebar({
     onUpdateCustomAttributes,
     notes,
     onUpdateNotes,
+    messages = [],
+    onScrollToMessage,
 }: ContactProfileSidebarProps) {
 
     // Edit basic details modal state
@@ -284,6 +290,110 @@ export default function ContactProfileSidebar({
                                         />
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Media Tab Content */}
+                        {activeTab === "media" && (
+                            <div className="space-y-4">
+                                {(() => {
+                                    // Aggregate all media
+                                    const mediaItems: any[] = [];
+
+                                    messages.forEach(msg => {
+                                        if (msg.images && msg.images.length > 0) {
+                                            msg.images.forEach((img: any) => {
+                                                mediaItems.push({ ...img, type: 'image', time: msg.time, from: msg.from, messageId: msg.id });
+                                            });
+                                        }
+                                        if (msg.video) {
+                                            mediaItems.push({ ...msg.video, type: 'video', time: msg.time, from: msg.from, messageId: msg.id });
+                                        }
+                                        if (msg.audio) {
+                                            mediaItems.push({ ...msg.audio, type: 'audio', time: msg.time, from: msg.from, messageId: msg.id });
+                                        }
+                                        if (msg.attachments && msg.attachments.length > 0) {
+                                            msg.attachments.forEach((att: any) => {
+                                                mediaItems.push({ ...att, type: 'document', time: msg.time, from: msg.from, messageId: msg.id });
+                                            });
+                                        }
+                                    });
+
+                                    // Reverse to show newest first
+                                    mediaItems.reverse();
+
+                                    if (mediaItems.length === 0) {
+                                        return (
+                                            <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                                <ImageIcon size={32} className="mb-2 opacity-50" />
+                                                <p className="text-sm">No media messages were found.</p>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {mediaItems.map((item, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="relative group border rounded-md overflow-hidden bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                                                    onClick={() => onScrollToMessage?.(item.messageId)}
+                                                >
+                                                    {item.type === 'image' && (
+                                                        <div className="aspect-square relative">
+                                                            <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <div className="p-2 bg-white/20 rounded-full text-white backdrop-blur-sm">
+                                                                    <ImageIcon size={16} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {item.type === 'video' && (
+                                                        <div className="aspect-square relative flex items-center justify-center bg-black/5">
+                                                            {item.thumbnail ? (
+                                                                <img src={item.thumbnail} alt={item.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                                                                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white/50">
+                                                                        <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-current border-b-[6px] border-b-transparent"></div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                                <div className="p-2 bg-black/50 rounded-full text-white backdrop-blur-sm">
+                                                                    <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {item.type === 'audio' && (
+                                                        <div className="aspect-square flex flex-col items-center justify-center p-3 relative">
+                                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+                                                                <div className="ml-1 w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-current border-b-[5px] border-b-transparent"></div>
+                                                            </div>
+                                                            <span className="text-xs text-center font-medium truncate w-full">Audio</span>
+                                                            <span className="text-[10px] text-muted-foreground">{item.duration || "0:05"}</span>
+                                                        </div>
+                                                    )}
+                                                    {item.type === 'document' && (
+                                                        <div className="aspect-square flex flex-col items-center justify-center p-3 text-center">
+                                                            <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-2">
+                                                                <NotebookPen size={20} />
+                                                            </div>
+                                                            <span className="text-xs font-medium truncate w-full px-1" title={item.name}>{item.name}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{(item.size / 1024).toFixed(0)} KB</span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/60 to-transparent text-white text-[10px] opacity-0 group-hover:opacity-100 transition-opacity truncate px-2">
+                                                        {item.time} • {item.from === 'agent' ? 'You' : 'User'}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
 
