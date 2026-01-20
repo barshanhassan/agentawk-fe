@@ -145,6 +145,7 @@ export default function AppSidebar() {
     { label: "User Management", href: "/users", icon: Settings },
     { label: "Team Management", href: "/teams", icon: UserPlus },
     { label: "Workspace Management", href: "/workspaces", icon: Grid },
+    { label: "Media Gallery", href: "/settings?tab=Media gallery", icon: Grid },
     { label: "WhatsApp Manager", href: "/whatsapp-manager", icon: SiWhatsapp },
     { label: "Billing", href: "/billing", icon: Grid },
     { label: "Settings", href: "/settings", icon: Settings },
