@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, User, ListFilter } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,9 +76,9 @@ export default function ConversationsInbox() {
   const [selectedFilterChannels, setSelectedFilterChannels] = useState<string[]>([]);
 
   const channelOptions = [
-    { id: "whatsapp", name: "Whatsapp" },
-    { id: "instagram", name: "Instagram" },
-    { id: "messenger", name: "Messenger" },
+    { id: "whatsapp", name: "Whatsapp", icon: React.createElement("img", { src: "/images/automations/whatsapp.svg", alt: "WhatsApp", className: "w-3.5 h-3.5" }) },
+    { id: "instagram", name: "Instagram", icon: React.createElement("img", { src: "/images/automations/instagram.svg", alt: "Instagram", className: "w-3.5 h-3.5" }) },
+    { id: "messenger", name: "Messenger", icon: React.createElement("img", { src: "/images/automations/messenger.svg", alt: "Messenger", className: "w-3.5 h-3.5" }) },
   ];
 
   // Filter Handlers
@@ -119,11 +119,31 @@ export default function ConversationsInbox() {
 
   // Mock agent list
   const agentOptions = [
-    { id: "self", name: currentUser.name },
-    { id: "agent-1", name: "Sarah Johnson" },
-    { id: "agent-2", name: "Mike Chen" },
-    { id: "agent-3", name: "Emma Davis" },
-    { id: "agent-4", name: "Alex Rodriguez" },
+    {
+      id: "self",
+      name: currentUser.name,
+      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-semibold text-white" }, "DU")
+    },
+    {
+      id: "agent-1",
+      name: "Sarah Johnson",
+      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "SJ")
+    },
+    {
+      id: "agent-2",
+      name: "Mike Chen",
+      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "MC")
+    },
+    {
+      id: "agent-3",
+      name: "Emma Davis",
+      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "ED")
+    },
+    {
+      id: "agent-4",
+      name: "Alex Rodriguez",
+      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "AR")
+    },
   ];
 
   // Helper function to get agent name by ID
@@ -1091,7 +1111,9 @@ export default function ConversationsInbox() {
     2: [
       { id: 1, from: "user", text: "Can you send me the invoice?", time: new Date(Date.now() - 125 * 60000).toISOString() },
       { id: 2, from: "agent", text: "Of course! Let me find that for you.", time: new Date(Date.now() - 122 * 60000).toISOString() },
-      { id: 3, from: "user", text: "Thank you!", time: new Date(Date.now() - 120 * 60000).toISOString() },
+      { id: 3, from: "agent", text: "", time: new Date(Date.now() - 121 * 60000).toISOString(), attachments: [{ name: "invoice_2024.pdf", url: "https://pdfobject.com/pdf/sample.pdf", size: 1024 * 850 }] },
+      { id: 4, from: "user", text: "", time: new Date(Date.now() - 120 * 60000).toISOString(), images: [{ name: "receipt.jpg", url: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=80", size: 1024 * 420 }] },
+      { id: 5, from: "user", text: "Thank you!", time: new Date(Date.now() - 119 * 60000).toISOString() },
     ],
     3: [
       { id: 1, from: "user", text: "I have a billing question", time: new Date(Date.now() - 365 * 60000).toISOString() },
@@ -1099,15 +1121,18 @@ export default function ConversationsInbox() {
     ],
     4: [
       { id: 1, from: "user", text: "This is amazing!", time: new Date(Date.now() - 5 * 60000).toISOString() },
-      { id: 2, from: "agent", text: "Glad I could help!", time: new Date(Date.now() - 3 * 60000).toISOString() },
-      { id: 3, from: "user", text: "Thank you for resolving this!", time: new Date(Date.now() - 1 * 60000).toISOString() },
+      { id: 2, from: "user", text: "", time: new Date(Date.now() - 4 * 60000).toISOString(), images: [{ name: "product.jpg", url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80", size: 1024 * 650 }] },
+      { id: 3, from: "agent", text: "Glad I could help!", time: new Date(Date.now() - 3 * 60000).toISOString() },
+      { id: 4, from: "user", text: "Thank you for resolving this!", time: new Date(Date.now() - 1 * 60000).toISOString() },
     ],
     5: [
       { id: 1, from: "user", text: "Order received, thank you!", time: new Date(Date.now() - 3 * 60000).toISOString() },
+      { id: 2, from: "user", text: "", time: new Date(Date.now() - 2 * 60000).toISOString(), video: { url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg", name: "unboxing.mp4", size: 1024 * 3500 } },
     ],
     6: [
       { id: 1, from: "user", text: "When will my refund be processed?", time: new Date(Date.now() - 15 * 60000).toISOString() },
       { id: 2, from: "agent", text: "It should be processed within 3-5 business days.", time: new Date(Date.now() - 12 * 60000).toISOString() },
+      { id: 3, from: "user", text: "", time: new Date(Date.now() - 11 * 60000).toISOString(), audio: { url: "https://index-tts.github.io/examples_part2/IndexTTS/Speaker_3.wav", duration: "0:12", size: 1024 * 180 } },
     ],
     7: [
       { id: 1, from: "user", text: "Great service!", time: new Date(Date.now() - 48 * 60000).toISOString() },
@@ -1217,10 +1242,10 @@ export default function ConversationsInbox() {
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
 
-      <div className="flex-1 flex gap-4 px-6 py-6 max-h-full">
+      <div className="flex-1 flex gap-0 px-6 py-6 max-h-full">
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
-          <Card className="flex flex-col shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full" style={{ width: `${sidebarWidth}px` }}>
+          <Card className="flex flex-col border-r rounded-r-none h-full" style={{ width: `${sidebarWidth}px` }}>
             <CardHeader className="px-3 space-y-3 pb-3 flex-shrink-0">
               {/* Tabs */}
               <div className="px-3 flex justify-between border-b pb-0 w-full">
@@ -1266,7 +1291,7 @@ export default function ConversationsInbox() {
                     {/* Select Agents Dropdown */}
                     <div className="relative">
                       <CustomDropdown
-                        options={agentOptions.map(a => ({ id: a.id, name: a.name }))}
+                        options={agentOptions.map(a => ({ id: a.id, name: a.name, icon: a.icon }))}
                         selected={selectedFilterAgents}
                         onChange={setSelectedFilterAgents}
                         placeholder="Agents"
@@ -1506,11 +1531,18 @@ export default function ConversationsInbox() {
                               })()}
                             </AvatarFallback>
                           </Avatar>
-                          {getPendingMessagesCount(conv.id) > 0 && (
-                            <Badge variant="default" className="absolute h-5 w-5 -top-1.5 left-7 flex items-center justify-center p-0 text-xs rounded-full bg-primary hover:bg-primary/90 text-white dark:text-white border-0">
-                              {getPendingMessagesCount(conv.id)}
-                            </Badge>
-                          )}
+                          {/* Channel Icon Badge */}
+                          <span className="absolute bottom-0 -right-1 block">
+                            {conv.channel === "whatsapp" && (
+                              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="w-4 h-4" />
+                            )}
+                            {conv.channel === "instagram" && (
+                              <img src="/images/automations/instagram.svg" alt="Instagram" className="w-4 h-4" />
+                            )}
+                            {conv.channel === "messenger" && (
+                              <img src="/images/automations/messenger.svg" alt="Messenger" className="w-4 h-4" />
+                            )}
+                          </span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1 gap-2">
@@ -1566,7 +1598,7 @@ export default function ConversationsInbox() {
         {/* Main Content Area */}
         {
           selectedConversation ? (
-            <Card className="flex-1 flex flex-col shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+            <Card className="flex-1 flex flex-col border-l-0 rounded-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-3">
                   <Avatar>
@@ -1639,6 +1671,7 @@ export default function ConversationsInbox() {
                           disabled={conversations.find(c => c.id === selectedConversation)?.assignedAgent !== "self"}
                           className={conversations.find(c => c.id === selectedConversation)?.assignedAgent !== "self" ? "opacity-50 cursor-not-allowed" : ""}
                         >
+                          <UserX size={16} className="mr-2" />
                           Unassign Chat
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -1655,6 +1688,7 @@ export default function ConversationsInbox() {
                           disabled={conversations.find(c => c.id === selectedConversation)?.status === "completed"}
                           className={conversations.find(c => c.id === selectedConversation)?.status === "completed" ? "opacity-50 cursor-not-allowed" : ""}
                         >
+                          <CheckCircle size={16} className="mr-2" />
                           Mark as Completed
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -1671,6 +1705,7 @@ export default function ConversationsInbox() {
                           disabled={conversations.find(c => c.id === selectedConversation)?.status === "spam"}
                           className={conversations.find(c => c.id === selectedConversation)?.status === "spam" ? "opacity-50 cursor-not-allowed" : ""}
                         >
+                          <AlertOctagon size={16} className="mr-2" />
                           Mark as Spam
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -1983,7 +2018,7 @@ export default function ConversationsInbox() {
               )}
             </Card>
           ) : (
-            <Card className="flex-1 flex flex-col items-center justify-center shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+            <Card className="flex-1 flex flex-col items-center justify-center border-l-0 rounded-none">
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">Select a conversation</h3>
                 <p className="text-sm text-muted-foreground">Choose a conversation from the list to start messaging</p>

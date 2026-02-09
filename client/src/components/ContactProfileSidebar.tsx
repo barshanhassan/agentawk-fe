@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -130,6 +131,26 @@ export default function ContactProfileSidebar({
     // Add note modal state
     const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
     const [newNote, setNewNote] = useState("");
+
+    // Add opportunity modal state
+    const [isAddOpportunityModalOpen, setIsAddOpportunityModalOpen] = useState(false);
+    const [newOpportunity, setNewOpportunity] = useState({
+        pipeline: "",
+        stage: "",
+        title: "",
+        value: "",
+        currency: "USD",
+        closingDate: "",
+        confidence: "5",
+        agent: "",
+        contact: "",
+        tags: [] as string[],
+        note: ""
+    });
+
+    // Add task modal state
+    const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+    const [newTask, setNewTask] = useState({ note: "", date: "", time: "", agent: "", contact: "" });
 
     // Active Tab State
     const [activeTab, setActiveTab] = useState("details");
@@ -258,7 +279,7 @@ export default function ContactProfileSidebar({
 
     return (
         <>
-            <Card className="w-72 shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0" data-testid="contact-panel">
+            <Card className="w-96 border-l-0 rounded-l-none" data-testid="contact-panel">
                 <CardContent className="space-y-6 pt-8">
                     <div className="flex flex-col items-center gap-3">
                         <button
@@ -598,7 +619,7 @@ export default function ContactProfileSidebar({
                         {/* Opportunities Tab */}
                         {activeTab === "opportunities" && (
                             <div className="space-y-4">
-                                <Button variant="outline" size="sm" className="w-full btn-outline-primary">
+                                <Button variant="outline" size="sm" className="w-full btn-outline-primary" onClick={() => setIsAddOpportunityModalOpen(true)}>
                                     <Plus size={14} className="mr-2" /> Add Opportunity
                                 </Button>
                                 <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
@@ -649,7 +670,7 @@ export default function ContactProfileSidebar({
                         {/* Create Task Tab */}
                         {activeTab === "tasks" && (
                             <div className="space-y-4">
-                                <Button variant="outline" size="sm" className="w-full btn-outline-primary">
+                                <Button variant="outline" size="sm" className="w-full btn-outline-primary" onClick={() => setIsAddTaskModalOpen(true)}>
                                     <Plus size={14} className="mr-2" /> Add Task
                                 </Button>
                                 <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
@@ -1095,6 +1116,312 @@ export default function ContactProfileSidebar({
                     </div>
                 </DialogContent>
             </Dialog >
+
+            {/* Add Opportunity Modal */}
+            <Dialog open={isAddOpportunityModalOpen} onOpenChange={setIsAddOpportunityModalOpen}>
+                <DialogContent className="bg-white dark:bg-background">
+                    <DialogHeader>
+                        <DialogTitle>Add Opportunity</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                        <div>
+                            <label className="text-sm font-medium">Pipeline and stage</label>
+                            <Select value={newOpportunity.pipeline} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, pipeline: value, stage: "" })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select pipeline and stage" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="sales">Sales Pipeline</SelectItem>
+                                    <SelectItem value="marketing">Marketing Pipeline</SelectItem>
+                                    <SelectItem value="support">Support Pipeline</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {newOpportunity.pipeline && (
+                            <div>
+                                <label className="text-sm font-medium">Stage</label>
+                                <Select value={newOpportunity.stage} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, stage: value })}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select stage" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="lead">Lead</SelectItem>
+                                        <SelectItem value="qualified">Qualified</SelectItem>
+                                        <SelectItem value="proposal">Proposal</SelectItem>
+                                        <SelectItem value="negotiation">Negotiation</SelectItem>
+                                        <SelectItem value="won">Won</SelectItem>
+                                        <SelectItem value="lost">Lost</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        <div>
+                            <label className="text-sm font-medium">Opportunity Title</label>
+                            <Input
+                                placeholder="Enter opportunity title..."
+                                value={newOpportunity.title}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, title: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Opportunity value</label>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="number"
+                                    placeholder="Enter value..."
+                                    value={newOpportunity.value}
+                                    onChange={(e) => setNewOpportunity({ ...newOpportunity, value: e.target.value })}
+                                    className="flex-1"
+                                />
+                                <Select value={newOpportunity.currency} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, currency: value })}>
+                                    <SelectTrigger className="w-24">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="USD">USD</SelectItem>
+                                        <SelectItem value="EUR">EUR</SelectItem>
+                                        <SelectItem value="GBP">GBP</SelectItem>
+                                        <SelectItem value="PKR">PKR</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Closing date</label>
+                            <Input
+                                type="date"
+                                value={newOpportunity.closingDate}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, closingDate: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Confidence</label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    value={newOpportunity.confidence}
+                                    onChange={(e) => setNewOpportunity({ ...newOpportunity, confidence: e.target.value })}
+                                    className="flex-1"
+                                />
+                                <span className="text-sm font-medium w-12 text-right">{newOpportunity.confidence}%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Agent</label>
+                            <Select
+                                value={newOpportunity.agent}
+                                onValueChange={(value) => setNewOpportunity({ ...newOpportunity, agent: value })}
+                                disabled={!newOpportunity.pipeline}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={newOpportunity.pipeline ? "Select agent" : "Select pipeline first"}>
+                                        {newOpportunity.agent && (() => {
+                                            const agent = agentOptions.find(a => a.id === newOpportunity.agent);
+                                            const getAgentColor = (id: string) => {
+                                                if (id === "self") return "bg-primary";
+                                                if (id === "agent-1") return "bg-blue-500";
+                                                if (id === "agent-2") return "bg-green-500";
+                                                if (id === "agent-3") return "bg-purple-500";
+                                                if (id === "agent-4") return "bg-orange-500";
+                                                return "bg-gray-500";
+                                            };
+                                            return agent ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {agentOptions.map((agent) => {
+                                        const getAgentColor = (id: string) => {
+                                            if (id === "self") return "bg-primary";
+                                            if (id === "agent-1") return "bg-blue-500";
+                                            if (id === "agent-2") return "bg-green-500";
+                                            if (id === "agent-3") return "bg-purple-500";
+                                            if (id === "agent-4") return "bg-orange-500";
+                                            return "bg-gray-500";
+                                        };
+                                        return (
+                                            <SelectItem key={agent.id} value={agent.id}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Contact</label>
+                            <div className="text-xs text-muted-foreground mb-1">WhatsApp number</div>
+                            <Input
+                                placeholder="Select contact"
+                                value={newOpportunity.contact}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Assigned tags</label>
+                            <CustomDropdown
+                                options={tagOptions}
+                                selected={newOpportunity.tags}
+                                onChange={(tags) => setNewOpportunity({ ...newOpportunity, tags })}
+                                placeholder="Select tags"
+                                width="100%"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Note</label>
+                            <Textarea
+                                placeholder="Enter note..."
+                                value={newOpportunity.note}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, note: e.target.value })}
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => {
+                            setIsAddOpportunityModalOpen(false);
+                            setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
+                        }}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => {
+                            // Handle save opportunity logic here
+                            console.log("New Opportunity:", newOpportunity);
+                            setIsAddOpportunityModalOpen(false);
+                            setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
+                        }}>
+                            Save Opportunity
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Task Modal */}
+            <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+                <DialogContent className="bg-white dark:bg-background">
+                    <DialogHeader>
+                        <DialogTitle>Add Task</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-sm font-medium">Note</label>
+                            <Textarea
+                                placeholder="Enter note..."
+                                value={newTask.note}
+                                onChange={(e) => setNewTask({ ...newTask, note: e.target.value })}
+                                rows={3}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium">Select date</label>
+                                <Input
+                                    type="date"
+                                    value={newTask.date}
+                                    onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Select time</label>
+                                <Input
+                                    type="time"
+                                    value={newTask.time}
+                                    onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Agent</label>
+                            <Select value={newTask.agent} onValueChange={(value) => setNewTask({ ...newTask, agent: value })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select agent">
+                                        {newTask.agent && (() => {
+                                            const agent = agentOptions.find(a => a.id === newTask.agent);
+                                            const getAgentColor = (id: string) => {
+                                                if (id === "self") return "bg-primary";
+                                                if (id === "agent-1") return "bg-blue-500";
+                                                if (id === "agent-2") return "bg-green-500";
+                                                if (id === "agent-3") return "bg-purple-500";
+                                                if (id === "agent-4") return "bg-orange-500";
+                                                return "bg-gray-500";
+                                            };
+                                            return agent ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {agentOptions.map((agent) => {
+                                        const getAgentColor = (id: string) => {
+                                            if (id === "self") return "bg-primary";
+                                            if (id === "agent-1") return "bg-blue-500";
+                                            if (id === "agent-2") return "bg-green-500";
+                                            if (id === "agent-3") return "bg-purple-500";
+                                            if (id === "agent-4") return "bg-orange-500";
+                                            return "bg-gray-500";
+                                        };
+                                        return (
+                                            <SelectItem key={agent.id} value={agent.id}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Contact</label>
+                            <Input
+                                placeholder="Enter contact..."
+                                value={newTask.contact}
+                                onChange={(e) => setNewTask({ ...newTask, contact: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => {
+                            setIsAddTaskModalOpen(false);
+                            setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
+                        }}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => {
+                            // Handle save task logic here
+                            console.log("New Task:", newTask);
+                            setIsAddTaskModalOpen(false);
+                            setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
+                        }}>
+                            Save Task
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <ContactDetailsModal
                 open={isDetailsModalOpen}
