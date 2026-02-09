@@ -233,6 +233,7 @@ export default function SettingsPage() {
          <CardContent className="p-2 flex flex-col flex-1 overflow-y-auto max-h-full min-h-0">
 
   {/* WORKSPACE DROPDOWN */}
+  <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
   <button
     onClick={() => setWorkspaceOpen(!workspaceOpen)}
      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -251,26 +252,28 @@ export default function SettingsPage() {
 
   {workspaceOpen && (
    <div className="ml-6 mt-1 space-y-1">
-  {sections[0].children?.map((item: any) => (
-    <button
-      key={item.path}
-      onClick={() => {navigate(item.path);
-        setActiveSection(item.name)
-      }}
-      className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors 
-        ${activeSection === item.name
-          ? "bg-primary text-white shadow-sm"
-          : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
-        }`}
-    >
-      {item.name}
-    </button>
+  {sections[0].children?.map((item: any, idx: number) => (
+    <React.Fragment key={item.path}>
+      <button
+        onClick={() => {navigate(item.path);
+          setActiveSection(item.name)
+        }}
+        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors 
+          ${activeSection === item.name
+            ? "bg-primary text-white shadow-sm"
+            : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+          }`}
+      >
+        {item.name}
+      </button>
+
+    </React.Fragment>
   ))}
 </div>
 
   )}
 
-  <div className="my-2 h-px bg-slate-200 dark:bg-slate-800" />
+  </div>
   {/* SETTINGS */}
   {sections.slice(1).map((section, index) => {
               if (!section) return null;
@@ -278,7 +281,7 @@ export default function SettingsPage() {
               // Render Customization as a dropdown with children
               if (section.name === "Conversation channels") {
                 return (
-                  <div key={section.name}>
+                  <div key={section.name} className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
                     <button
                       onClick={() => setChannelsOpen(!channelsOpen)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -295,24 +298,26 @@ export default function SettingsPage() {
 
                     {channelsOpen && (
                       <div className="ml-6 mt-1 space-y-1">
-                        {section.children?.map((child: any) => {
+                        {section.children?.map((child: any, childIndex: number) => {
                           const ChildIcon = child.icon;
                           return (
-                            <button
-                              key={child.name}
-                              onClick={() => setActiveSection(child.name)}
-                              className={`w-full flex items-center gap-2 text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
-                                ? "bg-primary text-white shadow-sm"
-                                : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
-                                }`}
-                            >
-                              {child.iconPath ? (
-                                <img src={child.iconPath} alt={child.name} className="w-3.5 h-3.5" />
-                              ) : ChildIcon ? (
-                                <ChildIcon size={14} className={activeSection === child.name ? "text-white" : child.color} />
-                              ) : null}
-                              {child.name}
-                            </button>
+                            <React.Fragment key={child.name}>
+                              <button
+                                onClick={() => setActiveSection(child.name)}
+                                className={`w-full flex items-center gap-2 text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                  ? "bg-primary text-white shadow-sm"
+                                  : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                  }`}
+                              >
+                                {child.iconPath ? (
+                                  <img src={child.iconPath} alt={child.name} className="w-3.5 h-3.5" />
+                                ) : ChildIcon ? (
+                                  <ChildIcon size={14} className={activeSection === child.name ? "text-white" : child.color} />
+                                ) : null}
+                                {child.name}
+                              </button>
+
+                            </React.Fragment>
                           );
                         })}
                       </div>
@@ -323,7 +328,7 @@ export default function SettingsPage() {
 
               if (section.name === "Customization") {
                 return (
-                  <div key={section.name}>
+                  <div key={section.name} className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
                     <button
                       onClick={() => setCustomizationOpen(!customizationOpen)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -340,17 +345,19 @@ export default function SettingsPage() {
 
                     {customizationOpen && (
                       <div className="ml-6 mt-1 space-y-1">
-                        {section.children?.map((child: any) => (
-                          <button
-                            key={child.name}
-                            onClick={() => setActiveSection(child.name)}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
-                              ? "bg-primary text-white shadow-sm"
-                              : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
-                              }`}
-                          >
-                            {child.name}
-                          </button>
+                        {section.children?.map((child: any, idx: number) => (
+                          <React.Fragment key={child.name}>
+                            <button
+                              onClick={() => setActiveSection(child.name)}
+                              className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                ? "bg-primary text-white shadow-sm"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                }`}
+                            >
+                              {child.name}
+                            </button>
+
+                          </React.Fragment>
                         ))}
                       </div>
                     )}
@@ -360,7 +367,7 @@ export default function SettingsPage() {
 
               if (section.name === "ChatGPT") {
                 return (
-                  <div key={section.name}>
+                  <div key={section.name} className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
                     <button
                       onClick={() => setChatGptOpen(!chatGptOpen)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -377,17 +384,19 @@ export default function SettingsPage() {
 
                     {chatGptOpen && (
                       <div className="ml-6 mt-1 space-y-1">
-                        {section.children?.map((child: any) => (
-                          <button
-                            key={child.name}
-                            onClick={() => setActiveSection(child.name)}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
-                              ? "bg-primary text-white shadow-sm"
-                              : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
-                              }`}
-                          >
-                            {child.name}
-                          </button>
+                        {section.children?.map((child: any, idx: number) => (
+                          <React.Fragment key={child.name}>
+                            <button
+                              onClick={() => setActiveSection(child.name)}
+                              className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                ? "bg-primary text-white shadow-sm"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                }`}
+                            >
+                              {child.name}
+                            </button>
+
+                          </React.Fragment>
                         ))}
                       </div>
                     )}
@@ -397,7 +406,7 @@ export default function SettingsPage() {
 
               if (section.name === "Connect") {
                 return (
-                  <div key={section.name}>
+                  <div key={section.name} className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
                     <button
                       onClick={() => setConnectOpen(!connectOpen)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -414,17 +423,19 @@ export default function SettingsPage() {
 
                     {connectOpen && (
                       <div className="ml-6 mt-1 space-y-1">
-                        {section.children?.map((child: any) => (
-                          <button
-                            key={child.name}
-                            onClick={() => setActiveSection(child.name)}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
-                              ? "bg-primary text-white shadow-sm"
-                              : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
-                              }`}
-                          >
-                            {child.name}
-                          </button>
+                        {section.children?.map((child: any, idx: number) => (
+                          <React.Fragment key={child.name}>
+                            <button
+                              onClick={() => setActiveSection(child.name)}
+                              className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                ? "bg-primary text-white shadow-sm"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                }`}
+                            >
+                              {child.name}
+                            </button>
+
+                          </React.Fragment>
                         ))}
                       </div>
                     )}
@@ -433,7 +444,7 @@ export default function SettingsPage() {
               }
 
               return (
-                <React.Fragment key={section.name}>
+                <div key={section.name} className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
                   <button
                     onClick={() => {
                       navigate(`/settings?tab=${section.name}`);
@@ -446,10 +457,7 @@ export default function SettingsPage() {
                     {Icon && <Icon size={16} />}
                     {section.name}
                   </button>
-                  {index < sections.slice(1).length - 1 && (
-                    <div className="mx-1 my-1 h-px bg-slate-200 dark:bg-slate-800" />
-                  )}
-                </React.Fragment>
+                </div>
               );
             })}
 

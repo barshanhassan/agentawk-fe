@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
 // Mock data for demonstration
 const mockAccounts = [
@@ -69,8 +70,8 @@ const mockApiAccounts = [
 export default function WhatsAppSection() {
   const [view, setView] = useState<"list" | "coex_manage" | "api_manage" | "qr_manage" | "qr_create">("list");
   const [accounts, setAccounts] = useState(mockAccounts);
-  const [hasAccounts, setHasAccounts] = useState(false); // Set to true to show connected accounts
-  const [hasApiAccounts, setHasApiAccounts] = useState(false); // Set to true to show API accounts
+  const [hasAccounts, setHasAccounts] = useState(true); // Set to true to show connected accounts
+  const [hasApiAccounts, setHasApiAccounts] = useState(true); // Set to true to show API accounts
 
   const toggleFeeder = (numberId: number, accountId: number) => {
     setAccounts(prev => prev.map(account => {
@@ -92,7 +93,15 @@ export default function WhatsAppSection() {
   return (
     <div className="p-6">
       {view === "list" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">WhatsApp</h2>
+            <p className="text-sm text-muted-foreground">
+              Connect your WhatsApp accounts to the platform.
+            </p>
+          </div>
+          <Separator className="bg-gray-200 dark:bg-slate-800" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card 1: WhatsApp Business App "Coex" */}
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
@@ -188,6 +197,7 @@ export default function WhatsAppSection() {
             </div>
           </div>
         </div>
+        </div>
       )}
       
       {view === "coex_manage" && (
@@ -238,7 +248,7 @@ export default function WhatsAppSection() {
               {accounts.map((account) => (
                 <div key={account.id} className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
                   {/* Account Header */}
-                  <div className="p-4 border-b dark:border-slate-800">
+                  <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-8 w-8" />
@@ -257,6 +267,7 @@ export default function WhatsAppSection() {
                       </div>
                     </div>
                   </div>
+                  <Separator className="bg-gray-200 dark:bg-slate-800" />
 
                   {/* Account Body */}
                   <div className="p-4 space-y-4">

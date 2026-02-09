@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "product-one-4d742",
+    "target": "update-site",
     "public": "dist/public",
     "ignore": [
       "firebase.json",

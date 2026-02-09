@@ -8,19 +8,10 @@ import {
   Plug, 
   ExternalLink, 
   ArrowLeftRight, 
-  AudioLines,
-  Cloud, 
-  ChevronRight,
-  Aperture,
-  Pause, 
-  MessageSquare, 
   FileText, 
-  Database, 
-  DollarSign, 
-  Infinity, 
   Sparkles, 
   Fish, 
-  Flame 
+  Flame
 } from "lucide-react";
 
 interface Integration {
@@ -40,7 +31,11 @@ export default function IntegrationsSection() {
       id: "azure-tts",
       name: "Microsoft Text-To-Speech",
       description: "Seamlessly link your Azure Text-To-Speech application to create lifelike voices for pre-recorded calls, audio messages across channels, and pre-recorded voice files or canned responses.",
-      icon: <AudioLines className="w-10 h-10 text-blue-500" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/tts.png" alt="Microsoft TTS" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: true,
       hasToggle: true,
       actionLabel: "Connect"
@@ -49,7 +44,11 @@ export default function IntegrationsSection() {
       id: "cloudinary",
       name: "Cloudinary",
       description: "Integrate Cloudinary for streamlined image uploads to Cloudinary folders. Organize and optimize your visual marketing with ease, delivering captivating content to your audience and enhancing engagement.",
-      icon: <Cloud className="w-10 h-10 text-blue-400" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/cloudinary.svg" alt="Cloudinary" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: true,
       actionLabel: "Connect"
@@ -59,8 +58,8 @@ export default function IntegrationsSection() {
       name: "ActiveCampaign",
       description: "Integrate ActiveCampaign to add contacts to ActiveCampaign.",
       icon: (
-        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <ChevronRight className="w-6 h-6 text-white" />
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/activecampaign.svg" alt="ActiveCampaign" className="h-12 w-auto object-contain" />
         </div>
       ),
       connected: false,
@@ -71,7 +70,11 @@ export default function IntegrationsSection() {
       id: "openai",
       name: "OpenAI",
       description: "Enter your OpenAI API to provide more tailored and accurate responses about your business, product and services. Automatically convert speech to text using Whisper Voice to Text technology.",
-      icon: <Aperture className="w-10 h-10 text-green-600" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/chat_gpt.svg" alt="OpenAI" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: true,
       hasToggle: true,
       actionLabel: "Connect"
@@ -81,8 +84,8 @@ export default function IntegrationsSection() {
       name: "Make.com",
       description: "Integrate with over 1600 external apps and effortlessly create and automate tasks using one robust visual platform, Make.com.",
       icon: (
-        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl mb-1">m</span>
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/make.png" alt="Make.com" className="h-12 w-auto object-contain" />
         </div>
       ),
       connected: false,
@@ -93,7 +96,11 @@ export default function IntegrationsSection() {
       id: "elevenlabs",
       name: "ElevenLabs",
       description: "Integrate to quickly generate AI voices in multiple languages.",
-      icon: <Pause className="w-10 h-10 text-black dark:text-white" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/elevenlabs.png" alt="ElevenLabs" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: true,
       hasToggle: true,
       actionLabel: "Connect"
@@ -103,8 +110,8 @@ export default function IntegrationsSection() {
       name: "Cal.com",
       description: "Integrate your Cal.com account and manage your calendar from the Smart flows.",
       icon: (
-        <div className="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold tracking-tighter">
-            Cal
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/cal_dot_com.png" alt="Cal.com" className="h-12 w-auto object-contain" />
         </div>
       ),
       connected: false,
@@ -115,16 +122,24 @@ export default function IntegrationsSection() {
       id: "dify",
       name: "Dify.ai",
       description: "Connect and manage dify.ai chatbots",
-      icon: <MessageSquare className="w-10 h-10 text-blue-500" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/dify_logo.png" alt="Dify.ai" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage"
     },
     {
-      id: "llmwhisperer",
-      name: "LLMWhisperer",
-      description: "Connect to convert any document into plain text.",
-      icon: <FileText className="w-10 h-10 text-orange-500" />,
+      id: "unstract",
+      name: "Unstract",
+      description: "Connect to Unstract to leverage LLM-powered data extraction.",
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/unstract_logo.svg" alt="Unstract" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Connect"
@@ -133,7 +148,11 @@ export default function IntegrationsSection() {
       id: "baserow",
       name: "Baserow.io",
       description: "Integrate external database for data manipulation",
-      icon: <Database className="w-10 h-10 text-blue-500" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/baserow.png" alt="Baserow" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage"
@@ -142,7 +161,11 @@ export default function IntegrationsSection() {
       id: "woovi",
       name: "Pix - Woovi.com",
       description: "Integrate with Woovi.com to manage Pix charges",
-      icon: <DollarSign className="w-10 h-10 text-green-500" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/woovi.png" alt="Woovi" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage",
@@ -152,18 +175,36 @@ export default function IntegrationsSection() {
       id: "meta",
       name: "Conversions API",
       description: "Track conversations initiated from your ads for WhatsApp, Instagram and Messenger.",
-      icon: <Infinity className="w-10 h-10 text-blue-600" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/metadas.png" alt="Meta Conversions API" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage",
       isBeta: true
+    },
+    // Extra integrations not in Vue reference but kept for completeness
+    {
+      id: "llmwhisperer",
+      name: "LLMWhisperer",
+      description: "Connect to convert any document into plain text.",
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/unstract_logo.svg" alt="LLMWhisperer" className="h-12 w-auto object-contain" />
+        </div>
+      ),
+      connected: false,
+      hasToggle: false,
+      actionLabel: "Connect"
     },
     {
       id: "anthropic",
       name: "Anthropic",
       description: "Enter your Anthropic API to provide more tailored AI responses.",
       icon: (
-        <div className="w-10 h-10 border-2 border-black dark:border-white rounded-lg flex items-center justify-center font-bold text-lg">
+        <div className="w-12 h-12 border rounded-lg flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-950">
             AI
         </div>
       ),
@@ -175,7 +216,11 @@ export default function IntegrationsSection() {
       id: "gemini",
       name: "Google Gemini",
       description: "Enter your Google Gemini API to provide more tailored and accurate responses.",
-      icon: <Sparkles className="w-10 h-10 text-blue-500" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/google_g.svg" alt="Google Gemini" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage"
@@ -184,7 +229,11 @@ export default function IntegrationsSection() {
       id: "deepseek",
       name: "DeepSeek",
       description: "Enter your DeepSeek API to provide more tailored and accurate responses.",
-      icon: <Fish className="w-10 h-10 text-blue-600" />,
+      icon: (
+        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
+          <img src="/images/integrations/deepseek_ai.png" alt="DeepSeek" className="h-12 w-auto object-contain" />
+        </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage"
@@ -193,7 +242,11 @@ export default function IntegrationsSection() {
       id: "firecrawl",
       name: "FireCrawl",
       description: "Enter your FireCrawl API to crawl your website for your AI Agents to learn from.",
-      icon: <Flame className="w-10 h-10 text-orange-500" />,
+      icon: (
+         <div className="w-12 h-12 border rounded-lg flex items-center justify-center bg-white dark:bg-slate-950">
+            <Flame className="w-8 h-8 text-orange-500" />
+         </div>
+      ),
       connected: false,
       hasToggle: false,
       actionLabel: "Manage"
@@ -220,12 +273,12 @@ export default function IntegrationsSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-6">
         {integrations.map((item) => (
-          <Card key={item.id} className="flex flex-col">
+          <Card key={item.id} className="flex flex-col shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="flex-row items-start justify-between space-y-0 pb-2">
               <div className="">
                 {item.icon}
               </div>
-              <ExternalLink className="w-5 h-5 text-muted-foreground" />
+              <ExternalLink className="w-5 h-5 text-muted-foreground hover:text-primary cursor-pointer" />
             </CardHeader>
             <CardContent className="flex-1 space-y-3 pt-4">
               <CardTitle className="text-base font-semibold">{item.name}</CardTitle>
@@ -249,9 +302,9 @@ export default function IntegrationsSection() {
               <Button 
                 variant="outline" 
                 size="sm"
-                className="gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+                className="gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground group"
               >
-                <ArrowLeftRight className="w-4 h-4" />
+                <ArrowLeftRight className="w-4 h-4 transition-transform group-hover:scale-110" />
                 {item.actionLabel}
               </Button>
             </CardFooter>

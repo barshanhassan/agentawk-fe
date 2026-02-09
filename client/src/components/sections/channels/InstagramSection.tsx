@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -46,7 +47,7 @@ const mockInstagramAccounts = [
 
 export default function InstagramSection() {
   const [view, setView] = useState<"list" | "preferred_manage" | "old_manage">("list");
-  const [hasAccounts, setHasAccounts] = useState(false);
+  const [hasAccounts, setHasAccounts] = useState(true);
   const [accounts, setAccounts] = useState(mockInstagramAccounts);
   
   // Dialog states
@@ -68,7 +69,15 @@ export default function InstagramSection() {
   return (
     <div className="p-6">
       {view === "list" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">Instagram</h2>
+            <p className="text-sm text-muted-foreground">
+              Connect your Instagram Business account to automate conversations.
+            </p>
+          </div>
+          <Separator className="bg-gray-200 dark:bg-slate-800" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Preferred Integration */}
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
@@ -122,6 +131,7 @@ export default function InstagramSection() {
               </Button>
             </div>
           </div>
+        </div>
         </div>
       )}
 

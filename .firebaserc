@@ -1,7 +1,8 @@
 {
   "projects": {
     "default": "product-one-4d742",
-    "comm-platform": "comm-platform-5fdce"
+    "comm-platform": "comm-platform-5fdce",
+    "prod": "product-3f6b0"
   },
   "targets": {
     "comm-platform-5fdce": {
@@ -10,6 +11,14 @@
           "comm-platform-update"
         ]
       }
+    },
+    "product-3f6b0": {
+      "hosting": {
+        "update-site": [
+          "product-3f6b0-site"
+        ]
+      }
     }
-  }
+  },
+  "etags": {}
 }
