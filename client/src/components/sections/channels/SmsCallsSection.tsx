@@ -1,5 +1,4 @@
 import React from "react";
-import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function SmsCallsSection() {
@@ -10,7 +9,7 @@ export default function SmsCallsSection() {
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-red-100 dark:bg-red-900/20 p-2 rounded-full">
-               <Phone className="h-6 w-6 text-red-600" />
+               <img src="/images/automations/sms.svg" alt="SMS" className="h-6 w-6" />
             </div>
             <div>
               <h3 className="font-semibold text-lg">SMS & Calls</h3>
@@ -27,7 +26,7 @@ export default function SmsCallsSection() {
         {/* Content */}
         <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 py-24">
           <div className="bg-red-100 dark:bg-red-900/20 p-4 rounded-full">
-            <Phone className="h-12 w-12 text-red-600" />
+            <img src="/images/automations/sms.svg" alt="SMS" className="h-12 w-12" />
           </div>
           <h2 className="text-lg font-semibold">Connect your Twilio account now</h2>
           <p className="text-muted-foreground max-w-md">

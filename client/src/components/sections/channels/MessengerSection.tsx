@@ -1,5 +1,4 @@
 import React from "react";
-import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function MessengerSection() {
@@ -10,7 +9,7 @@ export default function MessengerSection() {
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-full">
-               <MessageCircle className="h-6 w-6 text-blue-600" />
+               <img src="/images/automations/messenger.svg" alt="Messenger" className="h-6 w-6" />
             </div>
             <div>
               <h3 className="font-semibold text-lg">Messenger</h3>
@@ -27,7 +26,7 @@ export default function MessengerSection() {
         {/* Content */}
         <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 py-24">
           <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full">
-            <MessageCircle className="h-12 w-12 text-blue-600" />
+            <img src="/images/automations/messenger.svg" alt="Messenger" className="h-12 w-12" />
           </div>
           <h2 className="text-lg font-semibold">Facebook pages are not connected yet</h2>
           <p className="text-muted-foreground max-w-md">

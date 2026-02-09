@@ -10,9 +10,7 @@ export default function WebchatSection() {
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-full">
-              <svg className="h-6 w-6 text-blue-600" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <img src="/images/automations/webchat.svg" alt="Webchat" className="h-6 w-6" />
             </div>
             <div>
               <h3 className="font-semibold text-lg text-slate-900">Webchat</h3>

@@ -7,7 +7,6 @@ import {
   Settings,
   Clock,
   Bot,
-  MessageCircle,
   CalendarX,
   UserCog,
   MessageSquare,
@@ -20,9 +19,6 @@ import {
   Film,
   Sliders,
   Book,
-  Camera, // Added Camera icon
-  Send, // Added Send icon
-  PhoneCall, // Added PhoneCall icon
   Cpu, // Added Cpu icon for AI Products
   Plug, // Added Plug icon
   Code2,
@@ -96,12 +92,12 @@ export default function SettingsPage() {
     name: "Conversation channels",
     icon: MessageSquare,
     children: [
-      { name: "WhatsApp", icon: MessageCircle, color: "text-green-500" },
-      { name: "Instagram", icon: Camera, color: "text-pink-500" },
-      { name: "Messenger", icon: MessageCircle, color: "text-blue-500" },
-      { name: "Telegram", icon: Send, color: "text-blue-400" },
-      { name: "SMS & Calls", icon: PhoneCall, color: "text-red-500" },
-      { name: "Webchat", icon: MessageSquare, color: "text-purple-500" },
+      { name: "WhatsApp", iconPath: "/images/automations/whatsapp.svg" },
+      { name: "Instagram", iconPath: "/images/automations/instagram.svg" },
+      { name: "Messenger", iconPath: "/images/automations/messenger.svg" },
+      { name: "Telegram", iconPath: "/images/automations/telegram.svg" },
+      { name: "SMS & Calls", iconPath: "/images/automations/sms.svg" },
+      { name: "Webchat", iconPath: "/images/automations/webchat.svg" },
     ],
   },
   {
@@ -135,18 +131,18 @@ export default function SettingsPage() {
       { name: "Custom fields" },
       { name: "Chat Widget" },
       { name: "Iframe" },
+      { name: "Tags" },
+      { name: "Canned responses" },
     ],
   },
   { name: "Preferences", icon: Settings },
   { name: "Business Hours", icon: Clock },
   { name: "AI Assistants", icon: Bot },
-  { name: "Agent Chats", icon: MessageCircle },
+  { name: "Agent Chats", icon: MessageSquare },
   { name: "Out of Office", icon: CalendarX },
   { name: "Bot to Agent", icon: UserCog },
 
   { name: "Quick Replies", icon: MessageSquare },
-  { name: "Canned responses", icon: Book },
-  { name: "Tags", icon: Tag },
   { name: "Password Policy", icon: ShieldCheck },
   { name: "Developer Settings", icon: Code },
   { name: "Change Password", icon: Lock },
@@ -310,7 +306,11 @@ export default function SettingsPage() {
                                 : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
                                 }`}
                             >
-                              {ChildIcon && <ChildIcon size={14} className={activeSection === child.name ? "text-white" : child.color} />}
+                              {child.iconPath ? (
+                                <img src={child.iconPath} alt={child.name} className="w-3.5 h-3.5" />
+                              ) : ChildIcon ? (
+                                <ChildIcon size={14} className={activeSection === child.name ? "text-white" : child.color} />
+                              ) : null}
                               {child.name}
                             </button>
                           );
