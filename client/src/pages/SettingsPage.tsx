@@ -18,6 +18,15 @@ import {
   PaintBucket,
   ChevronDown,
   Film,
+  Sliders,
+  Book,
+  Camera, // Added Camera icon
+  Send, // Added Send icon
+  PhoneCall, // Added PhoneCall icon
+  Cpu, // Added Cpu icon for AI Products
+  Plug, // Added Plug icon
+  Code2,
+  Network,
 } from "lucide-react";
 import ManageSection from "@/components/workspace/ManageSection";
 import LiveChatSection from "@/components/workspace/LiveChatSection";
@@ -26,6 +35,17 @@ import ThemeSection from "@/components/sections/ThemeSection";
 import PreferencesSection from "@/components/sections/PreferencesSection";
 import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
 import AIAssistantsSection from "@/components/sections/AIAssistantsSection";
+import AIChatAssistantsSection from "@/components/sections/ai/AIChatAssistantsSection";
+import AIVoiceAssistantsSection from "@/components/sections/ai/AIVoiceAssistantsSection";
+import AIKnowledgeBaseSection from "@/components/sections/ai/AIKnowledgeBaseSection";
+import AIReportBuilderSection from "@/components/sections/ai/AIReportBuilderSection";
+import AIThemesSection from "@/components/sections/ai/AIThemesSection";
+import AIItemsSection from "@/components/sections/ai/AIItemsSection";
+import AITopicsSection from "@/components/sections/ai/AITopicsSection";
+import AIProductsSection from "@/components/sections/ai/AIProductsSection";
+import IntegrationsSection from "@/components/sections/connect/IntegrationsSection";
+import APISection from "@/components/sections/connect/APISection";
+import VisualAPISection from "@/components/sections/connect/VisualAPISection";
 import AgentChatsSection from "@/components/sections/AgentChatsSection";
 import OutOfOfficeSection from "@/components/sections/OutOfOfficeSection";
 import BotToAgentSection from "@/components/sections/BotToAgentSection";
@@ -33,12 +53,27 @@ import PasswordPolicySection from "@/components/sections/PasswordPolicySection";
 import DeveloperSettingsSection from "@/components/sections/DeveloperSettingsSection";
 import ChangePasswordSection from "@/components/sections/ChangePasswordSection";
 import QuickRepliesSection from "@/components/sections/QuickRepliesSection";
-import TagsSection from "@/components/sections/TagsSection";
+
 import WhiteLabelSection from "@/components/workspace/WhiteLabelSection";
 import RolesSection from "@/components/workspace/RolesSection";
 import TeamsSection from "@/components/workspace/TeamsSection";
 import ManageAgentsSection from "@/components/workspace/ManageAgentsSection";
 import MediaGallerySection from "@/components/workspace/MediaGallerySection";
+import CustomizationSection from "@/components/sections/CustomizationSection";
+import CustomFieldsSection from "@/components/sections/CustomFieldsSection";
+import ChatWidgetSection from "@/components/sections/ChatWidgetSection";
+import IframeSection from "@/components/sections/IframeSection";
+import TagsSection from "@/components/sections/TagsSection";
+import CannedResponsesSection from "@/components/sections/CannedResponsesSection";
+
+// Channel Sections
+import WhatsAppSection from "@/components/sections/channels/WhatsAppSection";
+import InstagramSection from "@/components/sections/channels/InstagramSection";
+import MessengerSection from "@/components/sections/channels/MessengerSection";
+import TelegramSection from "@/components/sections/channels/TelegramSection";
+import SmsCallsSection from "@/components/sections/channels/SmsCallsSection";
+import WebchatSection from "@/components/sections/channels/WebchatSection";
+
 
 export default function SettingsPage() {
   const sections = [
@@ -57,15 +92,60 @@ export default function SettingsPage() {
   { name: "Media gallery", icon: Film },
 
   // SETTINGS (existing ones)
-  
+  {
+    name: "Conversation channels",
+    icon: MessageSquare,
+    children: [
+      { name: "WhatsApp", icon: MessageCircle, color: "text-green-500" },
+      { name: "Instagram", icon: Camera, color: "text-pink-500" },
+      { name: "Messenger", icon: MessageCircle, color: "text-blue-500" },
+      { name: "Telegram", icon: Send, color: "text-blue-400" },
+      { name: "SMS & Calls", icon: PhoneCall, color: "text-red-500" },
+      { name: "Webchat", icon: MessageSquare, color: "text-purple-500" },
+    ],
+  },
+  {
+    name: "ChatGPT",
+    icon: Bot,
+    children: [
+      { name: "AI Chat Assistants" },
+      { name: "AI Voice Assistants" },
+      { name: "AI Knowledge base" },
+      { name: "AI Report Builder" },
+      { name: "Ai Themes" },
+      { name: "Ai items" },
+      { name: "Ai Topics" },
+    ],
+  },
+  {
+    name: "Connect",
+    icon: Plug,
+    children: [
+      { name: "Integrations", icon: Plug },
+      { name: "API", icon: Code2 },
+      { name: "Visual API", icon: Network },
+    ],
+  },
+  { name: "Ai Products", icon: Cpu },
   { name: "Theme", icon: PaintBucket },
+  {
+    name: "Customization",
+    icon: Sliders,
+    children: [
+      { name: "Custom fields" },
+      { name: "Chat Widget" },
+      { name: "Iframe" },
+    ],
+  },
   { name: "Preferences", icon: Settings },
   { name: "Business Hours", icon: Clock },
   { name: "AI Assistants", icon: Bot },
   { name: "Agent Chats", icon: MessageCircle },
   { name: "Out of Office", icon: CalendarX },
   { name: "Bot to Agent", icon: UserCog },
+
   { name: "Quick Replies", icon: MessageSquare },
+  { name: "Canned responses", icon: Book },
   { name: "Tags", icon: Tag },
   { name: "Password Policy", icon: ShieldCheck },
   { name: "Developer Settings", icon: Code },
@@ -77,10 +157,15 @@ export default function SettingsPage() {
 
   // Calculate initial activeSection directly from URL
   const initialTabParam = new URLSearchParams(window.location.search).get("tab");
-  const initialActiveSection = (initialTabParam && sections.some(s => s.name === initialTabParam)) ? initialTabParam : "My Profile";
+  // Default to empty so right pane is empty until a selection
+  const initialActiveSection = (initialTabParam && (sections.some(s => s.name === initialTabParam) || sections.some(s => s.children?.some((c: any) => c.name === initialTabParam)))) ? initialTabParam : "";
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
+  const [customizationOpen, setCustomizationOpen] = useState(false);
+  const [channelsOpen, setChannelsOpen] = useState(false);
+  const [chatGptOpen, setChatGptOpen] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState(""); // Default profile picture
   const [notificationsEnabled, setNotificationsEnabled] = useState(false); // User preference for notifications, off by default
   const [browserNotificationsDenied, setBrowserNotificationsDenied] = useState(Notification.permission === 'denied'); // Initialize based on actual browser permission
@@ -115,8 +200,9 @@ export default function SettingsPage() {
     const params = new URLSearchParams(search);
     const tabParam = params.get("tab");
 
-    if (tabParam && sections.some(s => s.name === tabParam)) {
-      setActiveSection(tabParam);
+    if (tabParam) {
+      const found = sections.some(s => s.name === tabParam) || sections.some(s => s.children?.some((c: any) => c.name === tabParam));
+      if (found) setActiveSection(tabParam);
     }
   }, [search]); // Depend on search and sections
 
@@ -147,8 +233,8 @@ export default function SettingsPage() {
     <div className="h-screen overflow-hidden">
       <div className="flex h-full">
         {/* Left Sidebar Navigation */}
-        <Card className="h-full w-64 bg-white dark:bg-background border-r border-0 rounded-none shadow-[4px_0_24px_rgba(0,0,0,0.02)] flex-shrink-0 z-10">
-         <CardContent className="p-2 flex flex-col">
+        <Card className="h-full w-64 bg-white dark:bg-background border-r border-0 rounded-none shadow-[4px_0_24px_rgba(0,0,0,0.02)] flex-shrink-0 z-10 flex flex-col">
+         <CardContent className="p-2 flex flex-col flex-1 overflow-y-auto max-h-full min-h-0">
 
   {/* WORKSPACE DROPDOWN */}
   <button
@@ -169,7 +255,7 @@ export default function SettingsPage() {
 
   {workspaceOpen && (
    <div className="ml-6 mt-1 space-y-1">
-  {sections[0].children?.map(item => (
+  {sections[0].children?.map((item: any) => (
     <button
       key={item.path}
       onClick={() => {navigate(item.path);
@@ -189,23 +275,175 @@ export default function SettingsPage() {
   )}
 
   <div className="my-2 h-px bg-slate-200 dark:bg-slate-800" />
-
   {/* SETTINGS */}
   {sections.slice(1).map((section, index) => {
               if (!section) return null;
               const Icon = section.icon;
+              // Render Customization as a dropdown with children
+              if (section.name === "Conversation channels") {
+                return (
+                  <div key={section.name}>
+                    <button
+                      onClick={() => setChannelsOpen(!channelsOpen)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                        }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {Icon && <Icon size={16} />}
+                        {section.name}
+                      </div>
+                      <ChevronDown size={14} className={`${channelsOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {channelsOpen && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {section.children?.map((child: any) => {
+                          const ChildIcon = child.icon;
+                          return (
+                            <button
+                              key={child.name}
+                              onClick={() => setActiveSection(child.name)}
+                              className={`w-full flex items-center gap-2 text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                                ? "bg-primary text-white shadow-sm"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                                }`}
+                            >
+                              {ChildIcon && <ChildIcon size={14} className={activeSection === child.name ? "text-white" : child.color} />}
+                              {child.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (section.name === "Customization") {
+                return (
+                  <div key={section.name}>
+                    <button
+                      onClick={() => setCustomizationOpen(!customizationOpen)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                        }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {Icon && <Icon size={16} />}
+                        {section.name}
+                      </div>
+                      <ChevronDown size={14} className={`${customizationOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {customizationOpen && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {section.children?.map((child: any) => (
+                          <button
+                            key={child.name}
+                            onClick={() => setActiveSection(child.name)}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                              ? "bg-primary text-white shadow-sm"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                              }`}
+                          >
+                            {child.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (section.name === "ChatGPT") {
+                return (
+                  <div key={section.name}>
+                    <button
+                      onClick={() => setChatGptOpen(!chatGptOpen)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                        }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {Icon && <Icon size={16} />}
+                        {section.name}
+                      </div>
+                      <ChevronDown size={14} className={`${chatGptOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {chatGptOpen && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {section.children?.map((child: any) => (
+                          <button
+                            key={child.name}
+                            onClick={() => setActiveSection(child.name)}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                              ? "bg-primary text-white shadow-sm"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                              }`}
+                          >
+                            {child.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (section.name === "Connect") {
+                return (
+                  <div key={section.name}>
+                    <button
+                      onClick={() => setConnectOpen(!connectOpen)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                        }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {Icon && <Icon size={16} />}
+                        {section.name}
+                      </div>
+                      <ChevronDown size={14} className={`${connectOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {connectOpen && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {section.children?.map((child: any) => (
+                          <button
+                            key={child.name}
+                            onClick={() => setActiveSection(child.name)}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${activeSection === child.name
+                              ? "bg-primary text-white shadow-sm"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                              }`}
+                          >
+                            {child.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <React.Fragment key={section.name}>
                   <button
                     onClick={() => {
                       navigate(`/settings?tab=${section.name}`);
                     }}
-                    className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
                       ? "bg-primary text-white shadow-sm"
                       : "text-muted-foreground hover:bg-accent hover:text-foreground dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white"
                       }`}
                   >
-                    {Icon && <Icon size={16} className="mr-2" />}
+                    {Icon && <Icon size={16} />}
                     {section.name}
                   </button>
                   {index < sections.slice(1).length - 1 && (
@@ -276,6 +514,39 @@ export default function SettingsPage() {
           {activeSection === "AI Assistants" && (
             <AIAssistantsSection />
           )}
+          {activeSection === "AI Chat Assistants" && (
+            <AIChatAssistantsSection />
+          )}
+          {activeSection === "AI Voice Assistants" && (
+            <AIVoiceAssistantsSection />
+          )}
+          {activeSection === "AI Knowledge base" && (
+            <AIKnowledgeBaseSection />
+          )}
+          {activeSection === "AI Report Builder" && (
+            <AIReportBuilderSection />
+          )}
+          {activeSection === "Ai Themes" && (
+            <AIThemesSection />
+          )}
+          {activeSection === "Ai items" && (
+            <AIItemsSection />
+          )}
+          {activeSection === "Ai Topics" && (
+            <AITopicsSection />
+          )}
+          {activeSection === "Ai Products" && (
+            <AIProductsSection />
+          )}
+          {activeSection === "Integrations" && (
+            <IntegrationsSection />
+          )}
+          {activeSection === "API" && (
+            <APISection />
+          )}
+          {activeSection === "Visual API" && (
+            <VisualAPISection />
+          )}
           {activeSection === "Agent Chats" && (
             <AgentChatsSection />
           )}
@@ -286,8 +557,11 @@ export default function SettingsPage() {
             <BotToAgentSection />
           )}
           {activeSection === "Quick Replies" && (
-            <QuickRepliesSection />
-          )}
+    <QuickRepliesSection />
+  )}
+  {activeSection === "Canned responses" && (
+    <CannedResponsesSection />
+  )}        
           {activeSection === "Tags" && (
             <TagsSection />
           )}
@@ -297,9 +571,26 @@ export default function SettingsPage() {
           {activeSection === "Developer Settings" && (
             <DeveloperSettingsSection />
           )}
+          {activeSection === "Custom fields" && (
+            <CustomFieldsSection />
+          )}
+          {activeSection === "Chat Widget" && (
+            <ChatWidgetSection />
+          )}
+          {activeSection === "Iframe" && (
+            <IframeSection />
+          )}
           {activeSection === "Change Password" && (
             <ChangePasswordSection />
           )}
+
+          {/* Channel Sections */}
+          {activeSection === "WhatsApp" && <WhatsAppSection />}
+          {activeSection === "Instagram" && <InstagramSection />}
+          {activeSection === "Messenger" && <MessengerSection />}
+          {activeSection === "Telegram" && <TelegramSection />}
+          {activeSection === "SMS & Calls" && <SmsCallsSection />}
+          {activeSection === "Webchat" && <WebchatSection />}
         </Card>
       </div>
     </div>
