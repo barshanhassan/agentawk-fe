@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data
 const mockSmsAccounts = [
@@ -69,10 +70,35 @@ export default function SmsCallsSection() {
   const [view, setView] = useState<"list" | "manage">("list");
   const [hasAccounts, setHasAccounts] = useState(true);
   const [accounts, setAccounts] = useState(mockSmsAccounts);
+  const { toast } = useToast();
 
   const toggleSipVisibility = (accountId: number, field: 'username' | 'password') => {
       // In a real app, logic to toggle visibility
       console.log("Toggle visibility", accountId, field);
+  };
+
+  const handleUpdatePhoneNumber = (accountId: number, numberId: number, updates: any) => {
+    setAccounts(prev => prev.map(account => {
+      if (account.id === accountId) {
+        return {
+          ...account,
+          numbers: account.numbers.map(num => {
+            if (num.id === numberId) {
+              return { ...num, ...updates };
+            }
+            return num;
+          })
+        };
+      }
+      return account;
+    }));
+  };
+
+  const handleSave = () => {
+    toast({
+      title: "Success",
+      description: "Call forwarding settings saved successfully.",
+    });
   };
 
   return (
@@ -311,7 +337,10 @@ export default function SmsCallsSection() {
                                    <div className="mt-4 grid grid-cols-2 gap-4">
                                      <div>
                                         <Label className="text-sm font-semibold mb-1 block">Forward calls to</Label>
-                                        <Select defaultValue={number.forward_type}>
+                                        <Select 
+                                          value={number.forward_type} 
+                                          onValueChange={(val) => handleUpdatePhoneNumber(account.id, number.id, { forward_type: val })}
+                                        >
                                           <SelectTrigger>
                                             <SelectValue />
                                           </SelectTrigger>
@@ -329,16 +358,22 @@ export default function SmsCallsSection() {
                                          <div className="grow bg-yellow-50 border border-yellow-200 p-2 text-yellow-700 text-xs font-semibold rounded flex items-center gap-2">
                                            <span>⚠</span> Call forwarding disabled
                                          </div>
-                                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
+                                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave}>Save</Button>
                                        </div>
                                      )}
 
                                       {number.forward_type === 'NUMBER' && (
                                        <div className="flex items-center space-x-2 mt-6">
                                           <div className="grow">
-                                            <input type="text" className="w-full px-3 py-2 border rounded-md text-sm" value={number.forward_to} placeholder="Enter number" />
+                                            <input 
+                                              type="text" 
+                                              className="w-full px-3 py-2 border rounded-md text-sm" 
+                                              value={number.forward_to} 
+                                              onChange={(e) => handleUpdatePhoneNumber(account.id, number.id, { forward_to: e.target.value })}
+                                              placeholder="Enter number" 
+                                            />
                                           </div>
-                                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
+                                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave}>Save</Button>
                                        </div>
                                      )}
                                    </div>

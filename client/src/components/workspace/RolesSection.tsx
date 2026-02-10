@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const INITIAL_ROLES = [
   { 
@@ -276,6 +277,8 @@ export default function RolesSection() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ id: string, type: 'archive' | 'activate' } | null>(null);
 
+  const { toast } = useToast();
+
   const confirmAction = (id: string, type: 'archive' | 'activate') => {
     setPendingAction({ id, type });
     setAlertOpen(true);
@@ -334,6 +337,70 @@ export default function RolesSection() {
     setSelectedIcon(ICONS[0]);
     setPermissions({});
     setEnableAll(false);
+  };
+
+  const handleSave = () => {
+    // Validate
+    if (!roleName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a role name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newRole = {
+      id: Date.now().toString(),
+      name: roleName,
+      description: roleDescription,
+      icon: selectedIcon.icon,
+      isArchived: false,
+      permissions: permissions
+    };
+
+    setRoles(prev => [...prev, newRole]);
+    console.log("Saving new role:", newRole);
+    toast({
+      title: "Success",
+      description: "Role created successfully!",
+    });
+    setView("list");
+    resetForm();
+  };
+
+  const handleUpdate = () => {
+    if (!editingRole) return;
+
+    // Validate
+    if (!roleName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a role name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedRole = {
+      ...editingRole,
+      name: roleName,
+      description: roleDescription,
+      icon: selectedIcon.icon,
+      permissions: permissions
+    };
+
+    setRoles(prev => prev.map(role => 
+      role.id === editingRole.id ? updatedRole : role
+    ));
+    
+    console.log("Updating role:", updatedRole);
+    toast({
+      title: "Success",
+      description: "Role updated successfully!",
+    });
+    setView("list");
+    resetForm();
   };
 
   if (view === "add" || view === "edit") {
@@ -480,6 +547,7 @@ export default function RolesSection() {
           {view === "add" ? (
             <Button 
               variant="outline"
+              onClick={handleSave}
               className="h-10 px-8 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors font-bold"
             >
               Save
@@ -487,6 +555,7 @@ export default function RolesSection() {
           ) : (
             <Button 
               variant="outline"
+              onClick={handleUpdate}
               className="h-10 px-8 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors font-bold"
             >
               Update

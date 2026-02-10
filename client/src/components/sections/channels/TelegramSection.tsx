@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data
 const mockTelegramBots = [
@@ -61,8 +62,18 @@ export default function TelegramSection() {
   const [selectedBot, setSelectedBot] = useState<typeof mockTelegramBots[0] | null>(null);
   const [autoReplyInterval, setAutoReplyInterval] = useState("0");
 
+  const { toast } = useToast();
+
   const toggleTokenVisibility = (id: number) => {
     setShowToken(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleSaveDefaultReply = () => {
+    toast({
+      title: "Success",
+      description: "Default reply settings saved successfully.",
+    });
+    setShowDefaultReply(false);
   };
 
   const toggleFeeder = (botId: number) => {
@@ -310,31 +321,26 @@ export default function TelegramSection() {
 
       {/* Default Reply Dialog */}
       <Dialog open={showDefaultReply} onOpenChange={setShowDefaultReply}>
-        <DialogContent className="max-w-5xl p-0">
+        <DialogContent className="max-w-4xl p-0">
           <div className="grid grid-cols-3">
             <div className="col-span-1 bg-slate-50 dark:bg-slate-900 p-5 flex justify-center items-center">
-              <img src="/images/settings/telegram.svg" className="w-64 h-auto" alt="Telegram" />
+              <img src="/images/settings/telegram-chat.png" className="w-full h-auto" alt="Telegram" />
             </div>
             <div className="col-span-2 p-6">
               <DialogHeader>
-                <div className="flex justify-between items-center">
-                  <DialogTitle className="text-lg font-medium">Send Instant Replies</DialogTitle>
-                  <button onClick={() => setShowDefaultReply(false)} className="p-2">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
+                <DialogTitle className="text-lg font-semibold">Send instant replies to incoming Messages</DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Trigger an automation to send an instant reply when someone sends you a message
+                  Default Reply gets triggered when your contact sends you a message and it doesn't match any Keywords.
                 </p>
               </DialogHeader>
 
               <div className="mt-6 space-y-6">
-                <div className="flex gap-3">
-                  <div className="flex-grow">
-                    <Label className="text-sm font-medium">Select Automation</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Select a Smart Flow</Label>
                     <Select>
                       <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select an automation" />
+                        <SelectValue placeholder="Select a Smart Flow" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">Welcome Message</SelectItem>
@@ -342,8 +348,8 @@ export default function TelegramSection() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="w-1/3">
-                    <Label className="text-sm font-medium">Trigger</Label>
+                  <div>
+                    <Label className="text-sm font-medium">trigger</Label>
                     <Select value={autoReplyInterval} onValueChange={setAutoReplyInterval}>
                       <SelectTrigger className="mt-2">
                         <SelectValue />
@@ -357,15 +363,15 @@ export default function TelegramSection() {
                   </div>
                 </div>
 
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm">
                   {autoReplyInterval === "0" && (
-                    <p>This automation will trigger only once per conversation</p>
+                    <p>The <strong>Once per conversation</strong> option will be triggered once per conversation.</p>
                   )}
                   {autoReplyInterval === "24" && (
-                    <p>This automation will trigger once every 24 hours</p>
+                    <p>The <strong>Once every 24 hours</strong> option will be triggered once every 24 hours.</p>
                   )}
                   {autoReplyInterval === "247" && (
-                    <p>This automation will trigger every time a message is received</p>
+                    <p>The <strong>Always</strong> option will be triggered <strong>Every time</strong> the contact sends a message that is not a Smart Flow keyword trigger, whether you're collecting data or the AI is asking a question.</p>
                   )}
                 </div>
 
@@ -378,6 +384,7 @@ export default function TelegramSection() {
                   </Button>
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={handleSaveDefaultReply}
                   >
                     Save
                   </Button>

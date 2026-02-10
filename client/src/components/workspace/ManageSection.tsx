@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,14 +11,51 @@ import {
 import { Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ManageSection() {
   const workspaceId = "3";
-  const loginUrl = ""
+  const loginUrl = "";
+
+  // State for editable fields
+  const [workspaceName, setWorkspaceName] = useState("Ezconn");
+  const [timezone, setTimezone] = useState("America/Fortaleza");
+  const [firstDayOfWeek, setFirstDayOfWeek] = useState("monday");
+
+  const { toast } = useToast();
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert("Copied to clipboard!");
+    toast({
+      title: "Copied!",
+      description: "Text copied to clipboard",
+    });
+  };
+
+  const handleSave = () => {
+    // Here you would typically make an API call to save the workspace settings
+    const settings = {
+      workspaceId,
+      name: workspaceName,
+      timezone,
+      firstDayOfWeek,
+    };
+    
+    console.log("Saving workspace settings:", settings);
+    
+    // Show success message
+    toast({
+      title: "Success",
+      description: "Workspace settings saved successfully!",
+    });
+    
+    // TODO: Replace with actual API call
+    // Example:
+    // await fetch('/api/workspace/settings', {
+    //   method: 'PUT',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(settings)
+    // });
   };
 
   return (
@@ -48,7 +86,11 @@ export default function ManageSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Name</label>
           <div className="md:col-span-2">
-            <Input defaultValue="Ezconn" className="text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white" />
+            <Input 
+              value={workspaceName} 
+              onChange={(e) => setWorkspaceName(e.target.value)} 
+              className="text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white" 
+            />
           </div>
         </div>
         <Separator />
@@ -57,7 +99,7 @@ export default function ManageSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Timezone</label>
           <div className="md:col-span-2">
-            <Select defaultValue="America/Fortaleza">
+            <Select value={timezone} onValueChange={setTimezone}>
               <SelectTrigger className="w-full text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white">
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
@@ -75,7 +117,7 @@ export default function ManageSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200">First day of week</label>
           <div className="md:col-span-2">
-            <Select defaultValue="monday">
+            <Select value={firstDayOfWeek} onValueChange={setFirstDayOfWeek}>
               <SelectTrigger className="w-full text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white">
                 <SelectValue placeholder="Select first day" />
               </SelectTrigger>
@@ -111,7 +153,11 @@ export default function ManageSection() {
 
         {/* Save Button */}
         <div className="flex justify-end pt-2">
-          <Button className="px-6 py-1 text-sm btn-outline-primary" variant="outline">
+          <Button 
+            className="px-6 py-1 text-sm btn-outline-primary" 
+            variant="outline"
+            onClick={handleSave}
+          >
             Save
           </Button>
         </div>

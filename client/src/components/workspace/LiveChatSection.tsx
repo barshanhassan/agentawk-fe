@@ -16,6 +16,7 @@ import { Info, CheckCircle2, AlertTriangle, Folder, Plus, Eye, Pencil, Trash, In
 import { useState } from "react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LiveChatSettings() {
   const [agentAction, setAgentAction] = useState<"keep" | "remove">("keep");
@@ -53,6 +54,9 @@ export default function LiveChatSettings() {
     }
   };
 
+  const { toast } = useToast();
+
+
   const handleEditFolder = (index: number) => {
     setNewFolderName(folders[index]);
     setEditingFolderIndex(index);
@@ -85,6 +89,66 @@ export default function LiveChatSettings() {
     console.log("New custom field added:", customField);
     alert(`Custom field "${customField}" added!`);
     setCustomField("");
+  };
+
+  const handleSaveAgents = () => {
+    const agentsSettings = {
+      agentAction,
+      saveAgentDetails,
+      agentDataFormat,
+      customField
+    };
+    console.log("Saving Agents settings:", agentsSettings);
+    toast({
+      title: "Success",
+      description: "Agents settings saved successfully!",
+    });
+  };
+
+  const handleSaveCompletion = () => {
+    const completionSettings = {
+      saveConversationJson,
+      jsonCustomField
+    };
+    console.log("Saving Completion settings:", completionSettings);
+    toast({
+      title: "Success",
+      description: "Completion settings saved successfully!",
+    });
+  };
+
+  const handleSaveSignature = () => {
+    const signatureSettings = {
+      includeSignature
+    };
+    console.log("Saving Signature settings:", signatureSettings);
+    toast({
+      title: "Success",
+      description: "Signature settings saved successfully!",
+    });
+  };
+
+  const handleSaveCorrection = () => {
+    const correctionSettings = {
+      correctionModel,
+      correctionPrompt
+    };
+    console.log("Saving Correction settings:", correctionSettings);
+    toast({
+      title: "Success",
+      description: "Correction settings saved successfully!",
+    });
+  };
+
+  const handleSavePause = () => {
+    const pauseSettings = {
+      pauseSmartFlow
+    };
+    console.log("Saving Pause settings:", pauseSettings);
+    toast({
+      title: "Success",
+      description: "Pause settings saved successfully!",
+    });
   };
 
   return (
@@ -224,7 +288,11 @@ export default function LiveChatSettings() {
 
                 {/* Save button */}
                 <div className="flex justify-start pt-4">
-                  <Button className="px-8 btn-outline-primary" variant="outline">
+                  <Button 
+                    className="px-8 btn-outline-primary" 
+                    variant="outline"
+                    onClick={handleSaveAgents}
+                  >
                     Save
                   </Button>
                 </div>
@@ -283,7 +351,11 @@ export default function LiveChatSettings() {
 
                 {/* Save Button */}
                 <div className="flex justify-start pt-4">
-                  <Button className="px-8 btn-outline-primary" variant="outline">
+                  <Button 
+                    className="px-8 btn-outline-primary" 
+                    variant="outline"
+                    onClick={handleSaveCompletion}
+                  >
                     Save
                   </Button>
                 </div>
@@ -428,7 +500,11 @@ export default function LiveChatSettings() {
                 
                 {/* Save Button */}
                 <div className="flex justify-start pt-6">
-                  <Button className="px-8 btn-outline-primary" variant="outline">
+                  <Button 
+                    className="px-8 btn-outline-primary" 
+                    variant="outline"
+                    onClick={handleSaveSignature}
+                  >
                     Save
                   </Button>
                 </div>
@@ -498,7 +574,11 @@ export default function LiveChatSettings() {
 
                  {/* Save Button */}
                 <div className="flex justify-start pt-8">
-                  <Button className="px-8 btn-outline-primary" variant="outline">
+                  <Button 
+                    className="px-8 btn-outline-primary" 
+                    variant="outline"
+                    onClick={handleSaveCorrection}
+                  >
                     Save
                   </Button>
                 </div>
@@ -663,6 +743,7 @@ export default function LiveChatSettings() {
                       <Button 
                           className="px-8 btn-outline-primary" 
                           variant="outline"
+                          onClick={handleSavePause}
                       >
                           Save
                       </Button>

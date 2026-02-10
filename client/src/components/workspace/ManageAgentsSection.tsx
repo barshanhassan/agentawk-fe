@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for agents
 const MOCK_AGENTS = [
@@ -49,6 +50,19 @@ export default function ManageAgentSection() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedChatAgents, setSelectedChatAgents] = useState<string[]>([]);
   const [selectedChatChannels, setSelectedChatChannels] = useState<string[]>([]);
+
+  // Form field states
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
+  const [language, setLanguage] = useState("pt-br");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [phoneNotifications, setPhoneNotifications] = useState(false);
+  const [whatsappNotifications, setWhatsappNotifications] = useState(false);
+
+  const { toast } = useToast();
 
   const SYSTEM_FIELDS = [
     "first_name", "last_name", "title", "primary_mobile", "primary_whatsapp",
@@ -200,6 +214,47 @@ export default function ManageAgentSection() {
     );
   };
 
+  const handleSave = () => {
+    // Validate required fields
+    if (!firstName.trim() || !email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (First Name and Email)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const agentData = {
+      firstName,
+      lastName,
+      email,
+      role,
+      language,
+      phoneNumber,
+      whatsappNumber,
+      phoneNotifications,
+      whatsappNotifications,
+      mobileAccess,
+      limitIp,
+      selectedSystemFields,
+      selectedCustomFields,
+      selectedTags,
+      selectedChatAgents,
+      selectedChatChannels,
+    };
+
+    console.log("Saving agent:", agentData);
+    toast({
+      title: "Success",
+      description: "Agent created successfully!",
+    });
+
+    // TODO: Replace with actual API call
+    // After successful save, return to list view
+    setView("list");
+  };
+
   const TIME_OPTIONS = Array.from({ length: 96 }, (_, i) => {
     const hours = Math.floor(i / 4).toString().padStart(2, "0");
     const minutes = (i % 4 * 15).toString().padStart(2, "0");
@@ -223,7 +278,7 @@ export default function ManageAgentSection() {
             <Button variant="outline" onClick={() => setView("list")} className="h-9 px-4 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800">
               Cancel
             </Button>
-            <Button variant="outline" className="h-9 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors">
+            <Button variant="outline" onClick={handleSave} className="h-9 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors">
               Save
             </Button>
           </div>
@@ -261,19 +316,19 @@ export default function ManageAgentSection() {
                 <div className="space-y-4">
                   <div className="space-y-1.5 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">First Name *</Label>
-                    <Input className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950" />
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950" />
                   </div>
                   <div className="space-y-1.5 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</Label>
-                    <Input className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950" />
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950" />
                   </div>
                   <div className="space-y-1.5 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email *</Label>
-                    <Input className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950" />
+                    <Input value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950" />
                   </div>
                   <div className="space-y-1.5 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Role</Label>
-                    <Select>
+                    <Select value={role} onValueChange={setRole}>
                       <SelectTrigger className="h-10 border-gray-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-600 bg-white dark:bg-slate-950 text-gray-500">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
@@ -285,7 +340,7 @@ export default function ManageAgentSection() {
                   </div>
                   <div className="space-y-1.5 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Language</Label>
-                    <Select>
+                    <Select value={language} onValueChange={setLanguage}>
                       <SelectTrigger className="h-10 border-gray-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-600 bg-white dark:bg-slate-950">
                         <SelectValue placeholder="" />
                       </SelectTrigger>
