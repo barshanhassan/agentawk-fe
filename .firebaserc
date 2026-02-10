@@ -18,6 +18,13 @@
           "product-3f6b0-site"
         ]
       }
+    },
+    "prodct-b7a67": {
+      "hosting": {
+        "update-site": [
+          "prodct-b7a67"
+        ]
+      }
     }
   },
   "etags": {}
