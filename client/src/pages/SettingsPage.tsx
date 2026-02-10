@@ -42,13 +42,11 @@ import AIProductsSection from "@/components/sections/ai/AIProductsSection";
 import IntegrationsSection from "@/components/sections/connect/IntegrationsSection";
 import APISection from "@/components/sections/connect/APISection";
 import VisualAPISection from "@/components/sections/connect/VisualAPISection";
-import AgentChatsSection from "@/components/sections/AgentChatsSection";
-import OutOfOfficeSection from "@/components/sections/OutOfOfficeSection";
-import BotToAgentSection from "@/components/sections/BotToAgentSection";
+
 import PasswordPolicySection from "@/components/sections/PasswordPolicySection";
 import DeveloperSettingsSection from "@/components/sections/DeveloperSettingsSection";
 import ChangePasswordSection from "@/components/sections/ChangePasswordSection";
-import QuickRepliesSection from "@/components/sections/QuickRepliesSection";
+
 
 import WhiteLabelSection from "@/components/workspace/WhiteLabelSection";
 import RolesSection from "@/components/workspace/RolesSection";
@@ -60,7 +58,7 @@ import CustomFieldsSection from "@/components/sections/CustomFieldsSection";
 import ChatWidgetSection from "@/components/sections/ChatWidgetSection";
 import IframeSection from "@/components/sections/IframeSection";
 import TagsSection from "@/components/sections/TagsSection";
-import CannedResponsesSection from "@/components/sections/CannedResponsesSection";
+import QuickRepliesSection from "@/components/sections/QuickRepliesSection";
 
 // Channel Sections
 import WhatsAppSection from "@/components/sections/channels/WhatsAppSection";
@@ -132,17 +130,15 @@ export default function SettingsPage() {
       { name: "Chat Widget" },
       { name: "Iframe" },
       { name: "Tags" },
-      { name: "Canned responses" },
+      { name: "Quick Replies" },
     ],
   },
   { name: "Preferences", icon: Settings },
   { name: "Business Hours", icon: Clock },
   { name: "AI Assistants", icon: Bot },
-  { name: "Agent Chats", icon: MessageSquare },
-  { name: "Out of Office", icon: CalendarX },
-  { name: "Bot to Agent", icon: UserCog },
 
-  { name: "Quick Replies", icon: MessageSquare },
+
+
   { name: "Password Policy", icon: ShieldCheck },
   { name: "Developer Settings", icon: Code },
   { name: "Change Password", icon: Lock },
@@ -555,20 +551,10 @@ export default function SettingsPage() {
           {activeSection === "Visual API" && (
             <VisualAPISection />
           )}
-          {activeSection === "Agent Chats" && (
-            <AgentChatsSection />
-          )}
-          {activeSection === "Out of Office" && (
-            <OutOfOfficeSection />
-          )}
-          {activeSection === "Bot to Agent" && (
-            <BotToAgentSection />
-          )}
-          {activeSection === "Quick Replies" && (
+
+
+  {activeSection === "Quick Replies" && (
     <QuickRepliesSection />
-  )}
-  {activeSection === "Canned responses" && (
-    <CannedResponsesSection />
   )}        
           {activeSection === "Tags" && (
             <TagsSection />
