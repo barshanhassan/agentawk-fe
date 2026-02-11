@@ -559,6 +559,7 @@ export default function LiveChatSettings() {
                                       <SelectItem value="gpt-4o-mini" className="dark:focus:bg-slate-800 dark:text-white">gpt-4o-mini</SelectItem>
                                       <SelectItem value="gpt-4" className="dark:focus:bg-slate-800 dark:text-white">gpt-4</SelectItem>
                                       <SelectItem value="gpt-3.5-turbo" className="dark:focus:bg-slate-800 dark:text-white">gpt-3.5-turbo</SelectItem>
+                                      <SelectItem value="add-new" className="dark:focus:bg-primary dark:focus:text-white focus:bg-primary focus:text-white font-medium text-primary">+ Add New Model</SelectItem>
                                   </SelectContent>
                               </Select>
                            </div>

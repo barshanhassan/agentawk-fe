@@ -25,7 +25,7 @@ export default function AIChatAssistant() {
             <span>Total Active : {totalActive}</span>
             <span>Limit : {limit}</span>
             <Button variant="outline" onClick={() => setCreating(!creating)}>
-              {creating ? "Close" : "Create new"}
+              {creating ? "Close" : "+ Create New"}
             </Button>
           </div>
         </div>
@@ -37,7 +37,7 @@ export default function AIChatAssistant() {
           <h4 className="mt-4 font-semibold text-lg">Create an AI Chat Assistant</h4>
           <p className="text-sm text-muted-foreground mt-2">Feed the AI Chat Assistant with custom data.</p>
           <Button className="mt-4" onClick={() => setCreating(true)}>
-            Create new
+            + Create New
           </Button>
         </div>
       </div>

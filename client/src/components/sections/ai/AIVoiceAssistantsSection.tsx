@@ -13,6 +13,13 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,6 +106,9 @@ export default function AIVoiceAssistantsSection() {
   
   // Audio Player State Simulation
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<any>(null);
+  const { toast } = useToast();
 
   const availableCredits = "1645:59";
 
@@ -148,7 +158,42 @@ export default function AIVoiceAssistantsSection() {
     setAgents(prev => prev.map(a => a.id === id ? { ...a, status: a.status === "ACTIVE" ? "PAUSED" : "ACTIVE" } : a));
   };
 
+  const handleDeleteRequest = (agent: any) => {
+    setAgentToDelete(agent);
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDeleteAgent = () => {
+    if (agentToDelete) {
+      setAgents(prev => prev.filter(a => a.id !== agentToDelete.id));
+      toast({
+        title: "Assistant Deleted",
+        description: `${agentToDelete.name} has been successfully removed.`,
+      });
+      setShowDeleteConfirm(false);
+      setAgentToDelete(null);
+    }
+  };
+
+  const handlePublish = () => {
+    if (formData.name.trim()) {
+      if (formData.id) {
+        setAgents(prev => prev.map(a => a.id === formData.id ? { ...formData } : a));
+        toast({ title: "Success", description: "Assistant updated successfully." });
+      } else {
+        const newAgent = {
+          ...formData,
+          id: Date.now(),
+          phone_number: mockPhones[0].number, // Mock phone assignment
+          status: "ACTIVE",
+          allow_in_feeder: true,
+        };
+        setAgents([...agents, newAgent]);
+        toast({ title: "Success", description: "Voice Assistant created successfully." });
+      }
+      setViewMode("list");
+    }
+  };
 
   return (
     <div className="p-6">
@@ -172,8 +217,9 @@ export default function AIVoiceAssistantsSection() {
                   <span className="font-semibold">{availableCredits}</span>
                   <span className="text-muted-foreground"> mins/secs</span>
                 </div>
-                <Button onClick={() => handleEdit(null)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Create new
+                <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Assistant
                 </Button>
               </div>
             </div>
@@ -215,7 +261,11 @@ export default function AIVoiceAssistantsSection() {
                            <Button variant="ghost" size="icon" onClick={() => handleEdit(agent)}>
                              <Pencil className="h-4 w-4 text-slate-500" />
                            </Button>
-                           <Button variant="ghost" size="icon">
+                           <Button 
+                             variant="ghost" 
+                             size="icon"
+                             onClick={() => toast({ title: "View Logs", description: `Opening activity logs for ${agent.name}...` })}
+                           >
                              <FileText className="h-4 w-4 text-slate-500" />
                            </Button>
                            <DropdownMenu>
@@ -225,11 +275,14 @@ export default function AIVoiceAssistantsSection() {
                                </Button>
                              </DropdownMenuTrigger>
                              <DropdownMenuContent align="end">
-                               <DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => toast({ title: "AI Feeder", description: `Opening AI Feeder for ${agent.name}...` })}>
                                  <Plus className="h-4 w-4 mr-2" />
                                  AI Feeder
                                </DropdownMenuItem>
-                               <DropdownMenuItem className="text-red-600">
+                               <DropdownMenuItem 
+                                 className="text-red-600"
+                                 onClick={() => handleDeleteRequest(agent)}
+                               >
                                  <Trash2 className="h-4 w-4 mr-2" />
                                  Delete
                                </DropdownMenuItem>
@@ -247,8 +300,9 @@ export default function AIVoiceAssistantsSection() {
                      <img src="/images/integrations/chat_gpt.svg" className="h-12 w-12 opacity-50" alt="AI" />
                   </div>
                   <h3 className="font-semibold text-lg">Create your first AI Voice Assistant</h3>
-                  <Button onClick={() => handleEdit(null)} className="mt-4">
-                    Create new
+                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Create Assistant
                   </Button>
                 </div>
              )}
@@ -302,7 +356,12 @@ export default function AIVoiceAssistantsSection() {
              </div>
              <div className="flex items-center gap-3">
                <Button variant="outline" onClick={() => setViewMode("list")}>Cancel</Button>
-               <Button className="bg-blue-600 hover:bg-blue-700 text-white">Publish</Button>
+               <Button 
+                className="btn-outline-primary"
+                onClick={handlePublish}
+               >
+                 Publish
+               </Button>
              </div>
           </div>
 
@@ -409,7 +468,7 @@ export default function AIVoiceAssistantsSection() {
                                <div className="flex justify-between text-xs text-muted-foreground">
                                   <span>Precise</span>
                                   <span>Creative</span>
-                               </div>
+                                </div>
                             </div>
                          </div>
 
@@ -578,7 +637,7 @@ export default function AIVoiceAssistantsSection() {
                            </div>
                          ) : (
                            <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
-                              No transfer rules configured.
+                               No transfer rules configured.
                            </div>
                          )}
                       </div>
@@ -594,7 +653,10 @@ export default function AIVoiceAssistantsSection() {
                          <p className="text-sm text-muted-foreground max-w-md">
                            Define custom functions that the AI can call to interact with your business logic or external APIs.
                          </p>
-                         <Button variant="outline">
+                         <Button 
+                           variant="outline"
+                           onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
+                         >
                            <Plus className="h-4 w-4 mr-2" />
                            Add Function
                          </Button>
@@ -711,15 +773,21 @@ export default function AIVoiceAssistantsSection() {
                           <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
                              <h4 className="font-medium mb-2">Embed Code</h4>
                              <code className="block text-xs bg-slate-900 text-slate-50 p-4 rounded mb-4 font-mono whitespace-pre-wrap">
-   {`<script>
-     window.voiceWidgetSettings = {
-       agentId: "123456789",
-       primaryColor: "${formData.design.bg_color || '#2563eb'}"
-     };
-   </script>
-   <script src="https://cdn.example.com/voice-widget.js" async></script>`}
+    {`<script>
+      window.voiceWidgetSettings = {
+        agentId: "123456789",
+        primaryColor: "${formData.design.bg_color || '#2563eb'}"
+      };
+    </script>
+    <script src="https://cdn.example.com/voice-widget.js" async></script>`}
                              </code>
-                             <Button variant="outline" size="sm">Copy Code</Button>
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => toast({ title: "Copied", description: "Embed code copied to clipboard." })}
+                             >
+                               Copy Code
+                             </Button>
                           </div>
                        </div>
                     </TabsContent>
@@ -728,6 +796,39 @@ export default function AIVoiceAssistantsSection() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Voice Assistant
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the voice assistant <span className="font-bold text-slate-900 dark:text-white">"{agentToDelete?.name}"</span>? 
+              This action cannot be undone and the associated phone number will be disconnected from this assistant.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteAgent}
+            >
+              Yes, delete assistant
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

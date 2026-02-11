@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Users, User, UserPlus, Settings, Mail, Phone, Languages, ShieldCheck, HelpCircle, UserCog, Info, MessageSquare, Users2, Smartphone, AlertCircle, CheckCircle2, Send, Zap, Instagram } from "lucide-react";
+import { Users, User, UserPlus, Settings, Mail, Phone, Languages, ShieldCheck, HelpCircle, UserCog, Info, MessageSquare, Users2, Smartphone, AlertCircle, CheckCircle2, Send, Zap, Instagram, Building2, Trash2, Plus } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
@@ -41,7 +41,9 @@ const MOCK_AGENTS = [
 ];
 
 export default function ManageAgentSection() {
-  const [view, setView] = useState<"list" | "add">("list");
+  const [agents, setAgents] = useState(MOCK_AGENTS);
+  const [view, setView] = useState<"list" | "add" | "edit">("list");
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("agent");
   const [mobileAccess, setMobileAccess] = useState(false);
   const [limitIp, setLimitIp] = useState(false);
@@ -214,6 +216,37 @@ export default function ManageAgentSection() {
     );
   };
 
+  const resetForm = () => {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setRole("");
+    setLanguage("pt-br");
+    setPhoneNumber("");
+    setWhatsappNumber("");
+    setPhoneNotifications(false);
+    setWhatsappNotifications(false);
+    setMobileAccess(false);
+    setLimitIp(false);
+    setSelectedSystemFields([]);
+    setSelectedCustomFields([]);
+    setSelectedTags([]);
+    setSelectedChatAgents([]);
+    setSelectedChatChannels([]);
+    setEditingId(null);
+  };
+
+  const handleEdit = (agent: any) => {
+    setEditingId(agent.id);
+    const names = agent.name.split(" ");
+    setFirstName(names[0] || "");
+    setLastName(names.slice(1).join(" ") || "");
+    setEmail(agent.email);
+    // Simple mapping for role, in a real app this would be more robust
+    setRole(agent.role.toLowerCase().includes("super") ? "super-user" : "agent");
+    setView("edit");
+  };
+
   const handleSave = () => {
     // Validate required fields
     if (!firstName.trim() || !email.trim()) {
@@ -244,14 +277,36 @@ export default function ManageAgentSection() {
       selectedChatChannels,
     };
 
-    console.log("Saving agent:", agentData);
-    toast({
-      title: "Success",
-      description: "Agent created successfully!",
-    });
+    if (view === "edit" && editingId) {
+      setAgents(agents.map(a => a.id === editingId ? {
+        ...a,
+        name: `${firstName} ${lastName}`.trim(),
+        email,
+        role: role === "super-user" ? "Super User" : "Agent"
+      } : a));
+      
+      toast({
+        title: "Success",
+        description: "Agent updated successfully!",
+      });
+    } else {
+      const newAgent = {
+        id: Date.now(),
+        name: `${firstName} ${lastName}`.trim(),
+        email,
+        status: "Active",
+        role: role === "super-user" ? "Super User" : "Agent"
+      };
+      
+      setAgents([...agents, newAgent]);
+      
+      toast({
+        title: "Success",
+        description: "Agent created successfully!",
+      });
+    }
 
-    // TODO: Replace with actual API call
-    // After successful save, return to list view
+    resetForm();
     setView("list");
   };
 
@@ -263,23 +318,23 @@ export default function ManageAgentSection() {
 
   const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-  if (view === "add") {
+  if (view === "add" || view === "edit") {
     return (
       <div className="flex flex-col min-h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg text-left">
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <User className="w-8 h-8 text-black dark:text-white" />
             <div className="text-left">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Add an agent</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Enter new agent details</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{view === "add" ? "Add New User" : "Edit User"}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{view === "add" ? "Enter new agent details" : "Edit agent details"}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setView("list")} className="h-9 px-4 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800">
+            <Button variant="outline" onClick={() => { setView("list"); resetForm(); }} className="h-9 px-4 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800">
               Cancel
             </Button>
-            <Button variant="outline" onClick={handleSave} className="h-9 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors">
-              Save
+            <Button variant="outline" onClick={handleSave} className="h-9 px-6 btn-outline-primary">
+              {view === "add" ? "Save" : "Update"}
             </Button>
           </div>
         </div>
@@ -859,16 +914,17 @@ export default function ManageAgentSection() {
         <div className="flex flex-row items-center gap-4">
           <Users className="w-8 h-8 text-black dark:text-white" />
           <div className="space-y-1 text-left">
-            <CardTitle className="text-lg font-bold">Agents</CardTitle>
-            <CardDescription className="text-gray-500 dark:text-gray-400">Manage your agents</CardDescription>
+            <CardTitle className="text-lg font-bold">Users</CardTitle>
+            <CardDescription className="text-gray-500 dark:text-gray-400">Manage your users</CardDescription>
           </div>
         </div>
         <Button 
           variant="outline" 
-          onClick={() => setView("add")}
-          className="h-9 px-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
+          onClick={() => { resetForm(); setView("add"); }}
+          className="h-9 px-4 btn-outline-primary text-sm font-medium flex items-center gap-2"
         >
-          Add an agent
+          <Plus className="w-4 h-4" />
+          Add New User
         </Button>
       </CardHeader>
       
@@ -886,7 +942,7 @@ export default function ManageAgentSection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {MOCK_AGENTS.map((agent) => (
+            {agents.map((agent) => (
               <TableRow key={agent.id} className="border-b border-gray-50 dark:border-slate-800/50 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors">
                 <TableCell className="py-3 px-4">
                   <div className="flex items-center gap-3">
@@ -913,7 +969,12 @@ export default function ManageAgentSection() {
                 </TableCell>
                 <TableCell className="py-3 px-4 text-center"></TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-black dark:text-white hover:text-[#10b981] dark:hover:text-[#10b981] transition-colors">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-black dark:text-white hover:text-[#10b981] dark:hover:text-[#10b981] transition-colors"
+                    onClick={() => handleEdit(agent)}
+                  >
                     <UserCog className="w-5 h-5" />
                   </Button>
                 </TableCell>

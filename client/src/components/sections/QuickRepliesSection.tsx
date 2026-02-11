@@ -203,23 +203,23 @@ export default function QuickRepliesSection() {
         </div>
         
         {view === "list" && (
-           <Button 
+          <Button 
             onClick={handleCreateCollectionClick}
             variant="outline"
-            className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 gap-2"
+            className="btn-outline-primary gap-2"
           >
             <Plus size={16} />
-            Create collection
+            Create Collection
           </Button>
         )}
          {(view === "collection_detail" || view === "create_message") && (
            <Button 
             onClick={handleCreateCollectionClick}
             variant="outline"
-            className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 gap-2"
+            className="btn-outline-primary gap-2"
           >
             <Plus size={16} />
-            Create collection
+            Create Collection
           </Button>
         )}
       </div>
@@ -331,11 +331,11 @@ export default function QuickRepliesSection() {
             </Button>
             <Button 
               onClick={handleCreateCollection}
-              className="bg-blue-600 hover:bg-blue-700 text-white min-w-[80px]"
-              variant="default"
+              className="btn-outline-primary min-w-[80px]"
+              variant="outline"
             >
               <span className="sr-only">Create</span>
-              Create
+              + Create
             </Button>
           </div>
         </div>
@@ -357,11 +357,11 @@ export default function QuickRepliesSection() {
               </Button>
               <Button 
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 gap-2"
+                className="btn-outline-primary gap-2"
                 onClick={handleCreateMessageClick}
               >
                 <Plus size={16} />
-                Create message
+                Create Message
               </Button>
             </div>
            </div>
@@ -397,10 +397,10 @@ export default function QuickRepliesSection() {
               </Button>
               <Button 
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 gap-2"
+                className="btn-outline-primary gap-2"
               >
                 <Plus size={16} />
-                Create message
+                Create Message
               </Button>
             </div>
            </div>
@@ -467,9 +467,10 @@ export default function QuickRepliesSection() {
               <Button 
                 onClick={handleCreateMessage}
                 disabled={!messageTitle.trim() || !messageContent.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white min-w-[80px]"
+                className="btn-outline-primary min-w-[80px]"
+                variant="outline"
               >
-                Create
+                + Create
               </Button>
            </div>
         </div>
@@ -494,7 +495,7 @@ export default function QuickRepliesSection() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdateCollection} disabled={!collectionName.trim()}>Save Changes</Button>
+            <Button onClick={handleUpdateCollection} disabled={!collectionName.trim()} variant="outline" className="btn-outline-primary">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

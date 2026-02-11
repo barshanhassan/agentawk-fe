@@ -62,6 +62,8 @@ export default function MessengerSection() {
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showExtendedEngagements, setShowExtendedEngagements] = useState(false);
   const [selectedPage, setSelectedPage] = useState<typeof mockMessengerPages[0] | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pageToDelete, setPageToDelete] = useState<typeof mockMessengerPages[0] | null>(null);
   
   // Feature states
   const [autoReplyInterval, setAutoReplyInterval] = useState("0");
@@ -190,12 +192,46 @@ export default function MessengerSection() {
     setShowExtendedEngagements(false);
   };
 
+  const handleRefresh = (pageName: string) => {
+    toast({
+      title: "Refreshing",
+      description: `Refreshing data for ${pageName}...`,
+    });
+  };
+
+  const handleDeletePage = (page: typeof mockMessengerPages[0]) => {
+    setPageToDelete(page);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeletePage = () => {
+    if (pageToDelete) {
+      setPages(prev => prev.filter(p => p.id !== pageToDelete.id));
+      toast({
+        title: "Page Deleted",
+        description: `${pageToDelete.name} has been removed.`,
+      });
+      setShowDeleteConfirm(false);
+      setPageToDelete(null);
+    }
+  };
+
+  const handleConversionsAPI = (pageName: string) => {
+    toast({
+      title: "Conversions API",
+      description: `Configuring Meta Conversions API for ${pageName}...`,
+    });
+  };
+
   return (
     <div className="p-6">
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Messenger</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Messenger</h2>
+              <img src="/images/automations/messenger.svg" alt="Messenger" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connect your Facebook Page to automate conversations.
             </p>
@@ -220,7 +256,7 @@ export default function MessengerSection() {
             <div className="mt-6 flex justify-end">
               <Button
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("manage")}
               >
                 Manage
@@ -237,9 +273,11 @@ export default function MessengerSection() {
             {/* Header */}
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/messenger.svg" alt="Messenger" className="h-10 w-10 mr-2" />
                 <div>
-                  <h3 className="text-lg font-medium">Messenger</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">Messenger</h3>
+                    <img src="/images/automations/messenger.svg" alt="Messenger" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Integrate your Facebook Page to unlock 2-Way interactive dynamic conversations via Messenger
                   </p>
@@ -248,10 +286,10 @@ export default function MessengerSection() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                  className="btn-outline-primary"
                   onClick={() => setHasPages(true)}
                 >
-                  Add new
+                  + Add New
                 </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
@@ -272,7 +310,8 @@ export default function MessengerSection() {
                 </p>
                 <div className="pt-2">
                   <Button 
-                    className="bg-blue-600 text-white hover:bg-blue-700 min-w-[150px]"
+                    className="btn-outline-primary min-w-[150px]"
+                    variant="outline"
                     onClick={() => setHasPages(true)}
                   >
                     Connect now
@@ -307,14 +346,18 @@ export default function MessengerSection() {
                     <Button 
                       variant="outline"
                       size="sm"
-                      className="text-xs px-2 py-1 h-auto"
+                      className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                      onClick={() => handleRefresh(page.name)}
+                      title="Refresh page data"
                     >
                       <RefreshCw className="h-3 w-3" />
                     </Button>
                     <Button 
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="text-xs px-2 py-1 h-auto text-red-500 hover:text-red-600"
+                      className="text-xs px-2 py-1 h-auto btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                      onClick={() => handleDeletePage(page)}
+                      title="Delete page"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -358,7 +401,8 @@ export default function MessengerSection() {
                       <Button 
                         variant="outline"
                         size="sm"
-                        className="text-xs px-2 py-1 h-auto"
+                        className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                        onClick={() => handleConversionsAPI(page.name)}
                       >
                         <i className="fa-brands fa-meta mr-2"></i>
                         Conversions API
@@ -480,8 +524,8 @@ export default function MessengerSection() {
                 <div className="flex gap-2">
                   {defaultReplyConfigured && (
                     <Button 
-                      variant="destructive"
-                      className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+                      variant="ghost"
+                      className="btn-soft-destructive transition-all hover:scale-105 active:scale-95"
                       onClick={handleDeleteDefaultReply}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
@@ -504,7 +548,8 @@ export default function MessengerSection() {
                     Close
                   </Button>
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="btn-outline-primary"
+                    variant="outline"
                     onClick={handleSaveDefaultReply}
                   >
                     Save
@@ -588,7 +633,8 @@ export default function MessengerSection() {
               {quickStarterConfigured && (
                  <div className="flex justify-end pt-4 border-t mt-4">
                     <Button 
-                      variant="destructive"
+                      variant="ghost"
+                      className="btn-soft-destructive transition-all hover:scale-105 active:scale-95"
                       onClick={handleDeleteQuickStarter}
                     >
                       Delete
@@ -621,7 +667,8 @@ export default function MessengerSection() {
                       Go back
                     </Button>
                     <Button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="btn-outline-primary"
+                      variant="outline"
                       onClick={handleSaveMainMenu}
                     >
                       Save & Publish
@@ -642,13 +689,14 @@ export default function MessengerSection() {
                 <div className="space-y-2">
                   {menuItems.map((item, index) => (
                     <div key={item.id} className={`border rounded-lg p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group ${item.error_message ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'bg-white dark:bg-slate-900'}`}>
-                      {/* Delete button */}
-                      <button 
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90 opacity-0 group-hover:opacity-100"
                         onClick={() => handleDeleteMenuItem(index)}
-                        className="p-2 hover:bg-red-50 dark:hover:bg-red-950 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </button>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       
                       {/* Menu item text input */}
                       <div className="flex-grow space-y-1">
@@ -831,6 +879,39 @@ export default function MessengerSection() {
                 </div>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Page Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Facebook Page
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the Facebook page <span className="font-bold text-slate-900 dark:text-white">"{pageToDelete?.name}"</span>? 
+              This action cannot be undone and all associated automations will stop working.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeletePage}
+            >
+              Yes, delete page
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

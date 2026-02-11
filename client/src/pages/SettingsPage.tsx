@@ -78,7 +78,7 @@ export default function SettingsPage() {
       { name: "Manage", path: "/settings/workspace/ManageSection" },
       { name: "Live Chat", path: "/settings/workspace/live-chat" },
       { name: "White Label", path: "/settings/workspace/white-label" },
-      { name: "Manage agents", path: "/settings/workspace/manage-agents" },
+      { name: "Add New User", path: "/settings/workspace/manage-agents" },
       { name: "Roles & Permissions", path: "/settings/workspace/roles" },
       { name: "Teams", path: "/settings/workspace/teams" },
     ],
@@ -133,7 +133,7 @@ export default function SettingsPage() {
       { name: "Quick Replies" },
     ],
   },
-  { name: "Preferences", icon: Settings },
+
   { name: "Business Hours", icon: Clock },
   { name: "AI Assistants", icon: Bot },
 
@@ -150,7 +150,7 @@ export default function SettingsPage() {
   // Calculate initial activeSection directly from URL
   const initialTabParam = new URLSearchParams(window.location.search).get("tab");
   // Default to empty so right pane is empty until a selection
-  const initialActiveSection = (initialTabParam && (sections.some(s => s.name === initialTabParam) || sections.some(s => s.children?.some((c: any) => c.name === initialTabParam)))) ? initialTabParam : "";
+  const initialActiveSection = (initialTabParam && (sections.some(s => s.name === initialTabParam) || sections.some(s => s.children?.some((c: any) => c.name === initialTabParam)))) ? initialTabParam : "Manage";
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
@@ -473,7 +473,7 @@ export default function SettingsPage() {
             
             {activeSection === "White Label" && ( 
             <WhiteLabelSection />)}
-            {activeSection === "Manage agents" && ( 
+            {activeSection === "Add New User" && ( 
             <ManageAgentsSection />)}
             {activeSection === "Roles & Permissions" && ( 
             <RolesSection />)}

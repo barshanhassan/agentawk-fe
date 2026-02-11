@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Users2, Users, Plus, Edit2, Trash2, Search, Check, ChevronDown } from "lucide-react";
+import { 
+  Users2, 
+  Edit, 
+  Trash2, 
+  UserPlus,
+  ArrowRight,
+  Plus,
+  Check,
+  Users,
+  Search,
+  ChevronDown
+} from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -114,7 +125,7 @@ export default function TeamsSection() {
         <CardHeader className="flex flex-row items-center gap-4 space-y-0 p-6 border-b border-gray-50 dark:border-slate-800/50">
           <Users2 className="w-10 h-10 text-black dark:text-white" />
           <div className="space-y-1">
-            <CardTitle className="text-xl font-bold">{view === "add" ? "Create a team" : "Edit team"}</CardTitle>
+            <CardTitle className="text-xl font-bold">{view === "add" ? "Create Team" : "Edit Team"}</CardTitle>
             <CardDescription className="text-sm font-medium">Create a team and manage how they receive incoming calls, conversations, opportunities and tasks.</CardDescription>
           </div>
         </CardHeader>
@@ -219,7 +230,7 @@ export default function TeamsSection() {
           <Button 
             variant="outline"
             onClick={handleSave}
-            className="h-11 px-12 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold rounded-lg shadow-sm"
+            className="h-11 px-12 btn-outline-primary font-bold rounded-lg shadow-sm"
           >
             {view === "add" ? "Create" : "Update"}
           </Button>
@@ -248,9 +259,10 @@ export default function TeamsSection() {
             resetForm();
             setView("add");
           }}
-          className="h-10 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-[13px] font-bold whitespace-nowrap rounded-lg shadow-sm"
+          className="h-10 px-6 btn-outline-primary text-[13px] font-bold whitespace-nowrap rounded-lg shadow-sm flex items-center gap-2"
         >
-          Create a team
+          <Plus className="w-4 h-4" />
+          Create Team
         </Button>
       </CardHeader>
 
@@ -291,7 +303,7 @@ export default function TeamsSection() {
                       onClick={() => handleEdit(team)}
                       className="h-9 w-9 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="ghost" 

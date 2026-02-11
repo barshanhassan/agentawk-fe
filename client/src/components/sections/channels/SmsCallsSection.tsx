@@ -20,6 +20,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
@@ -70,11 +76,15 @@ export default function SmsCallsSection() {
   const [view, setView] = useState<"list" | "manage">("list");
   const [hasAccounts, setHasAccounts] = useState(true);
   const [accounts, setAccounts] = useState(mockSmsAccounts);
+  const [showDeleteConfirmAccount, setShowDeleteConfirmAccount] = useState(false);
+  const [showDeleteConfirmNumber, setShowDeleteConfirmNumber] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<typeof mockSmsAccounts[0] | null>(null);
+  const [numberToDelete, setNumberToDelete] = useState<{accountId: number, numberId: number, number: string} | null>(null);
   const { toast } = useToast();
 
   const toggleSipVisibility = (accountId: number, field: 'username' | 'password') => {
       // In a real app, logic to toggle visibility
-      console.log("Toggle visibility", accountId, field);
+      toast({ title: "Visibility", description: `${field === 'username' ? 'Username' : 'Password'} visibility toggled.` });
   };
 
   const handleUpdatePhoneNumber = (accountId: number, numberId: number, updates: any) => {
@@ -101,12 +111,92 @@ export default function SmsCallsSection() {
     });
   };
 
+  const handleDeleteAccountRequest = (account: typeof mockSmsAccounts[0]) => {
+    setAccountToDelete(account);
+    setShowDeleteConfirmAccount(true);
+  };
+
+  const confirmDeleteAccount = () => {
+    if (accountToDelete) {
+      setAccounts(prev => prev.filter(a => a.id !== accountToDelete.id));
+      toast({
+        title: "Account Deleted",
+        description: `${accountToDelete.name} has been removed.`,
+      });
+      setShowDeleteConfirmAccount(false);
+      setAccountToDelete(null);
+    }
+  };
+
+  const handleDeleteNumberRequest = (accountId: number, numberId: number, number: string) => {
+    setNumberToDelete({ accountId, numberId, number });
+    setShowDeleteConfirmNumber(true);
+  };
+
+  const confirmDeleteNumber = () => {
+    if (numberToDelete) {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === numberToDelete.accountId) {
+          return {
+            ...acc,
+            numbers: acc.numbers.filter(n => n.id !== numberToDelete.numberId)
+          };
+        }
+        return acc;
+      }));
+      toast({
+        title: "Number Deleted",
+        description: `${numberToDelete.number} has been removed.`,
+      });
+      setShowDeleteConfirmNumber(false);
+      setNumberToDelete(null);
+    }
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied",
+      description: `${label} copied to clipboard.`,
+    });
+  };
+
+  const handleAddNewNumber = (accountId: number) => {
+    const newId = Date.now();
+    setAccounts(prev => prev.map(acc => {
+      if (acc.id === accountId) {
+        return {
+          ...acc,
+          numbers: [
+            ...acc.numbers,
+            {
+              id: newId,
+              number: "+1 000 000 0000",
+              type: "automated",
+              status: "PENDING",
+              forward_type: "NONE",
+              forward_to: "",
+            }
+          ]
+        };
+      }
+      return acc;
+    }));
+    toast({
+      title: "Number Added",
+      description: "A new pending number has been added.",
+    });
+  };
+
   return (
     <div className="p-6">
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">SMS & Calls</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">SMS & Calls</h2>
+              <img src="/images/automations/sms.svg" alt="SMS" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connect your Twilio account for SMS and Call automation.
             </p>
@@ -130,7 +220,7 @@ export default function SmsCallsSection() {
             <div className="mt-6 flex justify-end">
               <Button
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("manage")}
               >
                 Manage
@@ -147,9 +237,11 @@ export default function SmsCallsSection() {
             {/* Header */}
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/sms.svg" alt="SMS" className="h-10 w-10 mr-2" />
                 <div>
-                  <h3 className="text-lg font-medium">SMS & Calls</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">SMS & Calls</h3>
+                    <img src="/images/automations/sms.svg" alt="SMS" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Integrate your Twilio account to unlock 2-Way interactive dynamic conversations
                   </p>
@@ -158,10 +250,10 @@ export default function SmsCallsSection() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                  className="btn-outline-primary"
                   onClick={() => setHasAccounts(true)}
                 >
-                  Add new
+                  + Add New
                 </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
@@ -182,7 +274,8 @@ export default function SmsCallsSection() {
                 </p>
                 <div className="pt-2">
                   <Button 
-                    className="bg-blue-600 text-white hover:bg-blue-700 min-w-[150px]"
+                    className="btn-outline-primary min-w-[150px]"
+                    variant="outline"
                     onClick={() => setHasAccounts(true)}
                   >
                     Connect now
@@ -217,7 +310,13 @@ export default function SmsCallsSection() {
                                 <Badge variant="outline" className={`text-xs ${account.status === 'VERIFIED' ? 'text-green-600 border-green-600' : 'text-red-500'}`}>
                                   {account.status}
                                 </Badge>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                  onClick={() => handleDeleteAccountRequest(account)}
+                                  title="Delete account"
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                              </div>
@@ -263,10 +362,20 @@ export default function SmsCallsSection() {
                                    disabled 
                                  />
                                  <div className="flex gap-2">
-                                   <Button variant="ghost" size="icon" className="h-8 w-8">
+                                   <Button 
+                                     variant="ghost" 
+                                     size="icon" 
+                                     className="h-8 w-8"
+                                     onClick={() => toggleSipVisibility(account.id, 'username')}
+                                   >
                                      <Eye className="h-4 w-4" />
                                    </Button>
-                                   <Button variant="ghost" size="icon" className="h-8 w-8">
+                                   <Button 
+                                     variant="ghost" 
+                                     size="icon" 
+                                     className="h-8 w-8"
+                                     onClick={() => handleCopy(account.sip.username, "Username")}
+                                   >
                                      <Copy className="h-4 w-4" />
                                    </Button>
                                  </div>
@@ -282,10 +391,20 @@ export default function SmsCallsSection() {
                                    disabled 
                                  />
                                  <div className="flex gap-2">
-                                   <Button variant="ghost" size="icon" className="h-8 w-8">
+                                   <Button 
+                                     variant="ghost" 
+                                     size="icon" 
+                                     className="h-8 w-8"
+                                     onClick={() => toggleSipVisibility(account.id, 'password')}
+                                   >
                                      <Eye className="h-4 w-4" />
                                    </Button>
-                                   <Button variant="ghost" size="icon" className="h-8 w-8">
+                                   <Button 
+                                     variant="ghost" 
+                                     size="icon" 
+                                     className="h-8 w-8"
+                                     onClick={() => handleCopy(account.sip.password, "Password")}
+                                   >
                                      <Copy className="h-4 w-4" />
                                    </Button>
                                  </div>
@@ -325,7 +444,12 @@ export default function SmsCallsSection() {
                                        </Badge>
                                      </li>
                                      <li>
-                                       <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500">
+                                       <Button 
+                                         variant="ghost" 
+                                         size="icon" 
+                                         className="h-6 w-6 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                         onClick={() => handleDeleteNumberRequest(account.id, number.id, number.number)}
+                                       >
                                          <Trash2 className="h-4 w-4" />
                                        </Button>
                                      </li>
@@ -355,10 +479,10 @@ export default function SmsCallsSection() {
                                      
                                      {number.forward_type === 'NONE' && (
                                        <div className="flex items-center space-x-2 mt-6">
-                                         <div className="grow bg-yellow-50 border border-yellow-200 p-2 text-yellow-700 text-xs font-semibold rounded flex items-center gap-2">
-                                           <span>⚠</span> Call forwarding disabled
-                                         </div>
-                                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave}>Save</Button>
+                                          <div className="grow bg-yellow-50 border border-yellow-200 p-2 text-yellow-700 text-sm font-semibold rounded flex items-center gap-2">
+                                            <span>⚠</span> Call forwarding disabled
+                                          </div>
+                                          <Button size="sm" className="btn-outline-primary" variant="outline" onClick={handleSave}>Save</Button>
                                        </div>
                                      )}
 
@@ -373,7 +497,7 @@ export default function SmsCallsSection() {
                                               placeholder="Enter number" 
                                             />
                                           </div>
-                                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSave}>Save</Button>
+                                          <Button size="sm" className="btn-outline-primary" variant="outline" onClick={handleSave}>Save</Button>
                                        </div>
                                      )}
                                    </div>
@@ -382,7 +506,12 @@ export default function SmsCallsSection() {
                              ))}
                              
                              <div className="pt-2">
-                               <button className="text-sm font-semibold text-blue-600 hover:underline">Add new number</button>
+                               <button 
+                                 className="text-sm font-semibold text-blue-600 hover:underline"
+                                 onClick={() => handleAddNewNumber(account.id)}
+                               >
+                                 + Add New Number
+                               </button>
                              </div>
                            </div>
                          </div>
@@ -395,6 +524,72 @@ export default function SmsCallsSection() {
           </div>
         </div>
       )}
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmAccount} onOpenChange={setShowDeleteConfirmAccount}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete SMS Account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the SMS account <span className="font-bold text-slate-900 dark:text-white">"{accountToDelete?.name}"</span>? 
+              This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmAccount(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteAccount}
+            >
+              Yes, delete account
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Number Confirmation Dialog */}
+      <Dialog open={showDeleteConfirmNumber} onOpenChange={setShowDeleteConfirmNumber}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Phone Number
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the phone number <span className="font-bold text-slate-900 dark:text-white">"{numberToDelete?.number}"</span>? 
+              This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmNumber(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteNumber}
+            >
+              Yes, delete number
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

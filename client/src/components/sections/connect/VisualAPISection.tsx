@@ -153,7 +153,11 @@ export default function VisualAPISection() {
             <p className="text-sm text-muted-foreground">Configure triggers to start visual workflows from external API calls.</p>
           </div>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+        <Button 
+          variant="outline"
+          onClick={() => setIsCreateModalOpen(true)} 
+          className="gap-2 btn-outline-primary"
+        >
           <Plus size={16} />
           Add Trigger
         </Button>
@@ -227,7 +231,11 @@ export default function VisualAPISection() {
           <p className="text-muted-foreground mb-6 text-center max-w-sm">
             Create your first API trigger to start automating your visual workflows using external webhooks.
           </p>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Button 
+            variant="outline"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="btn-outline-primary"
+          >
             <Plus size={16} className="mr-2" />
             Create Trigger
           </Button>

@@ -2,11 +2,20 @@ import React, { useState } from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Edit, Trash2, FileText, Grid3x3, Link as LinkIcon } from "lucide-react";
+import { Sparkles, Edit, Trash2, FileText, Grid3x3, Link as LinkIcon, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AIItem {
   id: string;
   name: string;
+  aiAssistant?: string;
+  smartFlow?: string;
+  channel?: string;
+  linkText?: string;
+  payload?: string;
+  savePayloadField?: string;
+  dataToFeedAI?: string;
+  images?: string[];
 }
 
 export default function AIItemsSection() {
@@ -20,6 +29,8 @@ export default function AIItemsSection() {
     { id: "7", name: "ai item one" },
     { id: "8", name: "bot item two" },
   ]);
+  const { toast } = useToast();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"item-data" | "internal-notes">("item-data");
@@ -41,11 +52,23 @@ export default function AIItemsSection() {
 
   const handlePublish = () => {
     if (formData.name.trim()) {
-      const newItem: AIItem = {
-        id: String(items.length + 1),
-        name: formData.name,
-      };
-      setItems([...items, newItem]);
+      if (editingId) {
+        setItems(items.map(item => item.id === editingId ? { ...formData, id: editingId } : item));
+        toast({
+          title: "Success",
+          description: "AI Item updated successfully.",
+        });
+      } else {
+        const newItem: AIItem = {
+          ...formData,
+          id: String(Date.now()),
+        };
+        setItems([...items, newItem]);
+        toast({
+          title: "Success",
+          description: "AI Item created successfully.",
+        });
+      }
       setFormData({
         name: "",
         aiAssistant: "",
@@ -58,7 +81,24 @@ export default function AIItemsSection() {
         images: [],
       });
       setIsCreateFormOpen(false);
+      setEditingId(null);
     }
+  };
+
+  const handleEdit = (item: AIItem) => {
+    setEditingId(item.id);
+    setFormData({
+      name: item.name || "",
+      aiAssistant: item.aiAssistant || "",
+      smartFlow: item.smartFlow || "",
+      channel: item.channel || "",
+      linkText: item.linkText || "",
+      payload: item.payload || "",
+      savePayloadField: item.savePayloadField || "",
+      dataToFeedAI: item.dataToFeedAI || "",
+      images: item.images || [],
+    });
+    setIsCreateFormOpen(true);
   };
 
   const handleCancel = () => {
@@ -74,6 +114,7 @@ export default function AIItemsSection() {
       images: [],
     });
     setIsCreateFormOpen(false);
+    setEditingId(null);
   };
 
   // Show create form
@@ -89,8 +130,8 @@ export default function AIItemsSection() {
                   <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Create AI Item</h2>
-                  <p className="text-sm text-muted-foreground">Add structured data to the Knowledge base</p>
+                  <h2 className="text-lg font-semibold text-foreground">{editingId ? "Edit AI Item" : "Create AI Item"}</h2>
+                  <p className="text-sm text-muted-foreground">{editingId ? "Update structured data in the Knowledge base" : "Add structured data to the Knowledge base"}</p>
                 </div>
               </div>
               <button 
@@ -278,7 +319,10 @@ export default function AIItemsSection() {
                       placeholder="Add link"
                       className="flex-1 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <button className="px-4 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-md text-sm font-medium transition-colors">
+                    <button 
+                      className="px-4 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-md text-sm font-medium transition-colors"
+                      onClick={() => toast({ title: "Coming Soon", description: "Select from gallery feature is coming soon." })}
+                    >
                       Select from gallery
                     </button>
                   </div>
@@ -302,7 +346,7 @@ export default function AIItemsSection() {
                 disabled={!formData.name.trim()}
                 className="px-6 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
               >
-                Generate
+                {editingId ? "Update" : "Generate"}
               </button>
             </div>
           </div>
@@ -320,13 +364,14 @@ export default function AIItemsSection() {
         </div>
         <div className="space-y-1 flex-1">
           <CardTitle className="text-lg flex items-center justify-between">
-            Ai Items
+            AI Items
             <Button 
               variant="outline" 
-              className="text-primary border-primary hover:bg-primary hover:text-white"
+              className="btn-outline-primary flex items-center gap-2"
               onClick={() => setIsCreateFormOpen(true)}
             >
-              Create an Ai Item
+              <Plus className="w-4 h-4" />
+              Create AI Item
             </Button>
           </CardTitle>
           <CardDescription>Add structured data to the Knowledge base</CardDescription>
@@ -366,28 +411,33 @@ export default function AIItemsSection() {
                       <button 
                         className="p-1.5 bg-purple-500/10 hover:bg-purple-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
                         title="Grid View"
+                        onClick={() => toast({ title: "Grid View", description: `Opening grid view for ${item.name}` })}
                       >
                         <Grid3x3 size={16} className="text-purple-600 dark:text-purple-400" />
                       </button>
                       <button 
                         className="p-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
                         title="Link"
+                        onClick={() => toast({ title: "Link Copied", description: "Item link has been copied to clipboard." })}
                       >
                         <LinkIcon size={16} className="text-cyan-600 dark:text-cyan-400" />
                       </button>
                       <button 
                         className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
                         title="Edit"
+                        onClick={() => handleEdit(item)}
                       >
                         <Edit size={16} className="text-blue-600 dark:text-blue-400" />
                       </button>
-                      <button 
-                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
                         title="Delete"
                         onClick={() => handleDeleteItem(item.id)}
                       >
-                        <Trash2 size={16} className="text-red-600 dark:text-red-400" />
-                      </button>
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
                   </td>
                 </tr>

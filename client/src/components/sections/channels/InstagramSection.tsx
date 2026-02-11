@@ -56,7 +56,7 @@ interface MenuItem {
 }
 
 export default function InstagramSection() {
-  const [view, setView] = useState<"list" | "preferred_manage" | "old_manage">("list");
+  const [view, setView] = useState<"list" | "manage">("list");
   const [hasAccounts, setHasAccounts] = useState(true);
   const [accounts, setAccounts] = useState(mockInstagramAccounts);
   
@@ -65,6 +65,8 @@ export default function InstagramSection() {
   const [showQuickStarter, setShowQuickStarter] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<typeof mockInstagramAccounts[0] | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<typeof mockInstagramAccounts[0] | null>(null);
   
   // Feature states (mocking backend data)
   const [autoReplyInterval, setAutoReplyInterval] = useState("0");
@@ -185,66 +187,72 @@ export default function InstagramSection() {
     setShowQuickStarter(false);
   };
 
+  const handleRefresh = (accountName: string) => {
+    toast({
+      title: "Refreshing",
+      description: `Refreshing data for ${accountName}...`,
+    });
+  };
+
+  const handleDeleteAccount = (account: typeof mockInstagramAccounts[0]) => {
+    setAccountToDelete(account);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAccount = () => {
+    if (accountToDelete) {
+      setAccounts(prev => prev.filter(a => a.id !== accountToDelete.id));
+      toast({
+        title: "Account Deleted",
+        description: `${accountToDelete.name} has been removed.`,
+      });
+      setShowDeleteConfirm(false);
+      setAccountToDelete(null);
+    }
+  };
+
+  const handleConversionsAPI = (accountName: string) => {
+    toast({
+      title: "Conversions API",
+      description: `Configuring Meta Conversions API for ${accountName}...`,
+    });
+  };
+
   return (
     <div className="p-6">
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Instagram</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Instagram</h2>
+              <img src="/images/automations/instagram.svg" alt="Instagram" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connect your Instagram Business account to automate conversations.
             </p>
           </div>
           <Separator className="bg-gray-200 dark:bg-slate-800" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card 1: Preferred Integration */}
+          {/* Card: Instagram Integration */}
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
                 <img src="/images/automations/instagram.svg" alt="Instagram" className="h-6 w-6" />
                 <h3 className="font-semibold text-sm">Instagram</h3>
               </div>
-              <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Preferred</Badge>
             </div>
 
             <div className="space-y-4 text-xs text-muted-foreground flex-grow">
               <p>
-                Our Preferred integration method is the new Instagram API, which is easier to setup since it doesn't require linking a Facebook Page.
+                The Instagram integration allows you to automate conversations on your Instagram Business account.
               </p>
             </div>
 
             <div className="mt-6 flex justify-end">
               <Button
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                onClick={() => setView("preferred_manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
-
-          {/* Card 2: Old Integration */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <img src="/images/automations/instagram.svg" alt="Instagram" className="h-6 w-6" />
-                <h3 className="font-semibold text-sm">Instagram</h3>
-              </div>
-              <Badge variant="outline" className="text-gray-500 border-gray-300 text-[10px] px-1 py-0 h-5">Old</Badge>
-            </div>
-
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                Users with an existing integration through the previous Instagram method will retain full management access.
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                onClick={() => setView("old_manage")}
+                className="btn-outline-primary"
+                onClick={() => setView("manage")}
               >
                 Manage
               </Button>
@@ -254,15 +262,17 @@ export default function InstagramSection() {
         </div>
       )}
 
-      {view === "preferred_manage" && (
+      {view === "manage" && (
         <div className="space-y-6">
           {/* Header */}
           <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/instagram.svg" alt="Instagram" className="h-10 w-10 mr-2" />
                 <div>
-                  <h3 className="text-lg font-medium">Instagram</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">Instagram</h3>
+                    <img src="/images/automations/instagram.svg" alt="Instagram" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Integrate your Instagram Business account to unlock 2-Way interactive dynamic conversations
                   </p>
@@ -271,10 +281,10 @@ export default function InstagramSection() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                  className="btn-outline-primary"
                   onClick={() => setHasAccounts(true)}
                 >
-                  Add new
+                  + Add New
                 </Button>
               </div>
             </div>
@@ -292,7 +302,8 @@ export default function InstagramSection() {
               </p>
               <div className="pt-2">
                 <Button 
-                  className="bg-blue-600 text-white hover:bg-blue-700 min-w-[150px]"
+                  className="btn-outline-primary min-w-[150px]"
+                  variant="outline"
                   onClick={() => setHasAccounts(true)}
                 >
                   Connect now
@@ -359,10 +370,20 @@ export default function InstagramSection() {
                       <Button 
                         variant="outline"
                         size="sm"
-                        className="text-xs px-2 py-1 h-auto bg-blue-600 text-white hover:bg-blue-700 border-blue-600 gap-2"
+                        className="text-xs px-2 py-1 h-auto btn-outline-primary gap-2"
+                        onClick={() => handleRefresh(account.name)}
                       >
                         <RefreshCw className="h-3 w-3" />
                         Refresh
+                      </Button>
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs px-2 py-1 h-auto btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                        onClick={() => handleDeleteAccount(account)}
+                        title="Delete account"
+                      >
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -379,10 +400,6 @@ export default function InstagramSection() {
                               </div>
                               <Switch checked={account.allow_in_feeder} />
                             </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-500">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -406,7 +423,8 @@ export default function InstagramSection() {
                         <Button 
                           variant="outline"
                           size="sm"
-                          className="text-xs px-2 py-1 h-auto"
+                          className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                          onClick={() => handleConversionsAPI(account.name)}
                         >
                           <i className="fa-brands fa-meta mr-2"></i>
                           Conversions API
@@ -489,36 +507,7 @@ export default function InstagramSection() {
         </div>
       )}
 
-      {view === "old_manage" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/images/automations/instagram.svg" alt="Instagram" className="h-10 w-10" />
-              <div>
-                <h3 className="font-semibold text-lg">Instagram</h3>
-                <p className="text-sm text-muted-foreground">
-                  Integrate your Instagram account and unlock 2-Way interactive dynamic conversations
-                </p>
-              </div>
-            </div>
-             <Button variant="outline" onClick={() => setView("list")}>
-              Back
-            </Button>
-          </div>
 
-          {/* Content */}
-          <div className="border rounded-lg p-12 shadow-sm bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4 py-24">
-             <div className="bg-gradient-to-tr from-pink-50 to-pink-100 dark:from-slate-800 dark:to-slate-700 p-4 rounded-full">
-              <img src="/images/automations/instagram.svg" alt="Instagram" className="h-12 w-12" />
-            </div>
-            <h2 className="text-lg font-semibold">Instagram account is not connected yet</h2>
-            <p className="text-muted-foreground max-w-lg">
-              This integration method is no longer supported. Please use the new Instagram integration method that only requires Instagram Login for authentication.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Default Reply Dialog */}
       <Dialog open={showDefaultReply} onOpenChange={setShowDefaultReply}>
@@ -585,9 +574,9 @@ export default function InstagramSection() {
                   <div className="flex gap-2">
                     {defaultReplyConfigured && (
                       <Button 
-                        variant="destructive" 
+                        variant="ghost" 
                         size="sm"
-                        className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+                        className="btn-soft-destructive transition-all hover:scale-105 active:scale-95"
                         onClick={handleDeleteDefaultReply}
                       >
                          <Trash2 className="h-4 w-4 mr-2" />
@@ -611,7 +600,8 @@ export default function InstagramSection() {
                   Close
                 </Button>
                 <Button 
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="btn-outline-primary"
+                  variant="outline"
                   onClick={handleSaveDefaultReply}
                 >
                   Save
@@ -671,7 +661,8 @@ export default function InstagramSection() {
               {quickStarterConfigured && (
                  <div className="flex justify-end pt-4 border-t mt-4">
                     <Button 
-                      variant="destructive"
+                      variant="ghost"
+                      className="btn-soft-destructive transition-all hover:scale-105 active:scale-95"
                       onClick={handleDeleteQuickStarter}
                     >
                       Delete
@@ -704,7 +695,8 @@ export default function InstagramSection() {
                       Go back
                     </Button>
                     <Button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="btn-outline-primary"
+                      variant="outline"
                       onClick={handleSaveMainMenu}
                     >
                       Publish
@@ -725,13 +717,14 @@ export default function InstagramSection() {
                 <div className="space-y-2">
                   {menuItems.map((item, index) => (
                     <div key={item.id} className={`border rounded-lg p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group ${item.error_message ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'bg-white dark:bg-slate-900'}`}>
-                      {/* Delete button */}
-                      <button 
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90 opacity-0 group-hover:opacity-100"
                         onClick={() => handleDeleteMenuItem(index)}
-                        className="p-2 hover:bg-red-50 dark:hover:bg-red-950 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </button>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       
                       {/* Menu item text input */}
                       <div className="flex-grow space-y-1">
@@ -884,6 +877,39 @@ export default function InstagramSection() {
                 </div>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Instagram Account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the Instagram account <span className="font-bold text-slate-900 dark:text-white">"{accountToDelete?.name}"</span>? 
+              This action cannot be undone and all associated automations will stop working.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteAccount}
+            >
+              Yes, delete account
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

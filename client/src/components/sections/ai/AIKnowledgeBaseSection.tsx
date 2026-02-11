@@ -23,6 +23,7 @@ import {
   File,
   Loader2,
   Search,
+  Plus
 } from "lucide-react";
 import {
   AlertDialog,
@@ -35,6 +36,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock Data
 const mockKnowledgeBases = [
@@ -70,6 +72,7 @@ export default function AIKnowledgeBaseSection() {
   
   // Validation state
   const [errors, setErrors] = useState<any>({});
+  const { toast } = useToast();
 
   const handleEdit = (kb: any = null) => {
     if (kb) {
@@ -112,6 +115,7 @@ export default function AIKnowledgeBaseSection() {
     // Mock save
     if (formData.id) {
       setKnowledgeBases(prev => prev.map(k => k.id === formData.id ? { ...k, ...formData, status: k.status } : k));
+      toast({ title: "Success", description: "Knowledge base updated successfully." });
     } else {
       setKnowledgeBases(prev => [...prev, { 
         id: Date.now(), 
@@ -120,12 +124,14 @@ export default function AIKnowledgeBaseSection() {
         source_type: formData.source_type,
         items: formData.source_type === 'website' ? formData.selected_pages.length : (formData.files.length || 1)
       }]);
+      toast({ title: "Success", description: "Knowledge base created successfully." });
     }
     setViewMode("list");
   };
 
   const handleDelete = (id: number) => {
     setKnowledgeBases(prev => prev.filter(k => k.id !== id));
+    toast({ title: "Deleted", description: "Knowledge base has been removed." });
   };
 
   const handleFetchPages = () => {
@@ -139,6 +145,7 @@ export default function AIKnowledgeBaseSection() {
         web_pages: mockFetchedPages,
         selected_pages: [] // Reset selection on new fetch
       }));
+      toast({ title: "Pages Fetched", description: `Found ${mockFetchedPages.length} pages from ${formData.website}.` });
     }, 1500);
   };
 
@@ -165,6 +172,7 @@ export default function AIKnowledgeBaseSection() {
       ...prev,
       files: [...prev.files, newFile]
     }));
+    toast({ title: "File Added", description: `${newFile.object_name} attached to knowledge base.` });
   };
 
   const removeFile = (id: number) => {
@@ -172,6 +180,7 @@ export default function AIKnowledgeBaseSection() {
       ...prev,
       files: prev.files.filter((f: any) => f.id !== id)
     }));
+    toast({ title: "File Removed", description: "Document removed from attachments." });
   };
 
   const filteredPages = formData.web_pages?.filter((p: any) => 
@@ -182,7 +191,7 @@ export default function AIKnowledgeBaseSection() {
     <>
       <div className="flex flex-row items-center justify-between p-6 pb-0">
         <div className="flex items-center gap-4">
-           <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-md">
+           <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md">
               <img src="/images/integrations/chat_gpt.svg" className="h-8 w-8" alt="AI" />
            </div>
            <div>
@@ -192,8 +201,9 @@ export default function AIKnowledgeBaseSection() {
         </div>
         <div>
           {viewMode === "list" ? (
-             <Button onClick={() => handleEdit(null)} className="bg-blue-600 hover:bg-blue-700 text-white">
-               Create new
+             <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
+               <Plus className="w-4 h-4" />
+               Create Knowledge Base
              </Button>
           ) : (
              <Button variant="outline" onClick={() => setViewMode("list")}>
@@ -233,7 +243,7 @@ export default function AIKnowledgeBaseSection() {
                            <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </AlertDialogTrigger>
@@ -246,7 +256,7 @@ export default function AIKnowledgeBaseSection() {
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(kb.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                    <AlertDialogAction onClick={() => handleDelete(kb.id)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                              </AlertDialog>
@@ -260,13 +270,14 @@ export default function AIKnowledgeBaseSection() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 border-2 border-dashed rounded-lg">
                 <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full">
-                  <Book className="h-10 w-10 text-slate-400" />
+                   <Book className="h-10 w-10 text-slate-400" />
                 </div>
                 <h3 className="font-semibold text-lg">No knowledge bases yet</h3>
-                <p className="text-muted-foreground max-w-sm">
+                <p className="text-muted-foreground max-sm">
                   Create a knowledge base to train your AI agents on your specific business data.
                 </p>
-                <Button onClick={() => handleEdit(null)} className="mt-4">
+                <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
                   Create Knowledge Base
                 </Button>
               </div>
@@ -314,7 +325,7 @@ export default function AIKnowledgeBaseSection() {
                          <label className="text-sm font-medium">Website URL</label>
                          <div className="flex gap-2">
                             <div className="flex items-center px-3 border rounded-l-md bg-slate-50 dark:bg-slate-900 border-r-0 text-sm text-muted-foreground">
-                              https://
+                               https://
                             </div>
                             <Input 
                               value={formData.website} 
@@ -416,7 +427,7 @@ export default function AIKnowledgeBaseSection() {
                                          <FileText className="h-5 w-5 text-red-500" />
                                          <span className="text-sm font-medium">{file.object_name}</span>
                                       </div>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50" onClick={() => removeFile(file.id)}>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90" onClick={() => removeFile(file.id)}>
                                          <Trash2 className="h-4 w-4" />
                                       </Button>
                                    </div>
@@ -445,7 +456,7 @@ export default function AIKnowledgeBaseSection() {
              
              <div className="flex items-center justify-end gap-3 pt-6 border-t mt-8">
                 <Button variant="outline" onClick={() => setViewMode("list")}>Cancel</Button>
-                <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white min-w-[100px]">Publish</Button>
+                <Button onClick={handleSave} className="btn-outline-primary min-w-[100px]">Publish</Button>
              </div>
           </div>
         )}

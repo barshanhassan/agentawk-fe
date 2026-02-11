@@ -84,7 +84,7 @@ export default function IframeSection() {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="text-primary border-primary hover:bg-primary hover:text-white"
+                    className="btn-outline-primary"
                     onClick={() => {
                         setEditingId(null);
                         setName("");
@@ -94,7 +94,7 @@ export default function IframeSection() {
                     }}
                     disabled={iframes.length >= 3}
                   >
-                    Create new
+                    + Create New
                   </Button>
                 </div>
               </CardTitle>
@@ -148,7 +148,7 @@ export default function IframeSection() {
                   {iframes.length === 0 && (
                     <tr>
                       <td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">
-                        No iframes created yet. Click "Create new" to add one.
+                        No iframes created yet. Click "+ Create New" to add one.
                       </td>
                     </tr>
                   )}
@@ -214,7 +214,8 @@ export default function IframeSection() {
               </Button>
               <Button 
                 onClick={handleSave}
-                className="bg-primary hover:bg-blue-700 text-white"
+                className="btn-outline-primary"
+                variant="outline"
                 disabled={!name || !menuText || !htmlCode}
               >
                 Publish
@@ -250,7 +251,8 @@ export default function IframeSection() {
               </Button>
               <Button 
                 onClick={() => setIsEditTitleModalOpen(false)}
-                className="bg-primary hover:bg-blue-700 text-white"
+                className="btn-outline-primary"
+                variant="outline"
               >
                 Save
               </Button>

@@ -37,6 +37,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Mock Data
 const mockAgents = [
@@ -70,6 +77,9 @@ export default function AIChatAssistantsSection() {
   const [viewMode, setViewMode] = useState<"list" | "edit" | "logs">("list");
   const [agents, setAgents] = useState(mockAgents);
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<any>(null);
+  const { toast } = useToast();
   
   // Edit Form State
   const [activeTab, setActiveTab] = useState<"personality" | "configurations" | "knowledge" | "functions">("personality");
@@ -120,8 +130,25 @@ export default function AIChatAssistantsSection() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // Save logic here
-    setViewMode("list");
+    if (formData.name.trim()) {
+      if (selectedAgent) {
+        setAgents(prev => prev.map(a => a.id === selectedAgent.id ? { ...a, name: formData.name, model: formData.model } : a));
+        toast({ title: "Success", description: "Assistant updated successfully." });
+      } else {
+        const newAgent = {
+          id: Date.now(),
+          name: formData.name,
+          reference_id: `asst_${Math.random().toString(36).substr(2, 9)}`,
+          model: formData.model,
+          total_quries: 0,
+          status: "ACTIVE",
+          allow_in_feeder: true,
+        };
+        setAgents([...agents, newAgent]);
+        toast({ title: "Success", description: "Assistant created successfully." });
+      }
+      setViewMode("list");
+    }
   };
 
   const handleStatusToggle = (id: number) => {
@@ -130,6 +157,23 @@ export default function AIChatAssistantsSection() {
         ? { ...agent, status: agent.status === "ACTIVE" ? "PAUSED" : "ACTIVE" }
         : agent
     ));
+  };
+
+  const handleDeleteRequest = (agent: any) => {
+    setAgentToDelete(agent);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAgent = () => {
+    if (agentToDelete) {
+      setAgents(prev => prev.filter(a => a.id !== agentToDelete.id));
+      toast({
+        title: "Assistant Deleted",
+        description: `${agentToDelete.name} has been successfully removed.`,
+      });
+      setShowDeleteConfirm(false);
+      setAgentToDelete(null);
+    }
   };
 
   return (
@@ -141,7 +185,7 @@ export default function AIChatAssistantsSection() {
           <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-md">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md">
                    <img src="/images/integrations/chat_gpt.svg" className="h-8 w-8" alt="AI" />
                 </div>
                 <div>
@@ -166,8 +210,9 @@ export default function AIChatAssistantsSection() {
                   </Tooltip>
                 </TooltipProvider>
 
-                <Button onClick={() => handleEdit(null)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Create new
+                <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Assistant
                 </Button>
               </div>
             </div>
@@ -208,7 +253,11 @@ export default function AIChatAssistantsSection() {
                            <Button variant="ghost" size="icon" onClick={() => handleEdit(agent)}>
                              <Pencil className="h-4 w-4 text-slate-500" />
                            </Button>
-                           <Button variant="ghost" size="icon">
+                           <Button 
+                             variant="ghost" 
+                             size="icon"
+                             onClick={() => toast({ title: "View Logs", description: `Opening activity logs for ${agent.name}...` })}
+                           >
                              <FileText className="h-4 w-4 text-slate-500" />
                            </Button>
                            <DropdownMenu>
@@ -218,11 +267,14 @@ export default function AIChatAssistantsSection() {
                                </Button>
                              </DropdownMenuTrigger>
                              <DropdownMenuContent align="end">
-                               <DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => toast({ title: "AI Feeder", description: `Opening AI Feeder for ${agent.name}...` })}>
                                  <Plug className="h-4 w-4 mr-2" />
                                  AI Feeder
                                </DropdownMenuItem>
-                               <DropdownMenuItem className="text-red-600">
+                               <DropdownMenuItem 
+                                 className="text-red-600"
+                                 onClick={() => handleDeleteRequest(agent)}
+                               >
                                  <Trash2 className="h-4 w-4 mr-2" />
                                  Delete
                                </DropdownMenuItem>
@@ -243,8 +295,9 @@ export default function AIChatAssistantsSection() {
                   <p className="text-muted-foreground max-w-md">
                     Get started by creating a new AI assistant to help automate your conversations.
                   </p>
-                  <Button onClick={() => handleEdit(null)} className="mt-4">
-                    Create new
+                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Create Assistant
                   </Button>
                 </div>
              )}
@@ -256,7 +309,7 @@ export default function AIChatAssistantsSection() {
         <form onSubmit={handleSave} className="space-y-6">
           <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 p-4 flex items-center justify-between">
              <div className="flex items-center gap-4">
-                <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-md">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md">
                    <img src="/images/integrations/chat_gpt.svg" className="h-8 w-8" alt="AI" />
                 </div>
                 <div>
@@ -265,7 +318,7 @@ export default function AIChatAssistantsSection() {
                 </div>
              </div>
              <div className="flex items-center gap-3">
-               <Button variant="outline" onClick={() => setViewMode("list")}>
+               <Button type="button" variant="outline" onClick={() => setViewMode("list")}>
                  Back
                </Button>
                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -489,7 +542,14 @@ export default function AIChatAssistantsSection() {
                             </div>
                             <h3 className="font-medium">Upload PDF Files</h3>
                             <p className="text-sm text-muted-foreground">Upload your PDF knowledge base files here.</p>
-                            <Button variant="outline" className="mt-2">Select Files</Button>
+                            <Button 
+                              type="button"
+                              variant="outline" 
+                              className="mt-2"
+                              onClick={() => toast({ title: "Upload PDF", description: "File selection dialog would open here." })}
+                            >
+                              Select Files
+                            </Button>
                           </div>
                         )}
 
@@ -498,7 +558,13 @@ export default function AIChatAssistantsSection() {
                             <div className="flex gap-2">
                               <span className="flex items-center px-3 border rounded-l-md bg-slate-100 dark:bg-slate-800 text-muted-foreground">https://</span>
                               <Input placeholder="example.com" className="rounded-l-none" />
-                              <Button variant="secondary">Fetch Pages</Button>
+                              <Button 
+                                type="button"
+                                variant="secondary"
+                                onClick={() => toast({ title: "Fetching Pages", description: "Crawling website for knowledge base content..." })}
+                              >
+                                Fetch Pages
+                              </Button>
                             </div>
                           </div>
                         )}
@@ -522,7 +588,11 @@ export default function AIChatAssistantsSection() {
                       <p className="text-sm text-muted-foreground max-w-md">
                         Define custom functions that the AI can call to interact with your business logic or external APIs.
                       </p>
-                      <Button variant="outline">
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Function
                       </Button>
@@ -543,6 +613,39 @@ export default function AIChatAssistantsSection() {
           </div>
         </form>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Assistant
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the assistant <span className="font-bold text-slate-900 dark:text-white">"{agentToDelete?.name}"</span>? 
+              This action cannot be undone and all active conversations with this assistant will stop.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteAgent}
+            >
+              Yes, delete assistant
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

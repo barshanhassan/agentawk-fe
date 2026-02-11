@@ -159,7 +159,7 @@ export default function ChatWidgetSection() {
             Chat Widget
             <Button 
               variant="outline" 
-              className="text-primary border-primary hover:bg-primary hover:text-white"
+              className="btn-outline-primary"
               onClick={() => {
                 setEditingId(null);
                 setFormData({
@@ -175,7 +175,7 @@ export default function ChatWidgetSection() {
                 setIsCreateModalOpen(true);
               }}
             >
-              Create new
+              + Create New
             </Button>
           </CardTitle>
           <CardDescription>Embed a chat widget to your website</CardDescription>
@@ -497,13 +497,14 @@ export default function ChatWidgetSection() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={handleCreateWidget}
                 disabled={!formData.name.trim() || !formData.title.trim() || formData.channels.length === 0}
-                className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium transition-colors"
+                className="btn-outline-primary"
+                variant="outline"
               >
                 Save
-              </button>
+              </Button>
             </div>
             </div>
           </div>

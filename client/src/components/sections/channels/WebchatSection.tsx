@@ -2,19 +2,55 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Copy, Edit2, Trash2, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const instances = [{ id: 1, name: "TestTiagoStage" }];
 
 export default function WebchatSection() {
   const [view, setView] = useState<"list" | "manage">("list");
   const [hasInstances, setHasInstances] = useState(true);
+  const [webchatInstances, setWebchatInstances] = useState(instances);
+  const { toast } = useToast();
+
+  const handleExternalLink = (name: string) => {
+    toast({
+      title: "Opening",
+      description: `Opening ${name} in a new tab...`,
+    });
+  };
+
+  const handleCopy = (name: string) => {
+    navigator.clipboard.writeText(`https://webchat.example.com/${name}`);
+    toast({
+      title: "Copied",
+      description: "Webchat widget code copied to clipboard.",
+    });
+  };
+
+  const handleEdit = (name: string) => {
+    toast({
+      title: "Edit",
+      description: `Opening editor for ${name}...`,
+    });
+  };
+
+  const handleDelete = (id: number, name: string) => {
+    setWebchatInstances(prev => prev.filter(i => i.id !== id));
+    toast({
+      title: "Deleted",
+      description: `${name} has been removed.`,
+    });
+  };
 
   return (
     <div className="p-6">
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Webchat</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Webchat</h2>
+              <img src="/images/automations/webchat.svg" alt="Webchat" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Create a Webchat interface for your website.
             </p>
@@ -38,7 +74,7 @@ export default function WebchatSection() {
             <div className="mt-6 flex justify-end">
               <Button
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("manage")}
               >
                 Manage
@@ -54,9 +90,11 @@ export default function WebchatSection() {
           <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/webchat.svg" alt="Webchat" className="h-10 w-10 mr-2" />
                 <div>
-                  <h3 className="text-lg font-medium">Webchat</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">Webchat</h3>
+                    <img src="/images/automations/webchat.svg" alt="Webchat" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Create a Webchat interface that allows visitors to communicate with your business in real-time directly from a website.
                   </p>
@@ -66,10 +104,10 @@ export default function WebchatSection() {
               <div className="flex items-center gap-3">
                  <Button 
                   variant="outline" 
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                  className="btn-outline-primary"
                   onClick={() => setHasInstances(true)}
                 >
-                  Add new
+                  + Add New
                 </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
@@ -90,16 +128,17 @@ export default function WebchatSection() {
                   </p>
                   <div className="pt-2">
                     <Button 
-                      className="bg-blue-600 text-white hover:bg-blue-700 min-w-[150px]"
+                      className="btn-outline-primary min-w-[150px]"
+                      variant="outline"
                       onClick={() => setHasInstances(true)}
                     >
-                      Create now
+                      + Create Now
                     </Button>
                   </div>
                 </div>
               ) : (
                 <ul>
-                  {instances.map((inst) => (
+                  {webchatInstances.map((inst) => (
                     <li key={inst.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md border mb-2">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-md flex items-center justify-center font-medium">{inst.name.charAt(0)}</div>
@@ -109,16 +148,40 @@ export default function WebchatSection() {
                       </div>
 
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-blue-600">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 hover:text-blue-600"
+                          onClick={() => handleExternalLink(inst.name)}
+                          title="View live"
+                        >
                           <ExternalLink className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-blue-600">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 hover:text-blue-600"
+                          onClick={() => handleCopy(inst.name)}
+                          title="Copy snippet"
+                        >
                           <Copy className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-blue-600">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 hover:text-blue-600"
+                          onClick={() => handleEdit(inst.name)}
+                          title="Edit settings"
+                        >
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                          onClick={() => handleDelete(inst.id, inst.name)}
+                          title="Delete instance"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

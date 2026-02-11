@@ -406,7 +406,7 @@ export default function WhiteLabelSection() {
                     className="border-gray-200 dark:border-slate-700 w-64 focus-visible:ring-0 focus-visible:ring-offset-0 h-10 bg-white dark:bg-slate-950 text-gray-900 dark:text-white"
                   />
 
-                  <Button variant="secondary" className="bg-[#f1f3f5] dark:bg-slate-800 hover:bg-[#e9ecef] dark:hover:bg-slate-700 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 h-10 px-6 font-medium">
+                  <Button variant="outline" className="h-10 px-6 font-medium btn-outline-primary">
                     Connect
                   </Button>
                 </div>
@@ -443,7 +443,7 @@ export default function WhiteLabelSection() {
                     </div>
 
                     <Button 
-                      className="px-6 h-10 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" 
+                      className="px-6 h-10 btn-outline-primary" 
                       variant="outline"
                       onClick={handleConnectEmail}
                     >
@@ -522,7 +522,8 @@ export default function WhiteLabelSection() {
                           </Button>
                         ) : (
                           <Button
-                            className="bg-blue-600 text-white hover:bg-blue-700"
+                            variant="outline"
+                            className="btn-outline-primary"
                             onClick={handleSubmitNotificationEmail}
                             disabled={isSubmitting}
                           >
@@ -672,7 +673,8 @@ export default function WhiteLabelSection() {
 
                         <div className="flex justify-end">
                           <Button
-                            className="bg-blue-600 text-white hover:bg-blue-700"
+                            variant="outline"
+                            className="btn-outline-primary"
                             onClick={handleVerifyEmail}
                             disabled={isVerifying}
                           >

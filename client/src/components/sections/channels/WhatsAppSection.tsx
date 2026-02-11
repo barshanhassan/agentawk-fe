@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import { ExternalLink, ChevronLeft, MoreVertical, Trash2, Copy, Clock, Plug, Check, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -90,7 +91,8 @@ const mockApiAccounts = [
 ];
 
 export default function WhatsAppSection() {
-  const [view, setView] = useState<"list" | "coex_manage" | "api_manage" | "qr_manage" | "qr_create">("list");
+  const [, setLocation] = useLocation();
+  const [view, setView] = useState<"list" | "coex_manage" | "api_manage">("list");
   const [accounts, setAccounts] = useState(mockAccounts);
   const [hasAccounts, setHasAccounts] = useState(true); // Set to true to show connected accounts
   const [hasApiAccounts, setHasApiAccounts] = useState(true); // Set to true to show API accounts
@@ -308,7 +310,10 @@ export default function WhatsAppSection() {
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">WhatsApp</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">WhatsApp</h2>
+              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connect your WhatsApp accounts to the platform.
             </p>
@@ -319,8 +324,8 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
                 <h3 className="font-semibold text-sm">WhatsApp Business App "Coex"</h3>
+                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
               </div>
               <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Beta</Badge>
             </div>
@@ -349,7 +354,7 @@ export default function WhatsAppSection() {
             <div className="mt-6 flex justify-end">
               <Button 
                 variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("coex_manage")}
               >
                 Manage
@@ -361,8 +366,8 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
                 <h3 className="font-semibold text-sm">WhatsApp Business API</h3>
+                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
               </div>
               <ExternalLink className="h-4 w-4 text-blue-500" />
             </div>
@@ -376,7 +381,7 @@ export default function WhatsAppSection() {
             <div className="mt-6 flex justify-end">
               <Button 
                 variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("api_manage")}
               >
                 Manage
@@ -384,31 +389,7 @@ export default function WhatsAppSection() {
             </div>
           </div>
 
-          {/* Card 3: WhatsApp QR Code */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start mb-4">
-              <div className="flex items-center gap-2">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
-                <h3 className="font-semibold text-sm">WhatsApp QR Code</h3>
-              </div>
-            </div>
-            
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                Our native QR Code WhatsApp Web integration makes it easy and intuitive to connect your WhatsApp number to the platform.
-              </p>
-            </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button 
-                variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                onClick={() => setView("qr_manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
         </div>
         </div>
       )}
@@ -419,10 +400,10 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">WhatsApp Business Apps</h3>
+                    <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
                     <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Beta</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -449,7 +430,7 @@ export default function WhatsAppSection() {
               <div className="pt-2">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 min-w-[150px]"
+                  className="btn-outline-primary min-w-[150px]"
                   onClick={() => setHasAccounts(true)}
                 >
                   Connect now
@@ -507,9 +488,9 @@ export default function WhatsAppSection() {
                           <ExternalLink className="h-3 w-3" />
                         </a>
                         <Button 
-                          variant="destructive" 
+                          variant="ghost" 
                           size="sm"
-                          className="text-xs px-2 py-1 h-auto"
+                          className="text-xs px-2 py-1 h-auto btn-soft-destructive transition-all hover:scale-105 active:scale-95"
                           onClick={() => handleDeleteAccountClick(account)}
                         >
                           Delete Account
@@ -560,11 +541,10 @@ export default function WhatsAppSection() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem>
-                                    <Clock className="mr-2 h-4 w-4" />
-                                    Auto reply
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => setLocation("/templates")}
+                                    className="cursor-pointer"
+                                  >
                                     <Copy className="mr-2 h-4 w-4" />
                                     Templates
                                   </DropdownMenuItem>
@@ -615,7 +595,7 @@ export default function WhatsAppSection() {
                       onClick={() => handleAddNumberClick(account)}
                       className="block border p-2 w-full text-center text-sm text-blue-600 font-medium bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 dark:hover:bg-slate-800 border-blue-200 dark:border-blue-900 rounded transition-colors"
                     >
-                      Add new number
+                      + Add New Number
                     </button>
                   </div>
                 </div>
@@ -631,9 +611,11 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
                 <div>
-                  <h3 className="font-semibold text-lg">WhatsApp Business API</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">WhatsApp Business API</h3>
+                    <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Integrate your WhatsApp Business account to unlock 2-Way interactive dynamic conversations
                   </p>
@@ -642,10 +624,10 @@ export default function WhatsAppSection() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                  className="btn-outline-primary"
                   onClick={() => setHasApiAccounts(true)}
                 >
-                  Add new
+                  + Add New
                 </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
@@ -667,7 +649,7 @@ export default function WhatsAppSection() {
               <div className="pt-2">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 min-w-[150px]"
+                  className="btn-outline-primary min-w-[150px]"
                   onClick={() => setHasApiAccounts(true)}
                 >
                   Connect now
@@ -709,39 +691,32 @@ export default function WhatsAppSection() {
                             <Button 
                               variant="outline"
                               size="sm"
-                              className="text-xs px-2 py-1 h-auto bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+                              className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                              onClick={() => setLocation("/templates")}
                             >
-                              Templates
+                              Manage Templates
                             </Button>
                           </td>
                           <td className="px-4 pb-5 pt-1">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                onClick={() => handleDeleteAccountClick(account)}
+                                title="Delete account"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-2 py-1 h-auto text-red-500 border-red-400 hover:bg-red-50"
+                                className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                                onClick={() => toast({ title: "Conversions API", description: "Configuring Meta Conversions API for " + account.name })}
                               >
-                                Delete
+                                <i className="fa-brands fa-meta mr-2"></i>
+                                Conversions API
                               </Button>
-                              {account.capi ? (
-                                <Button 
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs px-2 py-1 h-auto bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
-                                >
-                                  <i className="fa-brands fa-meta mr-2"></i>
-                                  Conversions API
-                                </Button>
-                              ) : (
-                                <Button 
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs px-2 py-1 h-auto"
-                                >
-                                  <i className="fa-brands fa-meta mr-2"></i>
-                                  Conversions API
-                                </Button>
-                              )}
                             </div>
                           </td>
                           <td className="px-4 pb-5 pt-1">
@@ -812,27 +787,48 @@ export default function WhatsAppSection() {
                               )}
                             </td>
                             <td className="px-4 py-4">
-                              <div className="flex items-center justify-end gap-4">
-                                <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
-                                </button>
-                                <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
-                                </button>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                  onClick={() => handleDeleteNumberClick(number, account)}
+                                  title="Delete number"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                  onClick={() => toast({ title: "Auto Reply", description: "Navigating to auto-reply settings for " + number.display_phone_number })}
+                                  title="Auto reply"
+                                >
+                                  <Clock className="h-4 w-4" />
+                                </Button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-muted-foreground hover:text-foreground transition-colors">
+                                      <MoreVertical className="h-4 w-4" />
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer"
+                                      onSelect={(e) => {
+                                        e.preventDefault();
+                                        toggleFeeder(number.id, account.id);
+                                      }}
+                                    >
                                       <div className="flex items-center justify-between w-full gap-3">
                                         <div className="flex items-center gap-2">
                                           <Plug className="h-4 w-4" />
                                           <span>AI Feeder</span>
                                         </div>
-                                        <Switch checked={number.allow_in_feeder} />
+                                        <Switch 
+                                          checked={number.allow_in_feeder}
+                                          onCheckedChange={() => toggleFeeder(number.id, account.id)}
+                                        />
                                       </div>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
@@ -851,105 +847,7 @@ export default function WhatsAppSection() {
         </div>
       )}
 
-      {view === "qr_manage" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
-              <div>
-                <h3 className="font-semibold text-lg">WhatsApp QR Code</h3>
-                <p className="text-sm text-muted-foreground">
-                  Connect your WhatsApp number.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                onClick={() => setView("qr_create")}
-              >
-                Create an Instance
-              </Button>
-              <Button variant="outline" onClick={() => setView("list")}>
-                Back
-              </Button>
-            </div>
-          </div>
 
-          {/* Content */}
-          <div className="border rounded-lg p-12 shadow-sm bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4 py-24">
-            <div className="bg-green-100 dark:bg-green-900/20 p-4 rounded-full">
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-12 w-12" />
-            </div>
-            <h2 className="text-lg font-semibold">No instance found</h2>
-            <div className="pt-2">
-              <Button 
-                variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 min-w-[150px]"
-                onClick={() => setView("qr_create")}
-              >
-                Create an Instance
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {view === "qr_create" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
-              <div>
-                <h3 className="font-semibold text-lg">WhatsApp QR Code</h3>
-                <p className="text-sm text-muted-foreground">
-                  Connect your WhatsApp number.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Form Content */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Instance Name</label>
-              <div className="flex gap-4">
-                <input 
-                  type="text" 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 max-w-xl"
-                  placeholder="" 
-                />
-                <Button variant="outline" onClick={() => setView("qr_manage")}>Cancel</Button>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">Create</Button>
-              </div>
-            </div>
-
-            <div className="space-y-4 pt-4">
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="check1" className="mt-1" />
-                <label htmlFor="check1" className="text-sm text-muted-foreground">
-                  I declare that I take responsibility for the proper use of the platform, in accordance with <a href="#" className="text-blue-600 hover:underline">WhatsApp's Terms of Use</a>. I will not send SPAM, as I am aware of the risk of my number being banned from WhatsApp. I understand that the platform has no responsibility for the content of the messages sent or for the consequences of improper use. Furthermore, I confirm that the content of my messages complies with WhatsApp's Terms of Use, and I fully acknowledge my responsibility in this regard.
-                </label>
-              </div>
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="check2" className="mt-1" />
-                <label htmlFor="check2" className="text-sm text-muted-foreground">
-                  I acknowledge and agree that this purchase is final and non-refundable under any circumstances.
-                </label>
-              </div>
-               <div className="flex items-start gap-2">
-                <input type="checkbox" id="check3" className="mt-1" />
-                <label htmlFor="check3" className="text-sm text-muted-foreground">
-                  I acknowledge and agree that this purchase is final and non-refundable under any circumstances.
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add Number Dialog */}
       <Dialog open={showAddNumberDialog} onOpenChange={setShowAddNumberDialog}>
@@ -1080,7 +978,8 @@ export default function WhatsAppSection() {
             <Button
               onClick={handleSaveNewNumber}
               disabled={isSavingNumber}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="btn-outline-primary"
+              variant="outline"
             >
               {isSavingNumber ? (
                 <>

@@ -194,7 +194,7 @@ export default function AIProductsSection() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <Button onClick={handleCreateProduct} className="bg-blue-600 hover:bg-blue-700 text-white">Create</Button>
+          <Button variant="outline" onClick={handleCreateProduct} className="btn-outline-primary">Create</Button>
         </div>
       </div>
 
@@ -279,7 +279,7 @@ export default function AIProductsSection() {
              </div>
              <h3 className="text-lg font-medium text-foreground">No Products Found</h3>
              <p>Create a product to get started.</p>
-             <Button onClick={handleCreateProduct} className="mt-4">Create</Button>
+             <Button variant="outline" onClick={handleCreateProduct} className="mt-4 btn-outline-primary">Create</Button>
           </div>
         )}
       </div>
@@ -422,7 +422,7 @@ export default function AIProductsSection() {
                   </div>
 
                   <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950/50 border-t flex justify-end">
-                    <Button onClick={() => handleManageTheme(theme)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button variant="outline" onClick={() => handleManageTheme(theme)} className="btn-outline-primary">
                       Manage
                     </Button>
                   </div>
@@ -438,7 +438,7 @@ export default function AIProductsSection() {
                <p className="text-muted-foreground max-w-sm mb-6">
                  You haven't created any AI products yet. Create one to get started with automation.
                </p>
-               <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+               <Button variant="outline" className="btn-outline-primary">
                  <Plus className="w-4 h-4 mr-2" />
                  Create Product
                </Button>

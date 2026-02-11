@@ -114,7 +114,7 @@ export default function AIReportBuilderSection() {
                   className="text-primary border-primary hover:bg-primary hover:text-white"
                   onClick={() => setIsCreateFormOpen(true)}
                 >
-                  Create new
+                  + Create New
                 </Button>
               </CardTitle>
               <CardDescription>Generate reports with Artificial Intelligence</CardDescription>
