@@ -25,6 +25,13 @@
           "prodct-b7a67"
         ]
       }
+    },
+    "product2-5fedc": {
+      "hosting": {
+        "update-site": [
+          "product2-5fedc"
+        ]
+      }
     }
   },
   "etags": {}
