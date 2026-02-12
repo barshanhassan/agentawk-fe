@@ -335,7 +335,7 @@ export default function QuickRepliesSection() {
               variant="outline"
             >
               <span className="sr-only">Create</span>
-              + Create
+               Add
             </Button>
           </div>
         </div>
@@ -361,7 +361,7 @@ export default function QuickRepliesSection() {
                 onClick={handleCreateMessageClick}
               >
                 <Plus size={16} />
-                Create Message
+                Add Message
               </Button>
             </div>
            </div>
@@ -400,7 +400,7 @@ export default function QuickRepliesSection() {
                 className="btn-outline-primary gap-2"
               >
                 <Plus size={16} />
-                Create Message
+                Add Message
               </Button>
             </div>
            </div>
@@ -470,7 +470,7 @@ export default function QuickRepliesSection() {
                 className="btn-outline-primary min-w-[80px]"
                 variant="outline"
               >
-                + Create
+                 Add
               </Button>
            </div>
         </div>
