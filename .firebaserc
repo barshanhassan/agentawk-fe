@@ -1,45 +1,5 @@
 {
   "projects": {
-    "default": "product-one-4d742",
-    "comm-platform": "comm-platform-5fdce",
-    "prod": "product-3f6b0"
-  },
-  "targets": {
-    "comm-platform-5fdce": {
-      "hosting": {
-        "update-site": [
-          "comm-platform-update"
-        ]
-      }
-    },
-    "product-3f6b0": {
-      "hosting": {
-        "update-site": [
-          "product-3f6b0-site"
-        ]
-      }
-    },
-    "prodct-b7a67": {
-      "hosting": {
-        "update-site": [
-          "prodct-b7a67"
-        ]
-      }
-    },
-    "product2-5fedc": {
-      "hosting": {
-        "update-site": [
-          "product2-5fedc"
-        ]
-      }
-    },
-    "product-one-4d742": {
-      "hosting": {
-        "update-site": [
-          "product-one-4d742"
-        ]
-      }
-    }
-  },
-  "etags": {}
+    "default": "product-one-4d742"
+  }
 }
