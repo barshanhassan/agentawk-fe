@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Edit, Trash2, Eye } from "lucide-react";
+import { Globe, Edit, Trash2, Eye, Plus } from "lucide-react";
 
 interface IframeItem {
   id: string;
@@ -94,7 +94,7 @@ export default function IframeSection() {
                     }}
                     disabled={iframes.length >= 3}
                   >
-                    + Add New
+                    <Plus size={16} /> Add New
                   </Button>
                 </div>
               </CardTitle>

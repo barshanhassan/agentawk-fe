@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { FileText, Edit, Play, History, Download, Trash2, Sparkles } from "lucide-react";
+import { FileText, Edit, Play, History, Download, Trash2, Sparkles, Plus } from "lucide-react";
 
 interface Report {
   id: string;
@@ -114,7 +114,8 @@ export default function AIReportBuilderSection() {
                   className="btn-outline-primary h-9 px-4"
                   onClick={() => setIsCreateFormOpen(true)}
                 >
-                  + Add New
+                  <Plus size={16} />
+                  Add New
                 </Button>
               </CardTitle>
               <CardDescription>Generate reports with Artificial Intelligence</CardDescription>

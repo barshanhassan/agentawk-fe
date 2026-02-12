@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, MessageCircle, Mail, Phone, Send, Facebook, ArrowLeft, Copy, Eye } from "lucide-react";
+import { Edit, Trash2, MessageCircle, Mail, Phone, Send, Facebook, ArrowLeft, Copy, Eye, Plus } from "lucide-react";
 
 interface ChatWidget {
   id: string;
@@ -175,7 +175,7 @@ export default function ChatWidgetSection() {
                 setIsCreateModalOpen(true);
               }}
             >
-              + Add New
+              <Plus size={16} /> Add New
             </Button>
           </CardTitle>
           <CardDescription>Embed a chat widget to your website</CardDescription>
