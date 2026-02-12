@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BadgeCheck, Info, ChevronsUpDown, Mail } from "lucide-react";
+import { BadgeCheck, Info, ChevronsUpDown, Mail, Copy } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -242,478 +242,422 @@ export default function WhiteLabelSection() {
 
   return (
     <>
-      <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
-        <BadgeCheck className="w-8 h-8 text-black dark:text-white" />
+      <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 px-8 pt-8">
+        <div className="p-3 bg-primary/10 rounded-xl">
+          <BadgeCheck className="w-8 h-8 text-primary" />
+        </div>
         <div className="space-y-1">
-          <CardTitle className="text-lg">White Label</CardTitle>
-          <CardDescription>Change color, logo and favicon of your Workspace</CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight">White Label</CardTitle>
+          <CardDescription className="text-base text-gray-500 dark:text-gray-400">Change color, logo and favicon of your Workspace</CardDescription>
         </div>
       </CardHeader>
-      <Separator className="bg-gray-200 dark:bg-slate-800" />
       
-      <CardContent className="pt-6">
-        <div className="max-w-4xl mx-0 space-y-6">
-          <Tabs defaultValue="logo" className="w-full">
-            <TabsList className="grid grid-cols-5 bg-gray-100 dark:bg-slate-800 rounded-t-lg h-auto">
-              <TabsTrigger value="logo">Logo</TabsTrigger>
-              <TabsTrigger value="favicon">Favicon</TabsTrigger>
-              <TabsTrigger value="colors">Colors</TabsTrigger>
-              <TabsTrigger value="custom-domain">Custom Domain</TabsTrigger>
-              <TabsTrigger value="notification-email">Notification E-mail</TabsTrigger>
-            </TabsList>
+      <Separator className="mx-8 bg-gray-100 dark:bg-slate-800" />
+      
+      <CardContent className="p-8 pt-6">
+        <Tabs defaultValue="logo" className="w-full">
+          <TabsList className="flex w-full h-12 bg-gray-100/80 dark:bg-slate-800/60 p-1.5 rounded-xl mb-8">
+            <TabsTrigger value="logo" className="flex-1 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700">Logo</TabsTrigger>
+            <TabsTrigger value="favicon" className="flex-1 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700">Favicon</TabsTrigger>
+            <TabsTrigger value="colors" className="flex-1 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700">Colors</TabsTrigger>
+            <TabsTrigger value="custom-domain" className="flex-1 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700">Custom Domain</TabsTrigger>
+            <TabsTrigger value="notification-email" className="flex-1 text-sm font-semibold rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700">Notification E-mail</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="logo" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-8">
-                
-                {/* Light Logo Section */}
-                <div className="space-y-3 text-left">
-                  <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-gray-500" />
-                    <Label className="text-sm font-medium text-gray-900 dark:text-white">Light Logo</Label>
+          <TabsContent value="logo" className="mt-0 focus-visible:outline-none">
+            <div className="bg-[#ffffff] dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 space-y-12 shadow-sm backdrop-blur-sm">
+              
+              {/* Light Mode Logo Section */}
+              <div className="space-y-5 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100/50 dark:bg-blue-900/30 p-2 rounded-lg">
+                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  
-                  <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg p-2 flex items-center justify-center bg-white dark:bg-slate-900 w-full max-w-[460px] h-[140px]">
+                  <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Light Mode Logo</Label>
+                </div>
+                
+                <div className="relative group max-w-[540px]">
+                  <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-8 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 h-[180px] transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-md">
                     <img 
-                      src="/white-label/ezconn-logo.png" 
+                      src="/white-label/ezconn-logo.svg" 
                       alt="Light Logo" 
-                      className="w-full h-full object-contain"
+                      className="max-w-full max-h-full object-contain"
                     />
                   </div>
-                  <p className="text-xs text-red-500">Recommended size: 460px * 140px</p>
-                </div>
-
-                {/* Dark Logo Section */}
-                <div className="space-y-3 text-left">
-                  <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-gray-500" />
-                    <Label className="text-sm font-medium text-gray-900 dark:text-white">Dark Logo</Label>
+                  <div className="mt-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
+                      Recommended size: 460px * 140px
+                    </span>
                   </div>
-                  
-                  <div className="border-2 border-dashed border-gray-800 dark:border-slate-600 rounded-lg p-0 flex items-center justify-center bg-[#1e293b] w-full max-w-[460px] h-[140px] overflow-hidden isolate">
+                </div>
+              </div>
+
+              {/* Dark Mode Logo Section */}
+              <div className="space-y-5 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100/50 dark:bg-blue-900/30 p-2 rounded-lg">
+                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Dark Mode Logo</Label>
+                </div>
+                
+                <div className="relative group max-w-[540px]">
+                  <div className="border-2 border-dashed border-slate-700 dark:border-slate-600 rounded-2xl p-8 flex items-center justify-center bg-[#020617] h-[180px] transition-all duration-300 group-hover:border-primary/40 overflow-hidden isolate shadow-xl group-hover:shadow-2xl">
                     <img 
-                      src="/white-label/ezconn-logo.png" 
+                      src="/white-label/ezconn-logo-dark.svg" 
                       alt="Dark Logo" 
-                      className="w-full h-full object-contain invert hue-rotate-180 mix-blend-screen"
+                      className="max-w-full max-h-full object-contain"
                     />
                   </div>
-                  <p className="text-xs text-red-500">Recommended size: 460px * 140px</p>
-                </div>
-
-              </div>
-            </TabsContent>
-
-            <TabsContent value="favicon" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
-                <div className="flex items-start gap-3 text-left">
-                  <Info className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                    Upload the favicon that will be displayed at the browsers tab.
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-left">
-                  <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg p-6 flex items-center justify-center bg-white dark:bg-slate-900 w-32 h-32 overflow-hidden">
-                    <img
-                      src="/white-label/favicon.png"
-                      alt="Favicon Preview"
-                      className="w-full h-full object-contain"
-                    />
+                  <div className="mt-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
+                      Recommended size: 460px * 140px
+                    </span>
                   </div>
-                  <p className="text-xs text-red-500">Recommended size: 64px * 64px</p>
                 </div>
               </div>
-            </TabsContent>
+            </div>
+          </TabsContent>
 
-            <TabsContent value="colors" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
-                <div className="flex items-start gap-3 text-left mb-6">
-                  <Info className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                    Select the color that will be set to your account and Workspaces.
-                  </p>
+          <TabsContent value="favicon" className="mt-0 focus-visible:outline-none">
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
+              <div className="flex items-start gap-5 text-left bg-blue-50/60 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <div className="bg-blue-500 rounded-full p-1 mt-0.5">
+                  <Info className="h-4 w-4 text-white" />
                 </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">
+                  Upload the favicon that will be displayed at the browser tab. This is a critical element of your visual brand that helps users recognize your platform in a crowded browser.
+                </p>
+              </div>
 
-                <div className="space-y-6">
-                  <ColorPicker 
-                    label="Main theme color for buttons, active menu options and tabs"
-                    value={colors.mainTheme}
-                    onChange={(val) => handleColorChange('mainTheme', val)}
+              <div className="space-y-6 text-left">
+                <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-10 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 w-44 h-44 overflow-hidden transition-all duration-300 hover:border-primary/40 group hover:shadow-lg">
+                  <img
+                    src="/white-label/favicon.png"
+                    alt="Favicon Preview"
+                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                   />
-                  
-                  <ColorPicker 
-                    label="Main color for clickable links"
-                    value={colors.links}
-                    onChange={(val) => handleColorChange('links', val)}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                    <ColorPicker 
-                      label="Incoming message chat bubbles color"
-                      value={colors.incomingBubble}
-                      onChange={(val) => handleColorChange('incomingBubble', val)}
-                    />
-                    <ColorPicker 
-                      label="Incoming message chat bubbles text color"
-                      value={colors.incomingText}
-                      onChange={(val) => handleColorChange('incomingText', val)}
-                    />
-                    <ColorPicker 
-                      label="Outgoing message chat bubbles color"
-                      value={colors.outgoingBubble}
-                      onChange={(val) => handleColorChange('outgoingBubble', val)}
-                    />
-                    <ColorPicker 
-                      label="Outgoing message chat bubbles text color"
-                      value={colors.outgoingText}
-                      onChange={(val) => handleColorChange('outgoingText', val)}
-                    />
-                  </div>
                 </div>
-
-                <div className="flex justify-end pt-4">
-                  <Button 
-                    className="px-8 btn-outline-primary" 
-                    variant="outline"
-                    onClick={handleSaveColors}
-                  >
-                    Save
-                  </Button>
-                </div>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
+                  Recommended size: 64px * 64px
+                </span>
               </div>
-            </TabsContent>
-            <TabsContent value="custom-domain" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
+            </div>
+          </TabsContent>
+
+          <TabsContent value="colors" className="mt-0">
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
+              <div className="flex items-start gap-5 text-left bg-blue-50/60 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <Info className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">
+                  Customize the color palette for your Workspace. These settings will be applied across your dashboard and client-facing interfaces.
+                </p>
+              </div>
+
+              <div className="space-y-10">
+                <ColorPicker 
+                  label="Main theme color (Buttons, active menu, selected tabs)"
+                  value={colors.mainTheme}
+                  onChange={(val) => handleColorChange('mainTheme', val)}
+                />
                 
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center">
-                    <div className="bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-l-lg px-3 py-2 text-sm text-gray-500 dark:text-gray-400 border-r-0 h-10 flex items-center">
-                      https://
-                    </div>
-                    <Input 
-                      placeholder="app"
-                      value={subdomain}
-                      onChange={(e) => setSubdomain(e.target.value)}
-                      className="rounded-l-none border-gray-200 dark:border-slate-700 w-32 focus-visible:ring-0 focus-visible:ring-offset-0 h-10 bg-white dark:bg-slate-950 text-gray-900 dark:text-white"
-                    />
+                <ColorPicker 
+                  label="Link color (Clickable text, anchors)"
+                  value={colors.links}
+                  onChange={(val) => handleColorChange('links', val)}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  <ColorPicker 
+                    label="Incoming chat bubbles"
+                    value={colors.incomingBubble}
+                    onChange={(val) => handleColorChange('incomingBubble', val)}
+                  />
+                  <ColorPicker 
+                    label="Incoming bubble text"
+                    value={colors.incomingText}
+                    onChange={(val) => handleColorChange('incomingText', val)}
+                  />
+                  <ColorPicker 
+                    label="Outgoing chat bubbles"
+                    value={colors.outgoingBubble}
+                    onChange={(val) => handleColorChange('outgoingBubble', val)}
+                  />
+                  <ColorPicker 
+                    label="Outgoing bubble text"
+                    value={colors.outgoingText}
+                    onChange={(val) => handleColorChange('outgoingText', val)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-6">
+                <Button 
+                  className="px-10 h-12 text-sm font-bold transition-all btn-outline-primary" 
+                  variant="outline"
+                  onClick={handleSaveColors}
+                >
+                  Apply Changes
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="custom-domain" className="mt-0">
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
+              
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center shadow-sm">
+                  <div className="bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-blue-900/20 rounded-l-2xl px-5 py-3 text-sm font-bold text-blue-600 dark:text-blue-400 border-r-0 h-14 flex items-center">
+                    https://
                   </div>
-
-                  <span className="text-gray-900 dark:text-white font-bold text-xl mb-1">.</span>
-
                   <Input 
-                    placeholder="example.com"
-                    value={domain}
-                    onChange={(e) => setDomain(e.target.value)}
-                    className="border-gray-200 dark:border-slate-700 w-64 focus-visible:ring-0 focus-visible:ring-offset-0 h-10 bg-white dark:bg-slate-950 text-gray-900 dark:text-white"
+                    placeholder="app"
+                    value={subdomain}
+                    onChange={(e) => setSubdomain(e.target.value)}
+                    className="rounded-l-none border-gray-200 dark:border-slate-700 w-36 h-14 bg-white dark:bg-slate-950 font-semibold focus-visible:ring-primary/20"
                   />
+                </div>
 
-                  <Button variant="outline" className="h-10 px-6 font-medium btn-outline-primary">
-                    Connect
+                <span className="text-gray-400 dark:text-slate-600 font-bold text-2xl self-center">.</span>
+
+                <Input 
+                  placeholder="example.com"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  className="border-gray-200 dark:border-slate-700 w-72 h-14 bg-white dark:bg-slate-950 font-semibold shadow-sm focus-visible:ring-primary/20"
+                />
+
+                <Button variant="outline" className="h-14 px-10 font-bold btn-outline-primary shadow-sm">
+                  Connect Domain
+                </Button>
+              </div>
+
+              <div className="space-y-6 text-left bg-blue-50/60 dark:bg-blue-900/10 p-8 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                  Make your Workspace shine with your own custom domain!
+                </p>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-semibold">
+                  This section lets you ditch our branding and use your unique Workspace domain name. This adds a professional touch, strengthens your brand authority, and builds trust with your agents and clients.
+                </p>
+                <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-xl text-amber-700 dark:text-amber-400 text-sm font-bold">
+                  <Info className="w-4 h-4" />
+                  <span>Important Note: This custom domain applies to this specific Workspace only.</span>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="notification-email" className="mt-0">
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm backdrop-blur-sm">
+              
+              {!notificationEmail && (
+                <div className="flex flex-col items-center justify-center text-center space-y-8 py-10 animate-in fade-in zoom-in duration-500">
+                  <div className="w-28 h-28 rounded-3xl bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center shadow-xl rotate-3">
+                    <Mail className="w-14 h-14 text-white -rotate-3" />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Notification E-mail</h3>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-sm text-base font-medium mx-auto">
+                      Integrate your custom e-mail domain to send white-labeled agent invitations and security notifications.
+                    </p>
+                  </div>
+
+                  <Button 
+                    className="px-12 h-12 font-bold transition-all btn-outline-primary shadow-lg hover:shadow-primary/20" 
+                    variant="outline"
+                    onClick={handleConnectEmail}
+                  >
+                    Configure Now
                   </Button>
                 </div>
+              )}
 
-                <div className="space-y-4 text-left">
-                  <p className="font-bold text-gray-900 dark:text-white">
-                    Make your Workspace shine with your own custom domain!
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    This section lets you ditch the our branding and use your Workspace domain name. This adds a professional touch and builds trust with agents.
-                  </p>
-                  <p className="text-gray-900 dark:text-white">
-                    <span className="font-bold">Important Note:</span> This custom domain applies to this specific Workspace only.
-                  </p>
-                </div>
-
-              </div>
-            </TabsContent>
-            <TabsContent value="notification-email" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-16">
-                
-                {/* Empty State - No email configured */}
-                {!notificationEmail && (
-                  <div className="flex flex-col items-center justify-center text-center space-y-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#7c3aed] to-[#3b82f6] flex items-center justify-center shadow-md">
-                      <Mail className="w-12 h-12 text-white" />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">Notification E-mail</h3>
-                      <p className="text-gray-500 dark:text-gray-400 max-w-sm text-sm">
-                        Integrate your e-mail to send branded agent invitation and forgot password emails.
-                      </p>
-                    </div>
-
-                    <Button 
-                      className="px-6 h-10 btn-outline-primary" 
-                      variant="outline"
-                      onClick={handleConnectEmail}
-                    >
-                      Connect now
-                    </Button>
-                  </div>
-                )}
-
-                {/* Verified State */}
-                {notificationEmail && notificationEmail.status === "VERIFIED" && (
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      <p className="text-sm text-blue-900 dark:text-blue-200">
-                        Your email domain has been verified and is ready to send branded emails.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-900 dark:text-white">Verified Email</Label>
-                      <div className="flex items-center gap-4">
-                        <span className="text-gray-900 dark:text-white">{notificationEmail.email}</span>
-                        <span className="text-xs text-white bg-green-700 rounded-full px-3 py-1">Verified</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => setShowDeleteConfirm(true)}
-                        >
-                          Delete
-                        </Button>
+              {notificationEmail && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {notificationEmail.status === "VERIFIED" ? (
+                    <div className="space-y-8">
+                      <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 rounded-2xl p-6 flex items-center gap-4">
+                        <div className="bg-green-500 rounded-full p-2">
+                          <BadgeCheck className="w-6 h-6 text-white" />
+                        </div>
+                        <p className="text-sm font-bold text-green-800 dark:text-green-300">
+                          Your email domain has been successfully verified and is active.
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                )}
 
-                {/* Unverified State - Show Form */}
-                {notificationEmail && notificationEmail.status === "UNVERIFIED" && (
-                  <div className="space-y-6 max-w-2xl">
-                    {emailError && (
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                        <p className="text-sm text-red-900 dark:text-red-200">{emailError}</p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        Enter your domain
-                        <Info className="w-4 h-4 text-gray-400" />
-                      </Label>
-                      <div className="flex items-center gap-3">
-                        <Input
-                          type="text"
-                          placeholder="info"
-                          value={notificationEmail.prefix}
-                          onChange={(e) => setNotificationEmail({ ...notificationEmail, prefix: e.target.value })}
-                          disabled={!!notificationEmail.id}
-                          className="w-32 bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white disabled:opacity-50"
-                        />
-                        <span className="font-bold text-gray-900 dark:text-white">@</span>
-                        <Input
-                          type="text"
-                          placeholder="your-domain.com"
-                          value={notificationEmail.domain}
-                          onChange={(e) => setNotificationEmail({ ...notificationEmail, domain: e.target.value })}
-                          disabled={!!notificationEmail.id}
-                          className="flex-1 bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white disabled:opacity-50"
-                        />
-                        {notificationEmail.id ? (
+                      <div className="space-y-4">
+                        <Label className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest pl-1">Active Notification Email</Label>
+                        <div className="bg-gray-50 dark:bg-slate-900/60 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <span className="text-xl font-bold text-gray-900 dark:text-white">{notificationEmail.email}</span>
+                            <span className="text-xs font-bold text-white bg-green-500 rounded-full px-4 py-1 uppercase tracking-tighter">Verified</span>
+                          </div>
                           <Button
                             variant="outline"
-                            size="sm"
-                            className="text-red-500 hover:text-red-600"
+                            className="text-red-500 hover:text-white hover:bg-red-500 transition-all font-bold border-red-100 dark:border-red-900/30"
                             onClick={() => setShowDeleteConfirm(true)}
                           >
-                            Delete
+                            Disconnect
                           </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            className="btn-outline-primary"
-                            onClick={handleSubmitNotificationEmail}
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting ? "Submitting..." : "Submit domain"}
-                          </Button>
-                        )}
+                        </div>
                       </div>
                     </div>
-
-                    {/* DNS Configuration Instructions */}
-                    {notificationEmail.id && notificationEmail.request_id && (
-                      <div className="space-y-6 mt-8">
-                        <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                          <li>Log in to your domain provider's DNS management console.</li>
-                          <li>Add the following CNAME records to your DNS configuration:</li>
-                        </ol>
-
-                        <div className="overflow-x-auto">
-                          <table className="w-full border border-gray-200 dark:border-slate-700 rounded-lg">
-                            <thead className="bg-gray-50 dark:bg-slate-800">
-                              <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Type</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Hostname</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Value</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                              {notificationEmail.rpath_value && (
-                                <tr className="bg-white dark:bg-slate-900">
-                                  <td className="px-4 py-3">
-                                    <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">CNAME</span>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-900 dark:text-white">{notificationEmail.rpath_selector}</span>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="text-xs h-6"
-                                          onClick={() => copyToClipboard(notificationEmail.rpath_selector || "")}
-                                        >
-                                          Copy
-                                        </Button>
-                                      </div>
-                                      <p className="text-xs text-gray-400">
-                                        Full: {notificationEmail.rpath_selector}.{notificationEmail.domain}
-                                      </p>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm text-gray-900 dark:text-white">{notificationEmail.rpath_value}</span>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs h-6"
-                                        onClick={() => copyToClipboard(notificationEmail.rpath_value || "")}
-                                      >
-                                        Copy
-                                      </Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                              
-                              {notificationEmail.dkim_value && (
-                                <tr className="bg-white dark:bg-slate-900">
-                                  <td className="px-4 py-3">
-                                    <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">CNAME</span>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-900 dark:text-white">{notificationEmail.dkim_selector}._domainkey</span>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="text-xs h-6"
-                                          onClick={() => copyToClipboard(`${notificationEmail.dkim_selector}._domainkey`)}
-                                        >
-                                          Copy
-                                        </Button>
-                                      </div>
-                                      <p className="text-xs text-gray-400">
-                                        Full: {notificationEmail.dkim_selector}._domainkey.{notificationEmail.domain}
-                                      </p>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm text-gray-900 dark:text-white">{notificationEmail.dkim_value}</span>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs h-6"
-                                        onClick={() => copyToClipboard(notificationEmail.dkim_value || "")}
-                                      >
-                                        Copy
-                                      </Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-
-                              {notificationEmail.cname_selector && (
-                                <tr className="bg-white dark:bg-slate-900">
-                                  <td className="px-4 py-3">
-                                    <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">CNAME</span>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-900 dark:text-white">{notificationEmail.cname_selector}</span>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="text-xs h-6"
-                                          onClick={() => copyToClipboard(notificationEmail.cname_selector || "")}
-                                        >
-                                          Copy
-                                        </Button>
-                                      </div>
-                                      <p className="text-xs text-gray-400">
-                                        Full: {notificationEmail.cname_selector}.{notificationEmail.domain}
-                                      </p>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm text-gray-900 dark:text-white">{notificationEmail.cname_value}</span>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs h-6"
-                                        onClick={() => copyToClipboard(notificationEmail.cname_value || "")}
-                                      >
-                                        Copy
-                                      </Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
+                  ) : (
+                    <div className="space-y-10">
+                      {emailError && (
+                        <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl p-6 flex items-center gap-4 animate-shake">
+                          <Info className="w-6 h-6 text-red-500" />
+                          <p className="text-sm font-bold text-red-700 dark:text-red-400">{emailError}</p>
                         </div>
+                      )}
 
-                        <div className="flex justify-end">
-                          <Button
-                            variant="outline"
-                            className="btn-outline-primary"
-                            onClick={handleVerifyEmail}
-                            disabled={isVerifying}
-                          >
-                            {isVerifying ? "Verifying..." : "Verify"}
-                          </Button>
+                      <div className="space-y-6">
+                        <Label className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                          Domain Setup
+                          <Info className="w-4 h-4 text-primary" />
+                        </Label>
+                        <div className="flex items-center gap-4">
+                          <Input
+                            type="text"
+                            placeholder="info"
+                            value={notificationEmail.prefix}
+                            onChange={(e) => setNotificationEmail({ ...notificationEmail, prefix: e.target.value })}
+                            disabled={!!notificationEmail.id}
+                            className="w-40 h-14 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-lg font-bold shadow-sm"
+                          />
+                          <span className="font-black text-gray-400 text-2xl">@</span>
+                          <Input
+                            type="text"
+                            placeholder="brand.com"
+                            value={notificationEmail.domain}
+                            onChange={(e) => setNotificationEmail({ ...notificationEmail, domain: e.target.value })}
+                            disabled={!!notificationEmail.id}
+                            className="flex-1 h-14 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-lg font-bold shadow-sm"
+                          />
+                          {notificationEmail.id ? (
+                            <Button
+                              variant="outline"
+                              className="h-14 px-8 text-red-500 hover:bg-red-50 transition-all font-bold"
+                              onClick={() => setShowDeleteConfirm(true)}
+                            >
+                              Reset
+                            </Button>
+                          ) : (
+                            <Button
+                              className="h-14 px-10 font-bold transition-all btn-outline-primary"
+                              variant="outline"
+                              onClick={handleSubmitNotificationEmail}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? "Processing..." : "Submit Domain"}
+                            </Button>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
 
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+                      {notificationEmail.id && notificationEmail.request_id && (
+                        <div className="space-y-8 mt-12 animate-in fade-in zoom-in-95 duration-700">
+                          <div className="space-y-4">
+                            <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs">DNS</span>
+                              Required DNS Records
+                            </h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 pl-9 font-medium">
+                              Add these CNAME records to your domain's DNS settings to authorize e-mail delivery.
+                            </p>
+                          </div>
+
+                          <div className="border border-gray-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
+                            <table className="w-full text-left">
+                              <thead className="bg-blue-50/50 dark:bg-slate-800/80">
+                                <tr>
+                                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest w-24">Type</th>
+                                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Hostname</th>
+                                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest pl-2">Value</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+                                {[
+                                  { selector: notificationEmail.rpath_selector, value: notificationEmail.rpath_value, full: `${notificationEmail.rpath_selector}.${notificationEmail.domain}` },
+                                  { selector: `${notificationEmail.dkim_selector}._domainkey`, value: notificationEmail.dkim_value, full: `${notificationEmail.dkim_selector}._domainkey.${notificationEmail.domain}` },
+                                  { selector: notificationEmail.cname_selector, value: notificationEmail.cname_value, full: `${notificationEmail.cname_selector}.${notificationEmail.domain}` }
+                                ].filter(r => r.selector && r.value).map((record, i) => (
+                                  <tr key={i} className="bg-white dark:bg-slate-900/40 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td className="px-6 py-5">
+                                      <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md">CNAME</span>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                      <div className="flex flex-col gap-1.5 item-start">
+                                        <div className="flex items-center gap-2">
+                                          <code className="text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-900/30 px-2 py-0.5 rounded">{record.selector}</code>
+                                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(record.selector || "")}>
+                                            <Copy className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 overflow-hidden text-ellipsis max-w-[200px]">{record.full}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                      <div className="flex items-center gap-3">
+                                        <code className="text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-900/30 px-3 py-1 rounded max-w-[280px] truncate">{record.value}</code>
+                                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-bold border-slate-200 dark:border-slate-700 hover:bg-primary hover:text-white transition-all shadow-sm" onClick={() => copyToClipboard(record.value || "")}>
+                                          Copy
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <div className="flex justify-end mt-4 pt-6 border-t border-gray-100 dark:border-slate-800">
+                            <Button
+                              className="px-12 h-14 font-extrabold transition-all btn-outline-primary shadow-lg hover:shadow-primary/20"
+                              variant="outline"
+                              onClick={handleVerifyEmail}
+                              disabled={isVerifying}
+                            >
+                              {isVerifying ? "Verifying Authority..." : "Verify DNS Changes"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="bg-white dark:bg-slate-900">
-          <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-white">Delete Notification Email</DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
-              Are you sure you want to delete this notification email configuration? This action cannot be undone.
+        <DialogContent className="bg-white dark:bg-slate-900 border-none shadow-2xl rounded-3xl p-10 max-w-md">
+          <DialogHeader className="space-y-4">
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-2">
+              <Mail className="w-8 h-8 text-red-600" />
+            </div>
+            <DialogTitle className="text-2xl font-black text-gray-900 dark:text-white text-center">Disconnect Email Domain?</DialogTitle>
+            <DialogDescription className="text-gray-500 dark:text-gray-400 text-center text-base font-medium leading-relaxed">
+              This will remove your custom email branding. All system notifications will revert to our default sender. This action is irreversible.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-4 mt-8 sm:justify-center">
             <Button
               variant="outline"
               onClick={() => setShowDeleteConfirm(false)}
-              className="border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-300"
+              className="h-12 flex-1 rounded-xl border-gray-200 dark:border-slate-800 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-slate-800 order-2 sm:order-1"
             >
-              No
+              Cancel
             </Button>
             <Button
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="h-12 flex-1 rounded-xl bg-red-600 text-white hover:bg-red-700 font-black shadow-lg shadow-red-600/20 order-1 sm:order-2"
               onClick={handleDeleteEmail}
             >
-              Yes
+              Confirm Disconnect
             </Button>
           </DialogFooter>
         </DialogContent>
