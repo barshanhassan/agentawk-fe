@@ -232,7 +232,7 @@ export default function TeamsSection() {
             onClick={handleSave}
             className="h-11 px-12 btn-outline-primary font-bold rounded-lg shadow-sm"
           >
-            {view === "add" ? "Create" : "Update"}
+            {view === "add" ? "Add" : "Save"}
           </Button>
         </div>
       </div>
@@ -262,7 +262,7 @@ export default function TeamsSection() {
           className="h-10 px-6 btn-outline-primary text-[13px] font-bold whitespace-nowrap rounded-lg shadow-sm flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create Team
+          Add Team
         </Button>
       </CardHeader>
 

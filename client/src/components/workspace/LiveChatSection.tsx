@@ -634,14 +634,14 @@ export default function LiveChatSettings() {
                        <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 lg:py-0">
                           {!isCreatingFolder ? (
                                <div className="flex flex-col items-center text-center space-y-4">
-                                  <p className="text-gray-900 dark:text-white font-medium">Create a folder to organize your conversations.</p>
+                                  <p className="text-gray-900 dark:text-white font-medium">Add folder to organize your conversations.</p>
                                   <Button 
                                       variant="outline" 
                                       className="btn-outline-primary gap-2"
                                       onClick={() => setIsCreatingFolder(true)}
                                   >
                                      <Plus className="w-4 h-4" />
-                                     Create a folder
+                                     Add folder
                                   </Button>
                                </div>
                           ) : (

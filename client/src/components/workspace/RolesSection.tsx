@@ -558,7 +558,7 @@ export default function RolesSection() {
               onClick={handleUpdate}
               className="h-10 px-8 btn-outline-primary font-bold"
             >
-              Update
+              Save
             </Button>
           )}
         </div>
@@ -584,7 +584,7 @@ export default function RolesSection() {
             resetForm();
             setView("add");
           }}
-          className="h-9 px-4 btn-outline-primary text-sm font-bold flex items-center gap-2"
+          className="h-9 px-4 btn-outline-primary text-sm font-medium flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add Role

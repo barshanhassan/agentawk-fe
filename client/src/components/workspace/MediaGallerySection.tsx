@@ -463,7 +463,7 @@ export default function MediaGallerySection() {
             <Button 
               onClick={() => setUploadDialogOpen(true)}
               variant="outline" 
-              className="h-10 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold"
+              className="h-10 px-6 btn-outline-primary font-bold"
             >
               Add files
             </Button>
@@ -479,7 +479,7 @@ export default function MediaGallerySection() {
                 <div className="p-3 rounded-full bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                   <Upload className="w-8 h-8 text-blue-600" />
                 </div>
-                <Button variant="outline" className="h-8 px-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs font-bold rounded-md">
+                <Button variant="outline" className="h-8 px-4 btn-outline-primary text-xs font-bold rounded-md">
                   Add files
                 </Button>
               </div>
@@ -558,7 +558,7 @@ export default function MediaGallerySection() {
                       <div className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20">
                         <Upload className="w-5 h-5 text-blue-600" />
                       </div>
-                      <span className="text-sm font-bold text-blue-600">Add files</span>
+                      <span className="text-sm font-bold text-primary">Add files</span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -694,7 +694,7 @@ export default function MediaGallerySection() {
                   <Button 
                     type="button"
                     variant="outline" 
-                    className="h-10 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold"
+                    className="h-10 px-6 btn-outline-primary font-bold"
                     onClick={(e) => {
                       e.preventDefault();
                       (e.currentTarget.previousElementSibling as HTMLInputElement)?.click();

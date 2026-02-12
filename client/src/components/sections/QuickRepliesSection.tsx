@@ -209,7 +209,7 @@ export default function QuickRepliesSection() {
             className="btn-outline-primary gap-2"
           >
             <Plus size={16} />
-            Create Collection
+            Add Collection
           </Button>
         )}
          {(view === "collection_detail" || view === "create_message") && (
@@ -219,7 +219,7 @@ export default function QuickRepliesSection() {
             className="btn-outline-primary gap-2"
           >
             <Plus size={16} />
-            Create Collection
+            Add Collection
           </Button>
         )}
       </div>

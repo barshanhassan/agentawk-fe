@@ -78,7 +78,7 @@ export default function SettingsPage() {
       { name: "Manage", path: "/settings/workspace/ManageSection" },
       { name: "Live Chat", path: "/settings/workspace/live-chat" },
       { name: "White Label", path: "/settings/workspace/white-label" },
-      { name: "Add New User", path: "/settings/workspace/manage-agents" },
+      { name: "Manage Users", path: "/settings/workspace/manage-agents" },
       { name: "Roles & Permissions", path: "/settings/workspace/roles" },
       { name: "Teams", path: "/settings/workspace/teams" },
     ],
@@ -473,7 +473,7 @@ export default function SettingsPage() {
             
             {activeSection === "White Label" && ( 
             <WhiteLabelSection />)}
-            {activeSection === "Add New User" && ( 
+            {activeSection === "Manage Users" && ( 
             <ManageAgentsSection />)}
             {activeSection === "Roles & Permissions" && ( 
             <RolesSection />)}

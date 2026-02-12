@@ -32,6 +32,13 @@
           "product2-5fedc"
         ]
       }
+    },
+    "product-one-4d742": {
+      "hosting": {
+        "update-site": [
+          "product-one-4d742"
+        ]
+      }
     }
   },
   "etags": {}

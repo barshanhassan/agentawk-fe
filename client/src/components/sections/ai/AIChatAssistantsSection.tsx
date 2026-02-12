@@ -212,7 +212,7 @@ export default function AIChatAssistantsSection() {
 
                 <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
                   <Plus className="w-4 h-4" />
-                  Create Assistant
+                  Add Assistant
                 </Button>
               </div>
             </div>
@@ -295,9 +295,9 @@ export default function AIChatAssistantsSection() {
                   <p className="text-muted-foreground max-w-md">
                     Get started by creating a new AI assistant to help automate your conversations.
                   </p>
-                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2">
+                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2" variant="outline">
                     <Plus className="w-4 h-4" />
-                    Create Assistant
+                    Add Assistant
                   </Button>
                 </div>
              )}
@@ -321,7 +321,7 @@ export default function AIChatAssistantsSection() {
                <Button type="button" variant="outline" onClick={() => setViewMode("list")}>
                  Back
                </Button>
-               <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+               <Button type="submit" variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
                  Publish
                </Button>
              </div>
@@ -510,25 +510,25 @@ export default function AIChatAssistantsSection() {
                       <div className="flex gap-4">
                         <Button
                           type="button"
-                          variant={formData.source_type === 'pdf' ? 'default' : 'outline'}
+                          variant="outline"
                           onClick={() => setFormData({ ...formData, source_type: 'pdf' })}
-                          className={formData.source_type === 'pdf' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          className={`flex-1 ${formData.source_type === 'pdf' ? 'btn-outline-primary font-bold shadow-sm' : 'text-muted-foreground'}`}
                         >
                           PDF Files
                         </Button>
                         <Button
                           type="button"
-                          variant={formData.source_type === 'website' ? 'default' : 'outline'}
+                          variant="outline"
                           onClick={() => setFormData({ ...formData, source_type: 'website' })}
-                          className={formData.source_type === 'website' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          className={`flex-1 ${formData.source_type === 'website' ? 'btn-outline-primary font-bold shadow-sm' : 'text-muted-foreground'}`}
                         >
                           Website / URL
                         </Button>
                         <Button
                           type="button"
-                          variant={formData.source_type === 'text' ? 'default' : 'outline'}
+                          variant="outline"
                           onClick={() => setFormData({ ...formData, source_type: 'text' })}
-                          className={formData.source_type === 'text' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          className={`flex-1 ${formData.source_type === 'text' ? 'btn-outline-primary font-bold shadow-sm' : 'text-muted-foreground'}`}
                         >
                           Text Input
                         </Button>
@@ -545,7 +545,7 @@ export default function AIChatAssistantsSection() {
                             <Button 
                               type="button"
                               variant="outline" 
-                              className="mt-2"
+                              className="mt-2 btn-outline-primary h-9 px-6 font-medium"
                               onClick={() => toast({ title: "Upload PDF", description: "File selection dialog would open here." })}
                             >
                               Select Files
@@ -560,7 +560,8 @@ export default function AIChatAssistantsSection() {
                               <Input placeholder="example.com" className="rounded-l-none" />
                               <Button 
                                 type="button"
-                                variant="secondary"
+                                variant="outline"
+                                className="btn-outline-primary"
                                 onClick={() => toast({ title: "Fetching Pages", description: "Crawling website for knowledge base content..." })}
                               >
                                 Fetch Pages
@@ -591,6 +592,7 @@ export default function AIChatAssistantsSection() {
                       <Button 
                         type="button"
                         variant="outline"
+                        className="btn-outline-primary"
                         onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
                       >
                         <Plus className="h-4 w-4 mr-2" />
@@ -606,7 +608,7 @@ export default function AIChatAssistantsSection() {
                <Button type="button" variant="ghost" onClick={() => setViewMode("list")}>
                  Cancel
                </Button>
-               <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+               <Button type="submit" variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
                  Publish
                </Button>
              </div>

@@ -175,7 +175,7 @@ export default function ChatWidgetSection() {
                 setIsCreateModalOpen(true);
               }}
             >
-              + Create New
+              + Add New
             </Button>
           </CardTitle>
           <CardDescription>Embed a chat widget to your website</CardDescription>

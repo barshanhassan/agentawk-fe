@@ -94,7 +94,7 @@ export default function IframeSection() {
                     }}
                     disabled={iframes.length >= 3}
                   >
-                    + Create New
+                    + Add New
                   </Button>
                 </div>
               </CardTitle>

@@ -247,13 +247,14 @@ export default function AIThemesSection() {
                 >
                   Cancel
                 </button>
-                <button
+                <Button
+                  variant="outline"
                   onClick={handlePublish}
                   disabled={!formData.name.trim()}
-                  className="px-6 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
+                  className="btn-outline-primary h-9 px-6 font-medium"
                 >
                   Publish
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -276,10 +277,10 @@ export default function AIThemesSection() {
           <div className="flex gap-3">
             <Button 
               variant="outline" 
-              className="text-primary border-primary hover:bg-primary hover:text-white"
+              className="btn-outline-primary h-9 px-4"
               onClick={() => setIsCreateFormOpen(true)}
             >
-              Create
+              Add
             </Button>
             <button 
               onClick={() => setSelectedTheme(null)}
@@ -400,12 +401,13 @@ export default function AIThemesSection() {
                 ))}
               </div>
               {theme.available ? (
-                <button 
+                <Button 
+                  variant="outline"
                   onClick={() => setSelectedTheme(theme)}
-                  className="px-4 py-1.5 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 rounded-md text-sm font-medium transition-colors"
+                  className="btn-outline-primary h-8 px-4 text-xs font-semibold"
                 >
                   Select
-                </button>
+                </Button>
               ) : (
                 <button
                   disabled

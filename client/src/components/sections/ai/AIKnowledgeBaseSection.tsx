@@ -203,7 +203,7 @@ export default function AIKnowledgeBaseSection() {
           {viewMode === "list" ? (
              <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
                <Plus className="w-4 h-4" />
-               Create Knowledge Base
+               Add Knowledge Base
              </Button>
           ) : (
              <Button variant="outline" onClick={() => setViewMode("list")}>
@@ -333,7 +333,7 @@ export default function AIKnowledgeBaseSection() {
                               placeholder="yoursite.com"
                               className="rounded-l-none"
                             />
-                            <Button onClick={handleFetchPages} disabled={fetching || !formData.website} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            <Button onClick={handleFetchPages} disabled={fetching || !formData.website} variant="outline" className="btn-outline-primary h-10 px-6">
                                {fetching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                                {fetching ? "Fetching..." : "Fetch Pages"}
                             </Button>
@@ -456,7 +456,7 @@ export default function AIKnowledgeBaseSection() {
              
              <div className="flex items-center justify-end gap-3 pt-6 border-t mt-8">
                 <Button variant="outline" onClick={() => setViewMode("list")}>Cancel</Button>
-                <Button onClick={handleSave} className="btn-outline-primary min-w-[100px]">Publish</Button>
+                <Button variant="outline" onClick={handleSave} className="btn-outline-primary min-w-[100px]">Publish</Button>
              </div>
           </div>
         )}

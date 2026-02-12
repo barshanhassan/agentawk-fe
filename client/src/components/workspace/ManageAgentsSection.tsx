@@ -334,7 +334,7 @@ export default function ManageAgentSection() {
               Cancel
             </Button>
             <Button variant="outline" onClick={handleSave} className="h-9 px-6 btn-outline-primary">
-              {view === "add" ? "Save" : "Update"}
+              {view === "add" ? "Save" : "Save"}
             </Button>
           </div>
         </div>
@@ -413,13 +413,16 @@ export default function ManageAgentSection() {
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone number</Label>
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                           <span className="text-lg leading-none">🇺🇸</span>
-                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-slate-800 pr-2">US</span>
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pr-2 border-r border-gray-200 dark:border-slate-800">
+                           <img 
+                             src="https://flagcdn.com/w40/us.png" 
+                             alt="US Flag" 
+                             className="w-5 h-3.5 object-cover rounded-sm shadow-sm" 
+                           />
                         </div>
                         <Input 
                           placeholder="(407) 231-1234" 
-                          className="pl-16 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
+                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
                         />
                       </div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
@@ -434,13 +437,16 @@ export default function ManageAgentSection() {
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp number</Label>
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                           <span className="text-lg leading-none">🇺🇸</span>
-                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-slate-800 pr-2">US</span>
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pr-2 border-r border-gray-200 dark:border-slate-800">
+                           <img 
+                             src="https://flagcdn.com/w40/us.png" 
+                             alt="US Flag" 
+                             className="w-5 h-3.5 object-cover rounded-sm shadow-sm" 
+                           />
                         </div>
                         <Input 
                           placeholder="(407) 231-1234" 
-                          className="pl-16 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
+                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
                         />
                       </div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
@@ -924,7 +930,7 @@ export default function ManageAgentSection() {
           className="h-9 px-4 btn-outline-primary text-sm font-medium flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Add New User
+          Add User
         </Button>
       </CardHeader>
       

@@ -100,13 +100,14 @@ export default function AITopicsSection() {
               >
                 Cancel
               </button>
-              <button
+              <Button
+                variant="outline"
                 onClick={handlePublish}
                 disabled={!formData.name.trim()}
-                className="px-6 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
+                className="btn-outline-primary h-9 px-6 font-medium"
               >
                 {editingTopicId ? "Update Topic" : "Add Topic"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -130,7 +131,7 @@ export default function AITopicsSection() {
               onClick={() => setIsCreateFormOpen(true)}
             >
               <Plus className="w-4 h-4" />
-              Create Topic
+              Add Topic
             </Button>
           </CardTitle>
           <CardDescription>Manage your AI topics</CardDescription>
@@ -152,7 +153,7 @@ export default function AITopicsSection() {
             onClick={() => setIsCreateFormOpen(true)}
           >
             <Plus className="w-4 h-4" />
-            Create Topic
+            Add Topic
           </Button>
         </div>
       ) : (

@@ -219,7 +219,7 @@ export default function AIVoiceAssistantsSection() {
                 </div>
                 <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
                   <Plus className="w-4 h-4" />
-                  Create Assistant
+                  Add Assistant
                 </Button>
               </div>
             </div>
@@ -300,9 +300,9 @@ export default function AIVoiceAssistantsSection() {
                      <img src="/images/integrations/chat_gpt.svg" className="h-12 w-12 opacity-50" alt="AI" />
                   </div>
                   <h3 className="font-semibold text-lg">Create your first AI Voice Assistant</h3>
-                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2">
+                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2" variant="outline">
                     <Plus className="w-4 h-4" />
-                    Create Assistant
+                    Add Assistant
                   </Button>
                 </div>
              )}
@@ -332,7 +332,7 @@ export default function AIVoiceAssistantsSection() {
                    </div>
                    <h4 className="font-semibold text-lg mb-2">{item.title}</h4>
                    <p className="text-muted-foreground text-sm mb-6">{item.desc}</p>
-                   <Button variant="secondary" className="w-full mt-auto" onClick={() => handleSetType(item.type)}>
+                   <Button variant="outline" className="w-full mt-auto btn-outline-primary" onClick={() => handleSetType(item.type)}>
                      Select
                    </Button>
                 </div>
@@ -357,7 +357,7 @@ export default function AIVoiceAssistantsSection() {
              <div className="flex items-center gap-3">
                <Button variant="outline" onClick={() => setViewMode("list")}>Cancel</Button>
                <Button 
-                className="btn-outline-primary"
+                variant="outline" className="btn-outline-primary h-9 px-6 font-medium"
                 onClick={handlePublish}
                >
                  Publish
@@ -577,7 +577,7 @@ export default function AIVoiceAssistantsSection() {
                                <h4 className="font-medium">Call Transfer Rules</h4>
                                <p className="text-sm text-muted-foreground">Define when to transfer calls to a human agent.</p>
                             </div>
-                            <Button onClick={() => setFormData({
+                            <Button variant="outline" className="btn-outline-primary" onClick={() => setFormData({
                               ...formData, 
                               call_transfer_config: [...(formData.call_transfer_config || []), { description: '', number: '' }]
                             })}>
@@ -653,10 +653,7 @@ export default function AIVoiceAssistantsSection() {
                          <p className="text-sm text-muted-foreground max-w-md">
                            Define custom functions that the AI can call to interact with your business logic or external APIs.
                          </p>
-                         <Button 
-                           variant="outline"
-                           onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
-                         >
+                         <Button variant="outline" className="btn-outline-primary" onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}>
                            <Plus className="h-4 w-4 mr-2" />
                            Add Function
                          </Button>
@@ -784,6 +781,7 @@ export default function AIVoiceAssistantsSection() {
                              <Button 
                                variant="outline" 
                                size="sm"
+                               className="btn-outline-primary"
                                onClick={() => toast({ title: "Copied", description: "Embed code copied to clipboard." })}
                              >
                                Copy Code

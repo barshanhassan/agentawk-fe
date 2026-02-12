@@ -237,7 +237,7 @@ export default function VisualAPISection() {
             className="btn-outline-primary"
           >
             <Plus size={16} className="mr-2" />
-            Create Trigger
+            Add Trigger
           </Button>
         </div>
       )}
@@ -262,7 +262,7 @@ export default function VisualAPISection() {
              <Button variant="outline" onClick={() => setViewMode("LIST")}>
               Cancel
             </Button>
-            <Button>
+            <Button variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
               Save Changes
             </Button>
           </div>
@@ -463,7 +463,7 @@ export default function VisualAPISection() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateTrigger} disabled={!newTriggerName.trim()}>Create Trigger</Button>
+            <Button variant="outline" className="btn-outline-primary h-9 px-6 font-medium" onClick={handleCreateTrigger} disabled={!newTriggerName.trim()}>Add Trigger</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -371,7 +371,7 @@ export default function AIProductsSection() {
 
          <div className="flex justify-end gap-3 pt-6">
             <Button variant="secondary" onClick={() => setViewMode("manage_theme")}>Cancel</Button>
-            <Button onClick={handleSaveProduct} disabled={!currentProduct?.name} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={handleSaveProduct} disabled={!currentProduct?.name} variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
                {currentProduct?.id ? "Update" : "Create"}
             </Button>
          </div>
@@ -440,7 +440,7 @@ export default function AIProductsSection() {
                </p>
                <Button variant="outline" className="btn-outline-primary">
                  <Plus className="w-4 h-4 mr-2" />
-                 Create Product
+                 Add Product
                </Button>
             </div>
           )}

@@ -319,12 +319,13 @@ export default function AIItemsSection() {
                       placeholder="Add link"
                       className="flex-1 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <button 
-                      className="px-4 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-md text-sm font-medium transition-colors"
+                    <Button 
+                      variant="outline"
+                      className="btn-outline-primary h-10 px-4"
                       onClick={() => toast({ title: "Coming Soon", description: "Select from gallery feature is coming soon." })}
                     >
                       Select from gallery
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-xs text-red-500 mt-1">
                     Only PNG and JPG images are allowed, with a limit of up to 5 images, each no larger than 5MB.
@@ -341,13 +342,14 @@ export default function AIItemsSection() {
               >
                 Cancel
               </button>
-              <button
+              <Button
+                variant="outline"
                 onClick={handlePublish}
                 disabled={!formData.name.trim()}
-                className="px-6 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
+                className="btn-outline-primary h-9 px-6 font-medium"
               >
                 {editingId ? "Update" : "Generate"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -371,7 +373,7 @@ export default function AIItemsSection() {
               onClick={() => setIsCreateFormOpen(true)}
             >
               <Plus className="w-4 h-4" />
-              Create AI Item
+              Add AI Item
             </Button>
           </CardTitle>
           <CardDescription>Add structured data to the Knowledge base</CardDescription>
