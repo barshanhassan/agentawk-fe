@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { 
-  Film, 
-  Folder, 
-  Plus, 
-  MoreVertical, 
-  Search, 
-  Grid, 
-  List, 
-  FileText, 
-  Image as ImageIcon, 
-  Mic, 
+import {
+  Film,
+  Folder,
+  Plus,
+  MoreVertical,
+  Search,
+  Grid,
+  List,
+  FileText,
+  Image as ImageIcon,
+  Mic,
   Video,
   ChevronDown,
   UploadCloud,
@@ -66,27 +66,31 @@ import {
 } from "@/components/ui/table";
 import { Badge as UI_Badge } from "@/components/ui/badge";
 
-export default function MediaGallerySection() {
+interface MediaGallerySectionProps {
+  onSelect?: (file: typeof INITIAL_MEDIA[0]) => void;
+}
+
+export default function MediaGallerySection({ onSelect }: MediaGallerySectionProps) {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState("All files");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  
+
   // Load from localStorage or use initial data
   const [mediaItems, setMediaItems] = useState<typeof INITIAL_MEDIA>(() => {
     const saved = localStorage.getItem('mediaGallery_items');
     return saved ? JSON.parse(saved) : INITIAL_MEDIA;
   });
-  
+
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
-  
+
   const [folderContents, setFolderContents] = useState<Record<string, typeof INITIAL_MEDIA>>(() => {
     const saved = localStorage.getItem('mediaGallery_folderContents');
     return saved ? JSON.parse(saved) : {};
@@ -126,7 +130,7 @@ export default function MediaGallerySection() {
 
   const confirmRename = () => {
     if (renamingId && renameValue.trim()) {
-      setMediaItems(prev => prev.map(item => 
+      setMediaItems(prev => prev.map(item =>
         item.id === renamingId ? { ...item, name: renameValue.trim() } : item
       ));
       toast({
@@ -157,7 +161,7 @@ export default function MediaGallerySection() {
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files) return;
-    
+
     // Process files here
     Array.from(files).forEach(file => {
       console.log('Uploading file:', file.name, file.size);
@@ -165,12 +169,12 @@ export default function MediaGallerySection() {
         id: Date.now().toString() + Math.random(),
         name: file.name,
         size: `${(file.size / 1024).toFixed(0)} KB`,
-        type: file.type.startsWith('image/') ? 'image' : 
-              file.type.startsWith('video/') ? 'video' :
-              file.type.startsWith('audio/') ? 'audio' : 'pdf',
+        type: file.type.startsWith('image/') ? 'image' :
+          file.type.startsWith('video/') ? 'video' :
+            file.type.startsWith('audio/') ? 'audio' : 'pdf',
         url: URL.createObjectURL(file),
       };
-      
+
       if (currentFolder) {
         setFolderContents(prev => ({
           ...prev,
@@ -179,13 +183,13 @@ export default function MediaGallerySection() {
       } else {
         setMediaItems(prev => [...prev, newFile]);
       }
-      
+
       toast({
         title: "File uploaded",
         description: `${file.name} has been uploaded successfully`,
       });
     });
-    
+
     setUploadDialogOpen(false);
   };
 
@@ -224,14 +228,14 @@ export default function MediaGallerySection() {
   };
 
   const filteredMedia = getCurrentItems().filter(item => {
-    const matchesFilter = 
-      filter === "All files" || 
+    const matchesFilter =
+      filter === "All files" ||
       (filter === "Audios" && item.type === "audio") ||
       (filter === "Images" && item.type === "image") ||
       (filter === "Files" && item.type === "pdf") ||
       (filter === "Videos" && item.type === "video") ||
       (filter === "Folders" && item.type === "folder");
-    
+
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesFilter && matchesSearch;
@@ -268,8 +272,8 @@ export default function MediaGallerySection() {
         <div className="flex items-center gap-2">
           {currentFolder ? (
             <>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={handleBackToRoot}
                 className="h-9 px-3 flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
@@ -287,8 +291,8 @@ export default function MediaGallerySection() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                   {mediaItems.filter(item => item.type === 'folder').map((folder) => (
-                    <DropdownMenuItem 
-                      key={folder.id} 
+                    <DropdownMenuItem
+                      key={folder.id}
                       onClick={() => handleFolderClick(folder.id, folder.name)}
                       className="cursor-pointer flex items-center gap-2"
                     >
@@ -310,8 +314,8 @@ export default function MediaGallerySection() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                 {mediaItems.filter(item => item.type === 'folder').map((folder) => (
-                  <DropdownMenuItem 
-                    key={folder.id} 
+                  <DropdownMenuItem
+                    key={folder.id}
                     onClick={() => handleFolderClick(folder.id, folder.name)}
                     className="cursor-pointer flex items-center gap-2"
                   >
@@ -323,19 +327,19 @@ export default function MediaGallerySection() {
             </DropdownMenu>
           )}
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               className="h-9 w-9 text-slate-600 dark:text-slate-300 border-gray-200 dark:border-slate-800"
               onClick={() => setIsCreatingFolder(true)}
             >
               <Plus size={18} />
             </Button>
-            
+
             {isCreatingFolder && (
               <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 shadow-sm animate-in fade-in slide-in-from-left-2 duration-200">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Folder name"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
@@ -364,7 +368,7 @@ export default function MediaGallerySection() {
                     }
                   }}
                 />
-                <button 
+                <button
                   onClick={() => {
                     if (newFolderName.trim()) {
                       const newFolder = {
@@ -387,7 +391,7 @@ export default function MediaGallerySection() {
                 >
                   <Check size={16} strokeWidth={3} />
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setNewFolderName("");
                     setIsCreatingFolder(false);
@@ -404,8 +408,8 @@ export default function MediaGallerySection() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input 
-              placeholder="Search media..." 
+            <Input
+              placeholder="Search media..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9 w-64 pl-9 bg-slate-50/50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-800 focus:ring-1 focus:ring-blue-600/50"
@@ -429,17 +433,17 @@ export default function MediaGallerySection() {
           </DropdownMenu>
 
           <div className="flex items-center bg-slate-100/50 dark:bg-slate-800/50 rounded-lg p-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className={cn("h-7 w-7 rounded-md", viewMode === "list" && "bg-white dark:bg-slate-700 shadow-sm")}
               onClick={() => setViewMode("list")}
             >
               <List size={16} />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className={cn("h-7 w-7 rounded-md", viewMode === "grid" && "bg-white dark:bg-slate-700 shadow-sm")}
               onClick={() => setViewMode("grid")}
             >
@@ -460,10 +464,10 @@ export default function MediaGallerySection() {
             <p className="text-lg font-medium text-slate-600 dark:text-slate-300 mb-6">
               There aren't any files here. Want to upload some?
             </p>
-            <Button 
+            <Button
               onClick={() => setUploadDialogOpen(true)}
-              variant="outline" 
-              className="h-10 px-6 btn-outline-primary font-bold"
+              variant="outline"
+              className="h-10 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold"
             >
               Add files
             </Button>
@@ -471,7 +475,7 @@ export default function MediaGallerySection() {
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {/* Add Files Card */}
-            <div 
+            <div
               onClick={() => setUploadDialogOpen(true)}
               className="group relative flex flex-col items-center justify-center aspect-video border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-xl hover:border-blue-600 hover:bg-blue-50/10 dark:hover:bg-blue-900/10 transition-all cursor-pointer"
             >
@@ -487,12 +491,18 @@ export default function MediaGallerySection() {
 
             {/* Media Items */}
             {filteredMedia.map((item) => (
-              <div 
-                key={item.id} 
-                onClick={() => item.type === 'folder' && handleFolderClick(item.id, item.name)}
+              <div
+                key={item.id}
+                onClick={() => {
+                  if (item.type === 'folder') {
+                    handleFolderClick(item.id, item.name);
+                  } else if (onSelect) {
+                    onSelect(item);
+                  }
+                }}
                 className={cn(
                   "group relative flex flex-col bg-white dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-xl overflow-hidden hover:shadow-lg transition-shadow",
-                  item.type === 'folder' && "cursor-pointer"
+                  (item.type === 'folder' || onSelect) && "cursor-pointer"
                 )}
               >
                 <div className="flex-1 flex items-center justify-center p-8 bg-slate-50/30 dark:bg-slate-900/30">
@@ -506,7 +516,7 @@ export default function MediaGallerySection() {
                     </div>
                     <p className="text-[11px] font-medium text-slate-500">{item.size}</p>
                   </div>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
@@ -549,7 +559,7 @@ export default function MediaGallerySection() {
               </TableHeader>
               <TableBody>
                 {/* Add Files Row */}
-                <TableRow 
+                <TableRow
                   onClick={() => setUploadDialogOpen(true)}
                   className="cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 border-b-2 border-blue-100 dark:border-blue-900/30"
                 >
@@ -564,7 +574,19 @@ export default function MediaGallerySection() {
                 </TableRow>
 
                 {filteredMedia.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow
+                    key={item.id}
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        handleFolderClick(item.id, item.name);
+                      } else if (onSelect) {
+                        onSelect(item);
+                      }
+                    }}
+                    className={cn(
+                      (item.type === 'folder' || onSelect) && "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    )}
+                  >
                     <TableCell className="pl-6">
                       <div className="flex items-center gap-3">
                         {React.cloneElement(getIcon(item.type) as React.ReactElement, { className: "w-5 h-5" })}
@@ -621,7 +643,7 @@ export default function MediaGallerySection() {
               Enter a new name for this file
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Input 
+          <Input
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && confirmRename()}
@@ -659,7 +681,7 @@ export default function MediaGallerySection() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">Upload Files</AlertDialogTitle>
           </AlertDialogHeader>
-          
+
           <div className="space-y-4">
             {/* Drag and Drop Area */}
             <div
@@ -668,8 +690,8 @@ export default function MediaGallerySection() {
               onDrop={handleDrop}
               className={cn(
                 "border-2 border-dashed rounded-xl p-12 transition-all",
-                isDragging 
-                  ? "border-blue-600 bg-blue-50/50 dark:bg-blue-900/20" 
+                isDragging
+                  ? "border-blue-600 bg-blue-50/50 dark:bg-blue-900/20"
                   : "border-gray-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600"
               )}
             >
@@ -691,10 +713,10 @@ export default function MediaGallerySection() {
                     onChange={(e) => handleFileUpload(e.target.files)}
                     accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
                   />
-                  <Button 
+                  <Button
                     type="button"
-                    variant="outline" 
-                    className="h-10 px-6 btn-outline-primary font-bold"
+                    variant="outline"
+                    className="h-10 px-6 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all font-bold"
                     onClick={(e) => {
                       e.preventDefault();
                       (e.currentTarget.previousElementSibling as HTMLInputElement)?.click();
@@ -712,7 +734,7 @@ export default function MediaGallerySection() {
                 <AlertCircle className="w-4 h-4 text-slate-500 mt-0.5 flex-shrink-0" />
                 <p className="text-slate-600 dark:text-slate-400 font-medium">Accepted formats and file size limits:</p>
               </div>
-              
+
               <div className="pl-6 space-y-1.5 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-blue-600">📷</span>

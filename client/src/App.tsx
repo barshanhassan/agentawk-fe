@@ -23,6 +23,8 @@ import WhatsAppManagerPage from "@/pages/WhatsAppManagerPage";
 import SettingsPage from "@/pages/SettingsPage";
 import TeamManagementSection from "@/components/sections/TeamManagementSection";
 import WorkspaceManagementPage from "@/pages/WorkspaceManagementPage";
+import SmartFlowsPage from "@/pages/SmartFlowsPage";
+import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
@@ -85,6 +87,12 @@ function Router() {
       <Route path="/notifications">
         <ProtectedRoute><NotificationsPage /></ProtectedRoute>
       </Route>
+      <Route path="/automations/:id">
+        <ProtectedRoute><SmartFlowBuilderPage /></ProtectedRoute>
+      </Route>
+      <Route path="/automations">
+        <ProtectedRoute><SmartFlowsPage /></ProtectedRoute>
+      </Route>
 
       <Route path="/">
         <ProtectedRoute><InsightsDashboard /></ProtectedRoute>
@@ -114,16 +122,18 @@ function App() {
     setIsLoggedIn(checkAuthStatus());
   }, [location]);
 
+  const isBuilderRoute = location.startsWith("/automations/") && location.split("/").length === 3;
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <div className="flex flex-col h-screen overflow-hidden bg-background">
+          <div className="flex h-screen overflow-hidden bg-background">
             {/* New: Horizontal Top Bar (only shown when logged in) */}
-            {isLoggedIn && <AppSidebar />}
+            {isLoggedIn && !isBuilderRoute && <AppSidebar />}
 
             {/* Main content area - now full width, with top padding */}
-            <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn ? "mt-16" : ""}`}>
+            <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
               <Router />
             </main>
 

@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
   Menu,
+  GitMerge,
   Search,
   Sun,
   Moon,
@@ -141,6 +142,8 @@ export default function AppSidebar() {
   // Menu items for search filtering
   const menuItems = [
     { label: "Insights", href: "/insights", icon: BarChart2 },
+    { label: "Smart Flows", href: "/automations", icon: GitMerge },
+    { label: "Bot Conversations", href: "/conversations/bot", icon: Cpu },
     { label: "WhatsApp Templates", href: "/templates", icon: FileText },
     { label: "Campaign Manager", href: "/campaigns", icon: Send },
     { label: "Contacts", href: "/contacts", icon: Users },
@@ -196,6 +199,15 @@ export default function AppSidebar() {
                   className={`flex items-center gap-3 px-2 py-1  ${hoverClass} ${isActive("/insights") ? activeClass : ""}`}
                 >
                   <BarChart2 size={18} /> Insights
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/automations"
+                  className={`flex items-center gap-3 px-2 py-1  ${hoverClass} ${isActive("/automations") ? activeClass : ""}`}
+                >
+                  <GitMerge size={18} /> Smart Flows
                 </Link>
               </DropdownMenuItem>
 
