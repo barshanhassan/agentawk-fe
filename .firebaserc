@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "product-one-4d742",
+    "default": "ezconn-4398a",
     "comm-platform": "comm-platform-5fdce",
     "prod": "product-3f6b0"
   },
@@ -16,6 +16,13 @@
       "hosting": {
         "update-site": [
           "product-3f6b0-site"
+        ]
+      }
+    },
+    "ezconn-4398a": {
+      "hosting": {
+        "update-site": [
+          "ezconn-4398a"
         ]
       }
     }
