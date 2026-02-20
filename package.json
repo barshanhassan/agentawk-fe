@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "(cd server && npm run start:dev)",
     "build": "vite build",
+    "deploy": "npm run build && firebase deploy",
     "start": "node server/dist/main.js",
     "check": "tsc",
     "db:push": "drizzle-kit push"

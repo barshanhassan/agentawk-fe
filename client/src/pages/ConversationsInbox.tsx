@@ -2216,7 +2216,7 @@ export default function ConversationsInbox() {
                           </div>
                         </div>
 
-                        <div className="border-t pt-4 space-y-2">
+                        <div className="git statusborder-t pt-4 space-y-2">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium">Tries {selectedContact.callsUsed}/{selectedContact.callsMax}</span>
                             <span className="text-xs text-muted-foreground">Renews in {selectedContact.renewsIn}</span>

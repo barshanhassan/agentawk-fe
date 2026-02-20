@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { FileText, Edit, Play, History, Download, Trash2, Sparkles } from "lucide-react";
+import { FileText, Edit, Play, History, Download, Trash2, Sparkles, Plus } from "lucide-react";
 
 interface Report {
   id: string;
@@ -111,10 +111,11 @@ export default function AIReportBuilderSection() {
                 Report Builder
                 <Button 
                   variant="outline" 
-                  className="text-primary border-primary hover:bg-primary hover:text-white"
+                  className="btn-outline-primary h-9 px-4"
                   onClick={() => setIsCreateFormOpen(true)}
                 >
-                  Create new
+                  <Plus size={16} />
+                  Add New
                 </Button>
               </CardTitle>
               <CardDescription>Generate reports with Artificial Intelligence</CardDescription>
@@ -306,13 +307,14 @@ export default function AIReportBuilderSection() {
               >
                 Cancel
               </button>
-              <button
+              <Button
+                variant="outline"
                 onClick={handlePublish}
                 disabled={!formData.name.trim() || !formData.prompt.trim()}
-                className="px-6 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
+                className="btn-outline-primary h-9 px-6 font-medium"
               >
                 Publish
-              </button>
+              </Button>
             </div>
           </div>
         </div>

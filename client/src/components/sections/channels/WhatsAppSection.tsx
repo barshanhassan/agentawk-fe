@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ExternalLink, ChevronLeft, MoreVertical, Trash2, Copy, Clock, Plug, Check, Info } from "lucide-react";
+import { useLocation } from "wouter";
+import { ExternalLink, ChevronLeft, MoreVertical, Trash2, Copy, Clock, Plug, Check, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +11,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Mock data for demonstration
 const mockAccounts = [
@@ -68,10 +91,26 @@ const mockApiAccounts = [
 ];
 
 export default function WhatsAppSection() {
-  const [view, setView] = useState<"list" | "coex_manage" | "api_manage" | "qr_manage" | "qr_create">("list");
+  const [, setLocation] = useLocation();
+  const [view, setView] = useState<"list" | "coex_manage" | "api_manage">("list");
   const [accounts, setAccounts] = useState(mockAccounts);
   const [hasAccounts, setHasAccounts] = useState(true); // Set to true to show connected accounts
   const [hasApiAccounts, setHasApiAccounts] = useState(true); // Set to true to show API accounts
+  const [showAddNumberDialog, setShowAddNumberDialog] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [newNumberData, setNewNumberData] = useState({
+    phoneNumber: "",
+    purposeType: "automated" as "automated" | "notification",
+  });
+  const [isSavingNumber, setIsSavingNumber] = useState(false);
+  const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<any>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showDeleteNumberDialog, setShowDeleteNumberDialog] = useState(false);
+  const [numberToDelete, setNumberToDelete] = useState<any>(null);
+  const [isDeletingNumber, setIsDeletingNumber] = useState(false);
+
+  const { toast } = useToast();
 
   const toggleFeeder = (numberId: number, accountId: number) => {
     setAccounts(prev => prev.map(account => {
@@ -90,12 +129,191 @@ export default function WhatsAppSection() {
     }));
   };
 
+  const handleAddNumberClick = (account: any) => {
+    setSelectedAccount(account);
+    setNewNumberData({ phoneNumber: "", purposeType: "automated" });
+    setShowAddNumberDialog(true);
+  };
+
+  const handleCloseAddNumberDialog = () => {
+    setShowAddNumberDialog(false);
+    setSelectedAccount(null);
+    setNewNumberData({ phoneNumber: "", purposeType: "automated" });
+    setIsSavingNumber(false);
+  };
+
+  const handleSaveNewNumber = async () => {
+    // Validation
+    if (!newNumberData.phoneNumber.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingNumber(true);
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch('/api/whatsapp/account/add-number', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     account_id: selectedAccount.id,
+      //     phone_number: newNumberData.phoneNumber,
+      //     purpose_type: newNumberData.purposeType,
+      //   }),
+      // });
+      // const data = await response.json();
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Mock new number for demonstration
+      const mockNewNumber = {
+        id: Date.now(),
+        display_phone_number: newNumberData.phoneNumber,
+        verified_name: `New Number - ${newNumberData.purposeType}`,
+        name_status: "PENDING",
+        status: "ACTIVE",
+        allow_in_feeder: false,
+        auto_reply_automation_id: null,
+      };
+
+      // Update the accounts state
+      setAccounts(prev => prev.map(account => {
+        if (account.id === selectedAccount.id) {
+          return {
+            ...account,
+            phone_numbers: [...account.phone_numbers, mockNewNumber],
+          };
+        }
+        return account;
+      }));
+
+      toast({
+        title: "Success",
+        description: "Phone number added successfully!",
+      });
+
+      handleCloseAddNumberDialog();
+    } catch (error) {
+      console.error("Error adding number:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add phone number. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingNumber(false);
+    }
+  };
+
+  const handleDeleteAccountClick = (account: any) => {
+    setAccountToDelete(account);
+    setShowDeleteAccountDialog(true);
+  };
+
+  const handleConfirmDeleteAccount = async () => {
+    if (!accountToDelete) return;
+
+    setIsDeletingAccount(true);
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/whatsapp/account/${accountToDelete.id}`, {
+      //   method: 'DELETE',
+      // });
+      // await response.json();
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Remove account from state
+      setAccounts(prev => prev.filter(account => account.id !== accountToDelete.id));
+
+      toast({
+        title: "Success",
+        description: "Account deleted successfully!",
+      });
+
+      setShowDeleteAccountDialog(false);
+      setAccountToDelete(null);
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const handleDeleteNumberClick = (number: any, account: any) => {
+    setNumberToDelete({ number, account });
+    setShowDeleteNumberDialog(true);
+  };
+
+  const handleConfirmDeleteNumber = async () => {
+    if (!numberToDelete) return;
+
+    setIsDeletingNumber(true);
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/whatsapp/number/${numberToDelete.number.id}`, {
+      //   method: 'DELETE',
+      // });
+      // await response.json();
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Remove number from account
+      setAccounts(prev => prev.map(account => {
+        if (account.id === numberToDelete.account.id) {
+          return {
+            ...account,
+            phone_numbers: account.phone_numbers.filter(
+              (num: any) => num.id !== numberToDelete.number.id
+            ),
+          };
+        }
+        return account;
+      }));
+
+      toast({
+        title: "Success",
+        description: "Phone number deleted successfully!",
+      });
+
+      setShowDeleteNumberDialog(false);
+      setNumberToDelete(null);
+    } catch (error) {
+      console.error("Error deleting number:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete phone number. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingNumber(false);
+    }
+  };
+
   return (
     <div className="p-6">
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">WhatsApp</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">WhatsApp</h2>
+              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connect your WhatsApp accounts to the platform.
             </p>
@@ -106,8 +324,8 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
                 <h3 className="font-semibold text-sm">WhatsApp Business App "Coex"</h3>
+                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
               </div>
               <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Beta</Badge>
             </div>
@@ -136,7 +354,7 @@ export default function WhatsAppSection() {
             <div className="mt-6 flex justify-end">
               <Button 
                 variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("coex_manage")}
               >
                 Manage
@@ -148,8 +366,8 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
                 <h3 className="font-semibold text-sm">WhatsApp Business API</h3>
+                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
               </div>
               <ExternalLink className="h-4 w-4 text-blue-500" />
             </div>
@@ -163,7 +381,7 @@ export default function WhatsAppSection() {
             <div className="mt-6 flex justify-end">
               <Button 
                 variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("api_manage")}
               >
                 Manage
@@ -171,31 +389,7 @@ export default function WhatsAppSection() {
             </div>
           </div>
 
-          {/* Card 3: WhatsApp QR Code */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start mb-4">
-              <div className="flex items-center gap-2">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
-                <h3 className="font-semibold text-sm">WhatsApp QR Code</h3>
-              </div>
-            </div>
-            
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                Our native QR Code WhatsApp Web integration makes it easy and intuitive to connect your WhatsApp number to the platform.
-              </p>
-            </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button 
-                variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                onClick={() => setView("qr_manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
         </div>
         </div>
       )}
@@ -206,10 +400,10 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">WhatsApp Business Apps</h3>
+                    <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
                     <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Beta</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -236,7 +430,7 @@ export default function WhatsAppSection() {
               <div className="pt-2">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 min-w-[150px]"
+                  className="btn-outline-primary min-w-[150px]"
                   onClick={() => setHasAccounts(true)}
                 >
                   Connect now
@@ -294,9 +488,10 @@ export default function WhatsAppSection() {
                           <ExternalLink className="h-3 w-3" />
                         </a>
                         <Button 
-                          variant="destructive" 
+                          variant="ghost" 
                           size="sm"
-                          className="text-xs px-2 py-1 h-auto"
+                          className="text-xs px-2 py-1 h-auto btn-soft-destructive transition-all hover:scale-105 active:scale-95"
+                          onClick={() => handleDeleteAccountClick(account)}
                         >
                           Delete Account
                         </Button>
@@ -346,15 +541,17 @@ export default function WhatsAppSection() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem>
-                                    <Clock className="mr-2 h-4 w-4" />
-                                    Auto reply
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => setLocation("/templates")}
+                                    className="cursor-pointer"
+                                  >
                                     <Copy className="mr-2 h-4 w-4" />
                                     Templates
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600">
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteNumberClick(number, account)}
+                                  >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete number
                                   </DropdownMenuItem>
@@ -394,12 +591,12 @@ export default function WhatsAppSection() {
                     ))}
 
                     {/* Add New Number */}
-                    <a 
-                      href="#" 
-                      className="block border p-2 w-full text-center text-sm text-muted-foreground bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                    <button
+                      onClick={() => handleAddNumberClick(account)}
+                      className="block border p-2 w-full text-center text-sm text-blue-600 font-medium bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 dark:hover:bg-slate-800 border-blue-200 dark:border-blue-900 rounded transition-colors"
                     >
-                      Add new number
-                    </a>
+                      + Add New Number
+                    </button>
                   </div>
                 </div>
               ))}
@@ -414,9 +611,11 @@ export default function WhatsAppSection() {
           <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
                 <div>
-                  <h3 className="font-semibold text-lg">WhatsApp Business API</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">WhatsApp Business API</h3>
+                    <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Integrate your WhatsApp Business account to unlock 2-Way interactive dynamic conversations
                   </p>
@@ -425,10 +624,10 @@ export default function WhatsAppSection() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                  className="btn-outline-primary"
                   onClick={() => setHasApiAccounts(true)}
                 >
-                  Add new
+                  + Add New
                 </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
@@ -450,7 +649,7 @@ export default function WhatsAppSection() {
               <div className="pt-2">
                 <Button 
                   variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 min-w-[150px]"
+                  className="btn-outline-primary min-w-[150px]"
                   onClick={() => setHasApiAccounts(true)}
                 >
                   Connect now
@@ -492,39 +691,32 @@ export default function WhatsAppSection() {
                             <Button 
                               variant="outline"
                               size="sm"
-                              className="text-xs px-2 py-1 h-auto bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+                              className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                              onClick={() => setLocation("/templates")}
                             >
-                              Templates
+                              Manage Templates
                             </Button>
                           </td>
                           <td className="px-4 pb-5 pt-1">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                onClick={() => handleDeleteAccountClick(account)}
+                                title="Delete account"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="text-xs px-2 py-1 h-auto text-red-500 border-red-400 hover:bg-red-50"
+                                className="text-xs px-2 py-1 h-auto btn-outline-primary"
+                                onClick={() => toast({ title: "Conversions API", description: "Configuring Meta Conversions API for " + account.name })}
                               >
-                                Delete
+                                <i className="fa-brands fa-meta mr-2"></i>
+                                Conversions API
                               </Button>
-                              {account.capi ? (
-                                <Button 
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs px-2 py-1 h-auto bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
-                                >
-                                  <i className="fa-brands fa-meta mr-2"></i>
-                                  Conversions API
-                                </Button>
-                              ) : (
-                                <Button 
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs px-2 py-1 h-auto"
-                                >
-                                  <i className="fa-brands fa-meta mr-2"></i>
-                                  Conversions API
-                                </Button>
-                              )}
                             </div>
                           </td>
                           <td className="px-4 pb-5 pt-1">
@@ -595,27 +787,48 @@ export default function WhatsAppSection() {
                               )}
                             </td>
                             <td className="px-4 py-4">
-                              <div className="flex items-center justify-end gap-4">
-                                <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
-                                </button>
-                                <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
-                                </button>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                  onClick={() => handleDeleteNumberClick(number, account)}
+                                  title="Delete number"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                  onClick={() => toast({ title: "Auto Reply", description: "Navigating to auto-reply settings for " + number.display_phone_number })}
+                                  title="Auto reply"
+                                >
+                                  <Clock className="h-4 w-4" />
+                                </Button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-muted-foreground hover:text-foreground transition-colors">
+                                      <MoreVertical className="h-4 w-4" />
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer"
+                                      onSelect={(e) => {
+                                        e.preventDefault();
+                                        toggleFeeder(number.id, account.id);
+                                      }}
+                                    >
                                       <div className="flex items-center justify-between w-full gap-3">
                                         <div className="flex items-center gap-2">
                                           <Plug className="h-4 w-4" />
                                           <span>AI Feeder</span>
                                         </div>
-                                        <Switch checked={number.allow_in_feeder} />
+                                        <Switch 
+                                          checked={number.allow_in_feeder}
+                                          onCheckedChange={() => toggleFeeder(number.id, account.id)}
+                                        />
                                       </div>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
@@ -634,105 +847,295 @@ export default function WhatsAppSection() {
         </div>
       )}
 
-      {view === "qr_manage" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
-              <div>
-                <h3 className="font-semibold text-lg">WhatsApp QR Code</h3>
-                <p className="text-sm text-muted-foreground">
-                  Connect your WhatsApp number.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                onClick={() => setView("qr_create")}
-              >
-                Create an Instance
-              </Button>
-              <Button variant="outline" onClick={() => setView("list")}>
-                Back
-              </Button>
-            </div>
-          </div>
 
-          {/* Content */}
-          <div className="border rounded-lg p-12 shadow-sm bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4 py-24">
-            <div className="bg-green-100 dark:bg-green-900/20 p-4 rounded-full">
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-12 w-12" />
-            </div>
-            <h2 className="text-lg font-semibold">No instance found</h2>
-            <div className="pt-2">
-              <Button 
-                variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 min-w-[150px]"
-                onClick={() => setView("qr_create")}
-              >
-                Create an Instance
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {view === "qr_create" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-10 w-10" />
-              <div>
-                <h3 className="font-semibold text-lg">WhatsApp QR Code</h3>
-                <p className="text-sm text-muted-foreground">
-                  Connect your WhatsApp number.
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Add Number Dialog */}
+      <Dialog open={showAddNumberDialog} onOpenChange={setShowAddNumberDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Phone Number</DialogTitle>
+            <DialogDescription>
+              Add a new phone number to {selectedAccount?.name}
+            </DialogDescription>
+          </DialogHeader>
 
-          {/* Form Content */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 space-y-6">
+          <div className="space-y-6 py-4">
+            {/* Phone Number Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Instance Name</label>
-              <div className="flex gap-4">
-                <input 
-                  type="text" 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 max-w-xl"
-                  placeholder="" 
-                />
-                <Button variant="outline" onClick={() => setView("qr_manage")}>Cancel</Button>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">Create</Button>
-              </div>
+              <Label htmlFor="phoneNumber" className="font-semibold">
+                Phone Number *
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="text"
+                placeholder="e.g., +1 234 567 8900"
+                value={newNumberData.phoneNumber}
+                onChange={(e) =>
+                  setNewNumberData({ ...newNumberData, phoneNumber: e.target.value })
+                }
+                className="h-10"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter the phone number in international format (e.g., +1 234 567 8900)
+              </p>
             </div>
 
-            <div className="space-y-4 pt-4">
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="check1" className="mt-1" />
-                <label htmlFor="check1" className="text-sm text-muted-foreground">
-                  I declare that I take responsibility for the proper use of the platform, in accordance with <a href="#" className="text-blue-600 hover:underline">WhatsApp's Terms of Use</a>. I will not send SPAM, as I am aware of the risk of my number being banned from WhatsApp. I understand that the platform has no responsibility for the content of the messages sent or for the consequences of improper use. Furthermore, I confirm that the content of my messages complies with WhatsApp's Terms of Use, and I fully acknowledge my responsibility in this regard.
-                </label>
-              </div>
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="check2" className="mt-1" />
-                <label htmlFor="check2" className="text-sm text-muted-foreground">
-                  I acknowledge and agree that this purchase is final and non-refundable under any circumstances.
-                </label>
-              </div>
-               <div className="flex items-start gap-2">
-                <input type="checkbox" id="check3" className="mt-1" />
-                <label htmlFor="check3" className="text-sm text-muted-foreground">
-                  I acknowledge and agree that this purchase is final and non-refundable under any circumstances.
-                </label>
-              </div>
+            {/* Purpose Selection */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Purpose *</Label>
+              <RadioGroup
+                value={newNumberData.purposeType}
+                onValueChange={(value: "automated" | "notification") =>
+                  setNewNumberData({ ...newNumberData, purposeType: value })
+                }
+                className="grid grid-cols-2 gap-4"
+              >
+                {/* Automated Option */}
+                <div>
+                  <RadioGroupItem
+                    value="automated"
+                    id="automated"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="automated"
+                    className="flex flex-col items-start gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:bg-blue-50 dark:peer-data-[state=checked]:bg-blue-950/30 cursor-pointer transition-all h-full"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                          <svg
+                            className="w-5 h-5 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        <span className="font-semibold text-sm">AUTOMATED</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        For AI messaging and automated conversations
+                      </p>
+                    </div>
+                  </Label>
+                </div>
+
+                {/* Notification Option */}
+                <div>
+                  <RadioGroupItem
+                    value="notification"
+                    id="notification"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="notification"
+                    className="flex flex-col items-start gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:bg-blue-50 dark:peer-data-[state=checked]:bg-blue-950/30 cursor-pointer transition-all h-full"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                          <svg
+                            className="w-5 h-5 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                        </div>
+                        <span className="font-semibold text-sm">NOTIFICATION</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        For voice calls and SMS notifications
+                      </p>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCloseAddNumberDialog}
+              disabled={isSavingNumber}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveNewNumber}
+              disabled={isSavingNumber}
+              className="btn-outline-primary"
+              variant="outline"
+            >
+              {isSavingNumber ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteAccountDialog} onOpenChange={setShowDeleteAccountDialog}>
+      <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <AlertDialogTitle>Delete WhatsApp Account</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-semibold">{accountToDelete?.name}</span>?
+              <br /><br />
+              This action cannot be undone. All phone numbers and configurations associated with this account will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingAccount}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDeleteAccount();
+              }}
+              disabled={isDeletingAccount}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeletingAccount ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Account"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Number Confirmation Dialog */}
+      <AlertDialog open={showDeleteNumberDialog} onOpenChange={setShowDeleteNumberDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <AlertDialogTitle>Delete Phone Number</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Are you sure you want to delete the phone number{" "}
+              <span className="font-semibold">{numberToDelete?.number?.display_phone_number}</span>?
+              <br /><br />
+              This action cannot be undone. All conversations and configurations for this number will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingNumber}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDeleteNumber();
+              }}
+              disabled={isDeletingNumber}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeletingNumber ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Number"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
     </div>
   );

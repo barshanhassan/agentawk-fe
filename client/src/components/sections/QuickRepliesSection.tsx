@@ -1,18 +1,18 @@
-import { useState, useRef, useEffect } from "react";
-
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle } from "lucide-react";
+import { useState } from "react";
+import { Bot, Plus, Trash2, Edit2, MoreVertical, ArrowLeft, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -20,535 +20,502 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import CustomDropdown from "../CustomDropdown";
-import { Textarea } from "@/components/ui/textarea";
 
-type QuickReplyStatus = "Active" | "Inactive";
-
-interface Option {
+interface Collection {
   id: string;
   name: string;
+  visibility: "private" | "public" | "specific";
+  messages: Message[];
 }
 
-const statusOptions: Option[] = [
-  { id: "Active", name: "Active" },
-  { id: "Inactive", name: "Inactive" },
-];
-
-interface QuickReply {
+interface Message {
   id: string;
-  name: string;
-  message: string;
-  status: QuickReplyStatus;
-  lastEdited: string;
+  title: string;
+  type: "text" | "media";
+  content: string;
 }
 
-const initialQuickReplies: QuickReply[] = [
-  { id: "QR001", name: "Greeting", message: "Hello! How can I help you today?", status: "Active", lastEdited: "2025-11-12" },
-  { id: "QR002", name: "Pricing", message: "You can find our pricing details here: [Link]", status: "Active", lastEdited: "2025-11-11" },
-  { id: "QR003", name: "Support", message: "Please describe your issue, and I'll connect you with a support agent.", status: "Inactive", lastEdited: "2025-11-10" },
+const initialCollections: Collection[] = [
+  { id: "1", name: "CaioTest", visibility: "public", messages: [{ id: "m1", title: "Caio", type: "text", content: "" }] },
+  { id: "2", name: "Collection 2 by usman", visibility: "public", messages: [] },
+  { id: "3", name: "Another collection for public.", visibility: "public", messages: [] },
+  { id: "4", name: "public collection by john doe", visibility: "public", messages: [] },
+  { id: "5", name: "Teste Tiago", visibility: "public", messages: [] },
+  { id: "6", name: "Makar", visibility: "public", messages: [] },
 ];
 
 export default function QuickRepliesSection() {
   const { toast } = useToast();
-  const [quickReplies, setQuickReplies] = useState<QuickReply[]>(initialQuickReplies);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
-  const [filterStatus, setFilterStatus] = useState<QuickReplyStatus[]>([]);
+  const [collections, setCollections] = useState<Collection[]>(initialCollections);
+  const [view, setView] = useState<"list" | "create_collection" | "collection_detail" | "create_message">("list");
+  
+  // Create Form State
+  const [collectionName, setCollectionName] = useState("");
+  const [visibility, setVisibility] = useState<"private" | "public" | "specific">("private");
+  const [showError, setShowError] = useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
+  // Edit/Delete State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentCollection, setCurrentCollection] = useState<Collection | null>(null);
 
-  // Create Quick Reply Modal State
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newMessage, setNewMessage] = useState("");
+  // Create Message State
+  const [messageTitle, setMessageTitle] = useState("");
+  const [messageType, setMessageType] = useState<"text" | "media">("text");
+  const [messageContent, setMessageContent] = useState("");
 
-  // Edit Quick Reply Modal State
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<QuickReply | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editMessage, setEditMessage] = useState("");
-  const [editStatus, setEditStatus] = useState<QuickReplyStatus>("Active");
-
-  // Delete Quick Reply Modal State
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<QuickReply | null>(null);
-
-  const handleColumnSort = (column: string) => {
-    if (sort?.column === column) {
-      if (sort.direction === "asc") {
-        setSort({ column, direction: "desc" });
-      } else {
-        setSort(null); // Unsort
-      }
-    } else {
-      setSort({ column, direction: "asc" });
-    }
+  const handleCreateCollectionClick = () => {
+    setView("create_collection");
+    setCollectionName("");
+    setVisibility("private");
+    setShowError(false);
   };
 
-  const renderSortIcon = (column: string) => {
-    const isActive = sort?.column === column;
-    const color = isActive ? "text-foreground" : "text-muted-foreground";
-
-    if (!isActive) {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
-    }
-    if (sort?.direction === "asc") {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronUp size={14} className={color} /></div>;
-    }
-    return <div className="w-4 h-4 flex items-center justify-center"><ChevronDown size={14} className={color} /></div>;
+  const handleCancelCreateCollection = () => {
+    setView("list");
+    setCollectionName("");
+    setVisibility("private");
+    setShowError(false);
   };
 
-  const getFilteredAndSortedData = () => {
-    let data = [...quickReplies];
-
-    if (search) {
-      data = data.filter(item =>
-        item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.message.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (filterStatus.length > 0) {
-      data = data.filter(item => filterStatus.includes(item.status));
-    }
-
-    if (sort) {
-      data.sort((a, b) => {
-        const aVal = a[sort.column as keyof QuickReply];
-        const bVal = b[sort.column as keyof QuickReply];
-        let comparison = 0;
-        if (typeof aVal === "string" && typeof bVal === "string") {
-          comparison = aVal.localeCompare(bVal);
-        }
-        return sort.direction === "asc" ? comparison : -comparison;
-      });
-    }
-
-    const startIndex = (page - 1) * rowsPerPage;
-    return data.slice(startIndex, startIndex + rowsPerPage);
-  };
-
-  const totalFilteredItems = quickReplies.length;
-
-  const handleEdit = (item: QuickReply) => {
-    setEditingItem(item);
-    setEditName(item.name);
-    setEditMessage(item.message);
-    setEditStatus(item.status);
-    setShowEditModal(true);
-  };
-
-  const handleCopy = (item: QuickReply) => {
-    navigator.clipboard.writeText(item.message);
-    toast({
-      title: "Copied to clipboard",
-      description: item.message,
-    });
-  };
-
-  const handleDelete = (item: QuickReply) => {
-    setItemToDelete(item);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (itemToDelete) {
-      setQuickReplies(quickReplies.filter(item => item.id !== itemToDelete.id));
-      toast({
-        title: "Quick Reply Deleted",
-        description: `${itemToDelete.name} has been deleted.`,
-      });
-      setShowDeleteModal(false);
-      setItemToDelete(null);
-    }
-  };
-
-  const handleCreate = () => {
-    if (!newName.trim() || !newMessage.trim()) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+  const handleCreateCollection = () => {
+    if (!collectionName.trim()) {
+      setShowError(true);
       return;
     }
-    const newItem: QuickReply = {
-      id: `QR${String(quickReplies.length + 1).padStart(3, "0")}`,
-      name: newName,
-      message: newMessage,
-      status: "Active",
-      lastEdited: new Date().toISOString().slice(0, 10), // Set current date
+
+    const newCollection: Collection = {
+      id: Date.now().toString(),
+      name: collectionName,
+      visibility,
+      messages: [],
     };
-    setQuickReplies([...quickReplies, newItem]);
+    setCollections([...collections, newCollection]);
+    setView("list");
     toast({
-      title: "Quick Reply Created",
-      description: `${newName} has been created successfully.`,
+      title: "Success",
+      description: "Collection created successfully",
     });
-    setNewName("");
-    setNewMessage("");
-    setShowCreateModal(false);
   };
 
-  const handleSaveEdit = () => {
-    if (!editName.trim() || !editMessage.trim()) {
+  // Edit Logic
+  const handleUpdateCollection = () => {
+    if (currentCollection && collectionName.trim()) {
+      setCollections(collections.map(c => 
+        c.id === currentCollection.id ? { ...c, name: collectionName } : c
+      ));
+      setCollectionName("");
+      setCurrentCollection(null);
+      setIsEditModalOpen(false);
       toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
+        title: "Success",
+        description: "Collection updated successfully",
       });
-      return;
-    }
-    if (editingItem) {
-      setQuickReplies(
-        quickReplies.map(item =>
-          item.id === editingItem.id
-            ? { ...item, name: editName, message: editMessage, status: editStatus, lastEdited: new Date().toISOString().slice(0, 10) } // Update lastEdited
-            : item
-        )
-      );
-      toast({
-        title: "Quick Reply Updated",
-        description: `${editName} has been updated successfully.`,
-      });
-      setShowEditModal(false);
-      setEditingItem(null);
     }
   };
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setRowsDropdownOpen(false);
-      }
+  const handleDeleteCollection = () => {
+    if (currentCollection) {
+      setCollections(collections.filter(c => c.id !== currentCollection.id));
+      setCurrentCollection(null);
+      setIsDeleteModalOpen(false);
+      toast({
+        title: "Success",
+        description: "Collection deleted successfully",
+      });
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  };
+
+  const openEditModal = (collection: Collection) => {
+    setCurrentCollection(collection);
+    setCollectionName(collection.name);
+    setIsEditModalOpen(true);
+  };
+
+  const openDeleteModal = (collection: Collection) => {
+    setCurrentCollection(collection);
+    setIsDeleteModalOpen(true);
+  };
+
+  const openCollectionDetail = (collection: Collection) => {
+    setCurrentCollection(collection);
+    setView("collection_detail");
+  };
+
+  const handleCreateMessageClick = () => {
+    setView("create_message");
+    setMessageTitle("");
+    setMessageType("text");
+    setMessageContent("");
+  };
+
+  const handleCancelCreateMessage = () => {
+    setView("collection_detail");
+    setMessageTitle("");
+    setMessageType("text");
+    setMessageContent("");
+  };
+
+  const handleCreateMessage = () => {
+    if (currentCollection && messageTitle.trim() && messageContent.trim()) {
+       const newMessage: Message = {
+        id: Date.now().toString(),
+        title: messageTitle,
+        type: messageType,
+        content: messageContent,
+      };
+
+      const updatedCollections = collections.map(c => {
+        if (c.id === currentCollection.id) {
+          return { ...c, messages: [...c.messages, newMessage] };
+        }
+        return c;
+      });
+
+      setCollections(updatedCollections);
+      // Update current collection reference as well to reflect changes immediately
+      const updatedCurrent = updatedCollections.find(c => c.id === currentCollection.id) || null;
+      setCurrentCollection(updatedCurrent);
+
+      setView("collection_detail");
+       toast({
+        title: "Success",
+        description: "Message created successfully",
+      });
+    }
+  };
+
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold mb-1">Quick Replies</h2>
-          <p className="text-sm text-muted-foreground">You can create your pre-written replies here to enable your agents to reply instantly to customers.</p>
-        </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-outline-primary gap-2 h-9 font-normal"
-          variant="outline"
-        >
-          <Plus size={16} />
-          Create Quick Reply
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search quick replies..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-          />
-        </div>
-        <CustomDropdown
-          options={statusOptions}
-          selected={filterStatus}
-          onChange={(selectedIds) => setFilterStatus(selectedIds as QuickReplyStatus[])}
-          placeholder="Status"
-          width="120px"
-        />
-      </div>
-
-      <Card className="border-0">
-        <CardContent className="p-0 px-1 mt-1">
-          <div className="overflow-x-auto mt-6">
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("name")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Name
-                      {renderSortIcon("name")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("message")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Message
-                      {renderSortIcon("message")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status
-                      {renderSortIcon("status")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("lastEdited")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Last Edited
-                      {renderSortIcon("lastEdited")}
-                    </div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredAndSortedData().length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No quick replies found.
-                    </td>
-                  </tr>
-                ) : (
-                  getFilteredAndSortedData().map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3 max-w-[10rem]">
-                        <div className="break-all">
-                          {item.name}
-                        </div>
-                      </td>
-                      <td className="py-2 px-3 max-w-xs">
-                        <div className="break-all">
-                          {item.message}
-                        </div>
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                          }`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3">{item.lastEdited}</td>
-                      <td className="py-2 px-3">
-                        <div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1 hover:bg-muted rounded">
-                                <MoreVertical size={14} className="text-muted-foreground" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(item)}>
-                                <Edit2 size={14} className="mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleCopy(item)}>
-                                <Copy size={14} className="mr-2" />
-                                Copy
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive">
-                                <Trash2 size={14} className="mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between border-b pb-6">
+        <div className="flex gap-4">
+          <div className="mt-1">
+            <Bot className="h-8 w-8 text-foreground" />
           </div>
-
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{totalFilteredItems} results</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                  onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                >
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li
-                          key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                          onClick={() => {
-                            setRowsPerPage(option);
-                            setPage(1);
-                            setRowsDropdownOpen(false);
-                          }}
-                        >
-                          {option}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <span className="text-muted-foreground">Page {page} of {Math.ceil(totalFilteredItems / rowsPerPage)}</span>
-              <div className="flex gap-1">
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                >
-                  <ChevronsLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredItems / rowsPerPage), prev + 1))}
-                  disabled={page === Math.ceil(totalFilteredItems / rowsPerPage)}
-                >
-                  <ChevronRight size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(Math.ceil(totalFilteredItems / rowsPerPage))}
-                  disabled={page === Math.ceil(totalFilteredItems / rowsPerPage)}
-                >
-                  <ChevronsRight size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Create Quick Reply</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <div className="relative">
-                <Input
-                  placeholder="Enter name"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value.slice(0, 100))}
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  {newName.length}/100
-                </span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Message<span className="text-red-500 pl-0.5">*</span></label>
-              <div className="relative">
-                <Textarea
-                  placeholder="Enter message"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value.slice(0, 500))}
-                  className="pr-12"
-                />
-                <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
-                  {newMessage.length}/500
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowCreateModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleCreate} className="btn-outline-primary" variant="outline">Create</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Edit Quick Reply</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <div className="relative">
-                <Input
-                  placeholder="Enter name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value.slice(0, 100))}
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  {editName.length}/100
-                </span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Message<span className="text-red-500 pl-0.5">*</span></label>
-              <div className="relative">
-                <Textarea
-                  placeholder="Enter message"
-                  value={editMessage}
-                  onChange={(e) => setEditMessage(e.target.value.slice(0, 500))}
-                  className="pr-12"
-                />
-                <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
-                  {editMessage.length}/500
-                </span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Status<span className="text-red-500 pl-0.5">*</span></label>
-              <Select value={editStatus} onValueChange={(value: QuickReplyStatus) => setEditStatus(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowEditModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleSaveEdit} className="btn-outline-primary" variant="outline">Save Changes</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Delete Quick Reply</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold break-all">{itemToDelete?.name}</span>? This action cannot be undone.
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">Quick Replies</h2>
+            <p className="text-sm text-muted-foreground mt-1 text-slate-500">
+              Efficiently create and organize quick replies for live chats with leads or contacts.
             </p>
           </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowDeleteModal(false)} variant="outline" className="border-input">Cancel</Button>
-            <Button onClick={handleConfirmDelete} className="btn-outline-destructive" variant="outline">Delete</Button>
+        </div>
+        
+        {view === "list" && (
+          <Button 
+            onClick={handleCreateCollectionClick}
+            variant="outline"
+            className="btn-outline-primary gap-2"
+          >
+            <Plus size={16} />
+            Add Collection
+          </Button>
+        )}
+         {(view === "collection_detail" || view === "create_message") && (
+           <Button 
+            onClick={handleCreateCollectionClick}
+            variant="outline"
+            className="btn-outline-primary gap-2"
+          >
+            <Plus size={16} />
+            Add Collection
+          </Button>
+        )}
+      </div>
+
+      {view === "list" && (
+        <div className="mt-6">
+          <div className="w-full">
+            <div className="grid grid-cols-[1fr,100px] border-b pb-3 mb-4">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-4">Collection Name</div>
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider text-right pr-4">Action</div>
+            </div>
+            
+            <div className="space-y-1">
+              {collections.map((collection) => (
+                <div 
+                  key={collection.id} 
+                  className="grid grid-cols-[1fr,100px] items-center py-4 border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 px-4 -mx-4 transition-colors cursor-pointer group"
+                  onClick={() => openCollectionDetail(collection)}
+                >
+                  <div className="text-sm font-medium text-foreground group-hover:text-blue-600 transition-colors">
+                    {collection.name}
+                  </div>
+                  <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                     <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors">
+                          <MoreVertical size={16} className="text-slate-400" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditModal(collection)}>
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Edit name
+                        </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => openCollectionDetail(collection)}>
+                          <Bot className="mr-2 h-4 w-4" />
+                          Open collection
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openDeleteModal(collection)} className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+              
+              {collections.length === 0 && (
+                <div className="text-center py-12 text-slate-500 text-sm">
+                  No collections found. Create a new one to get started.
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+      )}
+
+      {view === "create_collection" && (
+        <div className="mt-6 space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="collection-name" className="text-sm font-medium text-foreground">
+                Collection name
+              </Label>
+              <Input
+                id="collection-name"
+                value={collectionName}
+                onChange={(e) => {
+                  setCollectionName(e.target.value);
+                  if (e.target.value.trim()) setShowError(false);
+                }}
+                placeholder="Collection name"
+                className={`w-full ${showError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              />
+              {showError && (
+                <p className="text-xs text-red-500">Enter collection name.</p>
+              )}
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <Label className="text-sm font-medium text-foreground">
+                Share this collection with.
+              </Label>
+              <RadioGroup value={visibility} onValueChange={(v: any) => setVisibility(v)} className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="private" id="private" className="text-blue-600 border-gray-400" />
+                  <Label htmlFor="private" className="font-normal cursor-pointer">Private - Only you can see.</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="public" id="public" className="text-blue-600 border-gray-400" />
+                  <Label htmlFor="public" className="font-normal cursor-pointer">Public - All agents can see.</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="specific" id="specific" className="text-blue-600 border-gray-400" />
+                  <Label htmlFor="specific" className="font-normal cursor-pointer">Specific - Share with specific agents.</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t mt-8">
+            <Button 
+              variant="outline" 
+              onClick={handleCancelCreateCollection}
+              className="text-foreground"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateCollection}
+              className="btn-outline-primary min-w-[80px]"
+              variant="outline"
+            >
+              <span className="sr-only">Create</span>
+               Add
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Collection Detail View */}
+      {view === "collection_detail" && currentCollection && (
+        <div className="space-y-6">
+           <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">{currentCollection.name}</h3>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setView("list")}
+                className="gap-2 text-muted-foreground"
+              >
+                <ArrowLeft size={16} />
+                Collections
+              </Button>
+              <Button 
+                variant="outline"
+                className="btn-outline-primary gap-2"
+                onClick={handleCreateMessageClick}
+              >
+                <Plus size={16} />
+                Add Message
+              </Button>
+            </div>
+           </div>
+
+           <div className="space-y-2">
+             {currentCollection.messages.map(message => (
+               <div key={message.id} className="p-4 rounded-lg border border-transparent hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer">
+                 <div className="font-medium">{message.title}</div>
+               </div>
+             ))}
+             {currentCollection.messages.length === 0 && (
+               <div className="text-center py-8 text-muted-foreground text-sm">
+                 No canned messages in this collection yet.
+               </div>
+             )}
+           </div>
+        </div>
+      )}
+
+      {/* Create Message View */}
+      {view === "create_message" && currentCollection && (
+        <div className="space-y-6">
+           <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">{currentCollection.name}</h3>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setView("list")}
+                className="gap-2 text-muted-foreground"
+              >
+                <ArrowLeft size={16} />
+                Collections
+              </Button>
+              <Button 
+                variant="outline"
+                className="btn-outline-primary gap-2"
+              >
+                <Plus size={16} />
+                Add Message
+              </Button>
+            </div>
+           </div>
+
+           <div className="space-y-4">
+             <div className="space-y-2">
+               <Label className="text-sm font-medium">Message title</Label>
+               <Input 
+                 placeholder="Message title" 
+                 value={messageTitle}
+                 onChange={(e) => setMessageTitle(e.target.value)}
+                />
+             </div>
+
+             <div className="space-y-3">
+               <Label className="text-sm font-medium">Message type</Label>
+               <RadioGroup value={messageType} onValueChange={(v: any) => setMessageType(v)} className="flex items-center gap-6">
+                 <div className="flex items-center space-x-2">
+                   <RadioGroupItem value="text" id="text" className="text-blue-600 border-gray-400" />
+                   <Label htmlFor="text" className="font-normal cursor-pointer">Text message</Label>
+                 </div>
+                 <div className="flex items-center space-x-2">
+                   <RadioGroupItem value="media" id="media" className="text-blue-600 border-gray-400" />
+                   <Label htmlFor="media" className="font-normal cursor-pointer">Media message</Label>
+                 </div>
+               </RadioGroup>
+             </div>
+
+             <div className="space-y-2 relative">
+               <Label className="text-sm font-medium">Response text</Label>
+               <div className="relative">
+                 <Textarea 
+                   placeholder="Type message..." 
+                   className="min-h-[140px] resize-none pr-8"
+                   value={messageContent}
+                   onChange={(e) => setMessageContent(e.target.value)}
+                 />
+                 <button className="absolute bottom-3 right-3 text-muted-foreground hover:text-foreground">
+                   <Smile size={20} />
+                 </button>
+               </div>
+             </div>
+
+             <div className="flex justify-between items-center">
+               <div className="w-[200px]">
+                 <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select field" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                    </SelectContent>
+                 </Select>
+               </div>
+               <span className="text-xs text-blue-500">Characters remaining: {2000 - messageContent.length}</span>
+             </div>
+           </div>
+
+           <div className="flex justify-end gap-3 pt-6">
+              <Button variant="outline" onClick={handleCancelCreateMessage}>
+                Close
+              </Button>
+              <Button 
+                onClick={handleCreateMessage}
+                disabled={!messageTitle.trim() || !messageContent.trim()}
+                className="btn-outline-primary min-w-[80px]"
+                variant="outline"
+              >
+                 Add
+              </Button>
+           </div>
+        </div>
+      )}
+
+      {/* Edit Modal (Collection Name) */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Collection</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Collection Name</Label>
+              <Input
+                id="edit-name"
+                value={collectionName}
+                onChange={(e) => setCollectionName(e.target.value)}
+                placeholder="Enter collection name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateCollection} disabled={!collectionName.trim()} variant="outline" className="btn-outline-primary">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Collection</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+             <p className="text-sm text-slate-500">
+              Are you sure you want to delete <span className="font-semibold text-foreground">{currentCollection?.name}</span>? 
+              This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteCollection}>Delete</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -28,7 +28,9 @@ import {
   Hash,
   Instagram,
   MessageCircle,
-  LifeBuoy
+
+  LifeBuoy,
+  Plus
 } from "react-feather";
 import { useTheme } from "@/contexts/ThemeContext";
 import { BsGrid3X3GapFill } from "react-icons/bs";
@@ -78,6 +80,7 @@ export default function AppSidebar() {
     { id: "workspace-a", name: "Workspace A" },
     { id: "workspace-b", name: "Workspace B" },
     { id: "workspace-c", name: "Workspace C" },
+    { id: "create-workspace", name: "+ Create Workspace", icon: <Plus size={14} /> },
   ];
 
   const statusOptions = [
@@ -144,7 +147,6 @@ export default function AppSidebar() {
     { label: "WhatsApp Templates", href: "/templates", icon: FileText },
     { label: "Campaign Manager", href: "/campaigns", icon: Send },
     { label: "Contacts", href: "/contacts", icon: Users },
-    { label: "User Management", href: "/users", icon: Settings },
     { label: "Team Management", href: "/teams", icon: UserPlus },
     { label: "Workspace Management", href: "/workspaces", icon: Grid },
     { label: "Media Gallery", href: "/settings?tab=Media gallery", icon: Grid },
@@ -246,14 +248,7 @@ export default function AppSidebar() {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/conversations/bot"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/conversations/bot") ? activeClass : ""}`}
-                >
-                  <Cpu size={18} /> Bot Conversations
-                </Link>
-              </DropdownMenuItem>
+
 
               <DropdownMenuItem asChild>
                 <Link
@@ -283,14 +278,7 @@ export default function AppSidebar() {
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/users"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/users") ? activeClass : ""}`}
-                >
-                  <Settings size={18} /> User Management
-                </Link>
-              </DropdownMenuItem>
+
 
               <DropdownMenuItem asChild>
                 <Link

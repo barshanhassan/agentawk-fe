@@ -70,7 +70,7 @@ export default function CustomFieldsSection() {
         <div className="space-y-1 flex-1">
           <CardTitle className="text-lg flex items-center justify-between">
             Custom fields
-            <Button variant="outline" className="text-primary border-primary hover:bg-primary hover:text-white" onClick={() => setIsCreateFieldOpen(true)}>Create new</Button>
+            <Button variant="outline" className="text-primary border-primary hover:bg-primary hover:text-white" onClick={() => setIsCreateFieldOpen(true)}><Plus size={16} /> Add New</Button>
           </CardTitle>
           <CardDescription>Efficiently manage custom fields and associate them with Contacts, Companies, or Opportunities</CardDescription>
         </div>
@@ -302,7 +302,8 @@ export default function CustomFieldsSection() {
                 disabled={!formData.displayName.trim() || !formData.systemName.trim() || !formData.dataType}
                 className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium transition-colors"
               >
-                Create
+                
+                 Add
               </button>
             </div>
           </div>

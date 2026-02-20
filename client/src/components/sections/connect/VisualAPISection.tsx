@@ -153,7 +153,11 @@ export default function VisualAPISection() {
             <p className="text-sm text-muted-foreground">Configure triggers to start visual workflows from external API calls.</p>
           </div>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+        <Button 
+          variant="outline"
+          onClick={() => setIsCreateModalOpen(true)} 
+          className="gap-2 btn-outline-primary"
+        >
           <Plus size={16} />
           Add Trigger
         </Button>
@@ -227,9 +231,13 @@ export default function VisualAPISection() {
           <p className="text-muted-foreground mb-6 text-center max-w-sm">
             Create your first API trigger to start automating your visual workflows using external webhooks.
           </p>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Button 
+            variant="outline"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="btn-outline-primary"
+          >
             <Plus size={16} className="mr-2" />
-            Create Trigger
+            Add Trigger
           </Button>
         </div>
       )}
@@ -254,7 +262,7 @@ export default function VisualAPISection() {
              <Button variant="outline" onClick={() => setViewMode("LIST")}>
               Cancel
             </Button>
-            <Button>
+            <Button variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
               Save Changes
             </Button>
           </div>
@@ -455,7 +463,7 @@ export default function VisualAPISection() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateTrigger} disabled={!newTriggerName.trim()}>Create Trigger</Button>
+            <Button variant="outline" className="btn-outline-primary h-9 px-6 font-medium" onClick={handleCreateTrigger} disabled={!newTriggerName.trim()}>Add Trigger</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -10,8 +10,8 @@ import {
   EyeOff, 
   CornerUpLeft, 
   Pen, 
-  MessageSquare,
-  X
+  X,
+  Check
 } from "lucide-react";
 import {
   Dialog,
@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data
 const mockTelegramBots = [
@@ -60,9 +61,27 @@ export default function TelegramSection() {
   const [showDefaultReply, setShowDefaultReply] = useState(false);
   const [selectedBot, setSelectedBot] = useState<typeof mockTelegramBots[0] | null>(null);
   const [autoReplyInterval, setAutoReplyInterval] = useState("0");
+  const [editingBotId, setEditingBotId] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [botToDelete, setBotToDelete] = useState<typeof mockTelegramBots[0] | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    username: "",
+    token: ""
+  });
+
+  const { toast } = useToast();
 
   const toggleTokenVisibility = (id: number) => {
     setShowToken(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleSaveDefaultReply = () => {
+    toast({
+      title: "Success",
+      description: "Default reply settings saved successfully.",
+    });
+    setShowDefaultReply(false);
   };
 
   const toggleFeeder = (botId: number) => {
@@ -74,12 +93,76 @@ export default function TelegramSection() {
     }));
   };
 
+  const handleEditBot = (bot: typeof mockTelegramBots[0]) => {
+    setEditingBotId(bot.id);
+    setEditFormData({
+      name: bot.name,
+      username: bot.username,
+      token: bot.token
+    });
+  };
+
+  const handleSaveBot = () => {
+    if (!editingBotId) return;
+    setBots(prev => prev.map(b => 
+      b.id === editingBotId 
+        ? { ...b, ...editFormData }
+        : b
+    ));
+    setEditingBotId(null);
+    toast({
+      title: "Success",
+      description: "Bot settings updated successfully.",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBotId(null);
+  };
+
+  const handleDeleteBot = (bot: typeof mockTelegramBots[0]) => {
+    setBotToDelete(bot);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteBot = () => {
+    if (botToDelete) {
+      setBots(prev => prev.filter(b => b.id !== botToDelete.id));
+      toast({
+        title: "Success",
+        description: "Bot deleted successfully.",
+      });
+      setShowDeleteConfirm(false);
+      setBotToDelete(null);
+    }
+  };
+
+  const handleAddNewBot = () => {
+    const newBotId = Date.now();
+    const newBot = {
+      id: newBotId,
+      name: "New Telegram Bot",
+      username: "new_bot",
+      token: "",
+      status: "INACTIVE",
+      allow_in_feeder: false,
+      auto_reply_automation_id: null,
+      avatar: null
+    };
+    setBots([newBot, ...bots]);
+    handleEditBot(newBot);
+    setHasBots(true);
+  };
+
   return (
     <div className="p-6">
       {view === "list" && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Telegram</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Telegram</h2>
+              <img src="/images/automations/telegram.svg" alt="Telegram" className="h-5 w-5" />
+            </div>
             <p className="text-sm text-muted-foreground">
               Connect your Telegram Bot to automate conversations.
             </p>
@@ -89,8 +172,8 @@ export default function TelegramSection() {
           <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img src="/images/automations/telegram.svg" alt="Telegram" className="h-6 w-6" />
                 <h3 className="font-semibold text-sm">Telegram</h3>
+                <img src="/images/automations/telegram.svg" alt="Telegram" className="h-5 w-5" />
               </div>
             </div>
 
@@ -103,7 +186,7 @@ export default function TelegramSection() {
             <div className="mt-6 flex justify-end">
               <Button
                 variant="outline"
-                className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
+                className="btn-outline-primary"
                 onClick={() => setView("manage")}
               >
                 Manage
@@ -120,9 +203,11 @@ export default function TelegramSection() {
             {/* Header */}
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src="/images/automations/telegram.svg" alt="Telegram" className="h-10 w-10 mr-2" />
                 <div>
-                  <h3 className="text-lg font-medium">Telegram</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">Telegram</h3>
+                    <img src="/images/automations/telegram.svg" alt="Telegram" className="h-6 w-6" />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Integrate your Telegram Bot to unlock 2-Way interactive dynamic conversations
                   </p>
@@ -131,10 +216,10 @@ export default function TelegramSection() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
-                  className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600"
-                  onClick={() => setHasBots(true)}
+                  className="btn-outline-primary"
+                  onClick={handleAddNewBot}
                 >
-                  Add new
+                  + Add New
                 </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
@@ -155,7 +240,8 @@ export default function TelegramSection() {
                 </p>
                 <div className="pt-2">
                   <Button 
-                    className="bg-blue-600 text-white hover:bg-blue-700 min-w-[150px]"
+                    className="btn-outline-primary min-w-[150px]"
+                    variant="outline"
                     onClick={() => setHasBots(true)}
                   >
                     Connect now
@@ -169,7 +255,7 @@ export default function TelegramSection() {
                     <div className="flex items-start py-5">
                       {/* Avatar */}
                       <div className="mr-6 text-center">
-                        <div className="relative group cursor-pointer inline-block">
+                        <div className="relative group cursor-pointer inline-block" onClick={() => toast({ title: "Avatar", description: "Avatar update feature coming soon." })}>
                           <div className="p-4 bg-white dark:bg-slate-800 border rounded-full w-[100px] h-[100px] flex items-center justify-center">
                             <img src="/images/automations/telegram.svg" className="w-10 h-10" alt="Bot Avatar" />
                           </div>
@@ -187,65 +273,80 @@ export default function TelegramSection() {
                           <div className="col-span-2">
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm"
-                              value={bot.name}
-                              disabled
+                              className={`w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm ${editingBotId === bot.id ? 'border-blue-500 ring-1 ring-blue-500' : ''}`}
+                              value={editingBotId === bot.id ? editFormData.name : bot.name}
+                              disabled={editingBotId !== bot.id}
+                              onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
                             />
                           </div>
                           <div>
-                            <ul className="flex space-x-4 items-center">
-                              <li>
-                                {bot.status === "ACTIVE" ? (
-                                  <Badge variant="outline" className="text-xs text-green-600 border-green-600">
-                                    {bot.status}
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="text-xs text-red-500 border-red-400">
-                                    {bot.status}
-                                  </Badge>
-                                )}
-                              </li>
-                              <li>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-56">
-                                    {bot.status === "ACTIVE" && (
-                                      <DropdownMenuItem onClick={() => { setSelectedBot(bot); setShowDefaultReply(true); }}>
+                            {editingBotId === bot.id ? (
+                              <div className="flex items-center gap-2">
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={handleSaveBot}>
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleCancelEdit}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <ul className="flex space-x-4 items-center">
+                                <li>
+                                  {bot.status === "ACTIVE" ? (
+                                    <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                                      {bot.status}
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs text-red-500 border-red-400">
+                                      {bot.status}
+                                    </Badge>
+                                  )}
+                                </li>
+                                <li>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
+                                    onClick={() => handleDeleteBot(bot)}
+                                    title="Delete bot"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                                        <MoreVertical className="h-4 w-4" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56">
+                                      {bot.status === "ACTIVE" && (
+                                        <DropdownMenuItem onClick={() => { setSelectedBot(bot); setShowDefaultReply(true); }}>
+                                          <div className="flex items-center gap-3">
+                                            <CornerUpLeft className="h-4 w-4" />
+                                            <span>Auto Reply</span>
+                                          </div>
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem onClick={() => handleEditBot(bot)}>
                                         <div className="flex items-center gap-3">
-                                          <CornerUpLeft className="h-4 w-4" />
-                                          <span>Auto Reply</span>
+                                          <Pen className="h-4 w-4" />
+                                          <span>Edit</span>
                                         </div>
                                       </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem>
-                                      <div className="flex items-center gap-3">
-                                        <Pen className="h-4 w-4" />
-                                        <span>Edit</span>
-                                      </div>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <div className="flex items-center gap-3 text-red-600">
-                                        <Trash2 className="h-4 w-4" />
-                                        <span>Delete</span>
-                                      </div>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleFeeder(bot.id); }}>
-                                      <div className="flex items-center justify-between w-full gap-3">
-                                        <div className="flex items-center gap-2">
-                                          <Plug className="h-4 w-4" />
-                                          <span>AI Feeder</span>
+                                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleFeeder(bot.id); }}>
+                                        <div className="flex items-center justify-between w-full gap-3">
+                                          <div className="flex items-center gap-2">
+                                            <Plug className="h-4 w-4" />
+                                            <span>AI Feeder</span>
+                                          </div>
+                                          <Switch checked={bot.allow_in_feeder} />
                                         </div>
-                                        <Switch checked={bot.allow_in_feeder} />
-                                      </div>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </li>
-                            </ul>
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </li>
+                              </ul>
+                            )}
                           </div>
                         </div>
 
@@ -255,9 +356,10 @@ export default function TelegramSection() {
                           <div className="col-span-2">
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm"
-                              value={`@${bot.username}`}
-                              readOnly
+                              className={`w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm ${editingBotId === bot.id ? 'border-blue-500 ring-1 ring-blue-500' : ''}`}
+                              value={editingBotId === bot.id ? editFormData.username : `@${bot.username}`}
+                              readOnly={editingBotId !== bot.id}
+                              onChange={(e) => setEditFormData({...editFormData, username: e.target.value})}
                             />
                           </div>
                         </div>
@@ -268,9 +370,10 @@ export default function TelegramSection() {
                           <div className="col-span-2 flex items-center gap-2">
                             <input
                               type={showToken[bot.id] ? "text" : "password"}
-                              className="w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm"
-                              value={bot.token}
-                              disabled
+                              className={`w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm ${editingBotId === bot.id ? 'border-blue-500 ring-1 ring-blue-500' : ''}`}
+                              value={editingBotId === bot.id ? editFormData.token : bot.token}
+                              disabled={editingBotId !== bot.id}
+                              onChange={(e) => setEditFormData({...editFormData, token: e.target.value})}
                             />
                           </div>
                           <div>
@@ -310,31 +413,26 @@ export default function TelegramSection() {
 
       {/* Default Reply Dialog */}
       <Dialog open={showDefaultReply} onOpenChange={setShowDefaultReply}>
-        <DialogContent className="max-w-5xl p-0">
+        <DialogContent className="max-w-4xl p-0">
           <div className="grid grid-cols-3">
             <div className="col-span-1 bg-slate-50 dark:bg-slate-900 p-5 flex justify-center items-center">
-              <img src="/images/settings/telegram.svg" className="w-64 h-auto" alt="Telegram" />
+              <img src="/images/settings/telegram-chat.png" className="w-full h-auto" alt="Telegram" />
             </div>
             <div className="col-span-2 p-6">
               <DialogHeader>
-                <div className="flex justify-between items-center">
-                  <DialogTitle className="text-lg font-medium">Send Instant Replies</DialogTitle>
-                  <button onClick={() => setShowDefaultReply(false)} className="p-2">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
+                <DialogTitle className="text-lg font-semibold">Send instant replies to incoming Messages</DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Trigger an automation to send an instant reply when someone sends you a message
+                  Default Reply gets triggered when your contact sends you a message and it doesn't match any Keywords.
                 </p>
               </DialogHeader>
 
               <div className="mt-6 space-y-6">
-                <div className="flex gap-3">
-                  <div className="flex-grow">
-                    <Label className="text-sm font-medium">Select Automation</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Select a Smart Flow</Label>
                     <Select>
                       <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select an automation" />
+                        <SelectValue placeholder="Select a Smart Flow" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">Welcome Message</SelectItem>
@@ -342,8 +440,8 @@ export default function TelegramSection() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="w-1/3">
-                    <Label className="text-sm font-medium">Trigger</Label>
+                  <div>
+                    <Label className="text-sm font-medium">trigger</Label>
                     <Select value={autoReplyInterval} onValueChange={setAutoReplyInterval}>
                       <SelectTrigger className="mt-2">
                         <SelectValue />
@@ -357,15 +455,15 @@ export default function TelegramSection() {
                   </div>
                 </div>
 
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm">
                   {autoReplyInterval === "0" && (
-                    <p>This automation will trigger only once per conversation</p>
+                    <p>The <strong>Once per conversation</strong> option will be triggered once per conversation.</p>
                   )}
                   {autoReplyInterval === "24" && (
-                    <p>This automation will trigger once every 24 hours</p>
+                    <p>The <strong>Once every 24 hours</strong> option will be triggered once every 24 hours.</p>
                   )}
                   {autoReplyInterval === "247" && (
-                    <p>This automation will trigger every time a message is received</p>
+                    <p>The <strong>Always</strong> option will be triggered <strong>Every time</strong> the contact sends a message that is not a Smart Flow keyword trigger, whether you're collecting data or the AI is asking a question.</p>
                   )}
                 </div>
 
@@ -377,13 +475,48 @@ export default function TelegramSection() {
                     Close
                   </Button>
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="btn-outline-primary"
+                    variant="outline"
+                    onClick={handleSaveDefaultReply}
                   >
                     Save
                   </Button>
                 </div>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Bot Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Telegram Bot
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete the Telegram bot <span className="font-bold text-slate-900 dark:text-white">"{botToDelete?.name}"</span>? 
+              This action cannot be undone and all associated automations will stop working.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteBot}
+            >
+              Yes, delete bot
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

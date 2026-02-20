@@ -134,12 +134,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             {filteredOptions.map(option => (
               <li
                 key={option.id}
-                className={`flex items-center px-3 py-2 text-sm cursor-pointer select-none transition-colors rounded-md hover:bg-accent dark:hover:bg-slate-700 text-foreground dark:text-gray-300`}
+                className={`group flex items-center px-3 py-2 text-sm cursor-pointer select-none transition-colors rounded-md hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white text-foreground dark:text-gray-300`}
                 onClick={() => handleSelect(option.id)}
                 title={option.name}
               >
                 <span className="flex items-center w-5 h-5 mr-2 justify-center flex-shrink-0">
-                  {selected.includes(option.id) && <Check className="h-4 w-4 text-primary" />}
+                  {selected.includes(option.id) && <Check className="h-4 w-4 text-primary group-hover:text-white" />}
                 </span>
                 {option.icon && <span className="mr-2 flex-shrink-0">{option.icon}</span>}
                 <span className="truncate overflow-hidden">{option.name}</span>

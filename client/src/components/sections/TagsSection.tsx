@@ -225,7 +225,7 @@ export default function TagsSection() {
           variant="outline"
         >
           <Plus size={16} />
-          Create Tag
+          Add Tag
         </Button>
       </div>
 

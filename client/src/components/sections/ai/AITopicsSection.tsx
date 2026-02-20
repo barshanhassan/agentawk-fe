@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Edit, Trash2, FileText } from "lucide-react";
+import { Sparkles, Edit, Trash2, FileText, Plus } from "lucide-react";
 
 interface Topic {
   id: string;
@@ -12,6 +12,7 @@ interface Topic {
 export default function AITopicsSection() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
   });
@@ -22,19 +23,31 @@ export default function AITopicsSection() {
 
   const handlePublish = () => {
     if (formData.name.trim()) {
-      const newTopic: Topic = {
-        id: String(topics.length + 1),
-        name: formData.name,
-      };
-      setTopics([...topics, newTopic]);
+      if (editingTopicId) {
+        setTopics(topics.map(t => t.id === editingTopicId ? { ...t, name: formData.name } : t));
+      } else {
+        const newTopic: Topic = {
+          id: String(Date.now()),
+          name: formData.name,
+        };
+        setTopics([...topics, newTopic]);
+      }
       setFormData({ name: "" });
       setIsCreateFormOpen(false);
+      setEditingTopicId(null);
     }
+  };
+
+  const handleEditTopic = (topic: Topic) => {
+    setEditingTopicId(topic.id);
+    setFormData({ name: topic.name });
+    setIsCreateFormOpen(true);
   };
 
   const handleCancel = () => {
     setFormData({ name: "" });
     setIsCreateFormOpen(false);
+    setEditingTopicId(null);
   };
 
   // Show create form
@@ -50,8 +63,8 @@ export default function AITopicsSection() {
                   <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">Add Topic</h2>
-                  <p className="text-sm text-muted-foreground">Create a new AI topic</p>
+                  <h2 className="text-lg font-semibold text-foreground">{editingTopicId ? "Edit Topic" : "Add Topic"}</h2>
+                  <p className="text-sm text-muted-foreground">{editingTopicId ? "Update your AI topic" : "Create a new AI topic"}</p>
                 </div>
               </div>
               <button 
@@ -87,13 +100,14 @@ export default function AITopicsSection() {
               >
                 Cancel
               </button>
-              <button
+              <Button
+                variant="outline"
                 onClick={handlePublish}
                 disabled={!formData.name.trim()}
-                className="px-6 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
+                className="btn-outline-primary h-9 px-6 font-medium"
               >
-                Add Topic
-              </button>
+                {editingTopicId ? "Update Topic" : "Add Topic"}
+              </Button>
             </div>
           </div>
         </div>
@@ -110,13 +124,14 @@ export default function AITopicsSection() {
         </div>
         <div className="space-y-1 flex-1">
           <CardTitle className="text-lg flex items-center justify-between">
-            Ai Topics
+            AI Topics
             <Button 
               variant="outline" 
-              className="text-primary border-primary hover:bg-primary hover:text-white"
+              className="btn-outline-primary flex items-center gap-2"
               onClick={() => setIsCreateFormOpen(true)}
             >
-              Add a topic
+              <Plus className="w-4 h-4" />
+              Add Topic
             </Button>
           </CardTitle>
           <CardDescription>Manage your AI topics</CardDescription>
@@ -134,10 +149,11 @@ export default function AITopicsSection() {
           <p className="text-sm text-muted-foreground mb-6">Click the button below to add a new topic</p>
           <Button 
             variant="outline" 
-            className="text-primary border-primary hover:bg-primary hover:text-white"
+            className="btn-outline-primary flex items-center gap-2"
             onClick={() => setIsCreateFormOpen(true)}
           >
-            Add a topic
+            <Plus className="w-4 h-4" />
+            Add Topic
           </Button>
         </div>
       ) : (
@@ -174,16 +190,19 @@ export default function AITopicsSection() {
                         <button 
                           className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
                           title="Edit"
+                          onClick={() => handleEditTopic(topic)}
                         >
                           <Edit size={16} className="text-blue-600 dark:text-blue-400" />
                         </button>
-                        <button 
-                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
                           title="Delete"
                           onClick={() => handleDeleteTopic(topic.id)}
                         >
-                          <Trash2 size={16} className="text-red-600 dark:text-red-400" />
-                        </button>
+                          <Trash2 size={16} />
+                        </Button>
                       </div>
                     </td>
                   </tr>

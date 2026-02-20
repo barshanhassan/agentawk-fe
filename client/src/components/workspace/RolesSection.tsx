@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, UserCog, Shield, Archive, ExternalLink, Plus, ChevronDown, Bot, Calendar, Settings, Users, PenTool, MessageSquare, Building2, Radio, Scale, Share2, Layers, Search, User, Info, HelpCircle, Check, Inbox, AlertCircle } from "lucide-react";
+import { ShieldCheck, UserCog, Shield, Archive, ExternalLink, Plus, ChevronDown, Bot, Calendar, Settings, Users, PenTool, MessageSquare, Building2, Radio, Scale, Share2, Layers, Search, User, Info, HelpCircle, Check, Inbox, AlertCircle, Eye, Edit3, Trash2, UserPlus, ChevronRight, MoreVertical } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const INITIAL_ROLES = [
   { 
@@ -276,6 +277,8 @@ export default function RolesSection() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ id: string, type: 'archive' | 'activate' } | null>(null);
 
+  const { toast } = useToast();
+
   const confirmAction = (id: string, type: 'archive' | 'activate') => {
     setPendingAction({ id, type });
     setAlertOpen(true);
@@ -336,6 +339,70 @@ export default function RolesSection() {
     setEnableAll(false);
   };
 
+  const handleSave = () => {
+    // Validate
+    if (!roleName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a role name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newRole = {
+      id: Date.now().toString(),
+      name: roleName,
+      description: roleDescription,
+      icon: selectedIcon.icon,
+      isArchived: false,
+      permissions: permissions
+    };
+
+    setRoles(prev => [...prev, newRole]);
+    console.log("Saving new role:", newRole);
+    toast({
+      title: "Success",
+      description: "Role created successfully!",
+    });
+    setView("list");
+    resetForm();
+  };
+
+  const handleUpdate = () => {
+    if (!editingRole) return;
+
+    // Validate
+    if (!roleName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a role name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedRole = {
+      ...editingRole,
+      name: roleName,
+      description: roleDescription,
+      icon: selectedIcon.icon,
+      permissions: permissions
+    };
+
+    setRoles(prev => prev.map(role => 
+      role.id === editingRole.id ? updatedRole : role
+    ));
+    
+    console.log("Updating role:", updatedRole);
+    toast({
+      title: "Success",
+      description: "Role updated successfully!",
+    });
+    setView("list");
+    resetForm();
+  };
+
   if (view === "add" || view === "edit") {
     return (
       <div className="flex flex-col min-h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg text-left overflow-hidden">
@@ -386,12 +453,12 @@ export default function RolesSection() {
                           setIconPickerOpen(false);
                         }}
                         className={cn(
-                          "flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-slate-800 w-full text-left transition-colors",
+                          "flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-600 hover:text-white w-full text-left transition-colors group",
                           selectedIcon.name === item.name ? "bg-gray-50 dark:bg-slate-800" : ""
                         )}
                       >
-                        <item.icon className="w-4 h-4 text-black dark:text-white" />
-                        <span className="flex-1 font-medium text-gray-900 dark:text-white">{item.name}</span>
+                        <item.icon className="w-4 h-4 text-black dark:text-white group-hover:text-white" />
+                        <span className="flex-1 font-medium text-gray-900 dark:text-white group-hover:text-white">{item.name}</span>
                         {selectedIcon.name === item.name && (
                           <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                              <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
@@ -480,16 +547,18 @@ export default function RolesSection() {
           {view === "add" ? (
             <Button 
               variant="outline"
-              className="h-10 px-8 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors font-bold"
+              onClick={handleSave}
+              className="h-10 px-8 btn-outline-primary font-bold"
             >
               Save
             </Button>
           ) : (
             <Button 
               variant="outline"
-              className="h-10 px-8 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors font-bold"
+              onClick={handleUpdate}
+              className="h-10 px-8 btn-outline-primary font-bold"
             >
-              Update
+              Save
             </Button>
           )}
         </div>
@@ -515,9 +584,10 @@ export default function RolesSection() {
             resetForm();
             setView("add");
           }}
-          className="h-9 px-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors text-sm font-bold"
+          className="h-9 px-4 btn-outline-primary text-sm font-medium flex items-center gap-2"
         >
-          Add role
+          <Plus className="w-4 h-4" />
+          Add Role
         </Button>
       </CardHeader>
 
@@ -568,7 +638,7 @@ export default function RolesSection() {
                   <Button 
                     variant="outline" 
                     onClick={() => handleManage(role)}
-                    className="h-9 px-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors text-xs font-bold"
+                    className="h-9 px-4 btn-outline-primary text-xs font-bold"
                   >
                     Manage
                   </Button>
@@ -598,7 +668,7 @@ export default function RolesSection() {
                     <Button 
                       variant="outline" 
                       onClick={() => confirmAction(role.id, 'activate')}
-                      className="h-9 px-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors text-xs font-bold"
+                      className="h-9 px-4 btn-outline-primary text-xs font-bold"
                     >
                       Activate
                     </Button>
