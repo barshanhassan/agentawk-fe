@@ -123,8 +123,8 @@ export default function ContactDetailsModal({
                                             <button
                                                 onClick={() => setActiveSection(section.id)}
                                                 className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-all ${isActive
-                                                        ? "bg-white dark:bg-accent shadow-sm font-medium text-foreground"
-                                                        : "text-muted-foreground hover:bg-white/50 dark:hover:bg-accent/50"
+                                                    ? "bg-white dark:bg-accent shadow-sm font-medium text-foreground"
+                                                    : "text-muted-foreground hover:bg-white/50 dark:hover:bg-accent/50"
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-2.5">
@@ -329,7 +329,7 @@ export default function ContactDetailsModal({
                         <div className="h-14 border-b flex items-center justify-between px-4 bg-muted/20">
                             <Button variant="ghost" size="sm" className="hidden">Back</Button>
                             <div className="w-full text-right">
-                                <Button variant="link" size="sm" className="text-xs text-muted-foreground h-auto p-0">
+                                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
                                     ← View contact history
                                 </Button>
                             </div>
