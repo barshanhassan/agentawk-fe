@@ -28,16 +28,16 @@ const ColorPicker = ({ label, value, onChange }: ColorPickerProps) => (
     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</Label>
     <div className="relative group">
       <div className="flex items-center gap-3 px-3 py-2 border border-gray-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 cursor-pointer hover:border-gray-300 dark:hover:border-slate-700 transition-colors h-10 w-full max-w-[280px]">
-        <div 
-          className="w-5 h-5 rounded-full border border-gray-100 dark:border-slate-800 flex-shrink-0" 
+        <div
+          className="w-5 h-5 rounded-full border border-gray-100 dark:border-slate-800 flex-shrink-0"
           style={{ backgroundColor: value }}
         />
         <span className="text-sm font-medium text-gray-900 dark:text-white uppercase">{value}</span>
         <ChevronsUpDown className="ml-auto w-4 h-4 text-gray-400" />
       </div>
-      <input 
-        type="color" 
-        value={value} 
+      <input
+        type="color"
+        value={value}
         onChange={(e) => onChange(e.target.value)}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
@@ -123,7 +123,7 @@ export default function WhiteLabelSection() {
       setEmailError("Domain is required");
       return;
     }
-    
+
     const domainPattern = /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/;
     if (!domainPattern.test(notificationEmail.domain)) {
       setEmailError("Invalid domain format");
@@ -144,7 +144,7 @@ export default function WhiteLabelSection() {
       //   })
       // });
       // const data = await response.json();
-      
+
       // Mock response for demonstration
       setTimeout(() => {
         setNotificationEmail({
@@ -177,7 +177,7 @@ export default function WhiteLabelSection() {
       // TODO: Replace with actual API call
       // const response = await fetch(`/api/notification-email/verify/${notificationEmail.id}`);
       // const data = await response.json();
-      
+
       // Mock verification
       setTimeout(() => {
         const verified = Math.random() > 0.5; // Random for demo
@@ -186,7 +186,7 @@ export default function WhiteLabelSection() {
           status: verified ? "VERIFIED" : "UNVERIFIED",
         });
         setIsVerifying(false);
-        
+
         if (verified) {
           toast({
             title: "Success",
@@ -216,7 +216,7 @@ export default function WhiteLabelSection() {
     try {
       // TODO: Replace with actual API call
       // await fetch(`/api/notification-email/${notificationEmail.id}`, { method: 'DELETE' });
-      
+
       setNotificationEmail(null);
       setShowDeleteConfirm(false);
       toast({
@@ -247,13 +247,13 @@ export default function WhiteLabelSection() {
           <BadgeCheck className="w-8 h-8 text-primary" />
         </div>
         <div className="space-y-1">
-          <CardTitle className="text-2xl font-bold tracking-tight">White Label</CardTitle>
+          <CardTitle className="text-lg font-semibold tracking-tight">White Label</CardTitle>
           <CardDescription className="text-base text-gray-500 dark:text-gray-400">Change color, logo and favicon of your Workspace</CardDescription>
         </div>
       </CardHeader>
-      
+
       <Separator className="mx-8 bg-gray-100 dark:bg-slate-800" />
-      
+
       <CardContent className="p-8 pt-6">
         <Tabs defaultValue="logo" className="w-full">
           <TabsList className="flex w-full h-12 bg-gray-100/80 dark:bg-slate-800/60 p-1.5 rounded-xl mb-8">
@@ -266,7 +266,7 @@ export default function WhiteLabelSection() {
 
           <TabsContent value="logo" className="mt-0 focus-visible:outline-none">
             <div className="bg-[#ffffff] dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 space-y-12 shadow-sm backdrop-blur-sm">
-              
+
               {/* Light Mode Logo Section */}
               <div className="space-y-5 text-left">
                 <div className="flex items-center gap-3">
@@ -275,12 +275,12 @@ export default function WhiteLabelSection() {
                   </div>
                   <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Light Mode Logo</Label>
                 </div>
-                
+
                 <div className="relative group max-w-[540px]">
                   <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-8 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 h-[180px] transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-md">
-                    <img 
-                      src="/white-label/ezconn-logo.svg" 
-                      alt="Light Logo" 
+                    <img
+                      src="/white-label/ezconn-logo.svg"
+                      alt="Light Logo"
                       className="max-w-full max-h-full object-contain"
                     />
                   </div>
@@ -300,12 +300,12 @@ export default function WhiteLabelSection() {
                   </div>
                   <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Dark Mode Logo</Label>
                 </div>
-                
+
                 <div className="relative group max-w-[540px]">
                   <div className="border-2 border-dashed border-slate-700 dark:border-slate-600 rounded-2xl p-8 flex items-center justify-center bg-[#020617] h-[180px] transition-all duration-300 group-hover:border-primary/40 overflow-hidden isolate shadow-xl group-hover:shadow-2xl">
-                    <img 
-                      src="/white-label/ezconn-logo-dark.svg" 
-                      alt="Dark Logo" 
+                    <img
+                      src="/white-label/ezconn-logo-dark.svg"
+                      alt="Dark Logo"
                       className="max-w-full max-h-full object-contain"
                     />
                   </div>
@@ -355,35 +355,35 @@ export default function WhiteLabelSection() {
               </div>
 
               <div className="space-y-10">
-                <ColorPicker 
+                <ColorPicker
                   label="Main theme color (Buttons, active menu, selected tabs)"
                   value={colors.mainTheme}
                   onChange={(val) => handleColorChange('mainTheme', val)}
                 />
-                
-                <ColorPicker 
+
+                <ColorPicker
                   label="Link color (Clickable text, anchors)"
                   value={colors.links}
                   onChange={(val) => handleColorChange('links', val)}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                  <ColorPicker 
+                  <ColorPicker
                     label="Incoming chat bubbles"
                     value={colors.incomingBubble}
                     onChange={(val) => handleColorChange('incomingBubble', val)}
                   />
-                  <ColorPicker 
+                  <ColorPicker
                     label="Incoming bubble text"
                     value={colors.incomingText}
                     onChange={(val) => handleColorChange('incomingText', val)}
                   />
-                  <ColorPicker 
+                  <ColorPicker
                     label="Outgoing chat bubbles"
                     value={colors.outgoingBubble}
                     onChange={(val) => handleColorChange('outgoingBubble', val)}
                   />
-                  <ColorPicker 
+                  <ColorPicker
                     label="Outgoing bubble text"
                     value={colors.outgoingText}
                     onChange={(val) => handleColorChange('outgoingText', val)}
@@ -392,8 +392,8 @@ export default function WhiteLabelSection() {
               </div>
 
               <div className="flex justify-end pt-6">
-                <Button 
-                  className="px-10 h-12 text-sm font-bold transition-all btn-outline-primary" 
+                <Button
+                  className="px-10 h-12 text-sm transition-all btn-outline-primary"
                   variant="outline"
                   onClick={handleSaveColors}
                 >
@@ -402,16 +402,16 @@ export default function WhiteLabelSection() {
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="custom-domain" className="mt-0">
             <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
-              
+
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center shadow-sm">
                   <div className="bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-blue-900/20 rounded-l-2xl px-5 py-3 text-sm font-bold text-blue-600 dark:text-blue-400 border-r-0 h-14 flex items-center">
                     https://
                   </div>
-                  <Input 
+                  <Input
                     placeholder="app"
                     value={subdomain}
                     onChange={(e) => setSubdomain(e.target.value)}
@@ -421,14 +421,14 @@ export default function WhiteLabelSection() {
 
                 <span className="text-gray-400 dark:text-slate-600 font-bold text-2xl self-center">.</span>
 
-                <Input 
+                <Input
                   placeholder="example.com"
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   className="border-gray-200 dark:border-slate-700 w-72 h-14 bg-white dark:bg-slate-950 font-semibold shadow-sm focus-visible:ring-primary/20"
                 />
 
-                <Button variant="outline" className="h-14 px-10 font-bold btn-outline-primary shadow-sm">
+                <Button variant="outline" className="h-14 px-10 btn-outline-primary shadow-sm">
                   Connect Domain
                 </Button>
               </div>
@@ -450,13 +450,13 @@ export default function WhiteLabelSection() {
 
           <TabsContent value="notification-email" className="mt-0">
             <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm backdrop-blur-sm">
-              
+
               {!notificationEmail && (
                 <div className="flex flex-col items-center justify-center text-center space-y-8 py-10 animate-in fade-in zoom-in duration-500">
                   <div className="w-28 h-28 rounded-3xl bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center shadow-xl rotate-3">
                     <Mail className="w-14 h-14 text-white -rotate-3" />
                   </div>
-                  
+
                   <div className="space-y-3">
                     <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Notification E-mail</h3>
                     <p className="text-gray-500 dark:text-gray-400 max-w-sm text-base font-medium mx-auto">
@@ -464,8 +464,8 @@ export default function WhiteLabelSection() {
                     </p>
                   </div>
 
-                  <Button 
-                    className="px-12 h-12 font-bold transition-all btn-outline-primary shadow-lg hover:shadow-primary/20" 
+                  <Button
+                    className="px-12 h-12 transition-all btn-outline-primary shadow-lg hover:shadow-primary/20"
                     variant="outline"
                     onClick={handleConnectEmail}
                   >

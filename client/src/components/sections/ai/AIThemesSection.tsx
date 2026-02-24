@@ -138,7 +138,7 @@ export default function AIThemesSection() {
                     <p className="text-sm text-muted-foreground">Create an AI theme to attach products to it</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={handleCancel}
                   className="text-primary hover:text-primary/80 font-medium text-sm"
                 >
@@ -176,7 +176,7 @@ export default function AIThemesSection() {
                   {/* TRIGGER SECTION */}
                   <div className="pt-4">
                     <h3 className="text-sm font-semibold text-primary mb-4">TRIGGER SECTION</h3>
-                    
+
                     {/* Smart Flow */}
                     <div className="mb-4">
                       <label className="block text-sm font-medium mb-2 text-foreground">Smart Flow</label>
@@ -221,7 +221,7 @@ export default function AIThemesSection() {
                   {/* BASEROW.IO SECTION */}
                   <div className="pt-4">
                     <h3 className="text-sm font-semibold text-primary mb-4">BASEROW.IO SECTION</h3>
-                    
+
                     {/* Select a Spreadsheet */}
                     <div>
                       <label className="block text-sm font-medium mb-2 text-foreground">Select a Spreadsheet</label>
@@ -275,14 +275,14 @@ export default function AIThemesSection() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="btn-outline-primary h-9 px-4"
               onClick={() => setIsCreateFormOpen(true)}
             >
               Add
             </Button>
-            <button 
+            <button
               onClick={() => setSelectedTheme(null)}
               className="text-primary hover:text-primary/80 font-medium text-sm"
             >
@@ -309,9 +309,8 @@ export default function AIThemesSection() {
                 {themeItems.map((item, index) => (
                   <tr
                     key={item.id}
-                    className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${
-                      index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
-                    }`}
+                    className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
+                      }`}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -321,13 +320,13 @@ export default function AIThemesSection() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
                           title="Edit"
                         >
                           <Edit size={16} className="text-blue-600 dark:text-blue-400" />
                         </button>
-                        <button 
+                        <button
                           className="p-1.5 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
                           title="Delete"
                           onClick={() => handleDeleteItem(item.id)}
@@ -358,7 +357,7 @@ export default function AIThemesSection() {
           <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
         </div>
         <div className="space-y-1 flex-1">
-          <CardTitle className="text-lg">Ai Themes</CardTitle>
+          <CardTitle className="text-lg font-semibold">AI Themes</CardTitle>
           <CardDescription>Organize and manage your AI Themes</CardDescription>
         </div>
       </CardHeader>
@@ -401,7 +400,7 @@ export default function AIThemesSection() {
                 ))}
               </div>
               {theme.available ? (
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => setSelectedTheme(theme)}
                   className="btn-outline-primary h-8 px-4 text-xs font-semibold"

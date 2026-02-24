@@ -114,7 +114,7 @@ export default function ManageSection() {
       <CardHeader className="flex flex-row items-center gap-4 space-y-0 border-b pb-6">
         <Settings className="w-8 h-8 text-black dark:text-white" />
         <div className="flex-1 space-y-1">
-          <CardTitle className="text-lg">Workspace Settings</CardTitle>
+          <CardTitle className="text-lg font-semibold">Workspace Settings</CardTitle>
           <CardDescription>Manage your Workspace settings</CardDescription>
         </div>
 

@@ -73,18 +73,18 @@ export default function ManageAgentSection() {
   ];
 
   const CUSTOM_FIELDS = [
-    "RespostaGPT", "Payload", "Ultimo Imovel", "RespostaVision", "Date time", 
-    "booking_date_time", "user_confirm", "user_email", "Booking id", 
+    "RespostaGPT", "Payload", "Ultimo Imovel", "RespostaVision", "Date time",
+    "booking_date_time", "user_confirm", "user_email", "Booking id",
     "booking_reschedule", "reschedule_user_confirm", "eventTypeID",
-    "Roger Booking Name", "Roger Booking Email", "Roger Book Date Time", 
-    "Roger Doctor Name", "Text area 2", "Json", "Resposta LLMW", 
-    "current_date_time", "resposta_vision", "pergunta_gpt", "buscabaserow", 
-    "endAtual", "campotexto", "Multiselect", "Nometst", "emailtst", 
-    "cidadetst", "number_ia", "campo_lista", "tel", "total_investimento", 
-    "nota_dinamica", "data_oportunidade", "confianca_oportunidade", 
-    "valor_oportunidade", "idMember", "min max length", "resposta_cal", 
-    "audio", "whisperer", "whisperer_resposta", "event_id", "CustomFieldJSON", 
-    "teste_edilson_apagar", "lower case test", "testing lower case paragraph", 
+    "Roger Booking Name", "Roger Booking Email", "Roger Book Date Time",
+    "Roger Doctor Name", "Text area 2", "Json", "Resposta LLMW",
+    "current_date_time", "resposta_vision", "pergunta_gpt", "buscabaserow",
+    "endAtual", "campotexto", "Multiselect", "Nometst", "emailtst",
+    "cidadetst", "number_ia", "campo_lista", "tel", "total_investimento",
+    "nota_dinamica", "data_oportunidade", "confianca_oportunidade",
+    "valor_oportunidade", "idMember", "min max length", "resposta_cal",
+    "audio", "whisperer", "whisperer_resposta", "event_id", "CustomFieldJSON",
+    "teste_edilson_apagar", "lower case test", "testing lower case paragraph",
     "number field test"
   ];
 
@@ -171,7 +171,7 @@ export default function ManageAgentSection() {
   };
 
   const toggleSystemField = (field: string) => {
-    setSelectedSystemFields(prev => 
+    setSelectedSystemFields(prev =>
       prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field]
     );
   };
@@ -181,7 +181,7 @@ export default function ManageAgentSection() {
   };
 
   const toggleCustomField = (field: string) => {
-    setSelectedCustomFields(prev => 
+    setSelectedCustomFields(prev =>
       prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field]
     );
   };
@@ -191,7 +191,7 @@ export default function ManageAgentSection() {
   };
 
   const toggleTag = (tagName: string) => {
-    setSelectedTags(prev => 
+    setSelectedTags(prev =>
       prev.includes(tagName) ? prev.filter(t => t !== tagName) : [...prev, tagName]
     );
   };
@@ -201,7 +201,7 @@ export default function ManageAgentSection() {
   };
 
   const toggleChatAgent = (agentName: string) => {
-    setSelectedChatAgents(prev => 
+    setSelectedChatAgents(prev =>
       prev.includes(agentName) ? prev.filter(a => a !== agentName) : [...prev, agentName]
     );
   };
@@ -211,7 +211,7 @@ export default function ManageAgentSection() {
   };
 
   const toggleChatChannel = (channelName: string) => {
-    setSelectedChatChannels(prev => 
+    setSelectedChatChannels(prev =>
       prev.includes(channelName) ? prev.filter(c => c !== channelName) : [...prev, channelName]
     );
   };
@@ -284,7 +284,7 @@ export default function ManageAgentSection() {
         email,
         role: role === "super-user" ? "Super User" : "Agent"
       } : a));
-      
+
       toast({
         title: "Success",
         description: "Agent updated successfully!",
@@ -297,9 +297,9 @@ export default function ManageAgentSection() {
         status: "Active",
         role: role === "super-user" ? "Super User" : "Agent"
       };
-      
+
       setAgents([...agents, newAgent]);
-      
+
       toast({
         title: "Success",
         description: "Agent created successfully!",
@@ -414,15 +414,15 @@ export default function ManageAgentSection() {
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pr-2 border-r border-gray-200 dark:border-slate-800">
-                           <img 
-                             src="https://flagcdn.com/w40/us.png" 
-                             alt="US Flag" 
-                             className="w-5 h-3.5 object-cover rounded-sm shadow-sm" 
-                           />
+                          <img
+                            src="https://flagcdn.com/w40/us.png"
+                            alt="US Flag"
+                            className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+                          />
                         </div>
-                        <Input 
-                          placeholder="(407) 231-1234" 
-                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
+                        <Input
+                          placeholder="(407) 231-1234"
+                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300"
                         />
                       </div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
@@ -438,15 +438,15 @@ export default function ManageAgentSection() {
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pr-2 border-r border-gray-200 dark:border-slate-800">
-                           <img 
-                             src="https://flagcdn.com/w40/us.png" 
-                             alt="US Flag" 
-                             className="w-5 h-3.5 object-cover rounded-sm shadow-sm" 
-                           />
+                          <img
+                            src="https://flagcdn.com/w40/us.png"
+                            alt="US Flag"
+                            className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+                          />
                         </div>
-                        <Input 
-                          placeholder="(407) 231-1234" 
-                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
+                        <Input
+                          placeholder="(407) 231-1234"
+                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300"
                         />
                       </div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
@@ -475,10 +475,10 @@ export default function ManageAgentSection() {
                         <Info className="w-3.5 h-3.5 text-gray-400" />
                       </div>
                       <div className="flex items-center gap-3">
-                        <Input 
+                        <Input
                           type="number"
-                          defaultValue="0" 
-                          className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 flex-1 text-sm font-semibold" 
+                          defaultValue="0"
+                          className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 flex-1 text-sm font-semibold"
                         />
                         <Switch className="data-[state=checked]:bg-blue-600 bg-gray-200" />
                       </div>
@@ -491,15 +491,15 @@ export default function ManageAgentSection() {
             <TabsContent value="2fa" className="m-0 p-6 space-y-8">
               <div className="text-left space-y-6">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">2-Factor authentication</h3>
-                
+
                 <div className="flex items-start gap-5">
                   <div className="w-16 h-16 bg-[#e11d48] rounded-xl flex items-center justify-center border border-gray-100 dark:border-slate-800 shadow-sm flex-shrink-0">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="white"/>
-                      <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="white"/>
+                      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="white" />
+                      <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="white" />
                     </svg>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="flex flex-col gap-3">
                       <Switch className="data-[state=checked]:bg-blue-600 bg-gray-200" />
@@ -529,10 +529,10 @@ export default function ManageAgentSection() {
                         <MessageSquare className="w-6 h-6 text-gray-900 dark:text-white" />
                       </div>
                       <div className="space-y-1">
-                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Live Chat Across All Channels</h3>
-                         <p className="text-sm text-gray-500 dark:text-gray-400 max-w-lg">
-                           Easily chat with your subscribers on WhatsApp, Instagram, Messenger, Telegram, Webchat, and SMS, all in one place. Never miss a message, no matter where your customers reach out.
-                         </p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Live Chat Across All Channels</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-lg">
+                          Easily chat with your subscribers on WhatsApp, Instagram, Messenger, Telegram, Webchat, and SMS, all in one place. Never miss a message, no matter where your customers reach out.
+                        </p>
                       </div>
                     </div>
 
@@ -541,19 +541,19 @@ export default function ManageAgentSection() {
                         <Users2 className="w-6 h-6 text-gray-900 dark:text-white" />
                       </div>
                       <div className="space-y-1">
-                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Simplified Team Collaboration</h3>
-                         <p className="text-sm text-gray-500 dark:text-gray-400 max-w-lg">
-                           Assign conversation to yourself or other team members to keep support fast, organized, and efficient.
-                         </p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Simplified Team Collaboration</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-lg">
+                          Assign conversation to yourself or other team members to keep support fast, organized, and efficient.
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Switch 
-                      checked={mobileAccess} 
+                    <Switch
+                      checked={mobileAccess}
                       onCheckedChange={setMobileAccess}
-                      className="data-[state=checked]:bg-blue-600 bg-gray-200" 
+                      className="data-[state=checked]:bg-blue-600 bg-gray-200"
                     />
                     <div className="flex items-center gap-2">
                       <Smartphone className="w-4 h-4 text-gray-500" />
@@ -593,19 +593,19 @@ export default function ManageAgentSection() {
                       <div className="w-14 h-3 bg-black rounded-full mb-0.5"></div>
                     </div>
                     <div className="w-full h-full bg-[#f8fafc] flex flex-col pt-7">
-                       <div className="px-3 py-1.5 border-b border-gray-100 bg-white">
-                          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
-                             <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-                          </div>
-                       </div>
-                       <div className="p-3 space-y-3">
-                          <div className="h-3 w-28 bg-gray-200 rounded"></div>
-                          <div className="h-16 w-full bg-blue-50 rounded-lg"></div>
-                          <div className="grid grid-cols-2 gap-2">
-                             <div className="h-20 bg-gray-100 rounded-lg"></div>
-                             <div className="h-20 bg-gray-100 rounded-lg"></div>
-                          </div>
-                       </div>
+                      <div className="px-3 py-1.5 border-b border-gray-100 bg-white">
+                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
+                          <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-3">
+                        <div className="h-3 w-28 bg-gray-200 rounded"></div>
+                        <div className="h-16 w-full bg-blue-50 rounded-lg"></div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="h-20 bg-gray-100 rounded-lg"></div>
+                          <div className="h-20 bg-gray-100 rounded-lg"></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -614,22 +614,22 @@ export default function ManageAgentSection() {
                       <div className="w-14 h-3 bg-black rounded-full mb-0.5"></div>
                     </div>
                     <div className="w-full h-full bg-white flex flex-col pt-7">
-                       <div className="p-3 space-y-2.5">
-                          {[1,2,3,4,5].map(i => (
-                            <div key={i} className="flex gap-2.5">
-                               <div className="w-7 h-7 rounded-full bg-gray-100"></div>
-                               <div className="space-y-1 flex-1">
-                                  <div className="h-1.5 w-16 bg-gray-200 rounded"></div>
-                                  <div className="h-1 w-full bg-gray-100 rounded"></div>
-                               </div>
+                      <div className="p-3 space-y-2.5">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div key={i} className="flex gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-gray-100"></div>
+                            <div className="space-y-1 flex-1">
+                              <div className="h-1.5 w-16 bg-gray-200 rounded"></div>
+                              <div className="h-1 w-full bg-gray-100 rounded"></div>
                             </div>
-                          ))}
-                       </div>
-                       <div className="mt-auto p-2.5 flex justify-around border-t">
-                          <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                          <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                          <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                       </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-auto p-2.5 flex justify-around border-t">
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                        <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -679,19 +679,19 @@ export default function ManageAgentSection() {
 
                 <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-slate-800">
                   <div className="flex items-center gap-3">
-                    <Switch 
-                      checked={limitIp} 
+                    <Switch
+                      checked={limitIp}
                       onCheckedChange={setLimitIp}
-                      className="data-[state=checked]:bg-blue-600 bg-gray-200" 
+                      className="data-[state=checked]:bg-blue-600 bg-gray-200"
                     />
                     <Label className="text-sm font-bold text-gray-900 dark:text-white cursor-pointer">Limit access by IP address</Label>
                   </div>
-                  
+
                   {limitIp && (
                     <div className="max-w-md animate-in fade-in slide-in-from-top-2 duration-200">
-                      <Input 
-                        placeholder="Type IP Address..." 
-                        className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300" 
+                      <Input
+                        placeholder="Type IP Address..."
+                        className="h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300"
                       />
                     </div>
                   )}
@@ -706,8 +706,8 @@ export default function ManageAgentSection() {
 
                 <div className="space-y-0 border border-gray-100 dark:border-slate-800 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
-                    <Checkbox 
-                      id="select-all" 
+                    <Checkbox
+                      id="select-all"
                       className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       checked={selectedSystemFields.length === SYSTEM_FIELDS.length && SYSTEM_FIELDS.length > 0}
                       onCheckedChange={(checked) => toggleAllSystemFields(checked as boolean)}
@@ -716,12 +716,12 @@ export default function ManageAgentSection() {
                   </div>
 
                   {SYSTEM_FIELDS.map((field, idx, arr) => (
-                    <div 
-                      key={field} 
+                    <div
+                      key={field}
                       className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors ${idx !== arr.length - 1 ? 'border-b border-gray-100 dark:border-slate-800/50' : ''}`}
                     >
-                      <Checkbox 
-                        id={field} 
+                      <Checkbox
+                        id={field}
                         className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                         checked={selectedSystemFields.includes(field)}
                         onCheckedChange={() => toggleSystemField(field)}
@@ -740,8 +740,8 @@ export default function ManageAgentSection() {
 
                 <div className="space-y-0 border border-gray-100 dark:border-slate-800 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
-                    <Checkbox 
-                      id="custom-select-all" 
+                    <Checkbox
+                      id="custom-select-all"
                       className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       checked={selectedCustomFields.length === CUSTOM_FIELDS.length && CUSTOM_FIELDS.length > 0}
                       onCheckedChange={(checked) => toggleAllCustomFields(checked as boolean)}
@@ -751,12 +751,12 @@ export default function ManageAgentSection() {
 
                   <div className="max-h-[500px] overflow-y-auto scrollbar-hide">
                     {CUSTOM_FIELDS.map((field, idx, arr) => (
-                      <div 
-                        key={field} 
+                      <div
+                        key={field}
                         className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors ${idx !== arr.length - 1 ? 'border-b border-gray-100 dark:border-slate-800/50' : ''}`}
                       >
-                        <Checkbox 
-                          id={`custom-${field}`} 
+                        <Checkbox
+                          id={`custom-${field}`}
                           className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={selectedCustomFields.includes(field)}
                           onCheckedChange={() => toggleCustomField(field)}
@@ -776,8 +776,8 @@ export default function ManageAgentSection() {
 
                 <div className="space-y-0 border border-gray-100 dark:border-slate-800 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
-                    <Checkbox 
-                      id="tags-select-all" 
+                    <Checkbox
+                      id="tags-select-all"
                       className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       checked={selectedTags.length === TAGS.length && TAGS.length > 0}
                       onCheckedChange={(checked) => toggleAllTags(checked as boolean)}
@@ -787,19 +787,19 @@ export default function ManageAgentSection() {
 
                   <div className="max-h-[500px] overflow-y-auto scrollbar-hide">
                     {TAGS.map((tag, idx, arr) => (
-                      <div 
-                        key={tag.name} 
+                      <div
+                        key={tag.name}
                         className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors ${idx !== arr.length - 1 ? 'border-b border-gray-100 dark:border-slate-800/50' : ''}`}
                       >
-                        <Checkbox 
-                          id={`tag-${tag.name}`} 
+                        <Checkbox
+                          id={`tag-${tag.name}`}
                           className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={selectedTags.includes(tag.name)}
                           onCheckedChange={() => toggleTag(tag.name)}
                         />
                         <Label htmlFor={`tag-${tag.name}`} className="cursor-pointer">
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`px-3 py-0.5 text-xs font-semibold rounded ${tag.className || 'bg-gray-100/50 dark:bg-slate-800/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-slate-700'}`}
                           >
                             {tag.name}
@@ -819,8 +819,8 @@ export default function ManageAgentSection() {
 
                 <div className="space-y-0 border border-gray-100 dark:border-slate-800 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
-                    <Checkbox 
-                      id="chat-agents-select-all" 
+                    <Checkbox
+                      id="chat-agents-select-all"
                       className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       checked={selectedChatAgents.length === CHAT_AGENTS.length && CHAT_AGENTS.length > 0}
                       onCheckedChange={(checked) => toggleAllChatAgents(checked as boolean)}
@@ -830,12 +830,12 @@ export default function ManageAgentSection() {
 
                   <div className="max-h-[500px] overflow-y-auto scrollbar-hide">
                     {CHAT_AGENTS.map((agent, idx, arr) => (
-                      <div 
-                        key={agent.name} 
+                      <div
+                        key={agent.name}
                         className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors ${idx !== arr.length - 1 ? 'border-b border-gray-100 dark:border-slate-800/50' : ''}`}
                       >
-                        <Checkbox 
-                          id={`chat-agent-${agent.name}`} 
+                        <Checkbox
+                          id={`chat-agent-${agent.name}`}
                           className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={selectedChatAgents.includes(agent.name)}
                           onCheckedChange={() => toggleChatAgent(agent.name)}
@@ -863,8 +863,8 @@ export default function ManageAgentSection() {
 
                 <div className="space-y-0 border border-gray-100 dark:border-slate-800 rounded-lg overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
-                    <Checkbox 
-                      id="channels-select-all" 
+                    <Checkbox
+                      id="channels-select-all"
                       className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       checked={selectedChatChannels.length === CHAT_CHANNELS.length && CHAT_CHANNELS.length > 0}
                       onCheckedChange={(checked) => toggleAllChatChannels(checked as boolean)}
@@ -874,25 +874,24 @@ export default function ManageAgentSection() {
 
                   <div className="max-h-[500px] overflow-y-auto scrollbar-hide">
                     {CHAT_CHANNELS.map((channel, idx, arr) => (
-                      <div 
-                        key={channel.name} 
+                      <div
+                        key={channel.name}
                         className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors ${idx !== arr.length - 1 ? 'border-b border-gray-100 dark:border-slate-800/50' : ''}`}
                       >
-                        <Checkbox 
-                          id={`channel-${channel.name}`} 
+                        <Checkbox
+                          id={`channel-${channel.name}`}
                           className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={selectedChatChannels.includes(channel.name)}
                           onCheckedChange={() => toggleChatChannel(channel.name)}
                         />
                         <div className="flex items-center gap-3">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            channel.type === 'telegram' ? 'bg-blue-400' :
-                            channel.type === 'whatsapp' ? 'bg-emerald-500' :
-                            channel.type === 'messenger' ? 'bg-blue-600' :
-                            channel.type === 'instagram' ? 'bg-pink-500' :
-                            channel.type === 'twilio' ? 'bg-red-500' :
-                            'bg-purple-500'
-                          }`}>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${channel.type === 'telegram' ? 'bg-blue-400' :
+                              channel.type === 'whatsapp' ? 'bg-emerald-500' :
+                                channel.type === 'messenger' ? 'bg-blue-600' :
+                                  channel.type === 'instagram' ? 'bg-pink-500' :
+                                    channel.type === 'twilio' ? 'bg-red-500' :
+                                      'bg-purple-500'
+                            }`}>
                             {channel.type === 'telegram' && <Send className="w-3.5 h-3.5 text-white fill-white -rotate-12" />}
                             {channel.type === 'whatsapp' && <MessageSquare className="w-3.5 h-3.5 text-white" />}
                             {channel.type === 'messenger' && <Zap className="w-3.5 h-3.5 text-white fill-white" />}
@@ -920,12 +919,12 @@ export default function ManageAgentSection() {
         <div className="flex flex-row items-center gap-4">
           <Users className="w-8 h-8 text-black dark:text-white" />
           <div className="space-y-1 text-left">
-            <CardTitle className="text-lg font-bold">Users</CardTitle>
+            <CardTitle className="text-lg font-semibold">Users</CardTitle>
             <CardDescription className="text-gray-500 dark:text-gray-400">Manage your users</CardDescription>
           </div>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => { resetForm(); setView("add"); }}
           className="h-9 px-4 btn-outline-primary text-sm font-medium flex items-center gap-2"
         >
@@ -933,9 +932,9 @@ export default function ManageAgentSection() {
           Add User
         </Button>
       </CardHeader>
-      
+
       <Separator className="bg-gray-100 dark:bg-slate-800" />
-      
+
       <CardContent className="p-0">
         <Table>
           <TableHeader>
@@ -975,9 +974,9 @@ export default function ManageAgentSection() {
                 </TableCell>
                 <TableCell className="py-3 px-4 text-center"></TableCell>
                 <TableCell className="py-3 px-4 text-center">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-8 w-8 text-black dark:text-white hover:text-[#10b981] dark:hover:text-[#10b981] transition-colors"
                     onClick={() => handleEdit(agent)}
                   >

@@ -260,7 +260,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
           <Film className="w-7 h-7 text-[#1e293b] dark:text-white" />
         </div>
         <div className="text-left max-w-2xl">
-          <CardTitle className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Media gallery</CardTitle>
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white tracking-tight">Media Gallery</CardTitle>
           <CardDescription className="text-[13px] font-medium text-slate-500 mt-1 leading-relaxed">
             Efficiently manage and organize the Workspace media right here
           </CardDescription>

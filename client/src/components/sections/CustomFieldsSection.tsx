@@ -68,8 +68,8 @@ export default function CustomFieldsSection() {
       <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-6">
         <Database className="w-8 h-8 text-black dark:text-white" />
         <div className="space-y-1 flex-1">
-          <CardTitle className="text-lg flex items-center justify-between">
-            Custom fields
+          <CardTitle className="text-lg font-semibold flex items-center justify-between">
+            Custom Fields
             <Button variant="outline" className="text-primary border-primary hover:bg-primary hover:text-white" onClick={() => setIsCreateFieldOpen(true)}><Plus size={16} /> Add New</Button>
           </CardTitle>
           <CardDescription>Efficiently manage custom fields and associate them with Contacts, Companies, or Opportunities</CardDescription>
@@ -82,7 +82,7 @@ export default function CustomFieldsSection() {
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground">Root</span>
             <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-            <button 
+            <button
               onClick={() => setIsCreateFieldOpen(true)}
               className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded cursor-pointer transition-colors"
               title="Add new folder"
@@ -92,14 +92,14 @@ export default function CustomFieldsSection() {
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground">51 out of 50</span>
-            
+
             {/* Content Type Dropdown */}
             <div className="relative group">
               <button className="flex items-center gap-2 text-xs px-2 py-1 border rounded bg-white dark:bg-slate-900 hover:bg-gray-50">
                 <span>Content Type</span>
                 <ChevronDown size={14} />
               </button>
-              
+
               <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-slate-900 border rounded-lg shadow-lg z-10 hidden group-hover:block">
                 <div className="py-1">
                   <div className="px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-xs">All</div>
@@ -164,16 +164,15 @@ export default function CustomFieldsSection() {
               {fields.map((field, index) => (
                 <tr
                   key={field.id}
-                  className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${
-                    index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
-                  }`}
+                  className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
+                    }`}
                 >
                   <td className="px-4 py-3">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedRows.has(field.id)} 
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(field.id)}
                       onChange={(e) => handleSelectRow(field.id, e.target.checked)}
-                      className="rounded" 
+                      className="rounded"
                     />
                   </td>
                   <td className="px-4 py-3 font-medium text-blue-600 dark:text-blue-400">{field.name}</td>
@@ -302,8 +301,8 @@ export default function CustomFieldsSection() {
                 disabled={!formData.displayName.trim() || !formData.systemName.trim() || !formData.dataType}
                 className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium transition-colors"
               >
-                
-                 Add
+
+                Add
               </button>
             </div>
           </div>

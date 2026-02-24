@@ -76,7 +76,7 @@ export default function LiveChatSettings() {
   };
 
   const handleViewFolder = (folderName: string) => {
-      alert(`Viewing content of folder: ${folderName}`);
+    alert(`Viewing content of folder: ${folderName}`);
   };
 
   const handleCancelFolder = () => {
@@ -156,12 +156,12 @@ export default function LiveChatSettings() {
       <CardHeader className="flex flex-row items-center gap-4 space-y-0">
         <Inbox className="w-8 h-8 text-black dark:text-white" />
         <div className="space-y-1">
-          <CardTitle className="text-lg">Live Chat</CardTitle>
+          <CardTitle className="text-lg font-semibold">Live Chat</CardTitle>
           <CardDescription>Manage how your Workspace Live Chat behaves.</CardDescription>
         </div>
       </CardHeader>
       <Separator className="bg-gray-200 dark:bg-slate-800" />
-      
+
       <CardContent className="pt-6">
         {/* Main content container */}
         <div className="max-w-4xl mx-0 space-y-6">
@@ -195,11 +195,10 @@ export default function LiveChatSettings() {
                     {["keep", "remove"].map((action) => (
                       <div
                         key={action}
-                        className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
-                          agentAction === action
+                        className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${agentAction === action
                             ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
                             : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700"
-                        }`}
+                          }`}
                         onClick={() => setAgentAction(action as "keep" | "remove")}
                       >
                         <RadioGroupItem value={action} id={action} />
@@ -252,11 +251,10 @@ export default function LiveChatSettings() {
                     {["full-name", "json"].map((format) => (
                       <button
                         key={format}
-                        className={`flex-1 px-4 py-3 rounded-lg border text-left transition-all ${
-                          agentDataFormat === format
+                        className={`flex-1 px-4 py-3 rounded-lg border text-left transition-all ${agentDataFormat === format
                             ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm font-medium text-blue-900 dark:text-blue-100"
                             : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300"
-                        }`}
+                          }`}
                         onClick={() => setAgentDataFormat(format)}
                       >
                         {format === "full-name" ? "Full name" : "JSON"}
@@ -288,8 +286,8 @@ export default function LiveChatSettings() {
 
                 {/* Save button */}
                 <div className="flex justify-start pt-4">
-                  <Button 
-                    className="px-8 btn-outline-primary" 
+                  <Button
+                    className="px-8 btn-outline-primary"
                     variant="outline"
                     onClick={handleSaveAgents}
                   >
@@ -303,7 +301,7 @@ export default function LiveChatSettings() {
             {/* Completion Tab */}
             <TabsContent value="completion" className="mt-0">
               <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
-                
+
                 <div className="space-y-4 text-left">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                     When the conversation is marked as DONE in Live Chat or Smart Flow:
@@ -320,9 +318,9 @@ export default function LiveChatSettings() {
                   </div>
                 </div>
 
-                 {/* Custom Field Select */}
-                 {saveConversationJson && (
-                   <div className="space-y-2 text-left">
+                {/* Custom Field Select */}
+                {saveConversationJson && (
+                  <div className="space-y-2 text-left">
                     <Label className="text-sm font-medium text-gray-900 dark:text-white">Select custom field</Label>
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
@@ -341,18 +339,18 @@ export default function LiveChatSettings() {
                         variant="outline"
                         size="icon"
                         className="h-10 w-10 btn-outline-primary"
-                        onClick={() => {}}
+                        onClick={() => { }}
                       >
                         +
                       </Button>
                     </div>
                   </div>
-                 )}
+                )}
 
                 {/* Save Button */}
                 <div className="flex justify-start pt-4">
-                  <Button 
-                    className="px-8 btn-outline-primary" 
+                  <Button
+                    className="px-8 btn-outline-primary"
                     variant="outline"
                     onClick={handleSaveCompletion}
                   >
@@ -366,11 +364,11 @@ export default function LiveChatSettings() {
             {/* Signature Tab */}
             <TabsContent value="signature" className="mt-0">
               <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6">
-                
+
                 <div className="flex flex-col lg:flex-row gap-12">
                   {/* Left Column: Settings */}
                   <div className="flex-1 space-y-8">
-                    
+
                     {/* Toggle */}
                     <div className="flex items-center gap-3">
                       <Switch
@@ -431,77 +429,77 @@ export default function LiveChatSettings() {
 
                   {/* Right Column: Mobile Mockup */}
                   <div className="flex-1 flex items-center justify-center pt-8 lg:pt-0">
-                      <div className="relative w-[280px] h-[580px] bg-black rounded-[3rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden ring-4 ring-gray-200 dark:ring-gray-700">
-                          
-                          {/* Dynamic Island / Notch Area */}
-                          <div className="absolute top-0 w-full h-8 bg-black flex justify-between px-8 items-center z-20">
-                              <span className="text-white text-[10px] font-semibold tracking-wide">9:41</span>
-                              <div className="w-16 h-5 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-1"></div>
-                              <div className="flex gap-1">
-                                  <div className="w-3 h-3 bg-white rounded-full opacity-80" />
-                                  <div className="w-3 h-3 bg-white rounded-full opacity-80" />
-                              </div>
-                          </div>
+                    <div className="relative w-[280px] h-[580px] bg-black rounded-[3rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden ring-4 ring-gray-200 dark:ring-gray-700">
 
-                          {/* App Header (WhatsApp Style) */}
-                          <div className="bg-[#075E54] h-[80px] pt-8 px-4 flex items-center gap-3 shadow-md z-10 relative">
-                              <div className="text-white text-lg">←</div>
-                              <div className="w-8 h-8 bg-gray-300 rounded-full border border-white/20 flex-shrink-0">
-                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Maria`} alt="Avatar" className="w-full h-full rounded-full" />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-white font-semibold text-sm leading-tight">Maria</span>
-                                <span className="text-white/80 text-[10px] leading-tight">online</span>
-                              </div>
-                          </div>
-
-                          {/* Chat Area */}
-                          <div className="bg-[#E5DDD5] dark:bg-[#0b141a] h-full p-4 relative flex flex-col pt-4">
-                               {/* Date Divider */}
-                               <div className="flex justify-center mb-6">
-                                 <span className="bg-[#E1F3FB] dark:bg-[#1f2c34] text-gray-500 dark:text-gray-300 text-[10px] px-2 py-1 rounded shadow-sm">
-                                   Today
-                                 </span>
-                               </div>
-
-                               {/* Customer Message (Received) */}
-                               <div className="self-start bg-white dark:bg-[#1f2c34] p-2 pl-3 rounded-lg rounded-tl-none shadow-sm max-w-[85%] mb-4 relative text-left">
-                                  <p className="text-sm text-gray-800 dark:text-gray-100 leading-snug pb-2">
-                                    Hi, I need help with my order #12345.
-                                  </p>
-                                  <span className="text-[9px] text-gray-400 absolute bottom-1 right-1.5">14:30</span>
-                               </div>
-
-                               {/* Agent Message (Sent) */}
-                               <div className="self-end bg-[#DCF8C6] dark:bg-[#005c4b] p-2 pl-3 pr-2 rounded-lg rounded-tr-none shadow-sm max-w-[85%] relative text-left">
-                                  {/* Signature Preview */}
-                                  {includeSignature && (
-                                    <div className="mp-1 mb-1 text-[10px] font-bold text-[#075E54] dark:text-[#25d366]">
-                                      ~ Maria
-                                    </div>
-                                  )}
-                                  
-                                  <p className="text-sm text-gray-800 dark:text-gray-100 leading-snug pb-3 min-w-[120px]">
-                                    Hello! I'd be happy to check that for you. One moment please.
-                                  </p>
-
-                                  <div className="flex justify-end items-center gap-1 absolute bottom-1 right-1.5">
-                                    <span className="text-[9px] text-gray-500 dark:text-gray-300">14:32</span>
-                                    <div className="flex">
-                                       <span className="text-[8px] text-[#4FB6EC]">✓✓</span> 
-                                    </div>
-                                  </div>
-                               </div>
-                          </div>
+                      {/* Dynamic Island / Notch Area */}
+                      <div className="absolute top-0 w-full h-8 bg-black flex justify-between px-8 items-center z-20">
+                        <span className="text-white text-[10px] font-semibold tracking-wide">9:41</span>
+                        <div className="w-16 h-5 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-1"></div>
+                        <div className="flex gap-1">
+                          <div className="w-3 h-3 bg-white rounded-full opacity-80" />
+                          <div className="w-3 h-3 bg-white rounded-full opacity-80" />
+                        </div>
                       </div>
+
+                      {/* App Header (WhatsApp Style) */}
+                      <div className="bg-[#075E54] h-[80px] pt-8 px-4 flex items-center gap-3 shadow-md z-10 relative">
+                        <div className="text-white text-lg">←</div>
+                        <div className="w-8 h-8 bg-gray-300 rounded-full border border-white/20 flex-shrink-0">
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Maria`} alt="Avatar" className="w-full h-full rounded-full" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-white font-semibold text-sm leading-tight">Maria</span>
+                          <span className="text-white/80 text-[10px] leading-tight">online</span>
+                        </div>
+                      </div>
+
+                      {/* Chat Area */}
+                      <div className="bg-[#E5DDD5] dark:bg-[#0b141a] h-full p-4 relative flex flex-col pt-4">
+                        {/* Date Divider */}
+                        <div className="flex justify-center mb-6">
+                          <span className="bg-[#E1F3FB] dark:bg-[#1f2c34] text-gray-500 dark:text-gray-300 text-[10px] px-2 py-1 rounded shadow-sm">
+                            Today
+                          </span>
+                        </div>
+
+                        {/* Customer Message (Received) */}
+                        <div className="self-start bg-white dark:bg-[#1f2c34] p-2 pl-3 rounded-lg rounded-tl-none shadow-sm max-w-[85%] mb-4 relative text-left">
+                          <p className="text-sm text-gray-800 dark:text-gray-100 leading-snug pb-2">
+                            Hi, I need help with my order #12345.
+                          </p>
+                          <span className="text-[9px] text-gray-400 absolute bottom-1 right-1.5">14:30</span>
+                        </div>
+
+                        {/* Agent Message (Sent) */}
+                        <div className="self-end bg-[#DCF8C6] dark:bg-[#005c4b] p-2 pl-3 pr-2 rounded-lg rounded-tr-none shadow-sm max-w-[85%] relative text-left">
+                          {/* Signature Preview */}
+                          {includeSignature && (
+                            <div className="mp-1 mb-1 text-[10px] font-bold text-[#075E54] dark:text-[#25d366]">
+                              ~ Maria
+                            </div>
+                          )}
+
+                          <p className="text-sm text-gray-800 dark:text-gray-100 leading-snug pb-3 min-w-[120px]">
+                            Hello! I'd be happy to check that for you. One moment please.
+                          </p>
+
+                          <div className="flex justify-end items-center gap-1 absolute bottom-1 right-1.5">
+                            <span className="text-[9px] text-gray-500 dark:text-gray-300">14:32</span>
+                            <div className="flex">
+                              <span className="text-[8px] text-[#4FB6EC]">✓✓</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
-                
+
                 {/* Save Button */}
                 <div className="flex justify-start pt-6">
-                  <Button 
-                    className="px-8 btn-outline-primary" 
+                  <Button
+                    className="px-8 btn-outline-primary"
                     variant="outline"
                     onClick={handleSaveSignature}
                   >
@@ -515,68 +513,68 @@ export default function LiveChatSettings() {
             {/* Correction Tab */}
             <TabsContent value="correction" className="mt-0">
               <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6">
-                
+
                 <div className="space-y-6 mb-8 text-left">
-                   <h3 className="text-gray-900 dark:text-white font-medium">Correct and enhance agent text in Live Chat</h3>
+                  <h3 className="text-gray-900 dark:text-white font-medium">Correct and enhance agent text in Live Chat</h3>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-12">
                   {/* Left Column: Benefits */}
                   <div className="flex-1 space-y-8">
-                     <div className="flex gap-3 items-start">
-                        <CheckCircle2 className="w-5 h-5 text-gray-900 dark:text-white mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1 text-left">
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">AI-Powered Text Refinement for Professional Communication</h4>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Leverage ChatGPT AI to enhance and correct agent messages, ensuring clear, grammatically accurate, and professional communication that elevates customer interactions.
-                          </p>
-                        </div>
+                    <div className="flex gap-3 items-start">
+                      <CheckCircle2 className="w-5 h-5 text-gray-900 dark:text-white mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1 text-left">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">AI-Powered Text Refinement for Professional Communication</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                          Leverage ChatGPT AI to enhance and correct agent messages, ensuring clear, grammatically accurate, and professional communication that elevates customer interactions.
+                        </p>
                       </div>
+                    </div>
 
-                      <div className="flex gap-3 items-start">
-                        <CheckCircle2 className="w-5 h-5 text-gray-900 dark:text-white mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1 text-left">
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Perfect Agent Messaging with ChatGPT AI</h4>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Improve communication by ChatGPT AI to refine and correct grammar in agent text, delivering polished, professionally-quality messages every time.
-                          </p>
-                        </div>
+                    <div className="flex gap-3 items-start">
+                      <CheckCircle2 className="w-5 h-5 text-gray-900 dark:text-white mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1 text-left">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Perfect Agent Messaging with ChatGPT AI</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                          Improve communication by ChatGPT AI to refine and correct grammar in agent text, delivering polished, professionally-quality messages every time.
+                        </p>
                       </div>
+                    </div>
                   </div>
 
                   {/* Right Column: Settings */}
                   <div className="flex-1 space-y-4">
-                      <div className="flex items-center justify-between gap-4">
-                           <Label className="text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                              Live Chat AI Chat Assistant button prompt
-                           </Label>
-                           <div className="w-[180px]">
-                              <Select value={correctionModel} onValueChange={setCorrectionModel}>
-                                  <SelectTrigger className="w-full bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 dark:text-white h-9">
-                                      <SelectValue placeholder="Select model" />
-                                  </SelectTrigger>
-                                  <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                                      <SelectItem value="gpt-4o-mini" className="dark:focus:bg-slate-800 dark:text-white">gpt-4o-mini</SelectItem>
-                                      <SelectItem value="gpt-4" className="dark:focus:bg-slate-800 dark:text-white">gpt-4</SelectItem>
-                                      <SelectItem value="gpt-3.5-turbo" className="dark:focus:bg-slate-800 dark:text-white">gpt-3.5-turbo</SelectItem>
-                                      <SelectItem value="add-new" className="dark:focus:bg-primary dark:focus:text-white focus:bg-primary focus:text-white font-medium text-primary">+ Add New Model</SelectItem>
-                                  </SelectContent>
-                              </Select>
-                           </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                        Live Chat AI Chat Assistant button prompt
+                      </Label>
+                      <div className="w-[180px]">
+                        <Select value={correctionModel} onValueChange={setCorrectionModel}>
+                          <SelectTrigger className="w-full bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 dark:text-white h-9">
+                            <SelectValue placeholder="Select model" />
+                          </SelectTrigger>
+                          <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
+                            <SelectItem value="gpt-4o-mini" className="dark:focus:bg-slate-800 dark:text-white">gpt-4o-mini</SelectItem>
+                            <SelectItem value="gpt-4" className="dark:focus:bg-slate-800 dark:text-white">gpt-4</SelectItem>
+                            <SelectItem value="gpt-3.5-turbo" className="dark:focus:bg-slate-800 dark:text-white">gpt-3.5-turbo</SelectItem>
+                            <SelectItem value="add-new" className="dark:focus:bg-primary dark:focus:text-white focus:bg-primary focus:text-white font-medium text-primary">+ Add New Model</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
+                    </div>
 
-                      <Textarea 
-                          className="min-h-[150px] resize-y text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 focus:border-blue-500"
-                          value={correctionPrompt}
-                          onChange={(e) => setCorrectionPrompt(e.target.value)}
-                      />
+                    <Textarea
+                      className="min-h-[150px] resize-y text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 focus:border-blue-500"
+                      value={correctionPrompt}
+                      onChange={(e) => setCorrectionPrompt(e.target.value)}
+                    />
                   </div>
                 </div>
 
-                 {/* Save Button */}
+                {/* Save Button */}
                 <div className="flex justify-start pt-8">
-                  <Button 
-                    className="px-8 btn-outline-primary" 
+                  <Button
+                    className="px-8 btn-outline-primary"
                     variant="outline"
                     onClick={handleSaveCorrection}
                   >
@@ -589,168 +587,166 @@ export default function LiveChatSettings() {
 
             {/* Folders Tab */}
             <TabsContent value="folders" className="mt-0">
-               <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 min-h-[400px]">
-                  <div className="space-y-6 text-left mb-8">
-                     <p className="text-gray-900 dark:text-white font-medium">Create custom folders to streamline and optimize your Live Chat management.</p>
-                  </div>
+              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 min-h-[400px]">
+                <div className="space-y-6 text-left mb-8">
+                  <p className="text-gray-900 dark:text-white font-medium">Create custom folders to streamline and optimize your Live Chat management.</p>
+                </div>
 
-                  <div className="flex flex-col lg:flex-row h-full gap-8">
-                      {/* Left Column: Folder List */}
-                      <div className="w-full lg:w-1/2 lg:border-r lg:border-gray-100 dark:lg:border-slate-800 lg:pr-8">
-                         <ul className="space-y-0">
-                            {folders.map((folder, index) => (
-                               <li 
-                                  key={index} 
-                                  className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-slate-800 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-800 px-2 rounded-md transition-colors cursor-pointer group"
-                                  onMouseEnter={() => setHoveredFolderIndex(index)}
-                                  onMouseLeave={() => setHoveredFolderIndex(null)}
-                               >
-                                  <div className="flex items-center gap-3">
-                                      <Folder className="w-5 h-5 text-black dark:text-white" />
-                                      <span className="text-gray-700 dark:text-gray-200 font-medium text-sm">{folder}</span>
-                                  </div>
-                                  {hoveredFolderIndex === index && (
-                                      <div className="flex items-center gap-3 text-black dark:text-white">
-                                          <Eye 
-                                              className="w-4 h-4 hover:text-gray-700 transition-colors" 
-                                              onClick={(e) => { e.stopPropagation(); handleViewFolder(folder); }}
-                                          />
-                                          <Pencil 
-                                              className="w-4 h-4 hover:text-gray-700 transition-colors" 
-                                              onClick={(e) => { e.stopPropagation(); handleEditFolder(index); }}
-                                          />
-                                          <Trash 
-                                              className="w-4 h-4 hover:text-red-600 transition-colors" 
-                                              onClick={(e) => { e.stopPropagation(); handleDeleteFolder(index); }}
-                                          />
-                                      </div>
-                                  )}
-                               </li>
-                            ))}
-                         </ul>
-                      </div>
-
-                      {/* Right Column: Action or Form */}
-                       <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 lg:py-0">
-                          {!isCreatingFolder ? (
-                               <div className="flex flex-col items-center text-center space-y-4">
-                                  <p className="text-gray-900 dark:text-white font-medium">Add folder to organize your conversations.</p>
-                                  <Button 
-                                      variant="outline" 
-                                      className="btn-outline-primary gap-2"
-                                      onClick={() => setIsCreatingFolder(true)}
-                                  >
-                                     <Plus className="w-4 h-4" />
-                                     Add folder
-                                  </Button>
-                               </div>
-                          ) : (
-                              <div className="bg-white dark:bg-slate-900 rounded-lg p-1 space-y-6 w-full max-w-md mx-auto">
-                                  <div className="space-y-4">
-                                      <div className="space-y-2 text-left">
-                                          <Label className="text-base font-medium text-gray-900 dark:text-white">Display name</Label>
-                                          <Input
-                                              value={newFolderName}
-                                              onChange={(e) => setNewFolderName(e.target.value)}
-                                              className="bg-white dark:bg-slate-950 dark:border-slate-800 dark:text-white"
-                                          />
-                                      </div>
-                                      <div className="space-y-2 text-left">
-                                          <Label className="text-base font-medium text-gray-900 dark:text-white">Assigned to</Label>
-                                          <Select>
-                                              <SelectTrigger className="w-full bg-white dark:bg-slate-950 dark:border-slate-800 text-gray-500 dark:text-gray-300">
-                                                  <SelectValue placeholder="Select" />
-                                              </SelectTrigger>
-                                              <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                                                  <SelectItem value="agent1" className="dark:focus:bg-slate-800 dark:text-white">Agent 1</SelectItem>
-                                                  <SelectItem value="agent2" className="dark:focus:bg-slate-800 dark:text-white">Agent 2</SelectItem>
-                                              </SelectContent>
-                                          </Select>
-                                      </div>
-                                  </div>
-                                  <div className="flex justify-end gap-3 pt-2">
-                                      <Button 
-                                          variant="outline" 
-                                          className="px-6 py-2 h-10 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                                          onClick={handleCancelFolder}
-                                      >
-                                          Cancel
-                                      </Button>
-                                      <Button 
-                                          className="px-8 py-2 h-10 btn-outline-primary shadow-none font-medium"
-                                          variant="outline"
-                                          onClick={handleSave_Folder}
-                                      >
-                                          Save
-                                      </Button>
-                                  </div>
-                              </div>
+                <div className="flex flex-col lg:flex-row h-full gap-8">
+                  {/* Left Column: Folder List */}
+                  <div className="w-full lg:w-1/2 lg:border-r lg:border-gray-100 dark:lg:border-slate-800 lg:pr-8">
+                    <ul className="space-y-0">
+                      {folders.map((folder, index) => (
+                        <li
+                          key={index}
+                          className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-slate-800 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-800 px-2 rounded-md transition-colors cursor-pointer group"
+                          onMouseEnter={() => setHoveredFolderIndex(index)}
+                          onMouseLeave={() => setHoveredFolderIndex(null)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Folder className="w-5 h-5 text-black dark:text-white" />
+                            <span className="text-gray-700 dark:text-gray-200 font-medium text-sm">{folder}</span>
+                          </div>
+                          {hoveredFolderIndex === index && (
+                            <div className="flex items-center gap-3 text-black dark:text-white">
+                              <Eye
+                                className="w-4 h-4 hover:text-gray-700 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); handleViewFolder(folder); }}
+                              />
+                              <Pencil
+                                className="w-4 h-4 hover:text-gray-700 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); handleEditFolder(index); }}
+                              />
+                              <Trash
+                                className="w-4 h-4 hover:text-red-600 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteFolder(index); }}
+                              />
+                            </div>
                           )}
-                       </div>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-               </div>
+
+                  {/* Right Column: Action or Form */}
+                  <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 lg:py-0">
+                    {!isCreatingFolder ? (
+                      <div className="flex flex-col items-center text-center space-y-4">
+                        <p className="text-gray-900 dark:text-white font-medium">Add folder to organize your conversations.</p>
+                        <Button
+                          variant="outline"
+                          className="btn-outline-primary gap-2"
+                          onClick={() => setIsCreatingFolder(true)}
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add folder
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="bg-white dark:bg-slate-900 rounded-lg p-1 space-y-6 w-full max-w-md mx-auto">
+                        <div className="space-y-4">
+                          <div className="space-y-2 text-left">
+                            <Label className="text-base font-medium text-gray-900 dark:text-white">Display name</Label>
+                            <Input
+                              value={newFolderName}
+                              onChange={(e) => setNewFolderName(e.target.value)}
+                              className="bg-white dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                            />
+                          </div>
+                          <div className="space-y-2 text-left">
+                            <Label className="text-base font-medium text-gray-900 dark:text-white">Assigned to</Label>
+                            <Select>
+                              <SelectTrigger className="w-full bg-white dark:bg-slate-950 dark:border-slate-800 text-gray-500 dark:text-gray-300">
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
+                                <SelectItem value="agent1" className="dark:focus:bg-slate-800 dark:text-white">Agent 1</SelectItem>
+                                <SelectItem value="agent2" className="dark:focus:bg-slate-800 dark:text-white">Agent 2</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                          <Button
+                            variant="outline"
+                            className="px-6 py-2 h-10 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                            onClick={handleCancelFolder}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            className="px-8 py-2 h-10 btn-outline-primary shadow-none font-medium"
+                            variant="outline"
+                            onClick={handleSave_Folder}
+                          >
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Pause Tab */}
             <TabsContent value="pause" className="mt-0">
-               <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
-                  
-                  <div className="space-y-4 text-left">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                          Automatically pause the Smart Flow when initiating a conversation?
-                      </h3>
+              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
 
-                      <RadioGroup
-                          value={pauseSmartFlow}
-                          onValueChange={(value) => setPauseSmartFlow(value as "manually" | "automatically")}
-                          className="space-y-3"
-                      >
-                          {/* Manually Option */}
-                          <div
-                              className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
-                                  pauseSmartFlow === "manually"
-                                      ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
-                                      : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
-                              }`}
-                              onClick={() => setPauseSmartFlow("manually")}
-                          >
-                               <div className="flex items-center gap-3">
-                                  <RadioGroupItem value="manually" id="manually" />
-                                  <Label htmlFor="manually" className="font-medium cursor-pointer text-gray-700 dark:text-gray-200">Manually</Label>
-                               </div>
-                               <span className="text-sm text-gray-500 dark:text-gray-400">Do not pause the Smart Flow when an agent send a message</span>
-                          </div>
+                <div className="space-y-4 text-left">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                    Automatically pause the Smart Flow when initiating a conversation?
+                  </h3>
 
-                          {/* Automatically Option */}
-                          <div
-                               className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
-                                  pauseSmartFlow === "automatically"
-                                      ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
-                                      : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
-                              }`}
-                              onClick={() => setPauseSmartFlow("automatically")}
-                          >
-                              <div className="flex items-center gap-3">
-                                  <RadioGroupItem value="automatically" id="automatically" />
-                                  <Label htmlFor="automatically" className="font-medium cursor-pointer text-gray-700 dark:text-gray-200">Automatically</Label>
-                              </div>
-                              <span className="text-sm text-gray-500 dark:text-gray-400">Pause the Smart Flow when an agent send a message</span>
-                          </div>
-                      </RadioGroup>
-                  </div>
+                  <RadioGroup
+                    value={pauseSmartFlow}
+                    onValueChange={(value) => setPauseSmartFlow(value as "manually" | "automatically")}
+                    className="space-y-3"
+                  >
+                    {/* Manually Option */}
+                    <div
+                      className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${pauseSmartFlow === "manually"
+                          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
+                          : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
+                        }`}
+                      onClick={() => setPauseSmartFlow("manually")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="manually" id="manually" />
+                        <Label htmlFor="manually" className="font-medium cursor-pointer text-gray-700 dark:text-gray-200">Manually</Label>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Do not pause the Smart Flow when an agent send a message</span>
+                    </div>
 
-                  {/* Save Button */}
-                  <div className="flex justify-start pt-4">
-                      <Button 
-                          className="px-8 btn-outline-primary" 
-                          variant="outline"
-                          onClick={handleSavePause}
-                      >
-                          Save
-                      </Button>
-                  </div>
+                    {/* Automatically Option */}
+                    <div
+                      className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${pauseSmartFlow === "automatically"
+                          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
+                          : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
+                        }`}
+                      onClick={() => setPauseSmartFlow("automatically")}
+                    >
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="automatically" id="automatically" />
+                        <Label htmlFor="automatically" className="font-medium cursor-pointer text-gray-700 dark:text-gray-200">Automatically</Label>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Pause the Smart Flow when an agent send a message</span>
+                    </div>
+                  </RadioGroup>
+                </div>
 
-               </div>
+                {/* Save Button */}
+                <div className="flex justify-start pt-4">
+                  <Button
+                    className="px-8 btn-outline-primary"
+                    variant="outline"
+                    onClick={handleSavePause}
+                  >
+                    Save
+                  </Button>
+                </div>
+
+              </div>
             </TabsContent>
 
           </Tabs>

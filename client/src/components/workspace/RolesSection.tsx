@@ -33,37 +33,37 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 const INITIAL_ROLES = [
-  { 
+  {
     id: "1",
-    name: "Super Agent", 
+    name: "Super Agent",
     description: "Has control of the entire account.",
     icon: UserCog,
     isArchived: false
   },
-  { 
+  {
     id: "2",
-    name: "Block Access to Done Folder", 
+    name: "Block Access to Done Folder",
     description: "Block Access to Done Folder",
     icon: UserCog,
     isArchived: false
   },
-  { 
+  {
     id: "3",
-    name: "teste edilson", 
+    name: "teste edilson",
     description: "",
     icon: UserCog,
     isArchived: false
   },
-  { 
+  {
     id: "4",
-    name: "Mob users", 
+    name: "Mob users",
     description: "",
     icon: UserCog,
     isArchived: false
   },
-  { 
+  {
     id: "5",
-    name: "Teste tiago delet", 
+    name: "Teste tiago delet",
     description: "",
     icon: UserCog,
     isArchived: false
@@ -85,9 +85,9 @@ interface PermissionCategory {
 }
 
 const PERMISSION_CATEGORIES: PermissionCategory[] = [
-  { 
-    id: "ai-products", 
-    name: "AI Products", 
+  {
+    id: "ai-products",
+    name: "AI Products",
     icon: Bot,
     subPermissions: [
       { id: "view", title: "View AI products", description: "Allow agents to view AI Products." },
@@ -95,18 +95,18 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "delete", title: "Delete AI products", description: "Allow agents to delete AI products." },
     ]
   },
-  { 
-    id: "bookings", 
-    name: "Bookings", 
+  {
+    id: "bookings",
+    name: "Bookings",
     icon: Calendar,
     subPermissions: [
       { id: "view", title: "View bookings", description: "Allow agents to view all bookings" },
       { id: "manage", title: "Manage bookings", description: "Enable agents to create, update, or cancel bookings." },
     ]
   },
-  { 
-    id: "ai-intelligence", 
-    name: "AI - Artificial Intelligence", 
+  {
+    id: "ai-intelligence",
+    name: "AI - Artificial Intelligence",
     icon: Bot,
     subPermissions: [
       { id: "manage_themes", title: "Manage AI themes", description: "Allow agents to create or edit AI themes." },
@@ -128,9 +128,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "delete_topics", title: "Delete AI topics and Q&As", description: "Allow deleting AI topics and Q&As." },
     ]
   },
-  { 
-    id: "workspace-settings", 
-    name: "Workspace & Settings", 
+  {
+    id: "workspace-settings",
+    name: "Workspace & Settings",
     icon: Settings,
     subPermissions: [
       { id: "supervisor", title: "Supervisor Dashboard", description: "Grants access to Supervisor Dashboard for a comprehensive overview and comparison of all agent metrics." },
@@ -141,9 +141,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "channels", title: "Communication Channels", description: "Grant agents access to manage all communication channels." },
     ]
   },
-  { 
-    id: "collaborations", 
-    name: "Collaborations", 
+  {
+    id: "collaborations",
+    name: "Collaborations",
     icon: Share2,
     subPermissions: [
       { id: "agents", title: "Agents", description: "Enable the Agent to manage other agents within the workspace." },
@@ -151,9 +151,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "teams", title: "Team Managment", description: "Empower agents to manage teams within this workspace." },
     ]
   },
-  { 
-    id: "customizations", 
-    name: "Customizations", 
+  {
+    id: "customizations",
+    name: "Customizations",
     icon: PenTool,
     subPermissions: [
       { id: "custom_fields", title: "Custom fields", description: "Enable the Agent to create and delete custom fields." },
@@ -162,9 +162,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "ai_chat", title: "AI Chat Assistants", description: "Allow agents to create, update and delete AI Chat Assistants." },
     ]
   },
-  { 
-    id: "live-chat", 
-    name: "Live Chat conversations and tasks", 
+  {
+    id: "live-chat",
+    name: "Live Chat conversations and tasks",
     icon: Inbox,
     subPermissions: [
       { id: "send_unassigned", title: "Allow sending messages to unassigned conversations", description: "The Agent will be able to send a message to an unassigned conversation" },
@@ -182,9 +182,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "task_avail", title: "Task availability", description: "Open to receiving tasks from other Agents and Smart Flows." },
     ]
   },
-  { 
-    id: "company-contacts", 
-    name: "Company & Contacts", 
+  {
+    id: "company-contacts",
+    name: "Company & Contacts",
     icon: Building2,
     subPermissions: [
       { id: "block_search", title: "Block access to global contact search", description: "The Agent will not have access to search contacts globally" },
@@ -197,9 +197,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "export_psid", title: "Export PSID", description: "Allow agents to export Facebook PSID's." },
     ]
   },
-  { 
-    id: "broadcast", 
-    name: "Broadcast", 
+  {
+    id: "broadcast",
+    name: "Broadcast",
     icon: Radio,
     subPermissions: [
       { id: "view", title: "View broadcasts", description: "View all workspace broadcast" },
@@ -207,9 +207,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "delete", title: "Delete broadcasts", description: "Allow agents to delete broadcasts." },
     ]
   },
-  { 
-    id: "legal", 
-    name: "Legal", 
+  {
+    id: "legal",
+    name: "Legal",
     icon: Scale,
     subPermissions: [
       { id: "view", title: "View Document", description: "View legal document" },
@@ -217,9 +217,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "edit", title: "Edit Legal Document", description: "Allow Agent to edit legal document." },
     ]
   },
-  { 
-    id: "connect", 
-    name: "Connect", 
+  {
+    id: "connect",
+    name: "Connect",
     icon: Layers,
     subPermissions: [
       { id: "meta", title: "Meta Conversions API", description: "Authorize agents to access this integration." },
@@ -238,9 +238,9 @@ const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "elevenlabs", title: "ElevenLabs Integration", description: "Authorize Agent to access this integration." },
     ]
   },
-  { 
-    id: "clonekits", 
-    name: "Clonekits", 
+  {
+    id: "clonekits",
+    name: "Clonekits",
     icon: Bot,
     subPermissions: [
       { id: "view", title: "View Clonekit", description: "Allow agents to view Clonekit" },
@@ -273,7 +273,7 @@ export default function RolesSection() {
   const [roleName, setRoleName] = useState("");
   const [roleDescription, setRoleDescription] = useState("");
   const [editingRole, setEditingRole] = useState<any>(null);
-  
+
   const [alertOpen, setAlertOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ id: string, type: 'archive' | 'activate' } | null>(null);
 
@@ -286,13 +286,13 @@ export default function RolesSection() {
 
   const executeAction = () => {
     if (!pendingAction) return;
-    
-    setRoles(prev => prev.map(role => 
-      role.id === pendingAction.id 
-        ? { ...role, isArchived: pendingAction.type === 'archive' } 
+
+    setRoles(prev => prev.map(role =>
+      role.id === pendingAction.id
+        ? { ...role, isArchived: pendingAction.type === 'archive' }
         : role
     ));
-    
+
     setAlertOpen(false);
     setPendingAction(null);
   };
@@ -390,10 +390,10 @@ export default function RolesSection() {
       permissions: permissions
     };
 
-    setRoles(prev => prev.map(role => 
+    setRoles(prev => prev.map(role =>
       role.id === editingRole.id ? updatedRole : role
     ));
-    
+
     console.log("Updating role:", updatedRole);
     toast({
       title: "Success",
@@ -412,7 +412,7 @@ export default function RolesSection() {
               <ShieldCheck className="w-6 h-6 text-black dark:text-white" />
             </div>
             <div className="text-left">
-              <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Roles and permissions</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Roles and Permissions</CardTitle>
               <CardDescription className="text-sm font-medium text-gray-400 dark:text-gray-500">Manage roles and permissions</CardDescription>
             </div>
           </div>
@@ -423,15 +423,15 @@ export default function RolesSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Name</Label>
-              <Input 
+              <Input
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
-                className="h-10 border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950" 
+                className="h-10 border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950"
               />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Select Icon</Label>
-              
+
               <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -461,7 +461,7 @@ export default function RolesSection() {
                         <span className="flex-1 font-medium text-gray-900 dark:text-white group-hover:text-white">{item.name}</span>
                         {selectedIcon.name === item.name && (
                           <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                             <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                           </div>
                         )}
                       </button>
@@ -474,10 +474,10 @@ export default function RolesSection() {
 
           <div className="space-y-2">
             <Label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Description</Label>
-            <Textarea 
+            <Textarea
               value={roleDescription}
               onChange={(e) => setRoleDescription(e.target.value)}
-              className="min-h-[100px] border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950" 
+              className="min-h-[100px] border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950"
             />
           </div>
 
@@ -512,10 +512,10 @@ export default function RolesSection() {
                             </div>
                             <p className="text-xs text-gray-400 dark:text-gray-500">{sub.description}</p>
                           </div>
-                          <Switch 
+                          <Switch
                             checked={permissions[category.id]?.[sub.id] || false}
                             onCheckedChange={() => togglePermission(category.id, sub.id)}
-                            className="data-[state=checked]:bg-blue-600" 
+                            className="data-[state=checked]:bg-blue-600"
                           />
                         </div>
                       ))
@@ -534,18 +534,18 @@ export default function RolesSection() {
         <Separator className="bg-gray-100 dark:bg-slate-800" />
 
         <div className="p-6 flex justify-end gap-3 bg-white dark:bg-slate-900">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               setView("list");
               resetForm();
-            }} 
+            }}
             className="h-10 px-6 border-gray-200 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 font-bold"
           >
             Cancel
           </Button>
           {view === "add" ? (
-            <Button 
+            <Button
               variant="outline"
               onClick={handleSave}
               className="h-10 px-8 btn-outline-primary font-bold"
@@ -553,7 +553,7 @@ export default function RolesSection() {
               Save
             </Button>
           ) : (
-            <Button 
+            <Button
               variant="outline"
               onClick={handleUpdate}
               className="h-10 px-8 btn-outline-primary font-bold"
@@ -574,12 +574,12 @@ export default function RolesSection() {
             <ShieldCheck className="w-6 h-6 text-black dark:text-white" />
           </div>
           <div className="text-left">
-            <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Roles and permissions</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Roles and Permissions</CardTitle>
             <CardDescription className="text-sm font-medium text-gray-400 dark:text-gray-500">Manage roles and permissions</CardDescription>
           </div>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => {
             resetForm();
             setView("add");
@@ -627,18 +627,18 @@ export default function RolesSection() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => confirmAction(role.id, 'archive')}
-                    className="h-9 px-4 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-2"
+                    className="h-9 px-4 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-primary dark:hover:bg-primary hover:text-white dark:hover:text-white text-sm flex items-center gap-2 transition-all"
                   >
                     <Shield className="w-3.5 h-3.5" />
                     Archive
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => handleManage(role)}
-                    className="h-9 px-4 btn-outline-primary text-xs font-bold"
+                    className="h-9 px-4 btn-outline-primary text-sm transition-all"
                   >
                     Manage
                   </Button>
@@ -665,10 +665,10 @@ export default function RolesSection() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => confirmAction(role.id, 'activate')}
-                      className="h-9 px-4 btn-outline-primary text-xs font-bold"
+                      className="h-9 px-4 btn-outline-primary text-sm transition-all"
                     >
                       Activate
                     </Button>
@@ -690,13 +690,13 @@ export default function RolesSection() {
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="w-20 h-20 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
               <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/40 rounded-full flex items-center justify-center relative">
-                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-b-[26px] border-b-orange-200 dark:border-b-orange-800/60 translate-y-[-2px]"></div>
-                 </div>
-                 <AlertCircle className="w-10 h-10 text-orange-600 relative z-10" strokeWidth={2.5} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-b-[26px] border-b-orange-200 dark:border-b-orange-800/60 translate-y-[-2px]"></div>
+                </div>
+                <AlertCircle className="w-10 h-10 text-orange-600 relative z-10" strokeWidth={2.5} />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <AlertDialogTitle className="text-xl font-bold text-[#1e293b] dark:text-white">Are you sure</AlertDialogTitle>
               <AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -711,7 +711,7 @@ export default function RolesSection() {
                 </Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
-                <Button 
+                <Button
                   onClick={executeAction}
                   className="h-11 px-10 bg-[#f97316] hover:bg-orange-600 text-white font-bold border-none min-w-[100px]"
                 >
