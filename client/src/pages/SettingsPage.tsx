@@ -81,12 +81,12 @@ export default function SettingsPage() {
         { name: "Manage", path: "/settings/workspace/ManageSection" },
         { name: "Live Chat", path: "/settings/workspace/live-chat" },
         { name: "White Label", path: "/settings/workspace/white-label" },
-        { name: "Add New User", path: "/settings/workspace/manage-agents" },
+        { name: "Manage User", path: "/settings/workspace/manage-agents" },
         { name: "Roles & Permissions", path: "/settings/workspace/roles" },
         { name: "Teams", path: "/settings/workspace/teams" },
       ],
     },
-    { name: "Media gallery", icon: Film },
+    { name: "Media Gallery", icon: Film },
 
     // SETTINGS (existing ones)
     {
@@ -527,7 +527,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Right Content Area */}
-          <div className="flex-1 flex flex-col min-h-0 p-6 bg-gray-50/50 dark:bg-slate-950">
+          <div className="flex-1 flex flex-col min-h-0 p-6 bg-gray-50/50 dark:bg-slate-950 settings-pane">
             <Card className="flex-1 overflow-auto shadow-sm border border-gray-100/50 bg-white dark:bg-slate-900 dark:border-slate-800">
               {activeSection === "Manage" && (
                 <ManageSection />)}
@@ -538,13 +538,13 @@ export default function SettingsPage() {
 
               {activeSection === "White Label" && (
                 <WhiteLabelSection />)}
-              {activeSection === "Add New User" && (
+              {activeSection === "Manage User" && (
                 <ManageAgentsSection />)}
               {activeSection === "Roles & Permissions" && (
                 <RolesSection />)}
               {activeSection === "Teams" && (
                 <TeamsSection />)}
-              {activeSection === "Media gallery" && (
+              {activeSection === "Media Gallery" && (
                 <MediaGallerySection />)}
 
 
