@@ -13,6 +13,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -51,16 +54,46 @@ const getDisplayName = (conversation: any): string => {
 };
 
 export default function ConversationsInbox() {
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
-  const [showContactPanel, setShowContactPanel] = useState(false); // Always start minimized by default
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch inbox list
+  const { data: inboxResponse, isLoading: isLoadingInbox } = useQuery({
+    queryKey: ["/api/inbox/get-inbox-list", { activeTab, searchQuery }],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/inbox/get-inbox-list?status=${activeTab}&search=${searchQuery}`);
+      return res.json();
+    }
+  });
+
+  const backendConversations = inboxResponse?.inbox || [];
+  
+  // Map backend conversations to frontend format
+  const conversations = backendConversations.map((item: any) => ({
+    id: Number(item.id),
+    name: item.contact?.full_name || 'Unknown',
+    displayName: item.contact?.full_name || '',
+    phoneNumber: item.contact?.title || '', // Mapping title as placeholder for phone
+    lastMessage: item.last_message_text || '',
+    time: item.updated_at || new Date().toISOString(),
+    unread: item.unread_count || 0,
+    status: item.status.toLowerCase(),
+    assignedAgent: item.assigned_to ? item.assigned_to.toString() : null,
+    channel: item.modelable_type?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 
+             item.modelable_type?.toLowerCase().includes('facebook') ? 'messenger' : 'instagram'
+  }));
+
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const [showContactPanel, setShowContactPanel] = useState(false);
   const [agentStatus, setAgentStatus] = useState<"available" | "away">("available");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [sidebarWidth, setSidebarWidth] = useState(384); // w-96 = 384px
+  const [sidebarWidth, setSidebarWidth] = useState(384);
   const [isDragging, setIsDragging] = useState(false);
   const [assignedAgent, setAssignedAgent] = useState<string | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Filter State
@@ -80,6 +113,70 @@ export default function ConversationsInbox() {
     { id: "instagram", name: "Instagram", icon: React.createElement("img", { src: "/images/automations/instagram.svg", alt: "Instagram", className: "w-3.5 h-3.5" }) },
     { id: "messenger", name: "Messenger", icon: React.createElement("img", { src: "/images/automations/messenger.svg", alt: "Messenger", className: "w-3.5 h-3.5" }) },
   ];
+
+  // Fetch messages for selected conversation
+  const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
+    queryKey: ["/api/inbox/get-chat-messages", selectedConversation],
+    queryFn: async () => {
+      if (!selectedConversation) return null;
+      const res = await apiRequest("GET", `/api/inbox/get-chat-messages/${selectedConversation}`);
+      return res.json();
+    },
+    enabled: !!selectedConversation
+  });
+
+  const messages = (messagesResponse?.messages || []).map((m: any) => ({
+    id: m.id,
+    from: m.direction === 'OUTGOING' ? 'agent' : 'user',
+    text: m.message_text || '',
+    time: m.created_at || new Date().toISOString(),
+  }));
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (text: string) => {
+      const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, { message: text });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-chat-messages", selectedConversation] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      setMessageText("");
+    }
+  });
+
+  // Update status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+      const res = await apiRequest("POST", "/api/inbox/update-inbox-status", { inbox_id: id, status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      toast({
+        title: "Status updated",
+        description: "Conversation status has been updated successfully.",
+      });
+    }
+  });
+
+  // Assign agent mutation
+  const assignAgentMutation = useMutation({
+    mutationFn: async ({ agentId }: { agentId: string | null }) => {
+      const res = await apiRequest("POST", "/api/inbox/assign-conversation", { 
+        inbox_id: selectedConversation, 
+        assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? currentUser.id : agentId)
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      toast({
+        title: "Agent assigned",
+        description: "The conversation has been assigned successfully.",
+      });
+    }
+  });
 
   // Filter Handlers
   const addFilter = () => {
@@ -185,40 +282,10 @@ export default function ConversationsInbox() {
     }
   }, [selectedConversation]);
 
-  // Get the actual last message from conversation messages
-  const getLastMessage = (convId: number): string => {
-    const messages = conversationMessagesData[convId] || [];
-    if (messages.length === 0) return "";
-    return messages[messages.length - 1].text;
-  };
-
   // Calculate pending messages count
-  const getPendingMessagesCount = (convId: number): number => {
-    const conv = conversations.find(c => c.id === convId);
-    // Don't show pending for completed or spam chats
-    if (conv?.status === "completed" || conv?.status === "spam") {
-      return 0;
-    }
-
-    const messages = conversationMessagesData[convId] || [];
-    if (messages.length === 0) return 0;
-
-    // Find the last agent message
-    let lastAgentMessageIndex = -1;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].from === "agent") {
-        lastAgentMessageIndex = i;
-        break;
-      }
-    }
-
-    // If no agent message, all user messages are pending
-    if (lastAgentMessageIndex === -1) {
-      return messages.filter(m => m.from === "user").length;
-    }
-
-    // Count user messages after the last agent message
-    return messages.slice(lastAgentMessageIndex + 1).filter(m => m.from === "user").length;
+  const getPendingMessagesCount = (conv: any): number => {
+    // We can use unread_count from the backend conversation object
+    return conv.unread || 0;
   };
 
   // Filter and sort conversations
@@ -229,33 +296,33 @@ export default function ConversationsInbox() {
     if (activeTab !== "all") {
       if (activeTab === "active") {
         // Only show active chats assigned to me
-        filtered = filtered.filter(conv => conv.status === "active" && conv.assignedAgent === "self");
+        filtered = filtered.filter((conv: any) => conv.status === "active" && conv.assignedAgent === "self");
       } else {
-        filtered = filtered.filter(conv => conv.status === activeTab);
+        filtered = filtered.filter((conv: any) => conv.status === activeTab);
       }
     }
 
     // Filter by search query
     if (searchQuery.trim()) {
-      filtered = filtered.filter(conv =>
+      filtered = filtered.filter((conv: any) =>
         getDisplayName(conv).toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Filter by Select Agents Dropdown
     if (selectedFilterAgents.length > 0) {
-      filtered = filtered.filter(conv => selectedFilterAgents.includes(conv.assignedAgent || ""));
+      filtered = filtered.filter((conv: any) => selectedFilterAgents.includes(conv.assignedAgent || ""));
     }
 
     // Filter by Select Channels Dropdown
     if (selectedFilterChannels.length > 0) {
-      filtered = filtered.filter(conv => selectedFilterChannels.includes(conv.channel || ""));
+      filtered = filtered.filter((conv: any) => selectedFilterChannels.includes(conv.channel || ""));
     }
 
     // Advanced Filters
     if (filters.length > 0) {
-      filtered = filtered.filter(conv => {
-        return filters.every(filter => {
+      filtered = filtered.filter((conv: any) => {
+        return filters.every((filter: any) => {
           let itemValue = "";
           if (filter.column === "name") {
             itemValue = getDisplayName(conv);
@@ -284,7 +351,7 @@ export default function ConversationsInbox() {
 
     // Filter by teams (Legacy/Existing)
     if (filterTeams.length > 0) {
-      filtered = filtered.filter(conv => {
+      filtered = filtered.filter((conv: any) => {
         const convTeams = involvedTeamsByConv[conv.id] || [];
         return filterTeams.some(teamId => convTeams.includes(teamId));
       });
@@ -292,25 +359,21 @@ export default function ConversationsInbox() {
 
     // Filter by agents (Legacy/Existing - usually superceded by Select Agents above)
     if (filterAgents.length > 0) {
-      filtered = filtered.filter(conv => {
+      filtered = filtered.filter((conv: any) => {
         return filterAgents.includes(conv.assignedAgent || "");
       });
     }
 
     // Sort by time
-    filtered.sort((a, b) => {
+      filtered.sort((a: any, b: any) => {
       // Get dynamic time from messages if available, relative to NOW.
       // Note: We use the *latest* message time.
-      const getLastTime = (convId: number, defaultTime: string) => {
-        const msgs = conversationMessagesData[convId];
-        if (msgs && msgs.length > 0) {
-          return msgs[msgs.length - 1].time;
-        }
-        return defaultTime;
+      const getLastTime = (con: any) => {
+        return con.time;
       };
 
-      const timeA = getLastTime(a.id, a.time);
-      const timeB = getLastTime(b.id, b.time);
+      const timeA = getLastTime(a);
+      const timeB = getLastTime(b);
 
       return sortOrder === "desc"
         ? new Date(timeB).getTime() - new Date(timeA).getTime()
@@ -323,20 +386,16 @@ export default function ConversationsInbox() {
   // Mark messages as read when conversation is selected
   const handleSelectConversation = (convId: number) => {
     setSelectedConversation(convId);
-    setAssignedAgent(conversations.find(c => c.id === convId)?.assignedAgent || null);
+    const conv = conversations.find((c: any) => c.id === convId);
+    setAssignedAgent(conv?.assignedAgent || null);
 
-    // Mark unread messages as read
-    setConversations(conversations.map(conv =>
-      conv.id === convId ? { ...conv, unread: 0 } : conv
-    ));
+    // TODO: hit API to mark as read
   };
 
   // Handle assignment - changes status to active and assigns agent
   const handleAssignAgent = (agentId: string) => {
     if (selectedConversation) {
-      setConversations(conversations.map(c =>
-        c.id === selectedConversation ? { ...c, assignedAgent: agentId, status: "active" } : c
-      ));
+      assignAgentMutation.mutate({ agentId });
       setAssignedAgent(agentId);
     }
   };
@@ -484,11 +543,7 @@ export default function ConversationsInbox() {
 
       // Update the conversation's displayName if it was changed
       if (details.displayName !== undefined) {
-        setConversations(conversations.map(conv =>
-          conv.id === selectedConversation
-            ? { ...conv, displayName: details.displayName }
-            : conv
-        ));
+        // TODO: Update via API
       }
     }
   };
@@ -641,82 +696,9 @@ export default function ConversationsInbox() {
   };
 
   // Handle send message
-  const handleSendMessage = async () => {
-    if (!selectedConversation) return;
-
-    // Create file data URLs for images and audio
-    const imageFiles: any[] = [];
-    const otherFiles: any[] = [];
-
-    // Process all attached files
-    for (const file of attachedFiles) {
-      const dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
-
-      if (file.type.startsWith("image/")) {
-        imageFiles.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: dataUrl
-        });
-      } else {
-        otherFiles.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: dataUrl
-        });
-      }
-    }
-
-    // Create audio data URL
-    let audioUrl: string | undefined;
-    if (recordedAudio) {
-      audioUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve(e.target?.result as string);
-        };
-        reader.readAsDataURL(recordedAudio);
-      });
-    }
-
-    // Create message object
-    const newMessage: any = {
-      id: Math.random(),
-      from: "agent",
-      text: messageText,
-      time: new Date().toISOString(),
-      images: imageFiles.length > 0 ? imageFiles : undefined,
-      attachments: otherFiles.length > 0 ? otherFiles : undefined,
-      audio: recordedAudio ? {
-        url: audioUrl,
-        size: recordedAudio.size,
-        duration: "0:05"
-      } : undefined
-    };
-
-    // Add message to conversation
-    const updatedMessages = [...(conversationMessagesData[selectedConversation] || []), newMessage];
-    setConversationMessagesData({ ...conversationMessagesData, [selectedConversation]: updatedMessages });
-
-    // Update last message in conversation list
-    setConversations(conversations.map(conv =>
-      conv.id === selectedConversation
-        ? { ...conv, lastMessage: messageText || (imageFiles.length > 0 ? "📷 Photo" : otherFiles.length > 0 ? "📎 Attachment" : "🎤 Voice message"), time: new Date().toISOString() }
-        : conv
-    ));
-
-    // Reset form
-    setMessageText("");
-    setAttachedFiles([]);
-    setRecordedAudio(null);
+  const handleSendMessage = () => {
+    // Audio recording is not yet fully implemented in backend endpoint but logic is here
+    sendMessageMutation.mutate(messageText);
   };
 
   // Remove attached file
@@ -896,7 +878,7 @@ export default function ConversationsInbox() {
 
     // Create a new conversation for each phone number
     const newConversations = validPhoneNumbers.map((phoneNumber, index) => {
-      const newId = Math.max(...conversations.map(c => c.id), 0) + index + 1;
+      const newId = Math.max(...conversations.map((c: any) => c.id), 0) + index + 1;
 
       // Replace variables in template body
       let messageText = selectedTemplate.body;
@@ -924,28 +906,27 @@ export default function ConversationsInbox() {
     });
     setBasicDetailsByConv(newBasicDetails);
 
-    // Add messages for each conversation
-    const newMessagesData = { ...conversationMessagesData };
-    newConversations.forEach(conv => {
-      // Replace variables in template body for the message
-      let messageText = selectedTemplate.body;
-      selectedTemplate.variables.forEach((variable: string) => {
-        messageText = messageText.replace(`{{${variable}}}`, templateVariables[variable] || `{{${variable}}}`);
-      });
+    // const newMessagesData = { ...conversationMessagesData };
+    // newConversations.forEach(conv => {
+    //   // Replace variables in template body for the message
+    //   let messageText = selectedTemplate.body;
+    //   selectedTemplate.variables.forEach((variable: string) => {
+    //     messageText = messageText.replace(`{{${variable}}}`, templateVariables[variable] || `{{${variable}}}`);
+    //   });
 
-      newMessagesData[conv.id] = [
-        {
-          id: 1,
-          from: "agent",
-          text: messageText,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ];
-    });
-    setConversationMessagesData(newMessagesData);
+    //   newMessagesData[conv.id] = [
+    //     {
+    //       id: 1,
+    //       from: "agent",
+    //       text: messageText,
+    //       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    //     }
+    //   ];
+    // });
+    // setConversationMessagesData(newMessagesData);
 
     // Add new conversations to the list
-    setConversations([...newConversations, ...conversations]);
+    // setConversations([...newConversations, ...conversations]);
 
     // Reset form and close modal
     setTemplatePhoneNumbers([""]);
@@ -1058,112 +1039,6 @@ export default function ConversationsInbox() {
     }
   };
 
-  // Helper function to get display name (defaults to phone number if no display name)
-  const getDisplayName = (conversation: any): string => {
-    return conversation.displayName || conversation.phoneNumber || conversation.name || "Unknown";
-  };
-
-  const { toast } = useToast();
-  // State to trigger re-renders every minute for time updates
-  const [_, setTimeUpdateTrigger] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeUpdateTrigger(prev => prev + 1);
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const [conversations, setConversations] = useState([
-    // queued (Unassigned)
-    { id: 1, phoneNumber: "+1 234 567 8900", displayName: "John Doe", lastMessage: "Hi, I need help with my order", time: new Date(Date.now() - 2 * 60000).toISOString(), unread: 2, channel: "whatsapp", status: "queued", assignedAgent: null },
-    { id: 2, phoneNumber: "+1 234 567 8901", displayName: "Jane Smith", lastMessage: "Can you send me the invoice?", time: new Date(Date.now() - 5 * 60000).toISOString(), unread: 3, channel: "whatsapp", status: "queued", assignedAgent: null },
-    { id: 3, phoneNumber: "+1 234 567 8902", displayName: "Michael Chen", lastMessage: "I have a billing question", time: new Date(Date.now() - 8 * 60000).toISOString(), unread: 1, channel: "whatsapp", status: "queued", assignedAgent: null },
-
-    // Active (Assigned)
-    { id: 4, phoneNumber: "+1 234 567 8903", displayName: "Sarah Wilson", lastMessage: "Thank you for resolving this!", time: new Date(Date.now() - 1 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-1" },
-    { id: 5, phoneNumber: "+1 234 567 8904", displayName: "Bob Johnson", lastMessage: "Order received, thank you!", time: new Date(Date.now() - 3 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-2" },
-    { id: 6, phoneNumber: "+1 234 567 8905", displayName: "Emma Davis", lastMessage: "When will my refund be processed?", time: new Date(Date.now() - 12 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "active", assignedAgent: "agent-3" },
-
-    // Completed (No assignments)
-    { id: 7, phoneNumber: "+1 234 567 8906", displayName: "Alex Rodriguez", lastMessage: "Issue resolved successfully", time: new Date(Date.now() - 45 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
-    { id: 8, phoneNumber: "+1 234 567 8907", displayName: "Lisa Anderson", lastMessage: "Thanks for your help!", time: new Date(Date.now() - 2 * 3600000).toISOString(), unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
-    { id: 9, phoneNumber: "+1 234 567 8908", displayName: "David Martinez", lastMessage: "Perfect, all set!", time: new Date(Date.now() - 3 * 3600000).toISOString(), unread: 0, channel: "whatsapp", status: "completed", assignedAgent: null },
-
-    // Spam (No assignments)
-    { id: 10, phoneNumber: "+1 234 567 8909", displayName: "", lastMessage: "Click here for free money!!!", time: new Date(Date.now() - 30 * 60000).toISOString(), unread: 0, channel: "whatsapp", status: "spam", assignedAgent: null },
-    { id: 11, phoneNumber: "+1 234 567 8910", displayName: "", lastMessage: "Limited time offer - 90% off!", time: new Date(Date.now() - 24 * 3600000).toISOString(), unread: 0, channel: "whatsapp", status: "spam", assignedAgent: null },
-  ]);
-
-  // Messages per conversation
-  const [conversationMessagesData, setConversationMessagesData] = useState<Record<number, any[]>>({
-    1: [
-      { id: 1, from: "user", text: "Hi, I need help with my order", time: new Date(Date.now() - 60 * 60000).toISOString() },
-      { id: 2, from: "agent", text: "Hello! I'd be happy to help. What's your order number?", time: new Date(Date.now() - 59 * 60000).toISOString() },
-      { id: 3, from: "user", text: "It's #ORD-12345", time: new Date(Date.now() - 58 * 60000).toISOString() },
-      { id: 4, from: "agent", text: "Let me check that for you...", time: new Date(Date.now() - 57 * 60000).toISOString() },
-      { id: 5, from: "user", text: "", time: new Date(Date.now() - 56 * 60000).toISOString(), images: [{ name: "issue.jpg", url: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?auto=format&fit=crop&w=1000&q=80", size: 1024 * 500 }] },
-      { id: 6, from: "user", text: "", time: new Date(Date.now() - 55 * 60000).toISOString(), audio: { url: "https://index-tts.github.io/examples_part2/IndexTTS/Speaker_2.wav", duration: "0:15", size: 1024 * 200 } },
-      { id: 7, from: "agent", text: "I see, here is a guide.", time: new Date(Date.now() - 54 * 60000).toISOString(), attachments: [{ name: "guide.pdf", url: "https://pdfobject.com/pdf/sample.pdf", size: 1024 * 1024 }] },
-      { id: 8, from: "user", text: "", time: new Date(Date.now() - 53 * 60000).toISOString(), video: { url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg", name: "screen_recording.mp4", size: 1024 * 5000 } },
-      { id: 9, from: "user", text: "Thanks for the help!", time: new Date(Date.now() - 50 * 60000).toISOString() },
-    ],
-    2: [
-      { id: 1, from: "user", text: "Can you send me the invoice?", time: new Date(Date.now() - 125 * 60000).toISOString() },
-      { id: 2, from: "agent", text: "Of course! Let me find that for you.", time: new Date(Date.now() - 122 * 60000).toISOString() },
-      { id: 3, from: "agent", text: "", time: new Date(Date.now() - 121 * 60000).toISOString(), attachments: [{ name: "invoice_2024.pdf", url: "https://pdfobject.com/pdf/sample.pdf", size: 1024 * 850 }] },
-      { id: 4, from: "user", text: "", time: new Date(Date.now() - 120 * 60000).toISOString(), images: [{ name: "receipt.jpg", url: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1000&q=80", size: 1024 * 420 }] },
-      { id: 5, from: "user", text: "Thank you!", time: new Date(Date.now() - 119 * 60000).toISOString() },
-    ],
-    3: [
-      { id: 1, from: "user", text: "I have a billing question", time: new Date(Date.now() - 365 * 60000).toISOString() },
-      { id: 2, from: "user", text: "Are you there?", time: new Date(Date.now() - 360 * 60000).toISOString() },
-    ],
-    4: [
-      { id: 1, from: "user", text: "This is amazing!", time: new Date(Date.now() - 5 * 60000).toISOString() },
-      { id: 2, from: "user", text: "", time: new Date(Date.now() - 4 * 60000).toISOString(), images: [{ name: "product.jpg", url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80", size: 1024 * 650 }] },
-      { id: 3, from: "agent", text: "Glad I could help!", time: new Date(Date.now() - 3 * 60000).toISOString() },
-      { id: 4, from: "user", text: "Thank you for resolving this!", time: new Date(Date.now() - 1 * 60000).toISOString() },
-    ],
-    5: [
-      { id: 1, from: "user", text: "Order received, thank you!", time: new Date(Date.now() - 3 * 60000).toISOString() },
-      { id: 2, from: "user", text: "", time: new Date(Date.now() - 2 * 60000).toISOString(), video: { url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg", name: "unboxing.mp4", size: 1024 * 3500 } },
-    ],
-    6: [
-      { id: 1, from: "user", text: "When will my refund be processed?", time: new Date(Date.now() - 15 * 60000).toISOString() },
-      { id: 2, from: "agent", text: "It should be processed within 3-5 business days.", time: new Date(Date.now() - 12 * 60000).toISOString() },
-      { id: 3, from: "user", text: "", time: new Date(Date.now() - 11 * 60000).toISOString(), audio: { url: "https://index-tts.github.io/examples_part2/IndexTTS/Speaker_3.wav", duration: "0:12", size: 1024 * 180 } },
-    ],
-    7: [
-      { id: 1, from: "user", text: "Great service!", time: new Date(Date.now() - 48 * 60000).toISOString() },
-      { id: 2, from: "agent", text: "Thank you! We appreciate your business.", time: new Date(Date.now() - 47 * 60000).toISOString() },
-      { id: 3, from: "user", text: "Issue resolved successfully", time: new Date(Date.now() - 45 * 60000).toISOString() },
-    ],
-    8: [
-      { id: 1, from: "user", text: "Thanks for your help!", time: new Date(Date.now() - 3 * 3600000).toISOString() },
-      { id: 2, from: "agent", text: "You're welcome! Have a great day.", time: new Date(Date.now() - 2 * 3600000).toISOString() },
-    ],
-    9: [
-      { id: 1, from: "user", text: "Perfect, all set!", time: new Date(Date.now() - 3 * 3600000).toISOString() },
-    ],
-    10: [
-      { id: 1, from: "user", text: "Click here for free money!!!", time: new Date(Date.now() - 35 * 60000).toISOString() },
-      { id: 2, from: "user", text: "Limited offer - act now!", time: new Date(Date.now() - 30 * 60000).toISOString() },
-    ],
-    11: [
-      { id: 1, from: "user", text: "Limited time offer - 90% off!", time: new Date(Date.now() - 25 * 3600000).toISOString() },
-      { id: 2, from: "user", text: "Don't miss out!", time: new Date(Date.now() - 24 * 3600000).toISOString() },
-    ],
-  });
-
-  // Quick replies state
-  const [quickReplies, setQuickReplies] = useState([
-    "Hi, how can I help you?",
-    "What is your order number?",
-    "Can I assist you with anything else?",
-    "Thank you for contacting us.",
-  ]);
-
   // Helper to handle file downloads
   const handleDownload = async (url: string, filename: string) => {
     toast({
@@ -1191,32 +1066,22 @@ export default function ConversationsInbox() {
   };
 
   // Function to check if there are any agent messages in the current conversation
-  const hasAgentMessages = (convId: number) => {
-    const messages = conversationMessagesData[convId] || [];
-    return messages.some((msg: any) => msg.from === "agent");
+  const hasAgentMessages = () => {
+    return (messages || []).some((msg: any) => msg.from === "agent");
   };
 
   // Handle scroll to message from Contact Profile Sidebar
   const handleScrollToMessage = (messageId: number) => {
-    // Find the message element
     const element = document.getElementById(`message-${messageId}`);
-
     if (element) {
-      // Try standard scrollIntoView first
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-      // Additional fallback/refinement: target the specific scroll container
-      // We look for the ScrollArea's viewport or the nearest scrollable ancestor
       const container = element.closest('[data-radix-scroll-area-viewport]') || element.closest('.overflow-y-auto');
 
       if (container && container instanceof HTMLElement) {
-        // Calculate position to center the element
         const elementRect = element.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
         const relativeTop = elementRect.top - containerRect.top;
         const currentScroll = container.scrollTop;
-
-        // Center the element: newScrollTop = currentScroll + relativeTop - (containerHeight / 2) + (elementHeight / 2)
         const targetScroll = currentScroll + relativeTop - (container.clientHeight / 2) + (element.clientHeight / 2);
 
         container.scrollTo({
@@ -1225,19 +1090,21 @@ export default function ConversationsInbox() {
         });
       }
 
-      // Optional: Add a highlight effect
       element.style.transition = 'background-color 0.5s';
-
-      // Add a temporary highlight class or inline style
       element.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
 
       setTimeout(() => {
         element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
       }, 2000);
-    } else {
-      console.warn(`Message with ID message-${messageId} not found`);
     }
   };
+
+  const [quickReplies, setQuickReplies] = useState([
+    "Hi, how can I help you?",
+    "What is your order number?",
+    "Can I assist you with anything else?",
+    "Thank you for contacting us.",
+  ]);
 
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
@@ -1254,8 +1121,8 @@ export default function ConversationsInbox() {
                   const count = tabKey === "all"
                     ? conversations.length
                     : tabKey === "active"
-                      ? conversations.filter(c => c.status === "active" && c.assignedAgent === "self").length
-                      : conversations.filter(c => c.status === tabKey).length;
+                      ? conversations.filter((c: any) => c.status === "active" && c.assignedAgent === "self").length
+                      : conversations.filter((c: any) => c.status === tabKey).length;
                   return (
                     <button
                       key={tab}
@@ -1547,7 +1414,7 @@ export default function ConversationsInbox() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1 gap-2">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className={`text-sm truncate ${getPendingMessagesCount(conv.id) > 0 ? "font-bold" : " font-semibold"}`}>{getDisplayName(conv)}</span>
+                              <span className={`text-sm truncate ${getPendingMessagesCount(conv) > 0 ? "font-bold" : " font-semibold"}`}>{getDisplayName(conv)}</span>
                               {activeTab === "all" && (
                                 <Badge
                                   variant="outline"
@@ -1566,9 +1433,9 @@ export default function ConversationsInbox() {
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conversationMessagesData[conv.id]?.slice(-1)[0]?.time || conv.time)}</span>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time)}</span>
                           </div>
-                          <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{getLastMessage(conv.id)}</p>
+                          <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{conv.lastMessage}</p>
                           {conv.assignedAgent && conv.assignedAgent !== "self" && (
                             <p className="text-xs text-muted-foreground">Assigned to: <span className="font-medium">{getAgentName(conv.assignedAgent)}</span></p>
                           )}
@@ -1602,9 +1469,9 @@ export default function ConversationsInbox() {
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarFallback className={getAvatarColor(getDisplayName(conversations.find(c => c.id === selectedConversation) || {}))}>
+                    <AvatarFallback className={getAvatarColor(getDisplayName(conversations.find((c: any) => c.id === selectedConversation) || {}))}>
                       {(() => {
-                        const name = getDisplayName(conversations.find(c => c.id === selectedConversation) || {});
+                        const name = getDisplayName(conversations.find((c: any) => c.id === selectedConversation) || {});
                         const parts = name.trim().split(/\s+/).filter((p: string) => p.length > 0);
                         if (parts.length === 0) return "U";
                         if (parts.length === 1) return parts[0][0].toUpperCase();
@@ -1613,7 +1480,7 @@ export default function ConversationsInbox() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-sm font-semibold">{getDisplayName(conversations.find(c => c.id === selectedConversation) || {})}</h3>
+                    <h3 className="text-sm font-semibold">{getDisplayName(conversations.find((c: any) => c.id === selectedConversation) || {})}</h3>
                     <p className="text-xs text-muted-foreground">Active now</p>
                   </div>
                 </div>
@@ -1660,33 +1527,27 @@ export default function ConversationsInbox() {
                       <DropdownMenuContent align="end" className="bg-white dark:bg-background">
                         <DropdownMenuItem
                           onClick={() => {
-                            const conv = conversations.find(c => c.id === selectedConversation);
-                            if (conv) {
-                              setConversations(conversations.map(c =>
-                                c.id === selectedConversation ? { ...c, assignedAgent: null, status: "queued" } : c
-                              ));
+                            if (selectedConversation) {
+                              assignAgentMutation.mutate({ agentId: "null" }); // Pass "null" string or handled null
                               setAssignedAgent(null);
                             }
                           }}
-                          disabled={conversations.find(c => c.id === selectedConversation)?.assignedAgent !== "self"}
-                          className={conversations.find(c => c.id === selectedConversation)?.assignedAgent !== "self" ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={conversations.find((c: any) => c.id === selectedConversation)?.assignedAgent !== "self"}
+                          className={conversations.find((c: any) => c.id === selectedConversation)?.assignedAgent !== "self" ? "opacity-50 cursor-not-allowed" : ""}
                         >
                           <UserX size={16} className="mr-2" />
                           Unassign Chat
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
+                         <DropdownMenuItem
                           onClick={() => {
-                            const conv = conversations.find(c => c.id === selectedConversation);
-                            if (conv) {
-                              setConversations(conversations.map(c =>
-                                c.id === selectedConversation ? { ...c, status: "completed", assignedAgent: null } : c
-                              ));
+                            if (selectedConversation) {
+                              updateStatusMutation.mutate({ id: selectedConversation, status: "completed" });
                               setAssignedAgent(null);
                             }
                           }}
-                          disabled={conversations.find(c => c.id === selectedConversation)?.status === "completed"}
-                          className={conversations.find(c => c.id === selectedConversation)?.status === "completed" ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={conversations.find((c: any) => c.id === selectedConversation)?.status === "completed"}
+                          className={conversations.find((c: any) => c.id === selectedConversation)?.status === "completed" ? "opacity-50 cursor-not-allowed" : ""}
                         >
                           <CheckCircle size={16} className="mr-2" />
                           Mark as Completed
@@ -1694,16 +1555,13 @@ export default function ConversationsInbox() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => {
-                            const conv = conversations.find(c => c.id === selectedConversation);
-                            if (conv) {
-                              setConversations(conversations.map(c =>
-                                c.id === selectedConversation ? { ...c, status: "spam", assignedAgent: null } : c
-                              ));
+                            if (selectedConversation) {
+                              updateStatusMutation.mutate({ id: selectedConversation, status: "spam" });
                               setAssignedAgent(null);
                             }
                           }}
-                          disabled={conversations.find(c => c.id === selectedConversation)?.status === "spam"}
-                          className={conversations.find(c => c.id === selectedConversation)?.status === "spam" ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={conversations.find((c: any) => c.id === selectedConversation)?.status === "spam"}
+                          className={conversations.find((c: any) => c.id === selectedConversation)?.status === "spam" ? "opacity-50 cursor-not-allowed" : ""}
                         >
                           <AlertOctagon size={16} className="mr-2" />
                           Mark as Spam
@@ -1719,7 +1577,7 @@ export default function ConversationsInbox() {
 
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {(conversationMessagesData[selectedConversation!] || []).map((msg: any, index: number, allMessages: any[]) => {
+                  {(messages || []).map((msg: any, index: number, allMessages: any[]) => {
                     const showDateDivider = index === 0 || formatMessageDate(msg.time) !== formatMessageDate(allMessages[index - 1].time);
                     return (
                       <React.Fragment key={msg.id}>
@@ -2051,7 +1909,7 @@ export default function ConversationsInbox() {
         {
           showContactPanel && (
             <ContactProfileSidebar
-              conversation={conversations.find(c => c.id === selectedConversation)}
+              conversation={conversations.find((c: any) => c.id === selectedConversation)}
               conversations={conversations}
               basicDetails={basicDetailsByConv[selectedConversation || 0]}
               onUpdateBasicDetails={handleUpdateBasicDetails}
@@ -2061,14 +1919,14 @@ export default function ConversationsInbox() {
               involvedTeams={involvedTeamsByConv[selectedConversation || 0]}
               onUpdateInvolvedTeams={handleUpdateInvolvedTeams}
               teamOptions={teamOptions}
-              tags={tagsByConv[conversations.find(c => c.id === selectedConversation)?.id || 0] || []}
+              tags={tagsByConv[conversations.find((c: any) => c.id === selectedConversation)?.id || 0] || []}
               onUpdateTags={handleUpdateTags}
               tagOptions={tagOptions}
-              customAttributes={customAttributesByConv[conversations.find(c => c.id === selectedConversation)?.id || 0] || {}}
+              customAttributes={customAttributesByConv[conversations.find((c: any) => c.id === selectedConversation)?.id || 0] || {}}
               onUpdateCustomAttributes={handleUpdateCustomAttributes}
-              notes={notesByConv[conversations.find(c => c.id === selectedConversation)?.id || 0] || []}
+              notes={notesByConv[conversations.find((c: any) => c.id === selectedConversation)?.id || 0] || []}
               onUpdateNotes={handleUpdateNotes}
-              messages={conversationMessagesData[selectedConversation!] || []}
+              messages={messages || []}
               onScrollToMessage={handleScrollToMessage}
             />
           )

@@ -2,7 +2,8 @@
   "projects": {
     "default": "ezconn-4398a",
     "comm-platform": "comm-platform-5fdce",
-    "prod": "product-3f6b0"
+    "prod": "product-3f6b0",
+    "product-1": "product-1-17ab1"
   },
   "targets": {
     "comm-platform-5fdce": {
@@ -23,6 +24,13 @@
       "hosting": {
         "update-site": [
           "ezconn-4398a"
+        ]
+      }
+    },
+    "product-1-17ab1": {
+      "hosting": {
+        "update-site": [
+          "product-1-17ab1"
         ]
       }
     }

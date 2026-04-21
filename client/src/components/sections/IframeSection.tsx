@@ -4,7 +4,10 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Edit, Trash2, Eye, Plus } from "lucide-react";
+import { Globe, Edit, Trash2, Eye, Plus, Loader2 } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface IframeItem {
   id: string;
@@ -14,56 +17,89 @@ interface IframeItem {
 }
 
 export default function IframeSection() {
-  const [iframes, setIframes] = useState<IframeItem[]>([
-    { id: "1", name: "Site", menuText: "Site", htmlCode: '<iframe src="https://example.com"></iframe>' }
-  ]);
+  const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [menuText, setMenuText] = useState("");
   const [htmlCode, setHtmlCode] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
+  const [menuTitleInput, setMenuTitleInput] = useState("");
 
-  const handleSave = () => {
-    if (name.trim() && menuText.trim() && htmlCode.trim()) {
-      if (editingId) {
-        setIframes(iframes.map(item => item.id === editingId ? {
-          ...item,
-          id: editingId,
-          name: name,
-          menuText: menuText,
-          htmlCode: htmlCode,
-        } : item));
-        setEditingId(null);
-      } else {
-        const newItem: IframeItem = {
-          id: Date.now().toString(),
-          name: name,
-          menuText: menuText,
-          htmlCode: htmlCode,
-        };
-        setIframes([...iframes, newItem]);
-      }
+  const { data, isLoading } = useQuery<{ iframes: any[]; menu_title: string }>({
+    queryKey: ["/api/iframes"],
+  });
+
+  const iframes = data?.iframes || [];
+  const menuTitle = data?.menu_title || "Iframes";
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await apiRequest("POST", "/api/iframes", payload);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/iframes"] });
+      toast({ title: "Success", description: "Iframe saved successfully" });
+      setIsCreateOpen(false);
       setName("");
       setMenuText("");
       setHtmlCode("");
-      setIsCreateOpen(false);
+      setEditingId(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/iframes/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/iframes"] });
+      toast({ title: "Success", description: "Iframe deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const titleMutation = useMutation({
+    mutationFn: async (title: string) => {
+      await apiRequest("POST", "/api/iframes/menu-title", { title });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/iframes"] });
+      toast({ title: "Success", description: "Menu title updated successfully" });
+      setIsEditTitleModalOpen(false);
+    },
+  });
+
+  const handleSave = () => {
+    if (name.trim() && menuText.trim() && htmlCode.trim()) {
+      saveMutation.mutate({
+        id: editingId,
+        name,
+        menu_text: menuText,
+        html_code: htmlCode,
+      });
     }
   };
 
-  const handleEditIframe = (iframe: IframeItem) => {
+  const handleEditIframe = (iframe: any) => {
      setName(iframe.name);
-     setMenuText(iframe.menuText);
-     setHtmlCode(iframe.htmlCode);
+     setMenuText(iframe.menu_text);
+     setHtmlCode(iframe.html_code);
      setEditingId(iframe.id);
      setIsCreateOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    setIframes(iframes.filter(item => item.id !== id));
+    if (confirm("Are you sure you want to delete this iframe?")) {
+      deleteMutation.mutate(id);
+    }
   };
-
-  const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
-  const [menuTitle, setMenuTitle] = useState("Iframes");
 
   return (
     <div className="p-6 h-full flex flex-col">
@@ -116,7 +152,13 @@ export default function IframeSection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {iframes.map((iframe) => (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={2} className="px-4 py-8 text-center">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                      </td>
+                    </tr>
+                  ) : iframes.map((iframe: any) => (
                     <tr
                       key={iframe.id}
                       className="border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors"
@@ -124,9 +166,6 @@ export default function IframeSection() {
                       <td className="px-4 py-4 font-medium text-foreground">{iframe.name}</td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors" title="View">
-                            <Eye size={16} className="text-slate-600 dark:text-slate-400" />
-                          </button>
                           <button 
                             className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors" 
                             title="Edit"
@@ -214,10 +253,11 @@ export default function IframeSection() {
               </Button>
               <Button 
                 onClick={handleSave}
-                className="btn-outline-primary"
+                className="btn-outline-primary flex items-center gap-2"
                 variant="outline"
-                disabled={!name || !menuText || !htmlCode}
+                disabled={!name || !menuText || !htmlCode || saveMutation.isPending}
               >
+                {saveMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Publish
               </Button>
           </div>
@@ -235,8 +275,8 @@ export default function IframeSection() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Menu Title</label>
               <Input 
-                value={menuTitle}
-                onChange={(e) => setMenuTitle(e.target.value)}
+                value={menuTitleInput || menuTitle}
+                onChange={(e) => setMenuTitleInput(e.target.value)}
                 className="w-full"
               />
             </div>
@@ -250,10 +290,12 @@ export default function IframeSection() {
                 Cancel
               </Button>
               <Button 
-                onClick={() => setIsEditTitleModalOpen(false)}
-                className="btn-outline-primary"
+                onClick={() => titleMutation.mutate(menuTitleInput || menuTitle)}
+                className="btn-outline-primary flex items-center gap-2"
                 variant="outline"
+                disabled={titleMutation.isPending}
               >
+                {titleMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Save
               </Button>
             </div>

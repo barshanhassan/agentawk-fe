@@ -9,12 +9,14 @@ import {
   Check,
   Users,
   Search,
-  ChevronDown
+  ChevronDown,
+  AlertCircle
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -42,8 +44,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const INITIAL_TEAMS = [
   { id: "1", name: "Team B", distribution: "Priority distribution", agents: "7 Agents" },
@@ -56,19 +60,57 @@ const INITIAL_TEAMS = [
 
 export default function TeamsSection() {
   const [view, setView] = useState<"list" | "add" | "edit">("list");
-  const [teams, setTeams] = useState(INITIAL_TEAMS);
+  const { toast } = useToast();
 
   // Form state
   const [teamName, setTeamName] = useState("");
-  const [distribution, setDistribution] = useState<"equal" | "priority">("equal");
-  const [availableOnly, setAvailableOnly] = useState(false);
+  const [distribution, setDistribution] = useState<"EQUAL" | "PRIORITY">("EQUAL");
+  const [autoAssign, setAutoAssign] = useState(false);
+  const [selectedAgents, setSelectedAgents] = useState<any[]>([]);
+
+  const { data: teamsData, isLoading: leadsLoading } = useQuery<any>({
+    queryKey: ["/api/teams/get-all"],
+  });
+
+  const { data: membersData } = useQuery<any>({
+    queryKey: ["/api/workspaces/members"],
+  });
+
+  const agents = membersData || [];
+  const teams = Array.isArray(teamsData) ? teamsData : [];
+
+  const createOrUpdateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/teams/create", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams/get-all"] });
+      toast({ title: "Success", description: "Team saved successfully!" });
+      setView("list");
+      resetForm();
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string | number) => {
+      await apiRequest("DELETE", `/api/teams/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams/get-all"] });
+      toast({ title: "Success", description: "Team deleted successfully!" });
+      setAlertOpen(false);
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
 
   const handleEdit = (team: any) => {
     setEditingId(team.id);
     setTeamName(team.name);
-    setDistribution(team.distribution === "Priority distribution" ? "priority" : "equal");
-    // agents in mock are just strings, so we'll just set defaults for demo
-    setAvailableOnly(false);
+    setDistribution(team.distribution);
+    setAutoAssign(team.auto_assign === 1);
+    setSelectedAgents(team.team_members?.map((m: any) => ({ ...m.users, priority: m.priority })) || []);
     setView("edit");
   };
 
@@ -78,9 +120,10 @@ export default function TeamsSection() {
 
   const resetForm = () => {
     setTeamName("");
-    setDistribution("equal");
-    setAvailableOnly(false);
+    setDistribution("EQUAL");
+    setAutoAssign(false);
     setEditingId(null);
+    setSelectedAgents([]);
   };
 
   const handleDelete = (id: string) => {
@@ -90,33 +133,20 @@ export default function TeamsSection() {
 
   const executeDelete = () => {
     if (pendingDeleteId) {
-      setTeams(prev => prev.filter(t => t.id !== pendingDeleteId));
-      setPendingDeleteId(null);
-      setAlertOpen(false);
+      deleteMutation.mutate(pendingDeleteId);
     }
   };
 
   const handleSave = () => {
     if (!teamName) return;
 
-    if (view === "add") {
-      const newTeam = {
-        id: (teams.length + 1).toString(),
-        name: teamName,
-        distribution: distribution === "priority" ? "Priority distribution" : "d_equal",
-        agents: "0 Agents"
-      };
-      setTeams([...teams, newTeam]);
-    } else if (view === "edit" && editingId) {
-      setTeams(teams.map(t => t.id === editingId ? {
-        ...t,
-        name: teamName,
-        distribution: distribution === "priority" ? "Priority distribution" : "d_equal"
-      } : t));
-    }
-
-    resetForm();
-    setView("list");
+    createOrUpdateMutation.mutate({
+      id: editingId,
+      name: teamName,
+      distribution: distribution,
+      auto_assign: autoAssign,
+      members: selectedAgents.map(a => ({ id: a.id, priority: a.priority || 0 }))
+    });
   };
 
   if (view === "add" || view === "edit") {
@@ -145,10 +175,10 @@ export default function TeamsSection() {
             <p className="text-[13px] font-bold text-[#1e293b] dark:text-slate-200">Select the automated contact distribution method of team.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
-                onClick={() => setDistribution("equal")}
+                onClick={() => setDistribution("EQUAL")}
                 className={cn(
                   "flex flex-col text-left p-6 rounded-xl border-2 transition-all relative group",
-                  distribution === "equal"
+                  distribution === "EQUAL"
                     ? "border-blue-600 bg-blue-50/10"
                     : "border-gray-100 dark:border-slate-800 hover:border-blue-200"
                 )}
@@ -157,7 +187,7 @@ export default function TeamsSection() {
                 <p className="text-[12px] text-slate-500 mt-2 leading-relaxed font-medium">
                   This distribution allows automated equal distribution of incoming calls, conversations, opportunities and tasks among all agents.
                 </p>
-                {distribution === "equal" && (
+                {distribution === "EQUAL" && (
                   <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
                     <Check className="w-3 h-3 text-white" strokeWidth={3} />
                   </div>
@@ -165,10 +195,10 @@ export default function TeamsSection() {
               </button>
 
               <button
-                onClick={() => setDistribution("priority")}
+                onClick={() => setDistribution("PRIORITY")}
                 className={cn(
                   "flex flex-col text-left p-6 rounded-xl border-2 transition-all relative group",
-                  distribution === "priority"
+                  distribution === "PRIORITY"
                     ? "border-blue-600 bg-blue-50/10"
                     : "border-gray-100 dark:border-slate-800 hover:border-blue-200"
                 )}
@@ -177,7 +207,7 @@ export default function TeamsSection() {
                 <p className="text-[12px] text-slate-500 mt-2 leading-relaxed font-medium">
                   This distribution type allows prioritization of specific agents to receive incoming calls, conversations, opportunities and tasks over others.
                 </p>
-                {distribution === "priority" && (
+                {distribution === "PRIORITY" && (
                   <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
                     <Check className="w-3 h-3 text-white" strokeWidth={3} />
                   </div>
@@ -189,8 +219,8 @@ export default function TeamsSection() {
           <div className="flex items-center space-x-3">
             <Checkbox
               id="available"
-              checked={availableOnly}
-              onCheckedChange={(checked) => setAvailableOnly(checked as boolean)}
+              checked={autoAssign}
+              onCheckedChange={(checked) => setAutoAssign(checked as boolean)}
               className="w-5 h-5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 rounded"
             />
             <label htmlFor="available" className="text-[13px] font-medium text-slate-600 dark:text-slate-400">
@@ -201,15 +231,64 @@ export default function TeamsSection() {
           <div className="space-y-3">
             <label className="text-[13px] font-bold text-[#1e293b] dark:text-slate-200">Add agents to this team</label>
             <div className="relative">
-              <Select>
+              <Select onValueChange={(val) => {
+                const agent = agents.find((a: any) => a.id.toString() === val);
+                if (agent && !selectedAgents.find(sa => sa.id === agent.id)) {
+                  setSelectedAgents([...selectedAgents, { ...agent, priority: 0 }]);
+                }
+              }}>
                 <SelectTrigger className="w-full h-12 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-slate-500 font-medium rounded-lg">
                   <SelectValue placeholder="Search agent..." />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                  <SelectItem value="agent1">Agent 1</SelectItem>
-                  <SelectItem value="agent2">Agent 2</SelectItem>
+                  {agents.filter((a: any) => !selectedAgents.find(sa => sa.id === a.id)).map((agent: any) => (
+                    <SelectItem key={agent.id} value={agent.id.toString()}>
+                      {agent.full_name || agent.first_name} ({agent.email})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-1 gap-3 mt-4">
+              {selectedAgents.map((agent, index) => (
+                <div key={agent.id} className="flex items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 transition-all hover:border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold text-xs">
+                      {(agent.full_name || agent.first_name || "?")[0].toUpperCase()}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{agent.full_name || agent.first_name}</span>
+                      <span className="text-[11px] text-slate-500 font-medium">{agent.email}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    {distribution === "PRIORITY" && (
+                      <div className="flex items-center gap-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase">Priority</Label>
+                        <Input 
+                          type="number" 
+                          value={agent.priority || 0} 
+                          onChange={(e) => {
+                            const newAgents = [...selectedAgents];
+                            newAgents[index].priority = parseInt(e.target.value) || 0;
+                            setSelectedAgents(newAgents);
+                          }}
+                          className="h-8 w-16 text-center text-xs font-bold bg-white dark:bg-slate-900 border-slate-200 focus:ring-1 focus:ring-blue-600 rounded-md"
+                        />
+                      </div>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setSelectedAgents(selectedAgents.filter(sa => sa.id !== agent.id))}
+                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -277,7 +356,11 @@ export default function TeamsSection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {teams.map((team) => (
+            {teams.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-20 text-slate-400">No teams found. Create one to get started.</TableCell>
+              </TableRow>
+            ) : teams.map((team: any) => (
               <TableRow key={team.id} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors group">
                 <TableCell className="py-5 pl-8">
                   <div className="flex items-center gap-3">
@@ -289,11 +372,11 @@ export default function TeamsSection() {
                 </TableCell>
                 <TableCell className="py-5">
                   <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[10px] py-1 px-2.5 rounded-full border-none shadow-none uppercase">
-                    {team.distribution}
+                    {team.distribution === 'PRIORITY' ? 'Priority distribution' : 'Equal distribution'}
                   </Badge>
                 </TableCell>
                 <TableCell className="py-5">
-                  <span className="text-[13px] font-bold text-slate-500 dark:text-slate-400">{team.agents}</span>
+                  <span className="text-[13px] font-bold text-slate-500 dark:text-slate-400">{team.team_members?.length || 0} Agents</span>
                 </TableCell>
                 <TableCell className="py-5 text-right pr-10">
                   <div className="flex items-center justify-end gap-1.5">
@@ -308,7 +391,7 @@ export default function TeamsSection() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(team.id)}
+                      onClick={() => handleDelete(team.id.toString())}
                       className="h-9 w-9 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                     >
                       <Trash2 className="w-4 h-4" />

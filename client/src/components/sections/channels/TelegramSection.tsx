@@ -51,10 +51,46 @@ const mockTelegramBots = [
   },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function TelegramSection() {
   const [view, setView] = useState<"list" | "manage">("list");
-  const [hasBots, setHasBots] = useState(true);
-  const [bots, setBots] = useState(mockTelegramBots);
+  const queryClient = useQueryClient();
+  
+  const handleConnect = () => {
+    toast({
+      title: "Connecting...",
+      description: "Redirecting to Telegram connection flow.",
+    });
+  };
+
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["/api/integrations/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/channels");
+      return res.json();
+    }
+  });
+
+  const bots = channels?.telegram || [];
+  const hasBots = bots.length > 0;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/channels/telegram/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: "Deleted",
+        description: "Bot removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete bot.", variant: "destructive" });
+    }
+  });
   const [showToken, setShowToken] = useState<Record<number, boolean>>({});
 
   // Dialog states
@@ -85,12 +121,10 @@ export default function TelegramSection() {
   };
 
   const toggleFeeder = (botId: number) => {
-    setBots(prev => prev.map(bot => {
-      if (bot.id === botId) {
-        return { ...bot, allow_in_feeder: !bot.allow_in_feeder };
-      }
-      return bot;
-    }));
+    toast({
+      title: "Info",
+      description: "AI Feeder toggle will be implemented with real mutation soon.",
+    });
   };
 
   const handleEditBot = (bot: typeof mockTelegramBots[0]) => {
@@ -104,15 +138,10 @@ export default function TelegramSection() {
 
   const handleSaveBot = () => {
     if (!editingBotId) return;
-    setBots(prev => prev.map(b => 
-      b.id === editingBotId 
-        ? { ...b, ...editFormData }
-        : b
-    ));
     setEditingBotId(null);
     toast({
       title: "Success",
-      description: "Bot settings updated successfully.",
+      description: "Bot settings update will be implemented with real mutation soon.",
     });
   };
 
@@ -127,31 +156,14 @@ export default function TelegramSection() {
 
   const confirmDeleteBot = () => {
     if (botToDelete) {
-      setBots(prev => prev.filter(b => b.id !== botToDelete.id));
-      toast({
-        title: "Success",
-        description: "Bot deleted successfully.",
-      });
+      deleteMutation.mutate(botToDelete.id);
       setShowDeleteConfirm(false);
       setBotToDelete(null);
     }
   };
 
   const handleAddNewBot = () => {
-    const newBotId = Date.now();
-    const newBot = {
-      id: newBotId,
-      name: "New Telegram Bot",
-      username: "new_bot",
-      token: "",
-      status: "INACTIVE",
-      allow_in_feeder: false,
-      auto_reply_automation_id: null,
-      avatar: null
-    };
-    setBots([newBot, ...bots]);
-    handleEditBot(newBot);
-    setHasBots(true);
+    handleConnect();
   };
 
   return (
@@ -242,7 +254,7 @@ export default function TelegramSection() {
                   <Button 
                     className="btn-outline-primary min-w-[150px]"
                     variant="outline"
-                    onClick={() => setHasBots(true)}
+                    onClick={handleConnect}
                   >
                     Connect now
                   </Button>
@@ -250,7 +262,7 @@ export default function TelegramSection() {
               </div>
             ) : (
               <div className="p-6 divide-y">
-                {bots.map((bot) => (
+                {bots.map((bot: any) => (
                   <div key={bot.id} className="pb-6">
                     <div className="flex items-start py-5">
                       {/* Avatar */}

@@ -6,8 +6,9 @@ interface ProtectedRouteProps {
 }
 
 const checkAuth = () => {
-  // In a real application, this would involve checking a token, session, etc.
-  // For this demo, we check for a simple 'demoLogin=true' cookie.
+  const token = localStorage.getItem("auth_token");
+  if (!token) return false;
+
   const cookies = document.cookie.split(';');
   for (let i = 0; i < cookies.length; i++) {
     let cookie = cookies[i].trim();

@@ -12,15 +12,29 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [, navigate] = useLocation();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, any email and password will work
-    if (email && password) {
-      // Set a dummy cookie for demo purposes
-      document.cookie = 'demoLogin=true; path=/';
-      navigate('/insights'); // Redirect to Insights Dashboard
-    } else {
-      alert('Please enter both email and password.');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Save token and user info
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user_info", JSON.stringify(data.user));
+        document.cookie = 'demoLogin=true; path=/';
+        navigate('/insights');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Login failed Check your credentials.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Failed to connect to the server.');
     }
   };
 

@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
 
 type ThemeMode = "light" | "dark";
 
 interface ThemeContextType {
     mode: ThemeMode;
-    setMode: (mode: ThemeMode) => void;
+    setMode: (mode: ThemeMode) => Promise<void>;
     primaryColor: string; // The HSL color like '217 91% 60%'
-    setPrimaryColor: (color: string) => void;
+    setPrimaryColor: (color: string) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -15,55 +16,64 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [mode, setModeState] = useState<ThemeMode>("light");
     const [primaryColor, setPrimaryColorState] = useState("217 91% 60%"); // Default Blue
 
-    // Helper to read cookie
-    const getCookie = (name: string) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop()?.split(';').shift();
-    };
-
-    // Load from cookie on mount
+    // Load from backend on mount
     useEffect(() => {
-        const savedMode = getCookie("themeMode") as ThemeMode;
-        const savedColor = getCookie("themePrimaryColor");
-
-        if (savedMode === "light" || savedMode === "dark") {
-            setModeState(savedMode);
-        }
-        if (savedColor) {
-            setPrimaryColorState(decodeURIComponent(savedColor));
-        }
+        const fetchTheme = async () => {
+            try {
+                const res = await fetch("/api/users/theme");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.mode) setModeState(data.mode);
+                    if (data.primaryColor) setPrimaryColorState(data.primaryColor);
+                }
+            } catch (error) {
+                console.error("Failed to fetch theme:", error);
+            }
+        };
+        fetchTheme();
     }, []);
 
-    // Update cookie and DOM when state changes
+    // Update cookie and DOM for mode
     useEffect(() => {
-        // Update document class for dark mode
         if (mode === "dark") {
             document.documentElement.classList.add("dark");
         } else {
             document.documentElement.classList.remove("dark");
         }
-        document.cookie = `themeMode=${mode}; path=/; max-age=31536000`; // 1 year
+        document.cookie = `themeMode=${mode}; path=/; max-age=31536000`;
     }, [mode]);
 
+    // Update CSS variables for color
     useEffect(() => {
-        // Update CSS variables
-        // Updating all variables that rely on primary HSL channels
-        document.documentElement.style.setProperty("--primary", primaryColor);
-        document.documentElement.style.setProperty("--ring", primaryColor);
-        document.documentElement.style.setProperty("--sidebar-primary", primaryColor);
-        document.documentElement.style.setProperty("--sidebar-ring", primaryColor);
-
-        // Cookie
+        const root = document.documentElement;
+        root.style.setProperty("--primary", primaryColor);
+        root.style.setProperty("--ring", primaryColor);
+        root.style.setProperty("--sidebar-primary", primaryColor);
+        root.style.setProperty("--sidebar-ring", primaryColor);
+        root.style.setProperty("--chart-1", primaryColor);
+        
+        // Update complementary colors for charts based on primary selection
+        // (Just updating the first chart color to match primary)
+        
         document.cookie = `themePrimaryColor=${encodeURIComponent(primaryColor)}; path=/; max-age=31536000`;
     }, [primaryColor]);
 
-    const setMode = (newMode: ThemeMode) => {
+    const setMode = async (newMode: ThemeMode) => {
         setModeState(newMode);
+        try {
+            await apiRequest("POST", "/api/users/theme", { mode: newMode, primaryColor });
+        } catch (error) {
+            console.error("Failed to save mode:", error);
+        }
     };
 
-    const setPrimaryColor = (newColor: string) => {
+    const setPrimaryColor = async (newColor: string) => {
         setPrimaryColorState(newColor);
+        try {
+            await apiRequest("POST", "/api/users/theme", { mode, primaryColor: newColor });
+        } catch (error) {
+            console.error("Failed to save primary color:", error);
+        }
     };
 
     return (

@@ -73,13 +73,51 @@ const gptModels = [
   { name: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function AIChatAssistantsSection() {
   const [viewMode, setViewMode] = useState<"list" | "edit" | "logs">("list");
-  const [agents, setAgents] = useState(mockAgents);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: agentsData, isLoading } = useQuery({
+    queryKey: ["/api/ai/agents"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/agents");
+      return res.json();
+    }
+  });
+
+  const agents = agentsData?.agents || [];
+  const totalActive = agentsData?.total_active || 0;
+  const limit = 15;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/agents/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
+      toast({ title: "Deleted", description: "Assistant removed successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete assistant.", variant: "destructive" });
+    }
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      await apiRequest("PATCH", `/api/ai/agents/${id}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
+    }
+  });
+
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<any>(null);
-  const { toast } = useToast();
   
   // Edit Form State
   const [activeTab, setActiveTab] = useState<"personality" | "configurations" | "knowledge" | "functions">("personality");
@@ -97,9 +135,6 @@ export default function AIChatAssistantsSection() {
     source_type: "pdf",
   });
 
-  const totalActive = agents.filter(a => a.status === "ACTIVE").length;
-  const limit = 15;
-
   const handleEdit = (agent: any) => {
     setSelectedAgent(agent);
     if (agent) {
@@ -107,10 +142,12 @@ export default function AIChatAssistantsSection() {
         ...formData,
         name: agent.name,
         model: agent.model,
-        // Populate other fields as needed from agent data
+        instructions: agent.instructions || "",
+        prompt_strategy: agent.prompt_strategy || "fixed",
+        creativity: agent.creativity || 1.0,
+        diversity: agent.diversity || 0.5,
       });
     } else {
-      // Reset form for new agent
       setFormData({
         name: "",
         instructions: "",
@@ -128,35 +165,28 @@ export default function AIChatAssistantsSection() {
     setViewMode("edit");
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim()) {
-      if (selectedAgent) {
-        setAgents(prev => prev.map(a => a.id === selectedAgent.id ? { ...a, name: formData.name, model: formData.model } : a));
-        toast({ title: "Success", description: "Assistant updated successfully." });
-      } else {
-        const newAgent = {
-          id: Date.now(),
-          name: formData.name,
-          reference_id: `asst_${Math.random().toString(36).substr(2, 9)}`,
-          model: formData.model,
-          total_quries: 0,
-          status: "ACTIVE",
-          allow_in_feeder: true,
-        };
-        setAgents([...agents, newAgent]);
-        toast({ title: "Success", description: "Assistant created successfully." });
+      try {
+        if (selectedAgent) {
+          await apiRequest("POST", `/api/ai/agents/${selectedAgent.id}/update`, formData);
+          toast({ title: "Success", description: "Assistant updated successfully." });
+        } else {
+          await apiRequest("POST", "/api/ai/agents/create", formData);
+          toast({ title: "Success", description: "Assistant created successfully." });
+        }
+        queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
+        setViewMode("list");
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to save assistant.", variant: "destructive" });
       }
-      setViewMode("list");
     }
   };
 
-  const handleStatusToggle = (id: number) => {
-    setAgents(prevAgents => prevAgents.map(agent => 
-      agent.id === id 
-        ? { ...agent, status: agent.status === "ACTIVE" ? "PAUSED" : "ACTIVE" }
-        : agent
-    ));
+  const handleStatusToggle = (id: number, currentStatus: string) => {
+    const newStatus = currentStatus === "ACTIVE" ? "PAUSED" : "ACTIVE";
+    statusMutation.mutate({ id, status: newStatus });
   };
 
   const handleDeleteRequest = (agent: any) => {
@@ -166,11 +196,7 @@ export default function AIChatAssistantsSection() {
 
   const confirmDeleteAgent = () => {
     if (agentToDelete) {
-      setAgents(prev => prev.filter(a => a.id !== agentToDelete.id));
-      toast({
-        title: "Assistant Deleted",
-        description: `${agentToDelete.name} has been successfully removed.`,
-      });
+      deleteMutation.mutate(agentToDelete.id);
       setShowDeleteConfirm(false);
       setAgentToDelete(null);
     }
@@ -219,19 +245,19 @@ export default function AIChatAssistantsSection() {
           </div>
 
           <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
-             {agents.length > 0 ? (
-               <table className="w-full text-sm text-left">
-                 <thead className="bg-slate-50 dark:bg-slate-800 border-b">
-                   <tr>
-                     <th className="px-6 py-3 font-medium text-muted-foreground">Name</th>
-                     <th className="px-6 py-3 font-medium text-muted-foreground">Model</th>
-                     <th className="px-6 py-3 font-medium text-muted-foreground">AI Calls</th>
-                     <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
-                     <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y">
-                   {agents.map((agent) => (
+             {agents && agents.length > 0 ? (
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-800 border-b">
+                    <tr>
+                      <th className="px-6 py-3 font-medium text-muted-foreground">Name</th>
+                      <th className="px-6 py-3 font-medium text-muted-foreground">Model</th>
+                      <th className="px-6 py-3 font-medium text-muted-foreground">AI Calls</th>
+                      <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
+                      <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {agents?.map((agent: any) => (
                      <tr key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                        <td className="px-6 py-4">
                          <div className="font-medium text-slate-900 dark:text-slate-100">{agent.name}</div>
@@ -243,10 +269,10 @@ export default function AIChatAssistantsSection() {
                        <td className="px-6 py-4">{agent.model}</td>
                        <td className="px-6 py-4">{agent.total_quries}</td>
                        <td className="px-6 py-4">
-                         <Switch 
-                           checked={agent.status === "ACTIVE"} 
-                           onCheckedChange={() => handleStatusToggle(agent.id)}
-                         />
+                          <Switch 
+                            checked={agent.status === "ACTIVE"} 
+                            onCheckedChange={() => handleStatusToggle(agent.id, agent.status)}
+                          />
                        </td>
                        <td className="px-6 py-4 text-right">
                          <div className="flex items-center justify-end gap-2">

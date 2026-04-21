@@ -43,6 +43,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 interface SortEntry {
   column: string;
@@ -52,11 +56,11 @@ interface SortEntry {
 interface Campaign {
   id: number;
   name: string;
-  type: "Broadcast" | "API Triggered";
+  type: string;
   messageType: string;
   sent: number;
   delivered: number;
-  status: "draft" | "scheduled" | "delivered" | "archived";
+  status: string;
   // New fields for API Triggered
   startDate?: Date;
   endDate?: Date;
@@ -76,6 +80,7 @@ interface Campaign {
   csvContent?: any[];
   recipients?: Recipient[];
   engagementData?: EngagementData[];
+  scheduledAt?: Date;
 }
 
 interface Schedule {
@@ -102,7 +107,6 @@ interface EngagementData {
 
 export default function CampaignManager() {
   const { toast } = useToast();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -146,6 +150,106 @@ export default function CampaignManager() {
   // For Popover states
   const [recurringStartPickerOpen, setRecurringStartPickerOpen] = useState(false);
   const [recurringEndPickerOpen, setRecurringEndPickerOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  // Fetch campaigns from backend
+  const { data: broadcastsData, isLoading: isLoadingCampaigns } = useQuery({
+    queryKey: ["/api/broadcasts"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/broadcasts");
+      return res.json();
+    }
+  });
+
+  const createBroadcastMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/broadcasts", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
+      toast({
+        title: "Broadcast Created",
+        description: "Your broadcast has been created successfully.",
+      });
+      setCreateOpen(false);
+      resetCreateCampaignForm();
+    }
+  });
+
+  const updateBroadcastMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/broadcasts/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
+      toast({
+        title: "Broadcast Updated",
+        description: "Your broadcast has been updated successfully.",
+      });
+      setCreateOpen(false);
+      setEditingCampaignId(null);
+      resetCreateCampaignForm();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/broadcasts/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Campaign deleted",
+        description: "The campaign has been removed successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
+      setShowDeleteModal(false);
+      setCampaignToDelete(null);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const campaigns = useMemo(() => {
+    if (!broadcastsData?.broadcasts) return [];
+    return (broadcastsData.broadcasts as any[]).map((b: any) => ({
+      id: Number(b.id),
+      name: b.name,
+      type: b.channel_type === "whatsapp" ? "Broadcast" : "API Triggered",
+      messageType: b.scheduled_at ? "Scheduled" : "Immediate",
+      sent: b.total_sent || 0,
+      delivered: b.total_sent || 0, // Placeholder
+      status: b.status?.toLowerCase() || "draft",
+      whatsAppTemplateName: b.wa_template_id ? `template_${b.wa_template_id}` : "Custom",
+      startDate: b.created_at ? new Date(b.created_at) : undefined,
+      scheduledAt: b.scheduled_at ? new Date(b.scheduled_at) : undefined,
+      repeatFrequency: b.repeat_frequency || "",
+      dailyRepeatInterval: b.daily_repeat_interval || "1",
+      weeklyRepeatDays: Array.isArray(b.weekly_repeat_days) ? b.weekly_repeat_days : [],
+      monthlyRepeatDates: Array.isArray(b.monthly_repeat_dates) ? b.monthly_repeat_dates : [],
+      deliverInTimezone: !!b.deliver_in_timezone,
+      csvFileName: b.csv_filename || "",
+      recurringStartDate: b.start_date ? new Date(b.start_date) : undefined,
+      recurringEndDate: b.end_date ? new Date(b.end_date) : undefined,
+      recurringTime: b.recurring_time ? b.recurring_time : { hour: "", minute: "", period: "" },
+      endDate: b.end_date ? new Date(b.end_date) : undefined,
+      neverEnds: !!b.never_ends,
+      // and other fields as needed
+    })) as Campaign[];
+  }, [broadcastsData]);
+
+  const handleConfirmDelete = () => {
+    if (campaignToDelete) {
+      deleteMutation.mutate(campaignToDelete.id);
+    }
+  };
 
   const whatsappTemplates = [
     {
@@ -242,107 +346,6 @@ export default function CampaignManager() {
 
     return data;
   };
-
-  // Initialize campaigns on first render
-  useEffect(() => {
-    if (campaigns.length === 0) {
-      const generateEngagementData = () => Array.from({ length: 24 }, (_, i) => ({
-        hour: `${i}:00`,
-        delivered: Math.floor(Math.random() * 1000) + 500,
-        viewed: Math.floor(Math.random() * 800) + 300,
-      }));
-
-      const generateRecipients = (count: number) => Array.from({ length: count }, (_, i) => {
-        const statuses = ["Sent", "Delivered", "Viewed", "Failed"];
-        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-        return {
-          id: i + 1,
-          name: `Recipient ${i + 1}`,
-          phone: `+1234567${(890 + i).toString().padStart(3, '0')}`,
-          status: randomStatus as "Sent" | "Delivered" | "Viewed" | "Failed",
-          time: `10:${(30 + i).toString().padStart(2, '0')} AM`,
-        };
-      });
-
-      setCampaigns([
-        {
-          id: 1,
-          name: "Summer Sale 2024",
-          type: "Broadcast",
-          messageType: "Immediate",
-          sent: 15420,
-          delivered: 14892,
-          status: "delivered",
-          whatsAppTemplateName: "promotional_offer",
-          startDate: new Date('2024-07-01'),
-          endDate: new Date('2024-07-31'),
-          csvFileName: "summer_sale_contacts.csv",
-          csvContent: [{ name: "Alice", number: "+1234567890" }],
-          engagementData: generateEngagementData(),
-          recipients: generateRecipients(20),
-        },
-        {
-          id: 2,
-          name: "Cart Abandonment",
-          type: "API Triggered",
-          messageType: "Recurring",
-          sent: 8923,
-          delivered: 8654,
-          status: "delivered",
-          whatsAppTemplateName: "promotional_offer",
-          startDate: new Date('2024-01-01'),
-          neverEnds: true,
-          engagementData: generateEngagementData(),
-          recipients: generateRecipients(15),
-        },
-        {
-          id: 3,
-          name: "Product Launch",
-          type: "Broadcast",
-          messageType: "Scheduled",
-          sent: 0,
-          delivered: 0,
-          status: "scheduled",
-          whatsAppTemplateName: "welcome_message",
-          schedules: [{ id: 1, date: new Date('2025-01-15'), hour: '10', minute: '00', period: 'AM' }],
-          deliverInTimezone: true,
-          csvFileName: "product_launch_contacts.csv",
-          csvContent: [{ name: "Bob", number: "+1987654321" }],
-          engagementData: generateEngagementData(),
-          recipients: generateRecipients(10),
-        },
-        {
-          id: 4,
-          name: "Draft Campaign",
-          type: "Broadcast",
-          messageType: "Immediate",
-          sent: 0,
-          delivered: 0,
-          status: "draft",
-          whatsAppTemplateName: "welcome_message",
-          startDate: new Date('2025-02-01'),
-          csvFileName: "draft_contacts.csv",
-          csvContent: [{ name: "Charlie", number: "+1122334455" }],
-          engagementData: generateEngagementData(),
-          recipients: generateRecipients(5),
-        },
-        {
-          id: 5,
-          name: "Archived Campaign",
-          type: "API Triggered",
-          messageType: "Recurring",
-          sent: 5000,
-          delivered: 4800,
-          status: "archived",
-          whatsAppTemplateName: "order_confirmation",
-          startDate: new Date('2023-01-01'),
-          endDate: new Date('2023-12-31'),
-          engagementData: generateEngagementData(),
-          recipients: generateRecipients(25),
-        },
-      ]);
-    }
-  }, []);
 
   // Handle CSV column sorting
   const handleCsvColumnSort = (column: string) => {
@@ -539,7 +542,7 @@ export default function CampaignManager() {
       delivered: 0,
     };
 
-    setCampaigns([...campaigns, clonedCampaign]);
+    createBroadcastMutation.mutate(clonedCampaign);
     toast({
       title: "Campaign Cloned",
       description: `${cloneCampaignName} has been cloned to Draft`,
@@ -556,9 +559,7 @@ export default function CampaignManager() {
   const handleConfirmArchive = () => {
     if (!campaignToArchive) return;
 
-    setCampaigns(campaigns.map(c =>
-      c.id === campaignToArchive.id ? { ...c, status: "archived" } : c
-    ));
+    updateBroadcastMutation.mutate({ id: campaignToArchive.id, data: { status: "archived" } });
     toast({
       title: "Campaign Archived",
       description: `${campaignToArchive.name} has been archived`,
@@ -571,18 +572,6 @@ export default function CampaignManager() {
   const handleOpenDeleteModal = (campaign: Campaign) => {
     setCampaignToDelete(campaign);
     setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (!campaignToDelete) return;
-
-    setCampaigns(campaigns.filter(c => c.id !== campaignToDelete.id));
-    toast({
-      title: "Campaign Deleted",
-      description: `${campaignToDelete.name} has been deleted`,
-    });
-    setShowDeleteModal(false);
-    setCampaignToDelete(null);
   };
 
   // Get archivable campaigns (non-archived)
@@ -604,9 +593,8 @@ export default function CampaignManager() {
   // Bulk archive handler
   const handleBulkArchive = () => {
     const archivable = getArchivableCampaigns();
-    setCampaigns(campaigns.map(c =>
-      archivable.includes(c.id) ? { ...c, status: "archived" } : c
-    ));
+    // Bulk actions should ideally hit a bulk API. For now, hitting update for each or TODO.
+    archivable.forEach(id => updateBroadcastMutation.mutate({ id, data: { status: "archived" } }));
     toast({
       title: "Campaigns Archived",
       description: `${archivable.length} campaign(s) have been archived`,
@@ -618,7 +606,8 @@ export default function CampaignManager() {
   // Bulk delete handler
   const handleBulkDelete = () => {
     const deletable = getDeletableCampaigns();
-    setCampaigns(campaigns.filter(c => !deletable.includes(c.id)));
+    // Bulk actions should ideally hit a bulk API.
+    deletable.forEach(id => deleteMutation.mutate(id));
     toast({
       title: "Campaigns Deleted",
       description: `${deletable.length} campaign(s) have been deleted`,
@@ -727,17 +716,9 @@ export default function CampaignManager() {
     };
 
     if (editingCampaignId) {
-      setCampaigns(prev => prev.map(c => c.id === editingCampaignId ? { ...campaignData, sent: c.sent, delivered: c.delivered } : c));
-      toast({
-        title: "Campaign Updated",
-        description: `${campaignName} has been updated.`,
-      });
+      updateBroadcastMutation.mutate({ id: editingCampaignId, data: campaignData });
     } else {
-      setCampaigns(prev => [...prev, campaignData]);
-      toast({
-        title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
-        description: `${campaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
-      });
+      createBroadcastMutation.mutate(campaignData);
     }
     setCreateOpen(false);
     setEditingCampaignId(null); // Reset editingCampaignId
@@ -772,17 +753,9 @@ export default function CampaignManager() {
     };
 
     if (editingCampaignId) {
-      setCampaigns(prev => prev.map(c => c.id === editingCampaignId ? { ...campaignData, sent: c.sent, delivered: c.delivered } : c));
-      toast({
-        title: "Campaign Updated",
-        description: `${campaignName} has been updated.`,
-      });
+      updateBroadcastMutation.mutate({ id: editingCampaignId, data: campaignData });
     } else {
-      setCampaigns(prev => [...prev, campaignData]);
-      toast({
-        title: status === "draft" ? "Draft Saved" : "Campaign Set Live",
-        description: `${campaignName} has been ${status === "draft" ? "saved as a draft" : "set live"}.`,
-      });
+      createBroadcastMutation.mutate(campaignData);
     }
     setCreateOpen(false);
     setEditingCampaignId(null); // Reset editingCampaignId
@@ -1086,7 +1059,13 @@ export default function CampaignManager() {
                 </tr>
               </thead>
               <tbody>
-                {getFilteredCampaigns().length === 0 ? (
+                {isLoadingCampaigns ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-20">
+                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+                    </td>
+                  </tr>
+                ) : getFilteredCampaigns().length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-8 text-muted-foreground">
                       No results

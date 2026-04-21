@@ -52,9 +52,35 @@ const mockFetchedPages = [
   { page: "https://example.com/features", title: "Features" },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function AIKnowledgeBaseSection() {
   const [viewMode, setViewMode] = useState<"list" | "edit">("list");
-  const [knowledgeBases, setKnowledgeBases] = useState(mockKnowledgeBases);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: knowledgeBases, isLoading } = useQuery({
+    queryKey: ["/api/ai/knowledge-bases"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/knowledge-bases");
+      return res.json();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/knowledge-bases/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/knowledge-bases"] });
+      toast({ title: "Deleted", description: "Knowledge base removed successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete knowledge base.", variant: "destructive" });
+    }
+  });
+
   const [formData, setFormData] = useState<any>({
     id: null,
     name: "",
@@ -72,21 +98,18 @@ export default function AIKnowledgeBaseSection() {
   
   // Validation state
   const [errors, setErrors] = useState<any>({});
-  const { toast } = useToast();
 
   const handleEdit = (kb: any = null) => {
     if (kb) {
-      // Load existing (mock implementation)
       setFormData({
         ...kb,
-        website: kb.source_type === 'website' ? 'example.com' : '',
-        web_pages: kb.source_type === 'website' ? mockFetchedPages : [],
-        selected_pages: kb.source_type === 'website' ? mockFetchedPages.map((p: any) => p.page) : [],
-        files: kb.source_type === 'pdf' ? [{ id: 1, object_name: 'policy.pdf' }] : [],
-        website_content: kb.source_type === 'text' ? 'Sample content...' : ''
+        website: kb.source_type === 'website' ? (kb.url || '') : '',
+        web_pages: [],
+        selected_pages: [],
+        files: [],
+        website_content: kb.source_type === 'text' ? (kb.content || '') : ''
       });
     } else {
-      // Create new
       setFormData({
         id: null,
         name: "",
@@ -104,34 +127,20 @@ export default function AIKnowledgeBaseSection() {
 
   const validateForm = () => {
     const newErrors: any = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData?.name?.trim()) newErrors.name = "Name is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
     
-    // Mock save
-    if (formData.id) {
-      setKnowledgeBases(prev => prev.map(k => k.id === formData.id ? { ...k, ...formData, status: k.status } : k));
-      toast({ title: "Success", description: "Knowledge base updated successfully." });
-    } else {
-      setKnowledgeBases(prev => [...prev, { 
-        id: Date.now(), 
-        name: formData.name, 
-        status: "PUBLISHED", // Auto publish for mock
-        source_type: formData.source_type,
-        items: formData.source_type === 'website' ? formData.selected_pages.length : (formData.files.length || 1)
-      }]);
-      toast({ title: "Success", description: "Knowledge base created successfully." });
-    }
+    toast({ title: "Info", description: "Saving knowledge base not fully implemented yet." });
     setViewMode("list");
   };
 
   const handleDelete = (id: number) => {
-    setKnowledgeBases(prev => prev.filter(k => k.id !== id));
-    toast({ title: "Deleted", description: "Knowledge base has been removed." });
+    deleteMutation.mutate(id);
   };
 
   const handleFetchPages = () => {
@@ -218,7 +227,7 @@ export default function AIKnowledgeBaseSection() {
       <CardContent className="p-6 pt-0">
         {viewMode === "list" && (
           <>
-            {knowledgeBases.length > 0 ? (
+            {knowledgeBases && knowledgeBases.length > 0 ? (
               <div className="border rounded-md">
                 <Table>
                   <TableHeader>
@@ -230,7 +239,7 @@ export default function AIKnowledgeBaseSection() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {knowledgeBases.map((kb) => (
+                     {knowledgeBases?.map((kb: any) => (
                       <TableRow key={kb.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" onClick={() => handleEdit(kb)}>
                         <TableCell className="font-medium">{kb.name}</TableCell>
                         <TableCell>

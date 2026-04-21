@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Film,
   Folder,
@@ -21,8 +21,12 @@ import {
   Pencil,
   Trash2,
   Upload,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  Download
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,12 +82,8 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
-  // Load from localStorage or use initial data
-  const [mediaItems, setMediaItems] = useState<typeof INITIAL_MEDIA>(() => {
-    const saved = localStorage.getItem('mediaGallery_items');
-    return saved ? JSON.parse(saved) : INITIAL_MEDIA;
-  });
-
+  const queryClient = useQueryClient();
+  const [parentId, setParentId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -91,31 +91,134 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
   const [isDragging, setIsDragging] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
 
-  const [folderContents, setFolderContents] = useState<Record<string, typeof INITIAL_MEDIA>>(() => {
-    const saved = localStorage.getItem('mediaGallery_folderContents');
-    return saved ? JSON.parse(saved) : {};
+  // Fetch media from backend
+  const { data: galleryData, isLoading } = useQuery({
+    queryKey: ["/api/gallery/listings", { object_id: parentId }],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/gallery/listings${parentId ? `?object_id=${parentId}` : ""}`);
+      return res.json();
+    }
   });
 
-  // Save to localStorage whenever mediaItems or folderContents change
-  React.useEffect(() => {
-    localStorage.setItem('mediaGallery_items', JSON.stringify(mediaItems));
-  }, [mediaItems]);
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/gallery/media/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
+      toast({
+        title: "Deleted successfully",
+        description: "Media has been removed",
+        variant: "destructive",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
-  React.useEffect(() => {
-    localStorage.setItem('mediaGallery_folderContents', JSON.stringify(folderContents));
-  }, [folderContents]);
+  // Rename mutation
+  const renameMutation = useMutation({
+    mutationFn: async ({ id, newName }: { id: string, newName: string }) => {
+      await apiRequest("PATCH", `/api/gallery/rename/${id}`, { object_name: newName });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
+      toast({
+        title: "Renamed successfully",
+        description: "Name has been updated",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Rename failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
-  const handlePlay = (item: typeof INITIAL_MEDIA[0]) => {
+  // Create folder mutation
+  const createFolderMutation = useMutation({
+    mutationFn: async (name: string) => {
+      await apiRequest("POST", "/api/gallery/folder", { name, parent_id: parentId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
+      toast({
+        title: "Folder created",
+        description: "New folder has been created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Folder creation failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      await apiRequest("POST", "/api/gallery/upload", formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
+      toast({
+        title: "Upload successful",
+        description: "Files have been uploaded",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const mediaItems = useMemo(() => {
+    if (!galleryData) return [];
+    
+    const mappedFolders = (galleryData.folders || []).map((f: any) => ({
+      id: f.object_id || f.id.toString(),
+      name: f.object_name,
+      type: "folder",
+      size: "-",
+      url: "#"
+    }));
+
+    const mappedFiles = (galleryData.file_folders?.data || []).map((f: any) => ({
+      id: f.object_id || f.id.toString(),
+      name: f.object_name,
+      type: f.media_type?.toLowerCase() || "file",
+      size: `${(f.file_size / 1024).toFixed(1)} KB`,
+      url: f.file_url
+    }));
+
+    return [...mappedFolders, ...mappedFiles];
+  }, [galleryData]);
+
+  const folders = useMemo(() => mediaItems.filter(i => i.type === "folder"), [mediaItems]);
+
+  const handlePlay = (item: any) => {
     toast({
       title: "Playing media",
       description: `Now playing: ${item.name}`,
     });
-    // In a real app, this would open a media player
     console.log("Playing:", item.url);
   };
 
-  const handleCopyURL = (item: typeof INITIAL_MEDIA[0]) => {
-    const fullUrl = `${window.location.origin}${item.url}`;
+  const handleCopyURL = (item: any) => {
+    const fullUrl = item.url;
     navigator.clipboard.writeText(fullUrl);
     toast({
       title: "URL copied",
@@ -123,20 +226,28 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     });
   };
 
-  const handleRename = (item: typeof INITIAL_MEDIA[0]) => {
+  const handleDownload = (item: any) => {
+    const link = document.createElement("a");
+    link.href = item.url;
+    link.download = item.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Downloading...",
+      description: `Saving ${item.object_name} to your device`,
+    });
+  };
+
+  const handleRename = (item: any) => {
     setRenamingId(item.id);
     setRenameValue(item.name);
   };
 
   const confirmRename = () => {
     if (renamingId && renameValue.trim()) {
-      setMediaItems(prev => prev.map(item =>
-        item.id === renamingId ? { ...item, name: renameValue.trim() } : item
-      ));
-      toast({
-        title: "Renamed successfully",
-        description: `File renamed to: ${renameValue.trim()}`,
-      });
+      renameMutation.mutate({ id: renamingId, newName: renameValue.trim() });
     }
     setRenamingId(null);
     setRenameValue("");
@@ -148,48 +259,24 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
 
   const confirmDelete = () => {
     if (deleteId) {
-      const item = mediaItems.find(m => m.id === deleteId);
-      setMediaItems(prev => prev.filter(m => m.id !== deleteId));
-      toast({
-        title: "Deleted successfully",
-        description: `${item?.name} has been removed`,
-        variant: "destructive",
-      });
+      deleteMutation.mutate(deleteId);
     }
     setDeleteId(null);
   };
 
   const handleFileUpload = (files: FileList | null) => {
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
-    // Process files here
+    const formData = new FormData();
+    if (parentId) {
+      formData.append("parent_id", parentId);
+    }
+
     Array.from(files).forEach(file => {
-      console.log('Uploading file:', file.name, file.size);
-      const newFile = {
-        id: Date.now().toString() + Math.random(),
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(0)} KB`,
-        type: file.type.startsWith('image/') ? 'image' :
-          file.type.startsWith('video/') ? 'video' :
-            file.type.startsWith('audio/') ? 'audio' : 'pdf',
-        url: URL.createObjectURL(file),
-      };
-
-      if (currentFolder) {
-        setFolderContents(prev => ({
-          ...prev,
-          [currentFolder]: [...(prev[currentFolder] || []), newFile]
-        }));
-      } else {
-        setMediaItems(prev => [...prev, newFile]);
-      }
-
-      toast({
-        title: "File uploaded",
-        description: `${file.name} has been uploaded successfully`,
-      });
+      formData.append("files", file);
     });
 
+    uploadMutation.mutate(formData);
     setUploadDialogOpen(false);
   };
 
@@ -211,43 +298,36 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
 
   const handleFolderClick = (folderId: string, folderName: string) => {
     setCurrentFolder(folderId);
-    if (!folderContents[folderId]) {
-      setFolderContents(prev => ({ ...prev, [folderId]: [] }));
-    }
+    setParentId(folderId);
   };
 
   const handleBackToRoot = () => {
+    setParentId(null);
     setCurrentFolder(null);
   };
 
-  const getCurrentItems = () => {
-    if (currentFolder) {
-      return folderContents[currentFolder] || [];
-    }
-    return mediaItems;
-  };
-
-  const filteredMedia = getCurrentItems().filter(item => {
+  const filteredMedia = mediaItems.filter((item: any) => {
     const matchesFilter =
       filter === "All files" ||
-      (filter === "Audios" && item.type === "audio") ||
-      (filter === "Images" && item.type === "image") ||
-      (filter === "Files" && item.type === "pdf") ||
-      (filter === "Videos" && item.type === "video") ||
-      (filter === "Folders" && item.type === "folder");
+      (filter === "Audios" && item.media_type === "AUDIO") ||
+      (filter === "Images" && item.media_type === "IMAGE") ||
+      (filter === "Files" && (item.media_type === "PDF" || item.media_type === "DOCUMENT" || item.media_type === "FILE")) ||
+      (filter === "Videos" && item.media_type === "VIDEO") ||
+      (filter === "Folders" && item.media_type === "FOLDER");
 
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesFilter && matchesSearch;
   });
 
   const getIcon = (type: string) => {
-    switch (type) {
-      case "audio": return <Mic className="w-12 h-12 text-slate-400" />;
-      case "pdf": return <FileText className="w-12 h-12 text-slate-400" />;
-      case "image": return <ImageIcon className="w-12 h-12 text-slate-400" />;
-      case "video": return <Video className="w-12 h-12 text-slate-400" />;
-      case "folder": return <Folder className="w-12 h-12 text-blue-600" />;
+    const t = type?.toUpperCase();
+    switch (t) {
+      case "AUDIO": return <Mic className="w-12 h-12 text-slate-400" />;
+      case "PDF": return <FileText className="w-12 h-12 text-slate-400" />;
+      case "IMAGE": return <ImageIcon className="w-12 h-12 text-slate-400" />;
+      case "VIDEO": return <Video className="w-12 h-12 text-slate-400" />;
+      case "FOLDER": return <Folder className="w-12 h-12 text-blue-600" />;
       default: return <FileText className="w-12 h-12 text-slate-400" />;
     }
   };
@@ -313,7 +393,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                {mediaItems.filter(item => item.type === 'folder').map((folder) => (
+                {folders.map((folder: any) => (
                   <DropdownMenuItem
                     key={folder.id}
                     onClick={() => handleFolderClick(folder.id, folder.name)}
@@ -347,18 +427,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   className="bg-transparent border-none outline-none text-sm text-slate-600 dark:text-slate-300 placeholder:text-slate-400 w-32"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newFolderName.trim()) {
-                      const newFolder = {
-                        id: Date.now().toString(),
-                        name: newFolderName.trim(),
-                        size: "Folder",
-                        type: "folder",
-                        url: `/media/folders/${newFolderName.trim()}`,
-                      };
-                      setMediaItems(prev => [newFolder, ...prev]);
-                      toast({
-                        title: "Folder created",
-                        description: `${newFolderName.trim()} has been created successfully`,
-                      });
+                      createFolderMutation.mutate(newFolderName.trim());
                       setNewFolderName("");
                       setIsCreatingFolder(false);
                     }
@@ -371,18 +440,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                 <button
                   onClick={() => {
                     if (newFolderName.trim()) {
-                      const newFolder = {
-                        id: Date.now().toString(),
-                        name: newFolderName.trim(),
-                        size: "Folder",
-                        type: "folder",
-                        url: `/media/folders/${newFolderName.trim()}`,
-                      };
-                      setMediaItems(prev => [newFolder, ...prev]);
-                      toast({
-                        title: "Folder created",
-                        description: `${newFolderName.trim()} has been created successfully`,
-                      });
+                      createFolderMutation.mutate(newFolderName.trim());
                       setNewFolderName("");
                     }
                     setIsCreatingFolder(false);
@@ -524,14 +582,24 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                      <DropdownMenuItem onClick={() => handlePlay(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        <Play size={14} className="text-blue-600" />
-                        <span className="text-sm font-medium">Play</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleCopyURL(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        <Copy size={14} className="text-slate-400" />
-                        <span className="text-sm font-medium">Copy URL</span>
-                      </DropdownMenuItem>
+                      {item.media_type !== 'FOLDER' && (
+                        <>
+                          <DropdownMenuItem onClick={() => handleDownload(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <Download size={14} className="text-blue-600" />
+                            <span className="text-sm font-medium">Download</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCopyURL(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <Copy size={14} className="text-slate-400" />
+                            <span className="text-sm font-medium">Copy URL</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {['AUDIO', 'VIDEO'].includes(item.media_type) && (
+                        <DropdownMenuItem onClick={() => handlePlay(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                          <Play size={14} className="text-blue-600" />
+                          <span className="text-sm font-medium">Play</span>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => handleRename(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                         <Pencil size={14} className="text-slate-400" />
                         <span className="text-sm font-medium">Rename</span>
@@ -589,13 +657,13 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   >
                     <TableCell className="pl-6">
                       <div className="flex items-center gap-3">
-                        {React.cloneElement(getIcon(item.type) as React.ReactElement, { className: "w-5 h-5" })}
+                        {React.cloneElement(getIcon(item.media_type) as React.ReactElement, { className: "w-5 h-5" })}
                         <span className="text-sm font-medium">{item.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <UI_Badge variant="secondary" className="capitalize text-[10px] font-bold">
-                        {item.type}
+                        {item.media_type}
                       </UI_Badge>
                     </TableCell>
                     <TableCell className="text-[12px] text-slate-500">{item.size}</TableCell>
@@ -607,19 +675,29 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                          <DropdownMenuItem onClick={() => handlePlay(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer">
-                            <Play size={14} className="text-blue-600" />
-                            <span className="text-sm font-medium">Play</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleCopyURL(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer">
-                            <Copy size={14} className="text-slate-400" />
-                            <span className="text-sm font-medium">Copy URL</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleRename(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                          {item.media_type !== 'FOLDER' && (
+                            <>
+                              <DropdownMenuItem onClick={() => handleDownload(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                <Download size={14} className="text-blue-600" />
+                                <span className="text-sm font-medium">Download</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCopyURL(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                <Copy size={14} className="text-slate-400" />
+                                <span className="text-sm font-medium">Copy URL</span>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {['AUDIO', 'VIDEO'].includes(item.media_type) && (
+                            <DropdownMenuItem onClick={() => handlePlay(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                              <Play size={14} className="text-blue-600" />
+                              <span className="text-sm font-medium">Play</span>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleRename(item)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                             <Pencil size={14} className="text-slate-400" />
                             <span className="text-sm font-medium">Rename</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(item.id)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10">
+                          <DropdownMenuItem onClick={() => handleDelete(item.id)} className="flex items-center gap-3 px-3 py-2 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
                             <Trash2 size={14} />
                             <span className="text-sm font-medium">Delete</span>
                           </DropdownMenuItem>

@@ -90,12 +90,42 @@ const mockApiAccounts = [
   },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function WhatsAppSection() {
   const [, setLocation] = useLocation();
   const [view, setView] = useState<"list" | "coex_manage" | "api_manage">("list");
-  const [accounts, setAccounts] = useState(mockAccounts);
-  const [hasAccounts, setHasAccounts] = useState(true); // Set to true to show connected accounts
-  const [hasApiAccounts, setHasApiAccounts] = useState(true); // Set to true to show API accounts
+  const queryClient = useQueryClient();
+  
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["/api/integrations/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/channels");
+      return res.json();
+    }
+  });
+
+  const accounts = channels?.whatsapp || [];
+  const hasAccounts = accounts.length > 0;
+  const hasApiAccounts = false; // Add logic if API accounts are separate
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/channels/whatsapp/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: "Deleted",
+        description: "WhatsApp account removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete account.", variant: "destructive" });
+    }
+  });
+
   const [showAddNumberDialog, setShowAddNumberDialog] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [newNumberData, setNewNumberData] = useState({
@@ -113,20 +143,10 @@ export default function WhatsAppSection() {
   const { toast } = useToast();
 
   const toggleFeeder = (numberId: number, accountId: number) => {
-    setAccounts(prev => prev.map(account => {
-      if (account.id === accountId) {
-        return {
-          ...account,
-          phone_numbers: account.phone_numbers.map(number => {
-            if (number.id === numberId) {
-              return { ...number, allow_in_feeder: !number.allow_in_feeder };
-            }
-            return number;
-          }),
-        };
-      }
-      return account;
-    }));
+    toast({
+      title: "Info",
+      description: "AI Feeder toggle will be implemented with real mutation soon.",
+    });
   };
 
   const handleAddNumberClick = (account: any) => {
@@ -168,30 +188,10 @@ export default function WhatsAppSection() {
       // });
       // const data = await response.json();
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock new number for demonstration
-      const mockNewNumber = {
-        id: Date.now(),
-        display_phone_number: newNumberData.phoneNumber,
-        verified_name: `New Number - ${newNumberData.purposeType}`,
-        name_status: "PENDING",
-        status: "ACTIVE",
-        allow_in_feeder: false,
-        auto_reply_automation_id: null,
-      };
-
-      // Update the accounts state
-      setAccounts(prev => prev.map(account => {
-        if (account.id === selectedAccount.id) {
-          return {
-            ...account,
-            phone_numbers: [...account.phone_numbers, mockNewNumber],
-          };
-        }
-        return account;
-      }));
+      toast({
+        title: "Info",
+        description: "Adding real phone numbers will be implemented soon.",
+      });
 
       toast({
         title: "Success",
@@ -219,35 +219,13 @@ export default function WhatsAppSection() {
   const handleConfirmDeleteAccount = async () => {
     if (!accountToDelete) return;
 
-    setIsDeletingAccount(true);
-
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/whatsapp/account/${accountToDelete.id}`, {
-      //   method: 'DELETE',
-      // });
-      // await response.json();
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Remove account from state
-      setAccounts(prev => prev.filter(account => account.id !== accountToDelete.id));
-
-      toast({
-        title: "Success",
-        description: "Account deleted successfully!",
-      });
-
+      setIsDeletingAccount(true);
+      await deleteMutation.mutateAsync(accountToDelete.id);
       setShowDeleteAccountDialog(false);
       setAccountToDelete(null);
     } catch (error) {
-      console.error("Error deleting account:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete account. Please try again.",
-        variant: "destructive",
-      });
+      // Error handled by mutation onError
     } finally {
       setIsDeletingAccount(false);
     }
@@ -264,27 +242,10 @@ export default function WhatsAppSection() {
     setIsDeletingNumber(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/whatsapp/number/${numberToDelete.number.id}`, {
-      //   method: 'DELETE',
-      // });
-      // await response.json();
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Remove number from account
-      setAccounts(prev => prev.map(account => {
-        if (account.id === numberToDelete.account.id) {
-          return {
-            ...account,
-            phone_numbers: account.phone_numbers.filter(
-              (num: any) => num.id !== numberToDelete.number.id
-            ),
-          };
-        }
-        return account;
-      }));
+      toast({
+        title: "Info",
+        description: "Deleting phone numbers will be implemented with real mutation soon.",
+      });
 
       toast({
         title: "Success",
@@ -303,6 +264,13 @@ export default function WhatsAppSection() {
     } finally {
       setIsDeletingNumber(false);
     }
+  };
+
+  const handleConnect = () => {
+    toast({
+      title: "Connecting...",
+      description: "Redirecting to WhatsApp connection flow.",
+    });
   };
 
   return (
@@ -431,7 +399,7 @@ export default function WhatsAppSection() {
                 <Button 
                   variant="outline"
                   className="btn-outline-primary min-w-[150px]"
-                  onClick={() => setHasAccounts(true)}
+                  onClick={handleConnect}
                 >
                   Connect now
                 </Button>
@@ -439,7 +407,7 @@ export default function WhatsAppSection() {
             </div>
           ) : (
             <div className="space-y-6">
-              {accounts.map((account) => (
+              {accounts.map((account: any) => (
                 <div key={account.id} className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
                   {/* Account Header */}
                   <div className="p-4">
@@ -518,7 +486,7 @@ export default function WhatsAppSection() {
                     </div>
 
                     {/* Phone Numbers */}
-                    {account.phone_numbers.map((number) => (
+                    {account.phone_numbers.map((number: any) => (
                       <div key={number.id} className="bg-slate-50 dark:bg-slate-800/50 p-4 border rounded-lg">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -625,7 +593,7 @@ export default function WhatsAppSection() {
                 <Button 
                   variant="outline"
                   className="btn-outline-primary"
-                  onClick={() => setHasApiAccounts(true)}
+                  onClick={handleConnect}
                 >
                   + Add New
                 </Button>
@@ -650,7 +618,7 @@ export default function WhatsAppSection() {
                 <Button 
                   variant="outline"
                   className="btn-outline-primary min-w-[150px]"
-                  onClick={() => setHasApiAccounts(true)}
+                  onClick={handleConnect}
                 >
                   Connect now
                 </Button>
@@ -658,7 +626,7 @@ export default function WhatsAppSection() {
             </div>
           ) : (
             <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-              {mockApiAccounts.map((account) => (
+              {mockApiAccounts.map((account: any) => (
                 <div key={account.id} className="border-b last:border-b-0">
                   {/* Account Header Table */}
                   <div className="bg-slate-50 dark:bg-slate-800/50">
@@ -758,7 +726,7 @@ export default function WhatsAppSection() {
                         </tr>
                       </thead>
                       <tbody>
-                        {account.phone_numbers.map((number) => (
+                        {account.phone_numbers.map((number: any) => (
                           <tr key={number.id} className="border-b last:border-b-0">
                             <td className="px-4 py-4">
                               <div className="flex items-center gap-2">

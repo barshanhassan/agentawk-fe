@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch"; // Added Switch import
 import { useToast } from "@/hooks/use-toast";
 
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
+
 // Define TypeScript interfaces
 interface TimePickerProps {
   hour: string;
@@ -31,7 +35,8 @@ interface DayHours {
 }
 
 interface BusinessHoursState {
-  allDayAvailability: boolean; // Added
+  allDayAvailability: boolean;
+  allDaysSelected: boolean;
   allDays: DayHours;
   perDay: {
     monday: DayHours;
@@ -50,15 +55,6 @@ interface DayRowProps {
   hours: DayHours;
   onHoursChange: (part: keyof DayHours, value: string) => void;
   onEnabledChange: (enabled: boolean) => void;
-}
-
-interface BusinessHoursSectionProps {
-  allDaysSelected: boolean;
-  setAllDaysSelected: (selected: boolean) => void;
-  businessHours: BusinessHoursState;
-  setBusinessHours: (hours: BusinessHoursState) => void;
-  allDayAvailability: boolean; // Added
-  setAllDayAvailability: (selected: boolean) => void; // Added
 }
 
 const TimePicker: React.FC<TimePickerProps> = ({ hour, minute, period, onHourChange, onMinuteChange, onPeriodChange, isDisabled = false }) => (
@@ -101,7 +97,7 @@ const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEna
       <Checkbox
         id={`checkbox-${day}`}
         checked={hours.enabled}
-        onCheckedChange={onEnabledChange}
+        onCheckedChange={(checked) => onEnabledChange(!!checked)}
       />
       <Label htmlFor={`checkbox-${day}`} className="text-sm font-bold capitalize">
         {label}
@@ -136,57 +132,84 @@ const DayRow: React.FC<DayRowProps> = ({ day, label, hours, onHoursChange, onEna
   </div>
 );
 
+const DEFAULT_STATE: BusinessHoursState = {
+  allDayAvailability: false,
+  allDaysSelected: true,
+  allDays: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+  perDay: {
+    monday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    tuesday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    wednesday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    thursday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    friday: { enabled: true, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    saturday: { enabled: false, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+    sunday: { enabled: false, startHour: '09', startMinute: '00', startPeriod: 'AM', endHour: '05', endMinute: '00', endPeriod: 'PM' },
+  }
+};
 
-const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSelected, setAllDaysSelected, businessHours, setBusinessHours, allDayAvailability, setAllDayAvailability }) => {
+const BusinessHoursSection: React.FC = () => {
   const { toast } = useToast();
+  const [state, setState] = React.useState<BusinessHoursState>(DEFAULT_STATE);
+
+  const { isLoading, data: fetchedData } = useQuery<BusinessHoursState | null>({
+    queryKey: ["/api/workspaces/business-hours"],
+  });
+
+  React.useEffect(() => {
+    if (fetchedData) setState(fetchedData);
+  }, [fetchedData]);
+
+  const mutation = useMutation({
+    mutationFn: async (data: BusinessHoursState) => {
+      const res = await apiRequest("POST", "/api/workspaces/business-hours", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/business-hours"] });
+      toast({ title: "Success", description: "Business hours updated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   const handleAllDaysHoursChange = (part: keyof DayHours, value: string) => {
-    const newBusinessHours = {
-      ...businessHours,
-      allDays: {
-        ...businessHours.allDays,
-        [part]: value,
-      },
-    };
-    setBusinessHours(newBusinessHours);
+    setState(prev => ({
+      ...prev,
+      allDays: { ...prev.allDays, [part]: value },
+    }));
   };
 
   const handlePerDayHoursChange = (day: keyof BusinessHoursState['perDay'], part: keyof DayHours, value: string) => {
-    const newBusinessHours = {
-      ...businessHours,
-      perDay: {
-        ...businessHours.perDay,
-        [day]: {
-          ...businessHours.perDay[day],
-          [part]: value,
-        },
-      },
-    };
-    setBusinessHours(newBusinessHours);
+    setState(prev => ({
+      ...prev,
+      perDay: { ...prev.perDay, [day]: { ...prev.perDay[day], [part]: value } },
+    }));
   };
 
   const handlePerDayEnabledChange = (day: keyof BusinessHoursState['perDay'], enabled: boolean) => {
-    const newBusinessHours = {
-      ...businessHours,
-      perDay: {
-        ...businessHours.perDay,
-        [day]: {
-          ...businessHours.perDay[day],
-          enabled,
-        },
-      },
-    };
-    setBusinessHours(newBusinessHours);
+    setState(prev => ({
+      ...prev,
+      perDay: { ...prev.perDay, [day]: { ...prev.perDay[day], enabled } },
+    }));
   };
 
   const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
       <CardHeader>
         <CardTitle className="text-lg">Business Hours</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Enable business hours to convey the working hours of your company. These are the hours when your business is closed and agents are not available to respond to support requests.
+          Enable business hours to convey the working hours of your company.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -196,18 +219,17 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
           <Label htmlFor="all-day-availability-toggle">Enable 24/7 availability for all days</Label>
           <Switch
             id="all-day-availability-toggle"
-            checked={allDayAvailability}
-            onCheckedChange={setAllDayAvailability}
+            checked={state.allDayAvailability}
+            onCheckedChange={(val) => setState(p => ({ ...p, allDayAvailability: val }))}
           />
         </div>
 
-        {!allDayAvailability && ( // Conditional rendering for the RadioGroup and time selection
+        {!state.allDayAvailability && (
           <>
             <RadioGroup
-              value={allDaysSelected ? "allDays" : "perDay"}
-              onValueChange={(value) => setAllDaysSelected(value === "allDays")}
+              value={state.allDaysSelected ? "allDays" : "perDay"}
+              onValueChange={(value) => setState(p => ({ ...p, allDaysSelected: value === "allDays" }))}
               className="flex space-x-4"
-              disabled={allDayAvailability} // Disable radio group when 24/7 is active
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="allDays" id="allDays" />
@@ -219,31 +241,29 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
               </div>
             </RadioGroup>
 
-            {allDaysSelected ? (
+            {state.allDaysSelected ? (
               <div className="p-4 border rounded-lg space-y-4 w-fit border border-input [border-color:hsl(var(--input))]">
                 <Label className="text-sm font-bold">All days</Label>
                 <div className="flex flex-col items-start justify-between space-y-2">
                   <Label className="text-sm">Start time</Label>
                   <TimePicker
-                    hour={businessHours.allDays.startHour}
-                    minute={businessHours.allDays.startMinute}
-                    period={businessHours.allDays.startPeriod}
+                    hour={state.allDays.startHour}
+                    minute={state.allDays.startMinute}
+                    period={state.allDays.startPeriod}
                     onHourChange={(value) => handleAllDaysHoursChange('startHour', value)}
                     onMinuteChange={(value) => handleAllDaysHoursChange('startMinute', value)}
                     onPeriodChange={(value) => handleAllDaysHoursChange('startPeriod', value)}
-                    isDisabled={allDayAvailability} // Disable when 24/7 is active
                   />
                 </div>
                 <div className="flex flex-col items-start justify-between space-y-2">
                   <Label className="text-sm">End time</Label>
                   <TimePicker
-                    hour={businessHours.allDays.endHour}
-                    minute={businessHours.allDays.endMinute}
-                    period={businessHours.allDays.endPeriod}
+                    hour={state.allDays.endHour}
+                    minute={state.allDays.endMinute}
+                    period={state.allDays.endPeriod}
                     onHourChange={(value) => handleAllDaysHoursChange('endHour', value)}
                     onMinuteChange={(value) => handleAllDaysHoursChange('endMinute', value)}
                     onPeriodChange={(value) => handleAllDaysHoursChange('endPeriod', value)}
-                    isDisabled={allDayAvailability} // Disable when 24/7 is active
                   />
                 </div>
               </div>
@@ -255,8 +275,8 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
                     <DayRow
                       key={day}
                       day={day}
-                      label={day.charAt(0).toUpperCase() + day.slice(1)} // Capitalize for display
-                      hours={businessHours.perDay[day]}
+                      label={day.charAt(0).toUpperCase() + day.slice(1)}
+                      hours={state.perDay[day]}
                       onHoursChange={(part, value) => handlePerDayHoursChange(day, part, value)}
                       onEnabledChange={(enabled) => handlePerDayEnabledChange(day, enabled)}
                     />
@@ -269,16 +289,12 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ allDaysSele
       </CardContent>
       <CardFooter className="flex justify-end">
         <Button
-          onClick={() => {
-            console.log("Save Business Hours", { ...businessHours, allDayAvailability });
-            toast({
-              title: "Settings Saved",
-              description: "Business hours settings have been updated.",
-            });
-          }}
-          className="btn-outline-primary font-normal"
+          onClick={() => mutation.mutate(state)}
+          disabled={mutation.isPending}
+          className="btn-outline-primary flex items-center gap-2"
           variant="outline"
         >
+          {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           Save
         </Button>
       </CardFooter>

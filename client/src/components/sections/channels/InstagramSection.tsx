@@ -55,22 +55,51 @@ interface MenuItem {
   modelable_id?: string;
 }
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function InstagramSection() {
   const [view, setView] = useState<"list" | "manage">("list");
-  const [hasAccounts, setHasAccounts] = useState(true);
-  const [accounts, setAccounts] = useState(mockInstagramAccounts);
+  const queryClient = useQueryClient();
   
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["/api/integrations/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/channels");
+      return res.json();
+    }
+  });
+
+  const accounts = channels?.instagram || [];
+  const hasAccounts = accounts.length > 0;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/channels/instagram/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: "Deleted",
+        description: "Account removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete account.", variant: "destructive" });
+    }
+  });
+
   // Dialog states
   const [showDefaultReply, setShowDefaultReply] = useState(false);
   const [showQuickStarter, setShowQuickStarter] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<typeof mockInstagramAccounts[0] | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [accountToDelete, setAccountToDelete] = useState<typeof mockInstagramAccounts[0] | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<any>(null);
   
   // Feature states (mocking backend data)
   const [autoReplyInterval, setAutoReplyInterval] = useState("0");
-  const [defaultReplyConfigured, setDefaultReplyConfigured] = useState(true);
+  const [defaultReplyConfigured, setDefaultReplyConfigured] = useState(false);
   const [quickStarterConfigured, setQuickStarterConfigured] = useState(false);
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -78,12 +107,10 @@ export default function InstagramSection() {
   const { toast } = useToast();
 
   const toggleFeeder = (accountId: number) => {
-    setAccounts(prev => prev.map(account => {
-      if (account.id === accountId) {
-        return { ...account, allow_in_feeder: !account.allow_in_feeder };
-      }
-      return account;
-    }));
+    toast({
+      title: "Info",
+      description: "AI Feeder toggle will be implemented with real mutation soon.",
+    });
   };
 
   const handleSaveDefaultReply = () => {
@@ -201,11 +228,7 @@ export default function InstagramSection() {
 
   const confirmDeleteAccount = () => {
     if (accountToDelete) {
-      setAccounts(prev => prev.filter(a => a.id !== accountToDelete.id));
-      toast({
-        title: "Account Deleted",
-        description: `${accountToDelete.name} has been removed.`,
-      });
+      deleteMutation.mutate(accountToDelete.id);
       setShowDeleteConfirm(false);
       setAccountToDelete(null);
     }
@@ -215,6 +238,13 @@ export default function InstagramSection() {
     toast({
       title: "Conversions API",
       description: `Configuring Meta Conversions API for ${accountName}...`,
+    });
+  };
+
+  const handleConnect = () => {
+    toast({
+      title: "Connecting...",
+      description: "Redirecting to Instagram connection flow.",
     });
   };
 
@@ -278,15 +308,18 @@ export default function InstagramSection() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline"
-                  className="btn-outline-primary"
-                  onClick={() => setHasAccounts(true)}
-                >
-                  + Add New
-                </Button>
-              </div>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline"
+                    className="btn-outline-primary"
+                    onClick={handleConnect}
+                  >
+                    + Add New
+                  </Button>
+                  <Button variant="outline" onClick={() => setView("list")}>
+                    Back
+                  </Button>
+                </div>
             </div>
           </div>
 
@@ -304,7 +337,7 @@ export default function InstagramSection() {
                 <Button 
                   className="btn-outline-primary min-w-[150px]"
                   variant="outline"
-                  onClick={() => setHasAccounts(true)}
+                  onClick={handleConnect}
                 >
                   Connect now
                 </Button>
@@ -312,7 +345,7 @@ export default function InstagramSection() {
             </div>
           ) : (
             <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 divide-y">
-              {accounts.map((account) => (
+              {accounts.map((account: any) => (
                 <div key={account.id} className="p-6">
                   {/* Profile Section */}
                   <div className="grid grid-cols-4 gap-4 items-center mb-5">

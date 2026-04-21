@@ -31,44 +31,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-
-const INITIAL_ROLES = [
-  {
-    id: "1",
-    name: "Super Agent",
-    description: "Has control of the entire account.",
-    icon: UserCog,
-    isArchived: false
-  },
-  {
-    id: "2",
-    name: "Block Access to Done Folder",
-    description: "Block Access to Done Folder",
-    icon: UserCog,
-    isArchived: false
-  },
-  {
-    id: "3",
-    name: "teste edilson",
-    description: "",
-    icon: UserCog,
-    isArchived: false
-  },
-  {
-    id: "4",
-    name: "Mob users",
-    description: "",
-    icon: UserCog,
-    isArchived: false
-  },
-  {
-    id: "5",
-    name: "Teste tiago delet",
-    description: "",
-    icon: UserCog,
-    isArchived: false
-  }
-];
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Permission {
   id: string;
@@ -264,7 +228,6 @@ const ICONS = [
 
 export default function RolesSection() {
   const [view, setView] = useState<"list" | "add" | "edit">("list");
-  const [roles, setRoles] = useState(INITIAL_ROLES);
   const [activeTab, setActiveTab] = useState("active");
   const [enableAll, setEnableAll] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState(ICONS[0]);
@@ -279,6 +242,50 @@ export default function RolesSection() {
 
   const { toast } = useToast();
 
+  const { data: rolesData, isLoading } = useQuery<any>({
+    queryKey: ["/api/workspaces/all-roles"],
+  });
+
+  const roles = rolesData ? rolesData.map((r: any) => ({
+    id: r.id.toString(),
+    name: r.name,
+    description: r.description,
+    icon: ICONS.find(i => i.name === r.icon)?.icon || UserCog,
+    iconName: r.icon,
+    isArchived: r.isArchived,
+    permissions: r.permissions || {}
+  })) : [];
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/workspaces/create-role", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
+      toast({ title: "Success", description: "Role created successfully!" });
+      setView("list");
+      resetForm();
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string | number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/workspaces/roles/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
+      toast({ title: "Success", description: "Role updated successfully!" });
+      setView("list");
+      resetForm();
+      setAlertOpen(false);
+      setPendingAction(null);
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
   const confirmAction = (id: string, type: 'archive' | 'activate') => {
     setPendingAction({ id, type });
     setAlertOpen(true);
@@ -286,15 +293,11 @@ export default function RolesSection() {
 
   const executeAction = () => {
     if (!pendingAction) return;
-
-    setRoles(prev => prev.map(role =>
-      role.id === pendingAction.id
-        ? { ...role, isArchived: pendingAction.type === 'archive' }
-        : role
-    ));
-
-    setAlertOpen(false);
-    setPendingAction(null);
+    
+    updateMutation.mutate({
+      id: pendingAction.id,
+      data: { isArchived: pendingAction.type === 'archive' }
+    });
   };
 
   const togglePermission = (categoryId: string, permissionId: string) => {
@@ -340,7 +343,6 @@ export default function RolesSection() {
   };
 
   const handleSave = () => {
-    // Validate
     if (!roleName.trim()) {
       toast({
         title: "Validation Error",
@@ -350,29 +352,17 @@ export default function RolesSection() {
       return;
     }
 
-    const newRole = {
-      id: Date.now().toString(),
+    createMutation.mutate({
       name: roleName,
       description: roleDescription,
-      icon: selectedIcon.icon,
-      isArchived: false,
+      icon: selectedIcon.name,
       permissions: permissions
-    };
-
-    setRoles(prev => [...prev, newRole]);
-    console.log("Saving new role:", newRole);
-    toast({
-      title: "Success",
-      description: "Role created successfully!",
     });
-    setView("list");
-    resetForm();
   };
 
   const handleUpdate = () => {
     if (!editingRole) return;
 
-    // Validate
     if (!roleName.trim()) {
       toast({
         title: "Validation Error",
@@ -382,25 +372,15 @@ export default function RolesSection() {
       return;
     }
 
-    const updatedRole = {
-      ...editingRole,
-      name: roleName,
-      description: roleDescription,
-      icon: selectedIcon.icon,
-      permissions: permissions
-    };
-
-    setRoles(prev => prev.map(role =>
-      role.id === editingRole.id ? updatedRole : role
-    ));
-
-    console.log("Updating role:", updatedRole);
-    toast({
-      title: "Success",
-      description: "Role updated successfully!",
+    updateMutation.mutate({
+      id: editingRole.id,
+      data: {
+        name: roleName,
+        description: roleDescription,
+        icon: selectedIcon.name,
+        permissions: permissions
+      }
     });
-    setView("list");
-    resetForm();
   };
 
   if (view === "add" || view === "edit") {
@@ -613,7 +593,7 @@ export default function RolesSection() {
 
         <TabsContent value="active" className="m-0 p-0">
           <div className="divide-y divide-gray-50 dark:divide-slate-800/50">
-            {roles.filter(r => !r.isArchived).map((role) => (
+            {roles.filter((r: any) => !r.isArchived).map((role: any) => (
               <div key={role.id} className="flex items-center justify-between p-6 hover:bg-gray-50/30 dark:hover:bg-slate-800/20 transition-colors">
                 <div className="flex items-center gap-6">
                   <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-slate-800/50">
@@ -649,9 +629,9 @@ export default function RolesSection() {
         </TabsContent>
 
         <TabsContent value="archived" className="m-0 p-0">
-          {roles.filter(r => r.isArchived).length > 0 ? (
+          {roles.filter((r: any) => r.isArchived).length > 0 ? (
             <div className="divide-y divide-gray-50 dark:divide-slate-800/50">
-              {roles.filter(r => r.isArchived).map((role) => (
+              {roles.filter((r: any) => r.isArchived).map((role: any) => (
                 <div key={role.id} className="flex items-center justify-between p-6 hover:bg-gray-50/30 dark:hover:bg-slate-800/20 transition-colors">
                   <div className="flex items-center gap-6">
                     <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-slate-800/50">

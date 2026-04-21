@@ -21,6 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 
 type UserRole = "Administrator" | "Agent" | "Chatbot User" | "Marketer" | "Team Supervisor" | "Viewer" | "WABA Manager";
@@ -233,8 +237,80 @@ const initialUsers: User[] = [
 
 export default function UserManagementSection() {
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const currentUserName = "Demo User"; // TODO: Get from auth context
+  const queryClient = useQueryClient();
+
+  // Fetch workspace members
+  const { data: membersData, isLoading: isLoadingMembers } = useQuery({
+    queryKey: ["/api/workspaces/members"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/members");
+      return res.json();
+    }
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/workspaces/members", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Invited",
+        description: "Invitation sent successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
+      setShowCreateUserModal(false);
+      // Reset form
+      setNewFirstName("");
+      setNewLastName("");
+      setNewEmail("");
+      setNewRole("Agent");
+      setNewPhoneNumber("");
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Invite failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/workspaces/members/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "User removed",
+        description: "User has been removed from workspace.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
+      setShowDeleteUserModal(false);
+      setUserToDelete(null);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Remove failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const users = useMemo(() => {
+    if (!membersData) return [];
+    return (membersData as any[]).map((m: any) => ({
+      id: m.id.toString(),
+      firstName: m.users?.first_name || "Unknown",
+      lastName: m.users?.last_name || "",
+      email: m.users?.email || "",
+      role: (m.roles?.name || "Agent") as UserRole,
+      status: (m.users?.status?.charAt(0) + m.users?.status?.slice(1).toLowerCase() || "Active") as UserStatus,
+      phoneNumber: m.users?.phoneNumber || "-",
+    }));
+  }, [membersData]);
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -408,13 +484,7 @@ export default function UserManagementSection() {
 
   const handleConfirmDelete = () => {
     if (userToDelete) {
-      setUsers(users.filter(u => u.id !== userToDelete.id));
-      toast({
-        title: "User Deleted",
-        description: `${userToDelete.firstName} ${userToDelete.lastName} has been deleted`,
-      });
-      setShowDeleteUserModal(false);
-      setUserToDelete(null);
+      deleteMutation.mutate(userToDelete.id);
     }
   };
 
@@ -423,7 +493,7 @@ export default function UserManagementSection() {
 
 
   const handleInviteUser = () => {
-    if (!newFirstName.trim() || !newLastName.trim() || !newEmail.trim() || !newPhoneNumber.trim()) {
+    if (!newFirstName.trim() || !newLastName.trim() || !newEmail.trim()) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields",
@@ -431,28 +501,12 @@ export default function UserManagementSection() {
       });
       return;
     }
-    const newUser: User = {
-      id: `U${String(users.length + 1).padStart(3, "0")}`,
-      firstName: newFirstName,
-      lastName: newLastName,
+    inviteMutation.mutate({
       email: newEmail,
-      role: newRole,
-      status: "Invited", // Always "Invited" for new users
-      phoneNumber: `${newCountryCode}-${newPhoneNumber}`,
-    };
-    setUsers([...users, newUser]);
-    toast({
-      title: "User Invited",
-      description: `${newFirstName} ${newLastName} has been invited successfully`,
+      first_name: newFirstName,
+      last_name: newLastName,
+      role_id: 1, // Default to 1 for now, should map from roleOptions
     });
-    // Reset form
-    setNewFirstName("");
-    setNewLastName("");
-    setNewEmail("");
-    setNewRole("Agent");
-    setNewPhoneNumber("");
-    setNewCountryCode("+1");
-    setShowCreateUserModal(false);
   };
 
   const handleSaveEditUser = () => {
@@ -465,18 +519,18 @@ export default function UserManagementSection() {
       return;
     }
     if (editingUser) {
-      setUsers(
-        users.map(u =>
-          u.id === editingUser.id
-            ? {
-              ...u,
-              role: editRole,
-              status: editStatus,
-              phoneNumber: `${editCountryCode}-${editPhoneNumber}`,
-            }
-            : u
-        )
-      );
+      // setUsers(
+      //   users.map(u =>
+      //     u.id === editingUser.id
+      //       ? {
+      //         ...u,
+      //         role: editRole,
+      //         status: editStatus,
+      //         phoneNumber: `${editCountryCode}-${editPhoneNumber}`,
+      //       }
+      //       : u
+      //   )
+      // );
       toast({
         title: "User Updated",
         description: `${editingUser.firstName} ${editingUser.lastName} has been updated successfully`,
@@ -596,7 +650,13 @@ export default function UserManagementSection() {
                 </tr>
               </thead>
               <tbody>
-                {getFilteredAndSortedData().length === 0 ? (
+                {isLoadingMembers ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-20">
+                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+                    </td>
+                  </tr>
+                ) : getFilteredAndSortedData().length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-muted-foreground">
                       No users found.

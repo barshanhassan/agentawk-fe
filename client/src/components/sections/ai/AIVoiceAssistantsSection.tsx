@@ -97,9 +97,35 @@ const gptModels = [
   { name: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function AIVoiceAssistantsSection() {
   const [viewMode, setViewMode] = useState<"list" | "edit">("list");
-  const [agents, setAgents] = useState(mockAgents);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: agents, isLoading } = useQuery({
+    queryKey: ["/api/ai/voice-assistants"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/voice-assistants");
+      return res.json();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/voice-assistants/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/voice-assistants"] });
+      toast({ title: "Deleted", description: "Voice Assistant removed successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete voice assistant.", variant: "destructive" });
+    }
+  });
+
   const [formData, setFormData] = useState<any>(null);
   const [editStep, setEditStep] = useState<"type_selection" | "form">("type_selection");
   const [activeTab, setActiveTab] = useState<"personality" | "configurations" | "transfer" | "functions" | "summary" | "design" | "embed">("personality");
@@ -108,7 +134,6 @@ export default function AIVoiceAssistantsSection() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<any>(null);
-  const { toast } = useToast();
 
   const availableCredits = "1645:59";
 
@@ -116,14 +141,14 @@ export default function AIVoiceAssistantsSection() {
     if (agent) {
       setFormData({ 
         ...agent, 
-        voice: "Alloy",
-        temperature: 0.7,
-        confidence: 0.7,
-        record_calls: true,
+        voice: agent.voice || "Alloy",
+        temperature: agent.temperature || 0.7,
+        confidence: agent.confidence || 0.7,
+        record_calls: agent.record_calls ?? true,
         allowed_minutes_enabled: false,
         automation_enabled: false,
-        call_transfer_config: [],
-        design: { type: 'page', bg_type: 'color', bg_color: '#ffffff', title: '', subtitle: '' }
+        call_transfer_config: agent.call_transfer_config ? JSON.parse(agent.call_transfer_config) : [],
+        design: agent.design ? JSON.parse(agent.design) : { type: 'page', bg_type: 'color', bg_color: '#ffffff', title: '', subtitle: '' }
       });
       setEditStep("form");
     } else {
@@ -155,7 +180,7 @@ export default function AIVoiceAssistantsSection() {
   };
 
   const handleStatusToggle = (id: number) => {
-    setAgents(prev => prev.map(a => a.id === id ? { ...a, status: a.status === "ACTIVE" ? "PAUSED" : "ACTIVE" } : a));
+    toast({ title: "Info", description: "Status toggle for Voice Assistants will be implemented soon." });
   };
 
   const handleDeleteRequest = (agent: any) => {
@@ -165,33 +190,26 @@ export default function AIVoiceAssistantsSection() {
 
   const confirmDeleteAgent = () => {
     if (agentToDelete) {
-      setAgents(prev => prev.filter(a => a.id !== agentToDelete.id));
-      toast({
-        title: "Assistant Deleted",
-        description: `${agentToDelete.name} has been successfully removed.`,
-      });
+      deleteMutation.mutate(agentToDelete.id);
       setShowDeleteConfirm(false);
       setAgentToDelete(null);
     }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (formData.name.trim()) {
-      if (formData.id) {
-        setAgents(prev => prev.map(a => a.id === formData.id ? { ...formData } : a));
-        toast({ title: "Success", description: "Assistant updated successfully." });
-      } else {
-        const newAgent = {
-          ...formData,
-          id: Date.now(),
-          phone_number: mockPhones[0].number, // Mock phone assignment
-          status: "ACTIVE",
-          allow_in_feeder: true,
-        };
-        setAgents([...agents, newAgent]);
-        toast({ title: "Success", description: "Voice Assistant created successfully." });
+      try {
+        if (formData.id) {
+          // Update would go here
+          toast({ title: "Info", description: "Updating Voice Assistant not fully implemented yet." });
+        } else {
+           // Create would go here
+           toast({ title: "Info", description: "Creating Voice Assistant not fully implemented yet." });
+        }
+        setViewMode("list");
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to publish voice assistant.", variant: "destructive" });
       }
-      setViewMode("list");
     }
   };
 
@@ -227,7 +245,7 @@ export default function AIVoiceAssistantsSection() {
 
           {/* List Table */}
           <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
-             {agents.length > 0 ? (
+             {agents && agents.length > 0 ? (
                <table className="w-full text-sm text-left">
                  <thead className="bg-slate-50 dark:bg-slate-800 border-b">
                    <tr>
@@ -240,7 +258,7 @@ export default function AIVoiceAssistantsSection() {
                    </tr>
                  </thead>
                  <tbody className="divide-y">
-                   {agents.map((agent) => (
+                   {agents?.map((agent: any) => (
                      <tr key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                        <td className="px-6 py-4 font-medium">{agent.name}</td>
                        <td className="px-6 py-4">{agent.model}</td>

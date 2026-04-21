@@ -26,6 +26,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Mock data for agents
 const MOCK_AGENTS = [
@@ -40,10 +42,72 @@ const MOCK_AGENTS = [
   { id: 9, name: "Bharat Bharat", email: "bharat@replyagent.com", status: "Active", role: "Super User" },
 ];
 
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  role: string;
+  original: any;
+}
+
 export default function ManageAgentSection() {
-  const [agents, setAgents] = useState(MOCK_AGENTS);
+  const { toast } = useToast();
+
+  const { data: membersData, isLoading } = useQuery<any>({
+    queryKey: ["/api/workspaces/members"],
+  });
+
+  const agents: Agent[] = membersData ? membersData.map((m: any) => ({
+    id: m.id.toString(), // format from bigInt to string 
+    name: m.full_name || `${m.first_name || ""} ${m.last_name || ""}`.trim(),
+    email: m.email,
+    status: m.status || "Active",
+    role: m.role || "Agent",
+    original: m
+  })) : [];
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/workspaces/members", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
+      toast({ title: "Success", description: "Agent created successfully!" });
+      resetForm();
+      setView("list");
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string | number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/workspaces/members/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
+      toast({ title: "Success", description: "Agent updated successfully!" });
+      resetForm();
+      setView("list");
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string | number) => {
+      const res = await apiRequest("DELETE", `/api/workspaces/members/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/members"] });
+      toast({ title: "Success", description: "Agent deleted successfully!" });
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
   const [view, setView] = useState<"list" | "add" | "edit">("list");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | number | null>(null);
   const [activeTab, setActiveTab] = useState("agent");
   const [mobileAccess, setMobileAccess] = useState(false);
   const [limitIp, setLimitIp] = useState(false);
@@ -63,8 +127,6 @@ export default function ManageAgentSection() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [phoneNotifications, setPhoneNotifications] = useState(false);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
-
-  const { toast } = useToast();
 
   const SYSTEM_FIELDS = [
     "first_name", "last_name", "title", "primary_mobile", "primary_whatsapp",
@@ -236,7 +298,7 @@ export default function ManageAgentSection() {
     setEditingId(null);
   };
 
-  const handleEdit = (agent: any) => {
+  const handleEdit = (agent: Agent) => {
     setEditingId(agent.id);
     const names = agent.name.split(" ");
     setFirstName(names[0] || "");
@@ -278,36 +340,29 @@ export default function ManageAgentSection() {
     };
 
     if (view === "edit" && editingId) {
-      setAgents(agents.map(a => a.id === editingId ? {
-        ...a,
-        name: `${firstName} ${lastName}`.trim(),
-        email,
-        role: role === "super-user" ? "Super User" : "Agent"
-      } : a));
-
-      toast({
-        title: "Success",
-        description: "Agent updated successfully!",
+      updateMutation.mutate({
+        id: editingId,
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          role_id: role === "super-user" ? 1 : 2, // Map abstractly
+        }
       });
     } else {
-      const newAgent = {
-        id: Date.now(),
-        name: `${firstName} ${lastName}`.trim(),
+      createMutation.mutate({
+        first_name: firstName,
+        last_name: lastName,
         email,
-        status: "Active",
-        role: role === "super-user" ? "Super User" : "Agent"
-      };
-
-      setAgents([...agents, newAgent]);
-
-      toast({
-        title: "Success",
-        description: "Agent created successfully!",
+        role_id: role === "super-user" ? 1 : 2,
       });
     }
+  };
 
-    resetForm();
-    setView("list");
+  const handleDelete = (id: string | number) => {
+    if (confirm("Are you sure you want to delete this agent?")) {
+      deleteMutation.mutate(id);
+    }
   };
 
   const TIME_OPTIONS = Array.from({ length: 96 }, (_, i) => {
@@ -947,7 +1002,7 @@ export default function ManageAgentSection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {agents.map((agent) => (
+            {agents.map((agent: Agent) => (
               <TableRow key={agent.id} className="border-b border-gray-50 dark:border-slate-800/50 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors">
                 <TableCell className="py-3 px-4">
                   <div className="flex items-center gap-3">

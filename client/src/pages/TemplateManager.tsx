@@ -31,6 +31,10 @@ import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import PreviewV2 from "@/components/PreviewV2";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 
 type SortDirection = "asc" | "desc" | "default";
@@ -332,7 +336,7 @@ export default function TemplateManager() {
     }
 
     // Add to templates list
-    setWhatappTemplates([...whatsappTemplates, newTemplate]);
+    // setWhatappTemplates([...whatsappTemplates, newTemplate]);
 
     toast({
       title: "Template Created",
@@ -414,10 +418,10 @@ export default function TemplateManager() {
       updatedTemplate.variableSamples = variableSamples;
     }
 
-    // Update the template in the list
-    setWhatappTemplates(whatsappTemplates.map(t =>
-      t.id === editingTemplateId ? updatedTemplate : t
-    ));
+    // Update the template in the list - In API mode, this should be a mutation
+    // setWhatappTemplates(whatsappTemplates.map(t =>
+    //   t.id === editingTemplateId ? updatedTemplate : t
+    // ));
 
     toast({
       title: "Template Updated",
@@ -439,25 +443,15 @@ export default function TemplateManager() {
 
   // Confirm delete handler
   const handleConfirmDelete = () => {
-    if (!templateToDelete) return;
-
-    setWhatappTemplates(whatsappTemplates.filter(t => t.id !== templateToDelete.id));
-    // Also remove from selected templates if it was selected
-    setSelectedTemplates(selectedTemplates.filter(id => id !== templateToDelete.id));
-
-    toast({
-      title: "Template Deleted",
-      description: `The template "${templateToDelete.name}" has been deleted successfully.`,
-    });
-
-    setTemplateToDelete(null);
-    setShowDeleteTemplateModal(false);
+    if (templateToDelete) {
+      deleteMutation.mutate(templateToDelete.id);
+    }
   };
 
   const handleConfirmBulkDelete = () => {
-    setWhatappTemplates(
-      whatsappTemplates.filter((template) => !selectedTemplates.includes(template.id))
-    );
+    // setWhatappTemplates(
+    //   whatsappTemplates.filter((template) => !selectedTemplates.includes(template.id))
+    // );
     setSelectedTemplates([]);
     setShowBulkDeleteModal(false);
     toast({
@@ -501,7 +495,7 @@ export default function TemplateManager() {
       lastEdited: new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10),
     };
 
-    setWhatappTemplates([...whatsappTemplates, clonedTemplate]);
+    // setWhatappTemplates([...whatsappTemplates, clonedTemplate]);
 
     toast({
       title: "Template Cloned",
@@ -610,199 +604,75 @@ export default function TemplateManager() {
   const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
   const [originalTemplate, setOriginalTemplate] = useState<any>(null);
 
-  const [whatsappTemplates, setWhatappTemplates] = useState<Array<any>>(
-    [
-      {
-        id: 1,
-        name: "welcome_message",
-        category: "Marketing",
-        type: "marketing-default",
-        language: "English",
-        status: "Active - HQ",
-        statusTypeColor: "success" as const,
-        topBlockReason: "Reported as Spam",
-        lastEdited: "2025-11-03",
-        body: "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
-        header: "Welcome to {{company}}",
-        footer: "Thank you for choosing us",
-        variables: ["company"],
-        buttons: [
-          { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
-          { id: 2, type: "quick-reply", buttonText: "Learn More" }
-        ],
-        variableSamples: {
-          company: "Acme Corp"
+  const queryClient = useQueryClient();
+
+  const { data: templatesData, isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ["/api/waba/templates"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/waba/templates");
+      return res.json();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/waba/templates/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Template deleted",
+        description: "The template has been removed successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] });
+      setShowDeleteTemplateModal(false);
+      setTemplateToDelete(null);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const whatsappTemplates = useMemo(() => {
+    if (!templatesData) return [];
+    return (templatesData as any[]).map((t: any) => {
+      let components = [];
+      if (t.components) {
+        try {
+          components = typeof t.components === "string" ? JSON.parse(t.components) : t.components;
+        } catch (e) {
+          console.error("Failed to parse components for template", t.id, e);
         }
-      },
-      {
-        id: 2,
-        name: "order_confirmation",
-        category: "Utility",
-        type: "utility-default",
-        language: "English",
-        status: "Active - HQ",
-        statusTypeColor: "success" as const,
-        topBlockReason: "",
-        lastEdited: "2025-11-01",
-        body: "Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
-      },
-      {
-        id: 3,
-        name: "promotional_offer",
-        category: "Marketing",
-        type: "marketing-default",
-        language: "English",
-        status: "Quality Pending",
-        statusTypeColor: "success" as const,
-        topBlockReason: "Blocked Business",
-        lastEdited: "2025-10-28",
-        body: "🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
-      },
-      {
-        id: 4,
-        name: "cart_abandonment",
-        category: "Marketing",
-        type: "marketing-default",
-        language: "English",
-        status: "Pending",
-        statusTypeColor: "warning" as const,
-        topBlockReason: "",
-        lastEdited: "2025-10-25",
-        body: "You left something in your cart! 🛒 Complete your purchase now and get free shipping on orders over $50. Don't miss out!",
-      },
-      {
-        id: 5,
-        name: "shipping_update",
-        category: "Utility",
-        type: "utility-default",
-        language: "English",
-        status: "Active - HQ",
-        statusTypeColor: "success" as const,
-        topBlockReason: "",
-        lastEdited: "2025-10-20",
-        body: "📦 Your package is on its way! Track your order with code ABC123. Expected delivery: Tomorrow by 6 PM.",
-      },
-      {
-        id: 6,
-        name: "payment_reminder",
-        category: "Utility",
-        type: "utility-default",
-        language: "Spanish",
-        status: "Approved",
-        statusTypeColor: "success" as const,
-        topBlockReason: "Sent Too Frequently",
-        lastEdited: "2025-10-15",
-        body: "Recordatorio de pago: Su factura de $150 vence mañana. Pague ahora para evitar cargos adicionales. Gracias! 💳",
-      },
-      {
-        id: 7,
-        name: "flash_sale_alert",
-        category: "Marketing",
-        type: "marketing-default",
-        language: "English",
-        status: "Rejected",
-        statusTypeColor: "danger" as const,
-        topBlockReason: "",
-        lastEdited: "2025-10-10",
-        body: "⚡ FLASH SALE ALERT! 50% OFF everything for the next 2 hours only! Use code FLASH50. Hurry, limited time!",
-      },
-      {
-        id: 8,
-        name: "account_verification",
-        category: "Authentication",
-        type: "auth-account",
-        language: "English",
-        status: "Active - HQ",
-        statusTypeColor: "success" as const,
-        topBlockReason: "Reported as Suspicious",
-        lastEdited: "2025-10-05",
-        body: "Please verify your account by clicking this link: verify.com/abc123. This link expires in 24 hours. 🔐",
-      },
-      {
-        id: 9,
-        name: "password_reset",
-        category: "Authentication",
-        type: "auth-account",
-        language: "English",
-        status: "Quality Pending",
-        statusTypeColor: "success" as const,
-        topBlockReason: "",
-        lastEdited: "2025-09-30",
-        body: "Reset your password by clicking here: reset.com/xyz789. If you didn't request this, please ignore this message. 🔑",
-      },
-      {
-        id: 10,
-        name: "appointment_reminder",
-        category: "Utility",
-        type: "utility-default",
-        language: "French",
-        status: "Active - HQ",
-        statusTypeColor: "success" as const,
-        topBlockReason: "",
-        lastEdited: "2025-09-25",
-        body: "Rappel de rendez-vous: Votre rendez-vous est demain à 14h00. Confirmez votre présence en répondant OUI. 📅",
-      },
-      {
-        id: 11,
-        name: "survey_request",
-        category: "Marketing",
-        type: "marketing-flows",
-        language: "English",
-        status: "Pending",
-        statusTypeColor: "warning" as const,
-        topBlockReason: "",
-        lastEdited: "2025-09-20",
-        body: "Help us improve! Take our 2-minute survey and get a 10% discount on your next order. Your feedback matters! 📝",
-      },
-      {
-        id: 12,
-        name: "delivery_notification",
-        category: "Utility",
-        type: "utility-default",
-        language: "English",
-        status: "Approved",
-        statusTypeColor: "success" as const,
-        topBlockReason: "Blocked Business",
-        lastEdited: "2025-09-15",
-        body: "📦 Package delivered! Your order has been successfully delivered to your address. Thank you for choosing us!",
-      },
-      {
-        id: 13,
-        name: "limited_time_offer",
-        category: "Marketing",
-        type: "marketing-default",
-        language: "German",
-        status: "Rejected",
-        statusTypeColor: "danger" as const,
-        topBlockReason: "",
-        lastEdited: "2025-09-10",
-        body: "🎯 Zeitlich begrenztes Angebot! 30% Rabatt auf alle Artikel. Code: SAVE30German. Nur heute gültig!",
-      },
-      {
-        id: 14,
-        name: "support_ticket_update",
-        category: "Utility",
-        type: "utility-issue",
-        language: "English",
-        status: "Quality Pending",
-        statusTypeColor: "success" as const,
-        topBlockReason: "Irrelevant Content",
-        lastEdited: "2025-08-30",
-        body: "Support Update: Your ticket #12345 has been resolved. If you need further assistance, please reply to this message. 🎧",
-      },
-      {
-        id: 15,
-        name: "new_feature_announcement",
-        category: "Marketing",
-        type: "marketing-default",
-        language: "English",
-        status: "Active - HQ",
-        statusTypeColor: "success" as const,
-        topBlockReason: "",
-        lastEdited: "2025-08-25",
-        body: "🚀 New Feature Alert! We've just launched dark mode! Update your app now to try this exciting new feature.",
-      },
-    ]);
+      }
+
+      const bodyComponent = components.find((c: any) => c.type === "BODY");
+      const headerComponent = components.find((c: any) => c.type === "HEADER");
+      const footerComponent = components.find((c: any) => c.type === "FOOTER");
+      const buttonsComponent = components.find((c: any) => c.type === "BUTTONS");
+
+      return {
+        id: Number(t.id),
+        name: t.name,
+        category: t.category,
+        language: t.language,
+        status: t.status,
+        body: bodyComponent?.text || t.template || "",
+        header: headerComponent?.text || "",
+        footer: footerComponent?.text || "",
+        buttons: buttonsComponent?.buttons || [],
+        lastEdited: t.updated_at ? new Date(t.updated_at).toLocaleDateString() : (t.created_at ? new Date(t.created_at).toLocaleDateString() : ""),
+        statusTypeColor: (t.status === "APPROVED" || t.status === "Active - HQ") ? "success" : (t.status === "PENDING" ? "warning" : "danger"),
+        topBlockReason: t.rejection_reason || "",
+        mediaFile: null,
+        mediaSample: "none",
+        variableSamples: {},
+        type: t.category === "MARKETING" ? "Marketing" : "Utility",
+      };
+    });
+  }, [templatesData]);
 
   const toggleTemplate = (id: number) => {
     setSelectedTemplates((prev) =>
@@ -1603,7 +1473,13 @@ export default function TemplateManager() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedTemplates.length === 0 ? (
+                  {isLoadingTemplates ? (
+                    <tr>
+                      <td colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Loading templates...
+                      </td>
+                    </tr>
+                  ) : paginatedTemplates.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="text-center py-8 text-muted-foreground">
                         No results

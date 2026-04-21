@@ -30,6 +30,7 @@ import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
 
 function Router() {
   return (
@@ -108,6 +109,9 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const checkAuthStatus = () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return false;
+
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
       let cookie = cookies[i].trim();
@@ -127,6 +131,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <GlobalBrandingFetcher />
         <TooltipProvider>
           <div className="flex h-screen overflow-hidden bg-background">
             {/* New: Horizontal Top Bar (only shown when logged in) */}

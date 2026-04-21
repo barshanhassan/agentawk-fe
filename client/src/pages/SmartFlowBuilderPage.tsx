@@ -61,6 +61,8 @@ import {
     FaBold,
     FaItalic,
     FaInfoCircle,
+    FaSave,
+    FaCheckCircle
 } from "react-icons/fa";
 import { SiGoogle, SiOpenai } from "react-icons/si";
 import MediaGallerySection from "@/components/workspace/MediaGallerySection";
@@ -77,7 +79,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 // The instruction to remove an extra closing brace at line 919 cannot be applied as the provided document does not reach line 919.
 // Assuming the user intended to add the 'cn' import as shown in the example, I'm adding it here.
 // If the line number was a typo and referred to a brace within the provided content, please clarify.
@@ -438,12 +443,112 @@ export default function SmartFlowBuilderPage() {
     const [match, params] = useRoute("/automations/:id");
     const id = match ? params?.id : null;
     const [, setLocation] = useLocation();
-    const [isSaving, setIsSaving] = useState(false);
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
     const [flowName, setFlowName] = useState("Loading...");
     const [flowStatus, setFlowStatus] = useState<"draft" | "active" | "unpublished">("draft");
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [nodeIdToDelete, setNodeIdToDelete] = useState<string | null>(null);
     const [edgeIdToDelete, setEdgeIdToDelete] = useState<string | null>(null);
+
+    // Fetch flow from backend
+    const { data: automationResponse, isLoading } = useQuery({
+        queryKey: [`/api/automations/${id}`],
+        queryFn: async () => {
+            const res = await apiRequest("GET", `/api/automations/${id}`);
+            return res.json();
+        },
+        enabled: !!id
+    });
+
+    useEffect(() => {
+        if (automationResponse?.automation) {
+            const auth = automationResponse.automation;
+            setFlowName(auth.name);
+            setFlowStatus(auth.status);
+
+            // Load nodes/edges from draft version configuration if exists
+            const draftVersion = auth.automation_versions?.find((v: any) => v.status === 'draft');
+            if (draftVersion && draftVersion.automation_steps?.length > 0) {
+                const configStep = draftVersion.automation_steps.find((s: any) => s.type === 'flow_config');
+                if (configStep && configStep.properties) {
+                    try {
+                        const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(configStep.properties);
+                        if (loadedNodes) setNodes(loadedNodes);
+                        if (loadedEdges) setEdges(loadedEdges);
+                    } catch (e) {
+                        console.error("Failed to parse flow config", e);
+                    }
+                }
+            }
+        }
+    }, [automationResponse]);
+
+    // Save mutation
+    const saveMutation = useMutation({
+        mutationFn: async ({ nodes, edges }: { nodes: Node[], edges: Edge[] }) => {
+            const auth = automationResponse?.automation;
+            if (!auth || !auth.draft_version_id) throw new Error("No draft version found");
+
+            // We combine everything into a single "flow_config" step for now
+            // In a more granular setup, each node would be a step, but properties-blob is safer for UI state
+            const draftVersion = auth.automation_versions?.find((v: any) => v.id.toString() === auth.draft_version_id.toString());
+            const configStep = draftVersion?.automation_steps?.find((s: any) => s.type === 'flow_config');
+
+            const payload = {
+                title: 'Flow Configuration',
+                type: 'flow_config',
+                properties: { nodes, edges }
+            };
+
+            if (configStep) {
+                // Update existing
+                await apiRequest("PATCH", `/api/automations/step/${configStep.id}`, payload);
+            } else {
+                // Create new config step
+                await apiRequest("POST", `/api/automations/version/${auth.draft_version_id}/step`, payload);
+            }
+        },
+        onSuccess: () => {
+            toast({
+                title: "Flow saved",
+                description: "Changes updated successfully",
+            });
+            queryClient.invalidateQueries({ queryKey: [`/api/automations/${id}`] });
+        },
+        onError: (err: Error) => {
+            toast({
+                title: "Save failed",
+                description: err.message,
+                variant: "destructive"
+            });
+        }
+    });
+
+    // Publish mutation
+    const publishMutation = useMutation({
+        mutationFn: async () => {
+            await apiRequest("POST", `/api/automations/${id}/publish`);
+        },
+        onSuccess: () => {
+            toast({
+                title: "Published!",
+                description: "Flow is now active",
+            });
+            queryClient.invalidateQueries({ queryKey: [`/api/automations/${id}`] });
+        },
+        onError: (err: Error) => {
+            toast({
+                title: "Publish failed",
+                description: err.message,
+                variant: "destructive"
+            });
+        }
+    });
+
+    const isSaving = saveMutation.isPending;
+    const isPublishing = publishMutation.isPending;
 
 
     const [showAddStepMenu, setShowAddStepMenu] = useState(false);
@@ -628,28 +733,18 @@ export default function SmartFlowBuilderPage() {
         [setEdges]
     );
 
-    useEffect(() => {
-        if (id) {
-            // Mock fetching flow data
-            setTimeout(() => {
-                const mockFlows = [
-                    { id: "1", name: "Welcome Flow", status: "active" },
-                    { id: "2", name: "Follow-up Sequence", status: "draft" },
-                    { id: "3", name: "Abandoned Cart Recovery", status: "active" },
-                    { id: "4", name: "Product Launch Announcement", status: "unpublished" },
-                ];
+    const handleSave = () => {
+        saveMutation.mutate({ nodes, edges });
+    };
 
-                const flow = mockFlows.find(f => f.id === id);
-                if (flow) {
-                    setFlowName(flow.name);
-                    setFlowStatus(flow.status as "draft" | "active" | "unpublished");
-                } else {
-                    setFlowName("New Smart Flow");
-                    setFlowStatus("draft");
-                }
-            }, 500);
-        }
-    }, [id]);
+    const handlePublish = () => {
+        // Save first then publish
+        saveMutation.mutate({ nodes, edges }, {
+            onSuccess: () => {
+                publishMutation.mutate();
+            }
+        });
+    };
 
     const handleZoomIn = () => {
         rfInstance?.zoomIn();
@@ -727,7 +822,24 @@ export default function SmartFlowBuilderPage() {
                     )}
 
                     <button className="h-9 px-4 text-sm font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-700 hover:text-white transition-all duration-200" onClick={() => setLocation("/automations")}>Exit</button>
-                    {flowStatus !== "active" && <button className="h-9 px-5 text-sm font-medium text-blue-600 border border-blue-500 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200">Publish</button>}
+                    <button 
+                        disabled={isSaving}
+                        onClick={handleSave}
+                        className="h-9 px-5 text-sm font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-700 hover:text-white transition-all duration-200 flex items-center gap-2"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FaSave className="w-3.5 h-3.5" />}
+                        Save
+                    </button>
+                    {flowStatus !== "active" && (
+                        <button 
+                            disabled={isPublishing}
+                            onClick={handlePublish}
+                            className="h-9 px-5 text-sm font-medium text-blue-600 border border-blue-500 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 flex items-center gap-2"
+                        >
+                            {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FaPlay className="w-3 h-3" />}
+                            Publish
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "react-feather";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PasswordInputProps {
   id: string;
@@ -94,22 +95,32 @@ const ChangePasswordSection = () => {
 
   }, [currentPassword, newPassword, retypePassword]);
 
+  const mutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/users/change-password", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password Changed",
+        description: "Your password has been successfully updated.",
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setRetypePassword('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password. Please check your current password.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = () => {
-    if (isSaveDisabled) {
-      // This should not be callable if button is disabled, but as a safeguard
-      console.log("Validation failed. Cannot save.");
-      return;
-    }
-    console.log("Validation successful. Saving password...");
-    // Add actual save logic here
-    toast({
-      title: "Password Changed",
-      description: "Your password has been successfully updated.",
-    });
-    // Optionally clear fields after successful save
-    setCurrentPassword('');
-    setNewPassword('');
-    setRetypePassword('');
+    if (isSaveDisabled) return;
+    mutation.mutate({ currentPassword, newPassword });
   };
 
   return (
@@ -157,7 +168,13 @@ const ChangePasswordSection = () => {
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaveDisabled} className="btn-outline-primary font-normal" variant="outline">
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaveDisabled || mutation.isPending} 
+          className="btn-outline-primary font-normal flex items-center gap-2" 
+          variant="outline"
+        >
+          {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           Save
         </Button>
       </CardFooter>

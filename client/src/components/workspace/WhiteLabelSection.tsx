@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 
 interface ColorPickerProps {
@@ -46,6 +48,33 @@ const ColorPicker = ({ label, value, onChange }: ColorPickerProps) => (
 );
 
 export default function WhiteLabelSection() {
+  const { toast } = useToast();
+
+  const { data: brandingData, isLoading } = useQuery<any>({
+    queryKey: ["/api/workspaces/branding"],
+  });
+
+  const updateBrandingMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/workspaces/branding", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/branding"] });
+      toast({
+        title: "Success",
+        description: "Color settings saved successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save colors",
+        variant: "destructive",
+      });
+    }
+  });
+
   const [colors, setColors] = useState({
     mainTheme: "#0a7a22",
     links: "#5742f5",
@@ -55,28 +84,28 @@ export default function WhiteLabelSection() {
     outgoingText: "#ffffff",
   });
 
+  React.useEffect(() => {
+    if (brandingData) {
+      setColors({
+        mainTheme: brandingData.color || "#0a7a22",
+        links: brandingData.link_color || "#5742f5",
+        incomingBubble: brandingData.incoming_chat_color || "#705800",
+        incomingText: brandingData.incoming_chat_text_color || "#ffffff",
+        outgoingBubble: brandingData.outgoing_chat_color || "#9c9c9c",
+        outgoingText: brandingData.outgoing_chat_text_color || "#ffffff",
+      });
+    }
+  }, [brandingData]);
+
   const [subdomain, setSubdomain] = useState("");
   const [domain, setDomain] = useState("");
-
-  const { toast } = useToast();
 
   const handleColorChange = (key: keyof typeof colors, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSaveColors = () => {
-    console.log("Saving color settings:", colors);
-    toast({
-      title: "Success",
-      description: "Color settings saved successfully!",
-    });
-    // TODO: Replace with actual API call
-    // Example:
-    // await fetch('/api/workspace/white-label/colors', {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(colors)
-    // });
+    updateBrandingMutation.mutate(colors);
   };
 
   // Notification Email state and handlers
@@ -240,6 +269,10 @@ export default function WhiteLabelSection() {
     });
   };
 
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading White Label settings...</div>;
+  }
+
   return (
     <>
       <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 px-8 pt-8">
@@ -396,8 +429,9 @@ export default function WhiteLabelSection() {
                   className="px-10 h-12 text-sm transition-all btn-outline-primary"
                   variant="outline"
                   onClick={handleSaveColors}
+                  disabled={updateBrandingMutation.isPending}
                 >
-                  Apply Changes
+                  {updateBrandingMutation.isPending ? "Applying..." : "Apply Changes"}
                 </Button>
               </div>
             </div>

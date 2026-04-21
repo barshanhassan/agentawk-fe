@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,15 +35,51 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function ManageSection() {
-  const workspaceId = "3";
+  const { data: workspaceData, isLoading, isError } = useQuery<any>({
+    queryKey: ["/api/workspaces/current"],
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/workspaces/current", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/current"] });
+      setHasUnsavedChanges(false);
+      toast({
+        title: "Success",
+        description: "Workspace settings saved successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update workspace",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const workspaceId = workspaceData?.id?.toString() || "";
   const loginUrl = "";
 
   // State for editable fields
   const [workspaceName, setWorkspaceName] = useState("Ezconn");
   const [timezone, setTimezone] = useState("America/Fortaleza");
   const [firstDayOfWeek, setFirstDayOfWeek] = useState("monday");
+
+  useEffect(() => {
+    if (workspaceData) {
+      setWorkspaceName(workspaceData.name || "");
+      if (workspaceData.timezone) setTimezone(workspaceData.timezone);
+      if (workspaceData.first_day_week) setFirstDayOfWeek(workspaceData.first_day_week.toLowerCase());
+    }
+  }, [workspaceData]);
 
   // Track unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -53,13 +89,17 @@ export default function ManageSection() {
 
   // Get current time in selected timezone
   const getCurrentTime = () => {
-    const now = new Date();
-    return now.toLocaleTimeString('en-US', {
-      timeZone: timezone,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    try {
+      const now = new Date();
+      return now.toLocaleTimeString('en-US', {
+        timeZone: timezone || "UTC",
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return "00:00 AM";
+    }
   };
 
   // Character count for workspace name
@@ -75,9 +115,11 @@ export default function ManageSection() {
   };
 
   const handleReset = () => {
-    setWorkspaceName("Ezconn");
-    setTimezone("America/Fortaleza");
-    setFirstDayOfWeek("monday");
+    if (workspaceData) {
+      setWorkspaceName(workspaceData.name || "");
+      if (workspaceData.timezone) setTimezone(workspaceData.timezone);
+      if (workspaceData.first_day_week) setFirstDayOfWeek(workspaceData.first_day_week.toLowerCase());
+    }
     setHasUnsavedChanges(false);
     toast({
       title: "Reset Complete",
@@ -86,19 +128,10 @@ export default function ManageSection() {
   };
 
   const handleSave = () => {
-    const settings = {
-      workspaceId,
+    updateMutation.mutate({
       name: workspaceName,
       timezone,
       firstDayOfWeek,
-    };
-
-    console.log("Saving workspace settings:", settings);
-    setHasUnsavedChanges(false);
-
-    toast({
-      title: "Success",
-      description: "Workspace settings saved successfully!",
     });
   };
 
@@ -108,6 +141,14 @@ export default function ManageSection() {
     if (field === 'timezone') setTimezone(value);
     if (field === 'firstDay') setFirstDayOfWeek(value);
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading workspace settigns...</div>;
+  }
+
+  if (isError) {
+    return <div className="p-8 text-center text-red-500">Failed to load workspace settings from the server.</div>;
+  }
 
   return (
     <>
@@ -275,6 +316,12 @@ export default function ManageSection() {
                 <SelectItem value="America/Fortaleza" className="dark:focus:bg-slate-800 dark:text-white">
                   Fortaleza (America/Fortaleza)
                 </SelectItem>
+                <SelectItem value="UTC" className="dark:focus:bg-slate-800 dark:text-white">
+                  UTC
+                </SelectItem>
+                <SelectItem value="Asia/Karachi" className="dark:focus:bg-slate-800 dark:text-white">
+                  Asia/Karachi
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -293,7 +340,7 @@ export default function ManageSection() {
 
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Info className="w-3 h-3" />
-              <span>Timezone offset: UTC-3</span>
+              <span>Timezone selection is important for automation triggers</span>
             </div>
           </div>
         </div>
@@ -393,6 +440,7 @@ export default function ManageSection() {
                 size="sm"
                 onClick={() => handleCopy(loginUrl)}
                 className="whitespace-nowrap text-sm px-3 btn-outline-primary gap-2"
+                disabled={!loginUrl}
               >
                 <Copy className="w-4 h-4" />
                 Copy
@@ -472,10 +520,10 @@ export default function ManageSection() {
             className="px-6 py-1 text-sm btn-outline-primary gap-2"
             variant="outline"
             onClick={handleSave}
-            disabled={!hasUnsavedChanges}
+            disabled={!hasUnsavedChanges || updateMutation.isPending}
           >
             <Save className="w-4 h-4" />
-            Save Changes
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </CardContent>

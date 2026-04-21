@@ -13,12 +13,40 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Info, CheckCircle2, AlertTriangle, Folder, Plus, Eye, Pencil, Trash, Inbox } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function LiveChatSettings() {
+  const { toast } = useToast();
+
+  const { data: settingsData, isLoading } = useQuery<any>({
+    queryKey: ["/api/workspaces/live-chat-settings"],
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/workspaces/live-chat-settings", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/live-chat-settings"] });
+      toast({
+        title: "Success",
+        description: "Settings saved successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update settings",
+        variant: "destructive",
+      });
+    }
+  });
   const [agentAction, setAgentAction] = useState<"keep" | "remove">("keep");
   const [saveAgentDetails, setSaveAgentDetails] = useState(false);
   const [agentDataFormat, setAgentDataFormat] = useState("full-name");
@@ -37,6 +65,25 @@ export default function LiveChatSettings() {
   const [hoveredFolderIndex, setHoveredFolderIndex] = useState<number | null>(null);
   const [editingFolderIndex, setEditingFolderIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    if (settingsData) {
+      if (settingsData.value === "keep" || settingsData.value === "remove") setAgentAction(settingsData.value);
+      setSaveAgentDetails(settingsData.save_to_custom_field === 1);
+      if (settingsData.data_format) setAgentDataFormat(settingsData.data_format);
+      if (settingsData.custom_field) setCustomField(settingsData.custom_field);
+      
+      setSaveConversationJson(settingsData.save_chat === 1);
+      if (settingsData.chat_field) setJsonCustomField(settingsData.chat_field);
+
+      setIncludeSignature(settingsData.append_username === 1);
+
+      if (settingsData.ai_model) setCorrectionModel(settingsData.ai_model);
+      if (settingsData.ai_prompt) setCorrectionPrompt(settingsData.ai_prompt);
+
+      setPauseSmartFlow(settingsData.automatically_pause_automation ? "automatically" : "manually");
+    }
+  }, [settingsData]);
+
   const handleSave_Folder = () => {
     if (newFolderName.trim()) {
       if (editingFolderIndex !== null) {
@@ -53,9 +100,6 @@ export default function LiveChatSettings() {
       setIsCreatingFolder(false);
     }
   };
-
-  const { toast } = useToast();
-
 
   const handleEditFolder = (index: number) => {
     setNewFolderName(folders[index]);
@@ -92,64 +136,43 @@ export default function LiveChatSettings() {
   };
 
   const handleSaveAgents = () => {
-    const agentsSettings = {
+    updateMutation.mutate({
       agentAction,
       saveAgentDetails,
       agentDataFormat,
       customField
-    };
-    console.log("Saving Agents settings:", agentsSettings);
-    toast({
-      title: "Success",
-      description: "Agents settings saved successfully!",
     });
   };
 
   const handleSaveCompletion = () => {
-    const completionSettings = {
+    updateMutation.mutate({
       saveConversationJson,
       jsonCustomField
-    };
-    console.log("Saving Completion settings:", completionSettings);
-    toast({
-      title: "Success",
-      description: "Completion settings saved successfully!",
     });
   };
 
   const handleSaveSignature = () => {
-    const signatureSettings = {
+    updateMutation.mutate({
       includeSignature
-    };
-    console.log("Saving Signature settings:", signatureSettings);
-    toast({
-      title: "Success",
-      description: "Signature settings saved successfully!",
     });
   };
 
   const handleSaveCorrection = () => {
-    const correctionSettings = {
+    updateMutation.mutate({
       correctionModel,
       correctionPrompt
-    };
-    console.log("Saving Correction settings:", correctionSettings);
-    toast({
-      title: "Success",
-      description: "Correction settings saved successfully!",
     });
   };
 
   const handleSavePause = () => {
-    const pauseSettings = {
+    updateMutation.mutate({
       pauseSmartFlow
-    };
-    console.log("Saving Pause settings:", pauseSettings);
-    toast({
-      title: "Success",
-      description: "Pause settings saved successfully!",
     });
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading Live Chat settings...</div>;
+  }
 
   return (
     <>

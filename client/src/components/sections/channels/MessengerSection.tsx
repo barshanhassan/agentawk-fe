@@ -51,23 +51,59 @@ interface MenuItem {
   modelable_id?: string;
 }
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function MessengerSection() {
   const [view, setView] = useState<"list" | "manage">("list");
-  const [hasPages, setHasPages] = useState(true);
-  const [pages, setPages] = useState(mockMessengerPages);
+  const queryClient = useQueryClient();
+  
+  const handleConnect = () => {
+    toast({
+      title: "Connecting...",
+      description: "Redirecting to Messenger connection flow.",
+    });
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/channels/messenger/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: "Deleted",
+        description: "Page removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete page.", variant: "destructive" });
+    }
+  });
+
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["/api/integrations/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/channels");
+      return res.json();
+    }
+  });
+
+  const pages = channels?.messenger || [];
+  const hasPages = pages.length > 0;
 
   // Dialog states
   const [showDefaultReply, setShowDefaultReply] = useState(false);
   const [showQuickStarter, setShowQuickStarter] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showExtendedEngagements, setShowExtendedEngagements] = useState(false);
-  const [selectedPage, setSelectedPage] = useState<typeof mockMessengerPages[0] | null>(null);
+  const [selectedPage, setSelectedPage] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [pageToDelete, setPageToDelete] = useState<typeof mockMessengerPages[0] | null>(null);
+  const [pageToDelete, setPageToDelete] = useState<any>(null);
   
   // Feature states
   const [autoReplyInterval, setAutoReplyInterval] = useState("0");
-  const [defaultReplyConfigured, setDefaultReplyConfigured] = useState(true);
+  const [defaultReplyConfigured, setDefaultReplyConfigured] = useState(false);
   const [quickStarterConfigured, setQuickStarterConfigured] = useState(false);
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -75,12 +111,10 @@ export default function MessengerSection() {
   const { toast } = useToast();
 
   const toggleFeeder = (pageId: number) => {
-    setPages(prev => prev.map(page => {
-      if (page.id === pageId) {
-        return { ...page, allow_in_feeder: !page.allow_in_feeder };
-      }
-      return page;
-    }));
+    toast({
+      title: "Info",
+      description: "AI Feeder toggle will be implemented with real mutation soon.",
+    });
   };
 
   const handleSaveDefaultReply = () => {
@@ -206,11 +240,7 @@ export default function MessengerSection() {
 
   const confirmDeletePage = () => {
     if (pageToDelete) {
-      setPages(prev => prev.filter(p => p.id !== pageToDelete.id));
-      toast({
-        title: "Page Deleted",
-        description: `${pageToDelete.name} has been removed.`,
-      });
+      deleteMutation.mutate(pageToDelete.id);
       setShowDeleteConfirm(false);
       setPageToDelete(null);
     }
@@ -283,18 +313,18 @@ export default function MessengerSection() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  className="btn-outline-primary"
-                  onClick={() => setHasPages(true)}
-                >
-                  + Add New
-                </Button>
-                <Button variant="outline" onClick={() => setView("list")}>
-                  Back
-                </Button>
-              </div>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="btn-outline-primary"
+                    onClick={handleConnect}
+                  >
+                    + Add New
+                  </Button>
+                  <Button variant="outline" onClick={() => setView("list")}>
+                    Back
+                  </Button>
+                </div>
             </div>
             <Separator className="bg-gray-200 dark:bg-slate-800" />
 
@@ -312,7 +342,7 @@ export default function MessengerSection() {
                   <Button 
                     className="btn-outline-primary min-w-[150px]"
                     variant="outline"
-                    onClick={() => setHasPages(true)}
+                    onClick={handleConnect}
                   >
                     Connect now
                   </Button>
@@ -320,7 +350,7 @@ export default function MessengerSection() {
               </div>
             ) : (
               <div className="p-6 divide-y">
-            {pages.map((page) => (
+            {pages.map((page: any) => (
               <div key={page.id} className="pb-6">
                 {/* Page Name */}
                 <div className="grid grid-cols-4 gap-4 items-center mb-5">

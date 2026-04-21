@@ -4,16 +4,17 @@ import {
   Plus, 
   MoreVertical, 
   Trash2, 
-  Edit, 
   Eye, 
+  EyeOff,
   RefreshCcw, 
   Settings, 
   ChevronLeft,
-  X,
-  Check,
   Copy
 } from "lucide-react";
 import { format } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,99 +46,90 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-// Mock Data
-interface Trigger {
-  id: string;
-  name: string;
-  slug: string;
-  url: string;
-  live: boolean;
-  created_at: string;
-  update_duplicates: boolean;
-  created_tags: string[];
-  updated_tags: string[];
-  mappedFields: Record<string, any>;
-}
-
-interface Log {
-  id: string;
-  created_at: string;
-  status: "success" | "failed";
-  error_code?: string;
-  error?: string;
-}
-
-const MOCK_TRIGGERS: Trigger[] = [
-  {
-    id: "1",
-    name: "Lead Qualification Flow",
-    slug: "lead-qual-flow",
-    url: "https://api.example.com/v1/api-trigger/lead-qual-flow",
-    live: true,
-    created_at: "2024-02-15T10:30:00Z",
-    update_duplicates: true,
-    created_tags: ["new-lead"],
-    updated_tags: ["updated-lead"],
-    mappedFields: {}
-  }
-];
-
-const MOCK_LOGS: Log[] = [
-  { id: "1", created_at: "2024-02-20T14:22:10Z", status: "success", error_code: "200" },
-  { id: "2", created_at: "2024-02-20T14:20:05Z", status: "failed", error_code: "400", error: "Invalid payload" },
-];
-
 export default function VisualAPISection() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<"LIST" | "MANAGE" | "LOGS">("LIST");
-  const [triggers, setTriggers] = useState<Trigger[]>(MOCK_TRIGGERS);
-  const [activeTrigger, setActiveTrigger] = useState<Trigger | null>(null);
-  const [logs, setLogs] = useState<Log[]>(MOCK_LOGS);
+  const [activeTrigger, setActiveTrigger] = useState<any | null>(null);
   
   // Modal States
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<Trigger | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<any | null>(null);
   const [newTriggerName, setNewTriggerName] = useState("");
 
+  const { data: triggers, isLoading } = useQuery({
+    queryKey: ["/api/integrations/api-triggers"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/api-triggers");
+      return res.json();
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/integrations/api-triggers", { name });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
+      toast({ title: "Created", description: "API Trigger created successfully." });
+      setIsCreateModalOpen(false);
+      setNewTriggerName("");
+      setActiveTrigger(data);
+      setViewMode("MANAGE");
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("PATCH", `/api/integrations/api-triggers/${data.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
+      toast({ title: "Updated", description: "Trigger settings saved." });
+      setViewMode("LIST");
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/api-triggers/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-triggers"] });
+      toast({ title: "Deleted", description: "Trigger removed successfully." });
+      setDeleteConfirmation(null);
+    }
+  });
+
   const handleCreateTrigger = () => {
-    const newTrigger: Trigger = {
-      id: Date.now().toString(),
-      name: newTriggerName,
-      slug: newTriggerName.toLowerCase().replace(/\s+/g, '-'),
-      url: `https://api.example.com/v1/api-trigger/${newTriggerName.toLowerCase().replace(/\s+/g, '-')}`,
-      live: false, // Default to Test mode
-      created_at: new Date().toISOString(),
-      update_duplicates: false,
-      created_tags: [],
-      updated_tags: [],
-      mappedFields: {}
-    };
-    setTriggers([...triggers, newTrigger]);
-    setNewTriggerName("");
-    setIsCreateModalOpen(false);
-    setActiveTrigger(newTrigger);
-    setViewMode("MANAGE");
+    if (!newTriggerName.trim()) return;
+    createMutation.mutate(newTriggerName);
   };
 
   const handleDeleteTrigger = () => {
     if (deleteConfirmation) {
-      setTriggers(triggers.filter(t => t.id !== deleteConfirmation.id));
-      setDeleteConfirmation(null);
+      deleteMutation.mutate(deleteConfirmation.id);
     }
   };
 
-  const handleManage = (trigger: Trigger) => {
+  const handleManage = (trigger: any) => {
     setActiveTrigger(trigger);
     setViewMode("MANAGE");
   };
 
-  const handleLogs = (trigger: Trigger) => {
+  const handleLogs = (trigger: any) => {
     setActiveTrigger(trigger);
     setViewMode("LOGS");
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Could add toast notification here
+    toast({ title: "Copied", description: "URL copied to clipboard." });
+  };
+
+  const getWebhookUrl = (slug: string) => {
+    return `${window.location.origin}/v1/api-trigger/${slug}`;
   };
 
   // Views
@@ -165,7 +157,7 @@ export default function VisualAPISection() {
 
       <Separator />
 
-      {triggers.length > 0 ? (
+      {triggers && triggers.length > 0 ? (
         <div className="border rounded-md">
           <Table>
             <TableHeader>
@@ -178,13 +170,13 @@ export default function VisualAPISection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {triggers.map((trigger) => (
+              {triggers.map((trigger: any) => (
                 <TableRow key={trigger.id}>
                   <TableCell className="font-medium">{trigger.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="truncate max-w-[300px]">{trigger.url}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(trigger.url)}>
+                      <span className="truncate max-w-[300px]">{getWebhookUrl(trigger.slug)}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(getWebhookUrl(trigger.slug))}>
                         <Copy size={12} />
                       </Button>
                     </div>
@@ -262,8 +254,13 @@ export default function VisualAPISection() {
              <Button variant="outline" onClick={() => setViewMode("LIST")}>
               Cancel
             </Button>
-            <Button variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
-              Save Changes
+            <Button 
+              variant="outline" 
+              className="btn-outline-primary h-9 px-6 font-medium"
+              onClick={() => updateMutation.mutate(activeTrigger)}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -277,8 +274,8 @@ export default function VisualAPISection() {
                 <div className="grid gap-2">
                   <Label>Trigger URL</Label>
                   <div className="flex gap-2">
-                    <Input readOnly value={activeTrigger.url} className="bg-muted font-mono text-sm" />
-                    <Button variant="outline" onClick={() => copyToClipboard(activeTrigger.url)}>
+                    <Input readOnly value={getWebhookUrl(activeTrigger.slug)} className="bg-muted font-mono text-sm" />
+                    <Button variant="outline" onClick={() => copyToClipboard(getWebhookUrl(activeTrigger.slug))}>
                       <Copy size={14} className="mr-2" /> Copy
                     </Button>
                   </div>
@@ -382,6 +379,16 @@ export default function VisualAPISection() {
     );
   };
 
+  const { data: logs, refetch: refetchLogs } = useQuery({
+    queryKey: ["/api/integrations/api-triggers", activeTrigger?.id, "logs"],
+    queryFn: async () => {
+      if (!activeTrigger) return [];
+      const res = await apiRequest("GET", `/api/integrations/api-triggers/${activeTrigger.id}/logs`);
+      return res.json();
+    },
+    enabled: !!activeTrigger && viewMode === "LOGS"
+  });
+
   const renderLogsView = () => {
      if (!activeTrigger) return null;
      return (
@@ -396,7 +403,7 @@ export default function VisualAPISection() {
                <p className="text-sm text-muted-foreground">Displaying recent execution logs for {activeTrigger.name}</p>
              </div>
            </div>
-           <Button variant="outline" size="sm" onClick={() => setLogs(MOCK_LOGS)}>
+           <Button variant="outline" size="sm" onClick={() => refetchLogs()}>
              <RefreshCcw size={14} className="mr-2" /> Refresh
            </Button>
          </div>
@@ -412,11 +419,11 @@ export default function VisualAPISection() {
                </TableRow>
              </TableHeader>
              <TableBody>
-               {logs.map((log) => (
+               {logs && logs.length > 0 ? logs.map((log: any) => (
                  <TableRow key={log.id}>
                    <TableCell className="font-mono text-xs">{format(new Date(log.created_at), "PP p")}</TableCell>
                    <TableCell>
-                      {log.status === "success" ? (
+                      {log.status === "SUCCESS" || log.status === "processed" ? (
                         <Badge className="bg-green-500">Success</Badge>
                       ) : (
                         <Badge variant="destructive">Failed</Badge>
@@ -425,7 +432,13 @@ export default function VisualAPISection() {
                    <TableCell className="font-mono text-xs">{log.error_code || "-"}</TableCell>
                    <TableCell className="text-sm text-muted-foreground">{log.error || "Request processed successfully"}</TableCell>
                  </TableRow>
-               ))}
+               )) : (
+                 <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      No logs found for this trigger.
+                    </TableCell>
+                 </TableRow>
+               )}
              </TableBody>
            </Table>
          </div>

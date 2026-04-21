@@ -54,6 +54,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import CustomDropdown from "@/components/CustomDropdown";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function SmartFlowsPage() {
     const [, setLocation] = useLocation();
@@ -64,7 +68,7 @@ export default function SmartFlowsPage() {
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [newFlowName, setNewFlowName] = useState("");
     const [newFolderName, setNewFolderName] = useState("");
-    const [isCreating, setIsCreating] = useState(false);
+    // const [isCreating, setIsCreating] = useState(false);
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
     const [selectedFlowIds, setSelectedFlowIds] = useState<number[]>([]);
@@ -72,78 +76,25 @@ export default function SmartFlowsPage() {
     const [currentPage, setCurrentPage] = useState(1);
 
 
-    // Initial data
-    const initialFolders = [
-        { id: 1, name: "Marketing Campaigns" },
-        { id: 2, name: "Customer Support" },
-        { id: 3, name: "Sales Automation" }
-    ];
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
 
-    const initialFlows = [
-        {
-            id: 1,
-            name: "Welcome Flow",
-            status: "active",
-            total_runs: 1234,
-            created_by: { id: 1, name: "John Doe", picture: "https://i.pravatar.cc/150?img=1" },
-            last_updated: "2024-01-15",
-            folder_id: null
-        },
-        {
-            id: 2,
-            name: "Follow-up Sequence",
-            status: "draft",
-            total_runs: 0,
-            created_by: { id: 2, name: "Jane Smith", picture: "https://i.pravatar.cc/150?img=2" },
-            last_updated: "2024-01-14",
-            folder_id: 1
-        },
-        {
-            id: 3,
-            name: "Abandoned Cart Recovery",
-            status: "active",
-            total_runs: 128,
-            created_by: { id: 1, name: "John Doe", picture: "https://i.pravatar.cc/150?img=1" },
-            last_updated: "2024-01-13",
-            folder_id: 2
-        },
-        {
-            id: 4,
-            name: "Product Launch Announcement",
-            status: "unpublished",
-            total_runs: 45,
-            created_by: { id: 3, name: "Mike Johnson", picture: "https://i.pravatar.cc/150?img=3" },
-            last_updated: "2024-01-12",
-            folder_id: 1
+    // Fetch automations and folders from backend
+    const { data: automationsData, isLoading } = useQuery({
+        queryKey: ["/api/automations", { folder_id: selectedFolders[0] }],
+        queryFn: async () => {
+            const folderId = selectedFolders.includes("all") ? undefined : selectedFolders[0];
+            const res = await apiRequest("GET", `/api/automations${folderId ? `?folder_id=${folderId}` : ""}`);
+            return res.json();
         }
-    ];
-
-    // Load from localStorage or use initial data
-    const [folders, setFolders] = useState(() => {
-        const saved = localStorage.getItem('smartFlowFolders');
-        return saved ? JSON.parse(saved) : initialFolders;
     });
 
-    const [flows, setFlows] = useState(() => {
-        const saved = localStorage.getItem('smartFlows');
-        return saved ? JSON.parse(saved) : initialFlows;
-    });
+    const folders = automationsData?.folders || [];
+    const flows = automationsData?.automations || [];
 
-    // Save to localStorage whenever folders or flows change
-    useEffect(() => {
-        localStorage.setItem('smartFlowFolders', JSON.stringify(folders));
-    }, [folders]);
-
-    useEffect(() => {
-        localStorage.setItem('smartFlows', JSON.stringify(flows));
-    }, [flows]);
-
-    // Mock users data
+    // Mock users data (still needed for UI until we have a users API properly)
     const mockUsers = [
-        { id: 1, name: "John Doe", picture: "https://i.pravatar.cc/150?img=1" },
-        { id: 2, name: "Jane Smith", picture: "https://i.pravatar.cc/150?img=2" },
-        { id: 3, name: "Mike Johnson", picture: "https://i.pravatar.cc/150?img=3" },
-        { id: 4, name: "Sarah Williams", picture: "https://i.pravatar.cc/150?img=4" }
+        { id: 1, name: "Admin", picture: "https://i.pravatar.cc/150?img=1" }
     ];
 
     const filteredFlows = useMemo(() => {
@@ -183,33 +134,44 @@ export default function SmartFlowsPage() {
     }, [selectedFolders, searchText, statusFilter, selectedUsers, flows]);
 
 
+    // Create Flow Mutation
+    const createFlowMutation = useMutation({
+        mutationFn: async (data: { name: string, folder_id?: string | null }) => {
+            const res = await apiRequest("POST", "/api/automations", data);
+            return res.json();
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            setShowCreateModal(false);
+            setNewFlowName("");
+            
+            toast({
+                title: "Automation created",
+                description: "Opening builder...",
+            });
+            
+            // Redirect to builder
+            setLocation(`/automations/${data.automation.id}`);
+        },
+        onError: (err: Error) => {
+            toast({
+                title: "Creation failed",
+                description: err.message,
+                variant: "destructive"
+            });
+        }
+    });
+
     const handleCreateFlow = () => {
         if (newFlowName.trim()) {
-            setIsCreating(true);
-            setTimeout(() => {
-                const newFlow = {
-                    id: flows.length + 1,
-                    name: newFlowName,
-                    status: "draft",
-                    total_runs: 0,
-                    created_by: mockUsers[0], // Default to first user
-                    last_updated: new Date().toISOString().split('T')[0],
-                    folder_id: selectedFolders.length === 1 && selectedFolders[0] !== "all" && selectedFolders[0] !== "root"
-                        ? parseInt(selectedFolders[0])
-                        : null
-                };
-
-                const updatedFlows = [...flows, newFlow];
-                setFlows(updatedFlows);
-                localStorage.setItem('smartFlows', JSON.stringify(updatedFlows));
-                setShowCreateModal(false);
-                setNewFlowName("");
-                setIsCreating(false);
-
-                setLocation(`/automations/${newFlow.id}`);
-            }, 1000);
+            const folder_id = selectedFolders.length === 1 && selectedFolders[0] !== "all" && selectedFolders[0] !== "root"
+                ? selectedFolders[0]
+                : null;
+            createFlowMutation.mutate({ name: newFlowName.trim(), folder_id });
         }
     };
+
+    const isCreating = createFlowMutation.isPending;
 
     const handleCreateFolder = () => {
         if (newFolderName.trim()) {
@@ -217,7 +179,7 @@ export default function SmartFlowsPage() {
                 id: folders.length + 1,
                 name: newFolderName
             };
-            setFolders([...folders, newFolder]);
+            // setFolders([...folders, newFolder]);
             setShowFolderModal(false);
             setNewFolderName("");
         }
@@ -238,7 +200,6 @@ export default function SmartFlowsPage() {
 
     const folderOptions = [
         { id: "all", name: "All Folders" },
-        { id: "root", name: "Root Folder" },
         ...folders.map((f: any) => ({ id: f.id.toString(), name: f.name }))
     ];
 
@@ -402,16 +363,13 @@ export default function SmartFlowsPage() {
                                             <td className="py-2 px-3 text-center">{flow.total_runs}</td>
                                             <td className="py-2 px-3 text-center">
                                                 <div className="flex justify-center">
-                                                    <img
-                                                        src={flow.created_by.picture}
-                                                        alt={flow.created_by.name}
-                                                        className="w-6 h-6 rounded-full"
-                                                        title={flow.created_by.name}
-                                                    />
+                                                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">
+                                                        US
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="py-2 px-3 text-center text-muted-foreground">
-                                                {flow.last_updated}
+                                                {flow.updated_at ? new Date(flow.updated_at).toLocaleDateString() : '-'}
                                             </td>
                                             <td className="py-2 px-3 text-right">
                                                 <DropdownMenu>
@@ -571,7 +529,7 @@ export default function SmartFlowsPage() {
                                     onClick={() => {
                                         setShowCreateModal(false);
                                         setNewFlowName("");
-                                        setIsCreating(false);
+                                        // setIsCreating(false);
                                     }}
                                     disabled={isCreating}
                                 >

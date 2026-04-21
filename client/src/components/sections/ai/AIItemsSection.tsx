@@ -18,18 +18,52 @@ interface AIItem {
   images?: string[];
 }
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function AIItemsSection() {
-  const [items, setItems] = useState<AIItem[]>([
-    { id: "1", name: "Apartamento no Brooklin #001" },
-    { id: "2", name: "Apartamento aconchegante no Itaim Bibi #002" },
-    { id: "3", name: "Apartamento de Luxo no Jardim Europa #003" },
-    { id: "4", name: "Springfield" },
-    { id: "5", name: "Elm Street" },
-    { id: "6", name: "asf" },
-    { id: "7", name: "ai item one" },
-    { id: "8", name: "bot item two" },
-  ]);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const { data: items, isLoading } = useQuery({
+    queryKey: ["/api/ai/products"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/products");
+      return res.json();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/products/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/products"] });
+      toast({ title: "Deleted", description: "Item removed successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete item.", variant: "destructive" });
+    }
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/ai/products", {
+        ...data,
+        ai_theme_id: 1, // Default theme if none selected
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/products"] });
+      toast({ title: "Success", description: "AI Item saved successfully." });
+      handleCancel();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save item.", variant: "destructive" });
+    }
+  });
+
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
@@ -46,57 +80,39 @@ export default function AIItemsSection() {
     images: [] as string[],
   });
 
-  const handleDeleteItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+  const handleDeleteItem = (id: string | number) => {
+    deleteMutation.mutate(id);
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (formData.name.trim()) {
-      if (editingId) {
-        setItems(items.map(item => item.id === editingId ? { ...formData, id: editingId } : item));
-        toast({
-          title: "Success",
-          description: "AI Item updated successfully.",
-        });
-      } else {
-        const newItem: AIItem = {
-          ...formData,
-          id: String(Date.now()),
-        };
-        setItems([...items, newItem]);
-        toast({
-          title: "Success",
-          description: "AI Item created successfully.",
-        });
-      }
-      setFormData({
-        name: "",
-        aiAssistant: "",
-        smartFlow: "",
-        channel: "",
-        linkText: "",
-        payload: "",
-        savePayloadField: "",
-        dataToFeedAI: "",
-        images: [],
-      });
-      setIsCreateFormOpen(false);
-      setEditingId(null);
+       saveMutation.mutate({
+         name: formData.name,
+         payload: formData.payload,
+         link_text: formData.linkText,
+         properties: {
+           aiAssistant: formData.aiAssistant,
+           smartFlow: formData.smartFlow,
+           channel: formData.channel,
+           dataToFeedAI: formData.dataToFeedAI
+         }
+       });
     }
   };
 
-  const handleEdit = (item: AIItem) => {
+  const handleEdit = (item: any) => {
     setEditingId(item.id);
+    const props = item.properties ? JSON.parse(item.properties) : {};
     setFormData({
       name: item.name || "",
-      aiAssistant: item.aiAssistant || "",
-      smartFlow: item.smartFlow || "",
-      channel: item.channel || "",
-      linkText: item.linkText || "",
+      aiAssistant: props.aiAssistant || "",
+      smartFlow: props.smartFlow || "",
+      channel: props.channel || "",
+      linkText: item.link_text || "",
       payload: item.payload || "",
-      savePayloadField: item.savePayloadField || "",
-      dataToFeedAI: item.dataToFeedAI || "",
-      images: item.images || [],
+      savePayloadField: "",
+      dataToFeedAI: props.dataToFeedAI || "",
+      images: [],
     });
     setIsCreateFormOpen(true);
   };
@@ -395,7 +411,7 @@ export default function AIItemsSection() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, index) => (
+              {items?.map((item: any, index: number) => (
                 <tr
                   key={item.id}
                   className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${
@@ -449,7 +465,7 @@ export default function AIItemsSection() {
         </div>
 
         <div className="border-t p-4 bg-gray-50 dark:bg-slate-800/50 text-xs text-muted-foreground">
-          Showing {items.length} of {items.length} items
+          Showing {items?.length || 0} of {items?.length || 0} items
         </div>
       </div>
     </div>

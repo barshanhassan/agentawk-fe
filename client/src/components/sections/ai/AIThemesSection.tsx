@@ -4,6 +4,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles, HelpCircle, Edit, Trash2, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Theme {
   id: string;
@@ -20,7 +23,17 @@ interface ThemeItem {
 }
 
 export default function AIThemesSection() {
-  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
+  const { toast } = useToast();
+  const { data: themesData, isLoading } = useQuery({
+    queryKey: ["/api/ai/themes"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/themes");
+      return res.json();
+    }
+  });
+
+  const [viewMode, setViewMode] = useState<"list" | "edit">("list");
+  const [selectedTheme, setSelectedTheme] = useState<any>(null);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",

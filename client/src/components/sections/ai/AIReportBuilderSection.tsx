@@ -11,8 +11,36 @@ interface Report {
   lastRun?: string;
 }
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
 export default function AIReportBuilderSection() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+
+  const { data: reports, isLoading } = useQuery({
+    queryKey: ["/api/ai/reports"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/reports");
+      return res.json();
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/reports/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/reports"] });
+      toast({ title: "Deleted", description: "Report removed successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete report.", variant: "destructive" });
+    }
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     reportType: "Text type",
@@ -20,71 +48,19 @@ export default function AIReportBuilderSection() {
     prompt: "",
   });
 
-  const [reports, setReports] = useState<Report[]>([
-    {
-      id: "1",
-      name: "report creating for haider test",
-      type: "Graph type",
-      lastRun: undefined,
-    },
-    {
-      id: "2",
-      name: "Test builder",
-      type: "Text type",
-      lastRun: "2025-12-24 04:56 am",
-    },
-    {
-      id: "3",
-      name: "Test-Tiago-Delet",
-      type: "Graph type",
-      lastRun: "2025-11-18 01:52 pm",
-    },
-    {
-      id: "4",
-      name: "Custom field test",
-      type: "Text type",
-      lastRun: undefined,
-    },
-    {
-      id: "5",
-      name: "Ads",
-      type: "Text type",
-      lastRun: undefined,
-    },
-    {
-      id: "6",
-      name: "Teste Live",
-      type: "Text type",
-      lastRun: "2025-10-08 08:32 pm",
-    },
-    {
-      id: "7",
-      name: "Roger III",
-      type: "Graph type",
-      lastRun: "2025-10-08 08:32 pm",
-    },
-  ]);
-
-  const handleDeleteReport = (id: string) => {
-    setReports(reports.filter(r => r.id !== id));
+  const handleDeleteReport = (id: string | number) => {
+    deleteMutation.mutate(id);
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (formData.name.trim() && formData.prompt.trim()) {
-      const newReport: Report = {
-        id: String(reports.length + 1),
-        name: formData.name,
-        type: formData.reportType,
-        lastRun: undefined,
-      };
-      setReports([...reports, newReport]);
-      setFormData({
-        name: "",
-        reportType: "Text type",
-        llmModel: "gpt-4o-mini",
-        prompt: "",
-      });
-      setIsCreateFormOpen(false);
+      try {
+        // Create endpoint would go here
+        toast({ title: "Info", description: "Creating reports not fully implemented yet." });
+        setIsCreateFormOpen(false);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to publish report.", variant: "destructive" });
+      }
     }
   };
 
@@ -140,7 +116,7 @@ export default function AIReportBuilderSection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reports.map((report, index) => (
+                  {reports?.map((report: any, index: number) => (
                     <tr
                       key={report.id}
                       className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${
@@ -205,7 +181,7 @@ export default function AIReportBuilderSection() {
             </div>
 
             <div className="border-t p-4 bg-gray-50 dark:bg-slate-800/50 text-xs text-muted-foreground">
-              Showing {reports.length} of {reports.length} reports
+              Showing {reports?.length || 0} of {reports?.length || 0} reports
             </div>
           </div>
         </>

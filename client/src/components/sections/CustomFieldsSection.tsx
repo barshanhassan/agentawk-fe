@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, MoreHorizontal, Copy, Database, Globe, DollarSign, Calendar, Clock, Type, Lock, Hash, Phone, Mail, Link, Code, ChevronDown, Plus, X } from "lucide-react";
+import { Edit, Trash2, MoreHorizontal, Copy, Database, Globe, DollarSign, Calendar, Clock, Type, Lock, Hash, Phone, Mail, Link, Code, ChevronDown, Plus, X, Loader2 } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface CustomField {
   id: string;
@@ -12,19 +15,7 @@ interface CustomField {
 }
 
 export default function CustomFieldsSection() {
-  const [fields] = useState<CustomField[]>([
-    { id: "valor_oportunidade", name: "valor_oportunidade", contentType: "00 NUMBER", dataFormat: "text" },
-    { id: "min_max_length", name: "min max length", contentType: "00 NUMBER", dataFormat: "text" },
-    { id: "resposta_cal", name: "resposta_cal", contentType: "TEXT", dataFormat: "textarea" },
-    { id: "audio", name: "audio", contentType: "URL", dataFormat: "text" },
-    { id: "whisperer", name: "whisperer", contentType: "TEXT", dataFormat: "text" },
-    { id: "whisperer_resposta", name: "whisperer_resposta", contentType: "TEXT", dataFormat: "textarea" },
-    { id: "event_id", name: "event_id", contentType: "TEXT", dataFormat: "text" },
-    { id: "customfieldjson", name: "CustomFieldJSON", contentType: "JSON", dataFormat: "textarea" },
-    { id: "teste_edilson_apagar", name: "teste_edilson_apagar", contentType: "TEXT", dataFormat: "textarea" },
-    { id: "lower_case_test", name: "lower case test", contentType: "FIXED", dataFormat: "text" },
-  ]);
-
+  const { toast } = useToast();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,6 +23,41 @@ export default function CustomFieldsSection() {
     systemName: "",
     description: "",
     dataType: "",
+  });
+
+  const { data, isLoading } = useQuery<{ fields: any[]; folders: any[] }>({
+    queryKey: ["/api/custom-fields"],
+  });
+
+  const fields = data?.fields || [];
+
+  const createMutation = useMutation({
+    mutationFn: async (newField: any) => {
+      const res = await apiRequest("POST", "/api/custom-fields/field", newField);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/custom-fields"] });
+      toast({ title: "Success", description: "Custom field created successfully" });
+      setIsCreateFieldOpen(false);
+      setFormData({ displayName: "", systemName: "", description: "", dataType: "" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (slug: string) => {
+      await apiRequest("DELETE", `/api/custom-fields/field/${slug}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/custom-fields"] });
+      toast({ title: "Success", description: "Custom field deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
   });
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,10 +80,14 @@ export default function CustomFieldsSection() {
 
   const handleCreateField = () => {
     if (formData.displayName.trim() && formData.systemName.trim() && formData.dataType) {
-      // TODO: API call to create field
-      console.log("Creating field:", formData);
-      setFormData({ displayName: "", systemName: "", description: "", dataType: "" });
-      setIsCreateFieldOpen(false);
+      createMutation.mutate({
+        label: formData.displayName,
+        system_name: formData.systemName,
+        description: formData.description,
+        content_type: formData.dataType.toUpperCase(),
+        input_type: formData.dataType === "number" ? "number" : "text",
+        creating_for: "CONTACT", // Defaulting as example
+      });
     }
   };
 
@@ -161,7 +191,13 @@ export default function CustomFieldsSection() {
               </tr>
             </thead>
             <tbody>
-              {fields.map((field, index) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                  </td>
+                </tr>
+              ) : fields.map((field: any, index: number) => (
                 <tr
                   key={field.id}
                   className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
@@ -170,32 +206,36 @@ export default function CustomFieldsSection() {
                   <td className="px-4 py-3">
                     <input
                       type="checkbox"
-                      checked={selectedRows.has(field.id)}
-                      onChange={(e) => handleSelectRow(field.id, e.target.checked)}
+                      checked={selectedRows.has(field.id.toString())}
+                      onChange={(e) => handleSelectRow(field.id.toString(), e.target.checked)}
                       className="rounded"
                     />
                   </td>
-                  <td className="px-4 py-3 font-medium text-blue-600 dark:text-blue-400">{field.name}</td>
+                  <td className="px-4 py-3 font-medium text-blue-600 dark:text-blue-400">{field.label}</td>
                   <td className="px-4 py-3 text-muted-foreground flex items-center gap-1">
-                    {field.id}
-                    <Copy size={14} className="text-muted-foreground cursor-pointer hover:text-foreground" />
+                    {field.slug}
+                    <Copy size={14} className="text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => navigator.clipboard.writeText(field.slug)} />
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-muted-foreground">{field.contentType}</span>
+                    <span className="text-muted-foreground">{field.content_type}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-muted-foreground">{field.dataFormat}</span>
+                    <span className="text-muted-foreground">{field.input_type}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors">
                         <Edit size={16} className="text-muted-foreground" />
                       </button>
-                      <button className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors">
+                      <button 
+                        className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this field?")) {
+                            deleteMutation.mutate(field.slug);
+                          }
+                        }}
+                      >
                         <Trash2 size={16} className="text-muted-foreground" />
-                      </button>
-                      <button className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors">
-                        <MoreHorizontal size={16} className="text-muted-foreground" />
                       </button>
                     </div>
                   </td>
@@ -298,10 +338,10 @@ export default function CustomFieldsSection() {
               </button>
               <button
                 onClick={handleCreateField}
-                disabled={!formData.displayName.trim() || !formData.systemName.trim() || !formData.dataType}
-                className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium transition-colors"
+                disabled={!formData.displayName.trim() || !formData.systemName.trim() || !formData.dataType || createMutation.isPending}
+                className="px-4 py-2 bg-primary hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
               >
-
+                {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Add
               </button>
             </div>

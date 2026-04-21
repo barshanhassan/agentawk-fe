@@ -58,6 +58,15 @@ export default function AppSidebar() {
   // State for Theme and Online Status
   const { mode: theme, setMode: setTheme } = useTheme();
   const [status, setStatus] = useState<"available" | "unavailable">("available");
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem("user_info");
+    if (userInfo) {
+      setUser(JSON.parse(userInfo));
+    }
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState<string[]>(["en-us"]);
   const [workspace, setWorkspace] = useState<string[]>(["workspace-a"]);
@@ -484,14 +493,16 @@ export default function AppSidebar() {
               <button className="flex items-center gap-3 hover:opacity-80 transition">
                 {/* Avatar */}
                 <Avatar className="w-7 h-7">
-                  <AvatarFallback className={`${getAvatarColor("Demo User")} text-[10px] font-[600]`}>
-                    DU
+                  <AvatarFallback className={`${getAvatarColor(user?.first_name || "User")} text-[10px] font-[600]`}>
+                    {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                   </AvatarFallback>
                 </Avatar>
 
                 {/* Name + Status Below */}
                 <div className="text-left">
-                  <p className="font-[400] text-[12px]">Demo User</p>
+                  <p className="font-[400] text-[12px] whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
+                    {user ? `${user.first_name} ${user.last_name || ""}` : "Loading..."}
+                  </p>
                   <div className="flex items-center gap-1.5 -mt-0.5">
                     {status === "available" ? (
                       <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
@@ -518,12 +529,14 @@ export default function AppSidebar() {
                   onClick={() => setLocation("/settings?tab=My%20Profile")}
                 >
                   <Avatar className="w-8 h-8 my-1">
-                    <AvatarFallback className={`${getAvatarColor("Demo User")} text-xs font-bold`}>
-                      DU
+                    <AvatarFallback className={`${getAvatarColor(user?.first_name || "User")} text-xs font-bold`}>
+                      {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">Profile</p>
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                      {user ? `${user.first_name} ${user.last_name || ""}` : "Profile"}
+                    </p>
                     <div className="flex items-center gap-2 text-sm">
 
                     </div>
@@ -591,6 +604,8 @@ export default function AppSidebar() {
               <div className="border-t border-gray-200 dark:border-slate-700 px-4 py-1">
                 <button
                   onClick={() => {
+                    localStorage.removeItem("auth_token");
+                    localStorage.removeItem("user_info");
                     document.cookie = "demoLogin=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
                     window.location.href = "/login";
                   }}

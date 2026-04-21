@@ -18,6 +18,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import ContactDetailsModal from "@/components/ContactDetailsModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -49,36 +52,6 @@ interface Contact {
   updatedBy: string;
 }
 
-const initialContacts: Contact[] = [
-  {
-    id: "C001",
-    name: "Alice Johnson",
-    phoneNumber: "+1-555-0101",
-    tags: ["VIP", "Active"],
-    createdAt: "2024-10-15",
-    lastActive: "2024-10-30",
-    updatedBy: "John Smith",
-  },
-  {
-    id: "C002",
-    name: "Bob Smith",
-    phoneNumber: "+1-555-0102",
-    tags: ["Inactive"],
-    createdAt: "2024-09-20",
-    lastActive: "2024-10-25",
-    updatedBy: "Sarah Johnson",
-  },
-  {
-    id: "C003",
-    name: "Carol White",
-    phoneNumber: "+1-555-0103",
-    tags: ["VIP"],
-    createdAt: "2024-08-10",
-    lastActive: "2024-10-28",
-    updatedBy: "Mike Davis",
-  },
-];
-
 const contactTagOptions = [
   { id: "VIP", name: "VIP" },
   { id: "Lead", name: "Lead" },
@@ -88,9 +61,74 @@ const contactTagOptions = [
 
 export default function ContactsSection() {
   const { toast } = useToast();
-  const [contacts, setContacts] = useState<Contact[]>(initialContacts);
-  const currentUserName = "Demo User"; // TODO: Get from auth context
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Fetch contacts
+  const { data: contactsResponse, isLoading: isLoadingContacts } = useQuery({
+      queryKey: ["/api/contacts", { search, status: statusFilter }],
+      queryFn: async () => {
+          const res = await apiRequest("GET", `/api/contacts?search=${search}`);
+          return res.json();
+      }
+  });
+
+  // Map backend contacts to frontend format
+  const contacts: Contact[] = (contactsResponse?.contacts || []).map((c: any) => ({
+      id: c.id.toString(),
+      name: c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'No Name',
+      phoneNumber: c.title || '-', // Using title as fallback if phone is missing in schema for now
+      tags: c.tag_links?.map((t: any) => t.tags.name) || [],
+      createdAt: c.created_at ? new Date(c.created_at).toISOString().split('T')[0] : '-',
+      lastActive: c.updated_at ? new Date(c.updated_at).toISOString().split('T')[0] : '-',
+      updatedBy: 'System'
+  }));
+
+  // Add Mutation
+  const addMutation = useMutation({
+      mutationFn: async (data: any) => {
+          const res = await apiRequest("POST", "/api/contacts", data);
+          return res.json();
+      },
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+          toast({ title: "Contact added" });
+          setShowAddContactModal(false);
+      }
+  });
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+      mutationFn: async (id: string) => {
+          await apiRequest("DELETE", `/api/contacts/${id}`);
+      },
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+          toast({ title: "Contact deleted" });
+          setShowDeleteContactModal(false);
+      }
+  });
+
+  // Update Mutation
+  const updateMutation = useMutation({
+      mutationFn: async ({ id, data }: { id: string, data: any }) => {
+          const res = await apiRequest("PATCH", `/api/contacts/${id}`, data);
+          return res.json();
+      },
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+          toast({ title: "Contact Updated", description: "Contact has been updated successfully" });
+          setShowEditContactModal(false);
+          setEditingContact(null);
+          setEditContactName("");
+          setEditContactPhone("");
+          setEditContactTags([]);
+          setEditTagInput("");
+      }
+  });
+
+  const currentUserName = "Demo User"; 
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sorts, setSorts] = useState<SortEntry[]>([]);
@@ -138,10 +176,6 @@ export default function ContactsSection() {
 
   // Bulk Delete Modal State
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-
-
-
-  const allTags = Array.from(new Set(contacts.flatMap((c: Contact) => c.tags)));
 
   const [draggedSortId, setDraggedSortId] = useState<string | null>(null);
   const [openSortColumnDropdown, setOpenSortColumnDropdown] = useState<string | null>(null);
@@ -364,13 +398,7 @@ export default function ContactsSection() {
 
   const handleConfirmDelete = () => {
     if (contactToDelete) {
-      setContacts(contacts.filter(c => c.id !== contactToDelete.id));
-      toast({
-        title: "Contact Deleted",
-        description: `${contactToDelete.name} has been deleted`,
-      });
-      setShowDeleteContactModal(false);
-      setContactToDelete(null);
+      deleteMutation.mutate(contactToDelete.id);
     }
   };
 
@@ -399,38 +427,44 @@ export default function ContactsSection() {
     }
   };
 
-  const handleSaveBulkEdit = () => {
+  const handleSaveBulkEdit = async () => {
     const selectedContactIds = Array.from(selectedRows);
-    setContacts(contacts.map(contact => {
-      if (selectedContactIds.includes(contact.id)) {
-        return {
-          ...contact,
-          tags: bulkEditTags,
-        };
-      }
-      return contact;
-    }));
-    toast({
-      title: "Contacts Updated",
-      description: `Tags updated for ${selectedContactIds.length} contact(s)`,
-    });
-    setShowBulkEditModal(false);
-    setSelectedRows(new Set());
+    try {
+      await Promise.all(selectedContactIds.map(id => 
+        apiRequest("PATCH", `/api/contacts/${id}`, { tags: bulkEditTags })
+      ));
+      toast({
+        title: "Contacts Updated",
+        description: `Tags updated for ${selectedContactIds.length} contact(s)`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      setShowBulkEditModal(false);
+      setSelectedRows(new Set());
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update contacts", variant: "destructive" });
+    }
   };
 
   const handleOpenBulkDelete = () => {
     setShowBulkDeleteModal(true);
   };
 
-  const handleConfirmBulkDelete = () => {
+  const handleConfirmBulkDelete = async () => {
     const selectedContactIds = Array.from(selectedRows);
-    setContacts(contacts.filter(c => !selectedContactIds.includes(c.id)));
-    toast({
-      title: "Contacts Deleted",
-      description: `${selectedContactIds.length} contact(s) have been deleted`,
-    });
-    setShowBulkDeleteModal(false);
-    setSelectedRows(new Set());
+    try {
+      await Promise.all(selectedContactIds.map(id => 
+        apiRequest("DELETE", `/api/contacts/${id}`)
+      ));
+      toast({
+        title: "Contacts Deleted",
+        description: `${selectedContactIds.length} contact(s) have been deleted`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      setShowBulkDeleteModal(false);
+      setSelectedRows(new Set());
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete contacts", variant: "destructive" });
+    }
   };
 
   const handleAddTag = () => {
@@ -472,34 +506,20 @@ export default function ContactsSection() {
   };
 
   const handleSaveContact = () => {
-    if (!newContactName.trim() || !newContactPhone.trim()) {
+    if (!newContactName.trim()) {
       toast({
         title: "Missing Fields",
-        description: "Please fill in all required fields",
+        description: "Please enter a name",
         variant: "destructive",
       });
       return;
     }
-    const newContact: Contact = {
-      id: `C${String(contacts.length + 1).padStart(3, "0")}`,
-      name: newContactName,
-      phoneNumber: newContactPhone,
-      tags: newContactTags,
-      createdAt: new Date().toISOString().split("T")[0],
-      lastActive: new Date().toISOString().split("T")[0],
-      updatedBy: currentUserName,
-    };
-    setContacts([...contacts, newContact]);
-    toast({
-      title: "Contact Created",
-      description: `${newContactName} has been added successfully`,
+    const names = newContactName.split(' ');
+    addMutation.mutate({
+        first_name: names[0],
+        last_name: names.slice(1).join(' '),
+        title: newContactPhone // Temporary mapping
     });
-    // Reset form
-    setNewContactName("");
-    setNewContactPhone("");
-    setNewContactTags([]);
-    setNewTagInput("");
-    setShowAddContactModal(false);
   };
 
   const handleSaveEditContact = () => {
@@ -512,29 +532,16 @@ export default function ContactsSection() {
       return;
     }
     if (editingContact) {
-      setContacts(
-        contacts.map(c =>
-          c.id === editingContact.id
-            ? {
-              ...c,
-              name: editContactName,
-              phoneNumber: editContactPhone,
-              tags: editContactTags,
-              updatedBy: currentUserName,
-            }
-            : c
-        )
-      );
-      toast({
-        title: "Contact Updated",
-        description: `${editContactName} has been updated successfully`,
+      const names = editContactName.split(' ');
+      updateMutation.mutate({
+        id: editingContact.id,
+        data: {
+          first_name: names[0],
+          last_name: names.slice(1).join(' '),
+          title: editContactPhone,
+          tags: editContactTags
+        }
       });
-      setShowEditContactModal(false);
-      setEditingContact(null);
-      setEditContactName("");
-      setEditContactPhone("");
-      setEditContactTags([]);
-      setEditTagInput("");
     }
   };
 
@@ -1442,20 +1449,20 @@ export default function ContactsSection() {
               </div>
 
               {/* Available Tags */}
-              {allTags.length > 0 && (
+              {contactTagOptions.length > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Available tags:</p>
                   <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag) => (
+                    {contactTagOptions.map((tagObj) => (
                       <button
-                        key={tag}
-                        onClick={() => handleToggleBulkTag(tag)}
-                        className={`px-2 py-1 rounded text-xs transition-colors ${bulkEditTags.includes(tag)
+                        key={tagObj.name}
+                        onClick={() => handleToggleBulkTag(tagObj.name)}
+                        className={`px-2 py-1 rounded text-xs transition-colors ${bulkEditTags.includes(tagObj.name)
                           ? "bg-blue-500 text-white"
                           : "bg-muted text-foreground hover:bg-muted/80"
                           }`}
                       >
-                        {tag}
+                        {tagObj.name}
                       </button>
                     ))}
                   </div>

@@ -4,12 +4,47 @@ import { Separator } from "@/components/ui/separator";
 import { Copy, Edit2, Trash2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const instances = [{ id: 1, name: "TestTiagoStage" }];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function WebchatSection() {
   const [view, setView] = useState<"list" | "manage">("list");
-  const [hasInstances, setHasInstances] = useState(true);
-  const [webchatInstances, setWebchatInstances] = useState(instances);
+  const queryClient = useQueryClient();
+  
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["/api/integrations/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/channels");
+      return res.json();
+    }
+  });
+
+  const webchatInstances = channels?.webchat || [];
+  const hasInstances = webchatInstances.length > 0;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/channels/webchat/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: "Deleted",
+        description: "Webchat instance removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete instance.", variant: "destructive" });
+    }
+  });
+
+  const handleConnect = () => {
+    toast({
+      title: "Connecting...",
+      description: "Starting Webchat setup flow.",
+    });
+  };
+
   const { toast } = useToast();
 
   const handleExternalLink = (name: string) => {
@@ -34,12 +69,10 @@ export default function WebchatSection() {
     });
   };
 
-  const handleDelete = (id: number, name: string) => {
-    setWebchatInstances(prev => prev.filter(i => i.id !== id));
-    toast({
-      title: "Deleted",
-      description: `${name} has been removed.`,
-    });
+  const handleDelete = (id: number | string, name: string) => {
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+      deleteMutation.mutate(id);
+    }
   };
 
   return (
@@ -101,14 +134,13 @@ export default function WebchatSection() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                 <Button 
-                  variant="outline" 
-                  className="btn-outline-primary"
-                  onClick={() => setHasInstances(true)}
-                >
-                  + Add New
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    className="btn-outline-primary"
+                    onClick={handleConnect}
+                  >
+                    + Add New
+                  </Button>
                 <Button variant="outline" onClick={() => setView("list")}>
                   Back
                 </Button>
@@ -130,7 +162,7 @@ export default function WebchatSection() {
                     <Button 
                       className="btn-outline-primary min-w-[150px]"
                       variant="outline"
-                      onClick={() => setHasInstances(true)}
+                      onClick={handleConnect}
                     >
                       + Create Now
                     </Button>
@@ -138,7 +170,7 @@ export default function WebchatSection() {
                 </div>
               ) : (
                 <ul>
-                  {webchatInstances.map((inst) => (
+                  {webchatInstances.map((inst: { id: number; name: string }) => (
                     <li key={inst.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md border mb-2">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-md flex items-center justify-center font-medium">{inst.name.charAt(0)}</div>
@@ -191,7 +223,6 @@ export default function WebchatSection() {
               )}
             </div>
           </div>
-        </div>
       )}
     </div>
   );

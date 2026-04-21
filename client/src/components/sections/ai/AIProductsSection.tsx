@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -38,132 +41,135 @@ import {
   ArrowLeft,
   Info,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2
 } from "lucide-react";
+import { format } from "date-fns";
 
-interface Theme {
-  id: string;
-  name: string;
-  subtitle: string;
-  type: string;
-}
-
-interface Product {
-  id: string;
+interface AIProduct {
+  id?: string | number;
   name: string;
   trigger_text?: string;
   payload?: string;
   trigger_url?: string;
-  properties?: Record<string, any>;
+  properties?: string | Record<string, any>;
+  ai_theme_id?: string | number;
 }
 
-const DefaultProductIcon = ({ className = "h-12 w-12" }: { className?: string }) => {
-  return (
-    <div className={`${className} flex flex-col gap-1 p-0.5`}>
-      {/* Top Row - Light Blue */}
-      <div className="flex gap-1 flex-1 h-[30%]">
-        <div className="w-[30%] bg-[#06b6d4] rounded-[2px]" />
-        <div className="flex-1 bg-[#06b6d4] rounded-[2px]" />
-      </div>
-      {/* Middle Row - Medium Blue */}
-      <div className="flex-1 h-[30%] bg-[#3b82f6] rounded-[2px]" />
-      {/* Bottom Row - Dark Blue */}
-      <div className="flex gap-1 flex-1 h-[30%]">
-        <div className="flex-1 bg-[#4f46e5] rounded-[2px]" />
-        <div className="w-[25%] bg-[#4f46e5] rounded-[2px]" />
-      </div>
-    </div>
-  );
-};
-
-const ThemeIcon = ({ type, className = "h-12 w-12" }: { type: string | undefined, className?: string }) => {
-  const [error, setError] = useState(false);
-
-  if (!type || error) {
-    return <DefaultProductIcon className={className} />;
-  }
-
-  return (
-    <img
-      src={`/images/integrations/${type}.png`}
-      className={`${className} object-contain`}
-      alt={type}
-      onError={() => {
-        setError(true);
-      }}
-    />
-  );
-};
+interface AITheme {
+  id: string | number;
+  name: string;
+  subtitle?: string;
+  type?: string;
+}
 
 export default function AIProductsSection() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<"list" | "manage_theme" | "edit_product">("list");
-  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
-  const [themes, setThemes] = useState<Theme[]>([
-    {
-      id: "1",
-      name: "Baserow Theme",
-      subtitle: "This is a baserow theme for testing",
-      type: "baserow",
-    },
-    {
-      id: "2",
-      name: "Imoveis Inventory",
-      subtitle: "Stock of available properties",
-      type: "google_sheets",
-    },
-    {
-      id: "3",
-      name: "Vehicle Rental",
-      subtitle: "Rental car registration system",
-      type: "airtable",
-    },
-  ]);
+  const [selectedTheme, setSelectedTheme] = useState<AITheme | null>(null);
+  const [currentProduct, setCurrentProduct] = useState<AIProduct | null>(null);
 
-  // Mock products state
-  const [products, setProducts] = useState<Product[]>([
-    { id: "101", name: "Product A", trigger_text: "Show A", trigger_url: "https://example.com/a" },
-    { id: "102", name: "Product B", trigger_text: "Show B", trigger_url: "https://example.com/b" },
-  ]);
+  // Queries
+  const { data: themes, isLoading: themesLoading } = useQuery({
+    queryKey: ["/api/ai/themes"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/ai/themes");
+      return res.json();
+    }
+  });
 
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const { data: products, isLoading: productsLoading } = useQuery({
+    queryKey: ["/api/ai/themes", selectedTheme?.id, "products"],
+    queryFn: async () => {
+      const themeId = selectedTheme?.id;
+      if (!themeId) return [];
+      const res = await apiRequest("GET", `/api/ai/themes/${themeId}/products`);
+      return res.json();
+    },
+    enabled: !!selectedTheme && viewMode !== "list"
+  });
 
-  const handleManageTheme = (theme: Theme) => {
+  // Mutations
+  const createThemeMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/ai/themes", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/themes"] });
+      toast({ title: "Created", description: "AI Theme created successfully." });
+    }
+  });
+
+  const deleteThemeMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/themes/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/themes"] });
+      toast({ title: "Deleted", description: "Theme and associated products removed." });
+      setViewMode("list");
+      setSelectedTheme(null);
+    }
+  });
+
+  const saveProductMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!selectedTheme) throw new Error("No theme selected");
+      const res = await apiRequest("POST", "/api/ai/products", { ...data, ai_theme_id: selectedTheme.id });
+      return res.json();
+    },
+    onSuccess: () => {
+      if (selectedTheme) {
+        queryClient.invalidateQueries({ queryKey: ["/api/ai/themes", selectedTheme.id, "products"] });
+      }
+      toast({ title: "Success", description: "Product saved successfully." });
+      setViewMode("manage_theme");
+    }
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/ai/products/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ai/themes", selectedTheme?.id, "products"] });
+      toast({ title: "Deleted", description: "Product removed." });
+    }
+  });
+
+  const handleManageTheme = (theme: any) => {
     setSelectedTheme(theme);
     setViewMode("manage_theme");
-    // In a real app, you'd fetch products for this theme here
   };
 
   const handleCreateProduct = () => {
-    setCurrentProduct({ id: "", name: "", trigger_text: "", payload: "", properties: {} });
+    setCurrentProduct({ name: "", trigger_text: "", payload: "", properties: {} });
     setViewMode("edit_product");
   };
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: any) => {
     setCurrentProduct({ ...product });
     setViewMode("edit_product");
   };
 
   const handleSaveProduct = () => {
     if (!currentProduct) return;
-    
-    if (currentProduct.id) {
-      setProducts(prev => prev.map(p => p.id === currentProduct.id ? currentProduct : p));
-    } else {
-      setProducts(prev => [...prev, { ...currentProduct, id: Date.now().toString(), trigger_url: "https://example.com/new" }]);
-    }
-    setViewMode("manage_theme");
+    saveProductMutation.mutate(currentProduct);
   };
 
-  const handleDeleteProduct = (productId: string) => {
-     setProducts(prev => prev.filter(p => p.id !== productId));
-  };
-
-  const handleDeleteTheme = () => {
-    if (selectedTheme) {
-      setThemes(prev => prev.filter(t => t.id !== selectedTheme.id));
-      setViewMode("list");
-      setSelectedTheme(null);
-    }
+  const ThemeIcon = ({ type, className = "h-12 w-12" }: { type: string | undefined, className?: string }) => {
+    const [error, setError] = useState(false);
+    if (!type || error) return <Cpu className={`${className} text-blue-500`} />;
+    return (
+      <img
+        src={`/images/integrations/${type}.png`}
+        className={`${className} object-contain`}
+        alt={type}
+        onError={() => setError(true)}
+      />
+    );
   };
 
   const renderProductList = () => (
@@ -190,7 +196,7 @@ export default function AIProductsSection() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteTheme} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                <AlertDialogAction onClick={() => selectedTheme && deleteThemeMutation.mutate(selectedTheme.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -198,8 +204,10 @@ export default function AIProductsSection() {
         </div>
       </div>
 
-      <div className="border rounded-md">
-        {products.length > 0 ? (
+      <div className="border rounded-md bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+        {productsLoading ? (
+            <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+        ) : products && products.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -208,7 +216,7 @@ export default function AIProductsSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
+              {products.map((product: any) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium flex items-center gap-2">
                      <span className="text-muted-foreground"><Cpu className="w-4 h-4" /></span>
@@ -230,7 +238,10 @@ export default function AIProductsSection() {
                        <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => { /* Copy link logic */ }}>
+                            <Button variant="ghost" size="icon" onClick={() => { 
+                                navigator.clipboard.writeText(product.trigger_url || "");
+                                toast({ title: "Copied", description: "Trigger URL copied to clipboard." });
+                             }}>
                               <LinkIcon className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
@@ -255,14 +266,14 @@ export default function AIProductsSection() {
                              <Trash2 className="w-4 h-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent key={product.id}> {/* Unique key to force re-render if needed */}
+                        <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Product?</AlertDialogTitle>
                             <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteProduct(product.id)} className="bg-red-600">Delete</AlertDialogAction>
+                            <AlertDialogAction onClick={() => deleteProductMutation.mutate(product.id)} className="bg-red-600">Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -274,9 +285,6 @@ export default function AIProductsSection() {
           </Table>
         ) : (
           <div className="p-12 text-center text-muted-foreground">
-             <div className="flex justify-center mb-4">
-               <img src="/images/integrations/baserow.png" className="h-12 w-12 opacity-50" onError={(e) => e.currentTarget.style.display='none'} alt="" />
-             </div>
              <h3 className="text-lg font-medium text-foreground">No Products Found</h3>
              <p>Create a product to get started.</p>
              <Button variant="outline" onClick={handleCreateProduct} className="mt-4 btn-outline-primary">Create</Button>
@@ -311,67 +319,42 @@ export default function AIProductsSection() {
             <label className="text-sm font-medium leading-none">Name <span className="text-red-500">*</span></label>
             <Input 
               value={currentProduct?.name || ""} 
-              onChange={(e) => setCurrentProduct(prev => prev ? ({...prev, name: e.target.value}) : null)}
+              onChange={(e) => setCurrentProduct((prev: AIProduct | null) => prev ? ({...prev, name: e.target.value}) : null)}
               placeholder="Product Name" 
             />
          </div>
 
          <div className="grid w-full items-center gap-1.5">
             <label className="text-sm font-medium leading-none flex items-center gap-2">
-              Trigger Text
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
-                  <TooltipContent>Text that triggers this product</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              Trigger URL
             </label>
             <Input 
-              value={currentProduct?.trigger_text || ""} 
-              onChange={(e) => setCurrentProduct(prev => prev ? ({...prev, trigger_text: e.target.value}) : null)}
+              readOnly
+              value={currentProduct?.trigger_url || "Generated after save"} 
+              className="bg-muted font-mono text-sm"
             />
          </div>
 
          <div className="grid w-full items-center gap-1.5">
             <label className="text-sm font-medium leading-none flex items-center gap-2">
               Payload
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
-                  <TooltipContent>JSON payload for the product</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </label>
             <Input 
                value={currentProduct?.payload || ""} 
-               onChange={(e) => setCurrentProduct(prev => prev ? ({...prev, payload: e.target.value}) : null)}
+               onChange={(e) => setCurrentProduct((prev: AIProduct | null) => prev ? ({...prev, payload: e.target.value}) : null)}
+               placeholder="optional JSON payload"
             />
-         </div>
-
-         {/* Mock Dynamic Fields */}
-         <Separator />
-         <div className="space-y-4">
-            <h4 className="font-medium">Properties</h4>
-            <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Input placeholder="Enter description..." />
-               </div>
-               <div className="space-y-2">
-                   <label className="text-sm font-medium">Image Upload</label>
-                   <div className="border border-dashed rounded-md p-4 flex items-center justify-center h-[100px] bg-slate-50 dark:bg-slate-900 cursor-pointer hover:bg-slate-100 transition-colors">
-                      <div className="flex flex-col items-center">
-                         <ImageIcon className="w-6 h-6 text-muted-foreground mb-2" />
-                         <span className="text-xs text-muted-foreground">Select Image</span>
-                      </div>
-                   </div>
-               </div>
-            </div>
          </div>
 
          <div className="flex justify-end gap-3 pt-6">
             <Button variant="secondary" onClick={() => setViewMode("manage_theme")}>Cancel</Button>
-            <Button onClick={handleSaveProduct} disabled={!currentProduct?.name} variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
+            <Button 
+                onClick={handleSaveProduct} 
+                disabled={!currentProduct?.name || saveProductMutation.isPending} 
+                variant="outline" 
+                className="btn-outline-primary h-9 px-6 font-medium"
+            >
+               {saveProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                {currentProduct?.id ? "Update" : "Create"}
             </Button>
          </div>
@@ -393,13 +376,21 @@ export default function AIProductsSection() {
                  <p className="text-sm text-muted-foreground">Organize and manage your AI Products</p>
                </div>
             </div>
+            <Button variant="outline" className="btn-outline-primary" onClick={() => {
+                // In a real app, open a "Create Theme" dialog
+                createThemeMutation.mutate({ name: "New Inventory", subtitle: "Managed items", type: "baserow" });
+            }}>
+                <Plus className="w-4 h-4 mr-2" /> Theme
+            </Button>
           </div>
           
           <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
 
-          {themes.length > 0 ? (
+          {themesLoading ? (
+            <div className="flex-1 flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-primary" /></div>
+          ) : themes && themes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {themes.map((theme) => (
+              {themes.map((theme: any) => (
                 <div
                   key={theme.id}
                   className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 flex flex-col hover:shadow-md transition-all overflow-hidden"
@@ -438,10 +429,6 @@ export default function AIProductsSection() {
                <p className="text-muted-foreground max-w-sm mb-6">
                  You haven't created any AI products yet. Create one to get started with automation.
                </p>
-               <Button variant="outline" className="btn-outline-primary">
-                 <Plus className="w-4 h-4 mr-2" />
-                 Add Product
-               </Button>
             </div>
           )}
         </>

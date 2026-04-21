@@ -1,25 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Eye, EyeOff, Copy, RefreshCw, Trash2 } from "react-feather"; // Added Trash2
+import { Eye, EyeOff, Copy, RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Added Dialog components
-import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
-import { Label } from "@/components/ui/label"; // Added Label
-
-// Function to generate a random API key
-const generateApiKey = (length = 40) => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0987654321';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
 
 type WebhookEvent = "Sent Message" | "Delivered Message" | "Read Message" | "Failed Message";
 
@@ -29,38 +21,52 @@ interface Webhook {
   events: WebhookEvent[];
 }
 
+interface DeveloperSettings {
+  apiKey: string;
+  webhooks: Webhook[];
+}
+
 const DeveloperSettingsSection = () => {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
-  const [showWebhookModal, setShowWebhookModal] = useState(false); // State for webhook modal
-  const [webhookUrl, setWebhookUrl] = useState(''); // State for webhook URL input
-  const [selectedEvents, setSelectedEvents] = useState<WebhookEvent[]>([]); // State for selected events
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]); // State for configured webhooks
+  const [showWebhookModal, setShowWebhookModal] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [selectedEvents, setSelectedEvents] = useState<WebhookEvent[]>([]);
 
-  useEffect(() => {
-    setApiKey(generateApiKey());
-  }, []);
+  const { data: settings, isLoading } = useQuery<DeveloperSettings>({
+    queryKey: ["/api/workspaces/developer-settings"],
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/workspaces/developer-settings", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces/developer-settings"] });
+      toast({ title: "Settings Updated", description: "Your changes have been saved." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(apiKey);
-    toast({
-      title: "Copied to clipboard",
-      description: "The API Key has been copied to your clipboard.",
-    });
+    if (settings?.apiKey) {
+      navigator.clipboard.writeText(settings.apiKey);
+      toast({
+        title: "Copied to clipboard",
+        description: "The API Key has been copied to your clipboard.",
+      });
+    }
   };
 
   const handleRegenerate = () => {
-    setApiKey(generateApiKey());
-    toast({
-      title: "API Key Regenerated",
-      description: "A new API Key has been generated.",
-    });
+    mutation.mutate({ regenerateKey: true });
   };
 
   const handleCreateWebhook = () => {
     let isValid = true;
-
     if (!webhookUrl.trim()) {
       isValid = false;
     } else {
@@ -77,36 +83,39 @@ const DeveloperSettingsSection = () => {
 
     if (!isValid) {
       toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
+        title: "Invalid Input",
+        description: "Please provide a valid URL and select at least one event.",
         variant: "destructive",
       });
       return;
     }
 
     const newWebhook: Webhook = {
-      id: `webhook-${Date.now()}`, // Simple unique ID
+      id: `webhook-${Date.now()}`,
       url: webhookUrl,
       events: selectedEvents,
     };
 
-    setWebhooks([...webhooks, newWebhook]);
-    toast({
-      title: "Webhook Created",
-      description: "Your webhook has been successfully configured.",
-    });
+    const updatedWebhooks = [...(settings?.webhooks || []), newWebhook];
+    mutation.mutate({ webhooks: updatedWebhooks });
+    
     setWebhookUrl('');
     setSelectedEvents([]);
     setShowWebhookModal(false);
   };
 
   const handleDeleteWebhook = (id: string) => {
-    setWebhooks(webhooks.filter(webhook => webhook.id !== id));
-    toast({
-      title: "Webhook Deleted",
-      description: "The webhook has been successfully deleted.",
-    });
+    const updatedWebhooks = (settings?.webhooks || []).filter(webhook => webhook.id !== id);
+    mutation.mutate({ webhooks: updatedWebhooks });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -120,7 +129,7 @@ const DeveloperSettingsSection = () => {
         <div>
           <h4 className="font-semibold text-base">API Docs</h4>
           <p className="text-sm text-muted-foreground">
-            Use our <span className="text-blue-500">API Documentation</span> to start understanding our API capabilities.
+            Use our <span className="text-blue-500 cursor-pointer hover:underline">API Documentation</span> to start understanding our API capabilities.
           </p>
         </div>
 
@@ -132,7 +141,7 @@ const DeveloperSettingsSection = () => {
               <Input
                 readOnly
                 type={showApiKey ? "text" : "password"}
-                value={apiKey}
+                value={settings?.apiKey || ''}
                 className="pr-12 w-full"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
@@ -170,8 +179,13 @@ const DeveloperSettingsSection = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleRegenerate}>
-                    <RefreshCw size={16} />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleRegenerate}
+                    disabled={mutation.isPending}
+                  >
+                    <RefreshCw size={16} className={mutation.isPending ? "animate-spin" : ""} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -197,11 +211,11 @@ const DeveloperSettingsSection = () => {
           </Button>
         </div>
 
-        {webhooks.length > 0 && (
+        {settings?.webhooks && settings.webhooks.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-semibold text-base">Configured Webhooks</h4>
             <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
-              {webhooks.map((webhook) => (
+              {settings.webhooks.map((webhook) => (
                 <div key={webhook.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
                   <div className="flex-1">
                     <p className="text-sm font-medium break-all">{webhook.url}</p>
@@ -212,6 +226,7 @@ const DeveloperSettingsSection = () => {
                     size="icon"
                     className="text-destructive hover:bg-destructive/10"
                     onClick={() => handleDeleteWebhook(webhook.id)}
+                    disabled={mutation.isPending}
                   >
                     <Trash2 size={16} />
                   </Button>
@@ -222,20 +237,8 @@ const DeveloperSettingsSection = () => {
         )}
 
       </CardContent>
-      <CardFooter className="flex justify-end">
-        <Button
-          onClick={() => {
-            console.log("Save Developer Settings");
-            toast({
-              title: "Settings Saved",
-              description: "Developer settings have been updated.",
-            });
-          }}
-          className="btn-outline-primary font-normal"
-          variant="outline"
-        >
-          Save
-        </Button>
+      <CardFooter className="flex justify-end p-0 mt-4">
+        {/* Save button removed as changes are immediate via mutation */}
       </CardFooter>
 
       {/* Webhook Configuration Modal */}
@@ -252,11 +255,9 @@ const DeveloperSettingsSection = () => {
                   id="webhook-url"
                   placeholder="https://example.com/api/webhook"
                   value={webhookUrl}
-                  onChange={(e) => {
-                    setWebhookUrl(e.target.value);
-                  }}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
                   maxLength={2000}
-                  className={`pr-12`}
+                  className="pr-12"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                   {webhookUrl.length}/2000
@@ -268,14 +269,14 @@ const DeveloperSettingsSection = () => {
               <h4 className="text-sm font-medium text-foreground mb-2">Events<span className="text-red-500 pl-0.5">*</span></h4>
               <p className="text-sm text-muted-foreground mb-2">Select events to retrieve message status update.</p>
               <div className="space-y-2">
-                {["Sent Message", "Delivered Message", "Read Message", "Failed Message"].map((event) => (
+                {(["Sent Message", "Delivered Message", "Read Message", "Failed Message"] as WebhookEvent[]).map((event) => (
                   <div key={event} className="flex items-center space-x-2">
                     <Checkbox
                       id={event}
-                      checked={selectedEvents.includes(event as WebhookEvent)}
+                      checked={selectedEvents.includes(event)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedEvents([...selectedEvents, event as WebhookEvent]);
+                          setSelectedEvents([...selectedEvents, event]);
                         } else {
                           setSelectedEvents(selectedEvents.filter((e) => e !== event));
                         }
@@ -288,8 +289,16 @@ const DeveloperSettingsSection = () => {
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowWebhookModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleCreateWebhook} className="btn-outline-primary font-normal" variant="outline">Create Webhook</Button>
+            <Button onClick={() => setShowWebhookModal(false)} variant="outline">Cancel</Button>
+            <Button 
+                onClick={handleCreateWebhook} 
+                className="btn-outline-primary" 
+                variant="outline"
+                disabled={mutation.isPending}
+            >
+                {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Create Webhook
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

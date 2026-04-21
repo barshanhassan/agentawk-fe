@@ -72,13 +72,50 @@ const mockSmsAccounts = [
   },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 export default function SmsCallsSection() {
   const [view, setView] = useState<"list" | "manage">("list");
-  const [hasAccounts, setHasAccounts] = useState(true);
-  const [accounts, setAccounts] = useState(mockSmsAccounts);
+  const queryClient = useQueryClient();
+  
+  const handleConnect = () => {
+    toast({
+      title: "Connecting...",
+      description: "Redirecting to Twilio connection flow.",
+    });
+  };
+
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["/api/integrations/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/integrations/channels");
+      return res.json();
+    }
+  });
+
+  const accounts = channels?.twilio || [];
+  const hasAccounts = accounts.length > 0;
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("DELETE", `/api/integrations/channels/twilio/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: "Deleted",
+        description: "Account removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete account.", variant: "destructive" });
+    }
+  });
+
   const [showDeleteConfirmAccount, setShowDeleteConfirmAccount] = useState(false);
   const [showDeleteConfirmNumber, setShowDeleteConfirmNumber] = useState(false);
-  const [accountToDelete, setAccountToDelete] = useState<typeof mockSmsAccounts[0] | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<any>(null);
   const [numberToDelete, setNumberToDelete] = useState<{accountId: number, numberId: number, number: string} | null>(null);
   const { toast } = useToast();
 
@@ -88,20 +125,10 @@ export default function SmsCallsSection() {
   };
 
   const handleUpdatePhoneNumber = (accountId: number, numberId: number, updates: any) => {
-    setAccounts(prev => prev.map(account => {
-      if (account.id === accountId) {
-        return {
-          ...account,
-          numbers: account.numbers.map(num => {
-            if (num.id === numberId) {
-              return { ...num, ...updates };
-            }
-            return num;
-          })
-        };
-      }
-      return account;
-    }));
+    toast({
+      title: "Info",
+      description: "Number update will be implemented with real mutation soon.",
+    });
   };
 
   const handleSave = () => {
@@ -118,11 +145,7 @@ export default function SmsCallsSection() {
 
   const confirmDeleteAccount = () => {
     if (accountToDelete) {
-      setAccounts(prev => prev.filter(a => a.id !== accountToDelete.id));
-      toast({
-        title: "Account Deleted",
-        description: `${accountToDelete.name} has been removed.`,
-      });
+      deleteMutation.mutate(accountToDelete.id);
       setShowDeleteConfirmAccount(false);
       setAccountToDelete(null);
     }
@@ -135,18 +158,9 @@ export default function SmsCallsSection() {
 
   const confirmDeleteNumber = () => {
     if (numberToDelete) {
-      setAccounts(prev => prev.map(acc => {
-        if (acc.id === numberToDelete.accountId) {
-          return {
-            ...acc,
-            numbers: acc.numbers.filter(n => n.id !== numberToDelete.numberId)
-          };
-        }
-        return acc;
-      }));
       toast({
-        title: "Number Deleted",
-        description: `${numberToDelete.number} has been removed.`,
+        title: "Info",
+        description: "Number deletion will be implemented with real mutation soon.",
       });
       setShowDeleteConfirmNumber(false);
       setNumberToDelete(null);
@@ -162,29 +176,9 @@ export default function SmsCallsSection() {
   };
 
   const handleAddNewNumber = (accountId: number) => {
-    const newId = Date.now();
-    setAccounts(prev => prev.map(acc => {
-      if (acc.id === accountId) {
-        return {
-          ...acc,
-          numbers: [
-            ...acc.numbers,
-            {
-              id: newId,
-              number: "+1 000 000 0000",
-              type: "automated",
-              status: "PENDING",
-              forward_type: "NONE",
-              forward_to: "",
-            }
-          ]
-        };
-      }
-      return acc;
-    }));
     toast({
-      title: "Number Added",
-      description: "A new pending number has been added.",
+      title: "Info",
+      description: "Adding new number will be implemented with real mutation soon.",
     });
   };
 
@@ -251,7 +245,7 @@ export default function SmsCallsSection() {
                 <Button 
                   variant="outline" 
                   className="btn-outline-primary"
-                  onClick={() => setHasAccounts(true)}
+                  onClick={handleConnect}
                 >
                   + Add New
                 </Button>
@@ -276,7 +270,7 @@ export default function SmsCallsSection() {
                   <Button 
                     className="btn-outline-primary min-w-[150px]"
                     variant="outline"
-                    onClick={() => setHasAccounts(true)}
+                    onClick={handleConnect}
                   >
                     Connect now
                   </Button>
@@ -284,7 +278,7 @@ export default function SmsCallsSection() {
               </div>
             ) : (
               <div className="p-6 divide-y">
-                {accounts.map((account) => (
+                {accounts.map((account: any) => (
                   <div key={account.id} className="pb-6">
                     <div className="flex items-start gap-10">
                       {/* Left Logo */}
@@ -341,7 +335,7 @@ export default function SmsCallsSection() {
                            <div className="font-bold col-span-1 text-sm">Account Token</div>
                            <div className="col-span-3">
                              <input 
-                               value={'*******************' + account.token.slice(-4)} 
+                               value={'*******************' + (account.token?.slice(-4) || '')} 
                                className="w-full px-3 py-2 border rounded-md disabled:opacity-50 bg-slate-50 dark:bg-slate-800 text-sm" 
                                type="text" 
                                disabled 
@@ -419,7 +413,7 @@ export default function SmsCallsSection() {
                          <div className="grid grid-cols-4">
                            <div className="font-bold col-span-1 mt-3 text-sm">Phone Numbers</div>
                            <div className="col-span-3 space-y-4">
-                             {account.numbers.map((number) => (
+                             {account.numbers.map((number: any) => (
                                <div key={number.id} className="py-2">
                                  <div className="grid grid-cols-2 gap-6 items-center">
                                    <div className="col-span-1">
