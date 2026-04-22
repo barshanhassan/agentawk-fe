@@ -160,6 +160,9 @@ export default function AppSidebar() {
     { label: "Workspace Management", href: "/workspaces", icon: Grid },
     { label: "Media Gallery", href: "/settings?tab=Media gallery", icon: Grid },
     { label: "WhatsApp Manager", href: "/whatsapp-manager", icon: SiWhatsapp },
+    { label: "Inbox", href: "/conversations/inbox", icon: Mail },
+    { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText },
+    { label: "Call Logs", href: "/conversations/call-logs", icon: Phone },
     { label: "Billing", href: "/billing", icon: Grid },
     { label: "Settings", href: "/settings", icon: Settings },
   ];
@@ -220,22 +223,23 @@ export default function AppSidebar() {
                 </Link>
               </DropdownMenuItem>
 
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/conversations/inbox"
+                  className={`flex items-center gap-3 px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/inbox") ? activeClass : ""}`}
+                >
+                  <Mail size={18} />
+                  Inbox
+                </Link>
+              </DropdownMenuItem>
+
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger
-                  className={`flex items-center gap-3 px-2 py-1 ${subTriggerClass} ${isConversationsParentActive ? activeClass : ""}`}
+                  className={`flex items-center gap-3 px-2 py-1 ${subTriggerClass} ${isActive("/conversations/conversation-logs") || isActive("/conversations/call-logs") ? activeClass : ""}`}
                 >
-                  <MessageSquare size={18} /> Conversations
+                  <MessageSquare size={18} /> Logs
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/conversations/inbox"
-                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/inbox") ? activeClass : ""}`}
-                    >
-                      <Mail size={18} />
-                      Inbox
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
                       href="/conversations/conversation-logs"
@@ -256,6 +260,7 @@ export default function AppSidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+
 
 
 

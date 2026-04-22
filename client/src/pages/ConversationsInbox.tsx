@@ -16,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { useSocket } from "@/hooks/use-socket";
 import {
   Select,
   SelectContent,
@@ -59,6 +60,36 @@ export default function ConversationsInbox() {
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+
+  // WebSocket Integration
+  const socket = useSocket(1); // Defaulting to 1, ideally fetch from user session
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (data: any) => {
+      console.log("Real-time message received:", data);
+      
+      // Invalidate inbox list to update snippets/unread counts
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      
+      // If current chat is open, refresh messages
+      if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-chat-messages", selectedConversation] });
+      }
+
+      toast({
+        title: "New Message",
+        description: data.message?.text || "New message received",
+      });
+    };
+
+    socket.on("new_message", handleNewMessage);
+    return () => {
+      socket.off("new_message", handleNewMessage);
+    };
+  }, [socket, selectedConversation, queryClient, toast]);
 
   // Fetch inbox list
   const { data: inboxResponse, isLoading: isLoadingInbox } = useQuery({
@@ -74,19 +105,19 @@ export default function ConversationsInbox() {
   // Map backend conversations to frontend format
   const conversations = backendConversations.map((item: any) => ({
     id: Number(item.id),
-    name: item.contact?.full_name || 'Unknown',
-    displayName: item.contact?.full_name || '',
-    phoneNumber: item.contact?.title || '', // Mapping title as placeholder for phone
+    name: item.contacts?.full_name || item.contacts?.first_name || 'Unknown',
+    displayName: item.contacts?.full_name || item.contacts?.first_name || '',
+    phoneNumber: item.contacts?.mobile_number || '', 
     lastMessage: item.last_message_text || '',
     time: item.updated_at || new Date().toISOString(),
     unread: item.unread_count || 0,
-    status: item.status.toLowerCase(),
-    assignedAgent: item.assigned_to ? item.assigned_to.toString() : null,
+    status: item.status?.toLowerCase() || 'pending',
+    assignedAgent: item.users?.name || null,
     channel: item.modelable_type?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 
              item.modelable_type?.toLowerCase().includes('facebook') ? 'messenger' : 'instagram'
   }));
 
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+
   const [showContactPanel, setShowContactPanel] = useState(false);
   const [agentStatus, setAgentStatus] = useState<"available" | "away">("available");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");

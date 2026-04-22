@@ -31,6 +31,10 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { format } from "date-fns";
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { getQueryFn } from "@/lib/queryClient";
+
 
 interface SortEntry {
     id: string;
@@ -202,18 +206,52 @@ const initialConversations: Conversation[] = [
 ];
 
 export default function ConversationLogsPage() {
-    const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
     const [search, setSearch] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const { data: logsResponse, isLoading } = useQuery<{ logs: Conversation[]; total: number }>({
+        queryKey: ["/api/logs/conversations", { page, limit: rowsPerPage, search, status: selectedStatus[0] }],
+        queryFn: async () => {
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: rowsPerPage.toString(),
+                search: search
+            });
+            if (selectedStatus.length > 0 && selectedStatus[0]) {
+                params.append('status', selectedStatus[0]);
+            }
+            const res = await apiRequest("GET", `/api/logs/conversations?${params.toString()}`);
+            return res.json();
+        }
+    });
+
+    const { data: statsResponse } = useQuery<{ conversations: any }>({
+        queryKey: ["/api/logs/stats"],
+        queryFn: async () => {
+            const res = await apiRequest("GET", "/api/logs/stats");
+            return res.json();
+        }
+    });
+
+    const conversations = logsResponse?.logs || [];
+    const stats = statsResponse?.conversations || {
+        total: 0,
+        queued: 0,
+        active: 0,
+        completed: 0,
+        resolutionRate: "0%"
+    };
+
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
     const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
     const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
     const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
     const [sorts, setSorts] = useState<SortEntry[]>([]);
-    const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
 
     // Modal State
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -236,11 +274,11 @@ export default function ConversationLogsPage() {
     ];
 
     const kpiData = {
-        totalConversations: 156,
-        queued: 12,
-        active: 8,
-        completed: 128,
-        resolutionRate: "82%",
+        totalConversations: stats.total,
+        queued: stats.queued,
+        active: stats.active,
+        completed: stats.completed,
+        resolutionRate: stats.resolutionRate,
     };
 
     const toggleRowSelection = (id: string) => {
@@ -491,8 +529,8 @@ export default function ConversationLogsPage() {
         document.body.removeChild(link);
     };
 
-    const paginatedData = getFilteredAndSortedData().slice((page - 1) * rowsPerPage, page * rowsPerPage);
-    const totalPages = Math.ceil(getFilteredAndSortedData().length / rowsPerPage);
+    const paginatedData = conversations; // Backend already paginates
+    const totalPages = Math.ceil((logsResponse?.total || 0) / rowsPerPage);
 
     return (
         <div className="p-6 space-y-6">

@@ -75,6 +75,7 @@ export default function ContactsSection() {
   });
 
   // Map backend contacts to frontend format
+  console.log("contactsResponse from backend:", contactsResponse);
   const contacts: Contact[] = (contactsResponse?.contacts || []).map((c: any) => ({
       id: c.id.toString(),
       name: c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'No Name',
@@ -518,7 +519,8 @@ export default function ContactsSection() {
     addMutation.mutate({
         first_name: names[0],
         last_name: names.slice(1).join(' '),
-        title: newContactPhone // Temporary mapping
+        title: newContactPhone, // Temporary mapping
+        tags: newContactTags
     });
   };
 

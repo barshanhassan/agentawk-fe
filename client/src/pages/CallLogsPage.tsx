@@ -31,6 +31,9 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { format } from "date-fns";
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
 
 interface SortEntry {
     id: string;
@@ -87,19 +90,55 @@ const initialCallLogs: CallLog[] = [
 ];
 
 export default function CallLogsPage() {
-    const [callLogs, setCallLogs] = useState<CallLog[]>(initialCallLogs);
     const [search, setSearch] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+    const [selectedDirection, setSelectedDirection] = useState<string[]>([]);
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const { data: logsResponse, isLoading } = useQuery<{ logs: CallLog[]; total: number }>({
+        queryKey: ["/api/logs/calls", { page, limit: rowsPerPage, search, direction: selectedDirection[0], status: selectedStatus[0] }],
+        queryFn: async () => {
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: rowsPerPage.toString(),
+                search: search
+            });
+            if (selectedDirection.length > 0 && selectedDirection[0]) {
+                params.append('direction', selectedDirection[0]);
+            }
+            if (selectedStatus.length > 0 && selectedStatus[0]) {
+                params.append('status', selectedStatus[0]);
+            }
+            const res = await apiRequest("GET", `/api/logs/calls?${params.toString()}`);
+            return res.json();
+        }
+    });
+
+    const { data: statsResponse } = useQuery<{ calls: any }>({
+        queryKey: ["/api/logs/stats"],
+        queryFn: async () => {
+            const res = await apiRequest("GET", "/api/logs/stats");
+            return res.json();
+        }
+    });
+
+    const callLogs = logsResponse?.logs || [];
+    const stats = statsResponse?.calls || {
+        total: 0,
+        completed: 0,
+        inbound: 0,
+        outbound: 0,
+        avgDuration: "0m 0s"
+    };
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
     const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
     const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
     const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-    const [selectedDirection, setSelectedDirection] = useState<string[]>([]);
     const [callSorts, setCallSorts] = useState<SortEntry[]>([]);
-    const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
 
     const [speedDropdownOpen, setSpeedDropdownOpen] = useState(false);
     const speedDropdownRef = useRef<HTMLDivElement>(null);
@@ -134,11 +173,11 @@ export default function CallLogsPage() {
     ];
 
     const callKpiData = {
-        totalCalls: 245,
-        completed: 198,
-        inboundCalls: 120,
-        outboundCalls: 125,
-        avgDuration: "6m 45s",
+        totalCalls: stats.total,
+        completed: stats.completed,
+        inboundCalls: stats.inbound,
+        outboundCalls: stats.outbound,
+        avgDuration: stats.avgDuration,
     };
 
     const getAudioUrl = (callId: string) => {
@@ -525,8 +564,8 @@ export default function CallLogsPage() {
         document.body.removeChild(link);
     };
 
-    const paginatedCallLogs = getFilteredAndSortedCallLogs().slice((page - 1) * rowsPerPage, page * rowsPerPage);
-    const totalPages = Math.ceil(getFilteredAndSortedCallLogs().length / rowsPerPage);
+    const paginatedCallLogs = callLogs; // Backend already paginates
+    const totalPages = Math.ceil((logsResponse?.total || 0) / rowsPerPage);
 
     return (
         <>

@@ -983,6 +983,14 @@ export default function TemplateManager() {
   const totalPages = Math.ceil(filteredAndSortedTemplates.length / rowsPerPage);
   const paginatedTemplates = filteredAndSortedTemplates.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
+  const { data: statsData } = useQuery({
+    queryKey: ["/api/waba/templates/stats"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/waba/templates/stats");
+      return res.json();
+    }
+  });
+
   return (
     <div className="p-6 space-y-6" data-testid="template-manager">
       {/* Header */}
@@ -1000,6 +1008,7 @@ export default function TemplateManager() {
                 size="sm"
                 className="h-10 w-10 p-0 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                 data-testid="button-refresh"
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] })}
               >
                 <RefreshCw size={16} />
               </Button>
@@ -1015,17 +1024,17 @@ export default function TemplateManager() {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Total Templates</p>
-              <p className="text-2xl font-bold">44</p>
+              <p className="text-2xl font-bold">{statsData?.total ?? 0}</p>
               <p className="text-xs text-muted-foreground">Templates</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Approved Templates</p>
-              <p className="text-2xl font-bold">40</p>
+              <p className="text-2xl font-bold">{statsData?.approved ?? 0}</p>
               <p className="text-xs text-muted-foreground">Approved</p>
             </div>
           </CardContent>
@@ -1035,7 +1044,7 @@ export default function TemplateManager() {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Pending</p>
-              <p className="text-2xl font-bold">2</p>
+              <p className="text-2xl font-bold">{statsData?.pending ?? 0}</p>
               <p className="text-xs text-muted-foreground">Awaiting approval</p>
             </div>
           </CardContent>
@@ -1045,7 +1054,7 @@ export default function TemplateManager() {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Messages Delivered</p>
-              <p className="text-2xl font-bold">24,343</p>
+              <p className="text-2xl font-bold">{statsData?.delivered?.toLocaleString() ?? 0}</p>
               <p className="text-xs text-muted-foreground">Total sent</p>
             </div>
           </CardContent>
@@ -1055,7 +1064,7 @@ export default function TemplateManager() {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Average Read Rate</p>
-              <p className="text-2xl font-bold">89.9%</p>
+              <p className="text-2xl font-bold">{statsData?.readRate ?? '0%'}</p>
               <p className="text-xs text-muted-foreground">Across templates</p>
             </div>
           </CardContent>
@@ -1065,7 +1074,7 @@ export default function TemplateManager() {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Estimated Cost</p>
-              <p className="text-2xl font-bold">$213.70</p>
+              <p className="text-2xl font-bold">{statsData?.cost ?? '$0.00'}</p>
               <p className="text-xs text-muted-foreground">Total messaging cost</p>
             </div>
           </CardContent>
