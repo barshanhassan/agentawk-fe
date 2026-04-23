@@ -164,6 +164,7 @@ export default function AppSidebar() {
     { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText },
     { label: "Call Logs", href: "/conversations/call-logs", icon: Phone },
     { label: "Billing", href: "/billing", icon: Grid },
+    { label: "Agency", href: "/agency", icon: Users },
     { label: "Settings", href: "/settings", icon: Settings },
   ];
 
@@ -309,6 +310,15 @@ export default function AppSidebar() {
                   className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/workspaces") ? activeClass : ""}`}
                 >
                   <Grid size={18} /> Workspace Management
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/agency"
+                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/agency") ? activeClass : ""}`}
+                >
+                  <Users size={18} /> Agency
                 </Link>
               </DropdownMenuItem>
 

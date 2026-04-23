@@ -28,7 +28,23 @@ import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import AgencyDashboard from "@/pages/Agency/AgencyDashboard";
+import AgencyWorkspaces from "@/pages/Agency/AgencyWorkspaces";
+import AgencyTeam from "@/pages/Agency/AgencyTeam";
+import AgencyRoles from "@/pages/Agency/AgencyRoles";
+import AgencyLogs from "@/pages/Agency/AgencyLogs";
+import WorkspaceLogs from "@/pages/Agency/WorkspaceLogs";
+import AgencyPlans from "@/pages/Agency/AgencyPlans";
+import AgencyAPI from "@/pages/Agency/AgencyAPI";
+import AgencyBillingPlans from "@/pages/Agency/AgencyBillingPlans";
+import AgencyBillingManage from "@/pages/Agency/AgencyBillingManage";
+import AgencyLegal from "@/pages/Agency/AgencyLegal";
+import AgencyHelp from "@/pages/Agency/AgencyHelp";
+import AgencyGeneralSettings from "@/pages/Agency/AgencyGeneralSettings";
+import AgencyNotificationsSettings from "@/pages/Agency/AgencyNotificationsSettings";
+import AgencyWhiteLabelSettings from "@/pages/Agency/AgencyWhiteLabelSettings";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AgencyLayout from "@/components/AgencyLayout";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
 
@@ -95,6 +111,64 @@ function Router() {
         <ProtectedRoute><SmartFlowsPage /></ProtectedRoute>
       </Route>
 
+      <Route path="/agency/settings/white-label">
+        <ProtectedRoute><AgencyWhiteLabelSettings /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/settings/notifications">
+        <ProtectedRoute><AgencyNotificationsSettings /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/settings/general">
+        <ProtectedRoute><AgencyGeneralSettings /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/help">
+        <ProtectedRoute><AgencyHelp /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/legal">
+        <ProtectedRoute><AgencyLegal /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/billing/plans">
+        <ProtectedRoute><AgencyBillingPlans /></ProtectedRoute>
+      </Route>
+      <Route path="/agency/billing/manage">
+        <ProtectedRoute><AgencyBillingManage /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/saas/api">
+        <ProtectedRoute><AgencyAPI /></ProtectedRoute>
+      </Route>
+      <Route path="/agency/saas/plans">
+        <ProtectedRoute><AgencyPlans /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/audit-logs/workspace">
+        <ProtectedRoute><WorkspaceLogs /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/audit-logs/agency">
+        <ProtectedRoute><AgencyLogs /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/roles">
+        <ProtectedRoute><AgencyRoles /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/team">
+        <ProtectedRoute><AgencyTeam /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/workspaces">
+        <ProtectedRoute><AgencyWorkspaces /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency">
+        <ProtectedRoute><AgencyDashboard /></ProtectedRoute>
+      </Route>
+
       <Route path="/">
         <ProtectedRoute><InsightsDashboard /></ProtectedRoute>
       </Route>
@@ -127,23 +201,30 @@ function App() {
   }, [location]);
 
   const isBuilderRoute = location.startsWith("/automations/") && location.split("/").length === 3;
+  const isAgencyRoute = location.startsWith("/agency");
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <GlobalBrandingFetcher />
         <TooltipProvider>
-          <div className="flex h-screen overflow-hidden bg-background">
-            {/* New: Horizontal Top Bar (only shown when logged in) */}
-            {isLoggedIn && !isBuilderRoute && <AppSidebar />}
-
-            {/* Main content area - now full width, with top padding */}
-            <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
+          {isAgencyRoute ? (
+            <AgencyLayout>
               <Router />
-            </main>
+            </AgencyLayout>
+          ) : (
+            <div className="flex h-screen overflow-hidden bg-background">
+              {/* New: Horizontal Top Bar (only shown when logged in) */}
+              {isLoggedIn && !isBuilderRoute && <AppSidebar />}
 
-            <Toaster />
-          </div>
+              {/* Main content area - now full width, with top padding */}
+              <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
+                <Router />
+              </main>
+
+              <Toaster />
+            </div>
+          )}
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
