@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Users, 
@@ -10,9 +10,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import AddAgentForm from "./AddAgentForm";
 
 const AgencyTeam = () => {
   const { mode } = useTheme();
+  const [showAddForm, setShowAddForm] = useState(false);
   
   const agents = [
     { email: "admin@connectagroupcorp.com", name: "John Doe", role: "Agency Owner", status: "ACTIVE" },
@@ -23,6 +25,10 @@ const AgencyTeam = () => {
     { email: "developer6@replyagent.com", name: "Haider Ali", role: "Super User", status: "ACTIVE" },
     { email: "bharat@replyagent.com", name: "Bharat Kat", role: "Super User", status: "ACTIVE" },
   ];
+
+  if (showAddForm) {
+    return <AddAgentForm onCancel={() => setShowAddForm(false)} />;
+  }
 
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", mode === "dark" ? "text-white" : "text-slate-900")}>
@@ -38,7 +44,9 @@ const AgencyTeam = () => {
             <p className="text-gray-400 text-sm">Manage team agents</p>
           </div>
         </div>
-        <button className={cn("px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2 border shadow-sm",
+        <button 
+          onClick={() => setShowAddForm(true)}
+          className={cn("px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2 border shadow-sm",
           mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
            Add agent
         </button>

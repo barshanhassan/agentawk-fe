@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Layers, 
@@ -8,7 +8,12 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  Monitor,
+  BarChart3,
+  Wallet,
+  Ban,
+  Trash2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,12 +26,13 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import CreateWorkspaceForm from "./CreateWorkspaceForm";
 
 const AgencyWorkspaces = () => {
   const { mode } = useTheme();
+  const [showCreateForm, setShowCreateForm] = useState(false);
   
   const workspaces = [
-    // ... workspaces definition
     { name: "Clonekit AI Studio Testes", createdAt: "2026-03-30 09:52 am", status: "Active" },
     { name: "Test CSV Contacts", createdAt: "2026-02-02 09:40 am", status: "Active" },
     { name: "Broadcaster", createdAt: "2026-01-30 04:37 pm", status: "Active" },
@@ -38,6 +44,10 @@ const AgencyWorkspaces = () => {
     { name: "Workspace Jaderson One", createdAt: "2025-11-21 01:01 pm", status: "Active" },
     { name: "Jawad Test", createdAt: "2025-07-31 07:38 am", status: "Active", customLogo: true },
   ];
+
+  if (showCreateForm) {
+    return <CreateWorkspaceForm onCancel={() => setShowCreateForm(false)} />;
+  }
 
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", mode === "dark" ? "text-white" : "text-slate-900")}>
@@ -53,7 +63,10 @@ const AgencyWorkspaces = () => {
             <p className="text-gray-400 text-sm">Workspaces (sub-accounts) belonging to either you or your customers.</p>
           </div>
         </div>
-        <button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2">
+        <button 
+          onClick={() => setShowCreateForm(true)}
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2"
+        >
            Create Workspace
         </button>
       </div>
@@ -151,10 +164,46 @@ const AgencyWorkspaces = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className={cn("p-1 rounded transition-colors",
-                    mode === "dark" ? "text-gray-400 hover:text-white hover:bg-[#475569]" : "text-slate-400 hover:text-primary hover:bg-slate-100")}>
-                    <Menu className="w-5 h-5 rotate-90" />
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={cn("p-1 rounded transition-colors outline-none",
+                        mode === "dark" ? "text-gray-400 hover:text-white hover:bg-[#475569]" : "text-slate-400 hover:text-primary hover:bg-slate-100")}>
+                        <Menu className="w-5 h-5 rotate-90" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      align="end" 
+                      className={cn("w-56 p-2 border transition-colors shadow-2xl", 
+                        mode === "dark" ? "bg-[#1e293b] border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-600")}
+                    >
+                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                        mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
+                        <Monitor size={18} />
+                        <span className="font-semibold">Manage</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                        mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
+                        <BarChart3 size={18} />
+                        <span className="font-semibold">Usage</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                        mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
+                        <Wallet size={18} />
+                        <span className="font-semibold">AI Voice Credits Wallet</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                        mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
+                        <Ban size={18} />
+                        <span className="font-semibold">Suspend</span>
+                      </DropdownMenuItem>
+                      <div className={cn("my-1 border-t", mode === "dark" ? "border-slate-800" : "border-slate-100")} />
+                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none text-red-500",
+                        mode === "dark" ? "hover:bg-red-500/10 focus:bg-red-500/10" : "hover:bg-red-50 focus:bg-red-50")}>
+                        <Trash2 size={18} />
+                        <span className="font-semibold">Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}

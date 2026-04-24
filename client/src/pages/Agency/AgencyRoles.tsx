@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   ShieldCheck, 
@@ -12,9 +12,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import AddRoleForm from "./AddRoleForm";
 
 const AgencyRoles = () => {
   const { mode } = useTheme();
+  const [showAddForm, setShowAddForm] = useState(false);
   
   const roles = [
     { 
@@ -40,6 +42,10 @@ const AgencyRoles = () => {
     },
   ];
 
+  if (showAddForm) {
+    return <AddRoleForm onCancel={() => setShowAddForm(false)} />;
+  }
+
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", mode === "dark" ? "text-white" : "text-slate-900")}>
       {/* Header Section */}
@@ -54,7 +60,9 @@ const AgencyRoles = () => {
             <p className="text-gray-400 text-sm">Manage Roles & Permissions and assign them to specific agents.</p>
           </div>
         </div>
-        <button className={cn("px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2 border shadow-sm",
+        <button 
+          onClick={() => setShowAddForm(true)}
+          className={cn("px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2 border shadow-sm",
           mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
            Add role
         </button>

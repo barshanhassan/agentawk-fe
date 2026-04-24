@@ -1,0 +1,349 @@
+import React from 'react';
+import { ChevronLeft, Info, HelpCircle, Save, X, MessageSquare, Globe, Clock, User, Shield, Users, Bot, MessageCircle, Send, Phone, Monitor } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+
+interface CreateWorkspaceFormProps {
+  onCancel: () => void;
+}
+
+const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) => {
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+
+  const features = [
+    { 
+      id: 'whatsapp_api', 
+      name: 'WhatsApp Business API', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
+          <MessageCircle className="w-5 h-5 text-white fill-white" />
+        </div>
+      ), 
+      info: 'Pilot connection: FREE', 
+      additional: 'Additional connections: $4 ea.', 
+      limit: 1 
+    },
+    { 
+      id: 'instagram', 
+      name: 'Instagram', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center shadow-sm">
+          <div className="w-4 h-4 border-2 border-white rounded-[4px] relative flex items-center justify-center">
+             <div className="w-1.5 h-1.5 border-2 border-white rounded-full" />
+             <div className="absolute top-0.5 right-0.5 w-0.5 h-0.5 bg-white rounded-full" />
+          </div>
+        </div>
+      ), 
+      info: 'Pilot connection: FREE', 
+      additional: 'Additional connections: $10 ea.', 
+      limit: 1 
+    },
+    { 
+      id: 'messenger', 
+      name: 'Messenger', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-[#00B2FF] flex items-center justify-center shadow-sm">
+          <MessageSquare className="w-5 h-5 text-white fill-white" />
+        </div>
+      ), 
+      info: 'Pilot connection: FREE', 
+      additional: 'Additional connections: $10 ea.', 
+      limit: 1 
+    },
+    { 
+      id: 'telegram', 
+      name: 'Telegram', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-[#229ED9] flex items-center justify-center shadow-sm p-1.5">
+          <Send className="w-5 h-5 text-white fill-white -translate-x-0.5" />
+        </div>
+      ), 
+      info: 'Pilot connection: FREE', 
+      additional: 'Additional connections: $10 ea.', 
+      limit: 1 
+    },
+    { 
+      id: 'whatsapp_qr', 
+      name: 'WhatsApp QR', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
+          <MessageCircle className="w-5 h-5 text-white fill-white" />
+        </div>
+      ), 
+      info: 'Pilot connection: $24', 
+      additional: 'Additional connections: $24 ea.', 
+      limit: 1 
+    },
+    { 
+      id: 'twilio', 
+      name: 'Twilio - SMS & Calls', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-[#F22F46] flex items-center justify-center shadow-sm">
+          <div className="grid grid-cols-2 gap-0.5">
+             <div className="w-1.5 h-1.5 bg-white rounded-full" />
+             <div className="w-1.5 h-1.5 bg-white rounded-full" />
+             <div className="w-1.5 h-1.5 bg-white rounded-full" />
+             <div className="w-1.5 h-1.5 bg-white rounded-full" />
+          </div>
+        </div>
+      ), 
+      info: 'Pilot connection: FREE', 
+      additional: 'Additional connections: $10 ea.', 
+      limit: 1 
+    },
+    { 
+      id: 'webchat', 
+      name: 'Webchat', 
+      icon: (
+        <div className="w-8 h-8 rounded-full bg-[#8E24AA] flex items-center justify-center shadow-sm">
+          <MessageSquare className="w-4 h-4 text-white fill-white" />
+        </div>
+      ), 
+      info: 'Pilot connection: FREE', 
+      additional: 'Additional connections: $10 ea.', 
+      limit: 1 
+    },
+  ];
+
+  return (
+    <div className={cn(
+      "min-h-screen p-6 font-sans transition-colors duration-300",
+      isDark ? "bg-[#020617] text-white" : "bg-slate-50 text-slate-900"
+    )}>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-xl font-semibold">Create a workspace</h1>
+        <p className={cn("text-sm mt-1", isDark ? "text-slate-400" : "text-slate-500")}>
+          Create distinct sub-accounts, also known as workspaces, either for yourself or your clients.
+        </p>
+      </div>
+
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Workspace Name & Domain */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              Workspace name
+            </label>
+            <Input 
+              placeholder="Workspace name" 
+              className={cn(
+                "h-12 border-slate-800",
+                isDark ? "bg-[#0f172a] text-white" : "bg-white"
+              )}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              Domain <HelpCircle size={14} className="text-slate-500" />
+            </label>
+            <div className="flex">
+              <div className={cn(
+                "flex items-center px-3 border border-r-0 border-slate-800 rounded-l-md text-sm",
+                isDark ? "bg-[#1e293b] text-slate-400" : "bg-slate-100 text-slate-500"
+              )}>
+                http://
+              </div>
+              <Input 
+                placeholder="domain" 
+                className={cn(
+                  "h-12 border-slate-800 rounded-none focus-visible:ring-0",
+                  isDark ? "bg-[#0f172a] text-white" : "bg-white"
+                )}
+              />
+              <div className={cn(
+                "flex items-center px-3 border border-l-0 border-slate-800 rounded-r-md text-sm",
+                isDark ? "bg-[#1e293b] text-slate-400" : "bg-slate-100 text-slate-500"
+              )}>
+                .domainemulator.com
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Timezone & Agent */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              Timezone
+            </label>
+            <Select defaultValue="asia_karachi">
+              <SelectTrigger className={cn(
+                "h-12 border-slate-800",
+                isDark ? "bg-[#0f172a] text-white" : "bg-white"
+              )}>
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent className={isDark ? "bg-[#1e293b] border-slate-700 text-white" : ""}>
+                <SelectItem value="asia_karachi">Islamabad, Karachi (Asia/Karachi)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              Assign an agency Agent to this workspace <HelpCircle size={14} className="text-slate-500" />
+            </label>
+            <Select defaultValue="firoula">
+              <SelectTrigger className={cn(
+                "h-12 border-slate-800",
+                isDark ? "bg-[#0f172a] text-white" : "bg-white"
+              )}>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white">FB</div>
+                  <SelectValue placeholder="Select agent" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className={isDark ? "bg-[#1e293b] border-slate-700 text-white" : ""}>
+                <SelectItem value="firoula">Firoula Berham</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Toggles */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={cn(
+            "p-4 rounded-lg border border-slate-800 flex items-center justify-between",
+            isDark ? "bg-[#0f172a]" : "bg-white"
+          )}>
+            <div className="flex items-center gap-3">
+              <Switch />
+              <span className="text-sm font-medium flex items-center gap-2">
+                Enable White Label for this workspace <HelpCircle size={14} className="text-slate-500" /> <Globe size={14} className="text-slate-500" />
+              </span>
+            </div>
+          </div>
+          <div className={cn(
+            "p-4 rounded-lg border border-slate-800 flex items-center justify-between",
+            isDark ? "bg-[#0f172a]" : "bg-white"
+          )}>
+            <div className="flex items-center gap-3">
+              <Switch />
+              <span className="text-sm font-medium flex items-center gap-2">
+                Allow support to login to workspace <HelpCircle size={14} className="text-slate-500" />
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Limits */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={cn(
+            "p-4 rounded-lg border border-slate-800 flex items-center justify-between",
+            isDark ? "bg-[#0f172a]" : "bg-white"
+          )}>
+            <div className="flex items-center gap-3">
+              <Switch />
+              <span className="text-sm font-medium flex items-center gap-2">
+                Limit of Active contacts <HelpCircle size={14} className="text-slate-500" /> <Users size={14} className="text-slate-500" />
+              </span>
+            </div>
+            <Input 
+              type="number" 
+              defaultValue={0} 
+              className={cn("w-20 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
+            />
+          </div>
+          <div className={cn(
+            "p-4 rounded-lg border border-slate-800 flex items-center justify-between",
+            isDark ? "bg-[#0f172a]" : "bg-white"
+          )}>
+            <div className="flex items-center gap-3">
+              <Switch defaultChecked />
+              <span className="text-sm font-medium flex items-center gap-2">
+                Limit of Agents <HelpCircle size={14} className="text-slate-500" /> <User size={14} className="text-slate-500" />
+              </span>
+            </div>
+            <Input 
+              type="number" 
+              defaultValue={4} 
+              className={cn("w-20 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
+            />
+          </div>
+        </div>
+
+        {/* Features Table */}
+        <div className={cn(
+          "rounded-lg border border-slate-800 overflow-hidden",
+          isDark ? "bg-[#0f172a]" : "bg-white"
+        )}>
+          <div className="divide-y divide-slate-800">
+            {/* AI Assistants Row (Moved inside) */}
+            <div className="p-4 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-900 dark:text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                    <path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4zm0 6a2 2 0 1 1 2-2 2 2 0 0 1-2 2z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium">Maximum number of Active AI Chat Assistants</span>
+              </div>
+              <div className="flex items-center gap-12 text-xs text-slate-400">
+                <span>Included in plan : 10</span>
+                <span>Additional connections: $0 ea.</span>
+                <div className="flex items-center gap-2">
+                  <span>Connection Limit</span>
+                  <HelpCircle size={14} className="text-slate-500" />
+                  <Input 
+                    type="number" 
+                    defaultValue={10} 
+                    className={cn("w-16 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
+                  />
+                </div>
+              </div>
+            </div>
+            {features.map((feature) => (
+              <div key={feature.id} className="p-4 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  {feature.icon}
+                  <span className="text-sm font-medium">{feature.name}</span>
+                </div>
+                <div className="flex items-center gap-12 text-xs text-slate-400">
+                  <span>{feature.info}</span>
+                  <span>{feature.additional}</span>
+                  <div className="flex items-center gap-2">
+                    <span>Connection Limit</span>
+                    <HelpCircle size={14} className="text-slate-500" />
+                    <Input 
+                      type="number" 
+                      defaultValue={feature.limit} 
+                      className={cn("w-16 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="flex justify-end gap-3 mt-8">
+          <Button 
+            variant="ghost" 
+            onClick={onCancel}
+            className={cn(isDark ? "text-slate-400 hover:text-white hover:bg-slate-800" : "")}
+          >
+            Cancel
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90 text-white px-8">
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateWorkspaceForm;
