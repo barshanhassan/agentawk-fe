@@ -46,9 +46,10 @@ import AgencyWhiteLabelSettings from "@/pages/Agency/AgencyWhiteLabelSettings";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AgencyLayout from "@/components/AgencyLayout";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SiteProvider, useSite } from "@/contexts/SiteContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
 
-function Router() {
+function Router({ siteType }: { siteType: string }) {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
@@ -170,7 +171,9 @@ function Router() {
       </Route>
 
       <Route path="/">
-        <ProtectedRoute><InsightsDashboard /></ProtectedRoute>
+        <ProtectedRoute>
+          {siteType === "AGENCY" ? <AgencyDashboard /> : <InsightsDashboard />}
+        </ProtectedRoute>
       </Route>
 
       <Route component={NotFound} />
@@ -178,39 +181,39 @@ function Router() {
   );
 }
 
-function App() {
+function AppContent() {
   const [location] = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const checkAuthStatus = () => {
     const token = localStorage.getItem("auth_token");
-    if (!token) return false;
-
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      let cookie = cookies[i].trim();
-      if (cookie.startsWith('demoLogin=true')) {
-        return true;
-      }
-    }
-    return false;
+    return !!token;
   };
 
   useEffect(() => {
     setIsLoggedIn(checkAuthStatus());
   }, [location]);
 
+  const { siteData, loading } = useSite();
+
   const isBuilderRoute = location.startsWith("/automations/") && location.split("/").length === 3;
-  const isAgencyRoute = location.startsWith("/agency");
+  const isAuthRoute = location === "/login" || location === "/forgot-password";
+  const siteType = siteData?.app?.site_type || "WORKSPACE";
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading application...</div>;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <GlobalBrandingFetcher />
         <TooltipProvider>
-          {isAgencyRoute ? (
+          {isAuthRoute ? (
+            <Router siteType={siteType} />
+          ) : siteType === "AGENCY" ? (
             <AgencyLayout>
-              <Router />
+              <Router siteType={siteType} />
             </AgencyLayout>
           ) : (
             <div className="flex h-screen overflow-hidden bg-background">
@@ -219,7 +222,7 @@ function App() {
 
               {/* Main content area - now full width, with top padding */}
               <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
-                <Router />
+                <Router siteType={siteType} />
               </main>
 
               <Toaster />
@@ -228,6 +231,14 @@ function App() {
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+function App() {
+  return (
+    <SiteProvider>
+      <AppContent />
+    </SiteProvider>
   );
 }
 

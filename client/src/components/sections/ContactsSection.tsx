@@ -52,18 +52,25 @@ interface Contact {
   updatedBy: string;
 }
 
-const contactTagOptions = [
-  { id: "VIP", name: "VIP" },
-  { id: "Lead", name: "Lead" },
-  { id: "Active", name: "Active" },
-  { id: "Inactive", name: "Inactive" },
-];
-
 export default function ContactsSection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Fetch tags
+  const { data: tagsResponse } = useQuery({
+      queryKey: ["/api/tags/list"],
+      queryFn: async () => {
+          const res = await apiRequest("GET", "/api/tags/list");
+          return res.json();
+      }
+  });
+
+  const contactTagOptions = (tagsResponse?.tags || []).map((t: any) => ({
+      id: t.name, // Using name as ID for consistency with existing state logic
+      name: t.name
+  }));
 
   // Fetch contacts
   const { data: contactsResponse, isLoading: isLoadingContacts } = useQuery({

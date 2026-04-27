@@ -7,6 +7,10 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -16,15 +20,27 @@ const AgencyTeam = () => {
   const { mode } = useTheme();
   const [showAddForm, setShowAddForm] = useState(false);
   
-  const agents = [
-    { email: "admin@connectagroupcorp.com", name: "John Doe", role: "Agency Owner", status: "ACTIVE" },
-    { email: "ana.benini.reply@gmail.com", name: "Ana Benini", role: "new role", status: "ACTIVE" },
-    { email: "dev.3@connectagroupcorp.com", name: "Jawad R", role: "Super User", status: "ACTIVE" },
-    { email: "suporte.agent2@replyagent.com", name: "Jaderson Olle", role: "Super User", status: "ACTIVE" },
-    { email: "developer5@replyagent.com", name: "Hassan Barshan", role: "Super User", status: "ACTIVE" },
-    { email: "developer6@replyagent.com", name: "Haider Ali", role: "Super User", status: "ACTIVE" },
-    { email: "bharat@replyagent.com", name: "Bharat Kat", role: "Super User", status: "ACTIVE" },
-  ];
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "7";
+
+  const { data: membersResponse, isLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      return res.json();
+    }
+  });
+
+  const agents = (membersResponse?.members || []).map((m: any) => ({
+    id: m.id,
+    email: m.email,
+    name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
+    role: m.role || "Agent",
+    status: m.status?.toUpperCase() || "ACTIVE"
+  }));
+
 
   if (showAddForm) {
     return <AddAgentForm onCancel={() => setShowAddForm(false)} />;

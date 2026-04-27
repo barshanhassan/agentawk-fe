@@ -19,29 +19,69 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
 import { Label } from "@/components/ui/label"; // Added Label
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // Added RadioGroup imports
-import { useToast } from "@/hooks/use-toast";
 import PreviewV2 from "@/components/PreviewV2";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
+
 
 export default function WhatsAppManagerPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch Profile from backend
+  const { data: profileResponse, isLoading } = useQuery({
+    queryKey: ["/api/whatsapp/profile"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/whatsapp/profile");
+      return res.json();
+    }
+  });
+
   // State for Business Profile fields
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [profilePhotoPreviewUrl, setProfilePhotoPreviewUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState("My business name"); // Default value as per requirement
+  const [displayName, setDisplayName] = useState("My business name");
   const [category, setCategory] = useState("Other");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [about, setAbout] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
-  const [whatsAppNumber, setWhatsAppNumber] = useState("+1 (555) 123-4567");
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
+
+  // Sync state with fetched data
+  React.useEffect(() => {
+    if (profileResponse?.phoneNumber) {
+      const p = profileResponse.phoneNumber;
+      setDisplayName(p.verified_name || "");
+      setWhatsAppNumber(p.phone_number || "");
+      // Other fields would be synced here if they existed in wa_phone_numbers
+    }
+  }, [profileResponse]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/whatsapp/profile", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/profile"] });
+      toast({ title: "Settings Saved", description: "WhatsApp profile has been updated." });
+    }
+  });
+
+  const handleSave = (field: string, value: any) => {
+    updateMutation.mutate({ [field]: value });
+  };
 
   // State for active tab
   const [activeTab, setActiveTab] = useState("business-profile");
 
   // Dummy states for badges
-  const [isConnected, setIsConnected] = useState(Math.random() < 0.5);
-  const [accountHealth, setAccountHealth] = useState(Math.random());
+  const [isConnected, setIsConnected] = useState(true);
+  const [accountHealth, setAccountHealth] = useState(0.1);
+
 
   // Helper TimePicker Component
   interface TimePickerProps {
@@ -520,19 +560,15 @@ export default function WhatsAppManagerPage() {
                 </CardContent>
                 <CardFooter className="flex justify-end">
                   <Button
-                    onClick={() => {
-                      toast({
-                        title: "Settings Saved",
-                        description: "Display name settings have been updated.",
-                      });
-                    }}
+                    onClick={() => handleSave("displayName", displayName)}
                     className="btn-outline-primary font-normal"
-                    disabled={!displayName.trim()}
+                    disabled={!displayName.trim() || updateMutation.isPending}
                     variant="outline"
                   >
-                    Save
+                    {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
                   </Button>
                 </CardFooter>
+
               </Card>
 
               {/* Business Information */}

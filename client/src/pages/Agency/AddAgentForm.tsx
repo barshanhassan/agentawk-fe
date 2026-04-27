@@ -13,6 +13,11 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
 
 interface AddAgentFormProps {
   onCancel: () => void;
@@ -21,6 +26,47 @@ interface AddAgentFormProps {
 const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
   const { mode } = useTheme();
   const isDark = mode === 'dark';
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "7";
+
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+    role: "agent",
+    phone: "",
+    whatsapp: "",
+    language: "en",
+    tfa_required: false
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", `/api/agencies/${agencyId}/members`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/members`] });
+      toast({ title: "Agent Added", description: "Team agent has been added successfully." });
+      onCancel();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: "Failed to add agent.", variant: "destructive" });
+    }
+  });
+
+  const handleSubmit = () => {
+    if (!formData.first_name || !formData.email || !formData.password) {
+      toast({ title: "Error", description: "Name, email, and password are required.", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate(formData);
+  };
+
 
   return (
     <div className={cn(
@@ -50,15 +96,43 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">First Name</label>
-                <Input className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} placeholder="First name" />
+                <Input 
+                  className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} 
+                  placeholder="First name" 
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                />
+
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Last Name</label>
-                <Input className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} placeholder="Last name" />
+                <Input 
+                  className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} 
+                  placeholder="Last name" 
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                />
+
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
-                <Input className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} placeholder="Email" />
+                <Input 
+                  className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} 
+                  placeholder="Email" 
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
+                <Input 
+                  type="password"
+                  className={cn(isDark ? "bg-[#0f172a] border-slate-700" : "")} 
+                  placeholder="Password" 
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Role</label>
@@ -187,9 +261,14 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
             <Button variant="outline" onClick={onCancel} className={cn(isDark ? "bg-transparent border-slate-700 hover:bg-slate-800" : "")}>
               Cancel
             </Button>
-            <Button className="bg-primary hover:bg-primary/90 text-white px-8">
-              Save
+            <Button 
+              className="bg-primary hover:bg-primary/90 text-white px-8"
+              onClick={handleSubmit}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? "Saving..." : "Save"}
             </Button>
+
           </div>
         </CardContent>
       </Card>

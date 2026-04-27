@@ -9,6 +9,10 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -18,29 +22,24 @@ const AgencyRoles = () => {
   const { mode } = useTheme();
   const [showAddForm, setShowAddForm] = useState(false);
   
-  const roles = [
-    { 
-      name: "Super User", 
-      description: "Has control of the entire account", 
-      isSystem: true 
-    },
-    { 
-      name: "canEditRole", 
-      description: "rem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has surv" 
-    },
-    { 
-      name: "new role", 
-      description: "smal ldescription" 
-    },
-    { 
-      name: "Agency co-owner", 
-      description: "Specific for new agency owner." 
-    },
-    { 
-      name: "Bug check", 
-      description: "" 
-    },
-  ];
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: rolesResponse, isLoading } = useQuery({
+    queryKey: ["/api/roles/list"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/roles/list");
+      return res.json();
+    }
+  });
+
+  const roles = (rolesResponse || []).map((r: any) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description || "No description provided.",
+    isSystem: r.is_system || false
+  }));
+
 
   if (showAddForm) {
     return <AddRoleForm onCancel={() => setShowAddForm(false)} />;

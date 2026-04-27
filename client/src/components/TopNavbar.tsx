@@ -104,7 +104,8 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
   const [, navigate] = useLocation(); // Get navigate function from wouter
 
   const handleLogout = () => {
-    document.cookie = 'demoLogin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;'; // Remove the cookie
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_info");
     navigate('/login'); // Redirect to login page
   };
 

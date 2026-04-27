@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 // --- Data Structures ---
 
@@ -39,32 +40,93 @@ interface Workspace {
   users: string[]; // Array of user IDs
 }
 
-const allUsers: User[] = [
-  { id: "U001", name: "Alice Johnson", email: "alice.j@example.com" },
-  { id: "U002", name: "Bob Smith", email: "bob.s@example.com" },
-  { id: "U003", name: "Carol White", email: "carol.w@example.com" },
-  { id: "U004", name: "David Brown", email: "david.b@example.com" },
-  { id: "U005", name: "Eve Davis", email: "eve.d@example.com" },
-  { id: "U006", name: "Frank Miller", email: "frank.m@example.com" },
-];
-
-const initialWorkspaces: Workspace[] = [
-  { id: "W001", name: "Main Workspace", status: "Active", users: ["U001", "U002", "U003"] },
-  { id: "W002", name: "Development Env", status: "Active", users: ["U001", "U004"] },
-  { id: "W003", name: "Marketing Team", status: "Active", users: ["U005"] },
-  { id: "W004", name: "Archived Project", status: "Inactive", users: [] },
-];
-
-
 const statusOptions = [
   { id: "Active", name: "Active" },
   { id: "Inactive", name: "Inactive" },
 ];
 
-
 export default function WorkspaceManagementSection() {
   const { toast } = useToast();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
+  const queryClient = useQueryClient();
+
+  // Get Agency ID from localStorage (set during login)
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "7"; // Fallback to 7 as seen in Postman test
+
+  // --- API Fetching ---
+
+  // Fetch Workspaces
+  const { data: workspacesResponse, isLoading: isLoadingWorkspaces } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/workspaces`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
+      return res.json();
+    }
+  });
+
+  // Fetch Agency Members (for user assignment)
+  const { data: membersResponse } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      return res.json();
+    }
+  });
+
+  const allUsers: User[] = (membersResponse?.members || []).map((m: any) => ({
+    id: m.id.toString(),
+    name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
+    email: m.email
+  }));
+
+  const workspaces: Workspace[] = (workspacesResponse?.workspaces || []).map((ws: any) => ({
+    id: ws.id.toString(),
+    name: ws.name,
+    status: ws.status === 'active' ? 'Active' : 'Inactive',
+    users: (ws.workspace_users || []).map((wu: any) => wu.user_id.toString())
+  }));
+
+  // --- Mutations ---
+
+  const createMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", `/api/agencies/${agencyId}/workspaces`, { name });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      toast({ title: "Workspace Created", description: "The workspace has been created successfully." });
+      setShowCreateWorkspaceModal(false);
+      setNewWorkspaceName("");
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}/workspaces/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      toast({ title: "Workspace Updated", description: "The workspace has been updated successfully." });
+      setShowEditWorkspaceModal(false);
+      setEditingWorkspace(null);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/agencies/${agencyId}/workspaces/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      toast({ title: "Workspace Deleted", description: "The workspace has been deleted." });
+      setShowDeleteWorkspaceModal(false);
+      setWorkspaceToDelete(null);
+    }
+  });
+
+  // --- Local UI State ---
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -143,17 +205,7 @@ export default function WorkspaceManagementSection() {
       toast({ title: "Missing Name", description: "Please enter a workspace name.", variant: "destructive" });
       return;
     }
-    const newWorkspace: Workspace = {
-      id: `W${String(workspaces.length + 10).padStart(3, "0")}`,
-      name: newWorkspaceName,
-      status: "Active",
-      users: newWorkspaceUsers,
-    };
-    setWorkspaces([...workspaces, newWorkspace]);
-    toast({ title: "Workspace Created", description: `${newWorkspaceName} has been created successfully.` });
-    setNewWorkspaceName("");
-    setNewWorkspaceUsers([]);
-    setShowCreateWorkspaceModal(false);
+    createMutation.mutate(newWorkspaceName);
   };
 
   const handleEditWorkspace = (workspace: Workspace) => {
@@ -170,16 +222,13 @@ export default function WorkspaceManagementSection() {
       return;
     }
     if (editingWorkspace) {
-      setWorkspaces(
-        workspaces.map(ws =>
-          ws.id === editingWorkspace.id
-            ? { ...ws, name: editWorkspaceName, status: editStatus, users: editAssignedUsers }
-            : ws
-        )
-      );
-      toast({ title: "Workspace Updated", description: `${editWorkspaceName} has been updated.` });
-      setShowEditWorkspaceModal(false);
-      setEditingWorkspace(null);
+      updateMutation.mutate({
+        id: editingWorkspace.id,
+        data: {
+          name: editWorkspaceName,
+          status: editStatus.toLowerCase()
+        }
+      });
     }
   };
 
@@ -190,10 +239,7 @@ export default function WorkspaceManagementSection() {
 
   const handleConfirmDelete = () => {
     if (workspaceToDelete) {
-      setWorkspaces(workspaces.filter(ws => ws.id !== workspaceToDelete.id));
-      toast({ title: "Workspace Deleted", description: `${workspaceToDelete.name} has been deleted.` });
-      setShowDeleteWorkspaceModal(false);
-      setWorkspaceToDelete(null);
+      deleteMutation.mutate(workspaceToDelete.id);
     }
   };
 

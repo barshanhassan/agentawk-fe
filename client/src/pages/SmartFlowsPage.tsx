@@ -92,10 +92,24 @@ export default function SmartFlowsPage() {
     const folders = automationsData?.folders || [];
     const flows = automationsData?.automations || [];
 
-    // Mock users data (still needed for UI until we have a users API properly)
-    const mockUsers = [
-        { id: 1, name: "Admin", picture: "https://i.pravatar.cc/150?img=1" }
-    ];
+    // Get Agency ID from localStorage
+    const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+    const agencyId = userInfo.modelable_id || "7";
+
+    // Fetch Agency Members
+    const { data: membersResponse } = useQuery({
+        queryKey: [`/api/agencies/${agencyId}/members`],
+        queryFn: async () => {
+            const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+            return res.json();
+        }
+    });
+
+    const mockUsers = (membersResponse?.members || []).map((m: any) => ({
+        id: m.id,
+        name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
+        picture: `https://ui-avatars.com/api/?name=${m.first_name || 'U'}&background=random`
+    }));
 
     const filteredFlows = useMemo(() => {
         let result = flows;

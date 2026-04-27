@@ -12,6 +12,11 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
 
 interface CreateWorkspaceFormProps {
   onCancel: () => void;
@@ -20,6 +25,46 @@ interface CreateWorkspaceFormProps {
 const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) => {
   const { mode } = useTheme();
   const isDark = mode === 'dark';
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "7";
+
+  const [formData, setFormData] = useState({
+    name: "",
+    domain: "",
+    timezone: "asia_karachi",
+    agentId: "",
+    whiteLabel: false,
+    supportLogin: false,
+    activeContactsLimit: 0,
+    agentsLimit: 4
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", `/api/agencies/${agencyId}/workspaces`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      toast({ title: "Workspace Created", description: "Successfully created the new workspace." });
+      onCancel();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: "Failed to create workspace.", variant: "destructive" });
+    }
+  });
+
+  const handleSubmit = () => {
+    if (!formData.name) {
+      toast({ title: "Error", description: "Workspace name is required.", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate(formData);
+  };
+
 
   const features = [
     { 
@@ -138,11 +183,14 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             </label>
             <Input 
               placeholder="Workspace name" 
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className={cn(
                 "h-12 border-slate-800",
                 isDark ? "bg-[#0f172a] text-white" : "bg-white"
               )}
             />
+
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
@@ -337,9 +385,14 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
           >
             Cancel
           </Button>
-          <Button className="bg-primary hover:bg-primary/90 text-white px-8">
-            Save
+          <Button 
+            className="bg-primary hover:bg-primary/90 text-white px-8"
+            onClick={handleSubmit}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? "Saving..." : "Save"}
           </Button>
+
         </div>
       </div>
     </div>

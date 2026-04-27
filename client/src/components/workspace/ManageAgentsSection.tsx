@@ -29,18 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Mock data for agents
-const MOCK_AGENTS = [
-  { id: 1, name: "Murphy Jaguar", email: "usmanlogin@gmail.com", status: "Active", role: "Super User" },
-  { id: 2, name: "José Carrilo", email: "usman.aslam@connectagroupcorp.com", status: "Active", role: "Mobile apis" },
-  { id: 3, name: "Jawad R", email: "dev.3@connectagroupcorp.com", status: "Active", role: "Super User" },
-  { id: 4, name: "Tiago Barcelos", email: "suporte.agente1@replyagent.com", status: "Active", role: "Super User" },
-  { id: 5, name: "Mario Souza", email: "suporte.agent2@replyagent.com", status: "Active", role: "Super User" },
-  { id: 6, name: "Edilson Pereira", email: "suporte.agente3@replyagent.com", status: "Active", role: "Super User" },
-  { id: 7, name: "William Motta", email: "mobi.dev@connectagroupcorp.com", status: "Active", role: "Mob users" },
-  { id: 8, name: "Thiago Delet Delet", email: "thiagomassariol@hotmail.com", status: "Active", role: "Tiago Delete Test" },
-  { id: 9, name: "Bharat Bharat", email: "bharat@replyagent.com", status: "Active", role: "Super User" },
-];
+
 
 interface Agent {
   id: string;
@@ -56,16 +45,30 @@ export default function ManageAgentSection() {
 
   const { data: membersData, isLoading } = useQuery<any>({
     queryKey: ["/api/workspaces/members"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/members");
+      return res.json();
+    }
   });
 
-  const agents: Agent[] = membersData ? membersData.map((m: any) => ({
-    id: m.id.toString(), // format from bigInt to string 
+  const { data: tagsApiData } = useQuery<any>({
+    queryKey: ["/api/tags/list"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/tags/list");
+      return res.json();
+    }
+  });
+
+  const agents: Agent[] = (membersData?.members || membersData || []).map((m: any) => ({
+    id: m.id.toString(),
     name: m.full_name || `${m.first_name || ""} ${m.last_name || ""}`.trim(),
     email: m.email,
     status: m.status || "Active",
     role: m.role || "Agent",
     original: m
-  })) : [];
+  }));
+
+  const TAGS = (tagsApiData?.tags || []).map((t: any) => ({ name: t.name }));
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -150,65 +153,12 @@ export default function ManageAgentSection() {
     "number field test"
   ];
 
-  const TAGS = [
-    { name: "named" },
-    { name: "marketing", className: "bg-emerald-500 text-white border-none" },
-    { name: "sales" },
-    { name: "vip", className: "bg-red-500 text-white border-none" },
-    { name: "support" },
-    { name: "wazapoptin", className: "bg-blue-600 text-white border-none" },
-    { name: "endafterbookfail" },
-    { name: "hotmartok" },
-    { name: "hotmartupdated" },
-    { name: "wa" },
-    { name: "new_age" },
-    { name: "instagram" },
-    { name: "aplacphac" },
-    { name: "uppercasetags" },
-    { name: "tested" },
-    { name: "seminteresse" },
-    { name: "creci_2024" },
-    { name: "importacao_001" },
-    { name: "vip1" },
-    { name: "vip2" },
-    { name: "vip3" },
-    { name: "bctesting" },
-    { name: "ai_tag" },
-    { name: "outcall" },
-    { name: "banana" },
-    { name: "walkthrough" },
-    { name: "privatetour" },
-    { name: "catalogo" },
-    { name: "download" },
-    { name: "lead_100k" },
-    { name: "deleteone" },
-    { name: "cal.com", className: "bg-fuchsia-500 text-white border-none" },
-    { name: "random-trigger", className: "bg-black text-white border-none" },
-    { name: "random-1", className: "bg-pink-100 text-pink-600 border-pink-200" },
-    { name: "random-2", className: "bg-purple-100 text-purple-600 border-purple-200" },
-    { name: "broadcast-counter", className: "bg-black text-white border-none" },
-    { name: "teste_edilson", className: "bg-black text-white border-none" },
-    { name: "tag-teste", className: "bg-black text-white border-none" },
-    { name: "rogerxxxyyyzzz", className: "bg-black text-white border-none" },
-    { name: "out_call_jaderson", className: "bg-black text-white border-none" },
-    { name: "portkey", className: "bg-cyan-400 text-white border-none" },
-    { name: "marketing_whatsapp", className: "bg-black text-white border-none" },
-  ];
+  // TAGS is now dynamically computed from /api/tags/list (see above)
 
-  const CHAT_AGENTS = [
-    { name: "Murphy Jaguar", image: "/avatars/avatar-1.png" },
-    { name: "Linda Benini", image: "/avatars/avatar-2.png" },
-    { name: "José Carrillo" },
-    { name: "Jawad R" },
-    { name: "Tiago Barcelos" },
-    { name: "Mario Souza" },
-    { name: "Edilson Pereira" },
-    { name: "William Motta" },
-    { name: "Thiago Delet Delet" },
-    { name: "Bharat Bharat" },
-    { name: "Roger Cardoso" },
-    { name: "Jawad Simple User" },
-  ];
+
+  // CHAT_AGENTS is derived from real workspace members
+  const CHAT_AGENTS = agents.map(a => ({ name: a.name }));
+
 
   const CHAT_CHANNELS = [
     { name: "Reply Agen Stage One", type: "telegram" },

@@ -23,27 +23,43 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import CreateWorkspaceForm from "./CreateWorkspaceForm";
 
 const AgencyWorkspaces = () => {
-  const { mode } = useTheme();
   const [showCreateForm, setShowCreateForm] = useState(false);
-  
-  const workspaces = [
-    { name: "Clonekit AI Studio Testes", createdAt: "2026-03-30 09:52 am", status: "Active" },
-    { name: "Test CSV Contacts", createdAt: "2026-02-02 09:40 am", status: "Active" },
-    { name: "Broadcaster", createdAt: "2026-01-30 04:37 pm", status: "Active" },
-    { name: "MM Lite", createdAt: "2026-01-28 02:57 pm", status: "Active" },
-    { name: "Workspace One testing", createdAt: "2025-12-22 06:17 am", status: "Active" },
-    { name: "workspace2", createdAt: "2025-12-04 04:54 am", status: "Active", hasLogin: true },
-    { name: "Workspace1", createdAt: "2025-12-04 04:48 am", status: "Active", hasLogin: true },
-    { name: "Coax10", createdAt: "2025-11-25 08:16 pm", status: "Active" },
-    { name: "Workspace Jaderson One", createdAt: "2025-11-21 01:01 pm", status: "Active" },
-    { name: "Jawad Test", createdAt: "2025-07-31 07:38 am", status: "Active", customLogo: true },
-  ];
+  const { toast } = useToast();
+  const { mode } = useTheme();
+  const queryClient = useQueryClient();
+
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "7";
+
+
+  const { data: workspacesResponse, isLoading: workspacesLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/workspaces`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
+      return res.json();
+    }
+  });
+
+  const workspaces = (workspacesResponse?.workspaces || []).map((ws: any) => ({
+    id: ws.id,
+    name: ws.name,
+    createdAt: ws.created_at ? format(new Date(ws.created_at), "yyyy-MM-dd hh:mm a") : "N/A",
+    status: ws.status === 'active' ? 'Active' : 'Inactive',
+    hasLogin: true
+  }));
+
+
 
   if (showCreateForm) {
     return <CreateWorkspaceForm onCancel={() => setShowCreateForm(false)} />;

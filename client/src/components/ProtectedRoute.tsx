@@ -7,16 +7,7 @@ interface ProtectedRouteProps {
 
 const checkAuth = () => {
   const token = localStorage.getItem("auth_token");
-  if (!token) return false;
-
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i].trim();
-    if (cookie.startsWith('demoLogin=true')) {
-      return true;
-    }
-  }
-  return false;
+  return !!token;
 };
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {

@@ -164,8 +164,8 @@ export default function AppSidebar() {
     { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText },
     { label: "Call Logs", href: "/conversations/call-logs", icon: Phone },
     { label: "Billing", href: "/billing", icon: Grid },
-    { label: "Agency", href: "/agency", icon: Users },
     { label: "Settings", href: "/settings", icon: Settings },
+
   ];
 
   const filteredItems = menuItems.filter((item) =>
@@ -313,14 +313,7 @@ export default function AppSidebar() {
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/agency"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/agency") ? activeClass : ""}`}
-                >
-                  <Users size={18} /> Agency
-                </Link>
-              </DropdownMenuItem>
+
 
               <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
 
@@ -621,7 +614,6 @@ export default function AppSidebar() {
                   onClick={() => {
                     localStorage.removeItem("auth_token");
                     localStorage.removeItem("user_info");
-                    document.cookie = "demoLogin=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
                     window.location.href = "/login";
                   }}
                   className="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg px-3 py-2 font-medium transition"

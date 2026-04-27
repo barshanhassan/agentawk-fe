@@ -20,9 +20,91 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
 
 const AgencyGeneralSettings = () => {
   const { mode } = useTheme();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
+
+  const { data: agencyResponse, isLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      return res.json();
+    }
+  });
+
+  const [generalData, setGeneralData] = useState({
+    name: "",
+    timezone: "",
+    phone: ""
+  });
+
+  const [billingData, setBillingData] = useState({
+    billing_company: "",
+    billing_person: "",
+    tax_id: "",
+    address: {
+      street: "",
+      city: "",
+      state: "",
+      zip: "",
+      country_iso2: "PK"
+    }
+  });
+
+  useEffect(() => {
+    if (agencyResponse?.agency) {
+      const a = agencyResponse.agency;
+      setGeneralData({
+        name: a.name || "",
+        timezone: a.timezone || "",
+        phone: a.phone || ""
+      });
+      setBillingData({
+        billing_company: a.billing_company || "",
+        billing_person: a.billing_person || "",
+        tax_id: a.tax_id || "",
+        address: {
+          street: a.address?.street || "",
+          city: a.address?.city || "",
+          state: a.address?.state || "",
+          zip: a.address?.zip || "",
+          country_iso2: a.address?.country_iso2 || "PK"
+        }
+      });
+    }
+  }, [agencyResponse]);
+
+  const updateGeneralMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      toast({ title: "Settings Updated", description: "General settings have been saved." });
+    }
+  });
+
+  const updateBillingMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}/billing`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      toast({ title: "Billing Updated", description: "Billing details have been saved." });
+    }
+  });
+
   
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300 space-y-8", 
@@ -52,7 +134,8 @@ const AgencyGeneralSettings = () => {
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Name</label>
                <Input 
-                 defaultValue="Connecta Group Corporation" 
+                 value={generalData.name}
+                 onChange={(e) => setGeneralData({ ...generalData, name: e.target.value })}
                  className={cn("text-sm h-11 transition-colors", 
                    mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
                />
@@ -60,7 +143,10 @@ const AgencyGeneralSettings = () => {
 
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Timezone</label>
-               <Select defaultValue="america-fortaleza">
+               <Select 
+                 value={generalData.timezone} 
+                 onValueChange={(val) => setGeneralData({ ...generalData, timezone: val })}
+               >
                  <SelectTrigger className={cn("text-sm h-11 transition-colors", 
                    mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
                    <SelectValue placeholder="Select timezone" />
@@ -68,6 +154,7 @@ const AgencyGeneralSettings = () => {
                  <SelectContent className={cn("border shadow-2xl transition-colors", 
                    mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
                    <SelectItem value="america-fortaleza">Fortaleza (America/Fortaleza)</SelectItem>
+                   <SelectItem value="asia_karachi">Karachi (Asia/Karachi)</SelectItem>
                    <SelectItem value="utc">UTC</SelectItem>
                  </SelectContent>
                </Select>
@@ -76,19 +163,27 @@ const AgencyGeneralSettings = () => {
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Phone number</label>
                <div className="relative">
-                 <Input className={cn("text-sm h-11 transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
+                 <Input 
+                   value={generalData.phone}
+                   onChange={(e) => setGeneralData({ ...generalData, phone: e.target.value })}
+                   className={cn("text-sm h-11 transition-colors", 
+                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                 />
                  <Phone className="absolute right-3 top-3.5 w-4 h-4 text-gray-500" />
                </div>
              </div>
           </div>
 
           <div className="flex justify-end pt-4">
-            <button className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
+            <button 
+              onClick={() => updateGeneralMutation.mutate(generalData)}
+              disabled={updateGeneralMutation.isPending}
+              className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
               mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-              <Save size={16} /> Save
+              <Save size={16} /> {updateGeneralMutation.isPending ? "Saving..." : "Save"}
             </button>
           </div>
+
         </CardContent>
       </Card>
 
@@ -109,53 +204,51 @@ const AgencyGeneralSettings = () => {
           <div className="grid grid-cols-1 gap-4">
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Company Name</label>
-               <Input className={cn("text-sm h-11 transition-colors", 
-                 mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
+               <Input 
+                 value={billingData.billing_company}
+                 onChange={(e) => setBillingData({ ...billingData, billing_company: e.target.value })}
+                 className={cn("text-sm h-11 transition-colors", 
+                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+               />
              </div>
 
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Person Responsible</label>
-               <Input className={cn("text-sm h-11 transition-colors", 
-                 mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
+               <Input 
+                 value={billingData.billing_person}
+                 onChange={(e) => setBillingData({ ...billingData, billing_person: e.target.value })}
+                 className={cn("text-sm h-11 transition-colors", 
+                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+               />
              </div>
 
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Tax ID</label>
-               <Select>
-                 <SelectTrigger className={cn("text-sm h-11 transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
-                   <SelectValue placeholder="Select a Tax ID" />
-                 </SelectTrigger>
-                 <SelectContent className={cn("border shadow-2xl transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
-                   <SelectItem value="none">None</SelectItem>
-                 </SelectContent>
-               </Select>
-             </div>
-
-             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-1.5">
-                 <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Tax ID Name / Tax Number</label>
-                 <Input className={cn("text-sm h-11 transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
-               </div>
-               <div className="space-y-1.5">
-                 <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>&nbsp;</label>
-                 <Input className={cn("text-sm h-11 transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
-               </div>
+               <Input 
+                 value={billingData.tax_id}
+                 onChange={(e) => setBillingData({ ...billingData, tax_id: e.target.value })}
+                 className={cn("text-sm h-11 transition-colors", 
+                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+               />
              </div>
 
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Address</label>
-               <Input className={cn("text-sm h-11 transition-colors", 
-                 mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
+               <Input 
+                 value={billingData.address.street}
+                 onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, street: e.target.value } })}
+                 className={cn("text-sm h-11 transition-colors", 
+                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+               />
              </div>
 
              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Country</label>
-                  <Select>
+                  <Select 
+                    value={billingData.address.country_iso2}
+                    onValueChange={(val) => setBillingData({ ...billingData, address: { ...billingData.address, country_iso2: val } })}
+                  >
                     <SelectTrigger className={cn("text-sm h-11 transition-colors", 
                       mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
                       <SelectValue placeholder="Select country" />
@@ -163,51 +256,54 @@ const AgencyGeneralSettings = () => {
                     <SelectContent className={cn("border shadow-2xl transition-colors", 
                       mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
                       <SelectItem value="br">Brazil</SelectItem>
+                      <SelectItem value="pk">Pakistan</SelectItem>
+                      <SelectItem value="us">United States</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
                   <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>State</label>
-                  <Select>
-                    <SelectTrigger className={cn("text-sm h-11 transition-colors", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent className={cn("border shadow-2xl transition-colors", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
-                      <SelectItem value="ce">Ceará</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input 
+                    value={billingData.address.state}
+                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, state: e.target.value } })}
+                    className={cn("text-sm h-11 transition-colors", 
+                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>City</label>
-                  <Select>
-                    <SelectTrigger className={cn("text-sm h-11 transition-colors", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
-                      <SelectValue placeholder="Select city" />
-                    </SelectTrigger>
-                    <SelectContent className={cn("border shadow-2xl transition-colors", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
-                      <SelectItem value="fortaleza">Fortaleza</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input 
+                    value={billingData.address.city}
+                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, city: e.target.value } })}
+                    className={cn("text-sm h-11 transition-colors", 
+                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                  />
                 </div>
              </div>
 
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Zip Code</label>
-               <Input className={cn("text-sm h-11 transition-colors", 
-                 mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} />
+               <Input 
+                 value={billingData.address.zip}
+                 onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, zip: e.target.value } })}
+                 className={cn("text-sm h-11 transition-colors", 
+                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+               />
              </div>
           </div>
 
           <div className="flex justify-end pt-4">
-            <button className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
+            <button 
+              onClick={() => updateBillingMutation.mutate(billingData)}
+              disabled={updateBillingMutation.isPending}
+              className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
               mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-              <Save size={16} /> Save
+              <Save size={16} /> {updateBillingMutation.isPending ? "Saving..." : "Save"}
             </button>
           </div>
+
         </CardContent>
+
       </Card>
 
       {/* Invoice Recipients Section */}

@@ -49,14 +49,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const INITIAL_TEAMS = [
-  { id: "1", name: "Team B", distribution: "Priority distribution", agents: "7 Agents" },
-  { id: "2", name: "Team A", distribution: "d_equal", agents: "6 Agents" },
-  { id: "3", name: "equipe_test", distribution: "d_equal", agents: "2 Agents" },
-  { id: "4", name: "suporte", distribution: "Priority distribution", agents: "2 Agents" },
-  { id: "5", name: "Equipe Teste", distribution: "Priority distribution", agents: "4 Agents" },
-  { id: "6", name: "teste edilson", distribution: "d_equal", agents: "7 Agents" },
-];
 
 export default function TeamsSection() {
   const [view, setView] = useState<"list" | "add" | "edit">("list");

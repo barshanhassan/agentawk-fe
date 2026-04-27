@@ -5,12 +5,14 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useSite } from '../contexts/SiteContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [, navigate] = useLocation();
+  const { siteData } = useSite();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +28,13 @@ const LoginPage: React.FC = () => {
         // Save token and user info
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("user_info", JSON.stringify(data.user));
-        document.cookie = 'demoLogin=true; path=/';
-        navigate('/insights');
+        
+        // Navigate based on siteType
+        if (siteData?.app?.site_type === "AGENCY") {
+          navigate('/agency');
+        } else {
+          navigate('/insights');
+        }
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Login failed Check your credentials.');

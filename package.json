@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "(cd server && npm run start:dev)",
+    "dev": "vite",
     "build": "vite build",
     "deploy": "npm run build && firebase deploy",
     "start": "node server/dist/main.js",

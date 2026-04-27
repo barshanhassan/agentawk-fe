@@ -93,9 +93,12 @@ export default function ConversationsInbox() {
 
   // Fetch inbox list
   const { data: inboxResponse, isLoading: isLoadingInbox } = useQuery({
-    queryKey: ["/api/inbox/get-inbox-list", { activeTab, searchQuery }],
+    queryKey: ["/api/inbox/list", { activeTab, searchQuery }],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/inbox/get-inbox-list?status=${activeTab}&search=${searchQuery}`);
+      const res = await apiRequest("POST", "/api/inbox/list", { 
+        status: activeTab === 'all' ? undefined : activeTab, 
+        search: searchQuery 
+      });
       return res.json();
     }
   });
@@ -147,10 +150,10 @@ export default function ConversationsInbox() {
 
   // Fetch messages for selected conversation
   const { data: messagesResponse, isLoading: isLoadingMessages } = useQuery({
-    queryKey: ["/api/inbox/get-chat-messages", selectedConversation],
+    queryKey: ["/api/inbox/messages", selectedConversation],
     queryFn: async () => {
       if (!selectedConversation) return null;
-      const res = await apiRequest("GET", `/api/inbox/get-chat-messages/${selectedConversation}`);
+      const res = await apiRequest("POST", `/api/inbox/messages/${selectedConversation}`, {});
       return res.json();
     },
     enabled: !!selectedConversation
@@ -166,12 +169,12 @@ export default function ConversationsInbox() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (text: string) => {
-      const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, { message: text });
+      const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, { message_text: text });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-chat-messages", selectedConversation] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       setMessageText("");
     }
   });
@@ -179,11 +182,11 @@ export default function ConversationsInbox() {
   // Update status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number, status: string }) => {
-      const res = await apiRequest("POST", "/api/inbox/update-inbox-status", { inbox_id: id, status });
+      const res = await apiRequest("PATCH", `/api/inbox/status/${id}`, { status });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       toast({
         title: "Status updated",
         description: "Conversation status has been updated successfully.",
@@ -194,14 +197,13 @@ export default function ConversationsInbox() {
   // Assign agent mutation
   const assignAgentMutation = useMutation({
     mutationFn: async ({ agentId }: { agentId: string | null }) => {
-      const res = await apiRequest("POST", "/api/inbox/assign-conversation", { 
-        inbox_id: selectedConversation, 
+      const res = await apiRequest("PATCH", `/api/inbox/assign/${selectedConversation}`, { 
         assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? currentUser.id : agentId)
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       toast({
         title: "Agent assigned",
         description: "The conversation has been assigned successfully.",
@@ -245,38 +247,32 @@ export default function ConversationsInbox() {
   // Current user
   const currentUser = { id: "self", name: "Demo User" };
 
-  // Mock agent list
-  const agentOptions = [
-    {
-      id: "self",
-      name: currentUser.name,
-      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-semibold text-white" }, "DU")
-    },
-    {
-      id: "agent-1",
-      name: "Sarah Johnson",
-      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "SJ")
-    },
-    {
-      id: "agent-2",
-      name: "Mike Chen",
-      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "MC")
-    },
-    {
-      id: "agent-3",
-      name: "Emma Davis",
-      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "ED")
-    },
-    {
-      id: "agent-4",
-      name: "Alex Rodriguez",
-      icon: React.createElement("div", { className: "w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-semibold text-white" }, "AR")
-    },
-  ];
+  // Get Agency ID from localStorage
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "7";
 
+  // Fetch Agency Members
+  const { data: membersResponse } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      return res.json();
+    }
+  });
+
+  const agentOptions = (membersResponse?.members || []).map((m: any) => ({
+    id: m.id.toString(),
+    name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
+    icon: React.createElement("div", { 
+      className: `w-5 h-5 rounded-full ${getAvatarColor(m.first_name || m.email)} flex items-center justify-center text-[10px] font-semibold text-white` 
+    }, (m.first_name?.[0] || m.email?.[0] || "U").toUpperCase())
+  }));
+
+  // Add "Unassigned" option if needed or handle it in the UI
+  
   // Helper function to get agent name by ID
   const getAgentName = (agentId: string | null) => {
-    if (!agentId) return "";
+    if (!agentId) return "Unassigned";
     const agent = agentOptions.find(a => a.id === agentId);
     return agent?.name || agentId;
   };
