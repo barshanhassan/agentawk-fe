@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Calendar, 
   Users, 
   ChevronLeft, 
   ChevronRight,
-  Search,
   Layers,
   ChevronDown
 } from "lucide-react";
@@ -20,9 +19,20 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
 
 const WorkspaceLogs = () => {
   const { mode } = useTheme();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
+
+  const [selectedWorkspace, setSelectedWorkspace] = useState("All Workspaces");
+  const [selectedDate, setSelectedDate] = useState("Today");
+  const [selectedAgent, setSelectedAgent] = useState("All Agents");
+  const [page, setPage] = useState(1);
+
   const logCategories = [
     "Agent logged in", "Logged out", "Added agent", "Agent joined", 
     "Created a team", "Updated a team", "Deleted a team", 
@@ -34,25 +44,29 @@ const WorkspaceLogs = () => {
     "AI Chat assistants", "Purchased White Label", "Cancelled white label"
   ];
 
-  const [selectedWorkspace, setSelectedWorkspace] = React.useState("Byte Digital Internet & Marketing");
-  const [selectedDate, setSelectedDate] = React.useState("Today");
-  const [selectedAgent, setSelectedAgent] = React.useState("Select agents");
+  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days"];
 
-  const workspaces = [
-    "Byte Digital Internet & Marketing",
-    "Agency Main Workspace",
-    "Client Alpha Workspace",
-    "Global Partners"
-  ];
+  const { data: workspacesResponse } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/workspaces`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
+      return res.json();
+    }
+  });
 
-  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "Custom Range"];
-  const agents = ["All Agents", "Admin User", "Support Staff", "Marketing Lead"];
+  const { data: logsResponse, isLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/audit-logs`, selectedDate, selectedWorkspace, page],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/audit-logs`);
+      return res.json();
+    }
+  });
 
-  const logs = [
-    { workspace: "Byte Digital Internet & Marketing", date: "2026-04-23 03:41 am", action: "Logged in", performer: "Hassan Barshan" },
-    { workspace: "Byte Digital Internet & Marketing", date: "2026-04-23 03:40 am", action: "Logged in", performer: "Hassan Barshan" },
-    { workspace: "Byte Digital Internet & Marketing", date: "2026-04-23 03:10 am", action: "Logged out", performer: "Hassan Barshan" },
-  ];
+  const workspaces = ["All Workspaces", ...(workspacesResponse?.workspaces || []).map((ws: any) => ws.name)];
+  const logs = logsResponse?.logs || [];
+  const total = logsResponse?.total || 0;
+  const perPage = logsResponse?.per_page || 20;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
     <div className={cn("flex flex-col h-full font-sans transition-colors duration-300", 
@@ -64,7 +78,7 @@ const WorkspaceLogs = () => {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar: Filter Categories */}
+        {/* Left Sidebar */}
         <div className={cn("w-72 border-r overflow-y-auto transition-colors", 
           mode === "dark" ? "border-slate-800" : "border-slate-200")}>
           <div className="flex flex-col">
@@ -80,9 +94,9 @@ const WorkspaceLogs = () => {
           </div>
         </div>
 
-        {/* Right Main Content: Logs Table */}
+        {/* Right Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Table Filters */}
+          {/* Filters */}
           <div className={cn("p-4 border-b flex items-center gap-8 transition-colors", 
             mode === "dark" ? "border-slate-800" : "border-slate-200")}>
             
@@ -91,7 +105,7 @@ const WorkspaceLogs = () => {
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
                   <Layers size={18} />
-                  <span className={cn("text-sm font-bold", selectedWorkspace !== "All" && "text-slate-500/80")}>
+                  <span className={cn("text-sm font-bold", selectedWorkspace !== "All Workspaces" && "text-slate-500/80")}>
                     {selectedWorkspace}
                   </span>
                   <ChevronDown size={14} className="opacity-50" />
@@ -99,11 +113,7 @@ const WorkspaceLogs = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className={cn("w-64", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                 {workspaces.map((ws) => (
-                  <DropdownMenuItem 
-                    key={ws} 
-                    onClick={() => setSelectedWorkspace(ws)}
-                    className="cursor-pointer hover:bg-primary/10"
-                  >
+                  <DropdownMenuItem key={ws} onClick={() => setSelectedWorkspace(ws)} className="cursor-pointer hover:bg-primary/10">
                     {ws}
                   </DropdownMenuItem>
                 ))}
@@ -121,34 +131,8 @@ const WorkspaceLogs = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                 {dateRanges.map((range) => (
-                  <DropdownMenuItem 
-                    key={range} 
-                    onClick={() => setSelectedDate(range)}
-                    className="cursor-pointer hover:bg-primary/10"
-                  >
+                  <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer hover:bg-primary/10">
                     {range}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Agent Filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
-                  <Users size={18} />
-                  <span className="text-sm font-bold">{selectedAgent}</span>
-                  <ChevronDown size={14} className="opacity-50" />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                {agents.map((agent) => (
-                  <DropdownMenuItem 
-                    key={agent} 
-                    onClick={() => setSelectedAgent(agent)}
-                    className="cursor-pointer hover:bg-primary/10"
-                  >
-                    {agent}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -166,34 +150,61 @@ const WorkspaceLogs = () => {
 
           {/* Table Content */}
           <div className="flex-1 relative overflow-auto">
-            <div className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-800/50" : "divide-slate-100")}>
-              {logs.map((log, i) => (
-                <div key={i} className={cn("grid grid-cols-12 px-4 py-4 transition-colors items-center", 
-                  mode === "dark" ? "hover:bg-[#1e293b]/20" : "hover:bg-slate-50")}>
-                  <div className={cn("col-span-3 text-[13px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{log.workspace}</div>
-                  <div className="col-span-3 text-[13px] text-gray-400 font-medium">{log.date}</div>
-                  <div className={cn("col-span-3 text-[13px] text-center font-bold", mode === "dark" ? "text-gray-300" : "text-slate-900")}>{log.action}</div>
-                  <div className="col-span-3 flex justify-end items-center gap-2">
-                    <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{log.performer}</span>
-                    <Avatar className="w-6 h-6 shrink-0">
-                      <AvatarFallback className={`${getAvatarColor(log.performer)} text-[10px] font-bold text-white`}>
-                        {log.performer.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-32 text-gray-400 text-sm">Loading logs...</div>
+            ) : logs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 opacity-20">
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-widest">No logs found for selected filters</span>
+              </div>
+            ) : (
+              <div className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-800/50" : "divide-slate-100")}>
+                {logs.map((log: any, i: number) => {
+                  const performer = log.user?.name || log.user?.email || "System";
+                  return (
+                    <div key={i} className={cn("grid grid-cols-12 px-4 py-4 transition-colors items-center", 
+                      mode === "dark" ? "hover:bg-[#1e293b]/20" : "hover:bg-slate-50")}>
+                      <div className={cn("col-span-3 text-[13px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>
+                        {log.workspace?.name || "—"}
+                      </div>
+                      <div className="col-span-3 text-[13px] text-gray-400 font-medium">
+                        {log.created_at ? format(new Date(log.created_at), "yyyy-MM-dd hh:mm a") : "N/A"}
+                      </div>
+                      <div className={cn("col-span-3 text-[13px] text-center font-bold", mode === "dark" ? "text-gray-300" : "text-slate-900")}>
+                        {log.action || log.message}
+                      </div>
+                      <div className="col-span-3 flex justify-end items-center gap-2">
+                        <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{performer}</span>
+                        <Avatar className="w-6 h-6 shrink-0">
+                          <AvatarFallback className={`${getAvatarColor(performer)} text-[10px] font-bold text-white`}>
+                            {performer.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-            {/* Pagination Info */}
+            {/* Pagination */}
             <div className={cn("flex items-center justify-between p-4 border-t transition-colors", 
               mode === "dark" ? "bg-[#1e293b]/30 border-slate-800" : "bg-slate-50 border-slate-100")}>
-               <span className="text-sm text-gray-400 font-medium">Showing 1 to 3 of 3 rows</span>
-               <div className="flex items-center gap-2">
-                 <button className="p-1 text-gray-300 cursor-not-allowed"><ChevronLeft size={20} /></button>
-                 <button className="w-8 h-8 rounded bg-primary text-white text-sm font-bold flex items-center justify-center">1</button>
-                 <button className="p-1 text-gray-300 cursor-not-allowed"><ChevronRight size={20} /></button>
-               </div>
+              <span className="text-sm text-gray-400 font-medium">Showing {logs.length} of {total} rows</span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className={cn("p-1", page === 1 ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+                <button className="w-8 h-8 rounded bg-primary text-white text-sm font-bold flex items-center justify-center">{page}</button>
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className={cn("p-1", page >= totalPages ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-primary")}>
+                  <ChevronRight size={20} />
+                </button>
+              </div>
             </div>
           </div>
         </div>

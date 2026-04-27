@@ -23,11 +23,18 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import WorkspaceUsageView from "./WorkspaceUsageView";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const AgencyBillingManage = () => {
   const { mode } = useTheme();
+  const { toast } = useToast();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
   const [showUsageModal, setShowUsageModal] = React.useState(false);
   const [showManageModal, setShowManageModal] = React.useState(false);
+  const [couponCode, setCouponCode] = React.useState("");
   const [email, setEmail] = React.useState("");
 
   const usageItems = [
@@ -38,7 +45,16 @@ const AgencyBillingManage = () => {
     { label: "Enterprise Addon", count: "1", type: "Chargeable", amount: "499.00" },
     { label: "Contacts", count: "51515", type: "Total contacts", amount: "0.00" },
   ];
-  
+  const subtotal = 647.00;
+  const discount = 152.05;
+  const total = 494.95;
+
+  const applyCoupon = () => {
+    toast({ title: "Coupon Applied", description: "Coupon has been applied to your account." });
+    setCouponCode("");
+  };
+
+
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", 
       mode === "dark" ? "text-white" : "text-slate-900")}>
@@ -85,11 +101,16 @@ const AgencyBillingManage = () => {
               <p className={cn("text-sm font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-200" : "text-slate-500")}>Add a coupon</p>
               <div className="flex gap-2">
                 <Input 
-                  placeholder="FREECOUPON" 
+                  placeholder="FREECOUPON"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
                   className={cn("text-xs h-10 transition-colors", 
                     mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
                 />
-                <button className={cn("px-4 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
+                <button 
+                  onClick={applyCoupon}
+                  disabled={!couponCode}
+                  className={cn("px-4 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
                   mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
                   Add
                 </button>
@@ -190,23 +211,25 @@ const AgencyBillingManage = () => {
           
           <div className="max-h-[60vh] overflow-y-auto">
             <div className={cn("divide-y", mode === 'dark' ? "divide-slate-700" : "divide-slate-100")}>
-               {usageItems.map((item, idx) => (
-                 <div key={idx} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/10 transition-colors">
-                    <div className="space-y-0.5">
-                       <p className="font-bold text-sm">{item.label}</p>
-                    </div>
-                    <div className="flex items-center gap-24">
-                       <div className="text-right w-24">
-                          <p className="text-sm font-bold">{item.count}</p>
-                          <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">{item.type}</p>
-                       </div>
-                       <div className="text-right w-24">
-                          <p className="text-sm font-bold">{item.amount}</p>
-                          <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
-                       </div>
-                    </div>
-                 </div>
-               ))}
+             {usageItems.length === 0 ? (
+               <div className="flex items-center justify-center h-32 text-gray-400 text-sm">No usage data available</div>
+             ) : usageItems.map((item: any, idx: number) => (
+               <div key={idx} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/10 transition-colors">
+                  <div className="space-y-0.5">
+                     <p className="font-bold text-sm">{item.label}</p>
+                  </div>
+                  <div className="flex items-center gap-24">
+                     <div className="text-right w-24">
+                        <p className="text-sm font-bold">{item.count}</p>
+                        <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">{item.type}</p>
+                     </div>
+                     <div className="text-right w-24">
+                        <p className="text-sm font-bold">{item.amount}</p>
+                        <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
+                     </div>
+                  </div>
+               </div>
+             ))}
             </div>
           </div>
           
@@ -214,21 +237,21 @@ const AgencyBillingManage = () => {
              <div className="flex justify-between items-center px-6">
                 <span className="font-bold text-sm">Sub total</span>
                 <div className="text-right">
-                   <p className="text-sm font-bold">647.00</p>
+                   <p className="text-sm font-bold">{subtotal.toFixed(2)}</p>
                    <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
                 </div>
              </div>
              <div className="flex justify-between items-center px-6">
                 <span className="font-bold text-sm">Discount</span>
                 <div className="text-right">
-                   <p className="text-sm font-bold">152.05</p>
+                   <p className="text-sm font-bold">{discount.toFixed(2)}</p>
                    <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
                 </div>
              </div>
              <div className="flex justify-between items-center px-6 pt-2">
                 <span className="font-bold text-lg">Total</span>
                 <div className="text-right">
-                   <p className="text-lg font-bold text-primary">494.95</p>
+                   <p className="text-lg font-bold text-primary">{total.toFixed(2)}</p>
                    <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
                 </div>
              </div>

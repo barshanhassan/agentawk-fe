@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Calendar, 
   Users, 
   ChevronLeft, 
   ChevronRight,
-  Search,
   Layers,
   ChevronDown
 } from "lucide-react";
@@ -18,38 +17,49 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
 
 const AgencyLogs = () => {
   const { mode } = useTheme();
-  
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
+
+  const [selectedDate, setSelectedDate] = useState("Today");
+  const [selectedAgent, setSelectedAgent] = useState("All Agents");
+  const [page, setPage] = useState(1);
+
   const logCategories = [
-    "Workspace created",
-    "Workspace deleted",
-    "Contacts limit changed",
-    "Contacts limit enabled",
-    "Contacts limit disabled",
-    "Subscription Upgraded",
-    "Subscription cancelled",
-    "Whitelabel purchased",
-    "White label cancelled",
-    "AI Chat assistants",
-    "Mobile app subscription purchased",
-    "Mobile app subscription cancelled"
-  ];
-  
-  const [selectedWorkspace, setSelectedWorkspace] = React.useState("Byte Digital Internet & Marketing");
-  const [selectedDate, setSelectedDate] = React.useState("Today");
-  const [selectedAgent, setSelectedAgent] = React.useState("Select agents");
-
-  const workspaces = [
-    "Byte Digital Internet & Marketing",
-    "Agency Main Workspace",
-    "Client Alpha Workspace",
-    "Global Partners"
+    "Workspace created", "Workspace deleted", "Contacts limit changed",
+    "Contacts limit enabled", "Contacts limit disabled", "Subscription Upgraded",
+    "Subscription cancelled", "Whitelabel purchased", "White label cancelled",
+    "AI Chat assistants", "Mobile app subscription purchased", "Mobile app subscription cancelled"
   ];
 
-  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "Custom Range"];
-  const agents = ["All Agents", "Admin User", "Support Staff", "Marketing Lead"];
+  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days"];
+
+  const { data: logsResponse, isLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/agency-logs`, selectedDate, page],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/agency-logs`);
+      return res.json();
+    }
+  });
+
+  const { data: membersResponse } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      return res.json();
+    }
+  });
+
+  const agents = ["All Agents", ...(membersResponse?.members || []).map((m: any) => m.email)];
+  const logs = logsResponse?.logs || [];
+  const total = logsResponse?.total || 0;
+  const perPage = logsResponse?.per_page || 20;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
     <div className={cn("flex flex-col h-full font-sans transition-colors duration-300", 
@@ -77,36 +87,12 @@ const AgencyLogs = () => {
           </div>
         </div>
 
-        {/* Right Main Content: Logs Table */}
+        {/* Right Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Table Filters */}
+          {/* Filters */}
           <div className={cn("p-4 border-b flex items-center gap-8 transition-colors", 
             mode === "dark" ? "border-slate-800" : "border-slate-200")}>
             
-            {/* Workspace Filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
-                  <Layers size={18} />
-                  <span className={cn("text-sm font-bold", selectedWorkspace !== "All" && "text-slate-500/80")}>
-                    {selectedWorkspace}
-                  </span>
-                  <ChevronDown size={14} className="opacity-50" />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className={cn("w-64", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                {workspaces.map((ws) => (
-                  <DropdownMenuItem 
-                    key={ws} 
-                    onClick={() => setSelectedWorkspace(ws)}
-                    className="cursor-pointer hover:bg-primary/10"
-                  >
-                    {ws}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             {/* Date Filter */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -118,11 +104,7 @@ const AgencyLogs = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                 {dateRanges.map((range) => (
-                  <DropdownMenuItem 
-                    key={range} 
-                    onClick={() => setSelectedDate(range)}
-                    className="cursor-pointer hover:bg-primary/10"
-                  >
+                  <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer hover:bg-primary/10">
                     {range}
                   </DropdownMenuItem>
                 ))}
@@ -140,11 +122,7 @@ const AgencyLogs = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                 {agents.map((agent) => (
-                  <DropdownMenuItem 
-                    key={agent} 
-                    onClick={() => setSelectedAgent(agent)}
-                    className="cursor-pointer hover:bg-primary/10"
-                  >
+                  <DropdownMenuItem key={agent} onClick={() => setSelectedAgent(agent)} className="cursor-pointer hover:bg-primary/10">
                     {agent}
                   </DropdownMenuItem>
                 ))}
@@ -160,21 +138,54 @@ const AgencyLogs = () => {
             <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right">Performed By</div>
           </div>
 
-          {/* Empty State / Table Content */}
+          {/* Table Content */}
           <div className="flex-1 relative overflow-auto">
-            <div className={cn("flex items-center justify-between p-4 transition-colors", 
-              mode === "dark" ? "bg-[#1e293b]/30" : "bg-slate-50/50")}>
-               <span className="text-sm text-gray-400 font-medium">Showing 0 to 0 of 0 rows</span>
-               <div className="flex items-center gap-2">
-                 <button className="p-1 text-gray-300 cursor-not-allowed"><ChevronLeft size={20} /></button>
-                 <button className="w-8 h-8 rounded bg-primary text-white text-sm font-bold flex items-center justify-center">1</button>
-                 <button className="p-1 text-gray-300 cursor-not-allowed"><ChevronRight size={20} /></button>
-               </div>
-            </div>
-            
-            {/* No Data Placeholder */}
-            <div className="flex flex-col items-center justify-center h-64 opacity-20">
-               <span className="text-sm text-gray-500 font-bold uppercase tracking-widest">No logs found for selected filters</span>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-32 text-gray-400 text-sm">Loading logs...</div>
+            ) : logs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 opacity-20">
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-widest">No logs found for selected filters</span>
+              </div>
+            ) : (
+              <div className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-800/50" : "divide-slate-100")}>
+                {logs.map((log: any, i: number) => (
+                  <div key={i} className={cn("grid grid-cols-12 px-4 py-4 transition-colors items-center", 
+                    mode === "dark" ? "hover:bg-[#1e293b]/20" : "hover:bg-slate-50")}>
+                    <div className="col-span-3 text-[13px] text-gray-400 font-medium">
+                      {log.created_at ? format(new Date(log.created_at), "yyyy-MM-dd hh:mm a") : "N/A"}
+                    </div>
+                    <div className={cn("col-span-6 text-[13px] text-center font-bold", mode === "dark" ? "text-gray-300" : "text-slate-900")}>
+                      {log.action || log.message}
+                    </div>
+                    <div className={cn("col-span-3 text-[13px] text-right font-bold", mode === "dark" ? "text-gray-300" : "text-slate-700")}>
+                      {log.user?.name || log.user?.email || "System"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            <div className={cn("flex items-center justify-between p-4 border-t transition-colors", 
+              mode === "dark" ? "bg-[#1e293b]/30 border-slate-800" : "bg-slate-50 border-slate-100")}>
+              <span className="text-sm text-gray-400 font-medium">
+                Showing {logs.length} of {total} rows
+              </span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className={cn("p-1 transition-colors", page === 1 ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+                <button className="w-8 h-8 rounded bg-primary text-white text-sm font-bold flex items-center justify-center">{page}</button>
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className={cn("p-1 transition-colors", page >= totalPages ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-primary")}>
+                  <ChevronRight size={20} />
+                </button>
+              </div>
             </div>
           </div>
         </div>

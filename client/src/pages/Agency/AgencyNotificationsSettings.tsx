@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Bell,
@@ -17,10 +17,49 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const AgencyNotificationsSettings = () => {
   const { mode } = useTheme();
-  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
+
+  const { data: agencyResponse } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      return res.json();
+    }
+  });
+
+  const [notifEmail, setNotifEmail] = useState("");
+  const [notifLanguage, setNotifLanguage] = useState("en-US");
+
+  useEffect(() => {
+    if (agencyResponse?.agency) {
+      setNotifEmail(agencyResponse.agency.notification_email || "");
+      setNotifLanguage(agencyResponse.agency.notification_language || "en-US");
+    }
+  }, [agencyResponse]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      toast({ title: "Saved", description: "Notification settings updated." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save settings.", variant: "destructive" });
+    }
+  });
+
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", 
       mode === "dark" ? "text-white" : "text-slate-900")}>
@@ -40,7 +79,9 @@ const AgencyNotificationsSettings = () => {
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Notification Email</label>
                <Input 
-                 defaultValue="admin@connectagroupcorp1.com" 
+                 value={notifEmail}
+                 onChange={(e) => setNotifEmail(e.target.value)}
+                 placeholder="admin@example.com"
                  className={cn("text-sm h-11 max-w-xl transition-colors", 
                    mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
                />
@@ -53,26 +94,31 @@ const AgencyNotificationsSettings = () => {
              {/* Notification Language */}
              <div className="space-y-1.5">
                <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Notification Language</label>
-               <Select defaultValue="pt-br">
+               <Select value={notifLanguage} onValueChange={setNotifLanguage}>
                  <SelectTrigger className={cn("text-sm h-11 max-w-xl transition-colors", 
                    mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
                    <div className="flex items-center gap-2">
-                     <span className="text-lg">🇧🇷</span>
                      <SelectValue placeholder="Select language" />
                    </div>
                  </SelectTrigger>
                  <SelectContent className={cn("border shadow-2xl transition-colors", 
                    mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
-                   <SelectItem value="pt-br">
+                   <SelectItem value="pt-BR">
                      <div className="flex items-center gap-2">
                        <span className="text-lg">🇧🇷</span>
                        <span>Português do Brasil</span>
                      </div>
                    </SelectItem>
-                   <SelectItem value="en">
+                   <SelectItem value="en-US">
                      <div className="flex items-center gap-2">
                        <span className="text-lg">🇺🇸</span>
                        <span>English (US)</span>
+                     </div>
+                   </SelectItem>
+                   <SelectItem value="es-ES">
+                     <div className="flex items-center gap-2">
+                       <span className="text-lg">🇪🇸</span>
+                       <span>Español</span>
                      </div>
                    </SelectItem>
                  </SelectContent>
@@ -82,9 +128,12 @@ const AgencyNotificationsSettings = () => {
           </div>
 
           <div className="flex justify-start pt-4">
-            <button className={cn("px-8 py-2.5 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
-              mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-               Save
+            <button 
+              onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
+              disabled={updateMutation.isPending}
+              className={cn("px-8 py-2.5 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
+                mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
+               <Save size={14} /> {updateMutation.isPending ? "Saving..." : "Save"}
             </button>
           </div>
         </CardContent>

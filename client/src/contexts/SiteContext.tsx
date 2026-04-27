@@ -25,14 +25,31 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const ignite = async () => {
       try {
-        const response = await fetch(`/api/ignite?hostname=${window.location.host}`);
-        if (!response.ok) throw new Error("Failed to ignite application");
-        const data = await response.json();
-        setSiteData(data);
+        const host = window.location.host; // e.g. "agency.localhost:5173"
+        const isAgency = host.startsWith("agency.");
+
+        // Try backend first, fall back to hostname detection
+        try {
+          const response = await fetch(`/api/ignite?hostname=${host}`);
+          if (response.ok) {
+            const data = await response.json();
+            setSiteData(data);
+            return;
+          }
+        } catch {
+          // Backend ignite failed, use hostname detection below
+        }
+
+        // Hostname-based fallback
+        setSiteData({
+          app: {
+            name: isAgency ? "EZCONN Agency" : "EZCONN",
+            site_type: isAgency ? "AGENCY" : "WORKSPACE",
+          },
+        });
       } catch (err: any) {
         console.error("Ignition error:", err);
         setError(err.message);
-        // Default fallback to WORKSPACE if ignite fails
         setSiteData({ app: { name: "Ezconn", site_type: "WORKSPACE" } });
       } finally {
         setLoading(false);
