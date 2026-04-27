@@ -4,7 +4,9 @@ import {
   Users, 
   ChevronLeft, 
   ChevronRight,
-  Search
+  Search,
+  Layers,
+  ChevronDown
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -19,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 const AgencyLogs = () => {
   const { mode } = useTheme();
+  
   const logCategories = [
     "Workspace created",
     "Workspace deleted",
@@ -33,6 +36,20 @@ const AgencyLogs = () => {
     "Mobile app subscription purchased",
     "Mobile app subscription cancelled"
   ];
+  
+  const [selectedWorkspace, setSelectedWorkspace] = React.useState("Byte Digital Internet & Marketing");
+  const [selectedDate, setSelectedDate] = React.useState("Today");
+  const [selectedAgent, setSelectedAgent] = React.useState("Select agents");
+
+  const workspaces = [
+    "Byte Digital Internet & Marketing",
+    "Agency Main Workspace",
+    "Client Alpha Workspace",
+    "Global Partners"
+  ];
+
+  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "Custom Range"];
+  const agents = ["All Agents", "Admin User", "Support Staff", "Marketing Lead"];
 
   return (
     <div className={cn("flex flex-col h-full font-sans transition-colors duration-300", 
@@ -65,17 +82,74 @@ const AgencyLogs = () => {
           {/* Table Filters */}
           <div className={cn("p-4 border-b flex items-center gap-8 transition-colors", 
             mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-            <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
-              <Calendar size={18} />
-              <span className="text-sm font-bold">Today</span>
-              <ChevronRight size={14} className="rotate-90" />
-            </div>
+            
+            {/* Workspace Filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
+                  <Layers size={18} />
+                  <span className={cn("text-sm font-bold", selectedWorkspace !== "All" && "text-slate-500/80")}>
+                    {selectedWorkspace}
+                  </span>
+                  <ChevronDown size={14} className="opacity-50" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className={cn("w-64", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                {workspaces.map((ws) => (
+                  <DropdownMenuItem 
+                    key={ws} 
+                    onClick={() => setSelectedWorkspace(ws)}
+                    className="cursor-pointer hover:bg-primary/10"
+                  >
+                    {ws}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
-              <Users size={18} />
-              <span className="text-sm font-bold">Select agents</span>
-              <ChevronRight size={14} className="rotate-90" />
-            </div>
+            {/* Date Filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
+                  <Calendar size={18} />
+                  <span className="text-sm font-bold">{selectedDate}</span>
+                  <ChevronDown size={14} className="opacity-50" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                {dateRanges.map((range) => (
+                  <DropdownMenuItem 
+                    key={range} 
+                    onClick={() => setSelectedDate(range)}
+                    className="cursor-pointer hover:bg-primary/10"
+                  >
+                    {range}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Agent Filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2 cursor-pointer hover:text-primary text-gray-400 transition-colors">
+                  <Users size={18} />
+                  <span className="text-sm font-bold">{selectedAgent}</span>
+                  <ChevronDown size={14} className="opacity-50" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                {agents.map((agent) => (
+                  <DropdownMenuItem 
+                    key={agent} 
+                    onClick={() => setSelectedAgent(agent)}
+                    className="cursor-pointer hover:bg-primary/10"
+                  >
+                    {agent}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Table Headers */}

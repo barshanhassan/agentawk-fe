@@ -11,12 +11,23 @@ import {
   Info,
   Upload,
   ChevronDown,
-  Pipette
+  Pipette,
+  Trash2,
+  ImagePlus,
+  Plus
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { HexColorPicker } from "react-colorful";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -30,6 +41,7 @@ const AgencyWhiteLabelSettings = () => {
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
   const agencyId = userInfo.modelable_id || "1";
 
@@ -48,6 +60,13 @@ const AgencyWhiteLabelSettings = () => {
     slug: "",
     domain: ""
   });
+
+  const [showEmailForm, setShowEmailForm] = React.useState(false);
+  const [emailFormData, setEmailFormData] = React.useState({
+    user: "info",
+    domain: ""
+  });
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (agencyResponse?.agency?.branding) {
@@ -75,9 +94,11 @@ const AgencyWhiteLabelSettings = () => {
 
   const handleColorChange = (color: string) => {
     setBrandingData({ ...brandingData, color });
-    // We could auto-save or wait for a save button if we add one
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const features = [
     // ... same as before
@@ -163,30 +184,70 @@ const AgencyWhiteLabelSettings = () => {
                     <p className={cn("text-[12px] font-bold uppercase", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Full wide logo</p>
                     <div className={cn("w-[300px] h-24 border-2 border-dashed rounded-lg flex items-center justify-center relative group overflow-hidden transition-colors",
                       mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-slate-50 border-slate-200")}>
-                       {brandingData.logo ? (
-                         <img src={brandingData.logo} alt="Agency Logo" className="max-h-full object-contain" />
-                       ) : (
-                         <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-green-500 rounded flex items-center justify-center font-bold text-white text-xl">R</div>
-                            <span className={cn("text-xl font-bold transition-colors", mode === "dark" ? "text-gray-400" : "text-slate-900")}>REPLYAGENT</span>
-                         </div>
-                       )}
+                       <DropdownMenu>
+                         <DropdownMenuTrigger asChild>
+                           <div className="w-full h-full flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                            {brandingData.logo ? (
+                              <img src={brandingData.logo} alt="Agency Logo" className="max-h-full object-contain" />
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                 <div className="w-10 h-10 bg-green-500 rounded flex items-center justify-center font-bold text-white text-xl">R</div>
+                                 <span className={cn("text-xl font-bold transition-colors", mode === "dark" ? "text-gray-400 group-hover:text-white" : "text-slate-900")}>REPLYAGENT</span>
+                              </div>
+                            )}
+                           </div>
+                         </DropdownMenuTrigger>
+                         <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                           <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                             <Upload size={14} /> Upload new
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
+                             <ImageIcon size={14} /> Select from gallery
+                           </DropdownMenuItem>
+                           <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
+                             <Trash2 size={14} /> remove
+                           </DropdownMenuItem>
+                         </DropdownMenuContent>
+                       </DropdownMenu>
                     </div>
-                    <Input 
-                      placeholder="Logo URL" 
-                      value={brandingData.logo}
-                      onChange={(e) => setBrandingData({ ...brandingData, logo: e.target.value })}
-                      className="mt-2 text-xs"
-                    />
+                    <div className="flex gap-2 mt-2">
+                      <Input 
+                        placeholder="Logo URL" 
+                        value={brandingData.logo}
+                        onChange={(e) => setBrandingData({ ...brandingData, logo: e.target.value })}
+                        className="text-xs flex-1"
+                      />
+                      <button 
+                        onClick={() => updateMutation.mutate({ logo: brandingData.logo })}
+                        className="bg-primary text-white px-4 py-2 rounded text-xs font-bold shrink-0">
+                        {updateMutation.isPending ? "Saving..." : "Save Logo"}
+                      </button>
+                    </div>
                     <p className="text-[10px] text-red-500 font-medium italic">Recommended size: 460px * 140px</p>
                   </div>
 
-                  <div className="flex items-end pb-8">
-                    <button 
-                      onClick={() => updateMutation.mutate({ logo: brandingData.logo })}
-                      className="bg-primary text-white px-4 py-2 rounded text-xs font-bold">
-                      {updateMutation.isPending ? "Saving..." : "Save Logo"}
-                    </button>
+                  <div className="space-y-2">
+                    <p className={cn("text-[12px] font-bold uppercase", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Small logo</p>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className={cn("w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:border-primary transition-colors",
+                          mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+                           <div className="w-12 h-12 bg-green-500 rounded flex items-center justify-center font-bold text-white text-2xl">R</div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                        <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                          <Upload size={14} /> Upload new
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
+                          <ImageIcon size={14} /> Select from gallery
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
+                          <Trash2 size={14} /> remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <p className="text-[10px] text-red-500 font-medium italic">Recommended size: 256px * 256px</p>
                   </div>
                 </div>
 
@@ -204,22 +265,52 @@ const AgencyWhiteLabelSettings = () => {
                 <div className="flex gap-12">
                   <div className="space-y-2">
                     <p className={cn("text-[12px] font-bold uppercase", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Full wide logo</p>
-                    <div className={cn("w-[300px] h-24 border-2 border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:border-primary transition-colors",
-                      mode === "dark" ? "bg-white/5 border-slate-700" : "bg-slate-900 border-slate-800")}>
-                       <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 bg-green-500 rounded flex items-center justify-center font-bold text-white text-xl">R</div>
-                          <span className="text-xl font-bold text-white">REPLYAGENT</span>
-                       </div>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className={cn("w-[300px] h-24 border-2 border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:border-primary transition-colors",
+                          mode === "dark" ? "bg-white/5 border-slate-700" : "bg-slate-900 border-slate-800")}>
+                           <div className="flex items-center gap-2">
+                              <div className="w-10 h-10 bg-green-500 rounded flex items-center justify-center font-bold text-white text-xl">R</div>
+                              <span className="text-xl font-bold text-white">REPLYAGENT</span>
+                           </div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                        <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                          <Upload size={14} /> Upload new
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
+                          <ImageIcon size={14} /> Select from gallery
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
+                          <Trash2 size={14} /> remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <p className="text-[10px] text-red-500 font-medium italic">Recommended size: 460px * 140px</p>
                   </div>
 
                   <div className="space-y-2">
                     <p className={cn("text-[12px] font-bold uppercase", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Small logo</p>
-                    <div className={cn("w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:border-primary transition-colors",
-                      mode === "dark" ? "bg-white/5 border-slate-700" : "bg-slate-900 border-slate-800")}>
-                       <div className="w-12 h-12 bg-green-500 rounded flex items-center justify-center font-bold text-white text-2xl">R</div>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className={cn("w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:border-primary transition-colors",
+                          mode === "dark" ? "bg-white/5 border-slate-700" : "bg-slate-900 border-slate-800")}>
+                           <div className="w-12 h-12 bg-green-500 rounded flex items-center justify-center font-bold text-white text-2xl">R</div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                        <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                          <Upload size={14} /> Upload new
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
+                          <ImageIcon size={14} /> Select from gallery
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
+                          <Trash2 size={14} /> remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <p className="text-[10px] text-red-500 font-medium italic">Recommended size: 256px * 256px</p>
                   </div>
                 </div>
@@ -237,11 +328,28 @@ const AgencyWhiteLabelSettings = () => {
               <div className="space-y-4">
                 <div className={cn("w-16 h-16 border-2 border-dashed rounded-lg flex items-center justify-center relative overflow-hidden transition-colors",
                   mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-slate-50 border-slate-200")}>
-                   {brandingData.favicon ? (
-                     <img src={brandingData.favicon} alt="Favicon" className="w-full h-full object-contain" />
-                   ) : (
-                     <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center font-bold text-white text-xs">R</div>
-                   )}
+                   <DropdownMenu>
+                     <DropdownMenuTrigger asChild>
+                       <div className="w-full h-full flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                        {brandingData.favicon ? (
+                          <img src={brandingData.favicon} alt="Favicon" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center font-bold text-white text-xs">R</div>
+                        )}
+                       </div>
+                     </DropdownMenuTrigger>
+                     <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                       <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                         <Upload size={14} /> Upload new
+                       </DropdownMenuItem>
+                       <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
+                         <ImageIcon size={14} /> Select from gallery
+                       </DropdownMenuItem>
+                       <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
+                         <Trash2 size={14} /> remove
+                       </DropdownMenuItem>
+                     </DropdownMenuContent>
+                   </DropdownMenu>
                 </div>
                 <div className="flex gap-4 max-w-md">
                   <Input 
@@ -357,27 +465,80 @@ const AgencyWhiteLabelSettings = () => {
             </TabsContent>
 
             <TabsContent value="notification" className="p-12">
-               <div className="flex flex-col items-center justify-center text-center space-y-6 min-h-[300px]">
-                  <div className="w-20 h-20 bg-[#7c3aed] rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
-                     <Mail className="w-10 h-10 text-white" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className={cn("text-xl font-bold", mode === "dark" ? "text-white" : "text-slate-900")}>Notification E-mail</h3>
-                    <p className={cn("text-sm max-w-md", mode === "dark" ? "text-gray-400" : "text-slate-500")}>
-                      Integrate your e-mail to send branded agent invitation and forgot password emails.
-                    </p>
-                  </div>
+               {!showEmailForm ? (
+                 <div className="flex flex-col items-center justify-center text-center space-y-6 min-h-[300px]">
+                    <div className="w-20 h-20 bg-[#7c3aed] rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
+                       <Mail className="w-10 h-10 text-white" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className={cn("text-xl font-bold", mode === "dark" ? "text-white" : "text-slate-900")}>Notification E-mail</h3>
+                      <p className={cn("text-sm max-w-md", mode === "dark" ? "text-gray-400" : "text-slate-500")}>
+                        Integrate your e-mail to send branded agent invitation and forgot password emails.
+                      </p>
+                    </div>
 
-                  <button className={cn("px-6 py-2 rounded text-sm font-medium transition-colors border shadow-sm",
-                    mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-                    Connect now
-                  </button>
-               </div>
+                    <button 
+                      onClick={() => setShowEmailForm(true)}
+                      className={cn("px-6 py-2 rounded text-sm font-medium transition-colors border shadow-sm",
+                        mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
+                      Connect now
+                    </button>
+                 </div>
+               ) : (
+                 <div className="space-y-6 max-w-2xl">
+                   <div className="space-y-4">
+                     <div className="flex items-center gap-2">
+                       <label className={cn("text-sm font-bold", mode === "dark" ? "text-gray-200" : "text-slate-800")}>Enter the domain to send from</label>
+                       <Info size={14} className="text-gray-400 cursor-help" />
+                     </div>
+                     
+                     <div className="flex items-center gap-3">
+                       <div className="flex items-center gap-0 flex-1">
+                          <Input 
+                            value={emailFormData.user}
+                            onChange={(e) => setEmailFormData(prev => ({ ...prev, user: e.target.value }))}
+                            className={cn("w-32 h-11 text-sm rounded-r-none border-r-0 focus-visible:ring-0", 
+                              mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")} 
+                          />
+                          <div className={cn("h-11 px-3 flex items-center border-y text-gray-400 font-bold text-lg",
+                            mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-slate-50 border-slate-200")}>
+                            @
+                          </div>
+                          <Input 
+                            placeholder="your-domain.com"
+                            value={emailFormData.domain}
+                            onChange={(e) => setEmailFormData(prev => ({ ...prev, domain: e.target.value }))}
+                            className={cn("flex-1 h-11 text-sm rounded-l-none border-l-0 focus-visible:ring-0", 
+                              mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")} 
+                          />
+                       </div>
+                       
+                       <button className="h-11 px-8 rounded-md bg-white border border-[#149f8f] text-[#149f8f] hover:bg-[#149f8f]/5 text-sm font-bold transition-colors">
+                          Continue
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Hidden File Input */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            console.log("File selected:", file.name);
+          }
+        }}
+      />
     </div>
   );
 };

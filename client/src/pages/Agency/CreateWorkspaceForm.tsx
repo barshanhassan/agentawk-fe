@@ -20,9 +20,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface CreateWorkspaceFormProps {
   onCancel: () => void;
+  initialData?: any;
 }
 
-const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) => {
+const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, initialData }) => {
   const { mode } = useTheme();
   const isDark = mode === 'dark';
   const { toast } = useToast();
@@ -32,32 +33,51 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
   const agencyId = userInfo.modelable_id || "7";
 
   const [formData, setFormData] = useState({
-    name: "",
-    domain: "",
-    timezone: "asia_karachi",
-    agentId: "",
-    whiteLabel: false,
-    supportLogin: false,
-    activeContactsLimit: 0,
-    agentsLimit: 4
+    name: initialData?.name || '',
+    subdomain: initialData?.subdomain || '',
+    timezone: initialData?.timezone || 'asia_karachi',
+    agent: initialData?.agent || 'firoula',
+    enableWhiteLabel: initialData?.allow_branding || false,
+    allowSupport: initialData?.allow_support || false,
+    limitContacts: initialData?.limited_contacts || false,
+    contactLimit: initialData?.maximum_contacts || 0,
+    limitAgents: initialData?.allow_agents || true,
+    agentLimit: initialData?.agents_limit || 4,
+    aiAssistantLimit: initialData?.chatgpt_assistant_limit || 10,
+    features: {
+      whatsapp_api: initialData?.whatsapp_channels_limit || 1,
+      instagram: initialData?.instagram_channels_limit || 1,
+      messenger: initialData?.facebook_channels_limit || 1,
+      telegram: initialData?.telegram_channels_limit || 1,
+      whatsapp_qr: initialData?.zapi_channels_limit || 1,
+      twilio: initialData?.twilio_channels_limit || 1,
+      webchat: initialData?.webchat_channels_limit || 1,
+    }
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", `/api/agencies/${agencyId}/workspaces`, data);
+      const endpoint = initialData 
+        ? `/api/agencies/${agencyId}/workspaces/${initialData.id}` 
+        : `/api/agencies/${agencyId}/workspaces`;
+      const method = initialData ? "PATCH" : "POST";
+      const res = await apiRequest(method, endpoint, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
-      toast({ title: "Workspace Created", description: "Successfully created the new workspace." });
+      toast({ 
+        title: initialData ? "Workspace Updated" : "Workspace Created", 
+        description: `Successfully ${initialData ? "updated" : "created"} the workspace.` 
+      });
       onCancel();
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: "Failed to create workspace.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save workspace.", variant: "destructive" });
     }
   });
 
-  const handleSubmit = () => {
+  const handleSave = () => {
     if (!formData.name) {
       toast({ title: "Error", description: "Workspace name is required.", variant: "destructive" });
       return;
@@ -65,6 +85,15 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
     createMutation.mutate(formData);
   };
 
+  const handleFeatureLimitChange = (id: string, value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      features: {
+        ...prev.features,
+        [id]: value
+      }
+    }));
+  };
 
   const features = [
     { 
@@ -77,7 +106,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: FREE', 
       additional: 'Additional connections: $4 ea.', 
-      limit: 1 
     },
     { 
       id: 'instagram', 
@@ -92,7 +120,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: FREE', 
       additional: 'Additional connections: $10 ea.', 
-      limit: 1 
     },
     { 
       id: 'messenger', 
@@ -104,7 +131,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: FREE', 
       additional: 'Additional connections: $10 ea.', 
-      limit: 1 
     },
     { 
       id: 'telegram', 
@@ -116,7 +142,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: FREE', 
       additional: 'Additional connections: $10 ea.', 
-      limit: 1 
     },
     { 
       id: 'whatsapp_qr', 
@@ -128,7 +153,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: $24', 
       additional: 'Additional connections: $24 ea.', 
-      limit: 1 
     },
     { 
       id: 'twilio', 
@@ -145,7 +169,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: FREE', 
       additional: 'Additional connections: $10 ea.', 
-      limit: 1 
     },
     { 
       id: 'webchat', 
@@ -157,7 +180,6 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
       ), 
       info: 'Pilot connection: FREE', 
       additional: 'Additional connections: $10 ea.', 
-      limit: 1 
     },
   ];
 
@@ -168,9 +190,12 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
     )}>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold">Create a workspace</h1>
+        <h1 className="text-xl font-semibold">{initialData ? 'Edit workspace' : 'Create a workspace'}</h1>
         <p className={cn("text-sm mt-1", isDark ? "text-slate-400" : "text-slate-500")}>
-          Create distinct sub-accounts, also known as workspaces, either for yourself or your clients.
+          {initialData 
+            ? `Editing settings for ${initialData.name}.`
+            : "Create distinct sub-accounts, also known as workspaces, either for yourself or your clients."
+          }
         </p>
       </div>
 
@@ -184,7 +209,14 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             <Input 
               placeholder="Workspace name" 
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => {
+                const name = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  name,
+                  subdomain: initialData ? prev.subdomain : name.toLowerCase().replace(/[^a-z0-9]/g, '')
+                }));
+              }}
               className={cn(
                 "h-12 border-slate-800",
                 isDark ? "bg-[#0f172a] text-white" : "bg-white"
@@ -205,9 +237,13 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
               </div>
               <Input 
                 placeholder="domain" 
+                value={formData.subdomain}
+                onChange={(e) => setFormData(prev => ({ ...prev, subdomain: e.target.value }))}
+                disabled={!!initialData}
                 className={cn(
                   "h-12 border-slate-800 rounded-none focus-visible:ring-0",
-                  isDark ? "bg-[#0f172a] text-white" : "bg-white"
+                  isDark ? "bg-[#0f172a] text-white" : "bg-white",
+                  initialData && "opacity-50 cursor-not-allowed"
                 )}
               />
               <div className={cn(
@@ -226,7 +262,10 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
               Timezone
             </label>
-            <Select defaultValue="asia_karachi">
+            <Select 
+              value={formData.timezone} 
+              onValueChange={(v) => setFormData(prev => ({ ...prev, timezone: v }))}
+            >
               <SelectTrigger className={cn(
                 "h-12 border-slate-800",
                 isDark ? "bg-[#0f172a] text-white" : "bg-white"
@@ -235,6 +274,8 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
               </SelectTrigger>
               <SelectContent className={isDark ? "bg-[#1e293b] border-slate-700 text-white" : ""}>
                 <SelectItem value="asia_karachi">Islamabad, Karachi (Asia/Karachi)</SelectItem>
+                <SelectItem value="america_new_york">New York (America/New_York)</SelectItem>
+                <SelectItem value="europe_london">London (Europe/London)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -242,18 +283,24 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
               Assign an agency Agent to this workspace <HelpCircle size={14} className="text-slate-500" />
             </label>
-            <Select defaultValue="firoula">
+            <Select 
+              value={formData.agent}
+              onValueChange={(v) => setFormData(prev => ({ ...prev, agent: v }))}
+            >
               <SelectTrigger className={cn(
                 "h-12 border-slate-800",
                 isDark ? "bg-[#0f172a] text-white" : "bg-white"
               )}>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white">FB</div>
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white">
+                    {formData.agent.slice(0, 2).toUpperCase()}
+                  </div>
                   <SelectValue placeholder="Select agent" />
                 </div>
               </SelectTrigger>
               <SelectContent className={isDark ? "bg-[#1e293b] border-slate-700 text-white" : ""}>
                 <SelectItem value="firoula">Firoula Berham</SelectItem>
+                <SelectItem value="admin">Admin User</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -266,7 +313,10 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             isDark ? "bg-[#0f172a]" : "bg-white"
           )}>
             <div className="flex items-center gap-3">
-              <Switch />
+              <Switch 
+                checked={formData.enableWhiteLabel}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, enableWhiteLabel: v }))}
+              />
               <span className="text-sm font-medium flex items-center gap-2">
                 Enable White Label for this workspace <HelpCircle size={14} className="text-slate-500" /> <Globe size={14} className="text-slate-500" />
               </span>
@@ -277,7 +327,10 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             isDark ? "bg-[#0f172a]" : "bg-white"
           )}>
             <div className="flex items-center gap-3">
-              <Switch />
+              <Switch 
+                checked={formData.allowSupport}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, allowSupport: v }))}
+              />
               <span className="text-sm font-medium flex items-center gap-2">
                 Allow support to login to workspace <HelpCircle size={14} className="text-slate-500" />
               </span>
@@ -292,14 +345,18 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             isDark ? "bg-[#0f172a]" : "bg-white"
           )}>
             <div className="flex items-center gap-3">
-              <Switch />
+              <Switch 
+                checked={formData.limitContacts}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, limitContacts: v }))}
+              />
               <span className="text-sm font-medium flex items-center gap-2">
                 Limit of Active contacts <HelpCircle size={14} className="text-slate-500" /> <Users size={14} className="text-slate-500" />
               </span>
             </div>
             <Input 
               type="number" 
-              defaultValue={0} 
+              value={formData.contactLimit}
+              onChange={(e) => setFormData(prev => ({ ...prev, contactLimit: parseInt(e.target.value) || 0 }))}
               className={cn("w-20 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
             />
           </div>
@@ -308,14 +365,18 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             isDark ? "bg-[#0f172a]" : "bg-white"
           )}>
             <div className="flex items-center gap-3">
-              <Switch defaultChecked />
+              <Switch 
+                checked={formData.limitAgents}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, limitAgents: v }))}
+              />
               <span className="text-sm font-medium flex items-center gap-2">
                 Limit of Agents <HelpCircle size={14} className="text-slate-500" /> <User size={14} className="text-slate-500" />
               </span>
             </div>
             <Input 
               type="number" 
-              defaultValue={4} 
+              value={formData.agentLimit}
+              onChange={(e) => setFormData(prev => ({ ...prev, agentLimit: parseInt(e.target.value) || 0 }))}
               className={cn("w-20 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
             />
           </div>
@@ -346,7 +407,8 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
                   <HelpCircle size={14} className="text-slate-500" />
                   <Input 
                     type="number" 
-                    defaultValue={10} 
+                    value={formData.aiAssistantLimit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, aiAssistantLimit: parseInt(e.target.value) || 0 }))}
                     className={cn("w-16 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
                   />
                 </div>
@@ -366,7 +428,8 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
                     <HelpCircle size={14} className="text-slate-500" />
                     <Input 
                       type="number" 
-                      defaultValue={feature.limit} 
+                      value={(formData.features as any)[feature.id]}
+                      onChange={(e) => handleFeatureLimitChange(feature.id, parseInt(e.target.value) || 0)}
                       className={cn("w-16 h-8 text-center border-slate-700", isDark ? "bg-slate-900" : "")} 
                     />
                   </div>
@@ -386,11 +449,11 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel }) =
             Cancel
           </Button>
           <Button 
+            onClick={handleSave}
             className="bg-primary hover:bg-primary/90 text-white px-8"
-            onClick={handleSubmit}
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? "Saving..." : "Save"}
+            {createMutation.isPending ? "Saving..." : (initialData ? 'Update' : 'Save')}
           </Button>
 
         </div>

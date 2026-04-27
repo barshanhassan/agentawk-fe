@@ -5,16 +5,39 @@ import {
   Settings, 
   Ticket,
   FileText,
-  BarChart3
+  BarChart3,
+  ChevronLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { X } from "lucide-react";
+import WorkspaceUsageView from "./WorkspaceUsageView";
 
 const AgencyBillingManage = () => {
   const { mode } = useTheme();
+  const [showUsageModal, setShowUsageModal] = React.useState(false);
+  const [showManageModal, setShowManageModal] = React.useState(false);
+  const [email, setEmail] = React.useState("");
+
+  const usageItems = [
+    { label: "Whatsapp QR", count: "4", type: "Chargeable", amount: "60.00" },
+    { label: "Channels", count: "4", type: "Chargeable", amount: "40.00" },
+    { label: "AI Agent Addon", count: "7", type: "Chargeable", amount: "28.00" },
+    { label: "VIP Pass", count: "1", type: "Chargeable", amount: "20.00" },
+    { label: "Enterprise Addon", count: "1", type: "Chargeable", amount: "499.00" },
+    { label: "Contacts", count: "51515", type: "Total contacts", amount: "0.00" },
+  ];
   
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", 
@@ -87,8 +110,10 @@ const AgencyBillingManage = () => {
           </div>
           
           <div className="flex justify-end mt-auto">
-            <button className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
-              mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
+            <button 
+              onClick={() => setShowManageModal(true)}
+              className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
+                mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
               Manage
             </button>
           </div>
@@ -106,14 +131,119 @@ const AgencyBillingManage = () => {
           </div>
           
           <div className="flex justify-end mt-auto">
-            <button className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
-              mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
+            <button 
+              onClick={() => setShowUsageModal(true)}
+              className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
+                mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
               Show current usage
             </button>
           </div>
         </Card>
 
       </div>
+
+      {/* Manage Subscriptions Modal */}
+      <Dialog open={showManageModal} onOpenChange={setShowManageModal}>
+        <DialogContent hideClose className={cn("max-w-[450px] p-0 overflow-hidden border-none shadow-2xl", mode === 'dark' ? "bg-[#1e293b]" : "bg-white")}>
+          <div className="relative">
+            <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors z-50">
+               <div className="w-8 h-8 bg-black/50 rounded-full flex items-center justify-center">
+                 <X size={18} />
+               </div>
+            </DialogClose>
+            
+            <div className="p-8 text-center space-y-6">
+              <div className="flex flex-col items-center gap-3">
+                 <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center font-bold text-white text-xl">R</div>
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">REPLYAGENT</span>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-[#4ade80] tracking-tight">Manage Your Subscriptions</h2>
+              
+              <div className={cn("p-12 space-y-8 rounded-xl", mode === 'dark' ? "bg-slate-900/30" : "bg-slate-50/50")}>
+                 <div className="space-y-4">
+                    <p className="text-sm font-bold text-[#4ade80]">Enter your email address to login</p>
+                    <Input 
+                      placeholder="Email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={cn("h-12 text-center text-sm border-slate-300 focus-visible:ring-0 shadow-sm", 
+                        mode === 'dark' ? "bg-white text-slate-900" : "bg-white text-slate-900")}
+                    />
+                 </div>
+                 
+                 <button className="w-full h-12 bg-[#4ade80] hover:bg-[#22c55e] text-white font-bold text-lg rounded transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-2">
+                   Continue <span className="text-xl">→</span>
+                 </button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Current Usage Modal */}
+      <Dialog open={showUsageModal} onOpenChange={setShowUsageModal}>
+        <DialogContent hideClose className={cn("max-w-3xl p-0 overflow-hidden", mode === 'dark' ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+          <DialogHeader className={cn("px-6 py-4 border-b", mode === 'dark' ? "border-slate-700" : "border-slate-100")}>
+            <DialogTitle className={cn("text-lg font-bold", mode === 'dark' ? "text-white" : "text-slate-800")}>Current Usage</DialogTitle>
+          </DialogHeader>
+          
+          <div className="max-h-[60vh] overflow-y-auto">
+            <div className={cn("divide-y", mode === 'dark' ? "divide-slate-700" : "divide-slate-100")}>
+               {usageItems.map((item, idx) => (
+                 <div key={idx} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/10 transition-colors">
+                    <div className="space-y-0.5">
+                       <p className="font-bold text-sm">{item.label}</p>
+                    </div>
+                    <div className="flex items-center gap-24">
+                       <div className="text-right w-24">
+                          <p className="text-sm font-bold">{item.count}</p>
+                          <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">{item.type}</p>
+                       </div>
+                       <div className="text-right w-24">
+                          <p className="text-sm font-bold">{item.amount}</p>
+                          <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
+                       </div>
+                    </div>
+                 </div>
+               ))}
+            </div>
+          </div>
+          
+          <div className={cn("p-6 space-y-4 border-t", mode === 'dark' ? "bg-slate-900/50 border-slate-700" : "bg-slate-50 border-slate-100")}>
+             <div className="flex justify-between items-center px-6">
+                <span className="font-bold text-sm">Sub total</span>
+                <div className="text-right">
+                   <p className="text-sm font-bold">647.00</p>
+                   <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
+                </div>
+             </div>
+             <div className="flex justify-between items-center px-6">
+                <span className="font-bold text-sm">Discount</span>
+                <div className="text-right">
+                   <p className="text-sm font-bold">152.05</p>
+                   <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
+                </div>
+             </div>
+             <div className="flex justify-between items-center px-6 pt-2">
+                <span className="font-bold text-lg">Total</span>
+                <div className="text-right">
+                   <p className="text-lg font-bold text-primary">494.95</p>
+                   <p className="text-[10px] text-gray-500 font-medium tracking-tight uppercase">Amount</p>
+                </div>
+             </div>
+             
+             <div className="flex justify-end pt-4">
+                <DialogClose asChild>
+                   <button className={cn("px-6 py-2 rounded text-sm font-bold transition-colors border shadow-sm",
+                     mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
+                     Close
+                   </button>
+                </DialogClose>
+             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

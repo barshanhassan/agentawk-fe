@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Layers, 
@@ -32,16 +32,18 @@ import { format } from "date-fns";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import CreateWorkspaceForm from "./CreateWorkspaceForm";
+import WorkspaceUsageView from "./WorkspaceUsageView";
+import AgencyVoiceWallet from "./AgencyVoiceWallet";
 
 const AgencyWorkspaces = () => {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const { toast } = useToast();
   const { mode } = useTheme();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [viewMode, setViewMode] = useState<'LIST' | 'CREATE' | 'EDIT' | 'USAGE' | 'VOICE_WALLET'>('LIST');
+  const [selectedWorkspace, setSelectedWorkspace] = useState<any>(null);
 
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
   const agencyId = userInfo.modelable_id || "7";
-
 
   const { data: workspacesResponse, isLoading: workspacesLoading } = useQuery({
     queryKey: [`/api/agencies/${agencyId}/workspaces`],
@@ -56,13 +58,107 @@ const AgencyWorkspaces = () => {
     name: ws.name,
     createdAt: ws.created_at ? format(new Date(ws.created_at), "yyyy-MM-dd hh:mm a") : "N/A",
     status: ws.status === 'active' ? 'Active' : 'Inactive',
-    hasLogin: true
+    hasLogin: true,
+    customLogo: ws.custom_logo || false
   }));
 
+  const [localWorkspaces, setLocalWorkspaces] = useState<any[]>([]);
 
+  useEffect(() => {
+    if (workspaces.length > 0) {
+      setLocalWorkspaces(workspaces);
+    }
+  }, [workspacesResponse]);
 
-  if (showCreateForm) {
-    return <CreateWorkspaceForm onCancel={() => setShowCreateForm(false)} />;
+  // Use localWorkspaces for filtering/searching to allow local UI updates (like suspend)
+  const displayWorkspaces = localWorkspaces.length > 0 ? localWorkspaces : workspaces;
+
+  const handleManage = (workspace: any) => {
+    setSelectedWorkspace(workspace);
+    setViewMode('EDIT');
+  };
+
+  const handleShowUsage = (workspace: any) => {
+    setSelectedWorkspace(workspace);
+    setViewMode('USAGE');
+  };
+
+  const handleVoiceWallet = (workspace: any) => {
+    setSelectedWorkspace(workspace);
+    setViewMode('VOICE_WALLET');
+  };
+
+  const handleToggleStatus = (workspace: any) => {
+    const isActive = workspace.status === 'Active';
+    const newStatus = isActive ? 'Suspended' : 'Active';
+    
+    setLocalWorkspaces(prev => prev.map(ws => 
+      ws.id === workspace.id ? { ...ws, status: newStatus } : ws
+    ));
+
+    toast({
+      title: `Workspace ${newStatus}`,
+      description: `${workspace.name} has been ${newStatus.toLowerCase()} successfully.`,
+    });
+  };
+
+  const handleDelete = (workspace: any) => {
+    if (confirm(`Are you sure you want to delete ${workspace.name}? This action cannot be undone.`)) {
+      setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
+      toast({
+        title: "Workspace Deleted",
+        description: `${workspace.name} has been removed from your agency.`,
+        variant: "destructive",
+      });
+    }
+  };
+  const handleLogin = (workspace: any) => {
+    toast({
+      title: "Logging in...",
+      description: `Redirecting you to ${workspace.name} dashboard.`,
+    });
+    // In real app: window.open(`/login-to-workspace/${workspace.id}`, '_blank');
+  };
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredWorkspaces = displayWorkspaces.filter(ws => 
+    ws.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (viewMode === 'VOICE_WALLET') {
+    return (
+      <AgencyVoiceWallet 
+        workspace={selectedWorkspace} 
+        onBack={() => {
+          setViewMode('LIST');
+          setSelectedWorkspace(null);
+        }} 
+      />
+    );
+  }
+
+  if (viewMode === 'CREATE' || viewMode === 'EDIT') {
+    return (
+      <CreateWorkspaceForm 
+        onCancel={() => {
+          setViewMode('LIST');
+          setSelectedWorkspace(null);
+        }} 
+        initialData={selectedWorkspace}
+      />
+    );
+  }
+
+  if (viewMode === 'USAGE') {
+    return (
+      <WorkspaceUsageView 
+        workspace={selectedWorkspace} 
+        onBack={() => {
+          setViewMode('LIST');
+          setSelectedWorkspace(null);
+        }} 
+      />
+    );
   }
 
   return (
@@ -80,7 +176,7 @@ const AgencyWorkspaces = () => {
           </div>
         </div>
         <button 
-          onClick={() => setShowCreateForm(true)}
+          onClick={() => setViewMode('CREATE')}
           className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2"
         >
            Create Workspace
@@ -94,6 +190,8 @@ const AgencyWorkspaces = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input 
               placeholder="Search" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className={cn("pl-10 focus-visible:ring-1 focus-visible:ring-primary transition-colors",
                 mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")} 
             />
@@ -139,7 +237,7 @@ const AgencyWorkspaces = () => {
             </tr>
           </thead>
           <tbody className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-700" : "divide-slate-100")}>
-            {workspaces.map((ws, i) => (
+            {filteredWorkspaces.map((ws, i) => (
               <tr key={i} className={cn("transition-colors group",
                 mode === "dark" ? "hover:bg-[#334155]/30" : "hover:bg-slate-50")}>
                 <td className="px-6 py-4">
@@ -164,7 +262,9 @@ const AgencyWorkspaces = () => {
                 </td>
                 <td className="px-6 py-4 text-center">
                   {ws.hasLogin && (
-                    <button className={cn("text-xs flex items-center justify-center gap-1 mx-auto transition-colors font-medium",
+                    <button 
+                      onClick={() => handleLogin(ws)}
+                      className={cn("text-xs flex items-center justify-center gap-1 mx-auto transition-colors font-medium",
                       mode === "dark" ? "text-gray-300 hover:text-white" : "text-slate-500 hover:text-primary")}>
                       Login <ExternalLink size={12} />
                     </button>
@@ -174,8 +274,11 @@ const AgencyWorkspaces = () => {
                   {ws.createdAt}
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold border",
-                    mode === "dark" ? "bg-[#14532d] text-green-400 border-green-900" : "bg-green-50 text-green-600 border-green-100")}>
+                  <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold border transition-colors",
+                    ws.status === 'Active' 
+                      ? (mode === "dark" ? "bg-[#14532d] text-green-400 border-green-900" : "bg-green-50 text-green-600 border-green-100")
+                      : (mode === "dark" ? "bg-[#7f1d1d] text-red-400 border-red-900" : "bg-red-50 text-red-600 border-red-100")
+                  )}>
                     {ws.status}
                   </span>
                 </td>
@@ -192,28 +295,38 @@ const AgencyWorkspaces = () => {
                       className={cn("w-56 p-2 border transition-colors shadow-2xl", 
                         mode === "dark" ? "bg-[#1e293b] border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-600")}
                     >
-                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                      <DropdownMenuItem 
+                        onClick={() => handleManage(ws)}
+                        className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
                         mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
                         <Monitor size={18} />
                         <span className="font-semibold">Manage</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                      <DropdownMenuItem 
+                        onClick={() => handleShowUsage(ws)}
+                        className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
                         mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
                         <BarChart3 size={18} />
                         <span className="font-semibold">Usage</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                      <DropdownMenuItem 
+                        onClick={() => handleVoiceWallet(ws)}
+                        className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
                         mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
                         <Wallet size={18} />
                         <span className="font-semibold">AI Voice Credits Wallet</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
+                      <DropdownMenuItem 
+                        onClick={() => handleToggleStatus(ws)}
+                        className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none",
                         mode === "dark" ? "hover:bg-slate-800 focus:bg-slate-800" : "hover:bg-slate-50 focus:bg-slate-50")}>
                         <Ban size={18} />
-                        <span className="font-semibold">Suspend</span>
+                        <span className="font-semibold">{ws.status === 'Active' ? 'Suspend' : 'Activate'}</span>
                       </DropdownMenuItem>
                       <div className={cn("my-1 border-t", mode === "dark" ? "border-slate-800" : "border-slate-100")} />
-                      <DropdownMenuItem className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none text-red-500",
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(ws)}
+                        className={cn("flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors outline-none text-red-500",
                         mode === "dark" ? "hover:bg-red-500/10 focus:bg-red-500/10" : "hover:bg-red-50 focus:bg-red-50")}>
                         <Trash2 size={18} />
                         <span className="font-semibold">Delete</span>
