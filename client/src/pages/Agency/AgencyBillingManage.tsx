@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import WorkspaceUsageView from "./WorkspaceUsageView";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 const AgencyBillingManage = () => {

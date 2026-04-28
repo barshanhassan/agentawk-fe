@@ -273,7 +273,7 @@ export default function ConversationsInbox() {
   // Helper function to get agent name by ID
   const getAgentName = (agentId: string | null) => {
     if (!agentId) return "Unassigned";
-    const agent = agentOptions.find(a => a.id === agentId);
+    const agent = agentOptions.find((a: any) => a.id === agentId);
     return agent?.name || agentId;
   };
 
@@ -1185,7 +1185,7 @@ export default function ConversationsInbox() {
                     {/* Select Agents Dropdown */}
                     <div className="relative">
                       <CustomDropdown
-                        options={agentOptions.map(a => ({ id: a.id, name: a.name, icon: a.icon }))}
+                        options={agentOptions.map((a: any) => ({ id: a.id, name: a.name, icon: a.icon }))}
                         selected={selectedFilterAgents}
                         onChange={setSelectedFilterAgents}
                         placeholder="Agents"

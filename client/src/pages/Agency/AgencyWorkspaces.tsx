@@ -121,7 +121,7 @@ const AgencyWorkspaces = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState('');
-  const filteredWorkspaces = displayWorkspaces.filter(ws => 
+  const filteredWorkspaces = displayWorkspaces.filter((ws: any) => 
     ws.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -237,7 +237,7 @@ const AgencyWorkspaces = () => {
             </tr>
           </thead>
           <tbody className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-700" : "divide-slate-100")}>
-            {filteredWorkspaces.map((ws, i) => (
+            {filteredWorkspaces.map((ws: any, i: number) => (
               <tr key={i} className={cn("transition-colors group",
                 mode === "dark" ? "hover:bg-[#334155]/30" : "hover:bg-slate-50")}>
                 <td className="px-6 py-4">

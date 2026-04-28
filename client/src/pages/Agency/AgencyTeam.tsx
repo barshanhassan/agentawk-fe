@@ -73,7 +73,7 @@ const AgencyTeam = () => {
         mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
         <CardContent className="p-0">
           <div className={cn("divide-y", mode === "dark" ? "divide-slate-700" : "divide-slate-100")}>
-            {agents.map((agent, i) => (
+            {agents.map((agent: any, i: number) => (
               <div key={i} className={cn("flex items-center justify-between p-6 transition-colors",
                 mode === "dark" ? "hover:bg-[#334155]/20" : "hover:bg-slate-50")}>
                 <div className="flex items-center gap-4">

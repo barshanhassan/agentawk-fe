@@ -206,7 +206,7 @@ export default function SmartFlowsPage() {
 
 
     // Prepare dropdown options
-    const userOptions = mockUsers.map(u => ({
+    const userOptions = mockUsers.map((u: any) => ({
         id: u.id.toString(),
         name: u.name,
         icon: <img src={u.picture} className="w-5 h-5 rounded-full" alt={u.name} />
