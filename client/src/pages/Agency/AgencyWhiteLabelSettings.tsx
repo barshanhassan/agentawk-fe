@@ -124,23 +124,31 @@ const AgencyWhiteLabelSettings = () => {
         
         <CardContent className="p-0">
           <Tabs defaultValue="features" className="w-full">
-            <TabsList className={cn("bg-transparent border-b w-full justify-start rounded-none h-12 p-0 px-4 gap-8", 
-              mode === "dark" ? "border-slate-800" : "border-slate-100")}>
-              {["features", "logo", "favicon", "colors", "domain", "notification"].map((tab) => (
-                <TabsTrigger 
-                  key={tab}
-                  value={tab} 
-                  className={cn(
-                    "data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full font-semibold text-sm transition-colors",
-                    mode === "dark" 
-                      ? "text-gray-400 data-[state=active]:text-white" 
-                      : "text-gray-500 data-[state=active]:text-slate-900"
-                  )}
-                >
-                  {tab === "notification" ? "Notification E-mail" : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className="px-4 py-3 border-b flex justify-start">
+              <TabsList className={cn(
+                "h-auto p-1.5 gap-1 rounded-2xl border transition-all duration-300",
+                mode === "dark" 
+                  ? "bg-slate-800/40 border-slate-700/50 shadow-inner" 
+                  : "bg-blue-50/70 border-blue-100/50 shadow-sm"
+              )}>
+                {["features", "logo", "favicon", "colors", "domain", "notification"].map((tab) => (
+                  <TabsTrigger 
+                    key={tab}
+                    value={tab} 
+                    className={cn(
+                      "px-5 py-2 rounded-xl text-[13px] font-bold transition-all duration-300",
+                      "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-[1.02]",
+                      "hover:scale-[1.02] active:scale-100",
+                      mode === "dark" 
+                        ? "text-slate-400 hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 shadow-blue-900/20" 
+                        : "text-slate-600 hover:text-slate-900 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:via-blue-500 data-[state=active]:to-cyan-500 shadow-blue-500/25"
+                    )}
+                  >
+                    {tab === "notification" ? "Notification E-mail" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
             <TabsContent value="features" className="p-6">
               <div className={cn("rounded-lg border p-10 min-h-[400px] transition-colors", 

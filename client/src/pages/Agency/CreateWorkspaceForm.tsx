@@ -82,7 +82,28 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
       toast({ title: "Error", description: "Workspace name is required.", variant: "destructive" });
       return;
     }
-    createMutation.mutate(formData);
+    
+    const payload = {
+      name: formData.name,
+      slug: formData.subdomain,
+      timezone: formData.timezone,
+      allow_branding: formData.enableWhiteLabel,
+      allow_support: formData.allowSupport,
+      limited_contacts: formData.limitContacts,
+      maximum_contacts: formData.contactLimit,
+      allow_agents: formData.limitAgents,
+      agents_limit: formData.agentLimit,
+      chatgpt_assistant_limit: formData.aiAssistantLimit,
+      whatsapp_channels_limit: formData.features.whatsapp_api,
+      instagram_channels_limit: formData.features.instagram,
+      facebook_channels_limit: formData.features.messenger,
+      telegram_channels_limit: formData.features.telegram,
+      zapi_channels_limit: formData.features.whatsapp_qr,
+      twilio_channels_limit: formData.features.twilio,
+      webchat_channels_limit: formData.features.webchat,
+    };
+
+    createMutation.mutate(payload);
   };
 
   const handleFeatureLimitChange = (id: string, value: number) => {

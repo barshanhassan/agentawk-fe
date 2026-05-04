@@ -38,16 +38,24 @@ function InsightsDashboardContent() {
     <div className="p-6 space-y-6" data-testid="insights-dashboard">
       {/* Header with Title on left and everything else on right */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Insights Dashboard</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
+            Insights <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Dashboard</span>
+          </h1>
+        </div>
 
         <div className="flex items-center gap-4">
           {/* Date Range Selector */}
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[160px] no-focus-outline" style={{ height: "38px" }}>
-              <Calendar className="h-4 w-4 mr-2" />
-              <SelectValue />
+            <SelectTrigger 
+              className="w-[180px] h-[46px] rounded-xl bg-blue-50/70 dark:bg-slate-800/60 border-blue-100/50 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-white dark:hover:bg-slate-700 hover:shadow-md no-focus-outline"
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-500" />
+                <SelectValue />
+              </div>
             </SelectTrigger>
-            <SelectContent className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] no-focus-outline">
+            <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl no-focus-outline">
               <SelectItem value="last-7-days">Last 7 Days</SelectItem>
               <SelectItem value="last-14-days">Last 14 Days</SelectItem>
               <SelectItem value="last-30-days">Last 30 Days</SelectItem>
@@ -61,8 +69,11 @@ function InsightsDashboardContent() {
           {dateRange === "custom" && (
             <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2 font-normal h-10 hover-elevate [border-color:hsl(var(--input))] bg-white dark:bg-background">
-                  <Calendar className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  className="h-[46px] rounded-xl px-4 gap-2 font-semibold bg-blue-50/70 dark:bg-slate-800/60 border-blue-100/50 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 transition-all duration-300 hover:scale-[1.02] hover:bg-white dark:hover:bg-slate-700 hover:shadow-md"
+                >
+                  <Calendar className="h-4 w-4 text-blue-500" />
                   <span>
                     {customDate
                       ? customDate.to
@@ -72,7 +83,7 @@ function InsightsDashboardContent() {
                   </span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
+              <PopoverContent className="w-auto p-0 rounded-2xl border-slate-200 dark:border-slate-800 shadow-2xl" align="end">
                 <CalendarComponent
                   initialFocus
                   mode="range"
@@ -87,151 +98,43 @@ function InsightsDashboardContent() {
 
           {/* Export Button */}
           <Button
-            variant="outline"
             onClick={() => setIsExportModalOpen(true)}
-            className="gap-2 hover-elevate font-normal btn-outline-primary"
+            className="h-[46px] px-6 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/25 dark:shadow-blue-500/15 transition-all duration-300 hover:scale-[1.05] hover:shadow-blue-500/40 active:scale-100 flex items-center gap-2 border-0"
             data-testid="export-button"
           >
-            <Download size={16} />
-            Export
+            <Download size={18} />
+            <span>Export</span>
           </Button>
         </div>
       </div>
 
-      {/* Tabs moved to top-right - now placed directly under the header, aligned right */}
+      {/* Tabs - Premium Design */}
       <div className="flex justify-start">
-        <div className="bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 flex gap-0 overflow-x-auto max-w-full">
-          <button
-            onClick={() => {
-              setLocalActiveTab("overview");
-              setActiveTab("overview");
-            }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "overview"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+        <div className="bg-blue-50/70 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl p-2 flex gap-1.5 overflow-x-auto border border-blue-100/50 dark:border-slate-700/50 shadow-sm">
+          {[
+            { id: "overview", label: "Overview", ctx: "overview" },
+            { id: "agent-performance", label: "Agent Performance", ctx: "agentPerformance" },
+            { id: "whatsapp-pricing", label: "WhatsApp Pricing", ctx: "whatsapp" },
+            { id: "bot-dashboard", label: "Bot Dashboard", ctx: "botDashboard" },
+            { id: "voice-of-customer", label: "Voice of Customer", ctx: "voiceOfCustomer" },
+            { id: "csat-dashboard", label: "CSAT Dashboard", ctx: "csatDashboard" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setLocalActiveTab(tab.id);
+                setActiveTab(tab.ctx);
+              }}
+              className={`relative px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 flex items-center justify-center min-w-fit whitespace-nowrap ${
+                localActiveTab === tab.id
+                  ? "bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25 dark:shadow-blue-500/15 scale-[1.02]"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700/60 hover:shadow-md hover:scale-[1.02] active:scale-100"
               }`}
-            data-testid="tab-overview"
-          >
-            Overview
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Platform metrics and user analytics</p>
-              </TooltipContent>
-            </Tooltip>
-          </button>
-
-          <button
-            onClick={() => {
-              setLocalActiveTab("agent-performance");
-              setActiveTab("agentPerformance");
-            }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "agent-performance"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-            data-testid="tab-agent-performance"
-          >
-            Agent Performance
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Team productivity and availability metrics</p>
-              </TooltipContent>
-            </Tooltip>
-          </button>
-
-          <button
-            onClick={() => {
-              setLocalActiveTab("whatsapp-pricing");
-              setActiveTab("whatsapp");
-            }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "whatsapp-pricing"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-            data-testid="tab-whatsapp-pricing"
-          >
-            WhatsApp Pricing
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Message and call costs with detailed breakdowns</p>
-              </TooltipContent>
-            </Tooltip>
-          </button>
-
-          <button
-            onClick={() => {
-              setLocalActiveTab("bot-dashboard");
-              setActiveTab("botDashboard");
-            }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "bot-dashboard"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-            data-testid="tab-bot-dashboard"
-          >
-            Bot Dashboard
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Bot performance analytics and interaction insights</p>
-              </TooltipContent>
-            </Tooltip>
-          </button>
-
-          <button
-            onClick={() => {
-              setLocalActiveTab("voice-of-customer");
-              setActiveTab("voiceOfCustomer");
-            }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "voice-of-customer"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-            data-testid="tab-voice-of-customer"
-          >
-            Voice of Customer
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Customer sentiment, feedback, and satisfaction insights</p>
-              </TooltipContent>
-            </Tooltip>
-          </button>
-
-          <button
-            onClick={() => {
-              setLocalActiveTab("csat-dashboard");
-              setActiveTab("csatDashboard");
-            }}
-            className={`px-6 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-w-fit ${localActiveTab === "csat-dashboard"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-            data-testid="tab-csat-dashboard"
-          >
-            CSAT Dashboard
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Customer satisfaction scores and agent performance metrics</p>
-              </TooltipContent>
-            </Tooltip>
-          </button>
+              data-testid={`tab-${tab.id}`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 

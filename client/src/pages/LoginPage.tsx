@@ -6,6 +6,7 @@ import { Label } from '../components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSite } from '../contexts/SiteContext';
+import { apiRequest } from '../lib/queryClient';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,31 +18,25 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Save token and user info
-        localStorage.setItem("auth_token", data.token);
-        localStorage.setItem("user_info", JSON.stringify(data.user));
-        
-        // Navigate based on siteType
-        if (siteData?.app?.site_type === "AGENCY") {
-          navigate('/agency');
-        } else {
-          navigate('/insights');
-        }
+      const response = await apiRequest('POST', '/auth/login', { email, password });
+      
+      const data = await response.json();
+      // Save token and user info
+      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("user_info", JSON.stringify(data.user));
+      
+      // Navigate based on backend response or role
+      if (data.redirect_to) {
+        navigate(data.redirect_to);
+      } else if (data.user?.role === 'AGENCY' || data.user?.role === 'agency') {
+        navigate('/agency');
       } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Login failed Check your credentials.');
+        // Redirect workspace users to root for better layout stability
+        navigate('/');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      alert('Failed to connect to the server.');
+      alert(error.message || 'Failed to connect to the server.');
     }
   };
 

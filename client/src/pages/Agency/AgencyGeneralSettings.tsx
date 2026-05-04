@@ -60,6 +60,25 @@ const AgencyGeneralSettings = () => {
     }
   });
 
+  const [recipients, setRecipients] = useState(["test@test.com"]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newRecipient, setNewRecipient] = useState("");
+
+  const handleSaveRecipient = () => {
+    if (newRecipient && !recipients.includes(newRecipient)) {
+      setRecipients([...recipients, newRecipient]);
+      setNewRecipient("");
+      setIsAdding(false);
+      toast({ title: "Recipient Added", description: "The invoice recipient has been added." });
+    }
+  };
+
+  const handleDeleteRecipient = (index: number) => {
+    const updated = recipients.filter((_, i) => i !== index);
+    setRecipients(updated);
+    toast({ title: "Recipient Deleted", description: "The invoice recipient has been removed." });
+  };
+
   useEffect(() => {
     if (agencyResponse?.agency) {
       const a = agencyResponse.agency;
@@ -307,38 +326,81 @@ const AgencyGeneralSettings = () => {
       </Card>
 
       {/* Invoice Recipients Section */}
-      <Card className={cn("shadow-xl overflow-hidden transition-colors", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
-        <div className={cn("p-4 border-b flex items-center gap-3 transition-colors", 
-          mode === "dark" ? "border-slate-800" : "border-slate-100")}>
-          <Mail className="w-5 h-5 text-gray-400" />
+      <Card className={cn("shadow-xl overflow-hidden transition-colors rounded-2xl border", 
+        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-100")}>
+        <div className={cn("p-5 border-b flex items-center gap-3 transition-colors", 
+          mode === "dark" ? "border-slate-800 bg-slate-900/50" : "border-slate-100 bg-slate-50/50")}>
+          <Mail className="w-5 h-5 text-teal-500" />
           <div>
             <h2 className={cn("font-bold text-base leading-tight uppercase tracking-tight", 
               mode === "dark" ? "text-white" : "text-slate-900")}>Invoice Recipients</h2>
-            <p className="text-[11px] text-gray-500">Add people to receive a copy of your invoices.</p>
+            <p className="text-[11px] text-gray-500 font-medium">Add people to receive a copy of your invoices.</p>
           </div>
         </div>
         
-        <CardContent className="p-6 space-y-4">
-          <div className="space-y-3">
-             <div className="space-y-1.5">
-               <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Recipient #1</label>
-               <div className="flex gap-2">
-                 <Input 
-                   defaultValue="test@test.com" 
-                   className={cn("text-sm h-11 flex-1 transition-colors", 
-                     mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
-                 />
-                 <button className="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded text-xs font-bold transition-colors border border-red-500/20">
-                   Delete
-                 </button>
-               </div>
-             </div>
-          </div>
+        <CardContent className="p-8 space-y-6">
+          <div className="space-y-4">
+            {recipients.map((recipient, index) => (
+              <div key={index} className="space-y-2">
+                <label className={cn("text-[12px] font-bold tracking-tight", mode === "dark" ? "text-gray-300" : "text-slate-600")}>
+                  Recipient # {index + 1}
+                </label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={recipient}
+                    readOnly
+                    className={cn("text-sm h-11 flex-1 transition-all rounded-xl", 
+                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                  />
+                  <button 
+                    onClick={() => handleDeleteRecipient(index)}
+                    className="bg-[#ef4444] hover:bg-[#dc2626] text-white px-6 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
 
-          <button className="text-primary hover:text-primary/80 text-[12px] font-bold transition-colors uppercase tracking-wider">
-            Add an invoice recipient
-          </button>
+            {isAdding ? (
+              <div className="space-y-2 animate-in fade-in slide-in-from-left-2">
+                <div className="flex items-center gap-2">
+                  <label className={cn("text-[12px] font-bold tracking-tight whitespace-nowrap", mode === "dark" ? "text-gray-300" : "text-slate-600")}>
+                    Recipient
+                  </label>
+                  <div className="flex-1 flex gap-2">
+                    <Input 
+                      placeholder="test@test.com"
+                      value={newRecipient}
+                      onChange={(e) => setNewRecipient(e.target.value)}
+                      className={cn("text-sm h-11 flex-1 transition-all rounded-xl focus:ring-teal-500", 
+                        mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-teal-500 text-slate-900")} 
+                    />
+                    <button 
+                      onClick={handleSaveRecipient}
+                      className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+                    >
+                      Save
+                    </button>
+                    <button 
+                      onClick={() => setIsAdding(false)}
+                      className={cn("px-6 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm active:scale-95",
+                        mode === "dark" ? "bg-slate-800 text-white border-slate-700" : "bg-white text-slate-700 border-slate-200")}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setIsAdding(true)}
+                className="text-teal-500 hover:text-teal-600 text-[12px] font-bold transition-all uppercase tracking-widest flex items-center gap-2"
+              >
+                + Add an invoice recipient
+              </button>
+            )}
+          </div>
         </CardContent>
       </Card>
 

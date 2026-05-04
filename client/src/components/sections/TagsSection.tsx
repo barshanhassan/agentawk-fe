@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 type TagStatus = "Active" | "Inactive";
 
@@ -40,15 +42,9 @@ interface Tag {
   lastEdited: string;
 }
 
-const initialTags: Tag[] = [
-  { id: "TAG001", name: "Sales", status: "Active", lastEdited: "2025-11-12" },
-  { id: "TAG002", name: "Support", status: "Active", lastEdited: "2025-11-11" },
-  { id: "TAG003", name: "Billing", status: "Inactive", lastEdited: "2025-11-10" },
-];
-
 export default function TagsSection() {
   const { toast } = useToast();
-  const [tags, setTags] = useState<Tag[]>(initialTags);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -57,6 +53,66 @@ export default function TagsSection() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
+
+  // Fetch Tags
+  const { data: tagsData, isLoading } = useQuery<any>({
+    queryKey: ["/api/tags/list"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/tags/list");
+      return res.json();
+    }
+  });
+
+  const allTags: Tag[] = (tagsData?.tags || []).map((t: any) => ({
+    id: t.id.toString(),
+    name: t.name,
+    status: t.status || "Active",
+    lastEdited: t.updated_at ? new Date(t.updated_at).toISOString().split('T')[0] : (t.created_at ? new Date(t.created_at).toISOString().split('T')[0] : "-")
+  }));
+
+  // Create Tag Mutation
+  const createMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/tags", { name, status: "Active" });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
+      toast({ title: "Success", description: "Tag created successfully!" });
+      setShowCreateModal(false);
+      setNewName("");
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
+  // Update Tag Mutation
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/tags/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
+      toast({ title: "Success", description: "Tag updated successfully!" });
+      setShowEditModal(false);
+      setEditingItem(null);
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
+
+  // Delete Tag Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/tags/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
+      toast({ title: "Success", description: "Tag deleted successfully!" });
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+  });
 
   // Create Tag Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -98,7 +154,7 @@ export default function TagsSection() {
   };
 
   const getFilteredAndSortedData = () => {
-    let data = [...tags];
+    let data = [...allTags];
 
     if (search) {
       data = data.filter(item =>
@@ -122,11 +178,12 @@ export default function TagsSection() {
       });
     }
 
-    const startIndex = (page - 1) * rowsPerPage;
-    return data.slice(startIndex, startIndex + rowsPerPage);
+    return data;
   };
 
-  const totalFilteredItems = tags.length;
+  const filteredAndSorted = getFilteredAndSortedData();
+  const totalFilteredItems = filteredAndSorted.length;
+  const paginatedData = filteredAndSorted.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const handleEdit = (item: Tag) => {
     setEditingItem(item);
@@ -142,13 +199,7 @@ export default function TagsSection() {
 
   const handleConfirmDelete = () => {
     if (itemToDelete) {
-      setTags(tags.filter(item => item.id !== itemToDelete.id));
-      toast({
-        title: "Tag Deleted",
-        description: `${itemToDelete.name} has been deleted.`,
-      });
-      setShowDeleteModal(false);
-      setItemToDelete(null);
+      deleteMutation.mutate(itemToDelete.id);
     }
   };
 
@@ -161,19 +212,7 @@ export default function TagsSection() {
       });
       return;
     }
-    const newItem: Tag = {
-      id: `TAG${String(tags.length + 1).padStart(3, "0")}`,
-      name: newName,
-      status: "Active",
-      lastEdited: new Date().toISOString().slice(0, 10), // Set current date
-    };
-    setTags([...tags, newItem]);
-    toast({
-      title: "Tag Created",
-      description: `${newName} has been created successfully.`,
-    });
-    setNewName("");
-    setShowCreateModal(false);
+    createMutation.mutate(newName);
   };
 
   const handleSaveEdit = () => {
@@ -186,19 +225,10 @@ export default function TagsSection() {
       return;
     }
     if (editingItem) {
-      setTags(
-        tags.map(item =>
-          item.id === editingItem.id
-            ? { ...item, name: editName, status: editStatus, lastEdited: new Date().toISOString().slice(0, 10) } // Update lastEdited
-            : item
-        )
-      );
-      toast({
-        title: "Tag Updated",
-        description: `${editName} has been updated successfully.`,
+      updateMutation.mutate({
+        id: editingItem.id,
+        data: { name: editName, status: editStatus }
       });
-      setShowEditModal(false);
-      setEditingItem(null);
     }
   };
 
@@ -252,155 +282,163 @@ export default function TagsSection() {
       <Card className="border-0">
         <CardContent className="p-0 px-1 mt-1">
           <div className="overflow-x-auto mt-6">
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("name")}
-                  >
-                    <div className="flex items-center gap-2 max-w-[15rem]" style={{ width: "100vw" }}>
-                      Name
-                      {renderSortIcon("name")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status
-                      {renderSortIcon("status")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("lastEdited")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Last Edited
-                      {renderSortIcon("lastEdited")}
-                    </div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredAndSortedData().length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8 text-muted-foreground">
-                      No tags found.
-                    </td>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <table className="w-full text-xs">
+                <thead className="select-none">
+                  <tr className="border-b">
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("name")}
+                    >
+                      <div className="flex items-center gap-2 max-w-[15rem]" style={{ width: "100vw" }}>
+                        Name
+                        {renderSortIcon("name")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("status")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Status
+                        {renderSortIcon("status")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
+                      onClick={() => handleColumnSort("lastEdited")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Last Edited
+                        {renderSortIcon("lastEdited")}
+                      </div>
+                    </th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
                   </tr>
-                ) : (
-                  getFilteredAndSortedData().map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3 max-w-[15rem]">
-                        <div className="break-all">
-                          {item.name}
-                        </div>
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                          }`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3">{item.lastEdited}</td>
-                      <td className="py-2 px-3">
-                        <div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1 hover:bg-muted rounded">
-                                <MoreVertical size={14} className="text-muted-foreground" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(item)}>
-                                <Edit2 size={14} className="mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive">
-                                <Trash2 size={14} className="mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                </thead>
+                <tbody>
+                  {paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center py-8 text-muted-foreground">
+                        No tags found.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    paginatedData.map((item) => (
+                      <tr key={item.id} className="border-b hover:bg-muted/50">
+                        <td className="py-2 px-3 max-w-[15rem]">
+                          <div className="break-all">
+                            {item.name}
+                          </div>
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                            }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3">{item.lastEdited}</td>
+                        <td className="py-2 px-3">
+                          <div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1 hover:bg-muted rounded">
+                                  <MoreVertical size={14} className="text-muted-foreground" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(item)}>
+                                  <Edit2 size={14} className="mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive">
+                                  <Trash2 size={14} className="mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
 
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{totalFilteredItems} results</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                  onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                >
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li
-                          key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                          onClick={() => {
-                            setRowsPerPage(option);
-                            setPage(1);
-                            setRowsDropdownOpen(false);
-                          }}
-                        >
-                          {option}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <span className="text-muted-foreground">Page {page} of {Math.ceil(totalFilteredItems / rowsPerPage)}</span>
-              <div className="flex gap-1">
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                >
-                  <ChevronsLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredItems / rowsPerPage), prev + 1))}
-                  disabled={page === Math.ceil(totalFilteredItems / rowsPerPage)}
-                >
-                  <ChevronRight size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(Math.ceil(totalFilteredItems / rowsPerPage))}
-                  disabled={page === Math.ceil(totalFilteredItems / rowsPerPage)}
-                >
-                  <ChevronsRight size={16} />
-                </button>
+          {!isLoading && (
+            <div className="flex items-center justify-between mt-4 text-xs">
+              <span className="text-muted-foreground">{totalFilteredItems} results</span>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Rows per page:</span>
+                <div className="relative w-15" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
+                    onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                  >
+                    <span className="truncate text-xs font-normal">{rowsPerPage}</span>
+                    <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
+                  </button>
+                  {rowsDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
+                      <ul className="py-1">
+                        {[10, 25, 50].map(option => (
+                          <li
+                            key={option}
+                            className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
+                            onClick={() => {
+                              setRowsPerPage(option);
+                              setPage(1);
+                              setRowsDropdownOpen(false);
+                            }}
+                          >
+                            {option}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <span className="text-muted-foreground">Page {page} of {Math.max(1, Math.ceil(totalFilteredItems / rowsPerPage))}</span>
+                <div className="flex gap-1">
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                  >
+                    <ChevronsLeft size={16} />
+                  </button>
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredItems / rowsPerPage), prev + 1))}
+                    disabled={page === Math.ceil(totalFilteredItems / rowsPerPage) || totalFilteredItems === 0}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <button
+                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                    onClick={() => setPage(Math.ceil(totalFilteredItems / rowsPerPage))}
+                    disabled={page === Math.ceil(totalFilteredItems / rowsPerPage) || totalFilteredItems === 0}
+                  >
+                    <ChevronsRight size={16} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -427,7 +465,14 @@ export default function TagsSection() {
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowCreateModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleCreate} className="btn-outline-primary" variant="outline">Create</Button>
+            <Button 
+              onClick={handleCreate} 
+              className="btn-outline-primary" 
+              variant="outline"
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -467,7 +512,14 @@ export default function TagsSection() {
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowEditModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button onClick={handleSaveEdit} className="btn-outline-primary" variant="outline">Save Changes</Button>
+            <Button 
+              onClick={handleSaveEdit} 
+              className="btn-outline-primary" 
+              variant="outline"
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -484,7 +536,14 @@ export default function TagsSection() {
           </div>
           <div className="flex gap-2 justify-end mt-2">
             <Button onClick={() => setShowDeleteModal(false)} variant="outline" className="border-input">Cancel</Button>
-            <Button onClick={handleConfirmDelete} className="btn-outline-destructive" variant="outline">Delete</Button>
+            <Button 
+              onClick={handleConfirmDelete} 
+              className="btn-outline-destructive" 
+              variant="outline"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

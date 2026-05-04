@@ -9,7 +9,9 @@ import {
   Globe, 
   User,
   ChevronRight,
-  Circle
+  Circle,
+  LayoutGrid,
+  Search
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarColor } from "@/lib/avatar-utils";
@@ -46,6 +48,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const handleLogout = () => {
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("user_info");
     setLocation("/login");
   };

@@ -57,7 +57,7 @@ const AgencyWorkspaces = () => {
     id: ws.id,
     name: ws.name,
     createdAt: ws.created_at ? format(new Date(ws.created_at), "yyyy-MM-dd hh:mm a") : "N/A",
-    status: ws.status === 'active' ? 'Active' : 'Inactive',
+    status: (ws.status === 'active' || ws.status === 'ACTIVE') ? 'Active' : 'Suspended',
     hasLogin: true,
     customLogo: ws.custom_logo || false
   }));
@@ -88,28 +88,55 @@ const AgencyWorkspaces = () => {
     setViewMode('VOICE_WALLET');
   };
 
-  const handleToggleStatus = (workspace: any) => {
-    const isActive = workspace.status === 'Active';
-    const newStatus = isActive ? 'Suspended' : 'Active';
-    
-    setLocalWorkspaces(prev => prev.map(ws => 
-      ws.id === workspace.id ? { ...ws, status: newStatus } : ws
-    ));
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (workspace: any) => {
+      const isActive = workspace.status === 'Active';
+      const endpoint = `/api/agencies/${agencyId}/workspaces/${workspace.id}/${isActive ? 'suspend' : 'activate'}`;
+      const res = await apiRequest("POST", endpoint);
+      return res.json();
+    },
+    onSuccess: (_, workspace) => {
+      const newStatus = workspace.status === 'Active' ? 'Suspended' : 'Active';
+      setLocalWorkspaces(prev => prev.map(ws => 
+        ws.id === workspace.id ? { ...ws, status: newStatus } : ws
+      ));
+      toast({
+        title: `Workspace ${newStatus}`,
+        description: `${workspace.name} has been ${newStatus.toLowerCase()} successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update workspace status.", variant: "destructive" });
+    }
+  });
 
-    toast({
-      title: `Workspace ${newStatus}`,
-      description: `${workspace.name} has been ${newStatus.toLowerCase()} successfully.`,
-    });
-  };
-
-  const handleDelete = (workspace: any) => {
-    if (confirm(`Are you sure you want to delete ${workspace.name}? This action cannot be undone.`)) {
+  const deleteMutation = useMutation({
+    mutationFn: async (workspace: any) => {
+      const res = await apiRequest("DELETE", `/api/agencies/${agencyId}/workspaces/${workspace.id}`);
+      return res.json();
+    },
+    onSuccess: (_, workspace) => {
       setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
       toast({
         title: "Workspace Deleted",
         description: `${workspace.name} has been removed from your agency.`,
         variant: "destructive",
       });
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete workspace.", variant: "destructive" });
+    }
+  });
+
+  const handleToggleStatus = (workspace: any) => {
+    toggleStatusMutation.mutate(workspace);
+  };
+
+  const handleDelete = (workspace: any) => {
+    if (confirm(`Are you sure you want to delete ${workspace.name}? This action cannot be undone.`)) {
+      deleteMutation.mutate(workspace);
     }
   };
   const handleLogin = (workspace: any) => {

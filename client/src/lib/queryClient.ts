@@ -7,6 +7,8 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app";
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -23,7 +25,14 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
+  // Prepend API_BASE_URL if the url is relative and remove /api if present
+  let processedUrl = url;
+  if (processedUrl.startsWith("/api")) {
+    processedUrl = processedUrl.substring(4);
+  }
+  const fullUrl = processedUrl.startsWith("http") ? processedUrl : `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
+
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: isFormData ? (data as FormData) : (data ? JSON.stringify(data) : undefined),
@@ -46,7 +55,15 @@ export const getQueryFn: <T>(options: {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const res = await fetch(queryKey.join("/") as string, {
+    let path = queryKey.join("/");
+    if (path.startsWith("/api")) {
+      path = path.substring(4);
+    } else if (path.startsWith("api/")) {
+       path = path.substring(3);
+    }
+    const fullUrl = path.startsWith("http") ? path : `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+
+    const res = await fetch(fullUrl, {
       credentials: "include",
       headers,
     });

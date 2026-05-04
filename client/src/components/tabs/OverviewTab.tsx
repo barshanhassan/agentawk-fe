@@ -121,7 +121,7 @@ export default function OverviewTab() {
       {/* Row 1: 4 KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: User Activity */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">User Activity</CardTitle>
           </CardHeader>
@@ -150,7 +150,7 @@ export default function OverviewTab() {
         </Card>
 
         {/* Card 2: New Users */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">New Users</CardTitle>
           </CardHeader>
@@ -180,7 +180,7 @@ export default function OverviewTab() {
         </Card>
 
         {/* Card 3: Plan Usage */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Plan Usage</CardTitle>
           </CardHeader>
@@ -207,7 +207,7 @@ export default function OverviewTab() {
         </Card>
 
         {/* Card 4: Agent Capacity */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Agent Capacity</CardTitle>
           </CardHeader>
@@ -236,7 +236,7 @@ export default function OverviewTab() {
 
       {/* Row 2: Daily Active Users & Monthly Active Users */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Daily Active Users (DAU)</CardTitle>
             <p className="text-xs text-muted-foreground">Last 30 Days</p>
@@ -254,7 +254,7 @@ export default function OverviewTab() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Monthly Active Users (MAU)</CardTitle>
             <p className="text-xs text-muted-foreground">Last 6 Months</p>
@@ -275,7 +275,7 @@ export default function OverviewTab() {
 
       {/* Row 3: Weekly Active Users & Stickiness */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Weekly Active Users (WAU)</CardTitle>
             <p className="text-xs text-muted-foreground">Last 5 Weeks</p>
@@ -293,7 +293,7 @@ export default function OverviewTab() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
+        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.12)] dark:hover:shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border hover:border-blue-100 dark:hover:border-blue-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Stickiness (DAU/MAU)</CardTitle>
             <p className="text-xs text-muted-foreground">Last 30 Days</p>

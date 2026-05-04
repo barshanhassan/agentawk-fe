@@ -30,11 +30,11 @@ import {
   MessageCircle,
 
   LifeBuoy,
-  Plus
+  Plus,
+  LogOut
 } from "react-feather";
+import { LayoutGrid } from "lucide-react"; // Import for the new grid icon
 import { useTheme } from "@/contexts/ThemeContext";
-import { BsGrid3X3GapFill } from "react-icons/bs";
-
 import { SiWhatsapp } from "react-icons/si";
 import {
   DropdownMenu,
@@ -45,12 +45,12 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarColor } from "@/lib/avatar-utils";
+import { cn } from "@/lib/utils";
 
 export default function AppSidebar() {
   const [location, setLocation] = useLocation();
@@ -116,30 +116,22 @@ export default function AppSidebar() {
     },
   ];
 
-  // ... (keeping existing functions)
-
   const isActive = (path: string) => {
-    if (path === "/insights") return location === "/" || location === "/insights";
+    if (path === "/insights") return location === "/" || location === "/insights" || location === "/workspace";
     return location.startsWith(path);
   };
 
-  const hoverClass = "hover:bg-primary hover:text-white data-[highlighted]:bg-primary data-[highlighted]:text-white";
-  const activeClass = "bg-primary text-white";
+  const hoverClass = "hover:bg-primary hover:text-white data-[highlighted]:bg-primary data-[highlighted]:text-white transition-all duration-200";
+  const activeClass = "bg-primary text-white shadow-md scale-[1.02]";
 
   const subTriggerClass =
     "hover:bg-primary hover:text-white " +
     "data-[highlighted]:bg-primary data-[highlighted]:text-white " +
-    "data-[state=open]:bg-primary data-[state=open]:text-white";
+    "data-[state=open]:bg-primary data-[state=open]:text-white transition-all duration-200";
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  const isConversationsParentActive =
-    location.startsWith("/conversations/inbox") ||
-    location.startsWith("/conversations/conversation-logs") ||
-    location.startsWith("/conversations/call-logs");
-
-  // Removed local theme effect as it's handled in ThemeContext
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -165,462 +157,360 @@ export default function AppSidebar() {
     { label: "Call Logs", href: "/conversations/call-logs", icon: Phone },
     { label: "Billing", href: "/billing", icon: Grid },
     { label: "Settings", href: "/settings", icon: Settings },
-
   ];
 
-  const filteredItems = menuItems.filter((item) =>
-    item.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-[0_-3px_6px_rgba(0,0,0,0.03),-3px_0_6px_rgba(0,0,0,0.03),3px_0_6px_rgba(0,0,0,0.03),0_4px_6px_rgba(0,0,0,0.07)] border-b border-slate-200 dark:border-slate-800 no-focus-outline">
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 border-b no-focus-outline",
+      theme === "dark" 
+        ? "bg-[#0f172a] border-slate-800 shadow-lg" 
+        : "bg-white border-slate-200 shadow-sm"
+    )}>
       <div className="flex items-center justify-between h-full px-5">
         {/* Left: Logo + EZCONN + Menu + Search */}
         <div className="flex items-center gap-6">
-          {/* Logo + EZCONN - Updated font style like REPLYAGENT */}
+          {/* Logo + EZCONN - Premium Styling */}
           <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer">
-              <div className="w-9 h-9 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <div className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center font-black text-white shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
+                theme === "dark" ? "bg-blue-600 shadow-blue-600/20" : "bg-gradient-to-br from-indigo-500 to-blue-600 shadow-blue-500/20"
+              )}>
                 EC
               </div>
-              <span className="font-bold text-xl tracking-wide uppercase hidden md:block" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <span className={cn(
+                "font-black text-xl tracking-tighter uppercase hidden md:block transition-colors duration-300",
+                theme === "dark" ? "text-white" : "text-slate-900"
+              )}>
                 EZCONN
               </span>
             </div>
           </Link>
 
-          {/* Menu with "Menu" text */}
+          {/* Menu with Premium Styling */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              {/* Custom 3x3 Grid Menu Icon */}
-              <button className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md shadow-sm transition text-sm">
-                <BsGrid3X3GapFill size={14} className="text-slate-700 dark:text-white" />
-                <span className="hidden md:block text-[14px] font-[500] font-[Roboto, sans-serif]">Menu</span>
+              <button className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group shadow-sm",
+                theme === "dark" 
+                  ? "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white" 
+                  : "bg-blue-50/50 border-blue-100/50 text-slate-700 hover:bg-white hover:shadow-md hover:scale-[1.02] hover:text-blue-600"
+              )}>
+                <div className={cn("p-1 rounded-lg transition-colors", theme === "dark" ? "bg-slate-700" : "bg-white shadow-sm")}>
+                  <LayoutGrid size={14} className={cn(theme === "dark" ? "text-blue-400" : "text-blue-500")} />
+                </div>
+                <span className="hidden md:block text-[14px] font-bold tracking-tight">Menu</span>
+                <ChevronDown size={14} className="text-gray-400 group-hover:rotate-180 transition-transform duration-300" />
               </button>
-
-
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="bottom"
               align="start"
-              sideOffset={6}
-              className="w-60 bg-white dark:bg-background border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-[14px] font-[Roboto, sans-serif] mt-2 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] no-focus-outline"
+              sideOffset={8}
+              className={cn(
+                "w-64 p-2 transition-all duration-200 border rounded-2xl shadow-2xl no-focus-outline",
+                theme === "dark" ? "bg-[#1e293b] border-slate-700 text-slate-300" : "bg-white border-slate-100 text-slate-600"
+              )}
             >
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/insights"
-                  className={`flex items-center gap-3 px-2 py-1  ${hoverClass} ${isActive("/insights") ? activeClass : ""}`}
-                >
-                  <BarChart2 size={18} /> Insights
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/automations"
-                  className={`flex items-center gap-3 px-2 py-1  ${hoverClass} ${isActive("/automations") ? activeClass : ""}`}
-                >
-                  <GitMerge size={18} /> Smart Flows
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/conversations/inbox"
-                  className={`flex items-center gap-3 px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/inbox") ? activeClass : ""}`}
-                >
-                  <Mail size={18} />
-                  Inbox
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger
-                  className={`flex items-center gap-3 px-2 py-1 ${subTriggerClass} ${isActive("/conversations/conversation-logs") || isActive("/conversations/call-logs") ? activeClass : ""}`}
-                >
-                  <MessageSquare size={18} /> Logs
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                  <DropdownMenuItem asChild>
+              <DropdownMenuLabel className="px-3 py-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Navigation</DropdownMenuLabel>
+              <div className="space-y-1">
+                {menuItems.slice(0, 8).map((item) => (
+                  <DropdownMenuItem key={item.label} asChild>
                     <Link
-                      href="/conversations/conversation-logs"
-                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/conversation-logs") ? activeClass : ""}`}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
+                        isActive(item.href) 
+                          ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold" 
+                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-blue-600"
+                      )}
                     >
-                      <FileText size={18} />
-                      Conversation Logs
+                      <item.icon size={18} className={isActive(item.href) ? "text-white" : "text-gray-400"} />
+                      <span>{item.label}</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                ))}
+              </div>
+              <DropdownMenuSeparator className={theme === "dark" ? "bg-slate-700 my-2" : "bg-slate-100 my-2"} />
+              <div className="space-y-1">
+                 {menuItems.slice(8).map((item) => (
+                  <DropdownMenuItem key={item.label} asChild>
                     <Link
-                      href="/conversations/call-logs"
-                      className={`px-2 py-1 text-slate-900 dark:text-white ${hoverClass} ${isActive("/conversations/call-logs") ? activeClass : ""}`}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
+                        isActive(item.href) 
+                          ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold" 
+                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-blue-600"
+                      )}
                     >
-                      <Phone size={18} />
-                      Call Logs
+                      <item.icon size={18} className={isActive(item.href) ? "text-white" : "text-gray-400"} />
+                      <span>{item.label}</span>
                     </Link>
                   </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-
-
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/templates"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/templates") ? activeClass : ""}`}
-                >
-                  <FileText size={18} /> WhatsApp Templates
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/campaigns"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/campaigns") ? activeClass : ""}`}
-                >
-                  {/* ... */}
-                  <Send size={18} /> Campaign Manager
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/contacts"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/contacts") ? activeClass : ""}`}
-                >
-                  <Users size={18} /> Contacts
-                </Link>
-              </DropdownMenuItem>
-
-
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/teams"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/teams") ? activeClass : ""}`}
-                >
-                  <UserPlus size={18} /> Team Management
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/workspaces"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/workspaces") ? activeClass : ""}`}
-                >
-                  <Grid size={18} /> Workspace Management
-                </Link>
-              </DropdownMenuItem>
-
-
-
-              <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/whatsapp-manager"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/whatsapp-manager") ? activeClass : ""}`}
-                >
-                  <SiWhatsapp size={18} /> WhatsApp Manager
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/billing"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/billing") ? activeClass : ""}`}
-                >
-                  <Grid size={18} /> Billing
-                </Link>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/settings"
-                  className={`flex items-center gap-3 px-2 py-1 ${hoverClass} ${isActive("/settings") ? activeClass : ""}`}
-                >
-                  <Settings size={18} /> Settings
-                </Link>
-              </DropdownMenuItem>
+                ))}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Search Bar Dropdown */}
+          {/* Search Section Premium Styling */}
+          <div className="relative flex items-center h-10">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className={cn(
+                "p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center",
+                isSearchOpen ? "opacity-0 pointer-events-none scale-90" : "opacity-100 scale-100",
+                theme === "dark" 
+                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white" 
+                  : "bg-blue-50/50 border-blue-100/50 text-slate-500 hover:bg-white hover:shadow-md hover:scale-[1.05] hover:text-blue-500"
+              )}
+            >
+              <Search size={16} />
+            </button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-
-              {/* Search Bar */}
-              <div className="relative flex items-center">
-                {/* Search Icon */}
-                <button
-                  onClick={() => setIsSearchOpen(true)}
-                  className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition
-      ${isSearchOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-                >
-                  <Search size={16} />
-                </button>
-
-                {/* Expanding Search Bar (to the RIGHT) */}
-                <div
-                  className={`
-                    absolute left-0 z-20 flex items-center
-                    bg-card border border-input
-                    rounded-md px-3 py-2 text-sm
-                    overflow-hidden
-                    transition-[width,opacity] duration-300 ease-out
-                    ${isSearchOpen ? "w-[550px] opacity-100" : "w-0 opacity-0 pointer-events-none"}
-
-                  `}
-                >
-                  {/* Search Icon */}
-                  <Search size={16} className="text-gray-400 mr-2 ml-[-0.25rem] shrink-0" />
-
-                  {/* Dropdown Label */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-1 text-slate-700 dark:text-white font-medium mr-3 whitespace-nowrap outline-none">
-                        {searchType}
-                        <ChevronDown size={14} className="text-gray-400" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="mt-2 ml-[-2.2rem] bg-card border-slate-200 dark:border-[#2c3a4f] no-focus-outline">
-                      {searchOptions.map((option) => (
-                        <DropdownMenuItem
-                          key={option.label}
-                          onClick={() => setSearchType(option.label)}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <div className="w-4 flex items-center justify-center shrink-0">
-                            {searchType === option.label && <Check size={14} className="text-primary" />}
-                          </div>
-                          <div className="text-muted-foreground flex items-center justify-center w-5">
-                            {option.icon}
-                          </div>
-                          <span>{option.label}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Divider */}
-                  <span className="h-4 w-px bg-gray-500/40 mr-3 shrink-0"></span>
-
-                  {/* REAL INPUT */}
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Search..."
-                    className="
-        flex-1 bg-transparent text-slate-900 dark:text-white placeholder-gray-400
-        outline-none !border-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0 text-sm
-      "
-                  />
-
-                  {/* Close */}
-                  <button
-                    onClick={() => {
-                      setIsSearchOpen(false);
-                      setSearchValue("");
-                    }}
-                    className="ml-2 text-gray-400 hover:text-slate-900 dark:hover:text-white shrink-0"
-                  >
-                    ✕
+            {/* Premium Expanding Search Bar */}
+            <div
+              className={cn(
+                "absolute left-0 z-20 flex items-center h-11 border transition-all duration-500 ease-in-out shadow-xl rounded-xl px-3",
+                theme === "dark" ? "bg-[#1e293b] border-slate-700 shadow-black/40" : "bg-white border-blue-100 shadow-blue-500/10",
+                isSearchOpen ? "w-[500px] opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-4 pointer-events-none overflow-hidden"
+              )}
+            >
+              <Search size={16} className="text-blue-500 mr-3 shrink-0" />
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-colors",
+                    theme === "dark" ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"
+                  )}>
+                    {searchType}
+                    <ChevronDown size={14} className="text-gray-400" />
                   </button>
-                </div>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={cn(
+                  "p-1 border shadow-2xl rounded-xl z-[60]",
+                  theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-100"
+                )}>
+                  {searchOptions.map((option) => (
+                    <DropdownMenuItem
+                      key={option.label}
+                      onClick={() => setSearchType(option.label)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all",
+                        searchType === option.label 
+                          ? "bg-blue-500 text-white font-bold" 
+                          : theme === "dark" ? "hover:bg-slate-800 text-slate-300" : "hover:bg-slate-50 text-slate-700"
+                      )}
+                    >
+                      <div className="shrink-0">{option.icon}</div>
+                      <span className="text-xs">{option.label}</span>
+                      {searchType === option.label && <Check size={14} className="ml-auto text-white" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
+              <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-3 shrink-0" />
 
-            </DropdownMenuTrigger>
-          </DropdownMenu>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Search anything..."
+                className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400"
+              />
+
+              <button
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchValue("");
+                }}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-gray-400 hover:text-red-500 transition-all shrink-0 ml-2"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
         </div>
+
         {/* Right Section */}
-        <div className="flex items-center gap-6">
-
-
-
-          {/* Notifications Dropdown */}
+        <div className="flex items-center gap-5">
+          {/* Notifications Premium Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="relative hover:text-primary transition">
-                <Bell size={20} />
-
+              <button className={cn(
+                "p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center relative group",
+                theme === "dark" 
+                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800" 
+                  : "bg-blue-50/50 border-blue-100/50 text-slate-500 hover:bg-white hover:shadow-md hover:text-blue-500"
+              )}>
+                <Bell size={20} className="group-hover:rotate-12 transition-transform" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end"
-              sideOffset={6}
-              className="w-80 bg-card text-card-foreground border-slate-200 dark:border-slate-700 mt-5 shadow-xl no-focus-outline">
-              <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 className="font-semibold">Notifications</h3>
+            <DropdownMenuContent align="end" sideOffset={12} className={cn(
+              "w-80 p-0 border rounded-2xl shadow-2xl overflow-hidden",
+              theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-100"
+            )}>
+              <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+                <h3 className="font-bold text-sm">Notifications</h3>
+                <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">3 NEW</span>
               </div>
-              <div className="max-h-96 overflow-y-auto">
-                <DropdownMenuItem
-                  onSelect={() => setLocation("/conversations/inbox")}
-                  className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium">New message from John Doe</p>
-                    <p className="text-sm text-muted-foreground">2 minutes ago</p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => setLocation("/campaigns")}
-                  className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium">Campaign "Summer Sale" completed</p>
-                    <p className="text-sm text-muted-foreground">1 hour ago</p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => setLocation("/templates")}
-                  className="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium">Template approved</p>
-                    <p className="text-sm text-muted-foreground">3 hours ago</p>
-                  </div>
-                </DropdownMenuItem>
+              <div className="max-h-96 overflow-y-auto p-1">
+                {[
+                  { title: "New message from John Doe", time: "2m ago", icon: Mail, color: "text-blue-500" },
+                  { title: "Campaign \"Summer Sale\" completed", time: "1h ago", icon: Send, color: "text-green-500" },
+                  { title: "Template approved", time: "3h ago", icon: Check, color: "text-indigo-500" }
+                ].map((n, i) => (
+                  <DropdownMenuItem key={i} className="p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none">
+                    <div className="flex gap-3">
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-700 shrink-0", n.color)}>
+                        <n.icon size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{n.title}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{n.time}</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
               </div>
-              <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
-              <DropdownMenuItem
-                onSelect={() => setLocation("/notifications")}
-                className="justify-center text-primary py-2 cursor-pointer"
-              >
-                View All Notifications
-              </DropdownMenuItem>
+              <div className="p-2 border-t border-slate-100 dark:border-slate-800">
+                <button 
+                  onClick={() => setLocation("/notifications")}
+                  className="w-full py-2 text-[12px] font-bold text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors"
+                >
+                  View All Notifications
+                </button>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* User Profile Dropdown - Avatar + Name + Status Below */}
+          {/* User Profile Premium Styling */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 hover:opacity-80 transition">
-                {/* Avatar */}
-                <Avatar className="w-7 h-7">
-                  <AvatarFallback className={`${getAvatarColor(user?.first_name || "User")} text-[10px] font-[600]`}>
+              <button className={cn(
+                "flex items-center gap-3 p-1.5 pr-3 rounded-2xl border transition-all duration-300 group shadow-sm",
+                theme === "dark" 
+                  ? "bg-slate-800/50 border-slate-700 hover:bg-slate-800" 
+                  : "bg-blue-50/50 border-blue-100/50 hover:bg-white hover:shadow-md hover:scale-[1.02]"
+              )}>
+                <Avatar className="w-8 h-8 ring-2 ring-white/50 shadow-sm transition-transform group-hover:scale-110">
+                  <AvatarFallback className={cn("text-[10px] font-black text-white", getAvatarColor(user?.first_name || "User"))}>
                     {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                   </AvatarFallback>
                 </Avatar>
 
-                {/* Name + Status Below */}
-                <div className="text-left">
-                  <p className="font-[400] text-[12px] whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]">
-                    {user ? `${user.first_name} ${user.last_name || ""}` : "Loading..."}
+                <div className="text-left hidden sm:block">
+                  <p className={cn("text-[13px] font-bold leading-none truncate max-w-[100px]", theme === "dark" ? "text-white" : "text-slate-900")}>
+                    {user ? `${user.first_name} ${user.last_name || ""}` : "Profile"}
                   </p>
-                  <div className="flex items-center gap-1.5 -mt-0.5">
-                    {status === "available" ? (
-                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                    ) : (
-                      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
-                    )}
-                    <span className={`text-[12px] ${status === "available" ? "text-green-500" : "text-gray-400"}`}>
-                      {status === "available" ? "Available" : "Unavailable"}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <div className={cn("w-2 h-2 rounded-full", status === "available" ? "bg-green-500 animate-pulse" : "bg-slate-400")} />
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
+                      {status === "available" ? "Online" : "Away"}
                     </span>
                   </div>
                 </div>
 
-                {/* Down Arrow */}
-                <ChevronDown size={16} className="text-gray-400 ml-2" />
+                <ChevronDown size={14} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
               </button>
             </DropdownMenuTrigger>
 
-            {/* Dropdown Content */}
-            <DropdownMenuContent align="end" className="w-64 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-xl rounded-lg mt-4 no-focus-outline">
+            <DropdownMenuContent align="end" sideOffset={12} className={cn(
+              "w-72 p-2 border rounded-2xl shadow-2xl no-focus-outline overflow-hidden",
+              theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-100"
+            )}>
               {/* Header */}
-              <DropdownMenuItem asChild>
-                <div
-                  className="flex items-center gap-3 p-5 border-b border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 transition"
-                  onClick={() => setLocation("/settings?tab=My%20Profile")}
-                >
-                  <Avatar className="w-8 h-8 my-1">
-                    <AvatarFallback className={`${getAvatarColor(user?.first_name || "User")} text-xs font-bold`}>
-                      {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">
-                      {user ? `${user.first_name} ${user.last_name || ""}` : "Profile"}
-                    </p>
-                    <div className="flex items-center gap-2 text-sm">
+              <div 
+                className="p-4 mb-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 flex items-center gap-4 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900/50"
+                onClick={() => setLocation("/settings?tab=My%20Profile")}
+              >
+                <Avatar className="w-10 h-10 ring-2 ring-white shadow-md">
+                  <AvatarFallback className={cn("text-xs font-black text-white", getAvatarColor(user?.first_name || "User"))}>
+                    {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="overflow-hidden">
+                  <p className="font-bold text-sm truncate">{user ? `${user.first_name} ${user.last_name || ""}` : "Loading..."}</p>
+                  <p className="text-[11px] text-gray-500 truncate">{user?.email || "admin@example.com"}</p>
+                </div>
+              </div>
 
+              {/* Selectors Group */}
+              <div className="space-y-1">
+                <div className="px-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase px-3 py-1 tracking-widest">Preferences</p>
+                  
+                  <div className="space-y-3 p-2">
+                    {/* Status Dropdown */}
+                    <div>
+                      <CustomDropdown
+                        options={statusOptions}
+                        selected={[status]}
+                        onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
+                        placeholder="Status"
+                        width="100%"
+                        showSelectedOption={true}
+                        showSearch={false}
+                      />
+                    </div>
+
+                    {/* Workspace Dropdown */}
+                    <div>
+                      <CustomDropdown
+                        options={workspaceOptions}
+                        selected={workspace}
+                        onChange={(val) => setWorkspace(val)}
+                        placeholder="Workspace"
+                        width="100%"
+                        showSelectedOption={true}
+                        showSearch={false}
+                      />
+                    </div>
+
+                    {/* Theme Dropdown */}
+                    <div>
+                      <CustomDropdown
+                        options={themeOptions}
+                        selected={[theme]}
+                        onChange={(val) => setTheme(val[0] as "light" | "dark")}
+                        placeholder="Theme"
+                        width="100%"
+                        showSelectedOption={true}
+                        showSearch={false}
+                      />
+                    </div>
+
+                    {/* Language Dropdown */}
+                    <div>
+                      <CustomDropdown
+                        options={languageOptions}
+                        selected={language}
+                        onChange={(val) => setLanguage(val)}
+                        placeholder="Language"
+                        width="100%"
+                        showSelectedOption={true}
+                        showSearch={false}
+                      />
                     </div>
                   </div>
                 </div>
-              </DropdownMenuItem>
-
-              {/* Online Status Selector */}
-              <div className="p-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Online Status</p>
-                <CustomDropdown
-                  options={statusOptions}
-                  selected={[status]}
-                  onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
-                  placeholder="Select Status"
-                  width="100%"
-                  showSelectedOption={true}
-                  showSearch={false}
-                />
               </div>
 
-              {/* Workspace Selector */}
-              <div className="px-4 pb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Workspace</p>
-                <CustomDropdown
-                  options={workspaceOptions}
-                  selected={workspace}
-                  onChange={(val) => setWorkspace(val)}
-                  placeholder="Select Workspace"
-                  width="100%"
-                  showSelectedOption={true}
-                  showSearch={false}
-                />
-              </div>
-
-              {/* Theme Selector */}
-              <div className="px-4 pb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Theme</p>
-                <CustomDropdown
-                  options={themeOptions}
-                  selected={[theme]}
-                  onChange={(val) => setTheme(val[0] as "light" | "dark")}
-                  placeholder="Select Theme"
-                  width="100%"
-                  showSelectedOption={true}
-                  showSearch={false}
-                />
-              </div>
-
-              {/* Language */}
-              <div className="px-4 pb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</p>
-                <CustomDropdown
-                  options={languageOptions}
-                  selected={language}
-                  onChange={(val) => setLanguage(val)}
-                  placeholder="Select Language"
-                  width="100%"
-                  showSelectedOption={true}
-                  showSearch={false}
-                />
-              </div>
-
-              {/* Sign Out */}
-              <div className="border-t border-gray-200 dark:border-slate-700 px-4 py-1">
+              {/* Footer Actions */}
+              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => {
                     localStorage.removeItem("auth_token");
                     localStorage.removeItem("user_info");
                     window.location.href = "/login";
                   }}
-                  className="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg px-3 py-2 font-medium transition"
+                  className="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl px-3 py-2.5 text-sm font-bold transition-all"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
+                  <LogOut size={16} />
                   Sign out
                 </button>
               </div>

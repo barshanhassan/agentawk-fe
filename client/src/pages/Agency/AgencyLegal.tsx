@@ -57,45 +57,36 @@ const AgencyLegal = () => {
 
       {/* Tabs Section */}
       <Tabs defaultValue="active" className="w-full">
-        <TabsList className={cn("bg-transparent border-b w-full justify-start rounded-none h-12 p-0 gap-8 transition-colors",
-          mode === "dark" ? "border-slate-700" : "border-slate-100")}>
-          <TabsTrigger 
-            value="active" 
-            className={cn(
-              "data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full font-bold transition-colors",
-              mode === "dark" ? "text-gray-400 data-[state=active]:text-white" : "text-gray-500 data-[state=active]:text-slate-900"
-            )}
-          >
-            Active
-          </TabsTrigger>
-          <TabsTrigger 
-            value="history" 
-            className={cn(
-              "data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full font-bold transition-colors",
-              mode === "dark" ? "text-gray-400 data-[state=active]:text-white" : "text-gray-500 data-[state=active]:text-slate-900"
-            )}
-          >
-            History
-          </TabsTrigger>
-          <TabsTrigger 
-            value="accepted" 
-            className={cn(
-              "data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full font-bold transition-colors",
-              mode === "dark" ? "text-gray-400 data-[state=active]:text-white" : "text-gray-500 data-[state=active]:text-slate-900"
-            )}
-          >
-            Accepted Terms
-          </TabsTrigger>
-          <TabsTrigger 
-            value="accepted2" 
-            className={cn(
-              "data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-full font-bold transition-colors",
-              mode === "dark" ? "text-gray-400 data-[state=active]:text-white" : "text-gray-500 data-[state=active]:text-slate-900"
-            )}
-          >
-            Your Accepted Terms
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex justify-start mb-6">
+          <TabsList className={cn(
+            "h-auto p-1.5 gap-1 rounded-2xl border transition-all duration-300",
+            mode === "dark" 
+              ? "bg-slate-800/40 border-slate-700/50 shadow-inner" 
+              : "bg-blue-50/70 border-blue-100/50 shadow-sm"
+          )}>
+            {[
+              { id: "active", label: "Active" },
+              { id: "history", label: "History" },
+              { id: "accepted", label: "Accepted Terms" },
+              { id: "accepted2", label: "Your Accepted Terms" },
+            ].map((tab) => (
+              <TabsTrigger 
+                key={tab.id}
+                value={tab.id} 
+                className={cn(
+                  "px-5 py-2 rounded-xl text-[13px] font-bold transition-all duration-300",
+                  "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-[1.02]",
+                  "hover:scale-[1.02] active:scale-100",
+                  mode === "dark" 
+                    ? "text-slate-400 hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 shadow-blue-900/20" 
+                    : "text-slate-600 hover:text-slate-900 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:via-blue-500 data-[state=active]:to-cyan-500 shadow-blue-500/25"
+                )}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value="active" className="mt-8">
           <div className={cn("rounded-lg border overflow-hidden transition-colors", 

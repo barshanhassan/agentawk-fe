@@ -14,6 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Upload, Image as ImageIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -269,6 +276,36 @@ export default function WhiteLabelSection() {
     });
   };
 
+  const handleLogoAction = (action: "upload" | "gallery" | "remove", type: "light" | "dark") => {
+    if (action === "upload") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = (e: any) => {
+        const file = e.target.files[0];
+        if (file) {
+          toast({
+            title: "Uploading...",
+            description: `Uploading ${type} logo: ${file.name}`,
+          });
+          // TODO: Implement actual upload logic
+        }
+      };
+      input.click();
+    } else if (action === "gallery") {
+      toast({
+        title: "Media Gallery",
+        description: "Opening media gallery...",
+      });
+    } else if (action === "remove") {
+      toast({
+        title: "Logo Removed",
+        description: `${type === "light" ? "Light" : "Dark"} mode logo has been removed.`,
+      });
+      // TODO: Call API to remove logo
+    }
+  };
+
   if (isLoading) {
     return <div className="p-8 text-center text-gray-500">Loading White Label settings...</div>;
   }
@@ -309,14 +346,29 @@ export default function WhiteLabelSection() {
                   <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Light Mode Logo</Label>
                 </div>
 
-                <div className="relative group max-w-[540px]">
-                  <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-8 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 h-[180px] transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-md">
-                    <img
-                      src="/white-label/ezconn-logo.svg"
-                      alt="Light Logo"
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
+                <div className="max-w-[540px]">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-8 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 h-[180px] transition-all duration-300 hover:border-primary/40 hover:shadow-md cursor-pointer group">
+                        <img
+                          src="/white-label/ezconn-logo.svg"
+                          alt="Light Logo"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={() => handleLogoAction("upload", "light")}>
+                        <Upload className="mr-2 h-4 w-4" /> Upload
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLogoAction("gallery", "light")}>
+                        <ImageIcon className="mr-2 h-4 w-4" /> Select from gallery
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLogoAction("remove", "light")} className="text-red-600 focus:text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <div className="mt-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
                       Recommended size: 460px * 140px
@@ -334,14 +386,29 @@ export default function WhiteLabelSection() {
                   <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Dark Mode Logo</Label>
                 </div>
 
-                <div className="relative group max-w-[540px]">
-                  <div className="border-2 border-dashed border-slate-700 dark:border-slate-600 rounded-2xl p-8 flex items-center justify-center bg-[#020617] h-[180px] transition-all duration-300 group-hover:border-primary/40 overflow-hidden isolate shadow-xl group-hover:shadow-2xl">
-                    <img
-                      src="/white-label/ezconn-logo-dark.svg"
-                      alt="Dark Logo"
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
+                <div className="max-w-[540px]">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className="border-2 border-dashed border-slate-700 dark:border-slate-600 rounded-2xl p-8 flex items-center justify-center bg-[#020617] h-[180px] transition-all duration-300 hover:border-primary/40 overflow-hidden isolate shadow-xl hover:shadow-2xl cursor-pointer group">
+                        <img
+                          src="/white-label/ezconn-logo-dark.svg"
+                          alt="Dark Logo"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={() => handleLogoAction("upload", "dark")}>
+                        <Upload className="mr-2 h-4 w-4" /> Upload
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLogoAction("gallery", "dark")}>
+                        <ImageIcon className="mr-2 h-4 w-4" /> Select from gallery
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLogoAction("remove", "dark")} className="text-red-600 focus:text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <div className="mt-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
                       Recommended size: 460px * 140px
@@ -364,13 +431,25 @@ export default function WhiteLabelSection() {
               </div>
 
               <div className="space-y-6 text-left">
-                <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-10 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 w-44 h-44 overflow-hidden transition-all duration-300 hover:border-primary/40 group hover:shadow-lg">
-                  <img
-                    src="/white-label/favicon.png"
-                    alt="Favicon Preview"
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                  />
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-10 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 w-44 h-44 overflow-hidden transition-all duration-300 hover:border-primary/40 group hover:shadow-lg cursor-pointer">
+                      <img
+                        src="/white-label/favicon.png"
+                        alt="Favicon Preview"
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem onClick={() => handleLogoAction("upload", "light")}>
+                      <Upload className="mr-2 h-4 w-4" /> Upload
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLogoAction("gallery", "light")}>
+                      <ImageIcon className="mr-2 h-4 w-4" /> Select from gallery
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
                   Recommended size: 64px * 64px
                 </span>
