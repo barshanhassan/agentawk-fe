@@ -60,81 +60,81 @@ const AgencyNotificationsSettings = () => {
     }
   });
 
+  const LANGUAGES = [
+    { code: "pt-BR", label: "Português do Brasil", flag: "br" },
+    { code: "en-US", label: "English (U.S)", flag: "us" },
+    { code: "es-ES", label: "Español", flag: "es" },
+  ];
+
+  const selectedLang = LANGUAGES.find(l => l.code === notifLanguage) || LANGUAGES[1];
+
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", 
       mode === "dark" ? "text-white" : "text-slate-900")}>
-      <Card className={cn("shadow-xl overflow-hidden transition-colors", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
+      <Card className={cn("shadow-sm overflow-hidden transition-colors rounded-lg", 
+        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
         {/* Header Section */}
-        <div className={cn("p-4 border-b flex items-center gap-3 transition-colors", 
-          mode === "dark" ? "border-slate-800" : "border-slate-100")}>
-          <Settings className="w-5 h-5 text-gray-400" />
-          <h2 className={cn("font-bold text-base leading-tight uppercase tracking-tight", 
+        <div className={cn("p-5 border-b flex items-center gap-4 transition-colors", 
+          mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+          <Settings className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+          <h2 className={cn("font-bold text-[15px] tracking-tight", 
             mode === "dark" ? "text-white" : "text-slate-900")}>Notifications</h2>
         </div>
         
-        <CardContent className="p-8 space-y-8">
-          {/* Notification Email */}
-          <div className="space-y-4">
-             <div className="space-y-1.5">
-               <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Notification Email</label>
-               <Input 
-                 value={notifEmail}
-                 onChange={(e) => setNotifEmail(e.target.value)}
-                 placeholder="admin@example.com"
-                 className={cn("text-sm h-11 max-w-xl transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
-               />
-               <p className="text-[11px] text-gray-500 font-medium">Email address that will receive our notification, announcements and products updates.</p>
-             </div>
-          </div>
+        <CardContent className="p-6">
+          <div className="max-w-[450px]">
+            {/* Notification Email */}
+            <div>
+              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Notification Email</label>
+              <Input 
+                value={notifEmail}
+                onChange={(e) => setNotifEmail(e.target.value)}
+                placeholder="admin@example.com"
+                className={cn("text-[13px] h-9 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                  mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+              />
+              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>Email address that will receive our notification, announcements and products updates.</p>
+            </div>
 
-          <div className={cn("border-t pt-8 space-y-4 transition-colors", 
-            mode === "dark" ? "border-slate-800/50" : "border-slate-100")}>
-             {/* Notification Language */}
-             <div className="space-y-1.5">
-               <label className={cn("text-[12px] font-bold uppercase tracking-wider", mode === "dark" ? "text-gray-300" : "text-slate-500")}>Notification Language</label>
-               <Select value={notifLanguage} onValueChange={setNotifLanguage}>
-                 <SelectTrigger className={cn("text-sm h-11 max-w-xl transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
-                   <div className="flex items-center gap-2">
-                     <SelectValue placeholder="Select language" />
-                   </div>
-                 </SelectTrigger>
-                 <SelectContent className={cn("border shadow-2xl transition-colors", 
-                   mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900")}>
-                   <SelectItem value="pt-BR">
-                     <div className="flex items-center gap-2">
-                       <span className="text-lg">🇧🇷</span>
-                       <span>Português do Brasil</span>
-                     </div>
-                   </SelectItem>
-                   <SelectItem value="en-US">
-                     <div className="flex items-center gap-2">
-                       <span className="text-lg">🇺🇸</span>
-                       <span>English (US)</span>
-                     </div>
-                   </SelectItem>
-                   <SelectItem value="es-ES">
-                     <div className="flex items-center gap-2">
-                       <span className="text-lg">🇪🇸</span>
-                       <span>Español</span>
-                     </div>
-                   </SelectItem>
-                 </SelectContent>
-               </Select>
-               <p className="text-[11px] text-gray-500 font-medium">Choose the language that you want to receive our email notifications.</p>
-             </div>
-          </div>
+            <div className={cn("h-px w-full my-6", mode === "dark" ? "bg-slate-800" : "bg-slate-100")}></div>
 
-          <div className="flex justify-start pt-4">
-            <button 
-              onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
-              disabled={updateMutation.isPending}
-              className={cn("px-8 py-2.5 rounded text-sm font-bold transition-colors border shadow-sm flex items-center gap-2",
-                mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-700" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-               <Save size={14} /> {updateMutation.isPending ? "Saving..." : "Save"}
-            </button>
+            {/* Notification Language */}
+            <div>
+              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Notification Language</label>
+              <Select value={notifLanguage} onValueChange={setNotifLanguage}>
+                <SelectTrigger className={cn("text-[13px] h-9 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                  mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                  <SelectValue placeholder="Select language">
+                    <div className="flex items-center gap-2">
+                      <img src={`https://flagcdn.com/w20/${selectedLang.flag}.png`} width="20" alt={selectedLang.flag} className="rounded-sm" />
+                      <span>{selectedLang.label}</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className={cn("border shadow-2xl transition-colors", 
+                  mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                  {LANGUAGES.map(lang => (
+                    <SelectItem key={lang.code} value={lang.code} className="text-[13px]">
+                      <div className="flex items-center gap-2">
+                        <img src={`https://flagcdn.com/w20/${lang.flag}.png`} width="20" alt={lang.flag} className="rounded-sm" />
+                        <span>{lang.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>Choose the language that you want to receive our email notifications.</p>
+
+              <div className="flex justify-end pt-5">
+                <button 
+                  onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
+                  disabled={updateMutation.isPending}
+                  className={cn("px-8 py-1.5 rounded text-[13px] font-medium transition-colors border",
+                  mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+                  {updateMutation.isPending ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

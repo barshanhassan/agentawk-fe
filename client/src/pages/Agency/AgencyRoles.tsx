@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  ShieldCheck, 
+  Shield, 
+  User,
   Plus, 
   UserCheck, 
   Archive, 
   Settings,
-  MoreHorizontal
+  MoreHorizontal,
+  ChevronRight,
+  ShieldCheck
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import AddRoleForm from "./AddRoleForm";
@@ -22,6 +22,7 @@ const AgencyRoles = () => {
   const { mode } = useTheme();
   const [viewMode, setViewMode] = useState<'LIST' | 'ADD' | 'EDIT'>('LIST');
   const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('active');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -34,7 +35,6 @@ const AgencyRoles = () => {
     }
   });
 
-  // Local state to manage status (Active/Archived) for UI until backend supports it fully
   const [localRoles, setLocalRoles] = useState<any[]>([]);
 
   React.useEffect(() => {
@@ -67,6 +67,10 @@ const AgencyRoles = () => {
     setLocalRoles(prev => prev.map(r => 
       r.id === role.id ? { ...r, status: newStatus } : r
     ));
+    toast({
+      title: newStatus === 'ARCHIVED' ? "Role Archived" : "Role Activated",
+      description: `The role "${role.name}" has been ${newStatus.toLowerCase()}.`
+    });
   };
 
   if (viewMode === 'ADD' || viewMode === 'EDIT') {
@@ -82,132 +86,169 @@ const AgencyRoles = () => {
   }
 
   return (
-    <div className={cn("p-6 font-sans transition-colors duration-300", mode === "dark" ? "text-white" : "text-slate-900")}>
-      {/* Header Section */}
-      <div className={cn("flex items-center justify-between mb-8 p-4 rounded-md border shadow-sm transition-colors",
-        mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
-        <div className="flex items-center gap-4">
-          <div className={cn("p-2 rounded", mode === "dark" ? "bg-[#334155]" : "bg-slate-100")}>
-            <ShieldCheck className={cn("w-6 h-6", mode === "dark" ? "text-white" : "text-primary")} />
+    <div className={cn("p-8 transition-colors duration-300", mode === "dark" ? "bg-[#0f172a]" : "bg-slate-50")}>
+      <div className={cn("max-w-[1400px] mx-auto rounded-lg border transition-colors duration-300 overflow-hidden",
+        mode === "dark" ? "bg-[#1e293b] border-slate-700 shadow-xl" : "bg-white border-slate-300 shadow-sm")}>
+        
+        {/* Header Section */}
+        <div className="px-8 py-5 border-b border-slate-300 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-[#1e293b]">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <User className={cn("w-7 h-7 text-slate-500")} />
+              <Shield className={cn("w-3.5 h-3.5 absolute -bottom-0.5 -right-0.5", mode === "dark" ? "text-slate-900 fill-slate-400" : "text-white fill-slate-900")} />
+            </div>
+            <div>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
+                Roles and permissions
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400 text-[12px] font-medium">
+                Manage Roles & Permissions and assign them to specific agents.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold">Roles and permissions</h1>
-            <p className="text-gray-400 text-sm">Manage Roles & Permissions and assign them to specific agents.</p>
-          </div>
+          <button 
+            onClick={handleAddNewRole}
+            className="px-5 py-1.5 rounded-md font-bold text-[12px] border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 transition-all"
+          >
+            Add role
+          </button>
         </div>
-        <button 
-          onClick={handleAddNewRole}
-          className={cn("px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2 border shadow-sm",
-          mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-white border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-           Add role
-        </button>
+
+        {/* Tabs Section */}
+        <Tabs defaultValue="active" onValueChange={setActiveTab} className="w-full">
+          <div className="px-8 bg-white dark:bg-[#1e293b]">
+            <TabsList className="bg-transparent h-auto p-0 gap-10 border-b border-slate-200 dark:border-slate-800 w-full justify-start rounded-none">
+              {[
+                { id: "active", label: "Active" },
+                { id: "archived", label: "Archived" },
+              ].map((tab) => (
+                <TabsTrigger 
+                  key={tab.id}
+                  value={tab.id} 
+                  className={cn(
+                    "px-0 py-3 rounded-none text-[13px] font-bold transition-all relative border-b-2 border-transparent shadow-none bg-transparent",
+                    "data-[state=active]:bg-transparent data-[state=active]:border-green-600 data-[state=active]:text-green-600 data-[state=active]:shadow-none",
+                    "hover:bg-transparent hover:text-green-600 hover:shadow-none focus-visible:ring-0",
+                    mode === "dark" ? "text-slate-400 data-[state=active]:text-green-400" : "text-slate-600 data-[state=active]:text-green-600"
+                  )}
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+
+          <TabsContent value="active" className="mt-0 focus-visible:outline-none min-h-[300px] bg-white dark:bg-[#1e293b]">
+            {roles.filter(r => r.status === 'ACTIVE').length > 0 ? (
+              <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                {roles.filter(r => r.status === 'ACTIVE').map((role, i) => (
+                  <div key={i} className="flex items-center justify-between p-6 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors">
+                    <div className="flex items-start gap-5 flex-1">
+                      <div className="mt-1">
+                        <UserCheck className="w-5 h-5 text-slate-500" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={cn("font-bold text-[14px]", mode === "dark" ? "text-white" : "text-slate-900")}>
+                          {role.name}
+                        </h3>
+                        <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-1 max-w-4xl leading-relaxed font-medium">
+                          {role.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {!role.isSystem && (
+                      <div className="flex items-center gap-3 ml-8">
+                        <button 
+                          onClick={() => handleToggleArchive(role)}
+                          className={cn("px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all border shadow-sm",
+                          mode === "dark" ? "bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800" : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50")}
+                        >
+                          Archive
+                        </button>
+                        <button 
+                          onClick={() => handleEditRole(role)}
+                          className={cn("px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10")}
+                        >
+                          Manage
+                        </button>
+                      </div>
+                    )}
+                    {role.isSystem && (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
+                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">System Role</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="relative mb-4">
+                  <div className="w-16 h-16 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center border border-green-100 dark:border-green-900/30">
+                    <User className="w-8 h-8 text-green-500/60" />
+                    <Shield className="w-4 h-4 absolute bottom-0 right-0 text-green-600 fill-green-600 border-2 border-white dark:border-[#1e293b] rounded-full" />
+                  </div>
+                </div>
+                <h3 className={cn("text-[16px] font-bold mb-1", mode === "dark" ? "text-white" : "text-slate-900")}>
+                  There is nothing here.
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-[13px] font-medium">
+                  All of your active roles will appear here.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="archived" className="mt-0 focus-visible:outline-none min-h-[300px] bg-white dark:bg-[#1e293b]">
+            {roles.filter(r => r.status === 'ARCHIVED').length > 0 ? (
+              <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                {roles.filter(r => r.status === 'ARCHIVED').map((role, i) => (
+                  <div key={i} className="flex items-center justify-between p-6 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors">
+                    <div className="flex items-start gap-5 flex-1">
+                      <div className="mt-1">
+                        <UserCheck className="w-5 h-5 text-slate-500" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={cn("font-bold text-[14px]", mode === "dark" ? "text-white" : "text-slate-900")}>
+                          {role.name}
+                        </h3>
+                        <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-1 max-w-4xl leading-relaxed font-medium">
+                          {role.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 ml-8">
+                      <button 
+                        onClick={() => handleToggleArchive(role)}
+                        className={cn("px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10")}
+                      >
+                        Activate
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="relative mb-4">
+                  <div className="w-16 h-16 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center border border-green-100 dark:border-green-900/30">
+                    <User className="w-8 h-8 text-green-500/60" />
+                    <Shield className="w-4 h-4 absolute bottom-0 right-0 text-green-600 fill-green-600 border-2 border-white dark:border-[#1e293b] rounded-full" />
+                  </div>
+                </div>
+                <h3 className={cn("text-[16px] font-bold mb-1", mode === "dark" ? "text-white" : "text-slate-900")}>
+                  There is nothing here.
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-[13px] font-medium">
+                  All of your archived roles will appear here.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Tabs Section */}
-      <Tabs defaultValue="active" className="w-full">
-        <div className="flex justify-start mb-6">
-          <TabsList className={cn(
-            "h-auto p-1.5 gap-1 rounded-2xl border transition-all duration-300",
-            mode === "dark" 
-              ? "bg-slate-800/40 border-slate-700/50 shadow-inner" 
-              : "bg-blue-50/70 border-blue-100/50 shadow-sm"
-          )}>
-            {[
-              { id: "active", label: "Active" },
-              { id: "archived", label: "Archived" },
-            ].map((tab) => (
-              <TabsTrigger 
-                key={tab.id}
-                value={tab.id} 
-                className={cn(
-                  "px-8 py-2 rounded-xl text-[13px] font-bold transition-all duration-300",
-                  "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-[1.02]",
-                  "hover:scale-[1.02] active:scale-100",
-                  mode === "dark" 
-                    ? "text-slate-400 hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 shadow-blue-900/20" 
-                    : "text-slate-600 hover:text-slate-900 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:via-blue-500 data-[state=active]:to-cyan-500 shadow-blue-500/25"
-                )}
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-        <TabsContent value="active" className="mt-8 space-y-6">
-          {roles.filter(r => r.status === 'ACTIVE').map((role, i) => (
-            <div key={i} className="flex items-start justify-between group">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="mt-1 bg-transparent p-1">
-                  <UserCheck className="w-6 h-6 text-gray-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className={cn("font-bold text-base transition-colors", mode === "dark" ? "text-gray-100" : "text-slate-800")}>{role.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1 max-w-2xl leading-relaxed font-medium">
-                    {role.description || ""}
-                  </p>
-                </div>
-              </div>
-
-              {!role.isSystem && (
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleToggleArchive(role)}
-                    className={cn("px-4 py-1.5 rounded text-xs font-bold transition-colors border shadow-sm",
-                    mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-gray-200 border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-                    Archive
-                  </button>
-                  <button 
-                    onClick={() => handleEditRole(role)}
-                    className={cn("px-4 py-1.5 rounded text-xs font-bold transition-colors border shadow-sm",
-                    mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-gray-200 border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-                    Manage
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-          {roles.filter(r => r.status === 'ACTIVE').length === 0 && (
-            <div className={cn("text-center py-12 rounded-lg border border-dashed transition-colors",
-              mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-slate-50 border-slate-200")}>
-               <p className="text-gray-500 font-medium">No active roles found.</p>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="archived" className="mt-8 space-y-6">
-          {roles.filter(r => r.status === 'ARCHIVED').map((role, i) => (
-            <div key={i} className="flex items-start justify-between group">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="mt-1 bg-transparent p-1">
-                  <UserCheck className="w-6 h-6 text-gray-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className={cn("font-bold text-base transition-colors", mode === "dark" ? "text-gray-100" : "text-slate-800")}>{role.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1 max-w-2xl leading-relaxed font-medium">
-                    {role.description || ""}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => handleToggleArchive(role)}
-                  className={cn("px-4 py-1.5 rounded text-xs font-bold transition-colors border shadow-sm",
-                  mode === "dark" ? "bg-[#334155] hover:bg-[#475569] text-gray-200 border-slate-600" : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-                  Activate
-                </button>
-              </div>
-            </div>
-          ))}
-          {roles.filter(r => r.status === 'ARCHIVED').length === 0 && (
-            <div className={cn("text-center py-12 rounded-lg border border-dashed transition-colors",
-              mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-slate-50 border-slate-200")}>
-               <p className="text-gray-500 font-medium">No archived roles found.</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

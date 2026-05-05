@@ -17,16 +17,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import { cn } from "@/lib/utils";
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+  DropdownMenu,
   DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { BellOff, Info, Settings, Check, Clock, ArrowLeft, Volume2, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLocation } from "wouter";
 
@@ -37,6 +41,9 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   const [openStatus, setOpenStatus] = React.useState(false);
   const [openTheme, setOpenTheme] = React.useState(false);
   const [openLang, setOpenLang] = React.useState(false);
+  const [isNotifSettings, setIsNotifSettings] = React.useState(false);
+  const [soundEnabled, setSoundEnabled] = React.useState(true);
+  const [selectedSound, setSelectedSound] = React.useState("Beep");
   const { mode, setMode } = useTheme();
   const [, setLocation] = useLocation();
 
@@ -62,37 +69,142 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
         <header className={cn("h-16 flex items-center justify-end px-8 border-b transition-colors duration-300", 
-          mode === "dark" ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-200")}>
+          mode === "dark" ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-300")}>
           <div className="flex items-center gap-6">
             {/* Notifications */}
-            <button className={cn("transition-colors", mode === "dark" ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-slate-900")}>
-              <Bell size={20} />
-            </button>
+            <Popover onOpenChange={(open) => { if (!open) setIsNotifSettings(false); }}>
+              <PopoverTrigger asChild>
+                <button className={cn("relative p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group", 
+                  mode === "dark" ? "text-gray-400 hover:text-white hover:bg-slate-800" : "text-gray-500 hover:text-slate-900 hover:bg-slate-100")}>
+                  <Bell size={20} className="group-hover:rotate-12 transition-transform" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                className="w-[360px] p-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl z-[100]"
+                sideOffset={12}
+              >
+                {!isNotifSettings ? (
+                  <>
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-white dark:bg-[#1e293b]">
+                      <div className="flex items-center gap-2">
+                        <Info size={16} className="text-slate-600 dark:text-slate-400" />
+                        <h3 className="font-bold text-[14px] text-slate-900 dark:text-white">Notifications</h3>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                        onClick={() => setIsNotifSettings(true)}
+                      >
+                        <Settings size={16} className="text-slate-600 dark:text-slate-400" />
+                      </Button>
+                    </div>
+                    
+                    <div className="py-12 px-6 flex flex-col items-center justify-center text-center bg-white dark:bg-[#0f172a]">
+                      <div className="mb-4 relative">
+                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center">
+                          <BellOff size={32} className="text-slate-300 dark:text-slate-600" />
+                        </div>
+                      </div>
+                      <p className="text-[14px] font-bold text-slate-900 dark:text-white mb-1">
+                        Currently, there are no notifications to present.
+                      </p>
+                      <p className="text-[12px] font-medium text-slate-400 dark:text-slate-500">
+                        You can view notifications from the last 7 days only.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-white dark:bg-[#1e293b]">
+                      <h3 className="font-bold text-[14px] text-slate-900 dark:text-white">Notifications</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                        onClick={() => setIsNotifSettings(false)}
+                      >
+                        <ArrowLeft size={16} className="text-slate-600 dark:text-slate-400" />
+                      </Button>
+                    </div>
+                    
+                    <div className="p-5 space-y-6 bg-white dark:bg-[#0f172a]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("w-10 h-6 rounded-full relative transition-colors cursor-pointer", soundEnabled ? "bg-green-500" : "bg-slate-200 dark:bg-slate-800")}
+                            onClick={() => setSoundEnabled(!soundEnabled)}>
+                            <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm", soundEnabled ? "left-5" : "left-1")} />
+                          </div>
+                          <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300">Sound notifications</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 pl-1">
+                        {["Beep", "Fanfarre", "Double Alert"].map((sound) => (
+                          <div key={sound} className="flex items-center justify-between group">
+                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedSound(sound)}>
+                              <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all", 
+                                selectedSound === sound ? "border-blue-500" : "border-slate-300 dark:border-slate-700")}>
+                                {selectedSound === sound && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                              </div>
+                              <span className={cn("text-[13px] font-medium transition-colors", 
+                                selectedSound === sound ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400")}>
+                                {sound}
+                              </span>
+                            </div>
+                            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                              <Play size={14} className="text-slate-400" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="pt-4 flex justify-end">
+                        <Button 
+                          className="bg-white dark:bg-transparent border border-green-500 text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 font-bold text-[12px] h-8 px-6 rounded-lg transition-all"
+                          onClick={() => setIsNotifSettings(false)}
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </PopoverContent>
+            </Popover>
 
             {/* Profile Dropdown */}
-            <DropdownMenu onOpenChange={() => {
-              setOpenStatus(false);
-              setOpenTheme(false);
-              setOpenLang(false);
+            <DropdownMenu onOpenChange={(open) => {
+              if (!open) {
+                setOpenStatus(false);
+                setOpenTheme(false);
+                setOpenLang(false);
+              }
             }}>
               <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity outline-none group">
-                  <Avatar className={cn("w-8 h-8 ring-2", mode === "dark" ? "ring-slate-800" : "ring-slate-100")}>
-                    <AvatarFallback className={`${getAvatarColor(user?.first_name || "User")} text-[10px] font-bold text-white`}>
-                      {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-right hidden sm:block leading-tight">
-                    <p className={cn("text-sm font-medium transition-colors group-hover:text-primary", 
+                <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all outline-none group border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                  <div className="relative">
+                    <Avatar className={cn("w-9 h-9 border-2 border-white dark:border-slate-800 shadow-sm", mode === "dark" ? "" : "")}>
+                      <AvatarFallback className={cn(getAvatarColor(user?.first_name || "User"), "text-[12px] font-bold text-white")}>
+                        {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#0f172a]", 
+                      status === "Available" ? "bg-green-500" : "bg-slate-400")} />
+                  </div>
+                  <div className="text-left hidden sm:block leading-tight">
+                    <p className={cn("text-[13px] font-bold transition-colors", 
                       mode === "dark" ? "text-white" : "text-slate-900")}>
                       {user ? `${user.first_name} ${user.last_name || ""}` : "Loading..."}
                     </p>
-                    <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-[11px] text-gray-400">{status}</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className={cn("w-1.5 h-1.5 rounded-full", status === "Available" ? "bg-green-500" : "bg-slate-400")}></div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">{status}</span>
                     </div>
                   </div>
-                  <ChevronDown size={16} className="text-gray-500 group-hover:text-white transition-colors" />
+                  <ChevronDown size={14} className="text-gray-500 group-hover:text-blue-500 transition-colors ml-1" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className={cn("w-64 border-slate-700 p-2 shadow-2xl transition-colors duration-200", 

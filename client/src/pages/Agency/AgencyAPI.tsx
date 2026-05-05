@@ -36,97 +36,98 @@ const AgencyAPI = () => {
     <div className={cn("p-6 font-sans transition-colors duration-300 min-h-screen", 
       mode === "dark" ? "bg-[#0f172a] text-white" : "bg-slate-50 text-slate-900")}>
       
-      {/* Header Section */}
-      <div className={cn("flex items-center justify-between mb-8 p-6 rounded-xl border shadow-sm transition-all duration-300", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
-        <div className="flex items-center gap-4">
-          <div className={cn("p-3 rounded-lg shadow-inner", mode === "dark" ? "bg-slate-800" : "bg-slate-100")}>
-            <Plug className={cn("w-6 h-6", mode === "dark" ? "text-teal-400" : "text-teal-600")} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">API</h1>
-            <p className={cn("text-sm font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-              Manage your API credential
-            </p>
-          </div>
-        </div>
-        <button className={cn("px-5 py-2.5 rounded-lg font-bold text-sm transition-all border shadow-sm flex items-center gap-2",
-          mode === "dark" 
-            ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700" 
-            : "bg-white hover:bg-slate-50 text-teal-600 border-teal-100")}>
-           View instructions
-        </button>
-      </div>
-
-      {/* Main Content Area */}
-      <div className={cn("border rounded-2xl shadow-xl min-h-[500px] flex flex-col items-center justify-center text-center p-12 transition-all duration-500", 
+      <div className={cn("rounded-xl border shadow-sm transition-all duration-300 w-full", 
         mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
         
-        <div className={cn("mb-8 p-6 rounded-full transition-colors", mode === "dark" ? "bg-teal-500/10" : "bg-teal-50")}>
-          <Plug className={cn("w-24 h-24 stroke-[1.5]", mode === "dark" ? "text-teal-400" : "text-teal-500")} />
-        </div>
-
-        {!hasKey ? (
-          <>
-            <h2 className={cn("text-2xl font-bold mb-3 tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-              API Key
-            </h2>
-            <p className={cn("text-sm mb-10 font-medium max-w-md mx-auto leading-relaxed", 
-              mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-              Generate your API key to connect with external applications and automate your workflow.
-            </p>
-            <button 
-              onClick={handleGenerate}
-              className={cn("px-8 py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-teal-500/20 active:scale-95",
-                "bg-teal-500 hover:bg-teal-600 text-white")}>
-              Generate key
-            </button>
-          </>
-        ) : (
-          <div className="w-full max-w-2xl animate-in fade-in zoom-in duration-500">
-            <h2 className={cn("text-2xl font-bold mb-3 tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-              Your API Key
-            </h2>
-            <p className={cn("text-sm mb-8 font-medium mx-auto leading-relaxed", 
-              mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-              Here is your API key for connecting with external applications
-            </p>
-            
-            <div className="relative mb-8 group">
-              <input 
-                type="text" 
-                readOnly 
-                value={apiKey}
-                className={cn("w-full px-6 py-4 rounded-xl border text-center font-mono text-sm transition-all focus:outline-none",
-                  mode === "dark" 
-                    ? "bg-[#0f172a] border-slate-700 text-slate-300 group-hover:border-slate-500" 
-                    : "bg-slate-50 border-slate-200 text-slate-600 group-hover:border-teal-200")}
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <button 
-                onClick={handleGenerate}
-                className={cn("px-6 py-3 rounded-xl font-bold text-sm transition-all border shadow-sm flex items-center gap-2 active:scale-95",
-                  mode === "dark" 
-                    ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700" 
-                    : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-                <RefreshCw size={16} />
-                Regenerate Key
-              </button>
-              
-              <button 
-                onClick={handleCopy}
-                className={cn("px-10 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center gap-2 active:scale-95",
-                  copied 
-                    ? "bg-green-500 text-white" 
-                    : "bg-teal-500 hover:bg-teal-600 text-white")}>
-                {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
-                {copied ? "Copied" : "Copy"}
-              </button>
+        {/* Header Section */}
+        <div className={cn("flex items-center justify-between p-6 border-b",
+          mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+          <div className="flex items-center gap-4">
+            <Plug className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} fill="currentColor" />
+            <div>
+              <h1 className="text-[20px] font-bold tracking-tight">API</h1>
+              <p className={cn("text-[13px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-600")}>
+                Manage your API credential
+              </p>
             </div>
           </div>
-        )}
+          <button className={cn("px-5 py-2 rounded font-medium text-[13px] transition-all border",
+            mode === "dark" 
+              ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
+              : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+             View instructions
+          </button>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="min-h-[350px] flex flex-col items-center justify-center text-center py-10 px-6 transition-all duration-500">
+          
+          <Plug className="w-16 h-16 mb-4 text-[#00e55e]" fill="currentColor" strokeWidth={1} />
+
+          {!hasKey ? (
+            <>
+              <h2 className={cn("text-[22px] font-bold mb-1 tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
+                API Key
+              </h2>
+              <p className={cn("text-[13px] mb-6 font-medium max-w-md mx-auto leading-relaxed", 
+                mode === "dark" ? "text-slate-400" : "text-slate-600")}>
+                Generate your API key to connect with external applications and automate your workflow.
+              </p>
+              <button 
+                onClick={handleGenerate}
+                className={cn("px-8 py-2.5 rounded font-medium text-[13px] transition-all border",
+                  "bg-white hover:bg-slate-50 text-[#00e55e] border-[#00e55e]")}>
+                Generate key
+              </button>
+            </>
+          ) : (
+            <div className="w-full max-w-3xl animate-in fade-in zoom-in duration-500">
+              <h2 className={cn("text-[22px] font-bold mb-1 tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
+                Your API Key
+              </h2>
+              <p className={cn("text-[13px] mb-6 font-medium mx-auto", 
+                mode === "dark" ? "text-slate-400" : "text-slate-600")}>
+                Here is your API key for connecting with external applications
+              </p>
+              
+              <div className="relative mb-5 group w-full max-w-[650px] mx-auto">
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={apiKey}
+                  className={cn("w-full px-4 py-3 rounded border text-center font-mono text-[13px] transition-all focus:outline-none",
+                    mode === "dark" 
+                      ? "bg-[#0f172a] border-slate-700 text-slate-300" 
+                      : "bg-white border-slate-200 text-slate-500")}
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button 
+                  onClick={handleGenerate}
+                  className={cn("px-4 py-2 rounded font-medium text-[13px] transition-all border flex items-center gap-2",
+                    mode === "dark" 
+                      ? "bg-[#1e293b] hover:bg-slate-800 text-slate-300 border-slate-700" 
+                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
+                  <RefreshCw size={14} />
+                  Regenerate Key
+                </button>
+                
+                <button 
+                  onClick={handleCopy}
+                  className={cn("px-6 py-2 rounded font-medium text-[13px] transition-all border flex items-center gap-2",
+                    copied 
+                      ? "bg-green-500 text-white border-green-500" 
+                      : mode === "dark" 
+                        ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
+                        : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+                  {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

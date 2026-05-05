@@ -7,7 +7,8 @@ import {
   FileText,
   BarChart3,
   ChevronLeft,
-  X
+  X,
+  Receipt
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -69,177 +70,184 @@ const AgencyBillingManage = () => {
   };
 
   return (
-    <div className={cn("p-6 font-sans transition-colors duration-300 min-h-screen", 
+    <div className={cn("p-6 font-sans transition-colors duration-300", 
       mode === "dark" ? "bg-[#0f172a] text-white" : "bg-slate-50 text-slate-900")}>
       
-      {/* Header Section */}
-      <div className={cn("flex items-center justify-between mb-8 p-6 rounded-xl border shadow-sm transition-all duration-300", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
-        <div className="flex items-center gap-4">
-          <div className={cn("p-3 rounded-lg", mode === "dark" ? "bg-slate-800" : "bg-slate-100")}>
-            <FileText className={cn("w-6 h-6", mode === "dark" ? "text-teal-400" : "text-teal-600")} />
+      <div className={cn("rounded-xl border shadow-sm transition-all duration-300 w-full", 
+        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
+        
+        {/* Header Section */}
+        <div className={cn("flex items-center gap-4 p-5 border-b",
+          mode === "dark" ? "border-slate-800" : "border-slate-300")}>
+          <div className={cn("p-2.5 rounded-xl border transition-all", 
+            mode === "dark" ? "bg-[#0f172a] border-slate-700 shadow-[0_0_15px_rgba(0,229,94,0.1)]" : "bg-white border-slate-200 shadow-sm")}>
+            <Receipt className="w-6 h-6 text-[#00e55e]" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Billing Plan</h1>
-            <p className={cn("text-sm font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Manage your subscription</p>
+            <h1 className="text-[20px] font-bold tracking-tight">Billing Plan</h1>
+            <p className={cn("text-[13px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-600")}>
+              Manage your subscription
+            </p>
+          </div>
+        </div>
+
+        {/* Management Grid */}
+        <div className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            {/* Coupons Box */}
+            <div className={cn("flex flex-col p-5 rounded-lg border", 
+              mode === "dark" ? "border-slate-800" : "border-slate-300")}>
+              <div className="flex items-start gap-3 mb-6">
+                <Ticket className={cn("w-5 h-5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+                <div>
+                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Coupons</h3>
+                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>Add discount coupon</p>
+                </div>
+              </div>
+              
+              <div className="space-y-6 flex-1 flex flex-col justify-between">
+                <div className="flex flex-col gap-2">
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-300" : "text-slate-900")}>Applied coupons:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {appliedCoupons.map(coupon => (
+                      <Badge 
+                        key={coupon}
+                        variant="secondary" 
+                        className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#00e55e] hover:bg-[#00e55e] text-white border-none flex items-center"
+                      >
+                        {coupon}
+                        <X 
+                          size={12} 
+                          className="cursor-pointer ml-1 opacity-70 hover:opacity-100" 
+                          onClick={() => removeCoupon(coupon)} 
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-300" : "text-slate-900")}>Add a coupon</p>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Enter the coupon code e.g. FREECOUPON"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value);
+                        if (e.target.value.trim()) setCouponError(false);
+                      }}
+                      className={cn("text-[13px] h-9 rounded transition-all focus-visible:ring-1 focus-visible:ring-slate-300 shadow-none", 
+                        mode === "dark" 
+                          ? "bg-[#0f172a] border-slate-700 text-white" 
+                          : "bg-white border-slate-200 text-slate-900",
+                        couponError && "border-red-500")}
+                    />
+                    <button 
+                      onClick={applyCoupon}
+                      className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-all border",
+                        mode === "dark" 
+                          ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
+                          : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+                      Add
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] text-red-500 font-bold italic ml-1">
+                      Please enter the coupon code
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Manage billing & credit card Box */}
+            <div className={cn("flex flex-col p-5 rounded-lg border", 
+              mode === "dark" ? "border-slate-800" : "border-slate-300")}>
+              <div className="flex items-start gap-3 mb-4 flex-1">
+                <CreditCard className={cn("w-5 h-5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+                <div>
+                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Manage billing & credit card</h3>
+                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>Manage invoices and credit card information on file.</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-auto">
+                <button 
+                  onClick={() => setShowManageModal(true)}
+                  className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-all border",
+                    mode === "dark" 
+                      ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
+                      : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+                  Manage
+                </button>
+              </div>
+            </div>
+
+            {/* Current Usage Box */}
+            <div className={cn("flex flex-col p-5 rounded-lg border", 
+              mode === "dark" ? "border-slate-800" : "border-slate-300")}>
+              <div className="flex items-start gap-3 mb-4 flex-1">
+                <BarChart3 className={cn("w-5 h-5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+                <div>
+                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Current Usage</h3>
+                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>View your account costs</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-auto">
+                <button 
+                  onClick={() => setShowUsageModal(true)}
+                  className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-all border",
+                    mode === "dark" 
+                      ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
+                      : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+                  Show current usage
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
 
-      {/* Management Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {/* Coupons Card */}
-        <Card className={cn("shadow-lg min-h-[260px] flex flex-col p-6 rounded-2xl border transition-all duration-300 hover:shadow-xl", 
-          mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-100")}>
-          <div className="flex items-start gap-3 mb-6">
-            <Ticket className="w-5 h-5 text-teal-500 mt-1" />
-            <div>
-              <h3 className={cn("font-bold text-lg tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Coupons</h3>
-              <p className={cn("text-xs font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Add discount coupon</p>
-            </div>
-          </div>
-          
-          <div className="space-y-6 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={cn("text-sm font-bold", mode === "dark" ? "text-slate-300" : "text-slate-600")}>Applied coupons:</span>
-              <div className="flex flex-wrap gap-2">
-                {appliedCoupons.map(coupon => (
-                  <Badge 
-                    key={coupon}
-                    variant="secondary" 
-                    className={cn("px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 group", 
-                      mode === "dark" 
-                        ? "bg-teal-500/10 text-teal-400 hover:bg-teal-500/20" 
-                        : "bg-teal-500 text-white hover:bg-teal-600")}
-                  >
-                    {coupon}
-                    <X 
-                      size={12} 
-                      className="cursor-pointer opacity-70 hover:opacity-100" 
-                      onClick={() => removeCoupon(coupon)} 
-                    />
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <p className={cn("text-sm font-bold", mode === "dark" ? "text-slate-300" : "text-slate-600")}>Add a coupon</p>
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="Enter the coupon code e.g. FREECOUPON"
-                    value={couponCode}
-                    onChange={(e) => {
-                      setCouponCode(e.target.value);
-                      if (e.target.value.trim()) setCouponError(false);
-                    }}
-                    className={cn("text-sm h-11 transition-all rounded-xl focus:ring-teal-500", 
-                      mode === "dark" 
-                        ? "bg-[#0f172a] border-slate-700 text-white" 
-                        : "bg-slate-50 border-slate-200 text-slate-900",
-                      couponError && "border-red-500")}
-                  />
-                  <button 
-                    onClick={applyCoupon}
-                    className={cn("px-6 py-2 rounded-xl text-sm font-bold transition-all border shadow-sm active:scale-95",
-                      mode === "dark" 
-                        ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700" 
-                        : "bg-white hover:bg-slate-50 text-teal-600 border-teal-200")}>
-                    Add
-                  </button>
-                </div>
-                {couponError && (
-                  <p className="text-[11px] text-red-500 font-bold italic ml-1">
-                    Please enter the coupon code
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Manage billing & credit card Card */}
-        <Card className={cn("shadow-lg min-h-[260px] flex flex-col p-6 rounded-2xl border transition-all duration-300 hover:shadow-xl", 
-          mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-100")}>
-          <div className="flex items-start gap-3 mb-4 flex-1">
-            <CreditCard className="w-5 h-5 text-teal-500 mt-1" />
-            <div>
-              <h3 className={cn("font-bold text-lg tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Manage billing & credit card</h3>
-              <p className={cn("text-xs font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Manage invoices and credit card information on file.</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-end mt-auto">
-            <button 
-              onClick={() => setShowManageModal(true)}
-              className={cn("px-8 py-2 rounded-xl text-sm font-bold transition-all border shadow-sm active:scale-95",
-                mode === "dark" 
-                  ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700" 
-                  : "bg-white hover:bg-slate-50 text-teal-600 border-teal-200")}>
-              Manage
-            </button>
-          </div>
-        </Card>
-
-        {/* Current Usage Card */}
-        <Card className={cn("shadow-lg min-h-[260px] flex flex-col p-6 rounded-2xl border transition-all duration-300 hover:shadow-xl", 
-          mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-100")}>
-          <div className="flex items-start gap-3 mb-4 flex-1">
-            <BarChart3 className="w-5 h-5 text-teal-500 mt-1" />
-            <div>
-              <h3 className={cn("font-bold text-lg tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Current Usage</h3>
-              <p className={cn("text-xs font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>View your account costs</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-end mt-auto">
-            <button 
-              onClick={() => setShowUsageModal(true)}
-              className={cn("px-8 py-2 rounded-xl text-sm font-bold transition-all border shadow-sm active:scale-95",
-                mode === "dark" 
-                  ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700" 
-                  : "bg-white hover:bg-slate-50 text-teal-600 border-teal-200")}>
-              Show current usage
-            </button>
-          </div>
-        </Card>
-
-      </div>
-
       {/* Manage Subscriptions Modal */}
       <Dialog open={showManageModal} onOpenChange={setShowManageModal}>
-        <DialogContent hideClose className={cn("max-w-[450px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl", mode === 'dark' ? "bg-[#1e293b]" : "bg-white")}>
+        <DialogContent hideClose className={cn("max-w-[420px] p-0 overflow-visible border shadow-lg rounded-lg", mode === 'dark' ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
           <div className="relative">
-            <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors z-50">
-               <div className="w-8 h-8 bg-black/50 rounded-full flex items-center justify-center">
-                 <X size={18} />
+            <DialogClose className={cn("absolute -right-3 -top-3 transition-colors z-50", mode === 'dark' ? "text-slate-300" : "text-white")}>
+               <div className={cn("w-6 h-6 rounded-full flex items-center justify-center border-2 shadow-sm", 
+                 mode === 'dark' ? "bg-slate-700 hover:bg-slate-600 border-slate-800" : "bg-slate-500 hover:bg-slate-600 border-white")}>
+                 <X size={12} strokeWidth={3} />
                </div>
             </DialogClose>
             
-            <div className="p-8 text-center space-y-6">
-              <div className="flex flex-col items-center gap-3">
-                 <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-teal-500/20">R</div>
-                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">REPLYAGENT</span>
+            <div className="text-center">
+              {/* Header Section */}
+              <div className={cn("p-6 pb-5 border-b", mode === 'dark' ? "border-slate-800" : "border-slate-100")}>
+                <div className="flex flex-col items-center gap-1.5 mb-4">
+                   <div className="w-8 h-8 bg-[#00e55e] rounded flex items-center justify-center font-bold text-white text-[15px]">E</div>
+                   <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">EZCONN</span>
+                </div>
+                
+                <h2 className="text-[17px] font-bold text-[#00e55e]">Manage Your Subscriptions</h2>
               </div>
               
-              <h2 className="text-2xl font-bold text-teal-500 tracking-tight">Manage Your Subscriptions</h2>
-              
-              <div className={cn("p-12 space-y-8 rounded-2xl shadow-inner", mode === 'dark' ? "bg-slate-900/30" : "bg-slate-50/50")}>
-                 <div className="space-y-4">
-                    <p className="text-sm font-bold text-teal-500">Enter your email address to login</p>
+              {/* Form Section */}
+              <div className="p-8 pb-10 space-y-6">
+                 <div className="space-y-3">
+                    <p className="text-[13px] font-medium text-[#00e55e]">Enter your email address to login</p>
                     <Input 
                       placeholder="Email address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={cn("h-12 text-center text-sm border-slate-200 focus-visible:ring-0 shadow-sm rounded-xl", 
-                        mode === 'dark' ? "bg-[#0f172a] text-white border-slate-700" : "bg-white text-slate-900")}
+                      className={cn("h-10 text-center text-[13px] border focus-visible:ring-1 focus-visible:ring-slate-300 shadow-none rounded", 
+                        mode === 'dark' ? "bg-[#0f172a] text-white border-slate-700" : "bg-white text-slate-500 border-slate-200")}
                     />
                  </div>
                  
-                 <button className="w-full h-12 bg-teal-500 hover:bg-teal-600 text-white font-bold text-lg rounded-xl transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 active:scale-95">
-                   Continue <span className="text-xl">→</span>
+                 <button className="w-full h-10 bg-[#00e55e] hover:bg-[#00c853] text-white font-bold text-[13px] rounded transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                   Continue <span>→</span>
                  </button>
               </div>
             </div>
@@ -249,28 +257,28 @@ const AgencyBillingManage = () => {
 
       {/* Current Usage Modal */}
       <Dialog open={showUsageModal} onOpenChange={setShowUsageModal}>
-        <DialogContent hideClose className={cn("max-w-3xl p-0 overflow-hidden rounded-2xl", mode === 'dark' ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
-          <DialogHeader className={cn("px-6 py-4 border-b transition-colors", mode === 'dark' ? "border-slate-700 bg-slate-900/50" : "border-slate-100 bg-slate-50/30")}>
-            <DialogTitle className={cn("text-lg font-bold tracking-tight", mode === 'dark' ? "text-white" : "text-slate-800")}>Current Usage</DialogTitle>
+        <DialogContent hideClose className={cn("max-w-2xl p-0 overflow-visible rounded-lg shadow-xl border", mode === 'dark' ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
+          <DialogHeader className={cn("px-6 py-4 border-b", mode === 'dark' ? "border-slate-800" : "border-slate-100")}>
+            <DialogTitle className={cn("text-[15px] font-medium tracking-tight", mode === 'dark' ? "text-white" : "text-slate-900")}>Current Usage</DialogTitle>
           </DialogHeader>
           
-          <div className="max-h-[60vh] overflow-y-auto">
-            <div className={cn("divide-y transition-colors", mode === 'dark' ? "divide-slate-700" : "divide-slate-100")}>
+          <div>
+            <div className={cn("divide-y", mode === 'dark' ? "divide-slate-800" : "divide-slate-100")}>
              {usageItems.length === 0 ? (
-               <div className="flex items-center justify-center h-32 text-gray-400 text-sm">No usage data available</div>
+               <div className="flex items-center justify-center h-32 text-slate-400 text-[13px]">No usage data available</div>
              ) : usageItems.map((item, idx) => (
-               <div key={idx} className={cn("px-8 py-5 flex items-center justify-between transition-colors", mode === 'dark' ? "hover:bg-slate-800/40" : "hover:bg-slate-50")}>
-                  <div className="space-y-1">
-                     <p className="font-bold text-sm tracking-tight">{item.label}</p>
+               <div key={idx} className={cn("px-6 py-3 flex items-center justify-between", mode === 'dark' ? "hover:bg-slate-800/40" : "hover:bg-slate-50")}>
+                  <div>
+                     <p className={cn("text-[13px] font-medium", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>{item.label}</p>
                   </div>
-                  <div className="flex items-center gap-24">
-                     <div className="text-right w-24">
-                        <p className="text-sm font-bold tracking-tight">{item.count}</p>
-                        <p className="text-[10px] text-gray-500 font-bold tracking-tight uppercase opacity-70">{item.type}</p>
+                  <div className="flex items-center gap-16">
+                     <div className="text-center w-20">
+                        <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{item.count}</p>
+                        <p className="text-[9px] text-slate-400 uppercase">{item.type}</p>
                      </div>
-                     <div className="text-right w-24">
-                        <p className="text-sm font-bold tracking-tight">{item.amount}</p>
-                        <p className="text-[10px] text-gray-500 font-bold tracking-tight uppercase opacity-70">Amount</p>
+                     <div className="text-right w-20">
+                        <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{item.amount}</p>
+                        <p className="text-[9px] text-slate-400 uppercase">Amount</p>
                      </div>
                   </div>
                </div>
@@ -278,34 +286,34 @@ const AgencyBillingManage = () => {
             </div>
           </div>
           
-          <div className={cn("p-8 space-y-5 border-t transition-colors", mode === 'dark' ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-100")}>
-             <div className="flex justify-between items-center px-6">
-                <span className="font-bold text-sm text-slate-500">Sub total</span>
+          <div className={cn("px-6 py-4 space-y-3 border-t", mode === 'dark' ? "border-slate-800" : "border-slate-100")}>
+             <div className="flex justify-between items-center">
+                <span className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>Sub total</span>
                 <div className="text-right">
-                   <p className="text-sm font-bold">{subtotal.toFixed(2)}</p>
-                   <p className="text-[10px] text-gray-400 font-bold uppercase">Amount</p>
+                   <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{subtotal.toFixed(2)}</p>
+                   <p className="text-[9px] text-slate-400 uppercase">Amount</p>
                 </div>
              </div>
-             <div className="flex justify-between items-center px-6">
-                <span className="font-bold text-sm text-slate-500">Discount</span>
+             <div className="flex justify-between items-center">
+                <span className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>Discount</span>
                 <div className="text-right">
-                   <p className="text-sm font-bold text-teal-500">-{discount.toFixed(2)}</p>
-                   <p className="text-[10px] text-gray-400 font-bold uppercase">Amount</p>
+                   <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{discount.toFixed(2)}</p>
+                   <p className="text-[9px] text-slate-400 uppercase">Amount</p>
                 </div>
              </div>
-             <div className="flex justify-between items-center px-6 pt-3 border-t border-dashed border-slate-300 dark:border-slate-600">
-                <span className="font-bold text-xl tracking-tighter">Total</span>
+             <div className="flex justify-between items-center pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+                <span className={cn("text-[15px] font-bold", mode === 'dark' ? "text-white" : "text-slate-900")}>Total</span>
                 <div className="text-right">
-                   <p className="text-2xl font-black text-teal-500 tracking-tighter">{total.toFixed(2)}</p>
-                   <p className="text-[10px] text-gray-400 font-bold uppercase">Amount</p>
+                   <p className={cn("text-[15px] font-bold", mode === 'dark' ? "text-white" : "text-slate-900")}>{total.toFixed(2)}</p>
+                   <p className="text-[9px] text-slate-400 uppercase">Amount</p>
                 </div>
              </div>
              
-             <div className="flex justify-end pt-6">
+             <div className="flex justify-end pt-4">
                 <DialogClose asChild>
-                   <button className={cn("px-10 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-sm active:scale-95",
+                   <button className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-all border",
                      mode === "dark" 
-                      ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700" 
+                      ? "bg-[#1e293b] hover:bg-slate-800 text-slate-300 border-slate-700" 
                       : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
                      Close
                    </button>

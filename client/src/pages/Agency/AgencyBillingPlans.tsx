@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   CreditCard, 
   AlertTriangle,
-  Check
+  Check,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,18 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const AgencyBillingPlans = () => {
   const { mode } = useTheme();
+  const isDark = mode === "dark";
+
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelCodeInput, setCancelCodeInput] = useState("");
+  const [checks, setChecks] = useState({
+    c1: false,
+    c2: false,
+    c3: false
+  });
+
+  const generatedCode = "44399";
+
   const plans = [
     { 
       name: "Free", 
@@ -41,81 +54,169 @@ const AgencyBillingPlans = () => {
   ];
 
   return (
-    <div className={cn("p-6 font-sans transition-colors duration-300", 
-      mode === "dark" ? "text-white" : "text-slate-900")}>
-      {/* Header Section */}
-      <div className={cn("flex items-center justify-between mb-8 p-4 rounded-md border shadow-sm transition-colors", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
-        <div className="flex items-center gap-4">
-          <div className={cn("p-2 rounded", mode === "dark" ? "bg-[#334155]" : "bg-slate-100")}>
-            <CreditCard className={cn("w-6 h-6", mode === "dark" ? "text-white" : "text-primary")} />
-          </div>
+    <div className={cn("p-6 font-sans transition-colors duration-300 flex flex-col", 
+      isDark ? "text-white" : "text-slate-900")}>
+      
+      <div className={cn("w-full border rounded-xl transition-colors flex flex-col bg-white",
+        isDark ? "bg-[#1e293b] border-slate-700" : "border-slate-200")}>
+        
+        {/* Header Section */}
+        <div className={cn("flex items-center gap-4 p-6 border-b transition-colors",
+          isDark ? "border-slate-800" : "border-slate-100")}>
+          <CreditCard className={cn("w-7 h-7 text-slate-700")} strokeWidth={1.5} />
           <div>
-            <h1 className="text-xl font-semibold uppercase tracking-tight">Billing Plan</h1>
-            <p className="text-gray-400 text-sm font-medium">Manage your subscription</p>
+            <h1 className="text-[19px] font-bold tracking-tight text-slate-900 leading-tight">Billing Plan</h1>
+            <p className="text-slate-500 text-[13px] font-medium leading-tight mt-0.5">Manage your subscription</p>
+          </div>
+        </div>
+
+        {/* Plans Grid Area */}
+        <div className="p-6 pb-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {plans.map((plan, i) => (
+              <div key={i} className={cn("rounded-md p-5 flex flex-col transition-all", 
+                i === 0 ? "bg-[#fef4ce]" : i === 1 ? "bg-[#a5f3d4]" : i === 2 ? "bg-[#d8f2fe]" : "bg-[#ccd4ff]")}>
+                
+                <h3 className="text-[16px] font-bold text-slate-900 mb-3">{plan.name}</h3>
+                
+                <div className="mb-4">
+                  <span className="text-[36px] font-bold text-slate-900 tracking-tight">{plan.price}</span>
+                  <span className="text-[14px] font-bold text-slate-900 ml-1">/Month</span>
+                </div>
+                
+                <div className="space-y-1 mb-4">
+                  <p className="text-[12px] font-medium text-slate-900 leading-snug">{plan.limit}</p>
+                  <p className="text-[11px] font-medium text-slate-800 leading-snug">{plan.feature}</p>
+                </div>
+                
+                {plan.isCurrent ? (
+                  <div className="mt-auto flex flex-col items-center w-full pt-2">
+                    <button className="w-full bg-[#1cd45b] hover:bg-[#16a34a] text-white py-2 rounded font-semibold text-[13px] transition-all active:scale-95">
+                      Current Plan
+                    </button>
+                    <p className="text-[11px] font-bold text-slate-900 mt-2">Next Payment Date : {plan.nextPayment}</p>
+                    <button 
+                      onClick={() => setIsCancelModalOpen(true)}
+                      className="text-[11px] font-medium text-[#f43f5e] mt-1 hover:underline transition-all">
+                      Cancel Subscription
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Warning Alert Integrated */}
+        <div className="p-6 pt-0">
+          <div className={cn(
+            "px-5 py-4 rounded border flex gap-3 transition-colors items-start",
+            isDark ? "bg-yellow-900/10 border-yellow-900/30" : "bg-[#fffdeb] border-[#fde047]/60"
+          )}>
+            <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" strokeWidth={2} />
+            <div>
+              <p className="font-bold text-yellow-700 mb-1 text-[12px]">Heads up!</p>
+              <div className="font-medium text-slate-700 text-[12px] leading-relaxed">
+                <p>We know it's a bit annoying, but our plans don't support downgrades. 🤨</p>
+                <p>If you really need to downgrade, you'll have to create a brand-new account and start from scratch, yep, content and all. We're truly sorry for the hassle, we wish it were easier too! 💙</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {plans.map((plan, i) => (
-          <Card key={i} className={cn(
-            "shadow-xl flex flex-col justify-between overflow-hidden transition-all",
-            mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200",
-            plan.isCurrent ? (mode === "dark" ? "ring-2 ring-primary/50" : "ring-2 ring-primary") : ""
+      {/* Cancel Subscription Modal Overlay */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
+          <div className={cn(
+            "w-full max-w-[650px] p-10 rounded-xl shadow-2xl transition-colors",
+            isDark ? "bg-[#1e293b]" : "bg-white"
           )}>
-            <CardHeader className="pb-2">
-              <h3 className={cn("text-lg font-bold uppercase tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>{plan.name}</h3>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-baseline gap-1">
-                <span className={cn("text-4xl font-black", mode === "dark" ? "text-white" : "text-slate-900")}>{plan.price}</span>
-                <span className="text-gray-400 text-sm font-bold">/Month</span>
-              </div>
-              <div className="space-y-1">
-                <p className={cn("text-[13px] font-bold", mode === "dark" ? "text-gray-200" : "text-slate-700")}>{plan.limit}</p>
-                <p className="text-[13px] text-gray-500 font-medium">{plan.feature}</p>
+            <div className="flex flex-col items-center mb-8">
+              <AlertTriangle className="w-16 h-16 text-[#f97316] mb-4" strokeWidth={2} />
+              <h2 className={cn("text-[18px] font-black uppercase tracking-wide", isDark ? "text-white" : "text-slate-900")}>
+                Close My Agency Account
+              </h2>
+            </div>
+
+            <div className={cn("space-y-6 text-[14px]", isDark ? "text-slate-300" : "text-slate-800")}>
+              <p className="font-bold">I understand that:</p>
+              
+              <div className="space-y-5">
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-[#f43f5e] focus:ring-[#f43f5e]"
+                    checked={checks.c1}
+                    onChange={(e) => setChecks({...checks, c1: e.target.checked})}
+                  />
+                  <span className="leading-snug">I will still be able to login and resubscribe within 90 days, before my account is fully closed and all the data is deleted.</span>
+                </label>
+                
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#f43f5e] focus:ring-[#f43f5e]"
+                    checked={checks.c2}
+                    onChange={(e) => setChecks({...checks, c2: e.target.checked})}
+                  />
+                  <span className="leading-snug">I have removed all the connections and channels integrated in my workspaces.</span>
+                </label>
+                
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#f43f5e] focus:ring-[#f43f5e]"
+                    checked={checks.c3}
+                    onChange={(e) => setChecks({...checks, c3: e.target.checked})}
+                  />
+                  <span className="leading-snug">I will lose access to all my workspaces immediately!</span>
+                </label>
               </div>
 
-              {plan.isCurrent ? (
-                <div className="pt-4 space-y-4">
-                  <button className={cn("w-full py-2 rounded font-bold text-sm border shadow-sm transition-colors", 
-                    mode === "dark" ? "bg-[#334155] text-gray-300 border-slate-600" : "bg-primary text-white border-primary")}>
-                    Current Plan
+              <div className="pt-2">
+                <p className="leading-relaxed">
+                  If you still wish to use your Workspaces but do not want to renew your subscription, we recommend closing your account before <span className="font-bold">2026-05-11</span>
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <p className="font-bold mb-3">
+                  Enter this code <span className="font-black">{generatedCode}</span> in the field below to continue.
+                </p>
+                <div className="flex gap-4">
+                  <input 
+                    type="text" 
+                    placeholder="Enter code here"
+                    value={cancelCodeInput}
+                    onChange={(e) => setCancelCodeInput(e.target.value)}
+                    className={cn(
+                      "flex-1 px-4 py-2.5 rounded-md border text-[14px] outline-none transition-colors",
+                      isDark ? "bg-[#0f172a] border-slate-700 text-white placeholder-slate-500 focus:border-slate-500" : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-400"
+                    )}
+                  />
+                  <button 
+                    onClick={() => setIsCancelModalOpen(false)}
+                    className={cn("px-6 py-2.5 rounded-md border font-medium text-[14px] transition-colors",
+                      isDark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                    )}
+                  >
+                    Cancel
                   </button>
-                  <div className="text-center">
-                    <p className={cn("text-[12px] font-bold", mode === "dark" ? "text-gray-200" : "text-slate-800")}>Next Payment Date : {plan.nextPayment}</p>
-                    <button className="text-[12px] text-red-500 font-bold hover:underline mt-2 uppercase tracking-wider">Cancel Subscription</button>
-                  </div>
+                  <button 
+                    disabled={!checks.c1 || !checks.c2 || !checks.c3 || cancelCodeInput !== generatedCode}
+                    className="px-6 py-2.5 rounded-md bg-[#eb6e6e] hover:bg-[#ef4444] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] transition-colors"
+                  >
+                    Delete
+                  </button>
                 </div>
-              ) : (
-                <div className="pt-4">
-                   <button className={cn("w-full py-2 rounded font-bold text-sm border shadow-sm transition-colors",
-                     mode === "dark" ? "bg-transparent text-gray-400 border-slate-700 hover:bg-slate-800" : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100")}>
-                     Upgrade
-                   </button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </div>
 
-      {/* Alert Section */}
-      <div className={cn("border p-6 rounded-lg flex gap-4 transition-colors", 
-        mode === "dark" ? "bg-yellow-100/5 border-yellow-500/20" : "bg-yellow-50 border-yellow-200")}>
-        <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0" />
-        <div className="space-y-2">
-          <h4 className="text-yellow-600 font-bold text-sm uppercase tracking-wider">Heads up!</h4>
-          <p className={cn("text-sm leading-relaxed font-medium", mode === "dark" ? "text-yellow-600/80" : "text-yellow-800/80")}>
-            We know it's a bit annoying, but our plans don't support downgrades. 😟
-          </p>
-          <p className={cn("text-sm leading-relaxed font-medium", mode === "dark" ? "text-yellow-600/80" : "text-yellow-800/80")}>
-            If you really need to downgrade, you'll have to create a brand-new account and start from scratch, yep, content and all. We're truly sorry for the hassle, we wish it were easier too! 💙
-          </p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 };
