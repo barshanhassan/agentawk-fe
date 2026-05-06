@@ -197,8 +197,8 @@ const AgencyWhiteLabelSettings = () => {
                               <img src={brandingData.logo} alt="Agency Logo" className="max-h-full object-contain" />
                             ) : (
                               <div className="flex items-center gap-2">
-                                 <div className="w-8 h-8 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-[18px]">R</div>
-                                 <span className={cn("text-[18px] font-bold tracking-tight transition-colors", mode === "dark" ? "text-gray-400 group-hover:text-white" : "text-slate-900")}>REPLYAGENT</span>
+                                 <div className="w-8 h-8 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-[18px]">EC</div>
+                                 <span className={cn("text-[18px] font-bold tracking-tight transition-colors", mode === "dark" ? "text-gray-400 group-hover:text-white" : "text-slate-900")}>EZCONN</span>
                               </div>
                             )}
                            </div>
@@ -225,7 +225,7 @@ const AgencyWhiteLabelSettings = () => {
                       <DropdownMenuTrigger asChild>
                         <div className={cn("w-16 h-16 border border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors",
                           mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-300")}>
-                           <div className="w-10 h-10 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-xl">R</div>
+                           <div className="w-10 h-10 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-xl">EC</div>
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
@@ -262,8 +262,8 @@ const AgencyWhiteLabelSettings = () => {
                         <div className={cn("w-[250px] h-20 border border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:opacity-80 transition-opacity",
                           mode === "dark" ? "bg-white/5 border-slate-700" : "bg-[#0f172a] border-slate-800")}>
                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-[18px]">R</div>
-                              <span className="text-[18px] font-bold text-white tracking-tight">REPLYAGENT</span>
+                              <div className="w-8 h-8 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-[18px]">EC</div>
+                              <span className="text-[18px] font-bold text-white tracking-tight">EZCONN</span>
                            </div>
                         </div>
                       </DropdownMenuTrigger>
@@ -288,7 +288,7 @@ const AgencyWhiteLabelSettings = () => {
                       <DropdownMenuTrigger asChild>
                         <div className={cn("w-16 h-16 border border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:opacity-80 transition-opacity",
                           mode === "dark" ? "bg-white/5 border-slate-700" : "bg-[#0f172a] border-slate-800")}>
-                           <div className="w-10 h-10 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-xl">R</div>
+                           <div className="w-10 h-10 bg-[#00e55e] rounded-md flex items-center justify-center font-bold text-white text-xl">EC</div>
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
@@ -325,7 +325,7 @@ const AgencyWhiteLabelSettings = () => {
                       {brandingData.favicon ? (
                         <img src={brandingData.favicon} alt="Favicon" className="w-full h-full object-contain rounded-lg" />
                       ) : (
-                        <div className="w-7 h-7 bg-[#00e55e] rounded flex items-center justify-center font-bold text-white text-xs">R</div>
+                        <div className="w-7 h-7 bg-[#00e55e] rounded flex items-center justify-center font-bold text-white text-xs">EC</div>
                       )}
                     </div>
                   </DropdownMenuTrigger>

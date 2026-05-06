@@ -297,6 +297,7 @@ export default function OverviewTab() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Stickiness (DAU/MAU)</CardTitle>
             <p className="text-xs text-muted-foreground">Last 30 Days</p>
+
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>

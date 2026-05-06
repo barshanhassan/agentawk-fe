@@ -298,9 +298,9 @@ const AgencyWorkspaces = () => {
                       ) : (
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                            R
+                            EC
                           </div>
-                          <span className={cn("text-[10px] font-bold uppercase tracking-tighter", mode === "dark" ? "text-gray-400" : "text-gray-600")}>REPLYAGENT</span>
+                          <span className={cn("text-[10px] font-bold uppercase tracking-tighter", mode === "dark" ? "text-gray-400" : "text-gray-600")}>EZCONN</span>
                         </div>
                       )}
                       <span className={cn("text-sm font-semibold transition-colors cursor-pointer",

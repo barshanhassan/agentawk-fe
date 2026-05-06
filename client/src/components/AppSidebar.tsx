@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import {
   Mail,
@@ -53,6 +54,7 @@ import { getAvatarColor } from "@/lib/avatar-utils";
 import { cn } from "@/lib/utils";
 
 export default function AppSidebar() {
+  const { t, i18n } = useTranslation();
   const [location, setLocation] = useLocation();
 
   // State for Theme and Online Status
@@ -70,31 +72,31 @@ export default function AppSidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState<string[]>(["en-us"]);
   const [workspace, setWorkspace] = useState<string[]>(["workspace-a"]);
-  const [searchType, setSearchType] = useState("WhatsApp Number");
+  const [searchType, setSearchType] = useState(t('sidebar.WhatsApp Number'));
 
   const searchOptions = [
-    { label: "WhatsApp Number", icon: <SiWhatsapp size={14} /> },
-    { label: "Email", icon: <Mail size={14} /> },
-    { label: "Phone Number", icon: <Phone size={14} /> },
-    { label: "First Name", icon: <User size={14} /> },
-    { label: "Last Name", icon: <User size={14} /> },
-    { label: "Full Name", icon: <Users size={14} /> },
-    { label: "Support Ticket", icon: <LifeBuoy size={14} /> },
-    { label: "Instagram Handle", icon: <Instagram size={14} /> },
-    { label: "Messenger Username", icon: <MessageCircle size={14} /> },
-    { label: "Contact ID", icon: <Hash size={14} /> }
+    { label: t('sidebar.WhatsApp Number'), icon: <SiWhatsapp size={14} /> },
+    { label: t('sidebar.Email'), icon: <Mail size={14} /> },
+    { label: t('sidebar.Phone Number'), icon: <Phone size={14} /> },
+    { label: t('sidebar.First Name'), icon: <User size={14} /> },
+    { label: t('sidebar.Last Name'), icon: <User size={14} /> },
+    { label: t('sidebar.Full Name'), icon: <Users size={14} /> },
+    { label: t('sidebar.Support Ticket'), icon: <LifeBuoy size={14} /> },
+    { label: t('sidebar.Instagram Handle'), icon: <Instagram size={14} /> },
+    { label: t('sidebar.Messenger Username'), icon: <MessageCircle size={14} /> },
+    { label: t('sidebar.Contact ID'), icon: <Hash size={14} /> }
   ];
 
   const workspaceOptions = [
-    { id: "workspace-a", name: "Workspace A" },
-    { id: "workspace-b", name: "Workspace B" },
-    { id: "workspace-c", name: "Workspace C" },
-    { id: "create-workspace", name: "+ Create Workspace", icon: <Plus size={14} /> },
+    { id: "workspace-a", name: t('sidebar.workspace_a', { defaultValue: "Workspace A" }) },
+    { id: "workspace-b", name: t('sidebar.workspace_b') },
+    { id: "workspace-c", name: t('sidebar.workspace_c') },
+    { id: "create-workspace", name: t('sidebar.create_workspace'), icon: <Plus size={14} /> },
   ];
 
   const statusOptions = [
-    { id: "available", name: "Available", icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
-    { id: "unavailable", name: "Unavailable", icon: <Circle size={12} className="text-gray-400" /> },
+    { id: "available", name: t('sidebar.available'), icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
+    { id: "unavailable", name: t('sidebar.unavailable'), icon: <Circle size={12} className="text-gray-400" /> },
   ];
 
   const themeOptions = [
@@ -104,7 +106,7 @@ export default function AppSidebar() {
 
   const languageOptions = [
     {
-      id: "en-us",
+      id: "en",
       name: "English (U.S)",
       icon: (
         <img
@@ -114,7 +116,37 @@ export default function AppSidebar() {
         />
       ),
     },
+    {
+      id: "pt",
+      name: "Português do Brasil",
+      icon: (
+        <img
+          src="https://flagcdn.com/w40/br.png"
+          alt="Brazil Flag"
+          className="w-4 h-4 object-cover rounded-sm"
+        />
+      ),
+    },
+    {
+      id: "es",
+      name: "Español",
+      icon: (
+        <img
+          src="https://flagcdn.com/w40/es.png"
+          alt="Spain Flag"
+          className="w-4 h-4 object-cover rounded-sm"
+        />
+      ),
+    },
   ];
+
+  const handleLanguageChange = (val: string[]) => {
+    const id = val[0];
+    i18n.changeLanguage(id);
+    localStorage.setItem('i18nextLng', id);
+  };
+
+  const currentLanguage = i18n.language ? i18n.language.split('-')[0] : 'en';
 
   const isActive = (path: string) => {
     if (path === "/insights") return location === "/" || location === "/insights" || location === "/workspace";
@@ -142,21 +174,21 @@ export default function AppSidebar() {
 
   // Menu items for search filtering
   const menuItems = [
-    { label: "Insights", href: "/insights", icon: BarChart2 },
-    { label: "Smart Flows", href: "/automations", icon: GitMerge },
-    { label: "Bot Conversations", href: "/conversations/bot", icon: Cpu },
-    { label: "WhatsApp Templates", href: "/templates", icon: FileText },
-    { label: "Campaign Manager", href: "/campaigns", icon: Send },
-    { label: "Contacts", href: "/contacts", icon: Users },
-    { label: "Team Management", href: "/teams", icon: UserPlus },
-    { label: "Workspace Management", href: "/workspaces", icon: Grid },
-    { label: "Media Gallery", href: "/settings?tab=Media gallery", icon: Grid },
-    { label: "WhatsApp Manager", href: "/whatsapp-manager", icon: SiWhatsapp },
-    { label: "Inbox", href: "/conversations/inbox", icon: Mail },
-    { label: "Conversation Logs", href: "/conversations/conversation-logs", icon: FileText },
-    { label: "Call Logs", href: "/conversations/call-logs", icon: Phone },
-    { label: "Billing", href: "/billing", icon: Grid },
-    { label: "Settings", href: "/settings", icon: Settings },
+    { label: t('sidebar.insights'), href: "/insights", icon: BarChart2 },
+    { label: t('sidebar.smart_flows'), href: "/automations", icon: GitMerge },
+    { label: t('sidebar.bot_conversations'), href: "/conversations/bot", icon: Cpu },
+    { label: t('sidebar.whatsapp_templates'), href: "/templates", icon: FileText },
+    { label: t('sidebar.campaign_manager'), href: "/campaigns", icon: Send },
+    { label: t('sidebar.contacts'), href: "/contacts", icon: Users },
+    { label: t('sidebar.team_management'), href: "/teams", icon: UserPlus },
+    { label: t('sidebar.workspace_management'), href: "/workspaces", icon: Grid },
+    { label: t('sidebar.media_gallery'), href: "/settings?tab=Media gallery", icon: Grid },
+    { label: t('sidebar.whatsapp_manager'), href: "/whatsapp-manager", icon: SiWhatsapp },
+    { label: t('sidebar.inbox'), href: "/conversations/inbox", icon: Mail },
+    { label: t('sidebar.conversation_logs'), href: "/conversations/conversation-logs", icon: FileText },
+    { label: t('sidebar.call_logs'), href: "/conversations/call-logs", icon: Phone },
+    { label: t('sidebar.billing'), href: "/billing", icon: Grid },
+    { label: t('sidebar.settings'), href: "/settings", icon: Settings },
   ];
 
   return (
@@ -199,7 +231,7 @@ export default function AppSidebar() {
                 <div className={cn("p-1 rounded-lg transition-colors", theme === "dark" ? "bg-slate-700" : "bg-white shadow-sm")}>
                   <LayoutGrid size={14} className={cn(theme === "dark" ? "text-blue-400" : "text-blue-500")} />
                 </div>
-                <span className="hidden md:block text-[14px] font-bold tracking-tight">Menu</span>
+                <span className="hidden md:block text-[14px] font-bold tracking-tight">{t('sidebar.menu')}</span>
                 <ChevronDown size={14} className="text-gray-400 group-hover:rotate-180 transition-transform duration-300" />
               </button>
             </DropdownMenuTrigger>
@@ -212,7 +244,7 @@ export default function AppSidebar() {
                 theme === "dark" ? "bg-[#1e293b] border-slate-700 text-slate-300" : "bg-white border-slate-100 text-slate-600"
               )}
             >
-              <DropdownMenuLabel className="px-3 py-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Navigation</DropdownMenuLabel>
+              <DropdownMenuLabel className="px-3 py-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest">{t('sidebar.navigation')}</DropdownMenuLabel>
               <div className="space-y-1">
                 {menuItems.slice(0, 8).map((item) => (
                   <DropdownMenuItem key={item.label} asChild>
@@ -318,7 +350,7 @@ export default function AppSidebar() {
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search anything..."
+                placeholder={t('sidebar.search_anything')}
                 className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400"
               />
 
@@ -439,64 +471,58 @@ export default function AppSidebar() {
                 </div>
               </div>
 
-              {/* Selectors Group */}
-              <div className="space-y-1">
-                <div className="px-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase px-3 py-1 tracking-widest">Preferences</p>
-                  
-                  <div className="space-y-3 p-2">
-                    {/* Status Dropdown */}
-                    <div>
-                      <CustomDropdown
-                        options={statusOptions}
-                        selected={[status]}
-                        onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
-                        placeholder="Status"
-                        width="100%"
-                        showSelectedOption={true}
-                        showSearch={false}
-                      />
-                    </div>
+              {/* Preferences Group */}
+              <div className="space-y-0">
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">{t('sidebar.status', { defaultValue: 'Your Online Status' })}</p>
+                  <CustomDropdown
+                    options={statusOptions}
+                    selected={[status]}
+                    onChange={(val) => setStatus(val[0] as "available" | "unavailable")}
+                    placeholder={t('sidebar.status')}
+                    width="100%"
+                    showSelectedOption={true}
+                    showSearch={false}
+                  />
+                </div>
 
-                    {/* Workspace Dropdown */}
-                    <div>
-                      <CustomDropdown
-                        options={workspaceOptions}
-                        selected={workspace}
-                        onChange={(val) => setWorkspace(val)}
-                        placeholder="Workspace"
-                        width="100%"
-                        showSelectedOption={true}
-                        showSearch={false}
-                      />
-                    </div>
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">{t('sidebar.workspace')}</p>
+                  <CustomDropdown
+                    options={workspaceOptions}
+                    selected={workspace}
+                    onChange={(val) => setWorkspace(val)}
+                    placeholder={t('sidebar.workspace')}
+                    width="100%"
+                    showSelectedOption={true}
+                    showSearch={false}
+                  />
+                </div>
 
-                    {/* Theme Dropdown */}
-                    <div>
-                      <CustomDropdown
-                        options={themeOptions}
-                        selected={[theme]}
-                        onChange={(val) => setTheme(val[0] as "light" | "dark")}
-                        placeholder="Theme"
-                        width="100%"
-                        showSelectedOption={true}
-                        showSearch={false}
-                      />
-                    </div>
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700/50">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">{t('sidebar.theme')}</p>
+                  <CustomDropdown
+                    options={themeOptions}
+                    selected={[theme]}
+                    onChange={(val) => setTheme(val[0] as "light" | "dark")}
+                    placeholder={t('sidebar.theme')}
+                    width="100%"
+                    showSelectedOption={true}
+                    showSearch={false}
+                  />
+                </div>
 
-                    {/* Language Dropdown */}
-                    <div>
-                      <CustomDropdown
-                        options={languageOptions}
-                        selected={language}
-                        onChange={(val) => setLanguage(val)}
-                        placeholder="Language"
-                        width="100%"
-                        showSelectedOption={true}
-                        showSearch={false}
-                      />
-                    </div>
-                  </div>
+                <div className="px-3 py-2">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">{t('sidebar.language')}</p>
+                  <CustomDropdown
+                    options={languageOptions}
+                    selected={[currentLanguage]}
+                    onChange={handleLanguageChange}
+                    placeholder={t('sidebar.language')}
+                    width="100%"
+                    showSelectedOption={true}
+                    showSearch={false}
+                  />
                 </div>
               </div>
 
