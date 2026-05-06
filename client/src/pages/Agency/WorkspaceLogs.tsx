@@ -22,29 +22,36 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { useTranslation } from 'react-i18next';
 
 const WorkspaceLogs = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
   const agencyId = userInfo.modelable_id || "1";
 
-  const [selectedWorkspace, setSelectedWorkspace] = useState("All Workspaces");
-  const [selectedDate, setSelectedDate] = useState("Today");
-  const [selectedAgent, setSelectedAgent] = useState("All Agents");
+  const [selectedWorkspace, setSelectedWorkspace] = useState(t("agency.auditLogs.filters.all_workspaces"));
+  const [selectedDate, setSelectedDate] = useState(t("agency.auditLogs.filters.today"));
+  const [selectedAgent, setSelectedAgent] = useState(t("agency.logs.filters.all_agents"));
   const [page, setPage] = useState(1);
 
   const logCategories = [
-    "Agent logged in", "Logged out", "Added agent", "Agent joined", 
-    "Created a team", "Updated a team", "Deleted a team", 
-    "Added team member", "Deleted team member", "Added a channel", 
-    "Deleted a channel", "Smart Flow created", "Smart Flow updated", 
-    "Smart Flow deleted", "Smart Flow archived", "Smart Flow activated",
-    "Changed call forwarding", "Added a domain", "pipeline created",
-    "pipeline deleted", "Custom field created", "Changed password",
-    "AI Chat assistants", "Purchased White Label", "Cancelled white label"
+    t("agency.auditLogs.categories.login"), t("agency.auditLogs.categories.logout"), t("agency.auditLogs.categories.add_agent"), t("agency.auditLogs.categories.agent_joined"), 
+    t("agency.auditLogs.categories.create_team"), t("agency.auditLogs.categories.update_team"), t("agency.auditLogs.categories.delete_team"), 
+    t("agency.auditLogs.categories.add_team_member"), t("agency.auditLogs.categories.delete_team_member"), t("agency.auditLogs.categories.add_channel"), 
+    t("agency.auditLogs.categories.delete_channel"), t("agency.auditLogs.categories.flow_created"), t("agency.auditLogs.categories.flow_updated"), 
+    t("agency.auditLogs.categories.flow_deleted"), t("agency.auditLogs.categories.flow_archived"), t("agency.auditLogs.categories.flow_activated"),
+    t("agency.auditLogs.categories.call_forwarding"), t("agency.auditLogs.categories.add_domain"), t("agency.auditLogs.categories.pipeline_created"),
+    t("agency.auditLogs.categories.pipeline_deleted"), t("agency.auditLogs.categories.field_created"), t("agency.auditLogs.categories.change_password"),
+    t("agency.auditLogs.categories.ai_assistants"), t("agency.auditLogs.categories.whitelabel_purchased"), t("agency.auditLogs.categories.whitelabel_cancelled")
   ];
 
-  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days"];
+  const dateRanges = [
+    t("agency.auditLogs.filters.today"), 
+    t("agency.auditLogs.filters.yesterday"), 
+    t("agency.auditLogs.filters.last_7_days"), 
+    t("agency.auditLogs.filters.last_30_days")
+  ];
 
   const { data: workspacesResponse } = useQuery({
     queryKey: [`/api/agencies/${agencyId}/workspaces`],
@@ -62,7 +69,7 @@ const WorkspaceLogs = () => {
     }
   });
 
-  const workspaces = ["All Workspaces", ...(workspacesResponse?.workspaces || []).map((ws: any) => ws.name)];
+  const workspaces = [t("agency.auditLogs.filters.all_workspaces"), ...(workspacesResponse?.workspaces || []).map((ws: any) => ws.name)];
   const logs = logsResponse?.logs || [];
   const total = logsResponse?.total || 0;
   const perPage = logsResponse?.per_page || 20;
@@ -74,7 +81,7 @@ const WorkspaceLogs = () => {
       {/* Title Bar */}
       <div className={cn("p-4 border-b transition-colors", 
         mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-        <h1 className="text-lg font-bold uppercase tracking-tight">Audit Logs</h1>
+        <h1 className="text-lg font-bold uppercase tracking-tight">{t("agency.auditLogs.title")}</h1>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -142,19 +149,19 @@ const WorkspaceLogs = () => {
           {/* Table Headers */}
           <div className={cn("grid grid-cols-12 px-4 py-3 border-b transition-colors", 
             mode === "dark" ? "bg-[#1e293b]/50 border-slate-800" : "bg-slate-50 border-slate-100")}>
-            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Workspace</div>
-            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Action Date</div>
-            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Action</div>
-            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right">Performed By</div>
+            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t("agency.auditLogs.table.workspace")}</div>
+            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t("agency.auditLogs.table.action_date")}</div>
+            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">{t("agency.auditLogs.table.action")}</div>
+            <div className="col-span-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right">{t("agency.auditLogs.table.performed_by")}</div>
           </div>
 
           {/* Table Content */}
           <div className="flex-1 relative overflow-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center h-32 text-gray-400 text-sm">Loading logs...</div>
+              <div className="flex items-center justify-center h-32 text-gray-400 text-sm">{t("agency.auditLogs.table.loading")}</div>
             ) : logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 opacity-20">
-                <span className="text-sm text-gray-500 font-bold uppercase tracking-widest">No logs found for selected filters</span>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-widest">{t("agency.auditLogs.table.empty")}</span>
               </div>
             ) : (
               <div className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-800/50" : "divide-slate-100")}>
@@ -189,7 +196,7 @@ const WorkspaceLogs = () => {
             {/* Pagination */}
             <div className={cn("flex items-center justify-between p-4 border-t transition-colors", 
               mode === "dark" ? "bg-[#1e293b]/30 border-slate-800" : "bg-slate-50 border-slate-100")}>
-              <span className="text-sm text-gray-400 font-medium">Showing {logs.length} of {total} rows</span>
+              <span className="text-sm text-gray-400 font-medium">{t("agency.auditLogs.pagination.showing", { count: logs.length, total: total })}</span>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setPage(p => Math.max(1, p - 1))}

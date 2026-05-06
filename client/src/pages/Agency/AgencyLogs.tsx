@@ -20,24 +20,31 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { useTranslation } from 'react-i18next';
 
 const AgencyLogs = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
   const agencyId = userInfo.modelable_id || "1";
 
-  const [selectedDate, setSelectedDate] = useState("Today");
-  const [selectedAgent, setSelectedAgent] = useState("All Agents");
+  const [selectedDate, setSelectedDate] = useState(t("agency.logs.filters.today"));
+  const [selectedAgent, setSelectedAgent] = useState(t("agency.logs.filters.all_agents"));
   const [page, setPage] = useState(1);
 
   const logCategories = [
-    "Workspace created", "Workspace deleted", "Contacts limit changed",
-    "Contacts limit enabled", "Contacts limit disabled", "Subscription Upgraded",
-    "Subscription cancelled", "Whitelabel purchased", "White label cancelled",
-    "AI Chat assistants"
+    t("agency.logs.categories.workspace_created"), t("agency.logs.categories.workspace_deleted"), t("agency.logs.categories.contacts_limit_changed"),
+    t("agency.logs.categories.contacts_limit_enabled"), t("agency.logs.categories.contacts_limit_disabled"), t("agency.logs.categories.subscription_upgraded"),
+    t("agency.logs.categories.subscription_cancelled"), t("agency.logs.categories.whitelabel_purchased"), t("agency.logs.categories.whitelabel_cancelled"),
+    t("agency.logs.categories.ai_assistants")
   ];
 
-  const dateRanges = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days"];
+  const dateRanges = [
+    t("agency.logs.filters.today"), 
+    t("agency.logs.filters.yesterday"), 
+    t("agency.logs.filters.last_7_days"), 
+    t("agency.logs.filters.last_30_days")
+  ];
 
   const { data: logsResponse, isLoading } = useQuery({
     queryKey: [`/api/agencies/${agencyId}/agency-logs`, selectedDate, page],
@@ -55,7 +62,7 @@ const AgencyLogs = () => {
     }
   });
 
-  const agents = ["All Agents", ...(membersResponse?.members || []).map((m: any) => m.email)];
+  const agents = [t("agency.logs.filters.all_agents"), ...(membersResponse?.members || []).map((m: any) => m.email)];
   const logs = logsResponse?.logs || [];
   const total = logsResponse?.total || 0;
   const perPage = logsResponse?.per_page || 20;
@@ -72,7 +79,7 @@ const AgencyLogs = () => {
           mode === "dark" ? "border-slate-800" : "border-slate-300")}>
           <div className={cn("p-4 border-b h-14 flex items-center shrink-0", 
             mode === "dark" ? "border-slate-800" : "border-slate-300")}>
-            <h1 className="text-sm font-bold tracking-tight">Agency Logs</h1>
+            <h1 className="text-sm font-bold tracking-tight">{t("agency.logs.title")}</h1>
           </div>
           <div className="flex flex-col flex-1">
             {logCategories.map((category, i) => (
@@ -116,7 +123,7 @@ const AgencyLogs = () => {
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer hover:text-green-600 text-slate-900 transition-colors">
                   <Users size={18} className="text-slate-900" />
-                  <span className="text-sm font-bold">Select agents</span>
+                  <span className="text-sm font-bold">{t("agency.logs.filters.select_agents")}</span>
                   <ChevronDown size={14} className="opacity-50" />
                 </div>
               </DropdownMenuTrigger>
@@ -133,9 +140,9 @@ const AgencyLogs = () => {
           {/* Table Headers */}
           <div className={cn("grid grid-cols-12 px-4 py-3 border-b transition-colors", 
             mode === "dark" ? "bg-[#1e293b]/50 border-slate-800" : "bg-white border-slate-300")}>
-            <div className="col-span-3 text-[10px] font-bold text-slate-900 uppercase tracking-widest">ACTION DATE</div>
-            <div className="col-span-6 text-[10px] font-bold text-slate-900 uppercase tracking-widest text-center">ACTION</div>
-            <div className="col-span-3 text-[10px] font-bold text-slate-900 uppercase tracking-widest text-right">PERFORMED BY</div>
+            <div className="col-span-3 text-[10px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.logs.table.action_date")}</div>
+            <div className="col-span-6 text-[10px] font-bold text-slate-900 uppercase tracking-widest text-center">{t("agency.logs.table.action")}</div>
+            <div className="col-span-3 text-[10px] font-bold text-slate-900 uppercase tracking-widest text-right">{t("agency.logs.table.performed_by")}</div>
           </div>
 
           {/* Table Content */}
@@ -162,13 +169,13 @@ const AgencyLogs = () => {
               
               {!isLoading && logs.length === 0 && (
                 <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
-                  No logs found
+                  {t("agency.logs.table.empty")}
                 </div>
               )}
 
               {isLoading && (
                 <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
-                  Loading logs...
+                  {t("agency.logs.table.loading")}
                 </div>
               )}
             </div>
@@ -177,7 +184,7 @@ const AgencyLogs = () => {
             <div className={cn("flex items-center justify-between p-4 border-t transition-colors mt-auto", 
               mode === "dark" ? "bg-[#1e293b]/30 border-slate-800" : "bg-white border-slate-200")}>
               <span className="text-sm text-slate-500 font-medium">
-                Showing {logs.length === 0 ? 0 : 1} to {logs.length} of {total} rows
+                {t("agency.logs.pagination.showing", { start: logs.length === 0 ? 0 : 1, end: logs.length, total: total })}
               </span>
               <div className="flex items-center gap-2">
                 <button 

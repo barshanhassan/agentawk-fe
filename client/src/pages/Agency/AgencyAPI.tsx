@@ -3,8 +3,10 @@ import { Plug, Copy, RefreshCw, CheckCircle } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 const AgencyAPI = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const [hasKey, setHasKey] = useState(true); // Default to true for demo as in the screenshot
@@ -17,8 +19,8 @@ const AgencyAPI = () => {
     setApiKey(newKey);
     setHasKey(true);
     toast({
-      title: "API Key Generated",
-      description: "Your new API key has been generated successfully.",
+      title: t("agency.api.generated_toast"),
+      description: t("agency.api.generated_desc"),
     });
   };
 
@@ -26,8 +28,8 @@ const AgencyAPI = () => {
     navigator.clipboard.writeText(apiKey);
     setCopied(true);
     toast({
-      title: "Copied!",
-      description: "API key copied to clipboard.",
+      title: t("common.copied"),
+      description: t("agency.api.copied_desc"),
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -45,9 +47,9 @@ const AgencyAPI = () => {
           <div className="flex items-center gap-4">
             <Plug className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} fill="currentColor" />
             <div>
-              <h1 className="text-[20px] font-bold tracking-tight">API</h1>
+              <h1 className="text-[20px] font-bold tracking-tight">{t("agency.api.title")}</h1>
               <p className={cn("text-[13px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-600")}>
-                Manage your API credential
+                {t("agency.api.desc")}
               </p>
             </div>
           </div>
@@ -55,7 +57,7 @@ const AgencyAPI = () => {
             mode === "dark" 
               ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
               : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-             View instructions
+             {t("agency.api.view_instructions")}
           </button>
         </div>
 
@@ -67,27 +69,27 @@ const AgencyAPI = () => {
           {!hasKey ? (
             <>
               <h2 className={cn("text-[22px] font-bold mb-1 tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-                API Key
+                {t("agency.api.key_title")}
               </h2>
               <p className={cn("text-[13px] mb-6 font-medium max-w-md mx-auto leading-relaxed", 
                 mode === "dark" ? "text-slate-400" : "text-slate-600")}>
-                Generate your API key to connect with external applications and automate your workflow.
+                {t("agency.api.key_desc_empty")}
               </p>
               <button 
                 onClick={handleGenerate}
                 className={cn("px-8 py-2.5 rounded font-medium text-[13px] transition-all border",
                   "bg-white hover:bg-slate-50 text-[#00e55e] border-[#00e55e]")}>
-                Generate key
+                {t("agency.api.generate_key")}
               </button>
             </>
           ) : (
             <div className="w-full max-w-3xl animate-in fade-in zoom-in duration-500">
               <h2 className={cn("text-[22px] font-bold mb-1 tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-                Your API Key
+                {t("agency.api.your_key_title")}
               </h2>
               <p className={cn("text-[13px] mb-6 font-medium mx-auto", 
                 mode === "dark" ? "text-slate-400" : "text-slate-600")}>
-                Here is your API key for connecting with external applications
+                {t("agency.api.your_key_desc")}
               </p>
               
               <div className="relative mb-5 group w-full max-w-[650px] mx-auto">
@@ -110,7 +112,7 @@ const AgencyAPI = () => {
                       ? "bg-[#1e293b] hover:bg-slate-800 text-slate-300 border-slate-700" 
                       : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
                   <RefreshCw size={14} />
-                  Regenerate Key
+                  {t("agency.api.regenerate_key")}
                 </button>
                 
                 <button 
@@ -122,7 +124,7 @@ const AgencyAPI = () => {
                         ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
                         : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
                   {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
-                  {copied ? "Copied" : "Copy"}
+                  {copied ? t("common.copied") : t("common.copy")}
                 </button>
               </div>
             </div>

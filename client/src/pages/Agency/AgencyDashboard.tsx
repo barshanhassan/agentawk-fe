@@ -40,85 +40,88 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLocation } from "wouter";
+import { useTranslation } from 'react-i18next';
 
 const AgencyDashboard = () => {
   const { mode } = useTheme();
+  const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
   
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return t("agency.dashboard.greeting.morning");
+    if (hour < 17) return t("agency.dashboard.greeting.afternoon");
+    return t("agency.dashboard.greeting.evening");
   };
 
   const stats = [
-    { label: "Total of Workspaces", value: "13", icon: <Layers size={14} className="text-gray-400" /> },
-    { label: "Agents in the Agency", value: "7", icon: <Users size={14} className="text-gray-400" /> },
-    { label: "Premium Support Seats", value: "0 of 0", icon: <ShieldCheck size={14} className="text-gray-400" /> },
+    { label: t("agency.dashboard.stats.workspaces"), value: "13", icon: <Layers size={14} className="text-gray-400" /> },
+    { label: t("agency.dashboard.stats.agents"), value: "7", icon: <Users size={14} className="text-gray-400" /> },
+    { label: t("agency.dashboard.stats.support"), value: "0 of 0", icon: <ShieldCheck size={14} className="text-gray-400" /> },
   ];
 
   const featureCards = [
     { 
-      title: "Agency White Label", 
-      desc: "Your brand, your domain, your agency.",
-      status: "ACTIVE", 
+      title: t("agency.dashboard.features.whiteLabel.title"), 
+      desc: t("agency.dashboard.features.whiteLabel.desc"),
+      status: t("common.active"), 
       statusColor: "text-green-500",
       icon: <Layout className="w-6 h-6 text-teal-500" />, 
-      action: "Configure",
+      action: t("common.manage"),
       href: "/agency/settings/white-label"
     },
     { 
-      title: "SaaS Mode", 
-      desc: "Offer Ezconn as a subscription product.",
-      status: "COMING SOON", 
+      title: t("agency.dashboard.features.saas.title"), 
+      desc: t("agency.dashboard.features.saas.desc"),
+      status: t("common.comingSoon"), 
       statusColor: "text-orange-500",
       icon: <Cloud className="w-6 h-6 text-blue-500" />, 
-      action: "Join waitlist",
+      action: t("common.joinWaitlist"),
       href: "/agency/saas/plans"
     },
     { 
-      title: "Marketplace", 
-      desc: "List your services and integrations for users.",
-      status: "APPROVED", 
+      title: t("agency.dashboard.features.marketplace.title"), 
+      desc: t("agency.dashboard.features.marketplace.desc"),
+      status: t("common.approved"), 
       statusColor: "text-green-500",
       icon: <ShoppingBag className="w-6 h-6 text-orange-500" />, 
-      action: "Manage listing",
+      action: t("common.manageListing"),
       href: "/agency/workspaces"
     },
     { 
-      title: "Community Access", 
-      desc: "Network with 10,000+ agency operators.",
-      status: "INCLUDED", 
+      title: t("agency.dashboard.features.community.title"), 
+      desc: t("agency.dashboard.features.community.desc"),
+      status: t("common.included"), 
       statusColor: "text-blue-500",
       icon: <Users2 className="w-6 h-6 text-pink-500" />, 
-      action: "Open community",
+      action: t("common.openCommunity"),
       href: "/agency/help"
     },
     { 
-      title: "Your Plan", 
-      desc: "Enterprise — Next billing: 2026-05-11.",
-      status: "ENTERPRISE", 
+      title: t("agency.dashboard.features.plan.title"), 
+      desc: t("agency.dashboard.features.plan.desc"),
+      status: t("common.enterprise"), 
       statusColor: "text-teal-500",
       icon: <Settings className="w-6 h-6 text-teal-500" />, 
-      action: "View plan details",
+      action: t("common.viewPlanDetails"),
       href: "/agency/billing/plans"
     },
   ];
 
   const quickActions = [
-    { label: "Create workspace", sub: "Set up a new client workspace.", icon: <Plus size={18} className="text-blue-500" />, href: "/agency/workspaces" },
-    { label: "Invite team member", sub: "Add agents to your agency.", icon: <UserPlus size={18} className="text-teal-500" />, href: "/agency/team" },
-    { label: "Agency settings", sub: "Branding, domains, billing.", icon: <Settings size={18} className="text-gray-500" />, href: "/agency/settings/general" },
-    { label: "View audit logs", sub: "Track every change in real time.", icon: <Eye size={18} className="text-purple-500" />, href: "/agency/audit-logs/agency" },
+    { label: t("agency.dashboard.quickActions.createWorkspace.title"), sub: t("agency.dashboard.quickActions.createWorkspace.sub"), icon: <Plus size={18} className="text-blue-500" />, href: "/agency/workspaces" },
+    { label: t("agency.dashboard.quickActions.inviteTeam.title"), sub: t("agency.dashboard.quickActions.inviteTeam.sub"), icon: <UserPlus size={18} className="text-teal-500" />, href: "/agency/team" },
+    { label: t("nav.settings"), sub: t("agency.dashboard.quickActions.settings.sub"), icon: <Settings size={18} className="text-gray-500" />, href: "/agency/settings/general" },
+    { label: t("agency.dashboard.quickActions.auditLogs.title"), sub: t("agency.dashboard.quickActions.auditLogs.sub"), icon: <Eye size={18} className="text-purple-500" />, href: "/agency/audit-logs/agency" },
   ];
 
   const activityLogs = [
-    { name: "Haider Ali", action: "created a workspace", target: "Haider Workspace.", time: "2026-04-17 10:14 am", initials: "HA" },
-    { name: "John Doe", action: "created a workspace", target: "Clonekit AI Studio Testes.", time: "2026-03-30 09:52 am", initials: "JD" },
-    { name: "System", action: "Subscription upgraded from ignite-plan to enterprise-plan.", time: "2026-03-11 04:56 pm", isSystem: true },
-    { name: "Jawad R", action: "created a workspace", target: "Test CSV Contacts.", time: "2026-02-02 09:40 am", initials: "JR" },
-    { name: "Bharat Kat", action: "created a workspace", target: "Broadcaster.", time: "2026-01-30 04:37 pm", initials: "BK" },
+    { name: "Haider Ali", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Haider Workspace.", time: "2026-04-17 10:14 am", initials: "HA" },
+    { name: "John Doe", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Clonekit AI Studio Testes.", time: "2026-03-30 09:52 am", initials: "JD" },
+    { name: "System", action: t("agency.dashboard.activity.actions.subscriptionUpgraded"), time: "2026-03-11 04:56 pm", isSystem: true },
+    { name: "Jawad R", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Test CSV Contacts.", time: "2026-02-02 09:40 am", initials: "JR" },
+    { name: "Bharat Kat", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Broadcaster.", time: "2026-01-30 04:37 pm", initials: "BK" },
   ];
 
   return (
@@ -130,14 +133,14 @@ const AgencyDashboard = () => {
         <div>
           <div className="flex items-center gap-2">
              <span className="text-xl">👋</span>
-             <h1 className="text-2xl font-black tracking-tight">{getGreeting()}, Talha!</h1>
+             <h1 className="text-2xl font-black tracking-tight">{getGreeting()}, {userInfo.first_name || "User"}!</h1>
           </div>
-          <p className="text-gray-400 text-sm font-medium mt-1">Here's what's happening across your agency today.</p>
+          <p className="text-gray-400 text-sm font-medium mt-1">{t("agency.dashboard.summary")}</p>
         </div>
         <div className={cn("px-4 py-2 rounded-xl border flex items-center gap-3 shadow-sm transition-colors",
           mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
           <Calendar size={16} className="text-teal-500" />
-          <span className="text-xs font-bold tracking-tight">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          <span className="text-xs font-bold tracking-tight">{new Date().toLocaleDateString(i18n.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
         </div>
       </div>
 
@@ -156,15 +159,15 @@ const AgencyDashboard = () => {
                   mode === "dark" ? "bg-amber-500/20" : "bg-white shadow-sm")}>
                   <FileText className="text-amber-600 w-5 h-5" />
                 </div>
-                <h3 className={cn("text-lg font-bold mb-2", mode === "dark" ? "text-amber-100" : "text-[#795548]")}>Documentation</h3>
+                <h3 className={cn("text-lg font-bold mb-2", mode === "dark" ? "text-amber-100" : "text-[#795548]")}>{t("common.documentation")}</h3>
                 <p className={cn("text-sm mb-6 leading-relaxed opacity-80", mode === "dark" ? "text-amber-200/70" : "text-[#795548]/70")}>
-                  Explore the system features, APIs, and integrations in one place.
+                  {t("agency.dashboard.documentation.desc")}.
                 </p>
                 <button 
                   onClick={() => window.open('#', '_blank')}
                   className={cn("px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95",
                   mode === "dark" ? "bg-amber-500 text-white" : "bg-amber-500 text-white")}>
-                  Open docs ↗
+                  {t("common.openDocs")} ↗
                 </button>
               </CardContent>
             </Card>
@@ -177,15 +180,15 @@ const AgencyDashboard = () => {
                   mode === "dark" ? "bg-blue-500/20" : "bg-white shadow-sm")}>
                   <Zap className="text-blue-600 w-5 h-5" />
                 </div>
-                <h3 className={cn("text-lg font-bold mb-2", mode === "dark" ? "text-blue-100" : "text-[#0D47A1]")}>Quick Setup</h3>
+                <h3 className={cn("text-lg font-bold mb-2", mode === "dark" ? "text-blue-100" : "text-[#0D47A1]")}>{t("common.quickSetup")}</h3>
                 <p className={cn("text-sm mb-6 leading-relaxed opacity-80", mode === "dark" ? "text-blue-200/70" : "text-[#0D47A1]/70")}>
-                  Get started quickly with our step-by-step onboarding guide.
+                  {t("agency.dashboard.quickSetup.desc")}.
                 </p>
                 <button 
                   onClick={() => setLocation('/agency/workspaces')}
                   className={cn("px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95",
                   mode === "dark" ? "bg-blue-600 text-white" : "bg-blue-600 text-white")}>
-                  Start now ↗
+                  {t("common.startNow")} ↗
                 </button>
               </CardContent>
             </Card>
@@ -211,12 +214,12 @@ const AgencyDashboard = () => {
           {/* Features Grid */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black tracking-tight">Agency features</h2>
+              <h2 className="text-lg font-black tracking-tight">{t("agency.dashboard.features.title")}</h2>
               <button 
                 onClick={() => setLocation('/agency/settings/general')}
                 className="text-teal-500 text-xs font-bold hover:underline"
               >
-                Manage all ↗
+                {t("agency.dashboard.features.manageAll")} ↗
               </button>
             </div>
             
@@ -234,8 +237,8 @@ const AgencyDashboard = () => {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
-                          feature.status === "ACTIVE" || feature.status === "APPROVED" || feature.status === "ENTERPRISE" ? "bg-green-500" : 
-                          feature.status === "COMING SOON" ? "bg-orange-500" : "bg-gray-400")} />
+                          feature.status === t("common.active") || feature.status === t("common.approved") || feature.status === t("common.enterprise") ? "bg-green-500" : 
+                          feature.status === t("common.comingSoon") ? "bg-orange-500" : "bg-gray-400")} />
                         <span className={cn("text-[9px] font-black tracking-widest uppercase", feature.statusColor)}>
                           {feature.status}
                         </span>
@@ -260,19 +263,19 @@ const AgencyDashboard = () => {
           {/* Plan Summary Card (Navy Blue) */}
           <Card className={cn("border shadow-2xl rounded-2xl overflow-hidden transition-colors", 
             mode === "dark" ? "bg-[#0a192f] border-slate-800" : "bg-[#051139] border-blue-900 shadow-xl")}>
-            <CardContent className="p-8">
+             <CardContent className="p-8">
                <div className="flex items-center gap-2 mb-2">
                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                  <span className={cn("text-[10px] font-black uppercase tracking-widest", 
-                   mode === "dark" ? "text-slate-400" : "text-blue-200/60")}>ENTERPRISE PLAN</span>
+                   mode === "dark" ? "text-slate-400" : "text-blue-200/60")}>{t("agency.dashboard.plan_card.enterprise_title")}</span>
                </div>
-               <h3 className={cn("text-2xl font-black mb-1 tracking-tighter leading-none text-white")}>Enterprise</h3>
+               <h3 className={cn("text-2xl font-black mb-1 tracking-tighter leading-none text-white")}>{t("agency.dashboard.plan_card.enterprise")}</h3>
                <p className={cn("text-xs font-bold mb-6 italic", 
-                 mode === "dark" ? "text-slate-500" : "text-blue-300/50")}>Next Payment: 2026-05-11</p>
+                 mode === "dark" ? "text-slate-500" : "text-blue-300/50")}>{t("agency.dashboard.plan_card.next_payment")}: 2026-05-11</p>
                
                <div className="space-y-3 mb-8">
                   <div className="flex justify-between items-end">
-                    <span className={cn("text-xs font-bold", mode === "dark" ? "text-slate-400" : "text-blue-200/60")}>Workspaces used</span>
+                    <span className={cn("text-xs font-bold", mode === "dark" ? "text-slate-400" : "text-blue-200/60")}>{t("agency.dashboard.plan_card.workspaces_used")}</span>
                     <span className={cn("text-xs font-black text-white")}>13 / 999</span>
                   </div>
                   <Progress value={(13/999)*100} className={cn("h-1.5", mode === "dark" ? "bg-slate-800" : "bg-blue-900/50")} indicatorClassName="bg-blue-400" />
@@ -280,9 +283,9 @@ const AgencyDashboard = () => {
 
                <div className="flex gap-2">
                  <button onClick={() => setLocation('/agency/billing/plans')} className={cn("flex-1 h-10 font-black text-[11px] uppercase tracking-wider rounded-lg transition-transform active:scale-95 shadow-lg", 
-                   mode === "dark" ? "bg-white text-slate-900" : "bg-white text-blue-900 hover:bg-blue-50")}>Upgrade</button>
+                   mode === "dark" ? "bg-white text-slate-900" : "bg-white text-blue-900 hover:bg-blue-50")}>{t("common.upgrade")}</button>
                  <button onClick={() => setLocation('/agency/billing/manage')} className={cn("flex-1 h-10 font-black text-[11px] uppercase tracking-wider rounded-lg transition-transform active:scale-95 border", 
-                   mode === "dark" ? "bg-slate-800 text-white border-slate-700" : "bg-blue-900/40 text-blue-100 border-blue-800 hover:bg-blue-900/60")}>Billing</button>
+                   mode === "dark" ? "bg-slate-800 text-white border-slate-700" : "bg-blue-900/40 text-blue-100 border-blue-800 hover:bg-blue-900/60")}>{t("nav.billing")}</button>
                </div>
             </CardContent>
           </Card>
@@ -291,7 +294,7 @@ const AgencyDashboard = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-2">
                <Zap className="text-orange-500 w-5 h-5 fill-orange-500/20" />
-               <h2 className="text-lg font-black tracking-tight">Quick actions</h2>
+               <h2 className="text-lg font-black tracking-tight">{t("agency.dashboard.quickActions.title")}</h2>
             </div>
             <div className="space-y-3">
               {quickActions.map((action, i) => (
@@ -321,10 +324,10 @@ const AgencyDashboard = () => {
             <div className="flex items-center justify-between px-2">
                <div className="flex items-center gap-2">
                   <Clock className="text-blue-500 w-5 h-5" />
-                  <h2 className="text-lg font-black tracking-tight">Recent activity</h2>
+                  <h2 className="text-lg font-black tracking-tight">{t("agency.dashboard.activity.title")}</h2>
                </div>
                <Badge className="bg-green-500/10 text-green-500 border-none font-bold text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1 animate-pulse">
-                 <div className="w-1 h-1 rounded-full bg-green-500" /> LIVE
+                 <div className="w-1 h-1 rounded-full bg-green-500" /> {t("common.live")}
                </Badge>
             </div>
             
@@ -350,7 +353,7 @@ const AgencyDashboard = () => {
                     </div>
                   ))}
                   <button className="w-full py-2.5 rounded-xl border border-dashed border-slate-700 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-teal-500 hover:border-teal-500/30 transition-all">
-                    View all activity
+                    {t("agency.dashboard.activity.viewAll")}
                   </button>
                 </div>
               </CardContent>

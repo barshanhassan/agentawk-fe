@@ -9,33 +9,35 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 const AgencyHelp = () => {
   const { mode } = useTheme();
+  const { t } = useTranslation();
   
   const helpCards = [
     {
-      title: "Live Chat Support",
-      description: "Live Chat Support is exclusively available to paid plan users, Monday through Friday, from 12:00 PM to 8:00 PM (UTC).",
-      buttonText: "Live Chat with Support",
+      title: t("agency.help.chat.title"),
+      description: t("agency.help.chat.desc"),
+      buttonText: t("agency.help.chat.btn"),
       icon: <MessagesSquare className="w-12 h-12 text-slate-700" />
     },
     {
-      title: "Knowledge base",
-      description: "Seeking additional help? Check out our articles that provide answers to your questions.",
-      buttonText: "Read More",
+      title: t("agency.help.kb.title"),
+      description: t("agency.help.kb.desc"),
+      buttonText: t("common.readMore"),
       icon: <BookOpen className="w-12 h-12 text-slate-700" />
     },
     {
-      title: "Tutorial Videos",
-      description: "Looking to accelerate your learning? Check out our YouTube channel for tutorial videos with examples to help you learn faster.",
-      buttonText: "Watch Now",
+      title: t("agency.help.tutorials.title"),
+      description: t("agency.help.tutorials.desc"),
+      buttonText: t("agency.help.tutorials.btn"),
       icon: <Clapperboard className="w-12 h-12 text-slate-700" />
     },
     {
-      title: "API Documentation",
-      description: "Looking to integrate with external systems? Explore our API documentation.",
-      buttonText: "Documentation",
+      title: t("agency.help.api.title"),
+      description: t("agency.help.api.desc"),
+      buttonText: t("agency.help.api.btn"),
       icon: <Terminal className="w-12 h-12 text-slate-700" />
     }
   ];

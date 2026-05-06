@@ -24,56 +24,58 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from 'react-i18next';
 
 const AgencySidebar = () => {
   const [location] = useLocation();
-  const [expanded, setExpanded] = React.useState<string | null>("Audit Logs");
+  const [expanded, setExpanded] = React.useState<string | null>("nav.auditLogs");
   const [settingsExpanded, setSettingsExpanded] = React.useState(false);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { mode } = useTheme();
+  const { t } = useTranslation();
 
   const menuItems = [
-    { label: "Dashboard", icon: <Gauge size={20} />, href: "/agency" },
-    { label: "Workspaces", icon: <Network size={20} />, href: "/agency/workspaces" },
-    { label: "Team", icon: <Users size={20} />, href: "/agency/team" },
-    { label: "Roles & Permissions", icon: <ShieldCheck size={20} />, href: "/agency/roles" },
+    { label: "nav.dashboard", icon: <Gauge size={20} />, href: "/agency" },
+    { label: "nav.workspaces", icon: <Network size={20} />, href: "/agency/workspaces" },
+    { label: "nav.team", icon: <Users size={20} />, href: "/agency/team" },
+    { label: "nav.roles", icon: <ShieldCheck size={20} />, href: "/agency/roles" },
     { 
-      label: "Audit Logs", 
+      label: "nav.auditLogs", 
       icon: <ScrollText size={20} />, 
       href: "#", 
       hasSubmenu: true,
       subItems: [
-        { label: "Agency", icon: <Briefcase size={16} />, href: "/agency/audit-logs/agency" },
+        { label: "nav.auditLogs_agency", icon: <Briefcase size={16} />, href: "/agency/audit-logs/agency" },
       ]
     },
     { 
-      label: "SaaS", 
+      label: "nav.saas", 
       icon: <Cloud size={20} />, 
       href: "#", 
       hasSubmenu: true,
       subItems: [
-        { label: "Plans", icon: <Briefcase size={16} />, href: "/agency/saas/plans", status: "Soon..." },
-        { label: "API", icon: <Plug size={16} />, href: "/agency/saas/api" },
+        { label: "nav.saas_plans", icon: <Briefcase size={16} />, href: "/agency/saas/plans", status: "Soon..." },
+        { label: "nav.saas_api", icon: <Plug size={16} />, href: "/agency/saas/api" },
       ]
     },
     { 
-      label: "Billing", 
+      label: "nav.billing", 
       icon: <FileText size={20} />, 
       href: "#", 
       hasSubmenu: true,
       subItems: [
-        { label: "Plans", icon: <ShoppingCart size={16} />, href: "/agency/billing/plans" },
-        { label: "Manage", icon: <CircleDollarSign size={16} />, href: "/agency/billing/manage" },
+        { label: "nav.billing_plans", icon: <ShoppingCart size={16} />, href: "/agency/billing/plans" },
+        { label: "nav.billing_manage", icon: <CircleDollarSign size={16} />, href: "/agency/billing/manage" },
       ]
     },
-    { label: "Legal", icon: <Gavel size={20} />, href: "/agency/legal" },
-    { label: "Help", icon: <HelpCircle size={20} />, href: "/agency/help" },
+    { label: "nav.legal", icon: <Gavel size={20} />, href: "/agency/legal" },
+    { label: "nav.help", icon: <HelpCircle size={20} />, href: "/agency/help" },
   ];
 
   const settingSubItems = [
-    { label: "General settings", icon: <Settings size={18} />, href: "/agency/settings/general" },
-    { label: "Notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications" },
-    { label: "White Label", icon: <Monitor size={18} />, href: "/agency/settings/white-label" },
+    { label: "nav.settings_general", icon: <Settings size={18} />, href: "/agency/settings/general" },
+    { label: "nav.settings_notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications" },
+    { label: "nav.settings_whiteLabel", icon: <Monitor size={18} />, href: "/agency/settings/white-label" },
   ];
 
   const isActive = (href: string) => location === href;
@@ -125,7 +127,7 @@ const AgencySidebar = () => {
                       ? (mode === "dark" ? "text-green-400" : "text-[#1b5e20]") 
                       : (mode === "dark" ? "text-slate-300" : "text-slate-900")
                   )}>
-                    {item.label}
+                    {t(item.label)}
                   </span>
                   <ChevronDown 
                     size={14} 
@@ -142,7 +144,7 @@ const AgencySidebar = () => {
                       ? (mode === "dark" ? "text-green-400" : "text-[#1b5e20]") 
                       : (mode === "dark" ? "text-slate-300" : "text-slate-900")
                   )}>
-                    {item.label}
+                    {t(item.label)}
                   </span>
                 </Link>
               )
@@ -158,7 +160,7 @@ const AgencySidebar = () => {
               "absolute left-full ml-3 px-3 py-1.5 text-[11px] font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[100] shadow-lg",
               mode === "dark" ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
             )}>
-              {item.label}
+              {t(item.label)}
             </div>
           )}
         </div>
@@ -178,7 +180,7 @@ const AgencySidebar = () => {
                     <span className={cn("transition-colors", isActive(sub.href) ? "text-[#1b5e20]" : "text-slate-500")}>
                       {React.cloneElement(sub.icon as React.ReactElement, { size: 16 })}
                     </span>
-                    <span className="text-[13px] font-semibold">{sub.label}</span>
+                    <span className="text-[13px] font-semibold">{t(sub.label)}</span>
                   </div>
                   {sub.status && (
                     <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full",
@@ -272,7 +274,7 @@ const AgencySidebar = () => {
                   <span className={cn("text-[13px] font-bold transition-colors",
                     isActive(item.href) ? "text-[#00e55e]" : (mode === "dark" ? "text-slate-300 group-hover:text-white" : "text-slate-900 group-hover:text-black")
                   )}>
-                    {item.label}
+                    {t(item.label)}
                   </span>
                 </div>
               </Link>
@@ -302,7 +304,7 @@ const AgencySidebar = () => {
                  ? (mode === "dark" ? "text-white" : "text-[#2e7d32]")
                  : (mode === "dark" ? "text-slate-300" : "text-slate-900")
              )}>
-               Agency Settings
+               {t("nav.settings")}
              </span>
            )}
            {!isCollapsed && (
@@ -317,7 +319,7 @@ const AgencySidebar = () => {
                "absolute left-full ml-3 px-3 py-1.5 text-[11px] font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[100] shadow-lg",
                mode === "dark" ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
              )}>
-               Agency Settings
+               {t("nav.settings")}
              </div>
            )}
         </div>

@@ -17,9 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import AddRoleForm from "./AddRoleForm";
+import { useTranslation } from 'react-i18next';
 
 const AgencyRoles = () => {
   const { mode } = useTheme();
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'LIST' | 'ADD' | 'EDIT'>('LIST');
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('active');
@@ -99,10 +101,10 @@ const AgencyRoles = () => {
             </div>
             <div>
               <h1 className={cn("text-[16px] font-bold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-                Roles and permissions
+                {t("nav.roles")}
               </h1>
               <p className="text-slate-600 dark:text-slate-400 text-[12px] font-medium">
-                Manage Roles & Permissions and assign them to specific agents.
+                {t("agency.roles.manage")}
               </p>
             </div>
           </div>
@@ -110,7 +112,7 @@ const AgencyRoles = () => {
             onClick={handleAddNewRole}
             className="px-5 py-1.5 rounded-md font-bold text-[12px] border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 transition-all"
           >
-            Add role
+            {t("agency.roles.add")}
           </button>
         </div>
 
@@ -119,8 +121,8 @@ const AgencyRoles = () => {
           <div className="px-8 bg-white dark:bg-[#1e293b]">
             <TabsList className="bg-transparent h-auto p-0 gap-10 border-b border-slate-200 dark:border-slate-800 w-full justify-start rounded-none">
               {[
-                { id: "active", label: "Active" },
-                { id: "archived", label: "Archived" },
+                { id: "active", label: t("common.active") },
+                { id: "archived", label: t("common.archived") },
               ].map((tab) => (
                 <TabsTrigger 
                   key={tab.id}
@@ -164,19 +166,19 @@ const AgencyRoles = () => {
                           className={cn("px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all border shadow-sm",
                           mode === "dark" ? "bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800" : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50")}
                         >
-                          Archive
+                          {t("common.archive")}
                         </button>
                         <button 
                           onClick={() => handleEditRole(role)}
                           className={cn("px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10")}
                         >
-                          Manage
+                          {t("common.manage")}
                         </button>
                       </div>
                     )}
                     {role.isSystem && (
                       <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
-                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">System Role</span>
+                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">{t("agency.roles.systemRole")}</span>
                       </div>
                     )}
                   </div>
@@ -191,10 +193,10 @@ const AgencyRoles = () => {
                   </div>
                 </div>
                 <h3 className={cn("text-[16px] font-bold mb-1", mode === "dark" ? "text-white" : "text-slate-900")}>
-                  There is nothing here.
+                  {t("agency.roles.empty")}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-[13px] font-medium">
-                  All of your active roles will appear here.
+                  {t("agency.roles.emptyActive")}
                 </p>
               </div>
             )}
@@ -224,7 +226,7 @@ const AgencyRoles = () => {
                         onClick={() => handleToggleArchive(role)}
                         className={cn("px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10")}
                       >
-                        Activate
+                        {t("common.activate")}
                       </button>
                     </div>
                   </div>
@@ -239,10 +241,10 @@ const AgencyRoles = () => {
                   </div>
                 </div>
                 <h3 className={cn("text-[16px] font-bold mb-1", mode === "dark" ? "text-white" : "text-slate-900")}>
-                  There is nothing here.
+                  {t("agency.roles.empty")}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-[13px] font-medium">
-                  All of your archived roles will appear here.
+                  {t("agency.roles.emptyArchived")}
                 </p>
               </div>
             )}

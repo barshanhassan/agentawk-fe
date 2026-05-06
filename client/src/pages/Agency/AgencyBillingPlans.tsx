@@ -9,8 +9,10 @@ import {
 import { cn } from "@/lib/utils";
 
 import { useTheme } from "@/contexts/ThemeContext";
+import { useTranslation } from 'react-i18next';
 
 const AgencyBillingPlans = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const isDark = mode === "dark";
 
@@ -26,28 +28,28 @@ const AgencyBillingPlans = () => {
 
   const plans = [
     { 
-      name: "Free", 
+      name: t("agency.billing.plans.types.free.name"), 
       price: "$0", 
-      limit: "Limit of 50 contacts.", 
-      feature: "Completely FREE" 
+      limit: t("agency.billing.plans.types.free.limit"), 
+      feature: t("agency.billing.plans.types.free.feature") 
     },
     { 
-      name: "Premium", 
+      name: t("agency.billing.plans.types.premium.name"), 
       price: "$19", 
-      limit: "Limit of 1000 contacts.", 
-      feature: "All features from Premium Workspaces." 
+      limit: t("agency.billing.plans.types.premium.limit"), 
+      feature: t("agency.billing.plans.types.premium.feature") 
     },
     { 
-      name: "Ignite", 
+      name: t("agency.billing.plans.types.ignite.name"), 
       price: "$299", 
-      limit: "Limit of 3000 contacts.", 
-      feature: "All features from Premium Workspaces." 
+      limit: t("agency.billing.plans.types.ignite.limit"), 
+      feature: t("agency.billing.plans.types.ignite.feature") 
     },
     { 
-      name: "Enterprise", 
+      name: t("agency.billing.plans.types.enterprise.name"), 
       price: "$599", 
-      limit: "A special plan designed just for resellers!", 
-      feature: "All features from Premium Workspaces.",
+      limit: t("agency.billing.plans.types.enterprise.limit"), 
+      feature: t("agency.billing.plans.types.enterprise.feature"),
       isCurrent: true,
       nextPayment: "2026-05-11"
     },
@@ -65,8 +67,8 @@ const AgencyBillingPlans = () => {
           isDark ? "border-slate-800" : "border-slate-100")}>
           <CreditCard className={cn("w-7 h-7 text-slate-700")} strokeWidth={1.5} />
           <div>
-            <h1 className="text-[19px] font-bold tracking-tight text-slate-900 leading-tight">Billing Plan</h1>
-            <p className="text-slate-500 text-[13px] font-medium leading-tight mt-0.5">Manage your subscription</p>
+            <h1 className="text-[19px] font-bold tracking-tight text-slate-900 leading-tight">{t("agency.billing.plans.title")}</h1>
+            <p className="text-slate-500 text-[13px] font-medium leading-tight mt-0.5">{t("agency.billing.plans.desc")}</p>
           </div>
         </div>
 
@@ -81,7 +83,7 @@ const AgencyBillingPlans = () => {
                 
                 <div className="mb-4">
                   <span className="text-[36px] font-bold text-slate-900 tracking-tight">{plan.price}</span>
-                  <span className="text-[14px] font-bold text-slate-900 ml-1">/Month</span>
+                  <span className="text-[14px] font-bold text-slate-900 ml-1">/{t("common.month")}</span>
                 </div>
                 
                 <div className="space-y-1 mb-4">
@@ -92,13 +94,13 @@ const AgencyBillingPlans = () => {
                 {plan.isCurrent ? (
                   <div className="mt-auto flex flex-col items-center w-full pt-2">
                     <button className="w-full bg-[#1cd45b] hover:bg-[#16a34a] text-white py-2 rounded font-semibold text-[13px] transition-all active:scale-95">
-                      Current Plan
+                      {t("agency.billing.plans.current_plan")}
                     </button>
-                    <p className="text-[11px] font-bold text-slate-900 mt-2">Next Payment Date : {plan.nextPayment}</p>
+                    <p className="text-[11px] font-bold text-slate-900 mt-2">{t("agency.billing.plans.next_payment", { date: plan.nextPayment })}</p>
                     <button 
                       onClick={() => setIsCancelModalOpen(true)}
                       className="text-[11px] font-medium text-[#f43f5e] mt-1 hover:underline transition-all">
-                      Cancel Subscription
+                      {t("agency.billing.plans.cancel_subscription")}
                     </button>
                   </div>
                 ) : null}
@@ -115,10 +117,10 @@ const AgencyBillingPlans = () => {
           )}>
             <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" strokeWidth={2} />
             <div>
-              <p className="font-bold text-yellow-700 mb-1 text-[12px]">Heads up!</p>
+              <p className="font-bold text-yellow-700 mb-1 text-[12px]">{t("agency.billing.plans.heads_up")}</p>
               <div className="font-medium text-slate-700 text-[12px] leading-relaxed">
-                <p>We know it's a bit annoying, but our plans don't support downgrades. 🤨</p>
-                <p>If you really need to downgrade, you'll have to create a brand-new account and start from scratch, yep, content and all. We're truly sorry for the hassle, we wish it were easier too! 💙</p>
+                <p>{t("agency.billing.plans.downgrade_warning_title")}</p>
+                <p>{t("agency.billing.plans.downgrade_warning_desc")}</p>
               </div>
             </div>
           </div>
@@ -135,12 +137,12 @@ const AgencyBillingPlans = () => {
             <div className="flex flex-col items-center mb-8">
               <AlertTriangle className="w-16 h-16 text-[#f97316] mb-4" strokeWidth={2} />
               <h2 className={cn("text-[18px] font-black uppercase tracking-wide", isDark ? "text-white" : "text-slate-900")}>
-                Close My Agency Account
+                {t("agency.billing.plans.cancel_modal.title")}
               </h2>
             </div>
 
             <div className={cn("space-y-6 text-[14px]", isDark ? "text-slate-300" : "text-slate-800")}>
-              <p className="font-bold">I understand that:</p>
+              <p className="font-bold">{t("agency.billing.plans.cancel_modal.understand")}</p>
               
               <div className="space-y-5">
                 <label className="flex items-start gap-4 cursor-pointer">
@@ -150,7 +152,7 @@ const AgencyBillingPlans = () => {
                     checked={checks.c1}
                     onChange={(e) => setChecks({...checks, c1: e.target.checked})}
                   />
-                  <span className="leading-snug">I will still be able to login and resubscribe within 90 days, before my account is fully closed and all the data is deleted.</span>
+                  <span className="leading-snug">{t("agency.billing.plans.cancel_modal.check1")}</span>
                 </label>
                 
                 <label className="flex items-start gap-4 cursor-pointer">
@@ -160,7 +162,7 @@ const AgencyBillingPlans = () => {
                     checked={checks.c2}
                     onChange={(e) => setChecks({...checks, c2: e.target.checked})}
                   />
-                  <span className="leading-snug">I have removed all the connections and channels integrated in my workspaces.</span>
+                  <span className="leading-snug">{t("agency.billing.plans.cancel_modal.check2")}</span>
                 </label>
                 
                 <label className="flex items-start gap-4 cursor-pointer">
@@ -170,24 +172,24 @@ const AgencyBillingPlans = () => {
                     checked={checks.c3}
                     onChange={(e) => setChecks({...checks, c3: e.target.checked})}
                   />
-                  <span className="leading-snug">I will lose access to all my workspaces immediately!</span>
+                  <span className="leading-snug">{t("agency.billing.plans.cancel_modal.check3")}</span>
                 </label>
               </div>
 
               <div className="pt-2">
                 <p className="leading-relaxed">
-                  If you still wish to use your Workspaces but do not want to renew your subscription, we recommend closing your account before <span className="font-bold">2026-05-11</span>
+                  {t("agency.billing.plans.cancel_modal.renew_warning", { date: "2026-05-11" })}
                 </p>
               </div>
 
               <div className="pt-4">
                 <p className="font-bold mb-3">
-                  Enter this code <span className="font-black">{generatedCode}</span> in the field below to continue.
+                  {t("agency.billing.plans.cancel_modal.enter_code", { code: generatedCode })}
                 </p>
                 <div className="flex gap-4">
                   <input 
                     type="text" 
-                    placeholder="Enter code here"
+                    placeholder={t("agency.billing.plans.cancel_modal.code_placeholder")}
                     value={cancelCodeInput}
                     onChange={(e) => setCancelCodeInput(e.target.value)}
                     className={cn(
@@ -201,13 +203,13 @@ const AgencyBillingPlans = () => {
                       isDark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-50"
                     )}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                   <button 
                     disabled={!checks.c1 || !checks.c2 || !checks.c3 || cancelCodeInput !== generatedCode}
                     className="px-6 py-2.5 rounded-md bg-[#eb6e6e] hover:bg-[#ef4444] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] transition-colors"
                   >
-                    Delete
+                    {t("common.delete")}
                   </button>
                 </div>
               </div>

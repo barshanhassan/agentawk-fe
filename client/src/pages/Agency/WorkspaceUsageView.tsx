@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 interface WorkspaceUsageViewProps {
   workspace: any;
@@ -25,6 +26,7 @@ interface WorkspaceUsageViewProps {
 }
 
 const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBack }) => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const isDark = mode === 'dark';
 
@@ -69,8 +71,8 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
             <BarChart3 className={cn("w-6 h-6", isDark ? "text-white" : "text-primary")} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold">Usage for {workspace?.name}</h1>
-            <p className="text-gray-400 text-sm">Review your resource consumption and billing history.</p>
+            <h1 className="text-xl font-semibold">{t("agency.workspaces.usage.title_for", { name: workspace?.name })}</h1>
+            <p className="text-gray-400 text-sm">{t("agency.workspaces.usage.desc")}</p>
           </div>
         </div>
       </div>
@@ -82,10 +84,10 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
             <CardHeader className="border-b border-slate-700/50 pb-4">
                <div className="flex justify-between items-center">
                   <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-yellow-500" /> Current Period Usage
+                    <Zap className="w-5 h-5 text-yellow-500" /> {t("agency.workspaces.usage.period")}
                   </CardTitle>
                   <div className="text-xs text-gray-400">
-                    Next billing: {usage.subscription.next_billing_at}
+                    {t("agency.workspaces.usage.next_billing", { date: usage.subscription.next_billing_at })}
                   </div>
                </div>
             </CardHeader>
@@ -98,17 +100,17 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
                       <div className="flex items-center gap-3">
                         <Users className="w-5 h-5 text-gray-400" />
                         <div>
-                          <p className="font-semibold text-sm">Agents</p>
-                          <p className="text-xs text-gray-400">Total agents in workspace</p>
+                          <p className="font-semibold text-sm">{t("agency.workspaces.usage.agents")}</p>
+                          <p className="text-xs text-gray-400">{t("agency.workspaces.usage.agents_desc")}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">Total</p>
+                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.total")}</p>
                       <p className="text-lg font-bold">{usage.current_usage.agents.total_agents}</p>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">Included</p>
+                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.included")}</p>
                       <p className="text-sm font-medium">{usage.current_usage.agents.free_agents}</p>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -122,17 +124,17 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
                       <div className="flex items-center gap-3">
                         <Users className="w-5 h-5 text-gray-400" />
                         <div>
-                          <p className="font-semibold text-sm">Contacts</p>
-                          <p className="text-xs text-gray-400">Active and stored contacts</p>
+                          <p className="font-semibold text-sm">{t("agency.workspaces.usage.contacts")}</p>
+                          <p className="text-xs text-gray-400">{t("agency.workspaces.usage.contacts_desc")}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">Current</p>
+                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.current")}</p>
                       <p className="text-lg font-bold">{usage.current_usage.contacts.current_total}</p>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">Peak</p>
+                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.peak")}</p>
                       <p className="text-sm font-medium">{usage.current_usage.contacts.total_contacts}</p>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -143,7 +145,7 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
                   {/* Total Row */}
                   <tr className={isDark ? "bg-[#0f172a]" : "bg-slate-50"}>
                     <td colSpan={3} className="px-6 py-4">
-                      <p className="font-bold">Total Amount for Current Period</p>
+                      <p className="font-bold">{t("agency.workspaces.usage.total_period")}</p>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <p className="text-2xl font-bold text-primary">${usage.current_usage.total.toFixed(2)}</p>
@@ -158,7 +160,7 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
           <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
             <CardHeader className="border-b border-slate-700/50 pb-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary" /> Channel Statistics
+                <MessageSquare className="w-5 h-5 text-primary" /> {t("agency.workspaces.usage.channel_stats")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -175,11 +177,11 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
                     <div className="flex justify-between items-end">
                       <div>
                         <p className="text-2xl font-bold">{stat.incoming}</p>
-                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Incoming</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">{t("common.incoming")}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold">{stat.outgoing}</p>
-                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Outgoing</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">{t("common.outgoing")}</p>
                       </div>
                     </div>
                   </div>
@@ -194,7 +196,7 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
           <Card className={cn("border transition-colors h-full", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
             <CardHeader className="border-b border-slate-700/50 pb-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <History className="w-5 h-5 text-gray-400" /> Usage History
+                <History className="w-5 h-5 text-gray-400" /> {t("agency.workspaces.usage.history")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -206,12 +208,12 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
                       <span className="text-sm font-bold text-primary">{item.currency}{item.total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>Agents: {item.currency}{item.agents.amount}</span>
-                      <span>Contacts: {item.currency}{item.contacts.amount}</span>
+                      <span>{t("agency.workspaces.usage.agents")}: {item.currency}{item.agents.amount}</span>
+                      <span>{t("agency.workspaces.usage.contacts")}: {item.currency}{item.contacts.amount}</span>
                     </div>
                     {item.media && (
                       <button className="text-[10px] flex items-center gap-1 text-blue-500 hover:underline font-bold uppercase tracking-wider mt-1">
-                        <FileText size={12} /> Download PDF Invoice
+                        <FileText size={12} /> {t("agency.workspaces.usage.download_invoice")}
                       </button>
                     )}
                   </div>
@@ -220,7 +222,7 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
               {usage.history.length === 0 && (
                 <div className="p-8 text-center space-y-2">
                   <AlertCircle className="w-8 h-8 text-gray-600 mx-auto" />
-                  <p className="text-sm text-gray-500 font-medium">No history available</p>
+                  <p className="text-sm text-gray-500 font-medium">{t("agency.workspaces.usage.empty_history")}</p>
                 </div>
               )}
             </CardContent>

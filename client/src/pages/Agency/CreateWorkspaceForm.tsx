@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 
 interface CreateWorkspaceFormProps {
@@ -24,6 +25,7 @@ interface CreateWorkspaceFormProps {
 }
 
 const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, initialData }) => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const isDark = mode === 'dark';
   const { toast } = useToast();
@@ -67,19 +69,19 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
       toast({ 
-        title: initialData ? "Workspace Updated" : "Workspace Created", 
-        description: `Successfully ${initialData ? "updated" : "created"} the workspace.` 
+        title: initialData ? t("agency.workspaces.form.updated") : t("agency.workspaces.form.created"), 
+        description: initialData ? t("agency.workspaces.form.updated_desc") : t("agency.workspaces.form.created_desc") 
       });
       onCancel();
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: "Failed to save workspace.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("agency.workspaces.form.save_error"), variant: "destructive" });
     }
   });
 
   const handleSave = () => {
     if (!formData.name) {
-      toast({ title: "Error", description: "Workspace name is required.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("agency.workspaces.form.name_required"), variant: "destructive" });
       return;
     }
     
@@ -119,18 +121,18 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
   const features = [
     { 
       id: 'whatsapp_api', 
-      name: 'WhatsApp Business API', 
+      name: t('agency.workspaces.features.whatsapp_api'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
           <MessageCircle className="w-5 h-5 text-white fill-white" />
         </div>
       ), 
-      info: 'Pilot connection: FREE', 
-      additional: 'Additional connections: $4 ea.', 
+      info: t('agency.workspaces.features.pilot_free'), 
+      additional: t('agency.workspaces.features.additional_whatsapp'), 
     },
     { 
       id: 'instagram', 
-      name: 'Instagram', 
+      name: t('agency.workspaces.features.instagram'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center shadow-sm">
           <div className="w-4 h-4 border-2 border-white rounded-[4px] relative flex items-center justify-center">
@@ -139,45 +141,45 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
           </div>
         </div>
       ), 
-      info: 'Pilot connection: FREE', 
-      additional: 'Additional connections: $10 ea.', 
+      info: t('agency.workspaces.features.pilot_free'), 
+      additional: t('agency.workspaces.features.additional_10'), 
     },
     { 
       id: 'messenger', 
-      name: 'Messenger', 
+      name: t('agency.workspaces.features.messenger'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-[#00B2FF] flex items-center justify-center shadow-sm">
           <MessageSquare className="w-5 h-5 text-white fill-white" />
         </div>
       ), 
-      info: 'Pilot connection: FREE', 
-      additional: 'Additional connections: $10 ea.', 
+      info: t('agency.workspaces.features.pilot_free'), 
+      additional: t('agency.workspaces.features.additional_10'), 
     },
     { 
       id: 'telegram', 
-      name: 'Telegram', 
+      name: t('agency.workspaces.features.telegram'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-[#229ED9] flex items-center justify-center shadow-sm p-1.5">
           <Send className="w-5 h-5 text-white fill-white -translate-x-0.5" />
         </div>
       ), 
-      info: 'Pilot connection: FREE', 
-      additional: 'Additional connections: $10 ea.', 
+      info: t('agency.workspaces.features.pilot_free'), 
+      additional: t('agency.workspaces.features.additional_10'), 
     },
     { 
       id: 'whatsapp_qr', 
-      name: 'WhatsApp QR', 
+      name: t('agency.workspaces.features.whatsapp_qr'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
           <MessageCircle className="w-5 h-5 text-white fill-white" />
         </div>
       ), 
-      info: 'Pilot connection: $24', 
-      additional: 'Additional connections: $24 ea.', 
+      info: t('agency.workspaces.features.pilot_24'), 
+      additional: t('agency.workspaces.features.additional_24'), 
     },
     { 
       id: 'twilio', 
-      name: 'Twilio - SMS & Calls', 
+      name: t('agency.workspaces.features.twilio'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-[#F22F46] flex items-center justify-center shadow-sm">
           <div className="grid grid-cols-2 gap-0.5">
@@ -188,19 +190,19 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
           </div>
         </div>
       ), 
-      info: 'Pilot connection: FREE', 
-      additional: 'Additional connections: $10 ea.', 
+      info: t('agency.workspaces.features.pilot_free'), 
+      additional: t('agency.workspaces.features.additional_10'), 
     },
     { 
       id: 'webchat', 
-      name: 'Webchat', 
+      name: t('agency.workspaces.features.webchat'), 
       icon: (
         <div className="w-8 h-8 rounded-full bg-[#8E24AA] flex items-center justify-center shadow-sm">
           <MessageSquare className="w-4 h-4 text-white fill-white" />
         </div>
       ), 
-      info: 'Pilot connection: FREE', 
-      additional: 'Additional connections: $10 ea.', 
+      info: t('agency.workspaces.features.pilot_free'), 
+      additional: t('agency.workspaces.features.additional_10'), 
     },
   ];
 
@@ -211,11 +213,11 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
     )}>
       {/* Header */}
       <div className="mb-6">
-        <h1 className={cn("text-[16px] font-bold", isDark ? "text-white" : "text-slate-900")}>{initialData ? 'Edit workspace' : 'Add a workspace'}</h1>
+        <h1 className={cn("text-[16px] font-bold", isDark ? "text-white" : "text-slate-900")}>{initialData ? t('agency.workspaces.form.edit_title') : t('agency.workspaces.form.add_title')}</h1>
         <p className={cn("text-[12px] mt-1 font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
           {initialData 
-            ? `Editing settings for ${initialData.name}.`
-            : "Create distinct sub-accounts, also known as workspaces, either for yourself or for your clients."
+            ? t("agency.workspaces.form.edit_desc", { name: initialData.name })
+            : t("agency.workspaces.form.add_desc")
           }
         </p>
       </div>
@@ -230,10 +232,10 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
-                Workspace name
+                {t("agency.workspaces.form.name_label")}
               </label>
               <Input 
-                placeholder="Workspace name" 
+                placeholder={t("agency.workspaces.form.name_label")} 
                 value={formData.name}
                 onChange={(e) => {
                   const name = e.target.value;
@@ -251,7 +253,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
             </div>
             <div className="space-y-1.5">
               <label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
-                Domain <Info size={12} className="text-slate-500" />
+                {t("agency.workspaces.form.domain_label")} <Info size={12} className="text-slate-500" />
               </label>
               <div className="flex h-10">
                 <div className={cn(
@@ -261,7 +263,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                   https://
                 </div>
                 <Input 
-                  placeholder="domain" 
+                  placeholder={t("agency.workspaces.form.domain_placeholder")} 
                   value={formData.subdomain}
                   onChange={(e) => setFormData(prev => ({ ...prev, subdomain: e.target.value }))}
                   disabled={!!initialData}
@@ -285,7 +287,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className={cn("text-[11px] font-bold", isDark ? "text-white" : "text-slate-900")}>
-                Timezone
+                {t("agency.settings.general.timezone")}
               </label>
               <Select 
                 value={formData.timezone} 
@@ -295,7 +297,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                   "h-10 text-[12px] border-slate-200 focus-visible:ring-1 focus-visible:ring-blue-500",
                   isDark ? "bg-[#1e293b] text-white border-slate-700" : "bg-white"
                 )}>
-                  <SelectValue placeholder="Select timezone" />
+                  <SelectValue placeholder={t("agency.settings.general.selectTimezone")} />
                 </SelectTrigger>
                 <SelectContent className={cn("max-h-80 overflow-y-auto", isDark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                   {/* Africa */}
@@ -429,7 +431,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
             </div>
             <div className="space-y-1.5">
               <label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
-                Assign an agency Agent to this workspace <Info size={12} className="text-slate-500" />
+                {t("agency.workspaces.form.assign_agent")} <Info size={12} className="text-slate-500" />
               </label>
               <Select 
                 value={formData.agent}
@@ -443,7 +445,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                     <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] text-white">
                       {formData.agent.slice(0, 2).toUpperCase()}
                     </div>
-                    <SelectValue placeholder="Select agent" />
+                    <SelectValue placeholder={t("agency.workspaces.form.select_agent")} />
                   </div>
                 </SelectTrigger>
                 <SelectContent className={isDark ? "bg-[#1e293b] border-slate-700 text-white" : ""}>
@@ -467,7 +469,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                 onCheckedChange={(v) => setFormData(prev => ({ ...prev, enableWhiteLabel: v }))}
               />
               <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                Enable White Label for this workspace <Info size={12} className="text-slate-500" /> <Globe size={12} className="text-slate-500" />
+                {t("agency.workspaces.form.enable_white_label")} <Info size={12} className="text-slate-500" /> <Globe size={12} className="text-slate-500" />
               </span>
             </div>
           </div>
@@ -481,7 +483,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                 onCheckedChange={(v) => setFormData(prev => ({ ...prev, allowSupport: v }))}
               />
               <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                Allow support to login to workspace <Info size={12} className="text-slate-500" />
+                {t("agency.workspaces.form.allow_support")} <Info size={12} className="text-slate-500" />
               </span>
             </div>
           </div>
@@ -499,7 +501,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                 onCheckedChange={(v) => setFormData(prev => ({ ...prev, limitContacts: v }))}
               />
               <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                Limit of Active contacts <Info size={12} className="text-slate-500" /> <Users size={12} className="text-slate-500" />
+                {t("agency.workspaces.form.limit_contacts")} <Info size={12} className="text-slate-500" /> <Users size={12} className="text-slate-500" />
               </span>
             </div>
             <Input 
@@ -519,7 +521,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                 onCheckedChange={(v) => setFormData(prev => ({ ...prev, limitAgents: v }))}
               />
               <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                Limit of Agents <Info size={12} className="text-slate-500" /> <User size={12} className="text-slate-500" />
+                {t("agency.workspaces.form.limit_agents")} <Info size={12} className="text-slate-500" /> <User size={12} className="text-slate-500" />
               </span>
             </div>
             <Input 
@@ -542,13 +544,13 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
               <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-300 dark:border-slate-600">
                  <Bot className="w-4 h-4 text-slate-900 dark:text-white" />
               </div>
-              <span className={cn("text-[12px] font-bold", isDark ? "text-white" : "text-slate-900")}>Maximum number of Active AI Chat Assistants</span>
+              <span className={cn("text-[12px] font-bold", isDark ? "text-white" : "text-slate-900")}>{t("agency.workspaces.form.max_ai_assistants")}</span>
             </div>
             <div className="flex items-center gap-8">
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">Included in plan : 10</span>
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">Additional connections: $0 ea.</span>
+              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">{t("agency.workspaces.form.included_in_plan", { count: 10 })}</span>
+              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">{t("agency.workspaces.form.additional_free")}</span>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">Connection Limit</span>
+                <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{t("agency.workspaces.form.connection_limit")}</span>
                 <Info size={11} className="text-slate-500" />
                 <Input 
                   type="number" 
@@ -573,7 +575,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
                 <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{feature.info}</span>
                 <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{feature.additional}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">Connection Limit</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{t("agency.workspaces.form.connection_limit")}</span>
                   <Info size={11} className="text-slate-500" />
                   <Input 
                     type="number" 
@@ -594,7 +596,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
             onClick={onCancel}
             className={cn("text-[12px] font-bold h-9 px-6", isDark ? "text-slate-300 hover:text-white hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100")}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button 
             onClick={handleSave}
@@ -602,7 +604,7 @@ const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, ini
               mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? "Saving..." : (initialData ? 'Update' : 'Save')}
+            {createMutation.isPending ? t("common.saving") : (initialData ? t('common.update') : t('common.save'))}
           </Button>
         </div>
       </div>

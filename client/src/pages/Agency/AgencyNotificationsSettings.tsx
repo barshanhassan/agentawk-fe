@@ -20,9 +20,11 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 const AgencyNotificationsSettings = () => {
   const { mode } = useTheme();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
@@ -53,17 +55,15 @@ const AgencyNotificationsSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
-      toast({ title: "Saved", description: "Notification settings updated." });
+      toast({ title: t("common.saved"), description: t("agency.settings.notifications.updated") });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to save settings.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("common.errorDesc"), variant: "destructive" });
     }
   });
 
   const LANGUAGES = [
-    { code: "pt-BR", label: "Português do Brasil", flag: "br" },
-    { code: "en-US", label: "English (U.S)", flag: "us" },
-    { code: "es-ES", label: "Español", flag: "es" },
+    { code: "en-US", label: t("common.languages.en"), flag: "us" },
   ];
 
   const selectedLang = LANGUAGES.find(l => l.code === notifLanguage) || LANGUAGES[1];
@@ -78,14 +78,14 @@ const AgencyNotificationsSettings = () => {
           mode === "dark" ? "border-slate-800" : "border-slate-200")}>
           <Settings className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
           <h2 className={cn("font-bold text-[15px] tracking-tight", 
-            mode === "dark" ? "text-white" : "text-slate-900")}>Notifications</h2>
+            mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.notifications.title")}</h2>
         </div>
         
         <CardContent className="p-6">
           <div className="max-w-[450px]">
             {/* Notification Email */}
             <div>
-              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Notification Email</label>
+              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.notifications.email")}</label>
               <Input 
                 value={notifEmail}
                 onChange={(e) => setNotifEmail(e.target.value)}
@@ -93,18 +93,18 @@ const AgencyNotificationsSettings = () => {
                 className={cn("text-[13px] h-9 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
                   mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
               />
-              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>Email address that will receive our notification, announcements and products updates.</p>
+              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>{t("agency.settings.notifications.emailDesc")}</p>
             </div>
 
             <div className={cn("h-px w-full my-6", mode === "dark" ? "bg-slate-800" : "bg-slate-100")}></div>
 
             {/* Notification Language */}
             <div>
-              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Notification Language</label>
+              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.notifications.language")}</label>
               <Select value={notifLanguage} onValueChange={setNotifLanguage}>
                 <SelectTrigger className={cn("text-[13px] h-9 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
                   mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                  <SelectValue placeholder="Select language">
+                  <SelectValue placeholder={t("agency.settings.notifications.selectLanguage")}>
                     <div className="flex items-center gap-2">
                       <img src={`https://flagcdn.com/w20/${selectedLang.flag}.png`} width="20" alt={selectedLang.flag} className="rounded-sm" />
                       <span>{selectedLang.label}</span>
@@ -123,7 +123,7 @@ const AgencyNotificationsSettings = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>Choose the language that you want to receive our email notifications.</p>
+              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>{t("agency.settings.notifications.languageDesc")}</p>
 
               <div className="flex justify-end pt-5">
                 <button 
@@ -131,7 +131,7 @@ const AgencyNotificationsSettings = () => {
                   disabled={updateMutation.isPending}
                   className={cn("px-8 py-1.5 rounded text-[13px] font-medium transition-colors border",
                   mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                  {updateMutation.isPending ? "Saving..." : "Save"}
+                  {updateMutation.isPending ? t("common.saving") : t("common.save")}
                 </button>
               </div>
             </div>

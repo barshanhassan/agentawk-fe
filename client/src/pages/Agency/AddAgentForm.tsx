@@ -31,6 +31,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { useTranslation } from 'react-i18next';
 
 const countries = [
   { name: "Afghanistan", code: "AF", dial: "+93", placeholder: "70 123 4567" },
@@ -252,6 +253,7 @@ const countries = [
 ];
 
 const CountrySelector = ({ value, onChange, isDark }: { value: string, onChange: (val: any) => void, isDark: boolean }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const selected = countries.find(c => c.code === value) || countries.find(c => c.code === "US") || countries[0];
 
@@ -266,9 +268,9 @@ const CountrySelector = ({ value, onChange, isDark }: { value: string, onChange:
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start" sideOffset={4}>
         <Command className={cn(isDark ? "bg-[#1e293b] text-white" : "bg-white")}>
-          <CommandInput placeholder="Search" className="h-10 text-[12px]" />
+          <CommandInput placeholder={t("common.search")} className="h-10 text-[12px]" />
           <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar">
-            <CommandEmpty className="text-[12px] p-4 text-center">No country found.</CommandEmpty>
+            <CommandEmpty className="text-[12px] p-4 text-center">{t("agency.settings.general.phoneModal.noCountries")}.</CommandEmpty>
             <CommandGroup>
               {countries.reduce((acc: any[], country, idx) => {
                 const firstLetter = country.name[0].toUpperCase();
@@ -314,6 +316,7 @@ interface AddAgentFormProps {
 }
 
 const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const isDark = mode === 'dark';
   const { toast } = useToast();
@@ -349,17 +352,17 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/members`] });
-      toast({ title: "Agent Added", description: "Team agent has been added successfully." });
+      toast({ title: t("agency.agents.form.added"), description: t("agency.agents.form.added_desc") });
       onCancel();
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: "Failed to add agent.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("agency.agents.form.save_error"), variant: "destructive" });
     }
   });
 
   const handleSubmit = () => {
     if (!formData.first_name || !formData.email || !formData.password) {
-      toast({ title: "Error", description: "Name, email, and password are required.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("agency.agents.form.required_fields"), variant: "destructive" });
       return;
     }
     createMutation.mutate(formData);
@@ -378,9 +381,9 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
               <Users className={cn("w-5 h-5", isDark ? "text-slate-200" : "text-slate-900")} />
             </div>
             <div>
-              <h1 className={cn("text-[14px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>Add agent</h1>
+              <h1 className={cn("text-[14px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.add_title")}</h1>
               <p className={cn("text-[11px] font-bold mt-0.5", isDark ? "text-slate-300" : "text-slate-800")}>
-                Add team agent and manage Workspace access.
+                {t("agency.agents.form.add_desc")}.
               </p>
             </div>
           </div>
@@ -391,50 +394,50 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
             {/* Left Column */}
             <div className="space-y-5">
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>First Name</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.first_name")}</label>
                 <Input 
                   className={cn("h-9 rounded border-slate-200 text-[12px] font-medium placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-green-500", 
                     isDark ? "bg-[#0f172a] border-slate-700" : "bg-white")} 
-                  placeholder="First name" 
+                  placeholder={t("agency.agents.form.first_name")} 
                   value={formData.first_name}
                   onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Last Name</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.last_name")}</label>
                 <Input 
                   className={cn("h-9 rounded border-slate-200 text-[12px] font-medium placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-green-500", 
                     isDark ? "bg-[#0f172a] border-slate-700" : "bg-white")} 
-                  placeholder="Last name" 
+                  placeholder={t("agency.agents.form.last_name")} 
                   value={formData.last_name}
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Email</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.email")}</label>
                 <Input 
                   className={cn("h-9 rounded border-slate-200 text-[12px] font-medium placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-green-500", 
                     isDark ? "bg-[#0f172a] border-slate-700" : "bg-white")} 
-                  placeholder="Email" 
+                  placeholder={t("agency.agents.form.email")} 
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Role</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.role")}</label>
                 <Select onValueChange={(val) => setFormData({...formData, role: val})}>
                   <SelectTrigger className={cn("h-9 rounded border-slate-200 text-[12px] font-medium focus:ring-1 focus:ring-green-500", 
                     isDark ? "bg-[#0f172a] border-slate-700" : "bg-white")}>
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder={t("agency.agents.form.select_role")} />
                   </SelectTrigger>
                   <SelectContent className={cn("border-slate-200 shadow-xl", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white")}>
-                    <SelectItem value="super_user" className="text-[12px] font-medium">Super User</SelectItem>
-                    <SelectItem value="can_edit_role" className="text-[12px] font-medium">canEditRole</SelectItem>
-                    <SelectItem value="new_role" className="text-[12px] font-medium">new role</SelectItem>
-                    <SelectItem value="co_owner" className="text-[12px] font-medium">Agency co-owner</SelectItem>
-                    <SelectItem value="bug_check" className="text-[12px] font-medium">Bug check</SelectItem>
-                    <SelectItem value="ahmed" className="text-[12px] font-medium">ahmed</SelectItem>
-                    <SelectItem value="testing" className="text-[12px] font-medium">testing</SelectItem>
+                    <SelectItem value="super_user" className="text-[12px] font-medium">{t("agency.agents.roles.super_user")}</SelectItem>
+                    <SelectItem value="can_edit_role" className="text-[12px] font-medium">{t("canEditRole")}</SelectItem>
+                    <SelectItem value="new_role" className="text-[12px] font-medium">{t("new role")}</SelectItem>
+                    <SelectItem value="co_owner" className="text-[12px] font-medium">{t("agency.agents.roles.co_owner")}</SelectItem>
+                    <SelectItem value="bug_check" className="text-[12px] font-medium">{t("Bug check")}</SelectItem>
+                    <SelectItem value="ahmed" className="text-[12px] font-medium">{t("ahmed")}</SelectItem>
+                    <SelectItem value="testing" className="text-[12px] font-medium">{t("testing")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -443,7 +446,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
             {/* Right Column */}
             <div className="space-y-5">
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Phone number</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.settings.general.phone")}</label>
                 <div className="relative group">
                   <CountrySelector 
                     isDark={isDark} 
@@ -460,7 +463,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>WhatsApp number</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.whatsapp")}</label>
                 <div className="relative group">
                   <CountrySelector 
                     isDark={isDark} 
@@ -477,16 +480,14 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Language</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.language")}</label>
                 <Select onValueChange={(val) => setFormData({...formData, language: val})}>
                   <SelectTrigger className={cn("h-9 rounded border-slate-200 text-[12px] font-medium focus:ring-1 focus:ring-green-500", 
                     isDark ? "bg-[#0f172a] border-slate-700" : "bg-white")}>
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t("agency.agents.form.select_language")} />
                   </SelectTrigger>
                   <SelectContent className={cn("border-slate-200 shadow-xl", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white")}>
-                    <SelectItem value="en" className="text-[12px] font-medium">English (U.S)</SelectItem>
-                    <SelectItem value="pt" className="text-[12px] font-medium">Português (Brasil)</SelectItem>
-                    <SelectItem value="es" className="text-[12px] font-medium">Español</SelectItem>
+                    <SelectItem value="en" className="text-[12px] font-medium">{t("common.languages.en")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -497,13 +498,13 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
 
           {/* 2-Factor Auth Section */}
           <div className="space-y-4">
-            <h3 className={cn("text-[13px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>2-Factor authentication</h3>
+            <h3 className={cn("text-[13px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.tfa_title")}</h3>
             <div className="flex items-start gap-4">
               <Switch className="mt-0.5 data-[state=checked]:bg-green-500 scale-[0.8] origin-left border border-slate-300 dark:border-slate-600" checked={formData.tfa_required} onCheckedChange={(val) => setFormData({...formData, tfa_required: val})} />
               <div className="-ml-2">
-                <p className={cn("text-[12px] font-bold", isDark ? "text-slate-200" : "text-slate-900")}>Require 2-Factor Authentication</p>
+                <p className={cn("text-[12px] font-bold", isDark ? "text-slate-200" : "text-slate-900")}>{t("agency.agents.form.tfa_label")}</p>
                 <p className={cn("text-[11px] mt-0.5 font-bold leading-relaxed", isDark ? "text-slate-400" : "text-slate-800")}>
-                  This will force the agent to enable 2-Factor Authentication on their next login.
+                  {t("agency.agents.form.tfa_desc")}.
                 </p>
               </div>
             </div>
@@ -520,16 +521,16 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                   <div className="mb-6">
                     <AlertTriangle className="w-12 h-12 text-[#ff9900]" />
                   </div>
-                  <h2 className={cn("text-[16px] font-bold mb-4", isDark ? "text-white" : "text-slate-900")}>Grant Premium Support Access</h2>
+                  <h2 className={cn("text-[16px] font-bold mb-4", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.premium.modal_title")}</h2>
                   
                   <p className={cn("text-[11px] font-bold leading-relaxed mb-8", isDark ? "text-slate-400" : "text-slate-600")}>
-                    Premium Support (Live Chat): Connect directly with our support team during business hours, 12:00 - 20:00 UTC.
+                    {t("agency.agents.form.premium.modal_desc")}.
                   </p>
 
                   <div className="flex items-baseline gap-2 mb-10">
-                    <span className={cn("text-[16px] font-bold", isDark ? "text-white" : "text-slate-900")}>Cost today</span>
+                    <span className={cn("text-[16px] font-bold", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.premium.cost_today")}</span>
                     <span className={cn("text-[20px] font-bold", isDark ? "text-white" : "text-slate-900")}>$2.49</span>
-                    <span className={cn("text-[12px] font-bold text-slate-500")}>then $15 per month</span>
+                    <span className={cn("text-[12px] font-bold text-slate-500")}>{t("agency.agents.form.premium.monthly_cost")}</span>
                   </div>
 
                   <div className="w-full space-y-6">
@@ -542,16 +543,16 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                         onChange={(e) => setPremiumTermsAccepted(e.target.checked)}
                       />
                       <label htmlFor="premium-terms" className={cn("text-[11px] font-bold leading-relaxed cursor-pointer", isDark ? "text-slate-300" : "text-slate-700")}>
-                        I understand that adding extra agent access to the Premium Support Access (Live Chat) is a paid service.
+                        {t("agency.agents.form.premium.terms")}.
                       </label>
                     </div>
 
                     <div className="space-y-2 text-left">
                       <p className={cn("text-[11px] font-bold", isDark ? "text-slate-300" : "text-slate-800")}>
-                        Enter this code <span className="text-slate-900 dark:text-white font-black">{targetCode}</span> in the field below to continue.
+                        {t("agency.agents.form.premium.enter_code")} <span className="text-slate-900 dark:text-white font-black">{targetCode}</span> {t("agency.agents.form.premium.to_continue")}.
                       </p>
                       <Input 
-                        placeholder="Enter code here" 
+                        placeholder={t("agency.agents.form.premium.code_placeholder")} 
                         className={cn("h-10 text-[12px] font-bold", isDark ? "bg-[#0f172a] border-slate-700" : "bg-white border-slate-200")}
                         value={verificationCode}
                         onChange={(e) => setVerificationCode(e.target.value)}
@@ -566,7 +567,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                         }}
                         className={cn("flex-1 h-9 rounded text-[12px] font-bold transition-colors border", 
                           isDark ? "bg-transparent border-slate-600 text-slate-300 hover:bg-slate-800" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50")}>
-                        Cancel
+                        {t("common.cancel")}
                       </button>
                       <button 
                         disabled={!premiumTermsAccepted || verificationCode !== targetCode}
@@ -578,7 +579,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                           premiumTermsAccepted && verificationCode === targetCode 
                             ? "bg-[#ef4444] hover:bg-red-600 text-white" 
                             : "bg-slate-100 text-slate-400 cursor-not-allowed")}>
-                        I agree
+                        {t("common.agree")}
                       </button>
                     </div>
                   </div>
@@ -592,7 +593,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
           {/* Premium Support Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
             <div className="space-y-5">
-              <h3 className={cn("text-[13px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>Premium Support</h3>
+              <h3 className={cn("text-[13px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.premium.title")}</h3>
               <div className="flex items-center gap-4">
                 <Switch 
                   className="data-[state=checked]:bg-green-500 scale-[0.8] origin-left" 
@@ -606,7 +607,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                   }}
                 />
                 <div className="flex items-center gap-1.5 -ml-2">
-                  <p className={cn("text-[12px] font-bold", isDark ? "text-slate-200" : "text-slate-900")}>Can access Premium Support</p>
+                  <p className={cn("text-[12px] font-bold", isDark ? "text-slate-200" : "text-slate-900")}>{t("agency.agents.form.premium.label")}</p>
                   <Info size={14} className="text-slate-300 cursor-pointer" />
                 </div>
               </div>
@@ -620,10 +621,10 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                   <AlertTriangle className={cn("w-4 h-4 shrink-0 mt-0.5", isDark ? "text-yellow-500" : "text-[#ff9900]")} />
                   <div className="text-[11px] leading-relaxed">
                     <p className={cn("font-bold mb-0.5", isDark ? "text-yellow-500" : "text-[#8a6d3b]")}>
-                      You have 0 agent(s) subscribed to Premium Support.
+                      {t("agency.agents.form.premium.subscribed_count", { count: 0 })}.
                     </p>
                     <p className={cn("font-medium", isDark ? "text-yellow-500/80" : "text-[#8a6d3b] opacity-80")}>
-                      Your current plan includes Premium Support access for 2 agent(s). Additional agent access is available for just $15/month each.
+                      {t("agency.agents.form.premium.plan_details")}.
                     </p>
                   </div>
                 </div>
@@ -632,11 +633,11 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
 
             <div className="space-y-4 mt-6 md:mt-0">
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Email to access premium support</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.premium.email")}</label>
                 <Input className={cn("h-9 rounded border-slate-300 text-[12px] font-bold placeholder:text-slate-500", isDark ? "bg-[#0f172a] border-slate-600" : "bg-white")} placeholder="a@b.com" />
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>Phone number to access premium support</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.premium.phone")}</label>
                 <div className="relative group">
                   <CountrySelector 
                     isDark={isDark} 
@@ -650,7 +651,7 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>WhatsApp to access premium support</label>
+                <label className={cn("text-[11px] font-bold uppercase tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.agents.form.premium.whatsapp")}</label>
                 <div className="relative group">
                   <CountrySelector 
                     isDark={isDark} 
@@ -672,14 +673,14 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
               onClick={onCancel} 
               className={cn("px-5 h-8 rounded text-[11px] font-bold transition-all border", 
                 isDark ? "bg-transparent border-slate-600 text-slate-300 hover:bg-slate-800" : "bg-white border-slate-400 text-slate-800 hover:bg-slate-50")}>
-              Cancel
+              {t("common.cancel")}
             </button>
             <button 
               className="bg-[#00e55e] hover:bg-[#00d056] text-white px-7 h-8 rounded text-[11px] font-bold shadow-sm transition-all active:scale-95 border border-[#00e55e]"
               onClick={handleSubmit}
               disabled={createMutation.isPending}
             >
-              {createMutation.isPending ? "Saving..." : "Save"}
+              {createMutation.isPending ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </div>

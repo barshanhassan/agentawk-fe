@@ -24,8 +24,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 const AgencyBillingManage = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
@@ -57,16 +59,16 @@ const AgencyBillingManage = () => {
     const upperCode = couponCode.toUpperCase();
     if (!appliedCoupons.includes(upperCode)) {
       setAppliedCoupons([...appliedCoupons, upperCode]);
-      toast({ title: "Coupon Applied", description: `Coupon ${upperCode} has been applied.` });
+      toast({ title: t("agency.billing.coupons.applied"), description: t("agency.billing.coupons.appliedDesc", { code: upperCode }) });
     } else {
-      toast({ title: "Already Applied", description: "This coupon is already in use.", variant: "destructive" });
+      toast({ title: t("agency.billing.coupons.alreadyApplied"), description: t("agency.billing.coupons.alreadyAppliedDesc"), variant: "destructive" });
     }
     setCouponCode("");
   };
 
   const removeCoupon = (code: string) => {
     setAppliedCoupons(appliedCoupons.filter(c => c !== code));
-    toast({ title: "Coupon Removed", description: `Coupon ${code} has been removed.` });
+    toast({ title: t("agency.billing.coupons.removed"), description: t("agency.billing.coupons.removedDesc", { code }) });
   };
 
   return (
@@ -84,9 +86,9 @@ const AgencyBillingManage = () => {
             <Receipt className="w-6 h-6 text-[#00e55e]" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-[20px] font-bold tracking-tight">Billing Plan</h1>
+            <h1 className="text-[20px] font-bold tracking-tight">{t("agency.billing.title")}</h1>
             <p className={cn("text-[13px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-600")}>
-              Manage your subscription
+              {t("agency.billing.desc")}
             </p>
           </div>
         </div>
@@ -101,14 +103,14 @@ const AgencyBillingManage = () => {
               <div className="flex items-start gap-3 mb-6">
                 <Ticket className={cn("w-5 h-5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
                 <div>
-                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Coupons</h3>
-                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>Add discount coupon</p>
+                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.billing.coupons.title")}</h3>
+                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>{t("agency.billing.coupons.addDesc")}</p>
                 </div>
               </div>
               
               <div className="space-y-6 flex-1 flex flex-col justify-between">
                 <div className="flex flex-col gap-2">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-300" : "text-slate-900")}>Applied coupons:</span>
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-300" : "text-slate-900")}>{t("agency.billing.coupons.appliedList")}</span>
                   <div className="flex flex-wrap gap-2">
                     {appliedCoupons.map(coupon => (
                       <Badge 
@@ -128,10 +130,10 @@ const AgencyBillingManage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <p className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-300" : "text-slate-900")}>Add a coupon</p>
+                  <p className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-300" : "text-slate-900")}>{t("agency.billing.coupons.add")}</p>
                   <div className="flex gap-2">
                     <Input 
-                      placeholder="Enter the coupon code e.g. FREECOUPON"
+                      placeholder={t("agency.billing.coupons.placeholder")}
                       value={couponCode}
                       onChange={(e) => {
                         setCouponCode(e.target.value);
@@ -149,12 +151,12 @@ const AgencyBillingManage = () => {
                         mode === "dark" 
                           ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
                           : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                      Add
+                      {t("common.add")}
                     </button>
                   </div>
                   {couponError && (
                     <p className="text-[11px] text-red-500 font-bold italic ml-1">
-                      Please enter the coupon code
+                      {t("agency.billing.coupons.error")}
                     </p>
                   )}
                 </div>
@@ -167,8 +169,8 @@ const AgencyBillingManage = () => {
               <div className="flex items-start gap-3 mb-4 flex-1">
                 <CreditCard className={cn("w-5 h-5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
                 <div>
-                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Manage billing & credit card</h3>
-                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>Manage invoices and credit card information on file.</p>
+                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.billing.manage.title")}</h3>
+                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>{t("agency.billing.manage.desc")}</p>
                 </div>
               </div>
               
@@ -179,7 +181,7 @@ const AgencyBillingManage = () => {
                     mode === "dark" 
                       ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
                       : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                  Manage
+                  {t("common.manage")}
                 </button>
               </div>
             </div>
@@ -190,8 +192,8 @@ const AgencyBillingManage = () => {
               <div className="flex items-start gap-3 mb-4 flex-1">
                 <BarChart3 className={cn("w-5 h-5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
                 <div>
-                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Current Usage</h3>
-                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>View your account costs</p>
+                  <h3 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.billing.usage.title")}</h3>
+                  <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-600")}>{t("agency.billing.usage.desc")}</p>
                 </div>
               </div>
               
@@ -202,7 +204,7 @@ const AgencyBillingManage = () => {
                     mode === "dark" 
                       ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
                       : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                  Show current usage
+                  {t("agency.billing.usage.show")}
                 </button>
               </div>
             </div>
@@ -230,15 +232,15 @@ const AgencyBillingManage = () => {
                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">EZCONN</span>
                 </div>
                 
-                <h2 className="text-[17px] font-bold text-[#00e55e]">Manage Your Subscriptions</h2>
+                <h2 className="text-[17px] font-bold text-[#00e55e]">{t("agency.billing.manage.modalTitle")}</h2>
               </div>
               
               {/* Form Section */}
               <div className="p-8 pb-10 space-y-6">
                  <div className="space-y-3">
-                    <p className="text-[13px] font-medium text-[#00e55e]">Enter your email address to login</p>
+                    <p className="text-[13px] font-medium text-[#00e55e]">{t("agency.billing.manage.emailPrompt")}</p>
                     <Input 
-                      placeholder="Email address"
+                      placeholder={t("common.email")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={cn("h-10 text-center text-[13px] border focus-visible:ring-1 focus-visible:ring-slate-300 shadow-none rounded", 
@@ -247,7 +249,7 @@ const AgencyBillingManage = () => {
                  </div>
                  
                  <button className="w-full h-10 bg-[#00e55e] hover:bg-[#00c853] text-white font-bold text-[13px] rounded transition-all flex items-center justify-center gap-1.5 active:scale-95">
-                   Continue <span>→</span>
+                   {t("common.continue")} <span>→</span>
                  </button>
               </div>
             </div>
@@ -259,13 +261,13 @@ const AgencyBillingManage = () => {
       <Dialog open={showUsageModal} onOpenChange={setShowUsageModal}>
         <DialogContent hideClose className={cn("max-w-2xl p-0 overflow-visible rounded-lg shadow-xl border", mode === 'dark' ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-200")}>
           <DialogHeader className={cn("px-6 py-4 border-b", mode === 'dark' ? "border-slate-800" : "border-slate-100")}>
-            <DialogTitle className={cn("text-[15px] font-medium tracking-tight", mode === 'dark' ? "text-white" : "text-slate-900")}>Current Usage</DialogTitle>
+            <DialogTitle className={cn("text-[15px] font-medium tracking-tight", mode === 'dark' ? "text-white" : "text-slate-900")}>{t("agency.billing.usage.title")}</DialogTitle>
           </DialogHeader>
           
           <div>
             <div className={cn("divide-y", mode === 'dark' ? "divide-slate-800" : "divide-slate-100")}>
              {usageItems.length === 0 ? (
-               <div className="flex items-center justify-center h-32 text-slate-400 text-[13px]">No usage data available</div>
+               <div className="flex items-center justify-center h-32 text-slate-400 text-[13px]">{t("agency.billing.usage.empty")}</div>
              ) : usageItems.map((item, idx) => (
                <div key={idx} className={cn("px-6 py-3 flex items-center justify-between", mode === 'dark' ? "hover:bg-slate-800/40" : "hover:bg-slate-50")}>
                   <div>
@@ -278,7 +280,7 @@ const AgencyBillingManage = () => {
                      </div>
                      <div className="text-right w-20">
                         <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{item.amount}</p>
-                        <p className="text-[9px] text-slate-400 uppercase">Amount</p>
+                        <p className="text-[9px] text-slate-400 uppercase">{t("agency.billing.usage.amount")}</p>
                      </div>
                   </div>
                </div>
@@ -288,24 +290,24 @@ const AgencyBillingManage = () => {
           
           <div className={cn("px-6 py-4 space-y-3 border-t", mode === 'dark' ? "border-slate-800" : "border-slate-100")}>
              <div className="flex justify-between items-center">
-                <span className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>Sub total</span>
+                <span className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>{t("agency.billing.usage.subtotal")}</span>
                 <div className="text-right">
                    <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{subtotal.toFixed(2)}</p>
-                   <p className="text-[9px] text-slate-400 uppercase">Amount</p>
+                   <p className="text-[9px] text-slate-400 uppercase">{t("agency.billing.usage.amount")}</p>
                 </div>
              </div>
              <div className="flex justify-between items-center">
-                <span className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>Discount</span>
+                <span className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-300" : "text-slate-800")}>{t("agency.billing.usage.discount")}</span>
                 <div className="text-right">
                    <p className={cn("text-[13px] font-bold", mode === 'dark' ? "text-slate-200" : "text-slate-900")}>{discount.toFixed(2)}</p>
-                   <p className="text-[9px] text-slate-400 uppercase">Amount</p>
+                   <p className="text-[9px] text-slate-400 uppercase">{t("agency.billing.usage.amount")}</p>
                 </div>
              </div>
              <div className="flex justify-between items-center pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
-                <span className={cn("text-[15px] font-bold", mode === 'dark' ? "text-white" : "text-slate-900")}>Total</span>
+                <span className={cn("text-[15px] font-bold", mode === 'dark' ? "text-white" : "text-slate-900")}>{t("agency.billing.usage.total")}</span>
                 <div className="text-right">
                    <p className={cn("text-[15px] font-bold", mode === 'dark' ? "text-white" : "text-slate-900")}>{total.toFixed(2)}</p>
-                   <p className="text-[9px] text-slate-400 uppercase">Amount</p>
+                   <p className="text-[9px] text-slate-400 uppercase">{t("agency.billing.usage.amount")}</p>
                 </div>
              </div>
              
@@ -315,7 +317,7 @@ const AgencyBillingManage = () => {
                      mode === "dark" 
                       ? "bg-[#1e293b] hover:bg-slate-800 text-slate-300 border-slate-700" 
                       : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200")}>
-                     Close
+                     {t("common.close")}
                    </button>
                 </DialogClose>
              </div>

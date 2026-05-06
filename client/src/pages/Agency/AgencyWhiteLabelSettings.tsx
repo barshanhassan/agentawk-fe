@@ -36,10 +36,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 
 const AgencyWhiteLabelSettings = () => {
   const { mode } = useTheme();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -89,12 +91,13 @@ const AgencyWhiteLabelSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
-      toast({ title: "Branding Updated", description: "White label settings have been saved." });
+      toast({ title: t("agency.settings.general.updated"), description: t("agency.settings.general.updatedDesc") });
     }
   });
 
   const handleColorChange = (color: string) => {
     setBrandingData({ ...brandingData, color });
+    updateMutation.mutate({ color });
   };
 
   const handleUploadClick = () => {
@@ -103,11 +106,11 @@ const AgencyWhiteLabelSettings = () => {
 
   const features = [
     // ... same as before
-    "Customize your Agency Logo, Colors and Domain.",
-    "Your agency logo will be displayed in all of your workspaces.",
-    "Your agency colors will be displayed in all of your workspaces.",
-    "Your agency e-mail can be used from your Workspaces.",
-    "Display your agency logo, colors, emails and the generic *.chatbotsystem.ai domain to White Label all your Workspaces."
+    "agency.settings.general.whiteLabel.customize",
+    "agency.settings.general.whiteLabel.logoDisplay",
+    "agency.settings.general.whiteLabel.colorDisplay",
+    "agency.settings.general.whiteLabel.emailUsage",
+    "agency.settings.general.whiteLabel.whiteLabelAll"
   ];
 
   return (
@@ -118,8 +121,8 @@ const AgencyWhiteLabelSettings = () => {
         <div className={cn("p-5 border-b flex items-start gap-4 transition-colors", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
           <Settings className={cn("w-6 h-6 mt-0.5", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
           <div>
-            <h2 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>White Label</h2>
-            <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Replace our brand with your own agency brand!</p>
+            <h2 className={cn("font-bold text-[15px] tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.general.whiteLabel.title")}</h2>
+            <p className={cn("text-[12px] font-medium mt-0.5", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.general.whiteLabel.replaceBrand")}</p>
           </div>
         </div>
         
@@ -140,7 +143,7 @@ const AgencyWhiteLabelSettings = () => {
                         : "text-slate-600 data-[state=active]:text-[#00e55e]"
                     )}
                   >
-                    {tab === "notification" ? "Notification E-mail" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === "notification" ? t("agency.settings.general.whiteLabel.email") : t(`agency.settings.general.whiteLabel.${tab}`)}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -149,7 +152,7 @@ const AgencyWhiteLabelSettings = () => {
             <TabsContent value="features" className="p-6">
               <div className="bg-[#00e55e] rounded border-none p-6">
                 <div className="space-y-0 mb-4">
-                  <h3 className="text-[12px] font-bold text-white">Agency White Label</h3>
+                  <h3 className="text-[12px] font-bold text-white">{t("agency.settings.general.whiteLabel.title")}</h3>
                   <div className="flex items-baseline">
                     <span className="text-[48px] leading-tight font-bold text-white tracking-tight">$0</span>
                   </div>
@@ -157,14 +160,14 @@ const AgencyWhiteLabelSettings = () => {
 
                 <div className="space-y-4">
                   <p className="text-[12px] font-bold text-white">
-                    Personalize your Workspaces with your logo, colors and chatbotsystem.ai domain.
+                    {t("agency.settings.general.whiteLabel.personalize")}
                   </p>
                   
                   <ul className="space-y-2">
                     {features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <CheckCircle2 className="w-[16px] h-[16px] text-white mt-[2px] shrink-0" />
-                        <span className="text-[12px] font-medium text-white">{feature}</span>
+                        <span className="text-[12px] font-medium text-white">{t(feature)}</span>
                       </li>
                     ))}
                   </ul>
@@ -178,13 +181,13 @@ const AgencyWhiteLabelSettings = () => {
                 <div className="flex items-start gap-2">
                    <Info className="w-[16px] h-[16px] text-gray-400 mt-[2px] shrink-0" />
                    <p className={cn("text-[11px] font-medium leading-relaxed", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                     The logos displayed in this Agency account and as the default logo in Workspaces when the agent selects light mode. Please note that you can assign specific logos directly to specific Workspaces. This change will not affect custom logos in active Workspaces.
+                     {t("agency.settings.general.whiteLabel.logo_info_light")}
                    </p>
                 </div>
 
                 <div className="flex gap-8">
                   <div className="space-y-1.5">
-                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>Full wide logo</p>
+                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{t("agency.settings.general.whiteLabel.fullLogo")}</p>
                     <div className={cn("w-[250px] h-20 border border-dashed rounded-lg flex items-center justify-center relative group overflow-hidden transition-colors",
                       mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-300")}>
                        <DropdownMenu>
@@ -202,22 +205,22 @@ const AgencyWhiteLabelSettings = () => {
                          </DropdownMenuTrigger>
                          <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                            <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
-                             <Upload size={14} /> Upload new
+                             <Upload size={14} /> {t("common.uploadNew")}
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
-                             <ImageIcon size={14} /> Select from gallery
+                             <ImageIcon size={14} /> {t("common.selectFromGallery")}
                            </DropdownMenuItem>
                            <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
-                             <Trash2 size={14} /> remove
+                             <Trash2 size={14} /> {t("common.remove")}
                            </DropdownMenuItem>
                          </DropdownMenuContent>
                        </DropdownMenu>
                     </div>
-                    <p className="text-[10px] text-[#ef4444]">Recommended size: 460px * 140px</p>
+                    <p className="text-[10px] text-[#ef4444]">{t("common.recommendedSize")}: 460px * 140px</p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>Small logo</p>
+                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{t("agency.settings.general.whiteLabel.smallLogo")}</p>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <div className={cn("w-16 h-16 border border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors",
@@ -227,17 +230,17 @@ const AgencyWhiteLabelSettings = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                         <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
-                          <Upload size={14} /> Upload new
+                          <Upload size={14} /> {t("common.uploadNew")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
-                          <ImageIcon size={14} /> Select from gallery
+                          <ImageIcon size={14} /> {t("common.selectFromGallery")}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
-                          <Trash2 size={14} /> remove
+                          <Trash2 size={14} /> {t("common.remove")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <p className="text-[10px] text-[#ef4444]">Recommended size: 256px * 256px</p>
+                    <p className="text-[10px] text-[#ef4444]">{t("common.recommendedSize")}: 256px * 256px</p>
                   </div>
                 </div>
               </div>
@@ -247,13 +250,13 @@ const AgencyWhiteLabelSettings = () => {
                 <div className={cn("flex items-start gap-2 border-t pt-6", mode === "dark" ? "border-slate-800" : "border-slate-100")}>
                    <Info className="w-[16px] h-[16px] text-gray-400 mt-[2px] shrink-0" />
                    <p className={cn("text-[11px] font-medium leading-relaxed", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                     The logos displayed in this Agency account and as the default logo in Workspaces when the agent selects dark mode. Please note that you can assign specific logos directly to specific Workspaces. This change will not affect custom logos in active Workspaces.
+                     {t("agency.settings.general.whiteLabel.logo_info_dark")}
                    </p>
                 </div>
 
                 <div className="flex gap-8">
                   <div className="space-y-1.5">
-                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>Full wide logo</p>
+                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{t("agency.settings.general.whiteLabel.fullLogo")}</p>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <div className={cn("w-[250px] h-20 border border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:opacity-80 transition-opacity",
@@ -266,21 +269,21 @@ const AgencyWhiteLabelSettings = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                         <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
-                          <Upload size={14} /> Upload new
+                          <Upload size={14} /> {t("common.uploadNew")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
-                          <ImageIcon size={14} /> Select from gallery
+                          <ImageIcon size={14} /> {t("common.selectFromGallery")}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
-                          <Trash2 size={14} /> remove
+                          <Trash2 size={14} /> {t("common.remove")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <p className="text-[10px] text-[#ef4444]">Recommended size: 460px * 140px</p>
+                    <p className="text-[10px] text-[#ef4444]">{t("common.recommendedSize")}: 460px * 140px</p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>Small logo</p>
+                    <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-gray-300" : "text-slate-700")}>{t("agency.settings.general.whiteLabel.smallLogo")}</p>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <div className={cn("w-16 h-16 border border-dashed rounded-lg flex items-center justify-center relative group cursor-pointer hover:opacity-80 transition-opacity",
@@ -290,17 +293,17 @@ const AgencyWhiteLabelSettings = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                         <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
-                          <Upload size={14} /> Upload new
+                          <Upload size={14} /> {t("common.uploadNew")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
-                          <ImageIcon size={14} /> Select from gallery
+                          <ImageIcon size={14} /> {t("common.selectFromGallery")}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
-                          <Trash2 size={14} /> remove
+                          <Trash2 size={14} /> {t("common.remove")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <p className="text-[10px] text-[#ef4444]">Recommended size: 256px * 256px</p>
+                    <p className="text-[10px] text-[#ef4444]">{t("common.recommendedSize")}: 256px * 256px</p>
                   </div>
                 </div>
               </div>
@@ -310,7 +313,7 @@ const AgencyWhiteLabelSettings = () => {
               <div className="flex items-start gap-2">
                  <Info className="w-[16px] h-[16px] text-gray-400 mt-[2px] shrink-0" />
                  <p className={cn("text-[11px] font-medium leading-relaxed", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                   Upload the favicon that will be displayed at the browsers tab.
+                   {t("agency.settings.general.whiteLabel.uploadFavicon")}
                  </p>
               </div>
 
@@ -328,17 +331,17 @@ const AgencyWhiteLabelSettings = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                     <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
-                      <Upload size={14} /> Upload new
+                      <Upload size={14} /> {t("common.uploadNew")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
-                      <ImageIcon size={14} /> Select from gallery
+                      <ImageIcon size={14} /> {t("common.selectFromGallery")}
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 hover:text-red-600">
-                      <Trash2 size={14} /> remove
+                      <Trash2 size={14} /> {t("common.remove")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <p className="text-[10px] text-[#ef4444]">Recommended size: 64px * 64px</p>
+                <p className="text-[10px] text-[#ef4444]">{t("common.recommendedSize")}: 64px * 64px</p>
               </div>
             </TabsContent>
 
@@ -346,7 +349,7 @@ const AgencyWhiteLabelSettings = () => {
               <div className="flex items-start gap-2">
                  <Info className="w-[16px] h-[16px] text-gray-400 mt-[2px] shrink-0" />
                  <p className={cn("text-[11px] font-medium leading-relaxed", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                   Select the color that will be set to your account and Workspaces.
+                   {t("agency.settings.general.whiteLabel.selectColor")}
                  </p>
               </div>
 
@@ -390,20 +393,6 @@ const AgencyWhiteLabelSettings = () => {
                     </div>
                   </PopoverContent>
                 </Popover>
-
-                <Button 
-                  onClick={() => updateMutation.mutate({ color: brandingData.color })}
-                  disabled={updateMutation.isPending}
-                  className={cn(
-                    "h-9 px-6 font-bold text-[13px] border transition-all",
-                    mode === "dark" 
-                      ? "bg-transparent border-green-500 text-green-500 hover:bg-green-500 hover:text-white" 
-                      : "bg-white border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
-                  )}
-                  variant="outline"
-                >
-                  {updateMutation.isPending ? "Saving..." : "Save"}
-                </Button>
               </div>
             </TabsContent>
 
@@ -441,17 +430,17 @@ const AgencyWhiteLabelSettings = () => {
                   onClick={() => updateMutation.mutate({ domain: brandingData.domain, slug: brandingData.slug })}
                   className={cn("px-6 py-1.5 rounded text-[12px] font-medium transition-colors border h-9",
                     mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                    {updateMutation.isPending ? "Connecting..." : "Connect"}
+                    {updateMutation.isPending ? t("common.connecting") : t("common.connect")}
                  </button>
               </div>
 
               <div className="space-y-2 max-w-4xl">
-                 <h3 className={cn("text-[13px] font-bold", mode === "dark" ? "text-gray-200" : "text-slate-800")}>Make your Agency shine with your own custom domain!</h3>
+                 <h3 className={cn("text-[13px] font-bold", mode === "dark" ? "text-gray-200" : "text-slate-800")}>{t("agency.settings.general.whiteLabel.makeShine")}</h3>
                  <p className={cn("text-[12px] leading-relaxed", mode === "dark" ? "text-gray-400" : "text-slate-500")}>
-                   This section lets you ditch our brand and use your agency's domain name. This adds a professional touch and builds trust with your Agency employees.
+                   {t("agency.settings.general.whiteLabel.ditchBrand")}
                  </p>
                  <p className={cn("text-[12px] leading-relaxed", mode === "dark" ? "text-gray-400" : "text-slate-500")}>
-                   <span className={cn("font-bold underline", mode === "dark" ? "text-gray-200" : "text-slate-800")}>Important Note:</span> This custom domain applies to the agency level, not individual workspaces. To change the domain for specific workspaces, head over to their settings directly.
+                   <span className={cn("font-bold underline", mode === "dark" ? "text-gray-200" : "text-slate-800")}>{t("common.importantNote")}</span> {t("agency.settings.general.whiteLabel.customDomainNote")}
                  </p>
               </div>
             </TabsContent>
@@ -464,9 +453,9 @@ const AgencyWhiteLabelSettings = () => {
                     </div>
                     
                     <div className="space-y-1">
-                      <h3 className={cn("text-[14px] font-bold", mode === "dark" ? "text-white" : "text-slate-900")}>Notification E-mail</h3>
+                      <h3 className={cn("text-[14px] font-bold", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.general.whiteLabel.email")}</h3>
                       <p className={cn("text-[12px] max-w-lg", mode === "dark" ? "text-gray-400" : "text-slate-500")}>
-                        Integrate your e-mail to send branded agent invitation and forgot password emails.
+                        {t("agency.settings.general.whiteLabel.emailIntegrate")}
                       </p>
                     </div>
 
@@ -474,14 +463,14 @@ const AgencyWhiteLabelSettings = () => {
                       onClick={() => setShowEmailForm(true)}
                       className={cn("px-5 py-1.5 rounded text-[12px] font-medium transition-colors border",
                         mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                      Connect now
+                      {t("common.connectNow")}
                     </button>
                  </div>
                ) : (
                  <div className="space-y-6 max-w-2xl">
                    <div className="space-y-4">
                      <div className="flex items-center gap-2">
-                       <label className={cn("text-sm font-bold", mode === "dark" ? "text-gray-200" : "text-slate-800")}>Enter the domain to send from</label>
+                       <label className={cn("text-sm font-bold", mode === "dark" ? "text-gray-200" : "text-slate-800")}>{t("agency.settings.general.whiteLabel.enterDomain")}</label>
                        <Info size={14} className="text-gray-400 cursor-help" />
                      </div>
                      
@@ -507,7 +496,7 @@ const AgencyWhiteLabelSettings = () => {
                        </div>
                        
                        <button className="h-11 px-8 rounded-md bg-white border border-[#149f8f] text-[#149f8f] hover:bg-[#149f8f]/5 text-sm font-bold transition-colors">
-                          Continue
+                          {t("common.continue")}
                        </button>
                      </div>
                    </div>

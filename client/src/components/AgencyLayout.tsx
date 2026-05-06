@@ -33,8 +33,10 @@ import { BellOff, Info, Settings, Check, Clock, ArrowLeft, Volume2, Play } from 
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLocation } from "wouter";
+import { useTranslation } from 'react-i18next';
 
 const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
+  const { t, i18n } = useTranslation();
   const [user, setUser] = React.useState<any>(null);
   const [status, setStatus] = React.useState("Available");
   const [language, setLanguage] = React.useState("English (U.S)");
@@ -44,8 +46,17 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   const [isNotifSettings, setIsNotifSettings] = React.useState(false);
   const [soundEnabled, setSoundEnabled] = React.useState(true);
   const [selectedSound, setSelectedSound] = React.useState("Beep");
+  const [hasNotifications, setHasNotifications] = React.useState(false);
   const { mode, setMode } = useTheme();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+
+  // Sync initial language state with i18n
+  React.useEffect(() => {
+    const currentLng = i18n.language;
+    if (currentLng.startsWith('pt')) setLanguage("Português do Brasil");
+    else if (currentLng.startsWith('es')) setLanguage("Español");
+    else setLanguage("English (U.S)");
+  }, [i18n.language]);
 
   React.useEffect(() => {
     const userInfo = localStorage.getItem("user_info");
@@ -77,7 +88,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                 <button className={cn("relative p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group", 
                   mode === "dark" ? "text-gray-400 hover:text-white hover:bg-slate-800" : "text-gray-500 hover:text-slate-900 hover:bg-slate-100")}>
                   <Bell size={20} className="group-hover:rotate-12 transition-transform" />
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
+                  {hasNotifications && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />}
                 </button>
               </PopoverTrigger>
               <PopoverContent
@@ -90,7 +101,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-white dark:bg-[#1e293b]">
                       <div className="flex items-center gap-2">
                         <Info size={16} className="text-slate-600 dark:text-slate-400" />
-                        <h3 className="font-bold text-[14px] text-slate-900 dark:text-white">Notifications</h3>
+                        <h3 className="font-bold text-[14px] text-slate-900 dark:text-white">{t("Notifications")}</h3>
                       </div>
                       <Button 
                         variant="ghost" 
@@ -109,7 +120,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                         </div>
                       </div>
                       <p className="text-[14px] font-bold text-slate-900 dark:text-white mb-1">
-                        Currently, there are no notifications to present.
+                        {t("No notifications")}
                       </p>
                       <p className="text-[12px] font-medium text-slate-400 dark:text-slate-500">
                         You can view notifications from the last 7 days only.
@@ -137,7 +148,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                             onClick={() => setSoundEnabled(!soundEnabled)}>
                             <div className={cn("absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm", soundEnabled ? "left-5" : "left-1")} />
                           </div>
-                          <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300">Sound notifications</span>
+                          <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{t("Sound notifications")}</span>
                         </div>
                       </div>
 
@@ -166,7 +177,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                           className="bg-white dark:bg-transparent border border-green-500 text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 font-bold text-[12px] h-8 px-6 rounded-lg transition-all"
                           onClick={() => setIsNotifSettings(false)}
                         >
-                          Save
+                          {t("Save")}
                         </Button>
                       </div>
                     </div>
@@ -191,8 +202,6 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                         {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#0f172a]", 
-                      status === "Available" ? "bg-green-500" : "bg-slate-400")} />
                   </div>
                   <div className="text-left hidden sm:block leading-tight">
                     <p className={cn("text-[13px] font-bold transition-colors", 
@@ -201,7 +210,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className={cn("w-1.5 h-1.5 rounded-full", status === "Available" ? "bg-green-500" : "bg-slate-400")}></div>
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">{status}</span>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">{t(status)}</span>
                     </div>
                   </div>
                   <ChevronDown size={14} className="text-gray-500 group-hover:text-blue-500 transition-colors ml-1" />
@@ -216,7 +225,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                     <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white text-xs font-bold">
                        {(user?.first_name?.[0] || "H") + (user?.last_name?.[0] || "B")}
                     </div>
-                    <span className={cn("font-semibold text-[14px]", mode === "dark" ? "text-white" : "text-slate-900")}>Profile</span>
+                    <span className={cn("font-semibold text-[14px]", mode === "dark" ? "text-white" : "text-slate-900")}>{t("Profile")}</span>
                   </div>
                   <ChevronRight size={16} className="text-gray-500 group-hover:text-white transition-colors" />
                 </DropdownMenuItem>
@@ -225,7 +234,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
 
                 {/* Online Status Section */}
                 <div className="px-2 py-1">
-                  <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">Your Online Status</p>
+                  <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">{t("Online Status")}</p>
                   <div 
                     onClick={(e) => { e.stopPropagation(); setOpenStatus(!openStatus); }}
                     className={cn("border rounded p-2 flex items-center justify-between cursor-pointer transition-colors group",
@@ -234,7 +243,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                      <div className="flex items-center gap-2">
                         <div className={cn("w-2.5 h-2.5 rounded-full", 
                           status === "Available" ? (mode === "dark" ? "bg-white" : "bg-green-500") : (mode === "dark" ? "border-2 border-white" : "border-2 border-slate-400"))}></div>
-                        <span className={cn("text-sm font-medium", mode === "dark" ? "text-white" : "text-slate-900")}>{status}</span>
+                        <span className={cn("text-sm font-medium", mode === "dark" ? "text-white" : "text-slate-900")}>{t(status)}</span>
                      </div>
                      <ChevronDown size={14} className={cn("text-gray-500 transition-transform", openStatus ? "rotate-180" : "")} />
                   </div>
@@ -247,7 +256,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
                          <div className={mode === "dark" ? "w-2.5 h-2.5 bg-white rounded-full" : "w-2.5 h-2.5 bg-green-500 rounded-full"}></div>
-                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>Available</span>
+                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>{t("Available")}</span>
                       </div>
                       <div 
                         onClick={() => { setStatus("Unavailable"); setOpenStatus(false); }}
@@ -255,7 +264,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
                          <Circle size={10} className={mode === "dark" ? "text-white" : "text-slate-400"} />
-                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>Unavailable</span>
+                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>{t("Busy")}</span>
                       </div>
                     </div>
                   )}
@@ -263,7 +272,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
 
                 {/* Theme Switcher Section */}
                 <div className="px-2 py-1">
-                  <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">Theme</p>
+                  <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">{t("Theme")}</p>
                   <div 
                     onClick={(e) => { e.stopPropagation(); setOpenTheme(!openTheme); }}
                     className={cn("border rounded p-2 flex items-center justify-between cursor-pointer transition-colors group",
@@ -271,7 +280,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                   >
                      <div className="flex items-center gap-2">
                         {mode === "dark" ? <Moon size={16} className="text-white" /> : <Sun size={16} className="text-slate-900" />}
-                        <span className={cn("text-sm font-medium capitalize", mode === "dark" ? "text-white" : "text-slate-900")}>{mode}</span>
+                        <span className={cn("text-sm font-medium capitalize", mode === "dark" ? "text-white" : "text-slate-900")}>{t(mode)}</span>
                      </div>
                      <ChevronDown size={14} className={cn("text-gray-500 transition-transform", openTheme ? "rotate-180" : "")} />
                   </div>
@@ -284,7 +293,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
                          <Sun size={16} className={mode === "dark" ? "text-white" : "text-slate-600"} />
-                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>Light</span>
+                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>{t("Light")}</span>
                       </div>
                       <div 
                         onClick={() => { setMode("dark"); setOpenTheme(false); }}
@@ -292,7 +301,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
                          <Moon size={16} className={mode === "dark" ? "text-white" : "text-slate-600"} />
-                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>Dark</span>
+                         <span className={mode === "dark" ? "text-white" : "text-slate-700"}>{t("Dark")}</span>
                       </div>
                     </div>
                   )}
@@ -300,7 +309,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
 
                 {/* Language Section */}
                 <div className="px-2 py-1">
-                  <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">Language</p>
+                  <p className="text-[11px] font-bold text-gray-500 uppercase mb-2 px-1">{t("Language")}</p>
                   <div 
                     onClick={(e) => { e.stopPropagation(); setOpenLang(!openLang); }}
                     className={cn("border rounded p-2 flex items-center justify-between cursor-pointer transition-colors group",
@@ -318,7 +327,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                     <div className={cn("mt-1 border rounded overflow-hidden shadow-sm", 
                       mode === "dark" ? "bg-[#0f172a]/30 border-slate-800" : "bg-white border-slate-100")}>
                       <div 
-                        onClick={() => { setLanguage("English (U.S)"); setOpenLang(false); }}
+                        onClick={() => { i18n.changeLanguage('en'); setLanguage("English (U.S)"); setOpenLang(false); }}
                         className={cn("flex items-center gap-2 p-2 cursor-pointer text-sm transition-colors",
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
@@ -326,7 +335,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                          <span className={mode === "dark" ? "text-white" : "text-slate-700"}>English (U.S)</span>
                       </div>
                       <div 
-                        onClick={() => { setLanguage("Português do Brasil"); setOpenLang(false); }}
+                        onClick={() => { i18n.changeLanguage('pt'); setLanguage("Português do Brasil"); setOpenLang(false); }}
                         className={cn("flex items-center gap-2 p-2 cursor-pointer text-sm transition-colors",
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
@@ -334,7 +343,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                          <span className={mode === "dark" ? "text-white" : "text-slate-700"}>Português do Brasil</span>
                       </div>
                       <div 
-                        onClick={() => { setLanguage("Español"); setOpenLang(false); }}
+                        onClick={() => { i18n.changeLanguage('es'); setLanguage("Español"); setOpenLang(false); }}
                         className={cn("flex items-center gap-2 p-2 cursor-pointer text-sm transition-colors",
                           mode === "dark" ? "hover:bg-[#334155]" : "hover:bg-slate-50")}
                       >
@@ -354,7 +363,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                     mode === "dark" ? "hover:bg-red-500/10 focus:bg-red-500/10" : "hover:bg-red-50 focus:bg-red-50 focus:text-red-600")}
                 >
                   <LogOut size={18} className="group-hover:text-red-400" />
-                  <span className={cn("font-semibold text-[14px]", mode === "dark" ? "" : "text-slate-600")}>Sign out</span>
+                  <span className={cn("font-semibold text-[14px]", mode === "dark" ? "" : "text-slate-600")}>{t("Sign out")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

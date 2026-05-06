@@ -23,8 +23,10 @@ import {
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 const AgencyLegal = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -66,8 +68,8 @@ const AgencyLegal = () => {
           mode === "dark" ? "border-slate-800" : "border-slate-300")}>
           <Gavel className={cn("w-7 h-7", mode === "dark" ? "text-slate-300" : "text-slate-800")} strokeWidth={1.5} />
           <div>
-            <h1 className="text-[19px] font-bold tracking-tight text-slate-900 leading-tight">Legal Documents</h1>
-            <p className="text-slate-500 text-[13px] font-medium leading-tight mt-0.5">Create legal documents to obtain consent from your Agency Team before joining your agency account.</p>
+            <h1 className="text-[19px] font-bold tracking-tight text-slate-900 leading-tight">{t("agency.legal.title")}</h1>
+            <p className="text-slate-500 text-[13px] font-medium leading-tight mt-0.5">{t("agency.legal.desc")}</p>
           </div>
         </div>
 
@@ -77,10 +79,10 @@ const AgencyLegal = () => {
             <TabsList className={cn("h-auto p-0 bg-transparent flex justify-start gap-6 w-full rounded-none border-b",
               mode === "dark" ? "border-slate-800" : "border-slate-300")}>
               {[
-                { id: "active", label: "Active" },
-                { id: "history", label: "History" },
-                { id: "accepted", label: "Accepted Terms" },
-                { id: "accepted2", label: "Accepted Terms" },
+                { id: "active", label: t("agency.legal.tabs.active") },
+                { id: "history", label: t("agency.legal.tabs.history") },
+                { id: "accepted", label: t("agency.legal.tabs.accepted") },
+                { id: "accepted2", label: t("agency.legal.tabs.accepted") },
               ].map((tab) => (
                 <TabsTrigger 
                   key={tab.id}
@@ -102,10 +104,10 @@ const AgencyLegal = () => {
             <table className="w-full text-left">
               <thead className={cn("border-b transition-colors", mode === "dark" ? "border-slate-700" : "border-slate-300")}>
                 <tr>
-                  <th className="w-[25%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Checkbox</th>
-                  <th className="w-[40%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Name</th>
-                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Active Date</th>
-                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest text-right">Action</th>
+                  <th className="w-[25%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.checkbox")}</th>
+                  <th className="w-[40%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.name")}</th>
+                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.active_date")}</th>
+                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest text-right">{t("agency.legal.table.action")}</th>
                 </tr>
               </thead>
               <tbody className="transition-colors">
@@ -130,28 +132,28 @@ const AgencyLegal = () => {
                         <DropdownMenuContent align="end" className="w-40 shadow-md">
                           <DropdownMenuItem className={cn("cursor-pointer", mode === "dark" ? "text-gray-300 focus:text-white focus:bg-[#334155]" : "text-slate-600 focus:text-slate-900 focus:bg-slate-50")}>
                             <Eye className="mr-2 h-4 w-4" />
-                            <span>View</span>
+                            <span>{t("agency.legal.actions.view")}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className={cn("cursor-pointer", mode === "dark" ? "text-blue-400 focus:text-blue-300 focus:bg-[#334155]" : "text-[#2563eb] focus:text-[#1d4ed8] focus:bg-slate-50")}
                             onClick={() => setIsEditModalOpen(true)}
                           >
                             <Edit className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
+                            <span>{t("agency.legal.actions.edit")}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className={cn("cursor-pointer", mode === "dark" ? "text-red-400 focus:text-red-300 focus:bg-[#334155]" : "text-[#ef4444] focus:text-[#dc2626] focus:bg-slate-50")}
                             onClick={() => setIsAddModalOpen(true)}
                           >
                             <FilePlus className="mr-2 h-4 w-4" />
-                            <span>Add</span>
+                            <span>{t("agency.legal.actions.add")}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className={cn("cursor-pointer", mode === "dark" ? "text-red-400 focus:text-red-300 focus:bg-[#334155]" : "text-[#ef4444] focus:text-[#dc2626] focus:bg-slate-50")}
                             onClick={() => setIsArchiveModalOpen(true)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Archive</span>
+                            <span>{t("agency.legal.actions.archive")}</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -166,11 +168,11 @@ const AgencyLegal = () => {
             <table className="w-full text-left">
               <thead className={cn("border-b transition-colors", mode === "dark" ? "border-slate-700" : "border-slate-300")}>
                 <tr>
-                  <th className="w-[15%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Checkbox</th>
-                  <th className="w-[30%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Name</th>
-                  <th className="w-[25%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Active Date</th>
-                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Inactive Date</th>
-                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest text-right">Action</th>
+                  <th className="w-[15%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.checkbox")}</th>
+                  <th className="w-[30%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.name")}</th>
+                  <th className="w-[25%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.active_date")}</th>
+                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.inactive_date")}</th>
+                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest text-right">{t("agency.legal.table.action")}</th>
                 </tr>
               </thead>
               <tbody className="transition-colors">
@@ -205,7 +207,7 @@ const AgencyLegal = () => {
                 mode === "dark" ? "bg-sky-500/10 border-sky-500/30" : "bg-[#f0f9ff] border-[#bae6fd]")}>
                  <Info className="w-4 h-4 fill-[#0284c7] text-white shrink-0" />
                  <p className={cn("text-[13px]", mode === "dark" ? "text-sky-100/90" : "text-[#0369a1]")}>
-                   These are the terms and conditions that you have accepted as a user.
+                   {t("agency.legal.info.accepted_desc")}
                  </p>
               </div>
             </div>
@@ -213,7 +215,7 @@ const AgencyLegal = () => {
               <thead className={cn("border-b transition-colors", mode === "dark" ? "border-slate-700" : "border-slate-300")}>
                 <tr>
                   <th className="w-[65%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Name</th>
-                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Accepted At</th>
+                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.accepted_at")}</th>
                   <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest text-right">Action</th>
                 </tr>
               </thead>
@@ -243,7 +245,7 @@ const AgencyLegal = () => {
                 mode === "dark" ? "bg-sky-500/10 border-sky-500/30" : "bg-[#f0f9ff] border-[#bae6fd]")}>
                  <Info className="w-4 h-4 fill-[#0284c7] text-white shrink-0" />
                  <p className={cn("text-[13px]", mode === "dark" ? "text-sky-100/90" : "text-[#0369a1]")}>
-                   Following is the list of your accepted Terms and Conditions
+                   {t("agency.legal.info.accepted_list")}
                  </p>
               </div>
             </div>
@@ -251,7 +253,7 @@ const AgencyLegal = () => {
               <thead className={cn("border-b transition-colors", mode === "dark" ? "border-slate-700" : "border-slate-300")}>
                 <tr>
                   <th className="w-[65%] px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Name</th>
-                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">Accepted At</th>
+                  <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.legal.table.accepted_at")}</th>
                   <th className="px-6 py-3 text-[11px] font-bold text-slate-900 uppercase tracking-widest text-right">Action</th>
                 </tr>
               </thead>
@@ -287,10 +289,10 @@ const AgencyLegal = () => {
             {/* Header */}
             <div>
               <h2 className={cn("text-xl font-semibold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-                Checkbox #1
+                {t("agency.legal.modals.edit.title")}
               </h2>
               <p className={cn("text-[13px] mt-1", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                Ensure compliance with legal requirements by obtaining your Agent's consent during their next login session.
+                {t("agency.legal.modals.edit.desc")}
               </p>
             </div>
 
@@ -299,7 +301,7 @@ const AgencyLegal = () => {
               {/* Document Name */}
               <div>
                 <label className={cn("block text-[13px] font-semibold mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-                  Document name
+                  {t("agency.legal.modals.edit.doc_name")}
                 </label>
                 <input 
                   type="text" 
@@ -312,7 +314,7 @@ const AgencyLegal = () => {
               {/* Link Text */}
               <div>
                 <label className={cn("block text-[13px] font-semibold mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-                  Link Text
+                  {t("agency.legal.modals.edit.link_text")}
                 </label>
                 <input 
                   type="text" 
@@ -326,11 +328,11 @@ const AgencyLegal = () => {
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className={cn("block text-[13px] font-semibold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-                    Set the text for the checkbox
+                    {t("agency.legal.modals.edit.checkbox_text_label")}
                   </label>
                   <button className={cn("text-[11px] px-2.5 py-0.5 rounded transition-colors border",
                     mode === "dark" ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700" : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200")}>
-                    Document Link
+                    {t("agency.legal.modals.edit.doc_link_btn")}
                   </button>
                 </div>
                 <textarea 
@@ -339,7 +341,7 @@ const AgencyLegal = () => {
                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
                 />
                 <p className={cn("text-[12px] mt-1.5", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                  Preview: I Accept the <span className={cn(mode === "dark" ? "text-blue-400" : "text-[#0284c7]")}>Terms</span> and Conditions
+                  {t("agency.legal.modals.edit.preview")}: I Accept the <span className={cn(mode === "dark" ? "text-blue-400" : "text-[#0284c7]")}>Terms</span> and Conditions
                 </p>
               </div>
             </div>
@@ -373,10 +375,10 @@ const AgencyLegal = () => {
             {/* Header */}
             <div>
               <h2 className={cn("text-xl font-semibold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-                Checkbox #1
+                {t("agency.legal.modals.edit.title")}
               </h2>
               <p className={cn("text-[13px] mt-1", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                Ensure compliance with legal requirements by obtaining your Agent's consent during their next login session.
+                {t("agency.legal.modals.edit.desc")}
               </p>
             </div>
 
@@ -385,7 +387,7 @@ const AgencyLegal = () => {
               {/* Document Name */}
               <div>
                 <label className={cn("block text-[13px] font-semibold mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-                  Document name
+                  {t("agency.legal.modals.edit.doc_name")}
                 </label>
                 <input 
                   type="text" 
@@ -397,7 +399,7 @@ const AgencyLegal = () => {
               {/* Link Text */}
               <div>
                 <label className={cn("block text-[13px] font-semibold mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-                  Link Text
+                  {t("agency.legal.modals.edit.link_text")}
                 </label>
                 <input 
                   type="text" 
@@ -410,11 +412,11 @@ const AgencyLegal = () => {
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className={cn("block text-[13px] font-semibold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-                    Set the text for the checkbox
+                    {t("agency.legal.modals.edit.checkbox_text_label")}
                   </label>
                   <button className={cn("text-[11px] px-2.5 py-0.5 rounded transition-colors border",
                     mode === "dark" ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700" : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200")}>
-                    Document Link
+                    {t("agency.legal.modals.edit.doc_link_btn")}
                   </button>
                 </div>
                 <textarea 
@@ -422,7 +424,7 @@ const AgencyLegal = () => {
                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
                 />
                 <p className={cn("text-[12px] mt-1.5", mode === "dark" ? "text-slate-400" : "text-slate-500")}>
-                  Preview:
+                  {t("agency.legal.modals.edit.preview")}:
                 </p>
               </div>
 
@@ -450,8 +452,8 @@ const AgencyLegal = () => {
                   </span>
                 ) : (
                   <>
-                    <span className="text-[#00e55e] text-[13px] font-medium mb-1">Add a file</span>
-                    <span className="text-red-500 text-[11px]">Only PDF file is allowed</span>
+                    <span className="text-[#00e55e] text-[13px] font-medium mb-1">{t("agency.legal.modals.edit.file_upload_btn")}</span>
+                    <span className="text-red-500 text-[11px]">{t("agency.legal.modals.edit.file_upload_warning")}</span>
                   </>
                 )}
               </div>
@@ -486,10 +488,10 @@ const AgencyLegal = () => {
             <AlertTriangle className="w-16 h-16 text-[#f97316] mb-3" strokeWidth={1.5} />
             
             <h2 className={cn("text-2xl font-bold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>
-              Are you sure?
+              {t("agency.legal.modals.archive.title")}
             </h2>
             <p className={cn("text-[13px] mt-2", mode === "dark" ? "text-slate-400" : "text-slate-700")}>
-              Your Legal Document Will Be Securely Archived
+              {t("agency.legal.modals.archive.desc")}
             </p>
 
             <div className="flex items-center justify-center gap-3 mt-8">
@@ -498,14 +500,14 @@ const AgencyLegal = () => {
                 className={cn("px-6 py-2.5 text-[13.5px] font-medium border rounded transition-colors",
                   mode === "dark" ? "border-slate-600 text-slate-300 hover:bg-slate-800" : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50")}
               >
-                No
+                {t("common.no")}
               </button>
               <button 
                 onClick={() => setIsArchiveModalOpen(false)}
                 className={cn("px-6 py-2.5 text-[13.5px] font-medium border rounded transition-colors",
                   mode === "dark" ? "border-[#00e55e] text-[#00e55e] hover:bg-[#00e55e]/10" : "bg-white border-[#00e55e] text-[#00e55e] hover:bg-[#00e55e]/5")}
               >
-                Yes
+                {t("common.yes")}
               </button>
             </div>
           </div>

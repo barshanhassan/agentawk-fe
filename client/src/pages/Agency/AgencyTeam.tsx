@@ -15,9 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import AddAgentForm from "./AddAgentForm";
+import { useTranslation } from 'react-i18next';
 
 const AgencyTeam = () => {
   const { mode } = useTheme();
+  const { t } = useTranslation();
   const [showAddForm, setShowAddForm] = useState(false);
   
   const { toast } = useToast();
@@ -58,16 +60,16 @@ const AgencyTeam = () => {
               <Users className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
             </div>
             <div>
-              <h1 className={cn("text-[15px] font-bold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>Team agents</h1>
-              <p className={cn("text-[12px] font-bold mt-0.5", mode === "dark" ? "text-slate-300" : "text-slate-700")}>Manage the people who have access to your agency dashboard.</p>
+              <h1 className={cn("text-[15px] font-bold tracking-tight", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.team.title")}</h1>
+              <p className={cn("text-[12px] font-bold mt-0.5", mode === "dark" ? "text-slate-300" : "text-slate-700")}>{t("agency.team.desc")}</p>
             </div>
           </div>
           <button 
-            onClick={() => setShowAddForm(true)}
+             onClick={() => setShowAddForm(true)}
             className={cn("px-5 py-1.5 rounded text-[12px] font-medium transition-colors border flex items-center gap-2",
               mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}
           >
-             <Plus size={14} /> Add Agent
+             <Plus size={14} /> {t("agency.team.add")}
           </button>
         </div>
 
@@ -75,15 +77,15 @@ const AgencyTeam = () => {
         <div className="px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-3 transition-colors border-t border-slate-300 dark:border-slate-600">
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative w-full md:w-64">
-              <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+               <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input 
-                placeholder="Search" 
+                placeholder={t("common.search")} 
                 className={cn("pl-10 h-9 w-full text-[12px] font-bold focus-visible:ring-1 focus-visible:ring-green-500 transition-colors rounded border outline-none",
                   mode === "dark" ? "bg-[#0f172a] border-slate-600 text-white" : "bg-white border-slate-300 text-slate-900")} 
               />
             </div>
             <button className={cn("px-4 h-8 rounded text-[11px] font-bold transition-all border",
-              mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>Search</button>
+              mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>{t("common.search")}</button>
           </div>
         </div>
 
@@ -123,19 +125,19 @@ const AgencyTeam = () => {
           ) : (
             <div className="flex flex-col items-center justify-center py-16 px-4">
               <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mb-6 transition-colors border-2",
-                mode === "dark" ? "bg-slate-800 border-slate-700" : "bg-green-50 border-green-100")}>
+                 mode === "dark" ? "bg-slate-800 border-slate-700" : "bg-green-50 border-green-100")}>
                 <Users size={32} className="text-green-500 opacity-40" />
               </div>
-              <h3 className={cn("text-[15px] font-bold mb-1", mode === "dark" ? "text-white" : "text-slate-900")}>No agents found</h3>
+              <h3 className={cn("text-[15px] font-bold mb-1", mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.team.empty")}</h3>
               <p className={cn("text-[12px] text-center max-w-sm mb-6 font-bold", mode === "dark" ? "text-slate-300" : "text-slate-700")}>
-                You haven't added any team agents yet. Add agents to help you manage your agency.
+                {t("agency.team.emptyDesc")}
               </p>
               <button 
-                onClick={() => setShowAddForm(true)}
+                 onClick={() => setShowAddForm(true)}
                 className={cn("px-6 py-2 rounded text-[12px] font-bold transition-colors border flex items-center gap-2 shadow-sm",
                   mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}
               >
-                 Add Agent
+                 <Plus size={14} /> {t("agency.team.add")}
               </button>
             </div>
           )}

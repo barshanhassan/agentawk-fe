@@ -18,57 +18,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 import { COUNTRIES } from "@/lib/countries";
 import { Country, State, City } from "country-state-city";
 
 const TAX_IDS = [
-  "Other",
-  "Australian Business Number (AU ABN)",
-  "Australian Taxation Office Reference Number",
-  "Brazil CNPJ number",
-  "Brazil CPF number",
-  "Bulgaria Unified Identification Code",
-  "Canada BN",
-  "Canada GST/HST number",
-  "Canadian PST number (British Columbia)",
-  "Canadian PST number (Manitoba)",
-  "Canadian PST number (Saskatchewan)",
-  "Canadian QST number (Québec)",
-  "Chilean TIN",
-  "Egyptian Tax Identification Number",
-  "EU VAT number",
-  "European One Stop Shop VAT number for non-Union scheme",
-  "Georgian VAT",
-  "Hong Kong BR number",
-  "Hungary tax number (adószám)",
-  "India GSTIN",
-  "Indonesian NPWP",
-  "Israel VAT",
-  "Japan TRN",
-  "Kenya PIN",
-  "Malaysia SST",
-  "Mexico RFC",
-  "New Zealand GST",
-  "Norway VAT",
-  "Oman VAT",
-  "Russia INN",
-  "Saudi Arabia VAT",
-  "Serbia VAT",
-  "Singapore GST",
-  "South Africa VAT",
-  "South Korea BRN",
-  "Switzerland VAT",
-  "Taiwan VAT",
-  "Thailand VAT",
-  "Turkey VAT",
-  "Ukraine VAT",
-  "United Arab Emirates TRN",
-  "United Kingdom VAT",
-  "United States EIN"
+  { key: "other", value: "Other" },
+  { key: "au_abn", value: "Australian Business Number (AU ABN)" },
+  { key: "au_trn", value: "Australian Taxation Office Reference Number" },
+  { key: "br_cnpj", value: "Brazil CNPJ number" },
+  { key: "br_cpf", value: "Brazil CPF number" },
+  { key: "bg_uic", value: "Bulgaria Unified Identification Code" },
+  { key: "ca_bn", value: "Canada BN" },
+  { key: "ca_gst_hst", value: "Canada GST/HST number" },
+  { key: "ca_pst_bc", value: "Canadian PST number (British Columbia)" },
+  { key: "ca_pst_mb", value: "Canadian PST number (Manitoba)" },
+  { key: "ca_pst_sk", value: "Canadian PST number (Saskatchewan)" },
+  { key: "ca_qst_qc", value: "Canadian QST number (Québec)" },
+  { key: "cl_tin", value: "Chilean TIN" },
+  { key: "eg_tin", value: "Egyptian Tax Identification Number" },
+  { key: "eu_vat", value: "EU VAT number" },
+  { key: "eu_oss_vat", value: "European One Stop Shop VAT number for non-Union scheme" },
+  { key: "ge_vat", value: "Georgian VAT" },
+  { key: "hk_br", value: "Hong Kong BR number" },
+  { key: "hu_tin", value: "Hungary tax number (adószám)" },
+  { key: "in_gstin", value: "India GSTIN" },
+  { key: "id_npwp", value: "Indonesian NPWP" },
+  { key: "il_vat", value: "Israel VAT" },
+  { key: "jp_trn", value: "Japan TRN" },
+  { key: "ke_pin", value: "Kenya PIN" },
+  { key: "my_sst", value: "Malaysia SST" },
+  { key: "mx_rfc", value: "Mexico RFC" },
+  { key: "nz_gst", value: "New Zealand GST" },
+  { key: "no_vat", value: "Norway VAT" },
+  { key: "om_vat", value: "Oman VAT" },
+  { key: "ru_inn", value: "Russia INN" },
+  { key: "sa_vat", value: "Saudi Arabia VAT" },
+  { key: "rs_vat", value: "Serbia VAT" },
+  { key: "sg_gst", value: "Singapore GST" },
+  { key: "za_vat", value: "South Africa VAT" },
+  { key: "kr_brn", value: "South Korea BRN" },
+  { key: "ch_vat", value: "Switzerland VAT" },
+  { key: "tw_vat", value: "Taiwan VAT" },
+  { key: "th_vat", value: "Thailand VAT" },
+  { key: "tr_vat", value: "Turkey VAT" },
+  { key: "ua_vat", value: "Ukraine VAT" },
+  { key: "ae_trn", value: "United Arab Emirates TRN" },
+  { key: "gb_vat", value: "United Kingdom VAT" },
+  { key: "us_ein", value: "United States EIN" }
 ];
 
 import { useTheme } from "@/contexts/ThemeContext";
@@ -77,9 +77,16 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 
 const AgencyGeneralSettings = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -119,18 +126,18 @@ const AgencyGeneralSettings = () => {
 
   const handleSaveBilling = () => {
     const errors: Record<string, string> = {};
-    if (!billingData.billing_company?.trim()) errors.billing_company = "Please enter a company name";
-    if (!billingData.billing_person?.trim()) errors.billing_person = "Please enter a name";
-    if (!billingData.tax_id) errors.tax_id = "auth.tax_type_required";
-    if (!billingData.tax_id_name?.trim()) errors.tax_id_name = "Please select a Tax ID";
-    if (!billingData.tax_number?.trim()) errors.tax_number = "Please enter Tax ID";
+    if (!billingData.billing_company?.trim()) errors.billing_company = t("agency.settings.billing.errors.company");
+    if (!billingData.billing_person?.trim()) errors.billing_person = t("agency.settings.billing.errors.person");
+    if (!billingData.tax_id) errors.tax_id = t("agency.settings.billing.errors.taxType");
+    if (!billingData.tax_id_name?.trim()) errors.tax_id_name = t("agency.settings.billing.selectTaxId");
+    if (!billingData.tax_number?.trim()) errors.tax_number = t("agency.settings.billing.errors.taxNumber");
     
     if (!billingData.address.country_iso2) {
-      errors.country_iso2 = "Please select a country";
+      errors.country_iso2 = t("agency.settings.billing.errors.country");
     } else {
       const states = State.getStatesOfCountry(billingData.address.country_iso2);
       if (states.length > 0 && !billingData.address.state) {
-         errors.state = "Please select a state";
+         errors.state = t("agency.settings.billing.errors.state");
       }
       
       const cities = states.length > 0 
@@ -138,7 +145,7 @@ const AgencyGeneralSettings = () => {
           : (City.getCitiesOfCountry(billingData.address.country_iso2) || []);
           
       if (cities.length > 0 && !billingData.address.city) {
-         errors.city = "Please select a city";
+         errors.city = t("agency.settings.billing.errors.city");
       }
     }
     
@@ -182,7 +189,7 @@ const AgencyGeneralSettings = () => {
 
   const handleSavePhone = () => {
     if (!tempPhone.trim()) {
-      setPhoneError("Please enter mobile number");
+      setPhoneError(t("agency.settings.general.phoneModal.label"));
       return;
     }
     setPhoneError("");
@@ -195,14 +202,14 @@ const AgencyGeneralSettings = () => {
       setRecipients([...recipients, newRecipient]);
       setNewRecipient("");
       setIsAdding(false);
-      toast({ title: "Recipient Added", description: "The invoice recipient has been added." });
+      toast({ title: t("agency.settings.recipients.added"), description: t("agency.settings.recipients.addedDesc") });
     }
   };
 
   const handleDeleteRecipient = (index: number) => {
     const updated = recipients.filter((_, i) => i !== index);
     setRecipients(updated);
-    toast({ title: "Recipient Deleted", description: "The invoice recipient has been removed." });
+    toast({ title: t("agency.settings.recipients.deleted"), description: t("agency.settings.recipients.deletedDesc") });
   };
 
   useEffect(() => {
@@ -237,7 +244,7 @@ const AgencyGeneralSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
-      toast({ title: "Settings Updated", description: "General settings have been saved." });
+      toast({ title: t("agency.settings.general.updated"), description: t("agency.settings.general.updatedDesc") });
     }
   });
 
@@ -248,7 +255,7 @@ const AgencyGeneralSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
-      toast({ title: "Billing Updated", description: "Billing details have been saved." });
+      toast({ title: t("agency.settings.billing.updated"), description: t("agency.settings.billing.updatedDesc") });
     }
   });
 
@@ -266,15 +273,15 @@ const AgencyGeneralSettings = () => {
             <Settings className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
             <div>
               <h2 className={cn("font-bold text-[15px] tracking-tight", 
-                mode === "dark" ? "text-white" : "text-slate-900")}>Settings</h2>
-              <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Control the preferences and settings</p>
+                mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.general.title")}</h2>
+              <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.general.desc")}</p>
             </div>
           </div>
           <button className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-colors border",
             mode === "dark" 
               ? "bg-[#1e293b] hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]" 
               : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-            Cancel White Label
+            {t("agency.settings.general.cancelWhiteLabel")}
           </button>
         </div>
         
@@ -282,7 +289,7 @@ const AgencyGeneralSettings = () => {
           <div className="px-6">
              <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Name</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.general.name")}</span>
                </div>
                <div className="flex-1">
                  <Input 
@@ -296,7 +303,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Timezone</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.general.timezone")}</span>
                </div>
                <div className="flex-1">
                  <Select 
@@ -305,24 +312,24 @@ const AgencyGeneralSettings = () => {
                  >
                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                     <SelectValue placeholder="Select timezone" />
+                     <SelectValue placeholder={t("agency.settings.general.selectTimezone")} />
                    </SelectTrigger>
                    <SelectContent className={cn("border shadow-2xl transition-colors", 
                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                     <SelectItem value="america-fortaleza">Fortaleza (America/Fortaleza)</SelectItem>
-                     <SelectItem value="etc-gmt+12">International Date Line West (Etc/GMT+12)</SelectItem>
-                     <SelectItem value="etc-gmt+11">Coordinated Universal Time 11 (Etc/GMT+11)</SelectItem>
-                     <SelectItem value="pacific-honolulu">Hawaii (Pacific/Honolulu)</SelectItem>
-                     <SelectItem value="america-anchorage">Alaska (America/Anchorage)</SelectItem>
-                     <SelectItem value="america-santa_isabel">Baja California (America/Santa_Isabel)</SelectItem>
-                     <SelectItem value="america-los_angeles">Pacific Time (US and Canada) (America/Los_Angeles)</SelectItem>
-                     <SelectItem value="america-chihuahua">Chihuahua, La Paz (America/Chihuahua)</SelectItem>
-                     <SelectItem value="america-mazatlan">Mazatlan (America/Mazatlan)</SelectItem>
-                     <SelectItem value="america-phoenix">Arizona (America/Phoenix)</SelectItem>
-                     <SelectItem value="america-denver">Mountain Time (US and Canada) (America/Denver)</SelectItem>
-                     <SelectItem value="america-guatemala">Central America (America/Guatemala)</SelectItem>
-                     <SelectItem value="america-chicago">Central Time (US and Canada) (America/Chicago)</SelectItem>
-                     <SelectItem value="america-regina">Saskatchewan (America/Regina)</SelectItem>
+                      <SelectItem value="america-fortaleza">{t("agency.settings.general.timezones.fortaleza")} (America/Fortaleza)</SelectItem>
+                      <SelectItem value="etc-gmt+12">{t("agency.settings.general.timezones.gmt_12")} (Etc/GMT+12)</SelectItem>
+                      <SelectItem value="etc-gmt+11">{t("agency.settings.general.timezones.gmt_11")} (Etc/GMT+11)</SelectItem>
+                      <SelectItem value="pacific-honolulu">{t("agency.settings.general.timezones.hawaii")} (Pacific/Honolulu)</SelectItem>
+                      <SelectItem value="america-anchorage">{t("agency.settings.general.timezones.alaska")} (America/Anchorage)</SelectItem>
+                      <SelectItem value="america-santa_isabel">{t("agency.settings.general.timezones.baja")} (America/Santa_Isabel)</SelectItem>
+                      <SelectItem value="america-los_angeles">{t("agency.settings.general.timezones.pacific")} (America/Los_Angeles)</SelectItem>
+                      <SelectItem value="america-chihuahua">{t("agency.settings.general.timezones.chihuahua")} (America/Chihuahua)</SelectItem>
+                      <SelectItem value="america-mazatlan">{t("agency.settings.general.timezones.mazatlan")} (America/Mazatlan)</SelectItem>
+                      <SelectItem value="america-phoenix">{t("agency.settings.general.timezones.arizona")} (America/Phoenix)</SelectItem>
+                      <SelectItem value="america-denver">{t("agency.settings.general.timezones.mountain")} (America/Denver)</SelectItem>
+                      <SelectItem value="america-guatemala">{t("agency.settings.general.timezones.central_am")} (America/Guatemala)</SelectItem>
+                      <SelectItem value="america-chicago">{t("agency.settings.general.timezones.central")} (America/Chicago)</SelectItem>
+                      <SelectItem value="america-regina">{t("agency.settings.general.timezones.saskatchewan")} (America/Regina)</SelectItem>
                    </SelectContent>
                  </Select>
                </div>
@@ -330,7 +337,7 @@ const AgencyGeneralSettings = () => {
 
              <div className="flex flex-col md:flex-row md:items-center py-5">
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Phone number</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.general.phone")}</span>
                </div>
                <div className="flex-1">
                  <div className="relative">
@@ -353,7 +360,7 @@ const AgencyGeneralSettings = () => {
               disabled={updateGeneralMutation.isPending}
               className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-colors border",
               mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-              {updateGeneralMutation.isPending ? "Saving..." : "Save"}
+              {updateGeneralMutation.isPending ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </CardContent>
@@ -367,8 +374,8 @@ const AgencyGeneralSettings = () => {
           <CreditCard className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
           <div>
             <h2 className={cn("font-bold text-[15px] tracking-tight", 
-              mode === "dark" ? "text-white" : "text-slate-900")}>Billing Details</h2>
-            <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Details that will be shown on your invoices</p>
+              mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.billing.title")}</h2>
+            <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.billing.desc")}</p>
           </div>
         </div>
         
@@ -376,7 +383,7 @@ const AgencyGeneralSettings = () => {
           <div className="px-6">
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Company Name</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.company")}</span>
                </div>
                <div className="flex-1">
                  <Input 
@@ -395,7 +402,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Person Responsible</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.person")}</span>
                </div>
                <div className="flex-1">
                  <Input 
@@ -414,7 +421,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Tax ID</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.taxId")}</span>
                </div>
                <div className="flex-1">
                  <Select 
@@ -427,12 +434,12 @@ const AgencyGeneralSettings = () => {
                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
                      billingErrors.tax_id && "border-red-400 focus-visible:ring-red-400",
                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                     <SelectValue placeholder="Select a Tax ID" />
+                     <SelectValue placeholder={t("agency.settings.billing.selectTaxId")} />
                    </SelectTrigger>
                    <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
                      {TAX_IDS.map(taxId => (
-                       <SelectItem key={taxId} value={taxId} className="text-[13px]">{taxId}</SelectItem>
+                       <SelectItem key={taxId.key} value={taxId.key} className="text-[13px]">{t(`agency.settings.billing.taxTypes.${taxId.key}`, taxId.value)}</SelectItem>
                      ))}
                    </SelectContent>
                  </Select>
@@ -442,7 +449,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Tax ID Name / Tax Number</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.taxIdName")}</span>
                </div>
                <div className="flex-1 grid grid-cols-2 gap-4">
                  <div>
@@ -478,7 +485,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Address</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.address")}</span>
                </div>
                <div className="flex-1">
                  <Input 
@@ -492,7 +499,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Country</span>
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.country")}</span>
                 </div>
                 <div className="flex-1">
                   <Select 
@@ -505,7 +512,7 @@ const AgencyGeneralSettings = () => {
                     <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
                       billingErrors.country_iso2 && "border-red-400 focus-visible:ring-red-400",
                       mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                      <SelectValue placeholder="Select Country" />
+                      <SelectValue placeholder={t("agency.settings.billing.selectCountry")} />
                     </SelectTrigger>
                     <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
                       mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
@@ -522,7 +529,7 @@ const AgencyGeneralSettings = () => {
 
               <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>State</span>
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.state")}</span>
                 </div>
                 <div className="flex-1">
                   <Select 
@@ -536,7 +543,7 @@ const AgencyGeneralSettings = () => {
                     <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300 disabled:opacity-50", 
                       billingErrors.state && "border-red-400 focus-visible:ring-red-400",
                       mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                      <SelectValue placeholder="Select State" />
+                      <SelectValue placeholder={t("agency.settings.billing.selectState")} />
                     </SelectTrigger>
                     <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
                       mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
@@ -546,7 +553,7 @@ const AgencyGeneralSettings = () => {
                         </SelectItem>
                       ))}
                       {billingData.address.country_iso2 && State.getStatesOfCountry(billingData.address.country_iso2).length === 0 && (
-                        <SelectItem value="none" disabled className="text-[13px]">No states available</SelectItem>
+                        <SelectItem value="none" disabled className="text-[13px]">{t("agency.settings.billing.noStates")}</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -556,7 +563,7 @@ const AgencyGeneralSettings = () => {
 
               <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>City</span>
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.city")}</span>
                 </div>
                 <div className="flex-1">
                   <Select 
@@ -570,7 +577,7 @@ const AgencyGeneralSettings = () => {
                     <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300 disabled:opacity-50", 
                       billingErrors.city && "border-red-400 focus-visible:ring-red-400",
                       mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                      <SelectValue placeholder="Select City" />
+                      <SelectValue placeholder={t("agency.settings.billing.selectCity")} />
                     </SelectTrigger>
                     <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
                       mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
@@ -588,7 +595,7 @@ const AgencyGeneralSettings = () => {
                           ? billingData.address.state ? City.getCitiesOfState(billingData.address.country_iso2, billingData.address.state) : []
                           : City.getCitiesOfCountry(billingData.address.country_iso2) || []
                       ).length === 0 && (
-                        <SelectItem value="none" disabled className="text-[13px]">No cities available</SelectItem>
+                        <SelectItem value="none" disabled className="text-[13px]">{t("agency.settings.billing.noCities")}</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -598,7 +605,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Zip Code</span>
+                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.zip")}</span>
                </div>
                <div className="flex-1">
                  <Input 
@@ -617,7 +624,7 @@ const AgencyGeneralSettings = () => {
               disabled={updateBillingMutation.isPending}
               className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-colors border",
               mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-              {updateBillingMutation.isPending ? "Saving..." : "Save"}
+              {updateBillingMutation.isPending ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </CardContent>
@@ -631,8 +638,8 @@ const AgencyGeneralSettings = () => {
           <CreditCard className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
           <div>
             <h2 className={cn("font-bold text-[15px] tracking-tight", 
-              mode === "dark" ? "text-white" : "text-slate-900")}>Invoice Recipients</h2>
-            <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>Add people to receive a copy of your invoices.</p>
+              mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.recipients.title")}</h2>
+            <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.recipients.desc")}</p>
           </div>
         </div>
         
@@ -641,7 +648,7 @@ const AgencyGeneralSettings = () => {
             {recipients.map((recipient, index) => (
               <div key={index} className={cn("flex flex-col md:flex-row md:items-center py-2 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>Recipient # {index + 1}</span>
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.recipients.label")} {index + 1}</span>
                 </div>
                 <div className="flex-1 flex gap-2">
                   <Input 
@@ -654,7 +661,7 @@ const AgencyGeneralSettings = () => {
                     onClick={() => handleDeleteRecipient(index)}
                     className="px-4 py-1.5 rounded text-[13px] font-medium transition-colors border bg-white hover:bg-red-50 text-red-500 border-red-300 dark:bg-[#1e293b] dark:border-red-900 dark:text-red-400 dark:hover:bg-red-900/30 shadow-sm"
                   >
-                    Delete
+                    {t("common.delete")}
                   </button>
                 </div>
               </div>
@@ -663,7 +670,7 @@ const AgencyGeneralSettings = () => {
             {isAdding ? (
               <div className="flex flex-col md:flex-row md:items-center py-2 animate-in fade-in slide-in-from-left-2">
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>New Recipient</span>
+                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.recipients.new")}</span>
                 </div>
                 <div className="flex-1 flex gap-2">
                   <Input 
@@ -677,14 +684,14 @@ const AgencyGeneralSettings = () => {
                     onClick={handleSaveRecipient}
                     className="px-4 py-1.5 rounded text-[13px] font-medium transition-colors border bg-[#00e55e] hover:bg-[#00c853] text-white border-[#00e55e] shadow-sm"
                   >
-                    Save
+                    {t("common.save")}
                   </button>
                   <button 
                     onClick={() => setIsAdding(false)}
                     className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-colors border shadow-sm",
                       mode === "dark" ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50")}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                 </div>
               </div>
@@ -695,7 +702,7 @@ const AgencyGeneralSettings = () => {
                   className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-colors border",
                   mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}
                 >
-                  Add an invoice recipient
+                  {t("agency.settings.recipients.add")}
                 </button>
               </div>
             )}
@@ -707,12 +714,12 @@ const AgencyGeneralSettings = () => {
         <DialogContent className={cn("sm:max-w-[450px] p-0 border-0 overflow-hidden shadow-2xl", 
           mode === "dark" ? "bg-[#1e293b] text-white" : "bg-white text-slate-900")}>
           <DialogHeader className={cn("p-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-            <DialogTitle className="text-[15px] font-bold">Update mobile number</DialogTitle>
+            <DialogTitle className="text-[15px] font-bold">{t("agency.settings.general.phoneModal.title")}</DialogTitle>
           </DialogHeader>
           
           <div className="p-6 space-y-3">
             <label className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
-              Enter mobile number
+              {t("agency.settings.general.phoneModal.label")}
             </label>
             <div className="flex flex-col gap-3">
               <div className={cn("flex items-center flex-1 rounded border transition-colors focus-within:ring-1", 
@@ -735,7 +742,7 @@ const AgencyGeneralSettings = () => {
                       <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                         <Input 
-                          placeholder="Search" 
+                          placeholder={t("common.search")} 
                           value={phoneSearchQuery}
                           onChange={(e) => setPhoneSearchQuery(e.target.value)}
                           className={cn("h-9 pl-9 text-[13px] shadow-none focus-visible:ring-1", 
@@ -768,7 +775,7 @@ const AgencyGeneralSettings = () => {
                         </button>
                       ))}
                       {COUNTRIES.filter(c => c.name.toLowerCase().includes(phoneSearchQuery.toLowerCase()) || c.dial.includes(phoneSearchQuery)).length === 0 && (
-                        <div className="p-3 text-center text-[13px] text-slate-500">No countries found.</div>
+                        <div className="p-3 text-center text-[13px] text-slate-500">{t("agency.settings.general.phoneModal.noCountries")}.</div>
                       )}
                     </div>
                   </PopoverContent>
@@ -781,38 +788,39 @@ const AgencyGeneralSettings = () => {
                     if (e.target.value.trim()) setPhoneError("");
                   }}
                   placeholder={
-                    selectedCountry.code === "US" || selectedCountry.code === "CA" ? "(407) 231-1234" :
-                    selectedCountry.code === "PK" ? "333 2345678" :
-                    selectedCountry.code === "IN" ? "98765 43210" :
-                    selectedCountry.code === "GB" ? "7911 123456" :
-                    selectedCountry.code === "AU" ? "412 345 678" :
-                    selectedCountry.code === "FR" ? "6 12 34 56 78" :
-                    selectedCountry.code === "DE" ? "1512 3456789" :
-                    selectedCountry.code === "AE" ? "50 123 4567" :
-                    selectedCountry.code === "SA" ? "50 123 4567" :
-                    "123 456 7890"
+                    selectedCountry.code === "US" || selectedCountry.code === "CA" ? t("agency.settings.general.phoneModal.placeholder_us") :
+                    selectedCountry.code === "PK" ? t("agency.settings.general.phoneModal.placeholder_pk") :
+                    selectedCountry.code === "IN" ? t("agency.settings.general.phoneModal.placeholder_in") :
+                    selectedCountry.code === "GB" ? t("agency.settings.general.phoneModal.placeholder_gb") :
+                    selectedCountry.code === "AU" ? t("agency.settings.general.phoneModal.placeholder_au") :
+                    selectedCountry.code === "FR" ? t("agency.settings.general.phoneModal.placeholder_fr") :
+                    selectedCountry.code === "DE" ? t("agency.settings.general.phoneModal.placeholder_de") :
+                    selectedCountry.code === "AE" ? t("agency.settings.general.phoneModal.placeholder_ae") :
+                    selectedCountry.code === "SA" ? t("agency.settings.general.phoneModal.placeholder_sa") :
+                    t("agency.settings.general.phoneModal.placeholder_default")
                   }
-                  className="flex-1 h-10 border-0 focus-visible:ring-0 shadow-none bg-transparent px-3 text-[13px]"
+                  className={cn("flex-1 h-10 border-0 focus-visible:ring-0 text-[13px] bg-transparent", 
+                    mode === "dark" ? "text-white" : "text-slate-900")}
                 />
               </div>
-
-              {phoneError && (
-                <div className="text-red-400 text-[13px] italic">{phoneError}</div>
-              )}
-
-              <div className="flex justify-end pt-1">
-                <button 
-                  onClick={handleSavePhone}
-                  className={cn("px-5 py-1.5 rounded text-[13px] font-medium transition-colors border",
-                    mode === "dark" 
-                      ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" 
-                      : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]"
-                  )}
-                >
-                  submit
-                </button>
-              </div>
+              {phoneError && <div className="text-red-400 text-[12px] italic">{phoneError}</div>}
             </div>
+          </div>
+
+          <div className={cn("p-4 border-t flex justify-end gap-2", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+            <button 
+              onClick={() => setIsPhoneModalOpen(false)}
+              className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-colors border",
+                mode === "dark" ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50")}
+            >
+              {t("common.cancel")}
+            </button>
+            <button 
+              onClick={handleSavePhone}
+              className="px-6 py-1.5 rounded text-[13px] font-medium transition-colors border bg-[#00e55e] hover:bg-[#00c853] text-white border-[#00e55e] shadow-sm"
+            >
+              {t("common.save")}
+            </button>
           </div>
         </DialogContent>
       </Dialog>

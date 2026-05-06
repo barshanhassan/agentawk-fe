@@ -48,6 +48,8 @@ import AgencyLayout from "@/components/AgencyLayout";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SiteProvider, useSite } from "@/contexts/SiteContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./lib/i18n";
 
 function DashboardDispatcher({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?: boolean }) {
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
@@ -82,7 +84,6 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       <Route path="/conversations/inbox">
         <ProtectedRoute><ConversationsInbox /></ProtectedRoute>
       </Route>
-      {/* ... rest of the routes ... */}
 
       <Route path="/conversations/bot">
         <ProtectedRoute><BotConversations /></ProtectedRoute>
@@ -225,30 +226,32 @@ function AppContent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <GlobalBrandingFetcher />
-        <TooltipProvider>
-          {isAuthRoute ? (
-            <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
-          ) : (siteType === "AGENCY" || isAgencyRoute || window.location.host.startsWith("agency.")) ? (
-            <AgencyLayout>
+      <I18nextProvider i18n={i18n}>
+        <ThemeProvider>
+          <GlobalBrandingFetcher />
+          <TooltipProvider>
+            {isAuthRoute ? (
               <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
-            </AgencyLayout>
-          ) : (
-            <div className="flex h-screen overflow-hidden bg-background">
-              {/* New: Horizontal Top Bar (only shown when logged in) */}
-              {isLoggedIn && !isBuilderRoute && <AppSidebar />}
-
-              {/* Main content area - now full width, with top padding */}
-              <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
+            ) : (siteType === "AGENCY" || isAgencyRoute || window.location.host.startsWith("agency.")) ? (
+              <AgencyLayout>
                 <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
-              </main>
+              </AgencyLayout>
+            ) : (
+              <div className="flex h-screen overflow-hidden bg-background">
+                {/* New: Horizontal Top Bar (only shown when logged in) */}
+                {isLoggedIn && !isBuilderRoute && <AppSidebar />}
 
-              <Toaster />
-            </div>
-          )}
-        </TooltipProvider>
-      </ThemeProvider>
+                {/* Main content area - now full width, with top padding */}
+                <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
+                  <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
+                </main>
+
+                <Toaster />
+              </div>
+            )}
+          </TooltipProvider>
+        </ThemeProvider>
+      </I18nextProvider>
     </QueryClientProvider>
   );
 }
