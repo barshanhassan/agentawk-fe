@@ -28,35 +28,34 @@ const AgencyRoles = () => {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
 
   const { data: rolesResponse, isLoading } = useQuery({
-    queryKey: ["/api/roles/list"],
+    queryKey: [`/api/agencies/${agencyId}/roles`],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/roles/list");
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/roles`);
       return res.json();
     }
   });
-
-  const [localRoles, setLocalRoles] = useState<any[]>([]);
-
-  React.useEffect(() => {
-    if (rolesResponse) {
-      const mappedRoles = (rolesResponse || []).map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description || "No description provided.",
-        isSystem: r.is_system || false,
-        status: r.status || 'ACTIVE'
-      }));
-      setLocalRoles(mappedRoles);
+  const toggleArchiveMutation = useMutation({
+    mutationFn: async (role: any) => {
+      const res = await apiRequest("PUT", `/api/agencies/${agencyId}/roles/${role.id}`, {
+        status: role.status === 'ACTIVE' ? 'ARCHIVE' : 'ACTIVE'
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/roles`] });
+      toast({
+        title: t("common.success"),
+        description: t("common.success")
+      });
     }
-  }, [rolesResponse]);
+  });
 
-  const roles = localRoles;
-
-  const handleAddNewRole = () => {
-    setSelectedRole(null);
-    setViewMode('ADD');
+  const handleToggleArchive = (role: any) => {
+    toggleArchiveMutation.mutate(role);
   };
 
   const handleEditRole = (role: any) => {
@@ -64,16 +63,12 @@ const AgencyRoles = () => {
     setViewMode('EDIT');
   };
 
-  const handleToggleArchive = (role: any) => {
-    const newStatus = role.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE';
-    setLocalRoles(prev => prev.map(r => 
-      r.id === role.id ? { ...r, status: newStatus } : r
-    ));
-    toast({
-      title: newStatus === 'ARCHIVED' ? "Role Archived" : "Role Activated",
-      description: `The role "${role.name}" has been ${newStatus.toLowerCase()}.`
-    });
+  const handleAddNewRole = () => {
+    setSelectedRole(null);
+    setViewMode('ADD');
   };
+
+  const roles = rolesResponse?.roles || rolesResponse?.data || (Array.isArray(rolesResponse) ? rolesResponse : []);
 
   if (viewMode === 'ADD' || viewMode === 'EDIT') {
     return (
@@ -141,9 +136,9 @@ const AgencyRoles = () => {
           </div>
 
           <TabsContent value="active" className="mt-0 focus-visible:outline-none min-h-[300px] bg-white dark:bg-[#1e293b]">
-            {roles.filter(r => r.status === 'ACTIVE').length > 0 ? (
+            {roles.filter((r: any) => r.status === 'ACTIVE').length > 0 ? (
               <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                {roles.filter(r => r.status === 'ACTIVE').map((role, i) => (
+                {roles.filter((r: any) => r.status === 'ACTIVE').map((role: any, i: number) => (
                   <div key={i} className="flex items-center justify-between p-6 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors">
                     <div className="flex items-start gap-5 flex-1">
                       <div className="mt-1">
@@ -203,9 +198,9 @@ const AgencyRoles = () => {
           </TabsContent>
 
           <TabsContent value="archived" className="mt-0 focus-visible:outline-none min-h-[300px] bg-white dark:bg-[#1e293b]">
-            {roles.filter(r => r.status === 'ARCHIVED').length > 0 ? (
+            {roles.filter((r: any) => r.status === 'ARCHIVE').length > 0 ? (
               <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                {roles.filter(r => r.status === 'ARCHIVED').map((role, i) => (
+                {roles.filter((r: any) => r.status === 'ARCHIVE').map((role: any, i: number) => (
                   <div key={i} className="flex items-center justify-between p-6 hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors">
                     <div className="flex items-start gap-5 flex-1">
                       <div className="mt-1">

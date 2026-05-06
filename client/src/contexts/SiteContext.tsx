@@ -30,7 +30,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Try backend first, fall back to hostname detection
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app";
+          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
           const response = await fetch(`${API_BASE_URL}/ignite?hostname=${host}`);
           if (response.ok) {
             const data = await response.json();

@@ -41,12 +41,26 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const AgencyDashboard = () => {
   const { mode } = useTheme();
   const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
+
+  const { data: dashboardResponse } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/dashboard-stats`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/dashboard-stats`);
+      return res.json();
+    }
+  });
+
+  const dashboardData = dashboardResponse?.stats;
+  const recentLogs = dashboardResponse?.recent_activity || [];
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -56,9 +70,9 @@ const AgencyDashboard = () => {
   };
 
   const stats = [
-    { label: t("agency.dashboard.stats.workspaces"), value: "13", icon: <Layers size={14} className="text-gray-400" /> },
-    { label: t("agency.dashboard.stats.agents"), value: "7", icon: <Users size={14} className="text-gray-400" /> },
-    { label: t("agency.dashboard.stats.support"), value: "0 of 0", icon: <ShieldCheck size={14} className="text-gray-400" /> },
+    { label: t("agency.dashboard.stats.workspaces"), value: dashboardData?.total_workspaces?.toString() || "0", icon: <Layers size={14} className="text-gray-400" /> },
+    { label: t("agency.dashboard.stats.agents"), value: dashboardData?.total_agents?.toString() || "0", icon: <Users size={14} className="text-gray-400" /> },
+    { label: t("agency.dashboard.stats.support"), value: dashboardData?.premium_support_seats || "0 of 0", icon: <ShieldCheck size={14} className="text-gray-400" /> },
   ];
 
   const featureCards = [
@@ -116,12 +130,8 @@ const AgencyDashboard = () => {
     { label: t("agency.dashboard.quickActions.auditLogs.title"), sub: t("agency.dashboard.quickActions.auditLogs.sub"), icon: <Eye size={18} className="text-purple-500" />, href: "/agency/audit-logs/agency" },
   ];
 
-  const activityLogs = [
-    { name: "Haider Ali", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Haider Workspace.", time: "2026-04-17 10:14 am", initials: "HA" },
-    { name: "John Doe", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Clonekit AI Studio Testes.", time: "2026-03-30 09:52 am", initials: "JD" },
-    { name: "System", action: t("agency.dashboard.activity.actions.subscriptionUpgraded"), time: "2026-03-11 04:56 pm", isSystem: true },
-    { name: "Jawad R", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Test CSV Contacts.", time: "2026-02-02 09:40 am", initials: "JR" },
-    { name: "Bharat Kat", action: t("agency.dashboard.activity.actions.createdWorkspace"), target: "Broadcaster.", time: "2026-01-30 04:37 pm", initials: "BK" },
+  const activityLogs = recentLogs.length > 0 ? recentLogs : [
+    { name: "System", action: t("agency.dashboard.activity.actions.noActivity"), time: "", isSystem: true },
   ];
 
   return (
@@ -276,9 +286,9 @@ const AgencyDashboard = () => {
                <div className="space-y-3 mb-8">
                   <div className="flex justify-between items-end">
                     <span className={cn("text-xs font-bold", mode === "dark" ? "text-slate-400" : "text-blue-200/60")}>{t("agency.dashboard.plan_card.workspaces_used")}</span>
-                    <span className={cn("text-xs font-black text-white")}>13 / 999</span>
+                    <span className={cn("text-xs font-black text-white")}>{dashboardData?.total_workspaces || 0} / 999</span>
                   </div>
-                  <Progress value={(13/999)*100} className={cn("h-1.5", mode === "dark" ? "bg-slate-800" : "bg-blue-900/50")} indicatorClassName="bg-blue-400" />
+                  <Progress value={((dashboardData?.total_workspaces || 0)/999)*100} className={cn("h-1.5", mode === "dark" ? "bg-slate-800" : "bg-blue-900/50")} indicatorClassName="bg-blue-400" />
                </div>
 
                <div className="flex gap-2">
@@ -335,7 +345,7 @@ const AgencyDashboard = () => {
               mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
               <CardContent className="p-6">
                 <div className="space-y-6">
-                  {activityLogs.map((log, i) => (
+                  {activityLogs.map((log: any, i: number) => (
                     <div key={i} className="flex gap-4 group">
                       <Avatar className="w-9 h-9 border-2 border-transparent group-hover:border-teal-500/30 transition-all">
                         <AvatarFallback className={cn("text-[11px] font-black text-white shadow-lg", getAvatarColor(log.name))}>

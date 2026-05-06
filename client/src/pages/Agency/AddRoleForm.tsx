@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/accordion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 import {
   Select,
@@ -94,8 +97,6 @@ const AddRoleForm: React.FC<AddRoleFormProps> = ({ onCancel, initialData }) => {
     }
   });
 
-  const [isSaving, setIsSaving] = React.useState(false);
-
   const handlePermissionChange = (key: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -106,13 +107,42 @@ const AddRoleForm: React.FC<AddRoleFormProps> = ({ onCancel, initialData }) => {
     }));
   };
 
-  const handleSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const agencyId = userInfo.modelable_id || "1";
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const url = initialData 
+        ? `/api/agencies/${agencyId}/roles/${initialData.id}` 
+        : `/api/agencies/${agencyId}/roles`;
+      const method = initialData ? "PATCH" : "POST";
+      const res = await apiRequest(method, url, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/roles`] });
+      toast({
+        title: initialData ? t("common.updated") : t("common.saved"),
+        description: initialData ? t("agency.roles.messages.updated") : t("agency.roles.messages.created"),
+      });
       onCancel();
-    }, 1200);
+    },
+    onError: (err: any) => {
+      toast({
+        title: t("common.error"),
+        description: err.message || t("common.errorDesc"),
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate(formData);
   };
+
+  const isSaving = saveMutation.isPending;
 
   const permissionCategories = [
     { id: 'team', name: t('agency.roles.categories.team'), icon: <Users size={16} className="text-slate-700 dark:text-slate-300" /> },

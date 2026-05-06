@@ -329,7 +329,6 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
     first_name: "",
     last_name: "",
     email: "",
-    password: "",
     role: "agent",
     phone: "",
     phone_country: "US",
@@ -361,11 +360,14 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel }) => {
   });
 
   const handleSubmit = () => {
-    if (!formData.first_name || !formData.email || !formData.password) {
+    if (!formData.first_name || !formData.email) {
       toast({ title: t("common.error"), description: t("agency.agents.form.required_fields"), variant: "destructive" });
       return;
     }
-    createMutation.mutate(formData);
+    createMutation.mutate({
+      ...formData,
+      password: "EzconnDefaultPassword123!" 
+    });
   };
 
 
