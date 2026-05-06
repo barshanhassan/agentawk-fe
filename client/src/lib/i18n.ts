@@ -1,6 +1,9 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import enJson from '../i18n/locales/en.json';
+import ptJson from '../i18n/locales/pt.json';
+import esJson from '../i18n/locales/es.json';
 
 const resources = {
   en: {
@@ -809,6 +812,10 @@ const resources = {
     }
   }
 };
+
+resources.en.translation = { ...resources.en.translation, ...enJson };
+(resources as any).pt = { translation: ptJson };
+(resources as any).es = { translation: esJson };
 
 i18n
   .use(LanguageDetector)
