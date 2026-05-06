@@ -7,6 +7,8 @@
     "language": "Language",
     "status": "Status",
     "preferences": "Preferences",
+    "workspace": "Workspace",
+    "theme": "Theme",
     "available": "Available",
     "unavailable": "Unavailable",
     "workspace_a": "Workspace A",
