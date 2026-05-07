@@ -38,18 +38,18 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:3001",
+        target: "https://ezconn-backend-396801134474.us-central1.run.app",
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       "/uploads": {
-        target: "http://127.0.0.1:3001",
+        target: "https://ezconn-backend-396801134474.us-central1.run.app",
         changeOrigin: true,
         secure: false,
       },
       "/socket.io": {
-        target: "http://127.0.0.1:3001",
+        target: "https://ezconn-backend-396801134474.us-central1.run.app",
         ws: true,
         changeOrigin: true,
       },
