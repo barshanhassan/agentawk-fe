@@ -7,7 +7,8 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+// Default to live URL if not provided
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app";
 
 export async function apiRequest(
   method: string,
@@ -25,14 +26,12 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Robust URL handling
+  // Forcefully remove any /api prefix to match live backend
   let processedUrl = url;
-  
-  // If we are pointing to live backend (starts with http), we must strip /api prefix
-  if (API_BASE_URL.startsWith("http")) {
-    if (processedUrl.startsWith("/api")) {
-      processedUrl = processedUrl.substring(4);
-    }
+  if (processedUrl.startsWith("/api")) {
+    processedUrl = processedUrl.substring(4);
+  } else if (processedUrl.startsWith("api/")) {
+    processedUrl = processedUrl.substring(4);
   }
 
   const fullUrl = processedUrl.startsWith("http") ? processedUrl : `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
@@ -62,13 +61,11 @@ export const getQueryFn: <T>(options: {
 
     let path = queryKey.join("/");
     
-    // Robust URL handling for queries
-    if (API_BASE_URL.startsWith("http")) {
-      if (path.startsWith("/api")) {
-        path = path.substring(4);
-      } else if (path.startsWith("api/")) {
-         path = path.substring(4);
-      }
+    // Forcefully remove any /api prefix
+    if (path.startsWith("/api")) {
+      path = path.substring(4);
+    } else if (path.startsWith("api/")) {
+       path = path.substring(4);
     }
     
     const fullUrl = path.startsWith("http") ? path : `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;

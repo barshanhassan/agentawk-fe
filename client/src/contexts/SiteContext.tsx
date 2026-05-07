@@ -17,6 +17,9 @@ interface SiteContextType {
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
 
+// Default to live URL if not provided
+const API_BASE_URL_FALLBACK = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app";
+
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,10 +31,16 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const host = window.location.host; // e.g. "agency.localhost:5173"
         const isAgency = host.startsWith("agency.");
 
-        // Try backend first, fall back to hostname detection
+        // Robust URL handling for ignite
+        let baseUrl = API_BASE_URL_FALLBACK;
+        if (baseUrl === "/api") {
+           baseUrl = "/api"; // Keep as is for local proxy
+        } else if (baseUrl.endsWith("/api")) {
+           baseUrl = baseUrl.substring(0, baseUrl.length - 4); // Strip trailing /api
+        }
+
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
-          const response = await fetch(`${API_BASE_URL}/ignite?hostname=${host}`);
+          const response = await fetch(`${baseUrl}${baseUrl.endsWith("/") ? "" : "/" }ignite?hostname=${host}`);
           if (response.ok) {
             const data = await response.json();
             setSiteData(data);
