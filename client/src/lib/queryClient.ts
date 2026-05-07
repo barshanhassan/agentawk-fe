@@ -25,11 +25,16 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Prepend API_BASE_URL if the url is relative and remove /api if present
+  // Robust URL handling
   let processedUrl = url;
-  if (processedUrl.startsWith("/api")) {
-    processedUrl = processedUrl.substring(4);
+  
+  // If we are pointing to live backend (starts with http), we must strip /api prefix
+  if (API_BASE_URL.startsWith("http")) {
+    if (processedUrl.startsWith("/api")) {
+      processedUrl = processedUrl.substring(4);
+    }
   }
+
   const fullUrl = processedUrl.startsWith("http") ? processedUrl : `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
 
   const res = await fetch(fullUrl, {
@@ -56,11 +61,16 @@ export const getQueryFn: <T>(options: {
     }
 
     let path = queryKey.join("/");
-    if (path.startsWith("/api")) {
-      path = path.substring(4);
-    } else if (path.startsWith("api/")) {
-       path = path.substring(3);
+    
+    // Robust URL handling for queries
+    if (API_BASE_URL.startsWith("http")) {
+      if (path.startsWith("/api")) {
+        path = path.substring(4);
+      } else if (path.startsWith("api/")) {
+         path = path.substring(4);
+      }
     }
+    
     const fullUrl = path.startsWith("http") ? path : `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 
     const res = await fetch(fullUrl, {
