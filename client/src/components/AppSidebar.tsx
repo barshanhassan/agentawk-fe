@@ -452,7 +452,7 @@ export default function AppSidebar() {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" sideOffset={12} className={cn(
-              "w-72 p-2 border rounded-2xl shadow-2xl no-focus-outline",
+              "w-72 p-2 border rounded-2xl shadow-2xl no-focus-outline overflow-visible",
               theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-100"
             )}>
               {/* Header */}

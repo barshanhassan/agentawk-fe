@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronsUpDown, Search } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -103,7 +103,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               )}
             </span>
             <span className="ml-2 text-muted-foreground dark:text-gray-400">
-              <ChevronDown className="h-4 w-4" />
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
             </span>
           </>
         )}
@@ -127,7 +127,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               />
             </div>
           )}
-          <ul className="max-h-48 overflow-y-auto py-1">
+          <ul className="max-h-[unset] overflow-y-auto py-1">
             {filteredOptions.length === 0 && (
               <li className="px-3 py-2 text-muted-foreground dark:text-gray-400 text-sm">No results</li>
             )}

@@ -813,9 +813,32 @@ const resources = {
   }
 };
 
-resources.en.translation = { ...resources.en.translation, ...enJson };
-(resources as any).pt = { translation: ptJson };
-(resources as any).es = { translation: esJson };
+// Deep merge helper
+function deepMerge(base: Record<string, any>, override: Record<string, any>): Record<string, any> {
+  const result = { ...base };
+  for (const key of Object.keys(override)) {
+    if (
+      typeof override[key] === 'object' &&
+      override[key] !== null &&
+      !Array.isArray(override[key]) &&
+      typeof base[key] === 'object' &&
+      base[key] !== null
+    ) {
+      result[key] = deepMerge(base[key], override[key]);
+    } else {
+      result[key] = override[key];
+    }
+  }
+  return result;
+}
+
+// English: merge hardcoded base with JSON file
+resources.en.translation = deepMerge(resources.en.translation, enJson);
+
+// pt and es: merge English (full) with their JSON, so missing keys fall back to English
+const enFull = resources.en.translation;
+(resources as any).pt = { translation: deepMerge(enFull, ptJson) };
+(resources as any).es = { translation: deepMerge(enFull, esJson) };
 
 i18n
   .use(LanguageDetector)
