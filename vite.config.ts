@@ -41,7 +41,7 @@ export default defineConfig({
         target: "https://ezconn-backend-396801134474.us-central1.run.app",
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (p) => p.replace(/^\/api/, ''),
       },
       "/uploads": {
         target: "https://ezconn-backend-396801134474.us-central1.run.app",
