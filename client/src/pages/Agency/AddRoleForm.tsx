@@ -1,341 +1,349 @@
 import React from 'react';
-import * as LucideIcons from 'lucide-react';
+import { getUserInfo } from "@/lib/auth";
+import { Shield, Users, Key, Layers, Settings, ChevronLeft, Loader2, Check, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+const GROUP_META: Record<string, { icon: React.ReactNode; color: string; bg: string; darkBg: string }> = {
+  'agency.users.*':     { icon: <Users size={14} />,   color: 'text-blue-500',   bg: 'bg-blue-50 border-blue-100',     darkBg: 'bg-blue-500/10 border-blue-500/20' },
+  'agency.acl.*':       { icon: <Shield size={14} />,   color: 'text-primary', bg: 'bg-primary/5 border-primary/20', darkBg: 'bg-primary/10 border-primary/20' },
+  'agency.workspace.*': { icon: <Layers size={14} />,   color: 'text-emerald-500',bg: 'bg-emerald-50 border-emerald-100',darkBg: 'bg-emerald-500/10 border-emerald-500/20' },
+  'agency.settings.*':  { icon: <Settings size={14} />, color: 'text-amber-500',  bg: 'bg-amber-50 border-amber-100',   darkBg: 'bg-amber-500/10 border-amber-500/20' },
+};
 
-const { 
-  Shield, 
-  User,
-  Users, 
-  Key, 
-  Layers, 
-  Settings, 
-  FileText,
-  Lock,
-  BadgeCheck,
-  UserRoundCheck,
-  UserRound,
-  Scale,
-  Stethoscope,
-  Info,
-  CircleHelp,
-  ChevronDown
-} = LucideIcons;
+const DEFAULT_META = { icon: <Key size={14} />, color: 'text-slate-400', bg: 'bg-slate-50 border-slate-100', darkBg: 'bg-slate-800 border-slate-700' };
 
-interface AddRoleFormProps {
-  onCancel: () => void;
-  initialData?: any;
-}
+interface Props { onCancel: () => void; initialData?: any; }
 
-const AddRoleForm: React.FC<AddRoleFormProps> = ({ onCancel, initialData }) => {
+const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
-  const isDark = mode === 'dark';
-
-  const iconsMap: Record<string, React.ElementType> = {
-    'fa-person-military-pointing': Shield,
-    'fa-lock': Lock,
-    'fa-shield-check': Shield,
-    'fa-user-shield': UserRoundCheck,
-    'fa-badge-check': BadgeCheck,
-    'fa-key': Key,
-    'fa-user-lock': UserRound,
-    'fa-user': UserRound,
-    'fa-user-tie': UserRound,
-    'fa-user-group': Users,
-    'fa-scale-balanced': Scale,
-    'fa-user-doctor': Stethoscope,
-    'fa-circle-info': Info,
-    'fa-circle-question': CircleHelp
-  };
+  const dark = mode === 'dark';
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   const [formData, setFormData] = React.useState({
     name: initialData?.name || '',
     description: initialData?.description || '',
     icon: initialData?.icon || 'fa-person-military-pointing',
-    permissions: initialData?.permissions || {
-      'team.add': false,
-      'team.edit': false,
-      'team.delete': false,
-      'roles.add': false,
-      'roles.edit': false,
-      'roles.delete': false,
-      'workspaces.add': false,
-      'workspaces.edit': false,
-      'workspaces.delete': false,
-      'settings.billing': false,
-      'settings.mobile': false,
-      'settings.audit': false,
-      'settings.help': false,
-      'settings.agency': false,
-      'legal.view': false,
-      'legal.view_doc': false,
-      'legal.create': false,
-      'legal.edit': false,
-    }
+    permissions: (initialData?.permissions as string[]) || [],
   });
 
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [expandedGroup, setExpandedGroup] = React.useState<string | null>(null);
 
-  const handlePermissionChange = (key: string, checked: boolean) => {
+  const { data: permGroups = [], isLoading: loadingPerms } = useQuery<any[]>({
+    queryKey: [`/api/agencies/${agencyId}/permissions`],
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/agencies/${agencyId}/permissions`);
+      return res.json();
+    },
+    enabled: !!agencyId,
+  });
+
+  React.useEffect(() => {
+    if (permGroups.length > 0 && !expandedGroup) {
+      setExpandedGroup(permGroups[0].slug);
+    }
+  }, [permGroups]);
+
+  const togglePermission = (slug: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      permissions: {
-        ...prev.permissions,
-        [key]: checked
-      }
+      permissions: checked
+        ? [...prev.permissions, slug]
+        : prev.permissions.filter(s => s !== slug),
     }));
   };
 
-  const handleSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      onCancel();
-    }, 1200);
+  const toggleGroup = (children: any[], checked: boolean) => {
+    const childSlugs = children.map((c: any) => c.slug);
+    setFormData(prev => ({
+      ...prev,
+      permissions: checked
+        ? Array.from(new Set([...prev.permissions, ...childSlugs]))
+        : prev.permissions.filter(s => !childSlugs.includes(s)),
+    }));
   };
 
-  const permissionCategories = [
-    { id: 'team', name: t('agency.roles.categories.team'), icon: <Users size={16} className="text-slate-700 dark:text-slate-300" /> },
-    { id: 'roles', name: t('agency.roles.categories.roles'), icon: <Shield size={16} className="text-slate-700 dark:text-slate-300" /> },
-    { id: 'workspaces', name: t('agency.roles.categories.workspaces'), icon: <Layers size={16} className="text-slate-700 dark:text-slate-300" /> },
-    { id: 'settings', name: t('agency.roles.categories.settings'), icon: <Settings size={16} className="text-slate-700 dark:text-slate-300" /> },
-    { id: 'legal', name: t('agency.roles.categories.legal'), icon: <FileText size={16} className="text-slate-700 dark:text-slate-300" /> },
-  ];
+  const isGroupChecked = (children: any[]) => children.every((c: any) => formData.permissions.includes(c.slug));
+  const isGroupPartial = (children: any[]) => children.some((c: any) => formData.permissions.includes(c.slug)) && !isGroupChecked(children);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const url = initialData
+        ? `/api/agencies/${agencyId}/roles/${initialData.id}`
+        : `/api/agencies/${agencyId}/roles`;
+      const res = await apiRequest(initialData ? 'PATCH' : 'POST', url, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/roles`] });
+      toast({ title: initialData ? t('common.updated') : t('common.saved') });
+      onCancel();
+    },
+    onError: (err: any) => {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const totalPerms = permGroups.reduce((sum: number, g: any) => sum + g.children.length, 0);
 
   return (
-    <div className={cn(
-      "min-h-screen p-8 transition-colors duration-300",
-      isDark ? "bg-[#0f172a]" : "bg-slate-50"
-    )}>
-      <div className={cn(
-        "w-full max-w-[1400px] rounded-lg border overflow-hidden transition-colors duration-300",
-        isDark ? "bg-[#1e293b] border-slate-700 shadow-xl" : "bg-white border-slate-300 shadow-sm"
-      )}>
-        {/* Header */}
-        <div className={cn("px-8 py-6 border-b flex items-center gap-4", isDark ? "border-slate-700 bg-[#1e293b]" : "border-slate-300 bg-white")}>
-          <div className="relative">
-            <User className={cn("w-7 h-7 text-slate-400")} />
-            <Shield className={cn("w-3.5 h-3.5 absolute -bottom-0.5 -right-0.5", isDark ? "text-slate-900 fill-slate-400" : "text-white fill-slate-900")} />
+    <div className={cn('min-h-screen flex flex-col', dark ? 'bg-[#0b1120]' : 'bg-slate-50/80')}>
+
+      {/* Header */}
+      <div className={cn('flex items-center gap-4 px-7 py-4 border-b shrink-0',
+        dark ? 'bg-[#0f1829] border-slate-800' : 'bg-white border-slate-200')}>
+        <button
+          onClick={onCancel}
+          className={cn('flex items-center justify-center w-8 h-8 rounded-lg border transition-colors',
+            dark ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-50')}
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-primary" />
           </div>
-          <h1 className={cn("text-[17px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-            {initialData ? t('agency.roles.form.edit_title') : t('agency.roles.form.add_title')}
-          </h1>
+          <div>
+            <h1 className={cn('text-[14px] font-bold leading-tight', dark ? 'text-white' : 'text-slate-900')}>
+              {initialData ? t('agency.roles.form.edit_title') : t('agency.roles.form.add_title')}
+            </h1>
+            <p className={cn('text-[11px]', dark ? 'text-slate-500' : 'text-slate-400')}>
+              {t('agency.roles.manage')}
+            </p>
+          </div>
         </div>
 
-        <div className="px-8 py-8 space-y-8">
-          {/* Top Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t("agency.roles.form.name")}</label>
-              <Input 
-                className={cn("h-11 rounded-md transition-all", isDark ? "bg-[#0f172a] border-slate-700" : "bg-white border-slate-200 focus:border-green-500")} 
-                placeholder={t("agency.roles.form.name")} 
+        {/* Save button in header */}
+        <div className="ml-auto flex gap-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className={cn('h-8 px-4 text-[12px] font-semibold', dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent' : '')}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button
+            onClick={() => saveMutation.mutate(formData)}
+            disabled={saveMutation.isPending || !formData.name.trim()}
+            className="h-8 px-5 text-[12px] font-semibold bg-primary hover:opacity-90 text-white"
+          >
+            {saveMutation.isPending
+              ? <span className="flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Saving...</span>
+              : initialData ? t('common.update') : t('common.save')}
+          </Button>
+        </div>
+      </div>
+
+      {/* Body — two column */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Left sidebar — role details + summary */}
+        <div className={cn('w-72 shrink-0 border-r flex flex-col',
+          dark ? 'bg-[#0f1829] border-slate-800' : 'bg-white border-slate-200')}>
+          <div className="p-5 space-y-4 flex-1 overflow-y-auto">
+            <div>
+              <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
+                dark ? 'text-slate-500' : 'text-slate-400')}>
+                {t('agency.roles.form.name')} *
+              </label>
+              <Input
+                className={cn('h-9 text-[13px]', dark ? 'bg-[#0b1120] border-slate-700 text-white' : 'border-slate-200')}
+                placeholder="e.g. Support Manager"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t("agency.roles.form.select_icon")}</label>
-              <Select 
-                value={formData.icon} 
-                onValueChange={(val) => setFormData(prev => ({ ...prev, icon: val }))}
-              >
-                <SelectTrigger className={cn("h-11 rounded-md transition-all", isDark ? "bg-[#0f172a] border-slate-700" : "bg-white border-slate-200 focus:border-green-500")}>
-                  <SelectValue placeholder={t("agency.roles.form.select_icon_placeholder")} />
-                </SelectTrigger>
-                <SelectContent className={cn(isDark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                  {Object.entries(iconsMap).map(([name, Icon]) => (
-                    <SelectItem key={name} value={name} className="cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <Icon size={16} className="text-gray-400" />
-                        <span className="text-sm font-medium">{name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div>
+              <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
+                dark ? 'text-slate-500' : 'text-slate-400')}>
+                {t('agency.roles.form.description')}
+              </label>
+              <textarea
+                rows={3}
+                className={cn(
+                  'w-full px-3 py-2 text-[12px] rounded-md border outline-none resize-none transition-colors',
+                  dark
+                    ? 'bg-[#0b1120] border-slate-700 text-white placeholder:text-slate-600 focus:border-slate-600'
+                    : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300'
+                )}
+                placeholder="What is this role for?"
+                value={formData.description}
+                onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}
+              />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t("agency.roles.form.description")}</label>
-            <Textarea 
-              className={cn("min-h-[100px] rounded-md transition-all", isDark ? "bg-[#0f172a] border-slate-700" : "bg-white border-slate-200 focus:border-green-500")} 
-              placeholder={t("agency.roles.form.description")} 
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            />
-          </div>
-
-          {/* Permissions Section */}
-          <div className="space-y-4 pt-4">
-            <h2 className={cn("text-[18px] font-bold tracking-tight", isDark ? "text-white" : "text-slate-900")}>{t("agency.roles.form.permissions")}</h2>
-            <div className={cn("border-t transition-colors", isDark ? "border-slate-700" : "border-slate-300")}>
-              <Accordion type="multiple" className="w-full">
-                {permissionCategories.map((category) => (
-                  <AccordionItem key={category.id} value={category.id} className={cn("border-b", isDark ? "border-slate-700" : "border-slate-300")}>
-                    <AccordionTrigger className="hover:no-underline py-4 px-2">
-                      <div className="flex items-center gap-3">
-                        {category.icon}
-                        <span className={cn("text-[14px] font-bold", isDark ? "text-slate-300" : "text-slate-800")}>{category.name}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-10 pb-6 pt-2">
-                      {category.id === 'team' ? (
-                        <div className="space-y-6">
-                          {[
-                            { key: 'team.add', label: t('agency.roles.permissions.team.add'), desc: t('agency.roles.permissions.team.add_desc') },
-                            { key: 'team.edit', label: t('agency.roles.permissions.team.edit'), desc: t('agency.roles.permissions.team.edit_desc') },
-                            { key: 'team.delete', label: t('agency.roles.permissions.team.delete'), desc: t('agency.roles.permissions.team.delete_desc') }
-                          ].map(perm => (
-                            <div key={perm.key} className="flex items-center justify-between py-1">
-                              <div>
-                                <p className={cn("text-[14px] font-bold", isDark ? "text-white" : "text-slate-900")}>{perm.label}</p>
-                                <p className="text-[12px] text-slate-500 font-medium">{perm.desc}</p>
-                              </div>
-                              <Switch 
-                                checked={formData.permissions[perm.key as keyof typeof formData.permissions]}
-                                onCheckedChange={(v) => handlePermissionChange(perm.key, v)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : category.id === 'roles' ? (
-                        <div className="space-y-6">
-                          {[
-                            { key: 'roles.add', label: t('agency.roles.permissions.roles.add'), desc: t('agency.roles.permissions.roles.add_desc') },
-                            { key: 'roles.edit', label: t('agency.roles.permissions.roles.edit'), desc: t('agency.roles.permissions.roles.edit_desc') },
-                            { key: 'roles.delete', label: t('agency.roles.permissions.roles.delete'), desc: t('agency.roles.permissions.roles.delete_desc') }
-                          ].map(perm => (
-                            <div key={perm.key} className="flex items-center justify-between py-1">
-                              <div>
-                                <p className={cn("text-[14px] font-bold", isDark ? "text-white" : "text-slate-900")}>{perm.label}</p>
-                                <p className="text-[12px] text-slate-500 font-medium">{perm.desc}</p>
-                              </div>
-                              <Switch 
-                                checked={formData.permissions[perm.key as keyof typeof formData.permissions]}
-                                onCheckedChange={(v) => handlePermissionChange(perm.key, v)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : category.id === 'workspaces' ? (
-                        <div className="space-y-6">
-                          {[
-                            { key: 'workspaces.add', label: t('agency.roles.permissions.workspaces.add'), desc: t('agency.roles.permissions.workspaces.add_desc') },
-                            { key: 'workspaces.edit', label: t('agency.roles.permissions.workspaces.edit'), desc: t('agency.roles.permissions.workspaces.edit_desc') },
-                            { key: 'workspaces.delete', label: t('agency.roles.permissions.workspaces.delete'), desc: t('agency.roles.permissions.workspaces.delete_desc') }
-                          ].map(perm => (
-                            <div key={perm.key} className="flex items-center justify-between py-1">
-                              <div>
-                                <p className={cn("text-[14px] font-bold", isDark ? "text-white" : "text-slate-900")}>{perm.label}</p>
-                                <p className="text-[12px] text-slate-500 font-medium">{perm.desc}</p>
-                              </div>
-                              <Switch 
-                                checked={formData.permissions[perm.key as keyof typeof formData.permissions]}
-                                onCheckedChange={(v) => handlePermissionChange(perm.key, v)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : category.id === 'settings' ? (
-                        <div className="space-y-6">
-                          {[
-                            { key: 'settings.billing', label: t('agency.roles.permissions.settings.billing'), desc: t('agency.roles.permissions.settings.billing_desc') },
-                            { key: 'settings.mobile', label: t('agency.roles.permissions.settings.mobile'), desc: t('agency.roles.permissions.settings.mobile_desc') },
-                            { key: 'settings.audit', label: t('agency.roles.permissions.settings.audit'), desc: t('agency.roles.permissions.settings.audit_desc') },
-                            { key: 'settings.help', label: t('agency.roles.permissions.settings.help'), desc: t('agency.roles.permissions.settings.help_desc') },
-                            { key: 'settings.agency', label: t('agency.roles.permissions.settings.agency'), desc: t('agency.roles.permissions.settings.agency_desc') }
-                          ].map(perm => (
-                            <div key={perm.key} className="flex items-center justify-between py-1">
-                              <div>
-                                <p className={cn("text-[14px] font-bold", isDark ? "text-white" : "text-slate-900")}>{perm.label}</p>
-                                <p className="text-[12px] text-slate-500 font-medium">{perm.desc}</p>
-                              </div>
-                              <Switch 
-                                checked={formData.permissions[perm.key as keyof typeof formData.permissions]}
-                                onCheckedChange={(v) => handlePermissionChange(perm.key, v)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : category.id === 'legal' ? (
-                        <div className="space-y-6">
-                          {[
-                            { key: 'legal.view', label: t('agency.roles.permissions.legal.view'), desc: t('agency.roles.permissions.legal.view_desc') },
-                            { key: 'legal.view_doc', label: t('agency.roles.permissions.legal.view_doc'), desc: t('agency.roles.permissions.legal.view_doc_desc') },
-                            { key: 'legal.create', label: t('agency.roles.permissions.legal.create'), desc: t('agency.roles.permissions.legal.create_desc') },
-                            { key: 'legal.edit', label: t('agency.roles.permissions.legal.edit'), desc: t('agency.roles.permissions.legal.edit_desc') }
-                          ].map(perm => (
-                            <div key={perm.key} className="flex items-center justify-between py-1">
-                              <div>
-                                <p className={cn("text-[14px] font-bold", isDark ? "text-white" : "text-slate-900")}>{perm.label}</p>
-                                <p className="text-[12px] text-slate-500 font-medium">{perm.desc}</p>
-                              </div>
-                              <Switch 
-                                checked={formData.permissions[perm.key as keyof typeof formData.permissions]}
-                                onCheckedChange={(v) => handlePermissionChange(perm.key, v)}
-                                className="data-[state=checked]:bg-green-500"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+            {/* Permission summary */}
+            <div className={cn('rounded-lg border p-3.5 space-y-2', dark ? 'border-slate-700/60 bg-[#0b1120]' : 'border-slate-100 bg-slate-50')}>
+              <div className="flex items-center justify-between">
+                <p className={cn('text-[11px] font-bold uppercase tracking-wide', dark ? 'text-slate-500' : 'text-slate-400')}>
+                  Permissions
+                </p>
+                {formData.permissions.length > 0 && (
+                  <button
+                    onClick={() => setFormData(p => ({ ...p, permissions: [] }))}
+                    className="text-[10px] text-red-400 hover:text-red-500 font-semibold"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+              <div className="flex items-end gap-2">
+                <span className={cn('text-[28px] font-black leading-none', dark ? 'text-white' : 'text-slate-900')}>
+                  {formData.permissions.length}
+                </span>
+                <span className={cn('text-[11px] mb-1', dark ? 'text-slate-500' : 'text-slate-400')}>
+                  of {totalPerms} selected
+                </span>
+              </div>
+              {/* Progress bar */}
+              <div className={cn('h-1.5 rounded-full overflow-hidden', dark ? 'bg-slate-800' : 'bg-slate-200')}>
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  style={{ width: totalPerms > 0 ? `${(formData.permissions.length / totalPerms) * 100}%` : '0%' }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className={cn("px-8 py-6 border-t flex justify-end gap-3", isDark ? "border-slate-700 bg-[#1e293b]" : "border-slate-300 bg-white")}>
-            <Button 
-              variant="outline" 
-              onClick={onCancel} 
-              className={cn("px-6 h-10 font-bold text-[13px] transition-all", isDark ? "bg-transparent border-slate-700 hover:bg-slate-800 text-slate-300" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50")}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-green-500 hover:bg-green-600 text-white px-8 h-10 font-bold text-[13px] min-w-[100px] shadow-sm transition-all"
-            >
-              {isSaving ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  {t("common.saving")}
-                </div>
-              ) : (
-                initialData ? t('common.update') : t('common.save')
-              )}
-            </Button>
+            {/* Per-group summary chips */}
+            {permGroups.length > 0 && (
+              <div className="space-y-1.5">
+                {permGroups.map((g: any) => {
+                  const meta = GROUP_META[g.slug] || DEFAULT_META;
+                  const selected = g.children.filter((c: any) => formData.permissions.includes(c.slug)).length;
+                  const all = g.children.length;
+                  return (
+                    <div key={g.slug}
+                      className={cn('flex items-center gap-2.5 px-3 py-2 rounded-lg border text-[11px] cursor-pointer transition-colors',
+                        expandedGroup === g.slug
+                          ? dark ? meta.darkBg : meta.bg
+                          : dark ? 'border-transparent hover:bg-slate-800/50' : 'border-transparent hover:bg-slate-100'
+                      )}
+                      onClick={() => setExpandedGroup(expandedGroup === g.slug ? null : g.slug)}
+                    >
+                      <span className={meta.color}>{meta.icon}</span>
+                      <span className={cn('flex-1 font-semibold', dark ? 'text-slate-300' : 'text-slate-700')}>{g.name}</span>
+                      <span className={cn('font-bold text-[10px]', selected === all ? 'text-emerald-500' : selected > 0 ? 'text-amber-500' : dark ? 'text-slate-600' : 'text-slate-400')}>
+                        {selected}/{all}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Right — permissions */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {loadingPerms ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 size={20} className="animate-spin text-primary" />
+            </div>
+          ) : expandedGroup === null ? (
+            <div className={cn('flex flex-col items-center justify-center py-20 text-center')}>
+              <ShieldCheck className="w-8 h-8 text-slate-300 mb-3" />
+              <p className={cn('text-[13px] font-semibold', dark ? 'text-slate-500' : 'text-slate-400')}>
+                Select a category from the left to configure permissions
+              </p>
+            </div>
+          ) : (
+            permGroups
+              .filter((g: any) => g.slug === expandedGroup)
+              .map((group: any) => {
+                const meta = GROUP_META[group.slug] || DEFAULT_META;
+                const allChecked = isGroupChecked(group.children);
+                const partial = isGroupPartial(group.children);
+                const selectedCount = group.children.filter((c: any) => formData.permissions.includes(c.slug)).length;
+                return (
+                  <div key={group.slug}>
+                    {/* Group header */}
+                    <div className={cn('flex items-center justify-between mb-5 pb-4 border-b',
+                      dark ? 'border-slate-800' : 'border-slate-100')}>
+                      <div className="flex items-center gap-3">
+                        <div className={cn('w-9 h-9 rounded-lg border flex items-center justify-center', dark ? meta.darkBg : meta.bg)}>
+                          <span className={meta.color}>{meta.icon}</span>
+                        </div>
+                        <div>
+                          <h2 className={cn('text-[14px] font-bold', dark ? 'text-white' : 'text-slate-900')}>{group.name}</h2>
+                          <p className={cn('text-[11px]', dark ? 'text-slate-500' : 'text-slate-400')}>
+                            {selectedCount} of {group.children.length} enabled
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={cn('text-[11px] font-semibold', dark ? 'text-slate-400' : 'text-slate-500')}>
+                          {allChecked ? 'All enabled' : partial ? 'Partial' : 'None'}
+                        </span>
+                        <Switch
+                          checked={allChecked}
+                          onCheckedChange={v => toggleGroup(group.children, v)}
+                          className={cn('data-[state=checked]:bg-primary scale-90', partial ? 'opacity-70' : '')}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Permission rows */}
+                    <div className="space-y-2">
+                      {group.children.map((perm: any) => {
+                        const enabled = formData.permissions.includes(perm.slug);
+                        return (
+                          <div
+                            key={perm.slug}
+                            onClick={() => togglePermission(perm.slug, !enabled)}
+                            className={cn(
+                              'flex items-center gap-4 px-4 py-3.5 rounded-xl border cursor-pointer transition-all',
+                              enabled
+                                ? dark
+                                  ? 'bg-primary/10 border-primary/30'
+                                  : 'bg-primary/5 border-primary/20'
+                                : dark
+                                  ? 'bg-[#0f1829] border-slate-800 hover:border-slate-700'
+                                  : 'bg-white border-slate-100 hover:border-slate-200'
+                            )}
+                          >
+                            {/* Checkbox */}
+                            <div className={cn(
+                              'w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all',
+                              enabled
+                                ? 'bg-primary border-primary'
+                                : dark ? 'border-slate-600' : 'border-slate-300'
+                            )}>
+                              {enabled && <Check size={11} className="text-white" strokeWidth={3} />}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <p className={cn('text-[13px] font-semibold', dark ? 'text-white' : 'text-slate-800')}>
+                                {perm.name}
+                              </p>
+                              {perm.description && (
+                                <p className={cn('text-[11px] mt-0.5 truncate', dark ? 'text-slate-500' : 'text-slate-400')}>
+                                  {perm.description}
+                                </p>
+                              )}
+                            </div>
+
+                            <code className={cn('text-[10px] font-mono shrink-0', dark ? 'text-slate-600' : 'text-slate-300')}>
+                              {perm.slug.split('.').pop()}
+                            </code>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })
+          )}
         </div>
       </div>
     </div>

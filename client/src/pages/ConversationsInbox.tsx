@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { getUserInfo } from "@/lib/auth";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
 import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX } from "lucide-react";
 import data from '@emoji-mart/data';
@@ -248,8 +249,8 @@ export default function ConversationsInbox() {
   const currentUser = { id: "self", name: "Demo User" };
 
   // Get Agency ID from localStorage
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "7";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   // Fetch Agency Members
   const { data: membersResponse } = useQuery({

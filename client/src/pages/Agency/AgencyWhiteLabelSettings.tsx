@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Settings, 
@@ -45,8 +46,8 @@ const AgencyWhiteLabelSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "1";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   const { data: agencyResponse } = useQuery({
     queryKey: [`/api/agencies/${agencyId}`],
@@ -63,6 +64,8 @@ const AgencyWhiteLabelSettings = () => {
     slug: "",
     domain: ""
   });
+
+  const [isUploading, setIsUploading] = useState(false);
 
   const [showEmailForm, setShowEmailForm] = React.useState(false);
   const [emailFormData, setEmailFormData] = React.useState({
@@ -100,8 +103,42 @@ const AgencyWhiteLabelSettings = () => {
     updateMutation.mutate({ color });
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
+  const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('files', file);
+      
+      const res = await apiRequest("POST", "/api/gallery/upload", formData);
+      const data = await res.json();
+      
+      if (data.success && data.media?.length > 0) {
+        const fileUrl = data.media[0].file_url;
+        setBrandingData(prev => ({ ...prev, [type]: fileUrl }));
+        updateMutation.mutate({ [type]: fileUrl });
+      }
+    } catch (err: any) {
+      toast({
+        title: t("common.error"),
+        description: err.message || t("common.errorDesc"),
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUploadClick = (type: 'logo' | 'favicon') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e: any) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleFileUpload(file, type);
+      }
+    };
+    input.click();
   };
 
   const features = [
@@ -204,7 +241,7 @@ const AgencyWhiteLabelSettings = () => {
                            </div>
                          </DropdownMenuTrigger>
                          <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                           <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                           <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="cursor-pointer gap-2">
                              <Upload size={14} /> {t("common.uploadNew")}
                            </DropdownMenuItem>
                            <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
@@ -229,7 +266,7 @@ const AgencyWhiteLabelSettings = () => {
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                        <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                        <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="cursor-pointer gap-2">
                           <Upload size={14} /> {t("common.uploadNew")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
@@ -268,7 +305,7 @@ const AgencyWhiteLabelSettings = () => {
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                        <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                        <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="cursor-pointer gap-2">
                           <Upload size={14} /> {t("common.uploadNew")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
@@ -292,7 +329,7 @@ const AgencyWhiteLabelSettings = () => {
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                        <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                        <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="cursor-pointer gap-2">
                           <Upload size={14} /> {t("common.uploadNew")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">
@@ -330,7 +367,7 @@ const AgencyWhiteLabelSettings = () => {
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                    <DropdownMenuItem onClick={handleUploadClick} className="cursor-pointer gap-2">
+                    <DropdownMenuItem onClick={() => handleUploadClick('favicon')} className="cursor-pointer gap-2">
                       <Upload size={14} /> {t("common.uploadNew")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setLocation("/settings?tab=Media Gallery")} className="cursor-pointer gap-2">

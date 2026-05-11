@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   CreditCard, 
@@ -30,7 +31,7 @@ const AgencyBillingManage = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const userInfo = getUserInfo();
   const [showUsageModal, setShowUsageModal] = React.useState(false);
   const [showManageModal, setShowManageModal] = React.useState(false);
   const [couponCode, setCouponCode] = React.useState("");

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Settings, 
@@ -90,8 +91,8 @@ const AgencyGeneralSettings = () => {
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "1";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   const { data: agencyResponse, isLoading } = useQuery({
     queryKey: [`/api/agencies/${agencyId}`],

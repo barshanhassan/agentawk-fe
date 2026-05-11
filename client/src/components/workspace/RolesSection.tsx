@@ -1,244 +1,140 @@
 import React, { useState } from "react";
-import { ShieldCheck, UserCog, Shield, Archive, ExternalLink, Plus, ChevronDown, Bot, Calendar, Settings, Users, PenTool, MessageSquare, Building2, Radio, Scale, Share2, Layers, Search, User, Info, HelpCircle, Check, Inbox, AlertCircle, Eye, Edit3, Trash2, UserPlus, ChevronRight, MoreVertical } from "lucide-react";
-import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Shield, ShieldCheck, ShieldOff, Plus, ChevronLeft, ChevronDown,
+  Loader2, Archive, RotateCcw, Pencil, Bot, Calendar, Settings,
+  Share2, PenTool, Inbox, Building2, Radio, Scale, Layers,
+  User, Users, Info, HelpCircle, UserCog, Sparkles, Lock,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTheme } from "@/contexts/ThemeContext";
 
-interface Permission {
-  id: string;
-  title: string;
-  description: string;
-  hasInfo?: boolean;
-}
+const PERMISSION_CATEGORIES = [
+  { id: "ai-products", name: "AI Products", icon: Bot, subPermissions: [
+    { id: "view", title: "View AI products", description: "Allow agents to view AI Products." },
+    { id: "manage", title: "Manage AI Products", description: "Allow agents to create or edit AI products." },
+    { id: "delete", title: "Delete AI products", description: "Allow agents to delete AI products." },
+  ]},
+  { id: "bookings", name: "Bookings", icon: Calendar, subPermissions: [
+    { id: "view", title: "View bookings", description: "Allow agents to view all bookings" },
+    { id: "manage", title: "Manage bookings", description: "Enable agents to create, update, or cancel bookings." },
+  ]},
+  { id: "ai-intelligence", name: "AI – Artificial Intelligence", icon: Bot, subPermissions: [
+    { id: "manage_themes", title: "Manage AI themes", description: "Allow agents to create or edit AI themes." },
+    { id: "manage_reports", title: "Manage AI reports", description: "Allow user to manage AI Reports." },
+    { id: "delete_themes", title: "Delete AI themes", description: "Allow agents to delete AI themes." },
+    { id: "create_kb", title: "Create Knowledgebase", description: "Allow agents to create knowledgebase for AI Voice Assistants." },
+    { id: "delete_kb", title: "Delete knowledgebase", description: "Allow agents to delete knowledgebases." },
+    { id: "view_voice", title: "View AI voice assistants", description: "Allow agents to view AI voice assistants." },
+    { id: "manage_voice", title: "Manage AI voice assistants", description: "Allow agents to manage voice assistants." },
+    { id: "delete_voice", title: "Delete AI voice assistants", description: "Allow agents to delete voice assistants." },
+    { id: "create_chat", title: "Create an AI Chat Assistant", description: "Authorize agents to create an AI Chat Assistant." },
+    { id: "edit_chat", title: "Edit an AI Chat Assistant", description: "Allow to update a Knowledge base." },
+    { id: "delete_chat", title: "Delete AI Chat Assistants", description: "Allow to delete an AI Chat Assistant." },
+  ]},
+  { id: "workspace-settings", name: "Workspace & Settings", icon: Settings, subPermissions: [
+    { id: "supervisor", title: "Supervisor Dashboard", description: "Grants access to Supervisor Dashboard." },
+    { id: "management", title: "Workspace Management", description: "Activate agent access and grant ability to modify workspace settings." },
+    { id: "media", title: "Media Gallery", description: "Authorize the agent to delete files from the media gallery." },
+    { id: "pipelines", title: "Pipelines", description: "Grant agents access for managing pipelines within this workspace." },
+    { id: "flows", title: "Smart Flows", description: "Grant agents access to view and manage smart flows." },
+    { id: "channels", title: "Communication Channels", description: "Grant agents access to manage all communication channels." },
+  ]},
+  { id: "collaborations", name: "Collaborations", icon: Share2, subPermissions: [
+    { id: "agents", title: "Agents", description: "Enable the Agent to manage other agents within the workspace." },
+    { id: "roles", title: "Roles & Permissions", description: "Empower agents with this role to modify and control all workspace permissions." },
+    { id: "teams", title: "Team Management", description: "Empower agents to manage teams within this workspace." },
+  ]},
+  { id: "customizations", name: "Customizations", icon: PenTool, subPermissions: [
+    { id: "custom_fields", title: "Custom fields", description: "Enable the Agent to create and delete custom fields." },
+    { id: "tags", title: "Tags", description: "Empower agents role to create and delete tags." },
+    { id: "iframe", title: "Iframe", description: "Grant agents access to manage iframes." },
+  ]},
+  { id: "live-chat", name: "Live Chat", icon: Inbox, subPermissions: [
+    { id: "access_live", title: "Live Chat access", description: "Can view and access the Live Chat." },
+    { id: "manage_live", title: "Manage Live Chat", description: "Can view and manage the live chat settings." },
+    { id: "assign_conv", title: "Assign conversations", description: "Unassigned conversations can be assigned to oneself or to other agents." },
+    { id: "send_unassigned", title: "Send to unassigned conversations", description: "The Agent will be able to send a message to an unassigned conversation." },
+    { id: "block_done", title: "Block \"Done\" folder", description: "The Agent will not have access to the \"Done\" folder." },
+    { id: "block_queue", title: "Block \"Queue\" folder", description: "Block Agent to view the conversation in the \"Queue\" folder." },
+  ]},
+  { id: "company-contacts", name: "Company & Contacts", icon: Building2, subPermissions: [
+    { id: "view", title: "View Contact & Companies", description: "View list of all contacts & company and allow agents to view profile." },
+    { id: "manage", title: "Manage Companies & Contacts", description: "Allow agents to Create or Update Companies & contacts." },
+    { id: "delete", title: "Delete Companies & Contacts", description: "Allow agents to delete Companies & Contacts." },
+    { id: "import", title: "Import contacts", description: "Allow agents to import contacts through files." },
+    { id: "export", title: "Export contacts", description: "Allow agents to export contacts." },
+  ]},
+  { id: "broadcast", name: "Broadcast", icon: Radio, subPermissions: [
+    { id: "view", title: "View broadcasts", description: "View all workspace broadcast." },
+    { id: "create_edit", title: "Create/Edit broadcasts", description: "Allow Agent to Create/Edit broadcasts." },
+    { id: "delete", title: "Delete broadcasts", description: "Allow agents to delete broadcasts." },
+  ]},
+  { id: "legal", name: "Legal", icon: Scale, subPermissions: [
+    { id: "view", title: "View Document", description: "View legal document." },
+    { id: "create", title: "Create Legal Document", description: "Allow Agent to create new legal documents." },
+    { id: "edit", title: "Edit Legal Document", description: "Allow Agent to edit legal document." },
+  ]},
+  { id: "connect", name: "Connect", icon: Layers, subPermissions: [
+    { id: "meta", title: "Meta Conversions API", description: "Authorize agents to access this integration." },
+    { id: "public_api", title: "Public API Access", description: "Authorize Agent to access and manage public API." },
+    { id: "openai", title: "OpenAI Integration", description: "Authorize Agent to access this integration." },
+    { id: "cal", title: "Cal.com", description: "Integrate your Cal.com account." },
+    { id: "dify", title: "Dify.ai", description: "Connect and manage dify.ai chatbots." },
+    { id: "make", title: "Make.com Integration", description: "Authorize Agent to access this integration." },
+  ]},
+];
 
-interface PermissionCategory {
-  id: string;
-  name: string;
-  icon: React.ElementType;
-  subPermissions?: Permission[];
-}
+const CAT_COLORS: Record<string, { icon: string; chip: string; darkChip: string }> = {
+  "ai-products":        { icon: "text-violet-500", chip: "bg-violet-50 border-violet-100 text-violet-700",  darkChip: "bg-violet-500/10 border-violet-500/20 text-violet-400" },
+  "bookings":           { icon: "text-blue-500",   chip: "bg-blue-50 border-blue-100 text-blue-700",       darkChip: "bg-blue-500/10 border-blue-500/20 text-blue-400" },
+  "ai-intelligence":    { icon: "text-purple-500", chip: "bg-purple-50 border-purple-100 text-purple-700", darkChip: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
+  "workspace-settings": { icon: "text-primary",    chip: "bg-primary/5 border-primary/20 text-primary",    darkChip: "bg-primary/10 border-primary/20 text-primary" },
+  "collaborations":     { icon: "text-emerald-500",chip: "bg-emerald-50 border-emerald-100 text-emerald-700",darkChip:"bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
+  "customizations":     { icon: "text-amber-500",  chip: "bg-amber-50 border-amber-100 text-amber-700",    darkChip: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
+  "live-chat":          { icon: "text-rose-500",   chip: "bg-rose-50 border-rose-100 text-rose-700",       darkChip: "bg-rose-500/10 border-rose-500/20 text-rose-400" },
+  "company-contacts":   { icon: "text-cyan-500",   chip: "bg-cyan-50 border-cyan-100 text-cyan-700",       darkChip: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400" },
+  "broadcast":          { icon: "text-orange-500", chip: "bg-orange-50 border-orange-100 text-orange-700", darkChip: "bg-orange-500/10 border-orange-500/20 text-orange-400" },
+  "legal":              { icon: "text-teal-500",   chip: "bg-teal-50 border-teal-100 text-teal-700",       darkChip: "bg-teal-500/10 border-teal-500/20 text-teal-400" },
+  "connect":            { icon: "text-indigo-500", chip: "bg-indigo-50 border-indigo-100 text-indigo-700", darkChip: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" },
+};
 
-const PERMISSION_CATEGORIES: PermissionCategory[] = [
-  {
-    id: "ai-products",
-    name: "AI Products",
-    icon: Bot,
-    subPermissions: [
-      { id: "view", title: "View AI products", description: "Allow agents to view AI Products." },
-      { id: "manage", title: "Manage AI Products", description: "Allow agents to create or edit AI products." },
-      { id: "delete", title: "Delete AI products", description: "Allow agents to delete AI products." },
-    ]
-  },
-  {
-    id: "bookings",
-    name: "Bookings",
-    icon: Calendar,
-    subPermissions: [
-      { id: "view", title: "View bookings", description: "Allow agents to view all bookings" },
-      { id: "manage", title: "Manage bookings", description: "Enable agents to create, update, or cancel bookings." },
-    ]
-  },
-  {
-    id: "ai-intelligence",
-    name: "AI - Artificial Intelligence",
-    icon: Bot,
-    subPermissions: [
-      { id: "manage_themes", title: "Manage AI themes", description: "Allow agents to create or edit AI themes." },
-      { id: "manage_reports", title: "Manage AI reports", description: "Allow user to manage AI Reports." },
-      { id: "delete_themes", title: "Delete AI themes", description: "Allow agents to delete AI themes." },
-      { id: "create_kb", title: "Create Knowledgebase", description: "Allow agents to create knowledgebase for AI Voice Assistants." },
-      { id: "delete_kb", title: "Delete knowledgebase", description: "Allow agents to delete knowledgebases." },
-      { id: "view_voice", title: "View AI voice assistants", description: "Allow agents to view AI voice assistants." },
-      { id: "manage_voice", title: "Manage AI voice assistants", description: "Allow agents to manage voice assistants." },
-      { id: "delete_voice", title: "Delete AI voice assistants", description: "Allow agents to delete voice assistants." },
-      { id: "create_item", title: "Create AI item", description: "Allow to create AI items." },
-      { id: "edit_item", title: "Edit AI item", description: "Allow to edit AI items." },
-      { id: "delete_item", title: "Delete AI item", description: "Allow to delete AI items." },
-      { id: "create_chat", title: "Create an AI Chat Assistant", description: "Authorize agents to create an AI Chat Assistant." },
-      { id: "edit_chat", title: "Edit an AI Chat Assistant", description: "Allow to update a Knowledge base." },
-      { id: "delete_chat", title: "Delete AI Chat Assistants", description: "Allow to delete an AI Chat Assistant." },
-      { id: "create_topics", title: "Create AI topics, questions and answers", description: "Allow to create AI topics and questions." },
-      { id: "edit_topics", title: "Allow editing AI topics and Q&As", description: "Allow editing AI topics and Q&As." },
-      { id: "delete_topics", title: "Delete AI topics and Q&As", description: "Allow deleting AI topics and Q&As." },
-    ]
-  },
-  {
-    id: "workspace-settings",
-    name: "Workspace & Settings",
-    icon: Settings,
-    subPermissions: [
-      { id: "supervisor", title: "Supervisor Dashboard", description: "Grants access to Supervisor Dashboard for a comprehensive overview and comparison of all agent metrics." },
-      { id: "management", title: "Workspace Management", description: "Activate agent access and grant the ability to modify workspace settings, such as name, timezone, and White Label." },
-      { id: "media", title: "Media Gallery", description: "Authorize the agent to delete files from the media gallery.", hasInfo: true },
-      { id: "pipelines", title: "Pipelines", description: "Grant agents access for managing pipelines within this workspace.", hasInfo: true },
-      { id: "flows", title: "Smart Flows", description: "Grant agents access to view and manage smart flows." },
-      { id: "channels", title: "Communication Channels", description: "Grant agents access to manage all communication channels." },
-    ]
-  },
-  {
-    id: "collaborations",
-    name: "Collaborations",
-    icon: Share2,
-    subPermissions: [
-      { id: "agents", title: "Agents", description: "Enable the Agent to manage other agents within the workspace." },
-      { id: "roles", title: "Roles & Permissions", description: "Empower agents with this role to modify and control all workspace permissions" },
-      { id: "teams", title: "Team Managment", description: "Empower agents to manage teams within this workspace." },
-    ]
-  },
-  {
-    id: "customizations",
-    name: "Customizations",
-    icon: PenTool,
-    subPermissions: [
-      { id: "custom_fields", title: "Custom fields", description: "Enable the Agent to create and delete custom fields." },
-      { id: "tags", title: "Tags", description: "Empower agents role to create and delete tags." },
-      { id: "iframe", title: "Iframe", description: "Grant agents access to manage iframes" },
-      { id: "ai_chat", title: "AI Chat Assistants", description: "Allow agents to create, update and delete AI Chat Assistants." },
-    ]
-  },
-  {
-    id: "live-chat",
-    name: "Live Chat conversations and tasks",
-    icon: Inbox,
-    subPermissions: [
-      { id: "send_unassigned", title: "Allow sending messages to unassigned conversations", description: "The Agent will be able to send a message to an unassigned conversation" },
-      { id: "delete_qr", title: "Delete Whatsapp QR Code message", description: "Allow agents to delete a sent message from Whatsapp QR Code to a contact." },
-      { id: "block_done", title: "Block access to \"Done\" folder", description: "The Agent will not have access to the \"Done\" folder" },
-      { id: "hide_channel", title: "Hide all contacts communication channel information", description: "Hide all contact details, including phone number, Instagram, Messenger or Telegram information." },
-      { id: "msg_without_assign", title: "Allow messaging without assignment", description: "The agent can send a message even if the conversation is not assigned to them." },
-      { id: "block_profile", title: "Block Access to Contact profile", description: "Hides the profile access button" },
-      { id: "block_queue", title: "Block access to the \"Queue\" folder", description: "Block Agent to view the conversation in the \"Queue\" folder." },
-      { id: "block_delete_conv", title: "Block permission to delete conversations.", description: "Block Agent access to delete the conversation from Live Chat." },
-      { id: "manage_live", title: "Manage Live Chat", description: "Can view and manage the live chat settings." },
-      { id: "access_live", title: "Live Chat access", description: "Can view and access the Live Chat." },
-      { id: "assign_conv", title: "Assign conversations", description: "Unassigned conversations can be assigned to oneself or to other agents." },
-      { id: "conv_avail", title: "Conversation availability", description: "Open to receiving conversations assignment from other agents or Smart Flow." },
-      { id: "task_avail", title: "Task availability", description: "Open to receiving tasks from other Agents and Smart Flows." },
-    ]
-  },
-  {
-    id: "company-contacts",
-    name: "Company & Contacts",
-    icon: Building2,
-    subPermissions: [
-      { id: "block_search", title: "Block access to global contact search", description: "The Agent will not have access to search contacts globally" },
-      { id: "merge", title: "Merge contacts", description: "Allow agents to merge contacts." },
-      { id: "view", title: "View Contact & Companies", description: "View list of all contacts & company and allow agents to view profile" },
-      { id: "manage", title: "Manage Companies & Contacts", description: "Allow agents to Create or Update Companies & contacts." },
-      { id: "delete", title: "Delete Companies & Contacts", description: "Allow agents to delete Companies & Contacts" },
-      { id: "import", title: "Import contacts", description: "Allow agents to import contacts through files." },
-      { id: "export", title: "Export contacts", description: "Allow agents to export contacts." },
-      { id: "export_psid", title: "Export PSID", description: "Allow agents to export Facebook PSID's." },
-    ]
-  },
-  {
-    id: "broadcast",
-    name: "Broadcast",
-    icon: Radio,
-    subPermissions: [
-      { id: "view", title: "View broadcasts", description: "View all workspace broadcast" },
-      { id: "create_edit", title: "Create/Edit broadcasts", description: "Allow Agent to Create/Edit broadcasts." },
-      { id: "delete", title: "Delete broadcasts", description: "Allow agents to delete broadcasts." },
-    ]
-  },
-  {
-    id: "legal",
-    name: "Legal",
-    icon: Scale,
-    subPermissions: [
-      { id: "view", title: "View Document", description: "View legal document" },
-      { id: "create", title: "Create Legal Document", description: "Allow Agent to create new legal documents." },
-      { id: "edit", title: "Edit Legal Document", description: "Allow Agent to edit legal document." },
-    ]
-  },
-  {
-    id: "connect",
-    name: "Connect",
-    icon: Layers,
-    subPermissions: [
-      { id: "meta", title: "Meta Conversions API", description: "Authorize agents to access this integration." },
-      { id: "woovi", title: "Woovi.com", description: "Authorize agent to access this integration." },
-      { id: "baserow", title: "Baserow.io", description: "Authorize Agent to access this integration." },
-      { id: "llmwhisperer", title: "LLMWhisperer", description: "Authorize Agent to access this integration." },
-      { id: "cal", title: "Cal.com", description: "Integrate your Cal.com account and manage your calendar from the Smart flows." },
-      { id: "dify", title: "Dify.ai", description: "Connect and manage dify.ai chatbots" },
-      { id: "public_api", title: "Public API Access", description: "Authorize Agent to access and manage public API." },
-      { id: "visual_api", title: "Visual API Access", description: "Authorize Agent to access and manage public API." },
-      { id: "openai", title: "OpenAI Integration", description: "Authorize Agent to access this integration." },
-      { id: "cloudinary", title: "Cloudinary Integration", description: "Authorize Agent to access this integration." },
-      { id: "activecampaign", title: "ActiveCampaign Integration", description: "Authorize Agent to access this integration." },
-      { id: "make", title: "Make.com Integration", description: "Authorize Agent to access this integration." },
-      { id: "microsoft_tts", title: "Microsoft Text to Speech Integration", description: "Authorize Agent to access this integration." },
-      { id: "elevenlabs", title: "ElevenLabs Integration", description: "Authorize Agent to access this integration." },
-    ]
-  },
-  {
-    id: "clonekits",
-    name: "Clonekits",
-    icon: Bot,
-    subPermissions: [
-      { id: "view", title: "View Clonekit", description: "Allow agents to view Clonekit" },
-      { id: "edit", title: "Edit Clonekit", description: "Allow agents to create and edit Clonekits" },
-      { id: "delete", title: "Delete Clonekit", description: "Allow agents to delete the Clonekit" },
-      { id: "download", title: "Download Clonekit", description: "Allow agents to download a Clonekit" },
-    ]
-  },
+const ROW_ACCENTS = [
+  'bg-violet-500', 'bg-blue-500', 'bg-emerald-500',
+  'bg-amber-500', 'bg-rose-500', 'bg-cyan-500',
+  'bg-indigo-500', 'bg-teal-500',
 ];
 
 const ICONS = [
-  { name: "fa-person-military-pointing", icon: UserCog },
-  { name: "fa-user", icon: User },
-  { name: "fa-user-tie", icon: UserCog },
-  { name: "fa-user-group", icon: Users },
-  { name: "fa-scale-balanced", icon: Scale },
-  { name: "fa-user-doctor", icon: User },
-  { name: "fa-circle-info", icon: Info },
-  { name: "fa-circle-question", icon: HelpCircle },
+  { name: "agent",    icon: UserCog },
+  { name: "user",     icon: User },
+  { name: "team",     icon: Users },
+  { name: "shield",   icon: Shield },
+  { name: "scale",    icon: Scale },
+  { name: "sparkles", icon: Sparkles },
+  { name: "lock",     icon: Lock },
+  { name: "info",     icon: Info },
 ];
 
 export default function RolesSection() {
+  const { mode } = useTheme();
+  const dark = mode === 'dark';
   const [view, setView] = useState<"list" | "add" | "edit">("list");
-  const [activeTab, setActiveTab] = useState("active");
+  const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
   const [enableAll, setEnableAll] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState(ICONS[0]);
-  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({});
   const [roleName, setRoleName] = useState("");
   const [roleDescription, setRoleDescription] = useState("");
   const [editingRole, setEditingRole] = useState<any>(null);
-
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ id: string, type: 'archive' | 'activate' } | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(PERMISSION_CATEGORIES[0]?.id || null);
+  const [archiveTarget, setArchiveTarget] = useState<{ role: any; type: 'archive' | 'activate' } | null>(null);
 
   const { toast } = useToast();
 
@@ -246,15 +142,18 @@ export default function RolesSection() {
     queryKey: ["/api/workspaces/all-roles"],
   });
 
-  const roles = rolesData ? rolesData.map((r: any) => ({
+  const roles = (rolesData || []).map((r: any) => ({
     id: r.id.toString(),
     name: r.name,
     description: r.description,
-    icon: ICONS.find(i => i.name === r.icon)?.icon || UserCog,
     iconName: r.icon,
     isArchived: r.isArchived,
-    permissions: r.permissions || {}
-  })) : [];
+    permissions: r.permissions || {},
+  }));
+
+  const activeRoles   = roles.filter((r: any) => !r.isArchived);
+  const archivedRoles = roles.filter((r: any) => r.isArchived);
+  const displayRoles  = activeTab === 'active' ? activeRoles : archivedRoles;
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -263,445 +162,397 @@ export default function RolesSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
-      toast({ title: "Success", description: "Role created successfully!" });
-      setView("list");
-      resetForm();
+      toast({ title: "Role created" });
+      setView("list"); resetForm();
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string | number, data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const res = await apiRequest("PATCH", `/api/workspaces/roles/${id}`, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/all-roles"] });
-      toast({ title: "Success", description: "Role updated successfully!" });
-      setView("list");
-      resetForm();
-      setAlertOpen(false);
-      setPendingAction(null);
+      toast({ title: "Role updated" });
+      setView("list"); resetForm(); setArchiveTarget(null);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
-
-  const confirmAction = (id: string, type: 'archive' | 'activate') => {
-    setPendingAction({ id, type });
-    setAlertOpen(true);
-  };
-
-  const executeAction = () => {
-    if (!pendingAction) return;
-    
-    updateMutation.mutate({
-      id: pendingAction.id,
-      data: { isArchived: pendingAction.type === 'archive' }
-    });
-  };
 
   const togglePermission = (categoryId: string, permissionId: string) => {
     setPermissions(prev => ({
       ...prev,
-      [categoryId]: {
-        ...(prev[categoryId] || {}),
-        [permissionId]: !(prev[categoryId]?.[permissionId])
-      }
+      [categoryId]: { ...(prev[categoryId] || {}), [permissionId]: !(prev[categoryId]?.[permissionId]) },
     }));
   };
 
   const handleEnableAll = (checked: boolean) => {
     setEnableAll(checked);
-    const newPermissions: Record<string, Record<string, boolean>> = {};
-    PERMISSION_CATEGORIES.forEach(category => {
-      if (category.subPermissions) {
-        newPermissions[category.id] = {};
-        category.subPermissions.forEach(sub => {
-          newPermissions[category.id][sub.id] = checked;
-        });
-      }
+    const all: Record<string, Record<string, boolean>> = {};
+    PERMISSION_CATEGORIES.forEach(cat => {
+      all[cat.id] = {};
+      cat.subPermissions?.forEach(sub => { all[cat.id][sub.id] = checked; });
     });
-    setPermissions(newPermissions);
+    setPermissions(all);
   };
 
   const handleManage = (role: any) => {
     setEditingRole(role);
     setRoleName(role.name);
     setRoleDescription(role.description || "");
-    const iconObj = ICONS.find(i => i.icon === role.icon) || ICONS[0];
-    setSelectedIcon(iconObj);
+    setPermissions(role.permissions || {});
+    const icon = ICONS.find(i => i.name === role.iconName) || ICONS[0];
+    setSelectedIcon(icon);
     setView("edit");
   };
 
   const resetForm = () => {
-    setRoleName("");
-    setRoleDescription("");
-    setEditingRole(null);
-    setSelectedIcon(ICONS[0]);
-    setPermissions({});
-    setEnableAll(false);
+    setRoleName(""); setRoleDescription(""); setEditingRole(null);
+    setSelectedIcon(ICONS[0]); setPermissions({}); setEnableAll(false);
+    setExpandedCategory(PERMISSION_CATEGORIES[0]?.id || null);
   };
 
   const handleSave = () => {
-    if (!roleName.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a role name",
-        variant: "destructive",
-      });
-      return;
+    if (!roleName.trim()) { toast({ title: "Role name is required", variant: "destructive" }); return; }
+    if (editingRole) {
+      updateMutation.mutate({ id: editingRole.id, data: { name: roleName, description: roleDescription, icon: selectedIcon.name, permissions } });
+    } else {
+      createMutation.mutate({ name: roleName, description: roleDescription, icon: selectedIcon.name, permissions });
     }
-
-    createMutation.mutate({
-      name: roleName,
-      description: roleDescription,
-      icon: selectedIcon.name,
-      permissions: permissions
-    });
   };
 
-  const handleUpdate = () => {
-    if (!editingRole) return;
+  const enabledCount = Object.values(permissions).reduce((sum, cat) =>
+    sum + (typeof cat === 'object' ? Object.values(cat).filter(Boolean).length : 0), 0);
+  const totalPerms = PERMISSION_CATEGORIES.reduce((s, g) => s + (g.subPermissions?.length || 0), 0);
+  const pct = totalPerms > 0 ? Math.round((enabledCount / totalPerms) * 100) : 0;
 
-    if (!roleName.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a role name",
-        variant: "destructive",
-      });
-      return;
-    }
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'       : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500'   : 'text-slate-400';
+  const card   = dark ? 'bg-[#0f1829]'     : 'bg-white';
 
-    updateMutation.mutate({
-      id: editingRole.id,
-      data: {
-        name: roleName,
-        description: roleDescription,
-        icon: selectedIcon.name,
-        permissions: permissions
-      }
-    });
-  };
+  const inputCls = cn(
+    'h-9 text-[12px] font-medium transition-colors focus-visible:ring-1 focus-visible:ring-primary/50',
+    dark ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600' : 'bg-white border-slate-200 placeholder:text-slate-400'
+  );
+  const labelCls = cn('block text-[10px] font-bold uppercase tracking-widest mb-1.5', sub);
 
+  /* ── Form view ── */
   if (view === "add" || view === "edit") {
     return (
-      <div className="flex flex-col min-h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg text-left overflow-hidden">
-        <CardHeader className="flex flex-col p-6 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-black dark:text-white" />
+      <div className={cn('flex flex-col rounded-xl border overflow-hidden', card, border)} style={{ minHeight: 560 }}>
+
+        {/* Header */}
+        <div className={cn('flex items-center gap-4 px-6 py-4 border-b shrink-0', card, border)}>
+          <button
+            onClick={() => { setView("list"); resetForm(); }}
+            className={cn('w-8 h-8 rounded-lg border flex items-center justify-center transition-colors shrink-0',
+              dark ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-50')}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-left">
-              <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Roles and Permissions</CardTitle>
-              <CardDescription className="text-sm font-medium text-gray-400 dark:text-gray-500">Manage roles and permissions</CardDescription>
+            <div>
+              <h1 className={cn('text-[14px] font-bold', text)}>{editingRole ? 'Edit Role' : 'Add Role'}</h1>
+              <p className={cn('text-[11px]', sub)}>Configure permissions for this role</p>
             </div>
           </div>
-        </CardHeader>
+          <div className="ml-auto flex gap-2 shrink-0">
+            <Button variant="outline" onClick={() => { setView("list"); resetForm(); }}
+              className={cn('h-8 px-4 text-[12px] font-semibold', dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent' : '')}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending || !roleName.trim()}
+              className="h-8 px-5 text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground">
+              {(createMutation.isPending || updateMutation.isPending)
+                ? <span className="flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" />Saving…</span>
+                : editingRole ? 'Update Role' : 'Save Role'}
+            </Button>
+          </div>
+        </div>
 
-        <CardContent className="p-6 space-y-8">
-          {/* Top Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Name</Label>
-              <Input
-                value={roleName}
-                onChange={(e) => setRoleName(e.target.value)}
-                className="h-10 border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950"
+        {/* Body */}
+        <div className="flex flex-1 overflow-hidden">
+
+          {/* Left sidebar */}
+          <div className={cn('w-64 shrink-0 border-r flex flex-col overflow-y-auto p-5 space-y-4',
+            dark ? 'border-slate-800 bg-[#0c1525]' : 'border-slate-200 bg-slate-50/60')}>
+
+            <div>
+              <label className={labelCls}>Role Name *</label>
+              <Input className={inputCls} placeholder="e.g. Support Agent" value={roleName} onChange={e => setRoleName(e.target.value)} />
+            </div>
+
+            <div>
+              <label className={labelCls}>Description</label>
+              <Textarea
+                className={cn(inputCls, 'h-auto min-h-[80px] resize-none py-2')}
+                placeholder="What does this role do?"
+                value={roleDescription}
+                onChange={e => setRoleDescription(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Select Icon</Label>
 
-              <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full h-10 px-3 justify-start gap-3 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 font-normal text-gray-900 dark:text-white hover:bg-white"
-                  >
-                    <selectedIcon.icon className="w-4 h-4 text-black dark:text-white" />
-                    <span>{selectedIcon.name}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 shadow-lg border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden rounded-md" align="start">
-                  <div className="flex flex-col max-h-[300px] overflow-y-auto pt-1">
-                    {ICONS.map((item) => (
-                      <button
-                        key={item.name}
-                        onClick={() => {
-                          setSelectedIcon(item);
-                          setIconPickerOpen(false);
-                        }}
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-600 hover:text-white w-full text-left transition-colors group",
-                          selectedIcon.name === item.name ? "bg-gray-50 dark:bg-slate-800" : ""
-                        )}
-                      >
-                        <item.icon className="w-4 h-4 text-black dark:text-white group-hover:text-white" />
-                        <span className="flex-1 font-medium text-gray-900 dark:text-white group-hover:text-white">{item.name}</span>
-                        {selectedIcon.name === item.name && (
-                          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+            <div>
+              <label className={labelCls}>Icon</label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {ICONS.map(item => (
+                  <button key={item.name} onClick={() => setSelectedIcon(item)}
+                    className={cn('w-full aspect-square rounded-lg flex items-center justify-center border transition-colors',
+                      selectedIcon.name === item.name
+                        ? 'bg-primary/10 border-primary/30 text-primary'
+                        : dark ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-400 hover:bg-slate-100')}>
+                    <item.icon size={15} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1" />
+
+            {/* Permission progress */}
+            <div className={cn('rounded-xl border p-3.5', dark ? 'border-slate-800 bg-slate-900/40' : 'border-slate-200 bg-slate-50')}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={cn('text-[10px] font-bold uppercase tracking-widest', sub)}>Permissions</span>
+                <span className={cn('text-[11px] font-bold', text)}>{enabledCount}/{totalPerms}</span>
+              </div>
+              <div className={cn('h-1.5 rounded-full overflow-hidden', dark ? 'bg-slate-800' : 'bg-slate-200')}>
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className={cn('text-[10px]', sub)}>Enable all</span>
+                <Switch checked={enableAll} onCheckedChange={handleEnableAll} className="data-[state=checked]:bg-primary scale-75 origin-right" />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Description</Label>
-            <Textarea
-              value={roleDescription}
-              onChange={(e) => setRoleDescription(e.target.value)}
-              className="min-h-[100px] border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-950"
-            />
-          </div>
-
-          {/* Permissions Header */}
-          <div className="flex items-center justify-between py-2">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Permissions</h3>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-gray-500">Enable / Disable all</span>
-              <Switch checked={enableAll} onCheckedChange={handleEnableAll} className="data-[state=checked]:bg-blue-600" />
-            </div>
-          </div>
-
-          {/* Permissions Accordion */}
-          <Accordion type="single" collapsible className="w-full space-y-0 border-t border-gray-100 dark:border-slate-800">
-            {PERMISSION_CATEGORIES.map((category) => (
-              <AccordionItem key={category.id} value={category.id} className="border-b border-gray-100 dark:border-slate-800 px-0">
-                <AccordionTrigger className="hover:no-underline py-4 px-2 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                  <div className="flex items-center gap-3 text-gray-900 dark:text-white">
-                    <category.icon className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-bold">{category.name}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-10 py-4 bg-white dark:bg-slate-900/50">
-                  <div className="space-y-6">
-                    {category.subPermissions ? (
-                      category.subPermissions.map((sub) => (
-                        <div key={sub.id} className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1.5">
-                              <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-none">{sub.title}</h4>
-                              {sub.hasInfo && <Info className="w-3.5 h-3.5 text-black dark:text-white opacity-60" />}
-                            </div>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">{sub.description}</p>
-                          </div>
-                          <Switch
-                            checked={permissions[category.id]?.[sub.id] || false}
-                            onCheckedChange={() => togglePermission(category.id, sub.id)}
-                            className="data-[state=checked]:bg-blue-600"
-                          />
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-sm text-gray-500">
-                        Configuration options for {category.name} will appear here.
-                      </div>
+          {/* Right: permission categories */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Category chips */}
+            <div className={cn('px-5 py-3 border-b flex flex-wrap gap-1.5', border)}>
+              {PERMISSION_CATEGORIES.map(cat => {
+                const col = CAT_COLORS[cat.id];
+                const count = cat.subPermissions?.filter(s => permissions[cat.id]?.[s.id]).length || 0;
+                const isActive = expandedCategory === cat.id;
+                return (
+                  <button key={cat.id} onClick={() => setExpandedCategory(isActive ? null : cat.id)}
+                    className={cn('inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full border transition-colors',
+                      isActive
+                        ? dark ? col?.darkChip : col?.chip
+                        : dark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600' : 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-200')}>
+                    <cat.icon size={10} />
+                    {cat.name}
+                    {count > 0 && (
+                      <span className="ml-0.5 bg-primary/20 text-primary px-1 rounded-full">{count}</span>
                     )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active category permissions */}
+            {PERMISSION_CATEGORIES.filter(c => c.id === expandedCategory).map(cat => {
+              const col = CAT_COLORS[cat.id];
+              return (
+                <div key={cat.id}>
+                  <div className={cn('px-5 py-2.5 border-b flex items-center gap-2', border,
+                    dark ? 'bg-slate-900/30' : 'bg-slate-50/60')}>
+                    <cat.icon size={13} className={col?.icon} />
+                    <span className={cn('text-[11px] font-bold', text)}>{cat.name}</span>
+                    <span className={cn('text-[10px] ml-auto', sub)}>
+                      {cat.subPermissions?.filter(s => permissions[cat.id]?.[s.id]).length || 0} / {cat.subPermissions?.length} enabled
+                    </span>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
+                  {cat.subPermissions?.map(sub_ => (
+                    <div key={sub_.id}
+                      className={cn('flex items-center justify-between px-5 py-3.5 border-b transition-colors cursor-pointer',
+                        border,
+                        permissions[cat.id]?.[sub_.id]
+                          ? dark ? 'bg-primary/5' : 'bg-primary/3'
+                          : dark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50/70'
+                      )}
+                      onClick={() => togglePermission(cat.id, sub_.id)}
+                    >
+                      <div className="min-w-0 pr-4">
+                        <p className={cn('text-[12px] font-semibold', text)}>{sub_.title}</p>
+                        <p className={cn('text-[11px] mt-0.5', sub)}>{sub_.description}</p>
+                      </div>
+                      <Switch
+                        checked={permissions[cat.id]?.[sub_.id] || false}
+                        onCheckedChange={() => togglePermission(cat.id, sub_.id)}
+                        onClick={e => e.stopPropagation()}
+                        className="data-[state=checked]:bg-primary shrink-0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
 
-        <Separator className="bg-gray-100 dark:bg-slate-800" />
-
-        <div className="p-6 flex justify-end gap-3 bg-white dark:bg-slate-900">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setView("list");
-              resetForm();
-            }}
-            className="h-10 px-6 border-gray-200 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 font-bold"
-          >
-            Cancel
-          </Button>
-          {view === "add" ? (
-            <Button
-              variant="outline"
-              onClick={handleSave}
-              className="h-10 px-8 btn-outline-primary font-bold"
-            >
-              Save
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={handleUpdate}
-              className="h-10 px-8 btn-outline-primary font-bold"
-            >
-              Save
-            </Button>
-          )}
+            {!expandedCategory && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Shield className="w-8 h-8 text-slate-300 mb-3" />
+                <p className={cn('text-[12px]', sub)}>Select a category above to configure permissions</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
+  /* ── List view ── */
   return (
-    <div className="flex flex-col min-h-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-lg text-left overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between p-6 bg-white dark:bg-slate-900">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
-            <ShieldCheck className="w-6 h-6 text-black dark:text-white" />
+    <div className={cn('flex flex-col rounded-xl border overflow-hidden', card, border)}>
+
+      {/* Header */}
+      <div className={cn('px-6 py-4 border-b flex items-center justify-between', border)}>
+        <div className="flex items-center gap-3">
+          <div className={cn('p-2 rounded-xl', dark ? 'bg-primary/15' : 'bg-primary/10')}>
+            <Shield className="w-4 h-4 text-primary" />
           </div>
-          <div className="text-left">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Roles and Permissions</CardTitle>
-            <CardDescription className="text-sm font-medium text-gray-400 dark:text-gray-500">Manage roles and permissions</CardDescription>
+          <div>
+            <h1 className={cn('text-[14px] font-bold', text)}>Roles & Permissions</h1>
+            <p className={cn('text-[11px] mt-0.5', sub)}>
+              {activeRoles.length} active · {archivedRoles.length} archived
+            </p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            resetForm();
-            setView("add");
-          }}
-          className="h-9 px-4 btn-outline-primary text-sm font-medium flex items-center gap-2"
+        <button
+          onClick={() => { resetForm(); setView("add"); }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
         >
-          <Plus className="w-4 h-4" />
-          Add Role
-        </Button>
-      </CardHeader>
+          <Plus size={13} /> Add Role
+        </button>
+      </div>
 
-      <Separator className="bg-gray-100 dark:bg-slate-800" />
+      {/* Tabs */}
+      <div className={cn('px-6 border-b flex items-center gap-0', border)}>
+        {([
+          { key: 'active',   label: 'Active',   icon: <ShieldCheck size={13} />, count: activeRoles.length },
+          { key: 'archived', label: 'Archived',  icon: <ShieldOff size={13} />,  count: archivedRoles.length },
+        ] as const).map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+            className={cn('flex items-center gap-2 px-4 py-3.5 text-[12px] font-semibold border-b-2 transition-colors',
+              activeTab === tab.key ? 'border-primary text-primary' : cn('border-transparent', sub, 'hover:text-slate-300'))}>
+            {tab.icon} {tab.label}
+            <span className={cn('ml-0.5 min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+              activeTab === tab.key
+                ? 'bg-primary/10 text-primary'
+                : dark ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400')}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800/50">
-          <TabsList className="flex items-center justify-start gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg h-auto w-fit">
-            <TabsTrigger
-              value="active"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-black dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-6 py-2 text-xs font-bold whitespace-nowrap transition-all border-none"
-            >
-              Active
-            </TabsTrigger>
-            <TabsTrigger
-              value="archived"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-black dark:data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-6 py-2 text-xs font-bold whitespace-nowrap transition-all border-none"
-            >
-              Archived
-            </TabsTrigger>
-          </TabsList>
+      {/* Column headers */}
+      {!isLoading && displayRoles.length > 0 && (
+        <div className={cn('grid items-center px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest border-b',
+          dark ? 'text-slate-600 border-slate-800 bg-slate-900/30' : 'text-slate-400 border-slate-100 bg-slate-50/60')}
+          style={{ gridTemplateColumns: '2.5rem 1fr 10rem 6rem' }}>
+          <span />
+          <span>Role</span>
+          <span>Permissions</span>
+          <span className="text-right">Actions</span>
         </div>
+      )}
 
-        <TabsContent value="active" className="m-0 p-0">
-          <div className="divide-y divide-gray-50 dark:divide-slate-800/50">
-            {roles.filter((r: any) => !r.isArchived).map((role: any) => (
-              <div key={role.id} className="flex items-center justify-between p-6 hover:bg-gray-50/30 dark:hover:bg-slate-800/20 transition-colors">
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-slate-800/50">
-                    <role.icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{role.name}</span>
-                    {role.description && (
-                      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium mt-1">{role.description}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => confirmAction(role.id, 'archive')}
-                    className="h-9 px-4 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-primary dark:hover:bg-primary hover:text-white dark:hover:text-white text-sm flex items-center gap-2 transition-all"
-                  >
-                    <Shield className="w-3.5 h-3.5" />
-                    Archive
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleManage(role)}
-                    className="h-9 px-4 btn-outline-primary text-sm transition-all"
-                  >
-                    Manage
-                  </Button>
-                </div>
-              </div>
-            ))}
+      {/* Rows */}
+      {isLoading ? (
+        Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className={cn('flex items-center gap-4 px-5 py-4 border-b last:border-0 animate-pulse', border)}>
+            <div className={cn('w-1.5 h-8 rounded-full', dark ? 'bg-slate-800' : 'bg-slate-200')} />
+            <div className="flex-1 space-y-2">
+              <div className={cn('h-3 w-40 rounded', dark ? 'bg-slate-800' : 'bg-slate-200')} />
+              <div className={cn('h-2 w-64 rounded', dark ? 'bg-slate-800/60' : 'bg-slate-100')} />
+            </div>
+            <div className={cn('h-6 w-24 rounded-full', dark ? 'bg-slate-800' : 'bg-slate-100')} />
           </div>
-        </TabsContent>
-
-        <TabsContent value="archived" className="m-0 p-0">
-          {roles.filter((r: any) => r.isArchived).length > 0 ? (
-            <div className="divide-y divide-gray-50 dark:divide-slate-800/50">
-              {roles.filter((r: any) => r.isArchived).map((role: any) => (
-                <div key={role.id} className="flex items-center justify-between p-6 hover:bg-gray-50/30 dark:hover:bg-slate-800/20 transition-colors">
-                  <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-slate-800/50">
-                      <role.icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{role.name}</span>
-                      {role.description && (
-                        <span className="text-xs text-gray-400 dark:text-gray-500 font-medium mt-1">{role.description}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => confirmAction(role.id, 'activate')}
-                      className="h-9 px-4 btn-outline-primary text-sm transition-all"
-                    >
-                      Activate
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center space-y-3 py-20">
-              <Archive className="w-12 h-12 text-gray-200 dark:text-slate-700" />
-              <p className="text-sm font-medium text-gray-400 dark:text-gray-500">No archived roles found</p>
-            </div>
+        ))
+      ) : displayRoles.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center mb-3', dark ? 'bg-slate-800' : 'bg-slate-100')}>
+            <Shield className="w-5 h-5 text-slate-400" />
+          </div>
+          <p className={cn('text-[13px] font-bold mb-1', text)}>
+            {activeTab === 'active' ? 'No roles yet' : 'No archived roles'}
+          </p>
+          <p className={cn('text-[12px] mb-5', sub)}>
+            {activeTab === 'active' ? 'Create your first role to get started' : 'Archived roles will appear here'}
+          </p>
+          {activeTab === 'active' && (
+            <button onClick={() => { resetForm(); setView("add"); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground">
+              <Plus size={13} /> Add Role
+            </button>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : (
+        displayRoles.map((role: any, i: number) => {
+          const accent = ROW_ACCENTS[i % ROW_ACCENTS.length];
+          const permCount = Object.values(role.permissions || {}).reduce((s: number, cat: any) =>
+            s + (typeof cat === 'object' ? Object.values(cat).filter(Boolean).length : 0), 0) as number;
+          const maxPerms = 20;
+          const rowPct = Math.min((permCount / maxPerms) * 100, 100);
 
-      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <AlertDialogContent className="max-w-[400px] p-6 bg-white dark:bg-slate-900 border-none shadow-2xl rounded-xl">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="w-20 h-20 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
-              <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/40 rounded-full flex items-center justify-center relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-b-[26px] border-b-orange-200 dark:border-b-orange-800/60 translate-y-[-2px]"></div>
+          return (
+            <div key={role.id}
+              className={cn('group grid items-center px-5 py-3.5 border-b last:border-0 transition-colors',
+                dark ? 'border-slate-800 hover:bg-slate-800/25' : 'border-slate-100 hover:bg-slate-50/70')}
+              style={{ gridTemplateColumns: '2.5rem 1fr 10rem 6rem' }}>
+
+              {/* Accent dot */}
+              <div className="flex items-center">
+                <span className={cn('w-2 h-2 rounded-full', accent)} />
+              </div>
+
+              {/* Name + description */}
+              <div className="min-w-0 pr-4">
+                <p className={cn('text-[13px] font-bold truncate', text)}>{role.name}</p>
+                {role.description && (
+                  <p className={cn('text-[11px] truncate mt-0.5', sub)}>{role.description}</p>
+                )}
+              </div>
+
+              {/* Permission bar */}
+              <div className="pr-4">
+                <div className="flex items-center gap-2">
+                  <div className={cn('flex-1 h-1.5 rounded-full overflow-hidden', dark ? 'bg-slate-800' : 'bg-slate-100')}>
+                    <div className={cn('h-full rounded-full transition-all', accent)} style={{ width: `${rowPct}%` }} />
+                  </div>
+                  <span className={cn('text-[10px] font-bold tabular-nums w-5 text-right', sub)}>{permCount}</span>
                 </div>
-                <AlertCircle className="w-10 h-10 text-orange-600 relative z-10" strokeWidth={2.5} />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {activeTab === 'active' && (
+                  <button onClick={() => handleManage(role)} title="Edit"
+                    className={cn('p-1.5 rounded-lg transition-colors',
+                      dark ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700')}>
+                    <Pencil size={13} />
+                  </button>
+                )}
+                <button
+                  onClick={() => updateMutation.mutate({ id: role.id, data: { isArchived: !role.isArchived } })}
+                  title={activeTab === 'active' ? 'Archive' : 'Activate'}
+                  className={cn('p-1.5 rounded-lg transition-colors',
+                    activeTab === 'active'
+                      ? dark ? 'hover:bg-slate-700 text-slate-500 hover:text-slate-300' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
+                      : 'hover:bg-emerald-50 text-emerald-500 dark:hover:bg-emerald-500/10')}>
+                  {activeTab === 'active' ? <Archive size={13} /> : <RotateCcw size={13} />}
+                </button>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <AlertDialogTitle className="text-xl font-bold text-[#1e293b] dark:text-white">Are you sure</AlertDialogTitle>
-              <AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                Are you sure you want to continue?
-              </AlertDialogDescription>
-            </div>
-
-            <AlertDialogFooter className="flex items-center justify-center gap-3 w-full sm:justify-center">
-              <AlertDialogCancel asChild>
-                <Button variant="outline" className="h-11 px-8 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold min-w-[100px]">
-                  Close
-                </Button>
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <Button
-                  onClick={executeAction}
-                  className="h-11 px-10 bg-[#f97316] hover:bg-orange-600 text-white font-bold border-none min-w-[100px]"
-                >
-                  Yes
-                </Button>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+          );
+        })
+      )}
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import React from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { 
-  Gauge, 
-  Layers, 
-  Users, 
-  ShieldCheck, 
-  Cloud, 
-  Gavel, 
+import {
+  LayoutDashboard,
+  Network,
+  Users,
+  ShieldCheck,
+  Cloud,
+  Gavel,
   HelpCircle,
   ChevronDown,
   Settings,
@@ -14,316 +15,293 @@ import {
   Monitor,
   ChevronLeft,
   ChevronRight,
-  Network,
   ScrollText,
-  FileText,
   Briefcase,
   Plug,
   ShoppingCart,
-  CircleDollarSign
+  CircleDollarSign,
+  CreditCard,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useTranslation } from 'react-i18next';
+
+type SubItem = {
+  label: string;
+  icon: React.ReactElement;
+  href: string;
+  status?: string;
+};
+
+type MenuItem = {
+  label: string;
+  icon: React.ReactElement;
+  href: string;
+  hasSubmenu?: boolean;
+  subItems?: SubItem[];
+};
+
+type MenuGroup = {
+  section: string;
+  items: MenuItem[];
+};
+
+const menuGroups: MenuGroup[] = [
+  {
+    section: "MAIN MENU",
+    items: [
+      { label: "Dashboard", icon: <LayoutDashboard size={18} />, href: "/agency" },
+      { label: "Workspaces", icon: <Network size={18} />, href: "/agency/workspaces" },
+      { label: "Team", icon: <Users size={18} />, href: "/agency/team" },
+      { label: "Roles", icon: <ShieldCheck size={18} />, href: "/agency/roles" },
+    ],
+  },
+  {
+    section: "MANAGEMENT",
+    items: [
+      {
+        label: "Audit Logs",
+        icon: <ScrollText size={18} />,
+        href: "#",
+        hasSubmenu: true,
+        subItems: [
+          { label: "Agency Logs", icon: <Briefcase size={15} />, href: "/agency/audit-logs/agency" },
+          { label: "Workspace Logs", icon: <Network size={15} />, href: "/agency/audit-logs/workspace" },
+        ],
+      },
+      {
+        label: "SaaS",
+        icon: <Cloud size={18} />,
+        href: "#",
+        hasSubmenu: true,
+        subItems: [
+          { label: "Plans", icon: <Briefcase size={15} />, href: "/agency/saas/plans", status: "Soon" },
+          { label: "API", icon: <Plug size={15} />, href: "/agency/saas/api" },
+        ],
+      },
+      {
+        label: "Billing",
+        icon: <CreditCard size={18} />,
+        href: "#",
+        hasSubmenu: true,
+        subItems: [
+          { label: "Plans", icon: <ShoppingCart size={15} />, href: "/agency/billing/plans" },
+          { label: "Manage", icon: <CircleDollarSign size={15} />, href: "/agency/billing/manage" },
+        ],
+      },
+      { label: "Legal", icon: <Gavel size={18} />, href: "/agency/legal" },
+    ],
+  },
+];
+
+const bottomItems = [
+  { label: "Settings", icon: <Settings size={18} />, href: "/agency/settings/general" },
+  { label: "Notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications" },
+  { label: "White Label", icon: <Monitor size={18} />, href: "/agency/settings/white-label" },
+  { label: "Security", icon: <Lock size={18} />, href: "#" },
+  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/agency/help" },
+];
 
 const AgencySidebar = () => {
   const [location] = useLocation();
-  const [expanded, setExpanded] = React.useState<string | null>("nav.auditLogs");
-  const [settingsExpanded, setSettingsExpanded] = React.useState(false);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { mode } = useTheme();
-  const { t } = useTranslation();
 
-  const menuItems = [
-    { label: "nav.dashboard", icon: <Gauge size={20} />, href: "/agency" },
-    { label: "nav.workspaces", icon: <Network size={20} />, href: "/agency/workspaces" },
-    { label: "nav.team", icon: <Users size={20} />, href: "/agency/team" },
-    { label: "nav.roles", icon: <ShieldCheck size={20} />, href: "/agency/roles" },
-    { 
-      label: "nav.auditLogs", 
-      icon: <ScrollText size={20} />, 
-      href: "#", 
-      hasSubmenu: true,
-      subItems: [
-        { label: "nav.auditLogs_agency", icon: <Briefcase size={16} />, href: "/agency/audit-logs/agency" },
-      ]
-    },
-    { 
-      label: "nav.saas", 
-      icon: <Cloud size={20} />, 
-      href: "#", 
-      hasSubmenu: true,
-      subItems: [
-        { label: "nav.saas_plans", icon: <Briefcase size={16} />, href: "/agency/saas/plans", status: "Soon..." },
-        { label: "nav.saas_api", icon: <Plug size={16} />, href: "/agency/saas/api" },
-      ]
-    },
-    { 
-      label: "nav.billing", 
-      icon: <FileText size={20} />, 
-      href: "#", 
-      hasSubmenu: true,
-      subItems: [
-        { label: "nav.billing_plans", icon: <ShoppingCart size={16} />, href: "/agency/billing/plans" },
-        { label: "nav.billing_manage", icon: <CircleDollarSign size={16} />, href: "/agency/billing/manage" },
-      ]
-    },
-    { label: "nav.legal", icon: <Gavel size={20} />, href: "/agency/legal" },
-    { label: "nav.help", icon: <HelpCircle size={20} />, href: "/agency/help" },
-  ];
+  const user = React.useMemo(() => {
+    try { return getUserInfo(); } catch { return {}; }
+  }, []);
 
-  const settingSubItems = [
-    { label: "nav.settings_general", icon: <Settings size={18} />, href: "/agency/settings/general" },
-    { label: "nav.settings_notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications" },
-    { label: "nav.settings_whiteLabel", icon: <Monitor size={18} />, href: "/agency/settings/white-label" },
-  ];
-
-  const isActive = (href: string) => location === href;
-  const isParentActive = (label: string) => {
-    const item = menuItems.find(i => i.label === label);
-    if (!item) return false;
+  const isActive = (href: string) => href !== "#" && location === href;
+  const isParentActive = (item: MenuItem) => {
     if (isActive(item.href)) return true;
-    return item.subItems?.some(sub => isActive(sub.href));
+    return item.subItems?.some(s => isActive(s.href)) ?? false;
   };
 
-  const renderMenuItem = (item: any) => {
-    const active = isActive(item.href) || (item.hasSubmenu && isParentActive(item.label));
-
-    return (
-      <div key={item.label} className="relative group">
-        <div 
-          onClick={() => {
-            if (isCollapsed) {
-              setIsCollapsed(false);
-              if (item.hasSubmenu) setExpanded(item.label);
-            } else if (item.hasSubmenu) {
-              setExpanded(expanded === item.label ? null : item.label);
-            }
-          }}
-          className={cn(
-            "flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 cursor-pointer relative",
-            active
-              ? (mode === "dark" 
-                  ? "bg-green-900/30 text-green-400 shadow-sm" 
-                  : "bg-[#e8f5e9] text-slate-900 shadow-sm font-bold scale-[1.01]")
-              : (mode === "dark" 
-                  ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" 
-                  : "text-slate-900 hover:bg-slate-50 hover:text-black hover:scale-[1.01]")
-          )}
-        >
-          <div className={cn("flex items-center gap-3 w-full", isCollapsed && "justify-center")}>
-            <span className={cn("shrink-0 transition-colors duration-200", 
-              active 
-                ? (mode === "dark" ? "text-green-400" : "text-[#2e7d32]") 
-                : (mode === "dark" ? "text-slate-500" : "text-slate-900")
-            )}>
-              {React.cloneElement(item.icon as React.ReactElement, { size: 20 })}
-            </span>
-            {!isCollapsed && (
-              item.hasSubmenu ? (
-                <div className="flex-1 flex items-center justify-between overflow-hidden">
-                  <span className={cn("text-[13px] font-semibold whitespace-nowrap",
-                    active 
-                      ? (mode === "dark" ? "text-green-400" : "text-[#1b5e20]") 
-                      : (mode === "dark" ? "text-slate-300" : "text-slate-900")
-                  )}>
-                    {t(item.label)}
-                  </span>
-                  <ChevronDown 
-                    size={14} 
-                    className={cn("transition-transform duration-200", 
-                      expanded === item.label ? "rotate-180" : "",
-                      active ? (mode === "dark" ? "text-green-400/70" : "text-green-500/70") : (mode === "dark" ? "text-slate-500" : "text-slate-400")
-                    )} 
-                  />
-                </div>
-              ) : (
-                <Link href={item.href} className="flex-1 flex items-center justify-between overflow-hidden">
-                  <span className={cn("text-[13px] font-semibold whitespace-nowrap",
-                    active 
-                      ? (mode === "dark" ? "text-green-400" : "text-[#1b5e20]") 
-                      : (mode === "dark" ? "text-slate-300" : "text-slate-900")
-                  )}>
-                    {t(item.label)}
-                  </span>
-                </Link>
-              )
-            )}
-            
-            {/* Active dot indicator */}
-            {/* Active dot indicator removed */}
-          </div>
-          
-          {/* Tooltip for Collapsed State */}
-          {isCollapsed && (
-            <div className={cn(
-              "absolute left-full ml-3 px-3 py-1.5 text-[11px] font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[100] shadow-lg",
-              mode === "dark" ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
-            )}>
-              {t(item.label)}
-            </div>
-          )}
-        </div>
-
-        {/* Submenu */}
-        {!isCollapsed && item.hasSubmenu && expanded === item.label && item.subItems && (
-          <div className="mt-1 space-y-1 animate-in slide-in-from-top-1 duration-200">
-            {item.subItems.map((sub: any) => (
-              <Link key={sub.label} href={sub.href}>
-                <div className={cn(
-                  "flex items-center justify-between ml-10 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer",
-                  isActive(sub.href) 
-                    ? (mode === "dark" ? "text-green-400" : "text-[#1b5e20] font-bold") 
-                    : (mode === "dark" ? "text-slate-500 hover:text-slate-300" : "text-slate-900 hover:bg-slate-50")
-                )}>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("transition-colors", isActive(sub.href) ? "text-[#1b5e20]" : "text-slate-500")}>
-                      {React.cloneElement(sub.icon as React.ReactElement, { size: 16 })}
-                    </span>
-                    <span className="text-[13px] font-semibold">{t(sub.label)}</span>
-                  </div>
-                  {sub.status && (
-                    <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full",
-                      mode === "dark" ? "bg-slate-800 text-green-400" : "bg-white text-green-500 border border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.2)]"
-                    )}>
-                      {sub.status}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const dark = mode === "dark";
 
   return (
     <div className={cn(
-      "relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out z-50", 
-      isCollapsed ? "w-20" : "w-64",
-      mode === "dark" 
-        ? "bg-[#0f172a] text-slate-300 border-slate-800" 
-        : "bg-white text-slate-600 border-slate-200 shadow-sm"
+      "relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out z-50 shrink-0",
+      isCollapsed ? "w-[70px]" : "w-[240px]",
+      dark ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-200"
     )}>
-      
-      {/* Collapse Toggle Button */}
-      <button 
+
+      {/* Collapse toggle */}
+      <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className={cn(
-          "absolute -right-3.5 top-[72px] w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md z-[100]",
-          mode === "dark" 
-            ? "bg-green-600 border-green-500 text-white hover:bg-green-500 shadow-green-900/40" 
-            : "bg-green-500 border-transparent text-white hover:bg-green-600 shadow-green-500/30"
-        )}>
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          "absolute -right-3 top-16 w-6 h-6 rounded-full border flex items-center justify-center z-[100] shadow-md transition-all hover:scale-110",
+          dark ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-300 text-slate-500"
+        )}
+      >
+        {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
-      {/* Logo Section */}
+      {/* Logo */}
       <div className={cn(
-        "px-5 py-5 flex items-center transition-all duration-300 overflow-hidden border-b",
-        isCollapsed ? "justify-center" : "gap-3",
-        mode === "dark" ? "border-slate-800" : "border-slate-200"
+        "flex items-center gap-3 px-4 py-5 border-b shrink-0",
+        dark ? "border-slate-800" : "border-slate-100"
       )}>
-        <div className={cn(
-          "w-9 h-9 rounded-xl flex items-center justify-center font-black text-white shrink-0 shadow-md",
-          mode === "dark" ? "bg-green-600 shadow-green-600/20" : "bg-green-600 shadow-green-500/20"
-        )}>
+        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
           EC
         </div>
         {!isCollapsed && (
-          <span className={cn(
-            "font-black text-xl tracking-tighter uppercase animate-in fade-in slide-in-from-left-3 duration-200", 
-            mode === "dark" ? "text-white" : "text-[#1a1a1a]"
-          )}>
-            EZCONN
-          </span>
+          <div className="overflow-hidden">
+            <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>
+              EZCONN
+            </p>
+            <p className="text-[11px] text-slate-400 truncate">Agency Manager</p>
+          </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto overflow-x-hidden">
-        {menuItems.map(item => renderMenuItem(item))}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-5">
+        {menuGroups.map((group) => (
+          <div key={group.section}>
+            {!isCollapsed && (
+              <p className={cn("px-4 mb-1 text-[10px] font-bold tracking-widest", dark ? "text-slate-500" : "text-slate-400")}>
+                {group.section}
+              </p>
+            )}
+            <div className="space-y-0.5 px-2">
+              {group.items.map((item) => {
+                const active = isActive(item.href) || isParentActive(item);
+                const open = expanded === item.label;
+
+                return (
+                  <div key={item.label}>
+                    <div
+                      onClick={() => {
+                        if (item.hasSubmenu) {
+                          if (isCollapsed) setIsCollapsed(false);
+                          setExpanded(open ? null : item.label);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
+                        active
+                          ? "bg-primary/10 text-primary"
+                          : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
+                        isCollapsed && "justify-center"
+                      )}
+                    >
+                      <span className={cn("shrink-0", active ? "text-primary" : "")}>
+                        {item.icon}
+                      </span>
+
+                      {!isCollapsed && (
+                        <>
+                          {item.hasSubmenu ? (
+                            <span className="flex-1 text-[13px] font-medium">{item.label}</span>
+                          ) : (
+                            <Link href={item.href} className="flex-1 text-[13px] font-medium">
+                              {item.label}
+                            </Link>
+                          )}
+                          {item.hasSubmenu && (
+                            <ChevronDown size={13} className={cn("transition-transform shrink-0", open ? "rotate-180" : "", dark ? "text-slate-500" : "text-slate-400")} />
+                          )}
+                        </>
+                      )}
+
+                      {/* Tooltip when collapsed */}
+                      {isCollapsed && (
+                        <div className={cn(
+                          "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
+                          dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                        )}>
+                          {item.label}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submenu */}
+                    {!isCollapsed && item.hasSubmenu && open && item.subItems && (
+                      <div className="mt-0.5 ml-4 pl-4 border-l space-y-0.5 border-slate-200 dark:border-slate-700">
+                        {item.subItems.map((sub) => (
+                          <Link key={sub.label} href={sub.href}>
+                            <div className={cn(
+                              "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] font-medium cursor-pointer transition-all",
+                              isActive(sub.href)
+                                ? "text-primary bg-primary/5"
+                                : (dark ? "text-slate-500 hover:text-slate-300" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50")
+                            )}>
+                              <div className="flex items-center gap-2">
+                                {sub.icon}
+                                <span>{sub.label}</span>
+                              </div>
+                              {sub.status && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">{sub.status}</span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* Bottom items */}
+        <div>
+          {!isCollapsed && (
+            <p className={cn("px-4 mb-1 text-[10px] font-bold tracking-widest", dark ? "text-slate-500" : "text-slate-400")}>
+              ACCOUNT
+            </p>
+          )}
+          <div className="space-y-0.5 px-2">
+            {bottomItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link key={item.label} href={item.href}>
+                  <div className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
+                    active
+                      ? (dark ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-700")
+                      : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
+                    isCollapsed && "justify-center"
+                  )}>
+                    <span className={cn("shrink-0", active ? (dark ? "text-blue-400" : "text-blue-600") : "")}>
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
+                    {isCollapsed && (
+                      <div className={cn(
+                        "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
+                        dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                      )}>
+                        {item.label}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </nav>
 
-      {/* Footer / Agency Settings */}
-      <div className={cn(
-        "p-3 border-t transition-all duration-200",
-        mode === "dark" ? "border-slate-800 bg-slate-900/50" : "border-slate-300 bg-white/50"
-      )}>
-        {!isCollapsed && settingsExpanded && (
-          <div className={cn("mb-3 rounded-lg border shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200",
-             mode === "dark" ? "border-slate-800 bg-[#0f172a]" : "border-slate-200 bg-white"
-          )}>
-            {settingSubItems.map((item, i) => (
-              <Link key={item.label} href={item.href}>
-                <div className={cn(
-                  "flex items-center gap-3 px-4 py-3 transition-all duration-200 cursor-pointer group",
-                  i !== settingSubItems.length - 1 && (mode === "dark" ? "border-b border-slate-800" : "border-b border-slate-200"),
-                  isActive(item.href) 
-                    ? (mode === "dark" ? "bg-[#00e55e]/15 text-[#00e55e]" : "bg-[#00e55e]/10 text-[#00e55e]")
-                    : (mode === "dark" ? "hover:bg-slate-800 text-slate-300 hover:text-white" : "hover:bg-slate-50 text-slate-900 hover:text-black")
-                )}>
-                  <span className={cn("transition-colors duration-200", 
-                    isActive(item.href) 
-                      ? "text-[#00e55e]" 
-                      : (mode === "dark" ? "text-slate-500 group-hover:text-slate-300" : "text-slate-600 group-hover:text-slate-900")
-                  )}>
-                    {React.cloneElement(item.icon as React.ReactElement, { size: 16 })}
-                  </span>
-                  <span className={cn("text-[13px] font-bold transition-colors",
-                    isActive(item.href) ? "text-[#00e55e]" : (mode === "dark" ? "text-slate-300 group-hover:text-white" : "text-slate-900 group-hover:text-black")
-                  )}>
-                    {t(item.label)}
-                  </span>
-                </div>
-              </Link>
-            ))}
+      {/* User footer */}
+      {!isCollapsed && (
+        <div className={cn("px-4 py-3 border-t shrink-0", dark ? "border-slate-800" : "border-slate-100")}>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+              {(user?.first_name?.[0] || "U")}
+            </div>
+            <div className="overflow-hidden">
+              <p className={cn("text-[12px] font-semibold truncate", dark ? "text-white" : "text-slate-900")}>
+                {user?.first_name} {user?.last_name || ""}
+              </p>
+              <p className="text-[11px] text-slate-400 truncate">{user?.email || ""}</p>
+            </div>
           </div>
-        )}
-        <div 
-          onClick={() => isCollapsed ? setIsCollapsed(false) : setSettingsExpanded(!settingsExpanded)}
-          className={cn(
-            "flex items-center rounded-lg transition-all duration-200 cursor-pointer p-3 group relative",
-            isCollapsed ? "justify-center" : "gap-3",
-            settingsExpanded && !isCollapsed 
-              ? (mode === "dark" ? "bg-slate-800 text-white shadow-sm" : "bg-white text-green-600 shadow-md border border-slate-50") 
-              : (mode === "dark" ? "text-slate-400 hover:text-green-400 hover:bg-slate-800" : "text-slate-500 hover:text-green-600 hover:bg-slate-50")
-          )}
-        >
-           <Settings size={20} className={cn(
-             "shrink-0 transition-all duration-200",
-             settingsExpanded && !isCollapsed
-               ? "rotate-90 text-green-500"
-               : (mode === "dark" ? "text-slate-500" : "text-slate-400")
-           )} />
-           {!isCollapsed && (
-             <span className={cn(
-               "flex-1 text-[13px] font-semibold whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-200",
-               settingsExpanded
-                 ? (mode === "dark" ? "text-white" : "text-[#2e7d32]")
-                 : (mode === "dark" ? "text-slate-300" : "text-slate-900")
-             )}>
-               {t("nav.settings")}
-             </span>
-           )}
-           {!isCollapsed && (
-             <ChevronRight size={14} className={cn(
-               "transition-transform duration-200",
-               settingsExpanded ? "rotate-90" : "",
-               mode === "dark" ? "text-slate-500" : "text-slate-400")
-             } />
-           )}
-           {isCollapsed && (
-             <div className={cn(
-               "absolute left-full ml-3 px-3 py-1.5 text-[11px] font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[100] shadow-lg",
-               mode === "dark" ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
-             )}>
-               {t("nav.settings")}
-             </div>
-           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

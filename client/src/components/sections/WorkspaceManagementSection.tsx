@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { getUserInfo } from "@/lib/auth";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, PlusCircle, MinusCircle } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,8 @@ export default function WorkspaceManagementSection() {
   const queryClient = useQueryClient();
 
   // Get Agency ID from localStorage (set during login)
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "7"; // Fallback to 7 as seen in Postman test
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id; // Fallback to 7 as seen in Postman test
 
   // --- API Fetching ---
 
