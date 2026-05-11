@@ -479,11 +479,16 @@ const resources = {
           "title": "Workspaces",
           "desc": "Workspaces (sub-accounts) belonging to either you or your customers.",
           "add": "Add Workspace",
+          "searchPlaceholder": "Search workspaces, teams...",
+          "showInactive": "Show inactive",
+          "sortNewest": "Newest first",
+          "sortOldest": "Oldest first",
           "filter": {
             "showInactive": "Show inactive",
             "fromNewest": "From newest",
             "fromOldest": "From oldest"
           },
+
           "table": {
             "name": "NAME",
             "login": "LOGIN",

@@ -32,8 +32,10 @@ import { cn } from "@/lib/utils";
 import CreateWorkspaceForm from "./CreateWorkspaceForm";
 import WorkspaceUsageView from "./WorkspaceUsageView";
 import AgencyVoiceWallet from "./AgencyVoiceWallet";
+import { useTranslation } from "react-i18next";
 
 const AgencyWorkspaces = () => {
+  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
