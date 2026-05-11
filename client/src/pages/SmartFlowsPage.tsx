@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { getUserInfo } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import {
     Plus,
@@ -93,8 +94,8 @@ export default function SmartFlowsPage() {
     const flows = automationsData?.automations || [];
 
     // Get Agency ID from localStorage
-    const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-    const agencyId = userInfo.modelable_id || "7";
+    const userInfo = getUserInfo();
+    const agencyId = userInfo.modelable_id;
 
     // Fetch Agency Members
     const { data: membersResponse } = useQuery({

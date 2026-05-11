@@ -1,35 +1,28 @@
 import React from 'react';
 import AgencySidebar from './AgencySidebar';
-import { 
-  Bell, 
-  ChevronDown, 
-  LogOut, 
-  Moon, 
-  Sun, 
-  Globe, 
-  User,
+import AgencyBrandingFetcher from './AgencyBrandingFetcher';
+import {
+  Bell,
+  ChevronDown,
+  LogOut,
+  Moon,
+  Sun,
   ChevronRight,
   Circle,
-  LayoutGrid,
   Search
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import { cn } from "@/lib/utils";
-import { 
+import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { BellOff, Info, Settings, Check, Clock, ArrowLeft, Volume2, Play } from "lucide-react";
+import { BellOff, Info, Settings, ArrowLeft, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLocation } from "wouter";
@@ -46,9 +39,9 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   const [isNotifSettings, setIsNotifSettings] = React.useState(false);
   const [soundEnabled, setSoundEnabled] = React.useState(true);
   const [selectedSound, setSelectedSound] = React.useState("Beep");
-  const [hasNotifications, setHasNotifications] = React.useState(false);
+  const [hasNotifications] = React.useState(false);
   const { mode, setMode } = useTheme();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
 
   // Sync initial language state with i18n
   React.useEffect(() => {
@@ -73,15 +66,31 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className={cn("flex h-screen overflow-hidden transition-colors duration-300", mode === "dark" ? "bg-[#0f172a]" : "bg-slate-50")}>
+      <AgencyBrandingFetcher />
       {/* Sidebar */}
       <AgencySidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className={cn("h-16 flex items-center justify-end px-8 border-b transition-colors duration-300", 
-          mode === "dark" ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-300")}>
-          <div className="flex items-center gap-6">
+        <header className={cn("h-14 flex items-center justify-between px-6 border-b transition-colors duration-300 shrink-0",
+          mode === "dark" ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-200")}>
+          {/* Search */}
+          <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg border w-72 transition-colors focus-within:ring-1",
+            mode === "dark"
+              ? "bg-slate-800 border-slate-700 focus-within:ring-slate-600"
+              : "bg-slate-50 border-slate-200 focus-within:ring-blue-300")}>
+            <Search size={14} className={mode === "dark" ? "text-slate-500 shrink-0" : "text-slate-400 shrink-0"} />
+            <input
+              type="text"
+              placeholder="Search workspaces, teams..."
+              className={cn(
+                "flex-1 bg-transparent outline-none text-[13px] placeholder:text-slate-400",
+                mode === "dark" ? "text-slate-200" : "text-slate-700"
+              )}
+            />
+          </div>
+          <div className="flex items-center gap-4">
             {/* Notifications */}
             <Popover onOpenChange={(open) => { if (!open) setIsNotifSettings(false); }}>
               <PopoverTrigger asChild>

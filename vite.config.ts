@@ -17,6 +17,12 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   server: {
+    host: true,
+    allowedHosts: ['localhost', 'agency.localhost', '.laglobal.local'],
+    fs: {
+      strict: true,
+      deny: ["**/.*"],
+    },
     proxy: {
       "/api": {
         target: "https://ezconn-backend-396801134474.us-central1.run.app",

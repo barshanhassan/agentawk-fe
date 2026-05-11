@@ -7,8 +7,7 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Direct Live Backend URL
-const LIVE_URL = "https://ezconn-backend-396801134474.us-central1.run.app";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app/api";
 
 export async function apiRequest(
   method: string,
@@ -32,7 +31,7 @@ export async function apiRequest(
     processedUrl = processedUrl.substring(4);
   }
   
-  const fullUrl = `${LIVE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
+  const fullUrl = `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
 
   console.log("Requesting:", fullUrl);
 
@@ -64,7 +63,7 @@ export const getQueryFn: <T>(options: {
       path = path.substring(4);
     }
     
-    const fullUrl = `${LIVE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+    const fullUrl = `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 
     const res = await fetch(fullUrl, {
       credentials: "include",

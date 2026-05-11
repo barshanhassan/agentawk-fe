@@ -31,7 +31,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isAgency = host.startsWith("agency.");
 
         try {
-          const response = await fetch(`${LIVE_URL}/ignite?hostname=${host}`);
+          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app/api";
+          const response = await fetch(`${API_BASE_URL}/ignite?hostname=${host}`);
           if (response.ok) {
             const data = await response.json();
             setSiteData(data);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { 
   Calendar, 
   Users, 
@@ -25,8 +26,8 @@ import { useTranslation } from 'react-i18next';
 const AgencyLogs = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "1";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   const [selectedDate, setSelectedDate] = useState(t("agency.logs.filters.today"));
   const [selectedAgent, setSelectedAgent] = useState(t("agency.logs.filters.all_agents"));

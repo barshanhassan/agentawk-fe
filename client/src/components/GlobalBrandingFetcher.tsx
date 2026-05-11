@@ -30,35 +30,35 @@ function hexToHslString(hex: string): string {
 }
 
 export default function GlobalBrandingFetcher() {
-  const { setPrimaryColor } = useTheme();
+  const { setWorkspacePrimaryColor } = useTheme();
 
   const { data: brandingData } = useQuery<any>({
     queryKey: ["/api/workspaces/branding"],
   });
 
   useEffect(() => {
-    if (brandingData && brandingData.color) {
-      const hslString = hexToHslString(brandingData.color);
-      setPrimaryColor(hslString);
-      
-      // Also inject incoming/outgoing styles if needed
-      if (brandingData.incoming_chat_color) {
-        document.documentElement.style.setProperty("--incoming-bubble", brandingData.incoming_chat_color);
-      }
-      if (brandingData.incoming_chat_text_color) {
-        document.documentElement.style.setProperty("--incoming-text", brandingData.incoming_chat_text_color);
-      }
-      if (brandingData.outgoing_chat_color) {
-        document.documentElement.style.setProperty("--outgoing-bubble", brandingData.outgoing_chat_color);
-      }
-      if (brandingData.outgoing_chat_text_color) {
-        document.documentElement.style.setProperty("--outgoing-text", brandingData.outgoing_chat_text_color);
-      }
-      if (brandingData.link_color) {
-        document.documentElement.style.setProperty("--link-color", brandingData.link_color);
-      }
+    if (!brandingData) return;
+
+    if (brandingData.color) {
+      setWorkspacePrimaryColor(hexToHslString(brandingData.color));
     }
-  }, [brandingData, setPrimaryColor]);
+
+    if (brandingData.incoming_chat_color) {
+      document.documentElement.style.setProperty("--incoming-bubble", brandingData.incoming_chat_color);
+    }
+    if (brandingData.incoming_chat_text_color) {
+      document.documentElement.style.setProperty("--incoming-text", brandingData.incoming_chat_text_color);
+    }
+    if (brandingData.outgoing_chat_color) {
+      document.documentElement.style.setProperty("--outgoing-bubble", brandingData.outgoing_chat_color);
+    }
+    if (brandingData.outgoing_chat_text_color) {
+      document.documentElement.style.setProperty("--outgoing-text", brandingData.outgoing_chat_text_color);
+    }
+    if (brandingData.link_color) {
+      document.documentElement.style.setProperty("--link-color", brandingData.link_color);
+    }
+  }, [brandingData]);
 
   return null;
 }

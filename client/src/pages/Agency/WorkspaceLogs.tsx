@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { 
   Calendar, 
   Users, 
@@ -27,8 +28,8 @@ import { useTranslation } from 'react-i18next';
 const WorkspaceLogs = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "1";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   const [selectedWorkspace, setSelectedWorkspace] = useState(t("agency.auditLogs.filters.all_workspaces"));
   const [selectedDate, setSelectedDate] = useState(t("agency.auditLogs.filters.today"));

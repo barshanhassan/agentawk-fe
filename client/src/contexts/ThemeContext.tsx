@@ -6,17 +6,26 @@ type ThemeMode = "light" | "dark";
 interface ThemeContextType {
     mode: ThemeMode;
     setMode: (mode: ThemeMode) => Promise<void>;
-    primaryColor: string; // The HSL color like '217 91% 60%'
+    primaryColor: string;
     setPrimaryColor: (color: string) => Promise<void>;
+    setWorkspacePrimaryColor: (color: string | null) => void;
+    setAgencyPrimaryColor: (color: string | null) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [mode, setModeState] = useState<ThemeMode>("light");
-    const [primaryColor, setPrimaryColorState] = useState("217 91% 60%"); // Default Blue
+    // User's personal color preference — persisted via /api/users/theme
+    const [primaryColor, setPrimaryColorState] = useState("217 91% 60%");
+    // Workspace branding override (wins over personal color, but not agency)
+    const [workspaceOverride, setWorkspaceOverride] = useState<string | null>(null);
+    // Agency branding override — highest priority
+    const [agencyOverride, setAgencyOverride] = useState<string | null>(null);
 
-    // Load from backend on mount
+    const effectivePrimary = agencyOverride ?? workspaceOverride ?? primaryColor;
+
+    // Load user's personal theme from backend once on mount
     useEffect(() => {
         const fetchTheme = async () => {
             try {
@@ -33,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         fetchTheme();
     }, []);
 
-    // Update cookie and DOM for mode
+    // Apply dark/light class
     useEffect(() => {
         if (mode === "dark") {
             document.documentElement.classList.add("dark");
@@ -43,20 +52,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         document.cookie = `themeMode=${mode}; path=/; max-age=31536000`;
     }, [mode]);
 
-    // Update CSS variables for color
+    // Apply CSS variables — effectivePrimary ensures the right tier wins
     useEffect(() => {
         const root = document.documentElement;
-        root.style.setProperty("--primary", primaryColor);
-        root.style.setProperty("--ring", primaryColor);
-        root.style.setProperty("--sidebar-primary", primaryColor);
-        root.style.setProperty("--sidebar-ring", primaryColor);
-        root.style.setProperty("--chart-1", primaryColor);
-        
-        // Update complementary colors for charts based on primary selection
-        // (Just updating the first chart color to match primary)
-        
-        document.cookie = `themePrimaryColor=${encodeURIComponent(primaryColor)}; path=/; max-age=31536000`;
-    }, [primaryColor]);
+        root.style.setProperty("--primary", effectivePrimary);
+        root.style.setProperty("--ring", effectivePrimary);
+        root.style.setProperty("--sidebar-primary", effectivePrimary);
+        root.style.setProperty("--sidebar-ring", effectivePrimary);
+        root.style.setProperty("--chart-1", effectivePrimary);
+        document.cookie = `themePrimaryColor=${encodeURIComponent(effectivePrimary)}; path=/; max-age=31536000`;
+    }, [effectivePrimary]);
 
     const setMode = async (newMode: ThemeMode) => {
         setModeState(newMode);
@@ -67,6 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Saves user's personal color preference to the DB
     const setPrimaryColor = async (newColor: string) => {
         setPrimaryColorState(newColor);
         try {
@@ -76,8 +82,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Sets workspace branding color — does NOT save to user theme
+    const setWorkspacePrimaryColor = (color: string | null) => {
+        setWorkspaceOverride(color);
+    };
+
+    // Sets agency branding color — highest priority override
+    const setAgencyPrimaryColor = (color: string | null) => {
+        setAgencyOverride(color);
+    };
+
     return (
-        <ThemeContext.Provider value={{ mode, setMode, primaryColor, setPrimaryColor }}>
+        <ThemeContext.Provider value={{ mode, setMode, primaryColor, setPrimaryColor, setWorkspacePrimaryColor, setAgencyPrimaryColor }}>
             {children}
         </ThemeContext.Provider>
     );
