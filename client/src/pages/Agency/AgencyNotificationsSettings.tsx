@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getUserInfo } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Bell,
@@ -27,8 +28,8 @@ const AgencyNotificationsSettings = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "1";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
   const { data: agencyResponse } = useQuery({
     queryKey: [`/api/agencies/${agencyId}`],

@@ -240,14 +240,11 @@ export default function SettingsPage() {
       <div className="h-screen overflow-hidden" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         <div className="flex h-full">
           {/* Left Sidebar Navigation */}
-          <Card className="h-full w-64 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 border-r-2 border-slate-200/50 dark:border-slate-700/50 rounded-none shadow-[4px_0_24px_rgba(0,0,0,0.04)] flex-shrink-0 z-10 flex flex-col relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-purple-500/5 to-transparent pointer-events-none rounded-full blur-2xl" />
+          <Card className="h-full w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 rounded-none flex-shrink-0 z-10 flex flex-col overflow-hidden">
             <CardContent className="p-0 flex flex-col flex-1 overflow-y-auto max-h-full min-h-0">
 
               {/* Search Bar */}
-              <div className="p-4 border-b-2 border-slate-200/70 dark:border-slate-700/70 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm relative z-10">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 relative z-10">
                 <div className="relative group">
                   <Search
                     size={16}
@@ -271,8 +268,8 @@ export default function SettingsPage() {
 
 
                 {/* WORKSPACE DROPDOWN */}
-                <div className="border-b-2 border-slate-200/60 dark:border-slate-700/60 pb-3 mb-3 relative">
-                  <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full opacity-60" />
+                <div className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
+                  <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                   <button
                     onClick={() => setWorkspaceOpen(!workspaceOpen)}
                     className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -321,8 +318,8 @@ export default function SettingsPage() {
                   // Render Customization as a dropdown with children
                   if (section.name === "Conversation channels") {
                     return (
-                      <div key={section.name} className="border-b-2 border-slate-200/60 dark:border-slate-700/60 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-green-500 to-teal-500 rounded-full opacity-60" />
+                      <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
+                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setChannelsOpen(!channelsOpen)}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -369,8 +366,8 @@ export default function SettingsPage() {
 
                   if (section.name === "Customization") {
                     return (
-                      <div key={section.name} className="border-b-2 border-slate-200/60 dark:border-slate-700/60 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full opacity-60" />
+                      <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
+                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setCustomizationOpen(!customizationOpen)}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -409,8 +406,8 @@ export default function SettingsPage() {
 
                   if (section.name === "ChatGPT") {
                     return (
-                      <div key={section.name} className="border-b-2 border-slate-200/60 dark:border-slate-700/60 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full opacity-60" />
+                      <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
+                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setChatGptOpen(!chatGptOpen)}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -449,8 +446,8 @@ export default function SettingsPage() {
 
                   if (section.name === "Connect") {
                     return (
-                      <div key={section.name} className="border-b-2 border-slate-200/60 dark:border-slate-700/60 pb-3 mb-3 relative">
-                        <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-orange-500 to-red-500 rounded-full opacity-60" />
+                      <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative">
+                        <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                         <button
                           onClick={() => setConnectOpen(!connectOpen)}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.name
@@ -488,8 +485,8 @@ export default function SettingsPage() {
                   }
 
                   return (
-                    <div key={section.name} className="border-b-2 border-slate-200/60 dark:border-slate-700/60 pb-3 mb-3 relative hover:bg-slate-50/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-                      <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-full opacity-60" />
+                    <div key={section.name} className="border-b border-slate-200/60 dark:border-slate-800 pb-3 mb-3 relative hover:bg-slate-50/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
+                      <div className="absolute -left-2 top-0 w-1 h-6 bg-primary/60 rounded-full" />
                       <button
                         onClick={() => {
                           navigate(`/settings?tab=${section.name}`);
@@ -513,8 +510,8 @@ export default function SettingsPage() {
           </Card>
 
           {/* Right Content Area */}
-          <div className="flex-1 flex flex-col min-h-0 p-6 bg-gray-50/50 dark:bg-slate-950 settings-pane">
-            <Card className="flex-1 overflow-auto shadow-sm border border-gray-100/50 bg-white dark:bg-slate-900 dark:border-slate-800">
+          <div className="flex-1 flex flex-col min-h-0 p-6 bg-slate-50/60 dark:bg-[#0b1120] settings-pane">
+            <Card className="flex-1 overflow-auto border-0 shadow-none bg-transparent dark:bg-transparent">
               {activeSection === "Manage" && (
                 <ManageSection />)}
 

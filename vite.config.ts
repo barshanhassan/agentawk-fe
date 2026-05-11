@@ -32,6 +32,8 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    host: true,
+    allowedHosts: ['localhost', 'agency.localhost', '.laglobal.local'],
     fs: {
       strict: true,
       deny: ["**/.*"],

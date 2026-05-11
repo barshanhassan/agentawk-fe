@@ -1,612 +1,523 @@
-import React from 'react';
-import { ChevronLeft, Info, HelpCircle, Save, X, MessageSquare, Globe, Clock, User, Shield, Users, Bot, MessageCircle, Send, Phone, Monitor } from 'lucide-react';
+import React, { useState } from 'react';
+import { getUserInfo } from "@/lib/auth";
+import {
+  Info, Globe, Users, User, Bot, MessageCircle,
+  MessageSquare, Send, Monitor, Layers, ChevronLeft,
+  Building2, Settings2, Check,
+} from 'lucide-react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslation } from 'react-i18next';
 
-
-interface CreateWorkspaceFormProps {
+interface Props {
   onCancel: () => void;
   initialData?: any;
 }
 
-const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({ onCancel, initialData }) => {
-  const { t } = useTranslation();
+const TIMEZONES = [
+  { value: "Africa/Cairo", label: "Cairo (UTC+2)" },
+  { value: "Africa/Lagos", label: "Lagos (UTC+1)" },
+  { value: "Africa/Nairobi", label: "Nairobi (UTC+3)" },
+  { value: "America/Chicago", label: "Chicago (UTC-6)" },
+  { value: "America/Los_Angeles", label: "Los Angeles (UTC-8)" },
+  { value: "America/New_York", label: "New York (UTC-5)" },
+  { value: "America/Sao_Paulo", label: "Sao Paulo (UTC-3)" },
+  { value: "America/Toronto", label: "Toronto (UTC-5)" },
+  { value: "Asia/Baghdad", label: "Baghdad (UTC+3)" },
+  { value: "Asia/Bangkok", label: "Bangkok (UTC+7)" },
+  { value: "Asia/Dhaka", label: "Dhaka (UTC+6)" },
+  { value: "Asia/Dubai", label: "Dubai (UTC+4)" },
+  { value: "Asia/Hong_Kong", label: "Hong Kong (UTC+8)" },
+  { value: "Asia/Jakarta", label: "Jakarta (UTC+7)" },
+  { value: "Asia/Karachi", label: "Islamabad / Karachi (UTC+5)" },
+  { value: "Asia/Kolkata", label: "Mumbai / Kolkata (UTC+5:30)" },
+  { value: "Asia/Kuala_Lumpur", label: "Kuala Lumpur (UTC+8)" },
+  { value: "Asia/Riyadh", label: "Riyadh (UTC+3)" },
+  { value: "Asia/Seoul", label: "Seoul (UTC+9)" },
+  { value: "Asia/Shanghai", label: "Beijing / Shanghai (UTC+8)" },
+  { value: "Asia/Singapore", label: "Singapore (UTC+8)" },
+  { value: "Asia/Tehran", label: "Tehran (UTC+3:30)" },
+  { value: "Asia/Tokyo", label: "Tokyo (UTC+9)" },
+  { value: "Australia/Sydney", label: "Sydney (UTC+10)" },
+  { value: "Europe/Berlin", label: "Berlin (UTC+1)" },
+  { value: "Europe/Istanbul", label: "Istanbul (UTC+3)" },
+  { value: "Europe/London", label: "London (UTC+0)" },
+  { value: "Europe/Moscow", label: "Moscow (UTC+3)" },
+  { value: "Europe/Paris", label: "Paris (UTC+1)" },
+  { value: "Pacific/Auckland", label: "Auckland (UTC+12)" },
+  { value: "UTC", label: "UTC (UTC+0)" },
+];
+
+const CHANNELS = [
+  { id: 'whatsapp_api', name: 'WhatsApp Business API', color: '#25D366', icon: <MessageCircle className="w-4 h-4 text-white fill-white" />, price: '$10' },
+  { id: 'instagram', name: 'Instagram', gradient: 'from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]', price: '$10',
+    icon: (
+      <div className="w-4 h-4 border-2 border-white rounded-[3px] flex items-center justify-center relative">
+        <div className="w-1.5 h-1.5 border-2 border-white rounded-full" />
+        <div className="absolute top-0.5 right-0.5 w-0.5 h-0.5 bg-white rounded-full" />
+      </div>
+    )
+  },
+  { id: 'messenger', name: 'Facebook Messenger', color: '#00B2FF', icon: <MessageSquare className="w-4 h-4 text-white fill-white" />, price: '$10' },
+  { id: 'telegram', name: 'Telegram', color: '#229ED9', icon: <Send className="w-4 h-4 text-white fill-white -translate-x-0.5" />, price: '$10' },
+  { id: 'whatsapp_qr', name: 'WhatsApp QR (Z-API)', color: '#25D366', icon: <MessageCircle className="w-4 h-4 text-white fill-white" />, price: '$24' },
+  { id: 'twilio', name: 'Twilio SMS', color: '#F22F46', price: '$10',
+    icon: (
+      <div className="grid grid-cols-2 gap-0.5">
+        <div className="w-1 h-1 bg-white rounded-full" />
+        <div className="w-1 h-1 bg-white rounded-full" />
+        <div className="w-1 h-1 bg-white rounded-full" />
+        <div className="w-1 h-1 bg-white rounded-full" />
+      </div>
+    )
+  },
+  { id: 'webchat', name: 'Web Chat', color: '#8E24AA', icon: <MessageSquare className="w-3.5 h-3.5 text-white fill-white" />, price: '$10' },
+];
+
+const AVATAR_COLORS = ['bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-orange-500', 'bg-pink-500', 'bg-teal-500'];
+
+function MemberAvatar({ name, index, size = 'md' }: { name: string; index: number; size?: 'sm' | 'md' }) {
+  const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const color = AVATAR_COLORS[index % AVATAR_COLORS.length];
+  const sz = size === 'sm' ? 'w-6 h-6 text-[9px]' : 'w-8 h-8 text-xs';
+  return (
+    <div className={cn("rounded-full flex items-center justify-center text-white font-bold shrink-0", sz, color)}>
+      {initials}
+    </div>
+  );
+}
+
+const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const { mode } = useTheme();
-  const isDark = mode === 'dark';
+  const dark = mode === 'dark';
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isEdit = !!initialData;
 
-  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
-  const agencyId = userInfo.modelable_id || "7";
+  const userInfo = getUserInfo();
+  const agencyId = userInfo.modelable_id;
 
-  const [formData, setFormData] = useState({
+  const { data: membersData } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      return res.json();
+    },
+  });
+  const members: any[] = membersData?.members || membersData?.data || membersData || [];
+
+  const [form, setForm] = useState({
     name: initialData?.name || '',
     subdomain: initialData?.subdomain || '',
     timezone: initialData?.timezone || 'Asia/Karachi',
-    agent: initialData?.agent || 'firoula',
-    enableWhiteLabel: initialData?.allow_branding || false,
+    agentId: String(initialData?.agent_id || ''),
+    whiteLabel: initialData?.allow_branding || false,
     allowSupport: initialData?.allow_support || false,
     limitContacts: initialData?.limited_contacts || false,
-    contactLimit: initialData?.maximum_contacts || 0,
-    limitAgents: initialData?.allow_agents || true,
+    contactLimit: initialData?.maximum_contacts || 500,
+    limitAgents: initialData?.allow_agents ?? true,
     agentLimit: initialData?.agents_limit || 4,
-    aiAssistantLimit: initialData?.chatgpt_assistant_limit || 10,
-    features: {
-      whatsapp_api: initialData?.whatsapp_channels_limit || 1,
-      instagram: initialData?.instagram_channels_limit || 1,
-      messenger: initialData?.facebook_channels_limit || 1,
-      telegram: initialData?.telegram_channels_limit || 1,
-      whatsapp_qr: initialData?.zapi_channels_limit || 1,
-      twilio: initialData?.twilio_channels_limit || 1,
-      webchat: initialData?.webchat_channels_limit || 1,
-    }
+    aiLimit: initialData?.chatgpt_assistant_limit || 10,
+    channels: {
+      whatsapp_api: initialData?.whatsapp_channels_limit ?? 1,
+      instagram: initialData?.instagram_channels_limit ?? 1,
+      messenger: initialData?.facebook_channels_limit ?? 1,
+      telegram: initialData?.telegram_channels_limit ?? 1,
+      whatsapp_qr: initialData?.zapi_channels_limit ?? 1,
+      twilio: initialData?.twilio_channels_limit ?? 1,
+      webchat: initialData?.webchat_channels_limit ?? 1,
+    },
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const endpoint = initialData 
-        ? `/api/agencies/${agencyId}/workspaces/${initialData.id}` 
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const endpoint = isEdit
+        ? `/api/agencies/${agencyId}/workspaces/${initialData.id}`
         : `/api/agencies/${agencyId}/workspaces`;
-      const method = initialData ? "PATCH" : "POST";
-      const res = await apiRequest(method, endpoint, data);
+      const res = await apiRequest(isEdit ? "PATCH" : "POST", endpoint, {
+        name: form.name,
+        slug: form.subdomain,
+        timezone: form.timezone,
+        agent_id: form.agentId || undefined,
+        allow_branding: form.whiteLabel,
+        allow_support: form.allowSupport,
+        limited_contacts: form.limitContacts,
+        maximum_contacts: form.contactLimit,
+        allow_agents: form.limitAgents,
+        agents_limit: form.agentLimit,
+        chatgpt_assistant_limit: form.aiLimit,
+        whatsapp_channels_limit: form.channels.whatsapp_api,
+        instagram_channels_limit: form.channels.instagram,
+        facebook_channels_limit: form.channels.messenger,
+        telegram_channels_limit: form.channels.telegram,
+        zapi_channels_limit: form.channels.whatsapp_qr,
+        twilio_channels_limit: form.channels.twilio,
+        webchat_channels_limit: form.channels.webchat,
+      });
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
-      toast({ 
-        title: initialData ? t("agency.workspaces.form.updated") : t("agency.workspaces.form.created"), 
-        description: initialData ? t("agency.workspaces.form.updated_desc") : t("agency.workspaces.form.created_desc") 
-      });
+      toast({ title: isEdit ? "Workspace updated" : "Workspace created successfully" });
       onCancel();
     },
-    onError: (err: any) => {
-      toast({ title: t("common.error"), description: t("agency.workspaces.form.save_error"), variant: "destructive" });
-    }
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save workspace.", variant: "destructive" });
+    },
   });
 
-  const handleSave = () => {
-    if (!formData.name) {
-      toast({ title: t("common.error"), description: t("agency.workspaces.form.name_required"), variant: "destructive" });
+  const handleSubmit = () => {
+    if (!form.name.trim()) {
+      toast({ title: "Name required", description: "Please enter a workspace name.", variant: "destructive" });
       return;
     }
-    
-    const payload = {
-      name: formData.name,
-      slug: formData.subdomain,
-      timezone: formData.timezone,
-      allow_branding: formData.enableWhiteLabel,
-      allow_support: formData.allowSupport,
-      limited_contacts: formData.limitContacts,
-      maximum_contacts: formData.contactLimit,
-      allow_agents: formData.limitAgents,
-      agents_limit: formData.agentLimit,
-      chatgpt_assistant_limit: formData.aiAssistantLimit,
-      whatsapp_channels_limit: formData.features.whatsapp_api,
-      instagram_channels_limit: formData.features.instagram,
-      facebook_channels_limit: formData.features.messenger,
-      telegram_channels_limit: formData.features.telegram,
-      zapi_channels_limit: formData.features.whatsapp_qr,
-      twilio_channels_limit: formData.features.twilio,
-      webchat_channels_limit: formData.features.webchat,
-    };
-
-    createMutation.mutate(payload);
+    saveMutation.mutate();
   };
 
-  const handleFeatureLimitChange = (id: string, value: number) => {
-    setFormData(prev => ({
-      ...prev,
-      features: {
-        ...prev.features,
-        [id]: value
-      }
-    }));
-  };
+  const set = (key: string, val: any) => setForm(prev => ({ ...prev, [key]: val }));
+  const setChannel = (id: string, val: number) =>
+    setForm(prev => ({ ...prev, channels: { ...prev.channels, [id]: val } }));
 
-  const features = [
-    { 
-      id: 'whatsapp_api', 
-      name: t('agency.workspaces.features.whatsapp_api'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
-          <MessageCircle className="w-5 h-5 text-white fill-white" />
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_free'), 
-      additional: t('agency.workspaces.features.additional_whatsapp'), 
-    },
-    { 
-      id: 'instagram', 
-      name: t('agency.workspaces.features.instagram'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center shadow-sm">
-          <div className="w-4 h-4 border-2 border-white rounded-[4px] relative flex items-center justify-center">
-             <div className="w-1.5 h-1.5 border-2 border-white rounded-full" />
-             <div className="absolute top-0.5 right-0.5 w-0.5 h-0.5 bg-white rounded-full" />
-          </div>
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_free'), 
-      additional: t('agency.workspaces.features.additional_10'), 
-    },
-    { 
-      id: 'messenger', 
-      name: t('agency.workspaces.features.messenger'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-[#00B2FF] flex items-center justify-center shadow-sm">
-          <MessageSquare className="w-5 h-5 text-white fill-white" />
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_free'), 
-      additional: t('agency.workspaces.features.additional_10'), 
-    },
-    { 
-      id: 'telegram', 
-      name: t('agency.workspaces.features.telegram'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-[#229ED9] flex items-center justify-center shadow-sm p-1.5">
-          <Send className="w-5 h-5 text-white fill-white -translate-x-0.5" />
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_free'), 
-      additional: t('agency.workspaces.features.additional_10'), 
-    },
-    { 
-      id: 'whatsapp_qr', 
-      name: t('agency.workspaces.features.whatsapp_qr'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
-          <MessageCircle className="w-5 h-5 text-white fill-white" />
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_24'), 
-      additional: t('agency.workspaces.features.additional_24'), 
-    },
-    { 
-      id: 'twilio', 
-      name: t('agency.workspaces.features.twilio'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-[#F22F46] flex items-center justify-center shadow-sm">
-          <div className="grid grid-cols-2 gap-0.5">
-             <div className="w-1.5 h-1.5 bg-white rounded-full" />
-             <div className="w-1.5 h-1.5 bg-white rounded-full" />
-             <div className="w-1.5 h-1.5 bg-white rounded-full" />
-             <div className="w-1.5 h-1.5 bg-white rounded-full" />
-          </div>
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_free'), 
-      additional: t('agency.workspaces.features.additional_10'), 
-    },
-    { 
-      id: 'webchat', 
-      name: t('agency.workspaces.features.webchat'), 
-      icon: (
-        <div className="w-8 h-8 rounded-full bg-[#8E24AA] flex items-center justify-center shadow-sm">
-          <MessageSquare className="w-4 h-4 text-white fill-white" />
-        </div>
-      ), 
-      info: t('agency.workspaces.features.pilot_free'), 
-      additional: t('agency.workspaces.features.additional_10'), 
-    },
-  ];
+  const selectedMember = members.find((m: any) => String(m.id) === form.agentId);
+  const selectedMemberIndex = members.findIndex((m: any) => String(m.id) === form.agentId);
+
+  const cardCls = cn("rounded-xl border", dark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200");
+  const labelCls = cn("block text-xs font-semibold mb-1.5", dark ? "text-slate-300" : "text-slate-600");
+  const inputCls = cn("h-10 text-sm focus:ring-2 focus:ring-primary focus:ring-offset-0 focus:border-primary", dark ? "bg-[#0f172a] border-slate-700 text-white placeholder:text-slate-600" : "border-slate-200");
+  const rowCls = cn("flex items-center gap-3 p-3.5 rounded-xl", dark ? "bg-[#0f172a]" : "bg-slate-50");
+  const switchCls = "data-[state=checked]:bg-primary data-[state=unchecked]:bg-slate-300 dark:data-[state=unchecked]:bg-slate-600";
+  const selectCls = cn("h-10 text-sm focus:ring-1 focus:ring-offset-0", dark ? "bg-[#0f172a] border-slate-700 text-white" : "border-slate-300");
 
   return (
-    <div className={cn(
-      "p-6 font-sans transition-all duration-300",
-      isDark ? "text-white" : "text-slate-900"
-    )}>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className={cn("text-[16px] font-bold", isDark ? "text-white" : "text-slate-900")}>{initialData ? t('agency.workspaces.form.edit_title') : t('agency.workspaces.form.add_title')}</h1>
-        <p className={cn("text-[12px] mt-1 font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
-          {initialData 
-            ? t("agency.workspaces.form.edit_desc", { name: initialData.name })
-            : t("agency.workspaces.form.add_desc")
-          }
-        </p>
+    <div className={cn("min-h-screen", dark ? "bg-[#0f172a] text-white" : "bg-slate-50 text-slate-900")}>
+      {/* Sticky header */}
+      <div className={cn(
+        "sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b",
+        dark ? "bg-[#0f172a] border-slate-800" : "bg-slate-50 border-slate-200"
+      )}>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onCancel}
+            className={cn("p-2 rounded-lg border transition-colors", dark ? "border-slate-700 hover:bg-slate-800 text-slate-400" : "border-slate-200 hover:bg-white text-slate-500")}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold">{isEdit ? `Edit — ${initialData.name}` : "Create Workspace"}</h1>
+            <p className={cn("text-xs mt-0.5", dark ? "text-slate-500" : "text-slate-400")}>
+              {isEdit ? "Update workspace configuration and limits" : "Set up a new client workspace in minutes"}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={onCancel}
+            className={cn(
+              "px-4 py-2 rounded-lg text-sm font-medium border transition-colors",
+              dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-white"
+            )}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saveMutation.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground shadow-sm transition-colors disabled:opacity-60"
+          >
+            {saveMutation.isPending ? (
+              <>
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Saving…
+              </>
+            ) : (
+              <>
+                <Check size={15} />
+                {isEdit ? "Save Changes" : "Save"}
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-4 max-w-7xl">
-        {/* Top Info Card */}
-        <div className={cn(
-          "p-4 rounded-lg border space-y-4",
-          isDark ? "bg-[#0f172a] border-slate-600" : "bg-white border-slate-300"
-        )}>
-          {/* Workspace Name & Domain */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.name_label")}
-              </label>
-              <Input 
-                placeholder={t("agency.workspaces.form.name_label")} 
-                value={formData.name}
+      <div className="p-6 space-y-5">
+
+        {/* Section 1: Basic Info */}
+        <div className={cardCls}>
+          <div className={cn("flex items-center gap-2.5 px-5 py-4 border-b", dark ? "border-slate-700" : "border-slate-100")}>
+            <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-primary/15" : "bg-primary/10")}>
+              <Building2 size={14} className="text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Basic Information</p>
+              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Workspace name, domain and timezone</p>
+            </div>
+          </div>
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Name */}
+            <div>
+              <label className={labelCls}>Workspace Name</label>
+              <Input
+                placeholder="e.g. Acme Corp"
+                value={form.name}
                 onChange={(e) => {
                   const name = e.target.value;
-                  setFormData(prev => ({
-                    ...prev,
-                    name,
-                    subdomain: initialData ? prev.subdomain : name.toLowerCase().replace(/[^a-z0-9]/g, '')
-                  }));
+                  set('name', name);
+                  if (!isEdit) set('subdomain', name.toLowerCase().replace(/[^a-z0-9]/g, ''));
                 }}
-                className={cn(
-                  "h-10 text-[12px] font-medium border-slate-300 focus-visible:ring-1 focus-visible:ring-blue-500",
-                  isDark ? "bg-[#1e293b] text-white border-slate-600" : "bg-white text-slate-900"
-                )}
+                className={inputCls}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.domain_label")} <Info size={12} className="text-slate-500" />
+            {/* Subdomain */}
+            <div>
+              <label className={cn(labelCls, "flex items-center gap-1")}>
+                Domain <Info size={11} className="text-slate-400" />
               </label>
-              <div className="flex h-10">
-                <div className={cn(
-                  "flex items-center px-3 border border-r-0 rounded-l text-[12px] font-bold h-full",
-                  isDark ? "bg-[#334155] text-slate-200 border-slate-600" : "bg-slate-100 text-slate-700 border-slate-300"
+              <div className={cn("flex h-10 rounded-lg overflow-hidden border", isEdit && "opacity-50 cursor-not-allowed", dark ? "border-slate-700" : "border-slate-200")}>
+                <span className={cn(
+                  "flex items-center px-3 border-r text-xs font-medium shrink-0",
+                  dark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"
                 )}>
                   https://
-                </div>
-                <Input 
-                  placeholder={t("agency.workspaces.form.domain_placeholder")} 
-                  value={formData.subdomain}
-                  onChange={(e) => setFormData(prev => ({ ...prev, subdomain: e.target.value }))}
-                  disabled={!!initialData}
-                  className={cn(
-                    "h-full text-[12px] font-medium border-slate-300 rounded-none focus-visible:ring-1 focus-visible:ring-blue-500 flex-1",
-                    isDark ? "bg-[#1e293b] text-white border-slate-600" : "bg-white text-slate-900",
-                    initialData && "opacity-50 cursor-not-allowed"
-                  )}
+                </span>
+                <Input
+                  placeholder="acmecorp"
+                  value={form.subdomain}
+                  onChange={(e) => set('subdomain', e.target.value)}
+                  disabled={isEdit}
+                  className={cn("rounded-none border-0 flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 h-full disabled:opacity-100", dark ? "bg-[#0f172a] text-white" : "bg-white")}
                 />
-                <div className={cn(
-                  "flex items-center px-3 border border-l-0 rounded-r text-[12px] font-bold h-full",
-                  isDark ? "bg-[#334155] text-slate-200 border-slate-600" : "bg-slate-100 text-slate-700 border-slate-300"
+                <span className={cn(
+                  "flex items-center px-3 border-l text-xs font-medium whitespace-nowrap shrink-0",
+                  dark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"
                 )}>
-                  .domainemulator.com
-                </div>
+                  .ezconn.com
+                </span>
               </div>
             </div>
-          </div>
-
-          {/* Timezone & Agent */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className={cn("text-[11px] font-bold", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.settings.general.timezone")}
-              </label>
-              <Select 
-                value={formData.timezone} 
-                onValueChange={(v) => setFormData(prev => ({ ...prev, timezone: v }))}
-              >
-                <SelectTrigger className={cn(
-                  "h-10 text-[12px] border-slate-200 focus-visible:ring-1 focus-visible:ring-blue-500",
-                  isDark ? "bg-[#1e293b] text-white border-slate-700" : "bg-white"
-                )}>
-                  <SelectValue placeholder={t("agency.settings.general.selectTimezone")} />
+            {/* Timezone */}
+            <div>
+              <label className={labelCls}>Timezone</label>
+              <Select value={form.timezone} onValueChange={(v) => set('timezone', v)}>
+                <SelectTrigger className={selectCls}>
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className={cn("max-h-80 overflow-y-auto", isDark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                  {/* Africa */}
-                  <SelectItem value="Africa/Abidjan">Abidjan (Africa/Abidjan) UTC+0</SelectItem>
-                  <SelectItem value="Africa/Accra">Accra (Africa/Accra) UTC+0</SelectItem>
-                  <SelectItem value="Africa/Addis_Ababa">Addis Ababa (Africa/Addis_Ababa) UTC+3</SelectItem>
-                  <SelectItem value="Africa/Algiers">Algiers (Africa/Algiers) UTC+1</SelectItem>
-                  <SelectItem value="Africa/Cairo">Cairo (Africa/Cairo) UTC+2</SelectItem>
-                  <SelectItem value="Africa/Casablanca">Casablanca (Africa/Casablanca) UTC+1</SelectItem>
-                  <SelectItem value="Africa/Johannesburg">Johannesburg (Africa/Johannesburg) UTC+2</SelectItem>
-                  <SelectItem value="Africa/Lagos">Lagos (Africa/Lagos) UTC+1</SelectItem>
-                  <SelectItem value="Africa/Nairobi">Nairobi (Africa/Nairobi) UTC+3</SelectItem>
-                  <SelectItem value="Africa/Tripoli">Tripoli (Africa/Tripoli) UTC+2</SelectItem>
-                  <SelectItem value="Africa/Tunis">Tunis (Africa/Tunis) UTC+1</SelectItem>
-                  {/* America */}
-                  <SelectItem value="America/Anchorage">Anchorage (America/Anchorage) UTC-9</SelectItem>
-                  <SelectItem value="America/Argentina/Buenos_Aires">Buenos Aires (America/Argentina/Buenos_Aires) UTC-3</SelectItem>
-                  <SelectItem value="America/Bogota">Bogota (America/Bogota) UTC-5</SelectItem>
-                  <SelectItem value="America/Caracas">Caracas (America/Caracas) UTC-4</SelectItem>
-                  <SelectItem value="America/Chicago">Chicago (America/Chicago) UTC-6</SelectItem>
-                  <SelectItem value="America/Denver">Denver (America/Denver) UTC-7</SelectItem>
-                  <SelectItem value="America/Godthab">Godthab (America/Godthab) UTC-2</SelectItem>
-                  <SelectItem value="America/Guatemala">Guatemala (America/Guatemala) UTC-6</SelectItem>
-                  <SelectItem value="America/Halifax">Halifax (America/Halifax) UTC-4</SelectItem>
-                  <SelectItem value="America/Havana">Havana (America/Havana) UTC-5</SelectItem>
-                  <SelectItem value="America/Lima">Lima (America/Lima) UTC-5</SelectItem>
-                  <SelectItem value="America/Los_Angeles">Los Angeles (America/Los_Angeles) UTC-8</SelectItem>
-                  <SelectItem value="America/Manaus">Manaus (America/Manaus) UTC-4</SelectItem>
-                  <SelectItem value="America/Mexico_City">Mexico City (America/Mexico_City) UTC-6</SelectItem>
-                  <SelectItem value="America/Montevideo">Montevideo (America/Montevideo) UTC-3</SelectItem>
-                  <SelectItem value="America/New_York">New York (America/New_York) UTC-5</SelectItem>
-                  <SelectItem value="America/Phoenix">Phoenix (America/Phoenix) UTC-7</SelectItem>
-                  <SelectItem value="America/Regina">Regina (America/Regina) UTC-6</SelectItem>
-                  <SelectItem value="America/Santiago">Santiago (America/Santiago) UTC-3</SelectItem>
-                  <SelectItem value="America/Sao_Paulo">Sao Paulo (America/Sao_Paulo) UTC-3</SelectItem>
-                  <SelectItem value="America/St_Johns">St. Johns (America/St_Johns) UTC-3:30</SelectItem>
-                  <SelectItem value="America/Toronto">Toronto (America/Toronto) UTC-5</SelectItem>
-                  <SelectItem value="America/Vancouver">Vancouver (America/Vancouver) UTC-8</SelectItem>
-                  {/* Asia */}
-                  <SelectItem value="Asia/Almaty">Almaty (Asia/Almaty) UTC+6</SelectItem>
-                  <SelectItem value="Asia/Amman">Amman (Asia/Amman) UTC+3</SelectItem>
-                  <SelectItem value="Asia/Baghdad">Baghdad (Asia/Baghdad) UTC+3</SelectItem>
-                  <SelectItem value="Asia/Baku">Baku (Asia/Baku) UTC+4</SelectItem>
-                  <SelectItem value="Asia/Bangkok">Bangkok (Asia/Bangkok) UTC+7</SelectItem>
-                  <SelectItem value="Asia/Beirut">Beirut (Asia/Beirut) UTC+3</SelectItem>
-                  <SelectItem value="Asia/Colombo">Colombo (Asia/Colombo) UTC+5:30</SelectItem>
-                  <SelectItem value="Asia/Dhaka">Dhaka (Asia/Dhaka) UTC+6</SelectItem>
-                  <SelectItem value="Asia/Dubai">Dubai (Asia/Dubai) UTC+4</SelectItem>
-                  <SelectItem value="Asia/Hong_Kong">Hong Kong (Asia/Hong_Kong) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Irkutsk">Irkutsk (Asia/Irkutsk) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Jakarta">Jakarta (Asia/Jakarta) UTC+7</SelectItem>
-                  <SelectItem value="Asia/Jerusalem">Jerusalem (Asia/Jerusalem) UTC+2</SelectItem>
-                  <SelectItem value="Asia/Kabul">Kabul (Asia/Kabul) UTC+4:30</SelectItem>
-                  <SelectItem value="Asia/Karachi">Islamabad, Karachi (Asia/Karachi) UTC+5</SelectItem>
-                  <SelectItem value="Asia/Kathmandu">Kathmandu (Asia/Kathmandu) UTC+5:45</SelectItem>
-                  <SelectItem value="Asia/Kolkata">Mumbai, Kolkata (Asia/Kolkata) UTC+5:30</SelectItem>
-                  <SelectItem value="Asia/Krasnoyarsk">Krasnoyarsk (Asia/Krasnoyarsk) UTC+7</SelectItem>
-                  <SelectItem value="Asia/Kuala_Lumpur">Kuala Lumpur (Asia/Kuala_Lumpur) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Kuwait">Kuwait (Asia/Kuwait) UTC+3</SelectItem>
-                  <SelectItem value="Asia/Magadan">Magadan (Asia/Magadan) UTC+11</SelectItem>
-                  <SelectItem value="Asia/Manila">Manila (Asia/Manila) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Muscat">Muscat (Asia/Muscat) UTC+4</SelectItem>
-                  <SelectItem value="Asia/Novosibirsk">Novosibirsk (Asia/Novosibirsk) UTC+7</SelectItem>
-                  <SelectItem value="Asia/Rangoon">Rangoon/Yangon (Asia/Rangoon) UTC+6:30</SelectItem>
-                  <SelectItem value="Asia/Riyadh">Riyadh (Asia/Riyadh) UTC+3</SelectItem>
-                  <SelectItem value="Asia/Seoul">Seoul (Asia/Seoul) UTC+9</SelectItem>
-                  <SelectItem value="Asia/Shanghai">Beijing, Shanghai (Asia/Shanghai) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Singapore">Singapore (Asia/Singapore) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Taipei">Taipei (Asia/Taipei) UTC+8</SelectItem>
-                  <SelectItem value="Asia/Tashkent">Tashkent (Asia/Tashkent) UTC+5</SelectItem>
-                  <SelectItem value="Asia/Tbilisi">Tbilisi (Asia/Tbilisi) UTC+4</SelectItem>
-                  <SelectItem value="Asia/Tehran">Tehran (Asia/Tehran) UTC+3:30</SelectItem>
-                  <SelectItem value="Asia/Tokyo">Tokyo (Asia/Tokyo) UTC+9</SelectItem>
-                  <SelectItem value="Asia/Vladivostok">Vladivostok (Asia/Vladivostok) UTC+10</SelectItem>
-                  <SelectItem value="Asia/Yakutsk">Yakutsk (Asia/Yakutsk) UTC+9</SelectItem>
-                  <SelectItem value="Asia/Yekaterinburg">Yekaterinburg (Asia/Yekaterinburg) UTC+5</SelectItem>
-                  <SelectItem value="Asia/Yerevan">Yerevan (Asia/Yerevan) UTC+4</SelectItem>
-                  {/* Atlantic */}
-                  <SelectItem value="Atlantic/Azores">Azores (Atlantic/Azores) UTC-1</SelectItem>
-                  <SelectItem value="Atlantic/Cape_Verde">Cape Verde (Atlantic/Cape_Verde) UTC-1</SelectItem>
-                  <SelectItem value="Atlantic/Reykjavik">Reykjavik (Atlantic/Reykjavik) UTC+0</SelectItem>
-                  {/* Australia */}
-                  <SelectItem value="Australia/Adelaide">Adelaide (Australia/Adelaide) UTC+9:30</SelectItem>
-                  <SelectItem value="Australia/Brisbane">Brisbane (Australia/Brisbane) UTC+10</SelectItem>
-                  <SelectItem value="Australia/Darwin">Darwin (Australia/Darwin) UTC+9:30</SelectItem>
-                  <SelectItem value="Australia/Hobart">Hobart (Australia/Hobart) UTC+10</SelectItem>
-                  <SelectItem value="Australia/Melbourne">Melbourne (Australia/Melbourne) UTC+10</SelectItem>
-                  <SelectItem value="Australia/Perth">Perth (Australia/Perth) UTC+8</SelectItem>
-                  <SelectItem value="Australia/Sydney">Sydney (Australia/Sydney) UTC+10</SelectItem>
-                  {/* Europe */}
-                  <SelectItem value="Europe/Amsterdam">Amsterdam (Europe/Amsterdam) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Athens">Athens (Europe/Athens) UTC+2</SelectItem>
-                  <SelectItem value="Europe/Belgrade">Belgrade (Europe/Belgrade) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Berlin">Berlin (Europe/Berlin) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Brussels">Brussels (Europe/Brussels) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Bucharest">Bucharest (Europe/Bucharest) UTC+2</SelectItem>
-                  <SelectItem value="Europe/Budapest">Budapest (Europe/Budapest) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Copenhagen">Copenhagen (Europe/Copenhagen) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Dublin">Dublin (Europe/Dublin) UTC+0</SelectItem>
-                  <SelectItem value="Europe/Helsinki">Helsinki (Europe/Helsinki) UTC+2</SelectItem>
-                  <SelectItem value="Europe/Istanbul">Istanbul (Europe/Istanbul) UTC+3</SelectItem>
-                  <SelectItem value="Europe/Kaliningrad">Kaliningrad (Europe/Kaliningrad) UTC+2</SelectItem>
-                  <SelectItem value="Europe/Kiev">Kiev (Europe/Kiev) UTC+2</SelectItem>
-                  <SelectItem value="Europe/Lisbon">Lisbon (Europe/Lisbon) UTC+0</SelectItem>
-                  <SelectItem value="Europe/London">London (Europe/London) UTC+0</SelectItem>
-                  <SelectItem value="Europe/Madrid">Madrid (Europe/Madrid) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Minsk">Minsk (Europe/Minsk) UTC+3</SelectItem>
-                  <SelectItem value="Europe/Moscow">Moscow (Europe/Moscow) UTC+3</SelectItem>
-                  <SelectItem value="Europe/Oslo">Oslo (Europe/Oslo) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Paris">Paris (Europe/Paris) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Prague">Prague (Europe/Prague) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Rome">Rome (Europe/Rome) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Samara">Samara (Europe/Samara) UTC+4</SelectItem>
-                  <SelectItem value="Europe/Sofia">Sofia (Europe/Sofia) UTC+2</SelectItem>
-                  <SelectItem value="Europe/Stockholm">Stockholm (Europe/Stockholm) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Vienna">Vienna (Europe/Vienna) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Warsaw">Warsaw (Europe/Warsaw) UTC+1</SelectItem>
-                  <SelectItem value="Europe/Zurich">Zurich (Europe/Zurich) UTC+1</SelectItem>
-                  {/* Pacific */}
-                  <SelectItem value="Pacific/Auckland">Auckland (Pacific/Auckland) UTC+12</SelectItem>
-                  <SelectItem value="Pacific/Fiji">Fiji (Pacific/Fiji) UTC+12</SelectItem>
-                  <SelectItem value="Pacific/Guam">Guam (Pacific/Guam) UTC+10</SelectItem>
-                  <SelectItem value="Pacific/Honolulu">Honolulu (Pacific/Honolulu) UTC-10</SelectItem>
-                  <SelectItem value="Pacific/Midway">Midway Island (Pacific/Midway) UTC-11</SelectItem>
-                  <SelectItem value="Pacific/Port_Moresby">Port Moresby (Pacific/Port_Moresby) UTC+10</SelectItem>
-                  <SelectItem value="Pacific/Tongatapu">Nuku'alofa (Pacific/Tongatapu) UTC+13</SelectItem>
-                  {/* UTC */}
-                  <SelectItem value="UTC">UTC+0</SelectItem>
+                <SelectContent className={cn("max-h-72", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                  {TIMEZONES.map(tz => (
+                    <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.assign_agent")} <Info size={12} className="text-slate-500" />
+            {/* Agent */}
+            <div>
+              <label className={cn(labelCls, "flex items-center gap-1")}>
+                Assign Agency Agent <Info size={11} className="text-slate-400" />
               </label>
-              <Select 
-                value={formData.agent}
-                onValueChange={(v) => setFormData(prev => ({ ...prev, agent: v }))}
-              >
-                <SelectTrigger className={cn(
-                  "h-10 text-[12px] border-slate-200 focus-visible:ring-1 focus-visible:ring-blue-500",
-                  isDark ? "bg-[#1e293b] text-white border-slate-700" : "bg-white"
-                )}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] text-white">
-                      {formData.agent.slice(0, 2).toUpperCase()}
-                    </div>
-                    <SelectValue placeholder={t("agency.workspaces.form.select_agent")} />
+              <Select value={form.agentId} onValueChange={(v) => set('agentId', v)}>
+                <SelectTrigger className={cn(selectCls, "gap-2")}>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {selectedMember ? (
+                      <>
+                        <MemberAvatar
+                          name={`${selectedMember.first_name || ''} ${selectedMember.last_name || ''}`.trim()}
+                          index={selectedMemberIndex}
+                          size="sm"
+                        />
+                        <span className="truncate text-sm">
+                          {selectedMember.first_name} {selectedMember.last_name}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={cn("text-sm", dark ? "text-slate-500" : "text-slate-400")}>Select an agent…</span>
+                    )}
                   </div>
                 </SelectTrigger>
-                <SelectContent className={isDark ? "bg-[#1e293b] border-slate-700 text-white" : ""}>
-                  <SelectItem value="firoula">Firoula Berham</SelectItem>
-                  <SelectItem value="admin">Admin User</SelectItem>
+                <SelectContent className={cn(dark ? "bg-[#1e293b] border-slate-700" : "")}>
+                  {members.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-slate-400">No team members found</div>
+                  ) : (
+                    members.map((m: any, i: number) => {
+                      const fullName = `${m.first_name || ''} ${m.last_name || ''}`.trim();
+                      return (
+                        <SelectItem key={m.id} value={String(m.id)} className="pr-3">
+                          <div className="flex items-center gap-2.5">
+                            <MemberAvatar name={fullName} index={i} size="sm" />
+                            <div>
+                              <p className={cn("text-sm font-medium", dark ? "text-white" : "text-slate-800")}>{fullName}</p>
+                              {m.email && <p className="text-xs text-slate-400">{m.email}</p>}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      );
+                    })
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
 
-        {/* Toggles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className={cn(
-            "px-4 py-3 rounded-lg border flex items-center justify-between",
-            isDark ? "bg-[#0f172a] border-slate-600" : "bg-white border-slate-300"
-          )}>
-            <div className="flex items-center gap-3">
-              <Switch 
-                checked={formData.enableWhiteLabel}
-                onCheckedChange={(v) => setFormData(prev => ({ ...prev, enableWhiteLabel: v }))}
-              />
-              <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.enable_white_label")} <Info size={12} className="text-slate-500" /> <Globe size={12} className="text-slate-500" />
-              </span>
+        {/* Section 2: Settings & Limits */}
+        <div className={cardCls}>
+          <div className={cn("flex items-center gap-2.5 px-5 py-4 border-b", dark ? "border-slate-700" : "border-slate-100")}>
+            <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-violet-500/20" : "bg-violet-50")}>
+              <Settings2 size={14} className="text-violet-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Settings & Limits</p>
+              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Control access and resource limits for this workspace</p>
             </div>
           </div>
-          <div className={cn(
-            "px-4 py-3 rounded-lg border flex items-center justify-between",
-            isDark ? "bg-[#0f172a] border-slate-600" : "bg-white border-slate-300"
-          )}>
-            <div className="flex items-center gap-3">
-              <Switch 
-                checked={formData.allowSupport}
-                onCheckedChange={(v) => setFormData(prev => ({ ...prev, allowSupport: v }))}
-              />
-              <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.allow_support")} <Info size={12} className="text-slate-500" />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Limits */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className={cn(
-            "px-4 py-3 rounded-lg border flex items-center justify-between",
-            isDark ? "bg-[#0f172a] border-slate-600" : "bg-white border-slate-300"
-          )}>
-            <div className="flex items-center gap-3">
-              <Switch 
-                checked={formData.limitContacts}
-                onCheckedChange={(v) => setFormData(prev => ({ ...prev, limitContacts: v }))}
-              />
-              <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.limit_contacts")} <Info size={12} className="text-slate-500" /> <Users size={12} className="text-slate-500" />
-              </span>
-            </div>
-            <Input 
-              type="number" 
-              value={formData.contactLimit}
-              onChange={(e) => setFormData(prev => ({ ...prev, contactLimit: parseInt(e.target.value) || 0 }))}
-              className={cn("w-16 h-8 text-[12px] font-bold text-center border-slate-300", isDark ? "bg-slate-900 border-slate-600" : "bg-white text-slate-900")} 
-            />
-          </div>
-          <div className={cn(
-            "px-4 py-3 rounded-lg border flex items-center justify-between",
-            isDark ? "bg-[#0f172a] border-slate-600" : "bg-white border-slate-300"
-          )}>
-            <div className="flex items-center gap-3">
-              <Switch 
-                checked={formData.limitAgents}
-                onCheckedChange={(v) => setFormData(prev => ({ ...prev, limitAgents: v }))}
-              />
-              <span className={cn("text-[12px] font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-slate-900")}>
-                {t("agency.workspaces.form.limit_agents")} <Info size={12} className="text-slate-500" /> <User size={12} className="text-slate-500" />
-              </span>
-            </div>
-            <Input 
-              type="number" 
-              value={formData.agentLimit}
-              onChange={(e) => setFormData(prev => ({ ...prev, agentLimit: parseInt(e.target.value) || 0 }))}
-              className={cn("w-16 h-8 text-[12px] font-bold text-center border-slate-300", isDark ? "bg-slate-900 border-slate-600" : "bg-white text-slate-900")} 
-            />
-          </div>
-        </div>
-
-        {/* Features Cards (Individual) */}
-        <div className="space-y-2">
-          {/* AI Assistants Card */}
-          <div className={cn(
-            "p-3 rounded-lg border flex items-center justify-between transition-colors",
-            isDark ? "bg-[#0f172a] border-slate-600 hover:bg-[#1e293b]" : "bg-white border-slate-300 hover:bg-slate-50"
-          )}>
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-300 dark:border-slate-600">
-                 <Bot className="w-4 h-4 text-slate-900 dark:text-white" />
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* White Label */}
+            <div className={rowCls}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-slate-800" : "bg-white border border-slate-200")}>
+                <Globe size={15} className="text-primary" />
               </div>
-              <span className={cn("text-[12px] font-bold", isDark ? "text-white" : "text-slate-900")}>{t("agency.workspaces.form.max_ai_assistants")}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">White Label</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Custom branding for workspace</p>
+              </div>
+              <Switch checked={form.whiteLabel} onCheckedChange={(v) => set('whiteLabel', v)} className={switchCls} />
             </div>
-            <div className="flex items-center gap-8">
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">{t("agency.workspaces.form.included_in_plan", { count: 10 })}</span>
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">{t("agency.workspaces.form.additional_free")}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{t("agency.workspaces.form.connection_limit")}</span>
-                <Info size={11} className="text-slate-500" />
-                <Input 
-                  type="number" 
-                  value={formData.aiAssistantLimit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, aiAssistantLimit: parseInt(e.target.value) || 0 }))}
-                  className={cn("w-14 h-7 text-[11px] font-bold text-center border-slate-300", isDark ? "bg-slate-900 border-slate-600" : "bg-white text-slate-900")} 
+            {/* Allow Support */}
+            <div className={rowCls}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-slate-800" : "bg-white border border-slate-200")}>
+                <Monitor size={15} className="text-emerald-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Allow Support</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Agency can log in to workspace</p>
+              </div>
+              <Switch checked={form.allowSupport} onCheckedChange={(v) => set('allowSupport', v)} className={switchCls} />
+            </div>
+            {/* Contact Limit */}
+            <div className={rowCls}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-slate-800" : "bg-white border border-slate-200")}>
+                <Users size={15} className="text-orange-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Limit Contacts</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Cap active contact count</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {form.limitContacts && (
+                  <Input
+                    type="number"
+                    value={form.contactLimit}
+                    onChange={(e) => set('contactLimit', parseInt(e.target.value) || 0)}
+                    className={cn("w-20 h-8 text-xs text-center", dark ? "bg-slate-900 border-slate-700 text-white" : "border-slate-200")}
+                  />
+                )}
+                <Switch checked={form.limitContacts} onCheckedChange={(v) => set('limitContacts', v)} className={switchCls} />
+              </div>
+            </div>
+            {/* Agent Limit */}
+            <div className={rowCls}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-slate-800" : "bg-white border border-slate-200")}>
+                <User size={15} className="text-violet-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Limit Agents</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Max agents in this workspace</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Input
+                  type="number"
+                  value={form.agentLimit}
+                  onChange={(e) => set('agentLimit', parseInt(e.target.value) || 0)}
+                  className={cn("w-20 h-8 text-xs text-center", dark ? "bg-slate-900 border-slate-700 text-white" : "border-slate-200")}
                 />
+                <Switch checked={form.limitAgents} onCheckedChange={(v) => set('limitAgents', v)} className={switchCls} />
               </div>
             </div>
           </div>
+        </div>
 
-          {features.map((feature) => (
-            <div key={feature.id} className={cn(
-              "p-3 rounded-lg border flex items-center justify-between transition-colors",
-              isDark ? "bg-[#0f172a] border-slate-600 hover:bg-[#1e293b]" : "bg-white border-slate-300 hover:bg-slate-50"
-            )}>
-              <div className="flex items-center gap-4">
-                {feature.icon}
-                <span className={cn("text-[12px] font-bold", isDark ? "text-white" : "text-slate-900")}>{feature.name}</span>
-              </div>
-              <div className="flex items-center gap-8">
-                <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{feature.info}</span>
-                <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{feature.additional}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-bold whitespace-nowrap">{t("agency.workspaces.form.connection_limit")}</span>
-                  <Info size={11} className="text-slate-500" />
-                  <Input 
-                    type="number" 
-                    value={(formData.features as any)[feature.id]}
-                    onChange={(e) => handleFeatureLimitChange(feature.id, parseInt(e.target.value) || 0)}
-                    className={cn("w-14 h-7 text-[11px] font-bold text-center border-slate-300", isDark ? "bg-slate-900 border-slate-600" : "bg-white text-slate-900")} 
+        {/* Section 3: Channels */}
+        <div className={cardCls}>
+          <div className={cn("flex items-center gap-2.5 px-5 py-4 border-b", dark ? "border-slate-700" : "border-slate-100")}>
+            <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", dark ? "bg-emerald-500/20" : "bg-emerald-50")}>
+              <Layers size={14} className="text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Channel Connections</p>
+              <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Set how many connections each channel can have</p>
+            </div>
+          </div>
+
+          {/* AI Assistant row */}
+          <div className={cn("flex items-center gap-4 px-5 py-3.5 border-b", dark ? "border-slate-700/60" : "border-slate-100")}>
+            <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", dark ? "bg-slate-800" : "bg-slate-100")}>
+              <Bot size={18} className={dark ? "text-slate-300" : "text-slate-600"} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={cn("text-sm font-medium", dark ? "text-slate-200" : "text-slate-700")}>AI Chat Assistants</p>
+            </div>
+            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>Included in plan: 10</span>
+            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>Additional: $4 ea.</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs font-medium text-blue-500 whitespace-nowrap">Connection limit</span>
+              <Info size={11} className="text-slate-400" />
+              <Input
+                type="number"
+                min={0}
+                value={form.aiLimit}
+                onChange={(e) => set('aiLimit', parseInt(e.target.value) || 0)}
+                className={cn("w-16 h-8 text-xs text-center", dark ? "bg-[#0f172a] border-slate-700 text-white" : "border-slate-200 bg-white")}
+              />
+            </div>
+          </div>
+
+          {/* Channel rows */}
+          <div className="divide-y">
+            {CHANNELS.map((ch, idx) => (
+              <div
+                key={ch.id}
+                className={cn(
+                  "flex items-center gap-4 px-5 py-3.5",
+                  dark ? "divide-slate-700" : "divide-slate-100",
+                  idx === CHANNELS.length - 1 ? "" : ""
+                )}
+                style={{ borderBottomColor: dark ? 'rgb(51,65,85)' : 'rgb(241,245,249)' }}
+              >
+                <div
+                  className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", ch.gradient ? `bg-gradient-to-tr ${ch.gradient}` : "")}
+                  style={ch.color ? { backgroundColor: ch.color } : {}}
+                >
+                  {ch.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-sm font-medium", dark ? "text-slate-200" : "text-slate-700")}>{ch.name}</p>
+                </div>
+                <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>First connection: FREE</span>
+                <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>Additional: {ch.price} ea.</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-xs font-medium text-primary whitespace-nowrap">Connection limit</span>
+                  <Info size={11} className="text-slate-400" />
+                  <Input
+                    type="number"
+                    min={0}
+                    value={(form.channels as any)[ch.id]}
+                    onChange={(e) => setChannel(ch.id, parseInt(e.target.value) || 0)}
+                    className={cn("w-16 h-8 text-xs text-center", dark ? "bg-[#0f172a] border-slate-700 text-white" : "border-slate-200 bg-white")}
                   />
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* Footer Buttons */}
-        <div className="flex justify-end gap-3 mt-4 pt-2">
-          <Button 
-            variant="ghost" 
-            onClick={onCancel}
-            className={cn("text-[12px] font-bold h-9 px-6", isDark ? "text-slate-300 hover:text-white hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100")}
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button 
-            onClick={handleSave}
-            className={cn("px-8 h-9 text-[12px] font-bold transition-colors border",
-              mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? t("common.saving") : (initialData ? t('common.update') : t('common.save'))}
-          </Button>
-        </div>
       </div>
     </div>
   );
