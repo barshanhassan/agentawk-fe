@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" fill="none">
+  <!-- Phone outer frame -->
+  <rect x="0" y="0" width="280" height="560" rx="35" fill="#e5e7eb"/>
+  
+  <!-- Phone screen -->
+  <rect x="8" y="8" width="264" height="544" rx="28" fill="#ffffff"/>
+  
+  <!-- Notch -->
+  <rect x="95" y="8" width="90" height="22" rx="11" fill="#4a5568"/>
+  
+  <!-- Status bar -->
+  <g transform="translate(0, 30)">
+    <!-- Time -->
+    <text x="20" y="12" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#000" font-weight="500">12:30 pm</text>
+    
+    <!-- Signal and battery icons -->
+    <g transform="translate(230, 4)">
+      <rect x="0" y="2" width="2" height="8" rx="1" fill="#000"/>
+      <rect x="4" y="0" width="2" height="10" rx="1" fill="#000"/>
+      <rect x="8" y="3" width="2" height="7" rx="1" fill="#000"/>
+      <circle cx="18" cy="5" r="4" fill="none" stroke="#000" stroke-width="1"/>
+      <rect x="26" y="1" width="16" height="8" rx="2" stroke="#000" stroke-width="1" fill="none"/>
+      <rect x="42" y="3" width="2" height="4" rx="1" fill="#000"/>
+    </g>
+  </g>
+  
+  <!-- Header bar -->
+  <g transform="translate(0, 55)">
+    <rect x="8" y="0" width="264" height="44" fill="#8e8e8e"/>
+    
+    <!-- Back arrow -->
+    <path d="M 24 22 L 18 22 M 24 18 L 18 22 L 24 26" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Page name -->
+    <text x="40" y="26" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" fill="#1a1a1a" font-weight="500">Byte Digital</text>
+    
+    <!-- Menu icon (three lines) -->
+    <g transform="translate(250, 16)">
+      <rect x="0" y="0" width="14" height="2" rx="1" fill="#1a1a1a"/>
+      <rect x="0" y="5" width="14" height="2" rx="1" fill="#1a1a1a"/>
+      <rect x="0" y="10" width="14" height="2" rx="1" fill="#1a1a1a"/>
+    </g>
+  </g>
+  
+  <!-- Content area -->
+  <g transform="translate(0, 99)">
+    <rect x="8" y="0" width="264" height="453" fill="#ffffff"/>
+    
+    <!-- Top handle line -->
+    <rect x="125" y="10" width="30" height="4" rx="2" fill="#d1d5db"/>
+    
+    <!-- Type message prompt -->
+    <g transform="translate(0, 25)">
+      <rect x="28" y="0" width="224" height="38" rx="19" fill="#f0f2f5"/>
+      <text x="140" y="24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" fill="#bcc0c4" text-anchor="middle">Type your message...</text>
+    </g>
+    
+    <!-- Menu items section -->
+    <g transform="translate(28, 78)">
+      <!-- Divider line -->
+      <line x1="0" y1="0" x2="224" y2="0" stroke="#e4e6eb" stroke-width="1"/>
+      
+      <!-- Menu item 1 -->
+      <g transform="translate(0, 15)">
+        <text x="0" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" fill="#1a1a1a">📍 Store Locations</text>
+      </g>
+      
+      <!-- Divider line -->
+      <line x1="0" y1="50" x2="224" y2="50" stroke="#e4e6eb" stroke-width="1"/>
+      
+      <!-- Menu item 2 -->
+      <g transform="translate(0, 65)">
+        <text x="0" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" fill="#1a1a1a">⏰ Business Hours</text>
+      </g>
+      
+      <!-- Divider line -->
+      <line x1="0" y1="100" x2="224" y2="100" stroke="#e4e6eb" stroke-width="1"/>
+      
+      <!-- Menu item 3 -->
+      <g transform="translate(0, 115)">
+        <text x="0" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" fill="#1a1a1a">💬 Talk to Agent</text>
+      </g>
+      
+      <!-- Divider line -->
+      <line x="0" y1="150" x2="224" y2="150" stroke="#e4e6eb" stroke-width="1"/>
+      
+      <!-- Menu item 4 -->
+      <g transform="translate(0, 165)">
+        <text x="0" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" fill="#1a1a1a">🛒 Our Products</text>
+      </g>
+      
+      <!-- Divider line -->
+      <line x1="0" y1="200" x2="224" y2="200" stroke="#e4e6eb" stroke-width="1"/>
+    </g>
+  </g>
+  
+  <!-- Bottom home indicator -->
+  <rect x="110" y="542" width="60" height="4" rx="2" fill="#d1d5db"/>
+</svg>

@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" fill="none">
+  <!-- Phone outer frame -->
+  <rect x="0" y="0" width="280" height="560" rx="35" fill="#1a1a1a"/>
+  
+  <!-- Phone screen -->
+  <rect x="8" y="8" width="264" height="544" rx="28" fill="#ffffff"/>
+  
+  <!-- Notch -->
+  <rect x="95" y="8" width="90" height="22" rx="11" fill="#4a5568"/>
+  
+  <!-- Status bar -->
+  <g transform="translate(0, 30)">
+    <!-- Time -->
+    <text x="20" y="12" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#000" font-weight="500">9:41</text>
+    
+    <!-- Signal and battery icons -->
+    <g transform="translate(230, 4)">
+      <rect x="0" y="2" width="2" height="8" rx="1" fill="#000"/>
+      <rect x="4" y="0" width="2" height="10" rx="1" fill="#000"/>
+      <rect x="8" y="3" width="2" height="7" rx="1" fill="#000"/>
+      <circle cx="18" cy="5" r="4" fill="none" stroke="#000" stroke-width="1"/>
+      <rect x="26" y="1" width="16" height="8" rx="2" stroke="#000" stroke-width="1" fill="none"/>
+      <rect x="42" y="3" width="2" height="4" rx="1" fill="#000"/>
+    </g>
+  </g>
+  
+  <!-- Header bar -->
+  <g transform="translate(0, 55)">
+    <rect x="8" y="0" width="264" height="50" fill="#ffffff" stroke="#e5e7eb" stroke-width="1"/>
+    
+    <!-- Back arrow -->
+    <path d="M 24 25 L 18 25 M 24 21 L 18 25 L 24 29" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Profile picture -->
+    <circle cx="48" cy="25" r="14" fill="#10b981"/>
+    <text x="48" y="30" font-family="Arial" font-size="12" fill="#fff" text-anchor="middle" font-weight="bold">RC</text>
+    
+    <!-- Business name -->
+    <text x="70" y="28" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" fill="#1a1a1a" font-weight="600">Roof Center</text>
+    
+    <!-- Header icons -->
+    <g transform="translate(230, 20)">
+      <circle cx="0" cy="5" r="5" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+      <circle cx="15" cy="5" r="5" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+      <circle cx="30" cy="5" r="5" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+    </g>
+  </g>
+  
+  <!-- Chat messages -->
+  <g transform="translate(20, 120)">
+    <!-- Message 1 - Received with quick replies -->
+    <g>
+      <circle cx="12" cy="12" r="10" fill="#10b981"/>
+      <text x="12" y="16" font-family="Arial" font-size="9" fill="#fff" text-anchor="middle" font-weight="bold">RC</text>
+      
+      <rect x="30" y="0" width="200" height="70" rx="12" fill="#f1f3f5"/>
+      <text x="40" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#1a1a1a">
+        <tspan x="40" dy="0">Hello Arnold! Thanks for reaching</tspan>
+        <tspan x="40" dy="15">out to Roof Center. How can we</tspan>
+        <tspan x="40" dy="15">assist you today?</tspan>
+      </text>
+    </g>
+    
+    <!-- Quick reply buttons -->
+    <g transform="translate(30, 80)">
+      <rect x="0" y="0" width="110" height="26" rx="13" fill="none" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="55" y="16" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#8b5cf6" text-anchor="middle" font-weight="500">See our locations</text>
+    </g>
+    
+    <g transform="translate(30, 112)">
+      <rect x="0" y="0" width="95" height="26" rx="13" fill="none" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="47" y="16" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#8b5cf6" text-anchor="middle" font-weight="500">Talk to a human</text>
+    </g>
+    
+    <!-- Message 2 - Sent -->
+    <g transform="translate(0, 150)">
+      <rect x="70" y="0" width="160" height="45" rx="12" fill="#8b5cf6"/>
+      <text x="80" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#ffffff">
+        <tspan x="80" dy="0">Hello! I have a question</tspan>
+        <tspan x="80" dy="15">about your services</tspan>
+      </text>
+    </g>
+    
+    <!-- Message 3 - Received -->
+    <g transform="translate(0, 210)">
+      <circle cx="12" cy="12" r="10" fill="#10b981"/>
+      <text x="12" y="16" font-family="Arial" font-size="9" fill="#fff" text-anchor="middle" font-weight="bold">RC</text>
+      
+      <rect x="30" y="0" width="200" height="70" rx="12" fill="#f1f3f5"/>
+      <text x="40" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#1a1a1a">
+        <tspan x="40" dy="0">Hello Arnold! Thanks for reaching</tspan>
+        <tspan x="40" dy="15">out to Roof Center. How can we</tspan>
+        <tspan x="40" dy="15">assist you today?</tspan>
+      </text>
+    </g>
+    
+    <!-- Message 4 - Sent -->
+    <g transform="translate(0, 295)">
+      <rect x="90" y="0" width="140" height="32" rx="12" fill="#8b5cf6"/>
+      <text x="100" y="20" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#ffffff">Talk to a human</text>
+    </g>
+    
+    <!-- Message 5 - Received -->
+    <g transform="translate(0, 340)">
+      <circle cx="12" cy="12" r="10" fill="#10b981"/>
+      <text x="12" y="16" font-family="Arial" font-size="9" fill="#fff" text-anchor="middle" font-weight="bold">RC</text>
+      
+      <rect x="30" y="0" width="210" height="55" rx="12" fill="#f1f3f5"/>
+      <text x="40" y="18" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#1a1a1a">
+        <tspan x="40" dy="0">One of our agents will be calling you</tspan>
+        <tspan x="40" dy="15">shortly. Kindly hold on...</tspan>
+      </text>
+    </g>
+  </g>
+  
+  <!-- Input bar -->
+  <g transform="translate(20, 490)">
+    <rect x="0" y="0" width="240" height="42" rx="21" fill="#f1f3f5"/>
+    
+    <!-- Message icon -->
+    <circle cx="20" cy="21" r="10" fill="#0095f6"/>
+    <text x="20" y="25" font-family="Arial" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">M</text>
+    
+    <!-- Input text placeholder -->
+    <text x="45" y="25" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" fill="#8e8e8e">Message...</text>
+    
+    <!-- Right icons -->
+    <g transform="translate(180, 16)">
+      <circle cx="7" cy="5" r="5" fill="none" stroke="#8e8e8e" stroke-width="1.5"/>
+      <circle cx="22" cy="5" r="5" fill="none" stroke="#8e8e8e" stroke-width="1.5"/>
+      <circle cx="37" cy="5" r="5" fill="none" stroke="#8e8e8e" stroke-width="1.5"/>
+    </g>
+  </g>
+  
+  <!-- Bottom home indicator -->
+  <rect x="110" y="542" width="60" height="4" rx="2" fill="#d1d5db"/>
+</svg>

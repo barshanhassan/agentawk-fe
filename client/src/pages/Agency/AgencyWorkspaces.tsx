@@ -1,0 +1,340 @@
+import React, { useState, useEffect } from 'react';
+import { getUserInfo } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Network,
+  Plus,
+  Search,
+  ExternalLink,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Monitor,
+  BarChart3,
+  Wallet,
+  Ban,
+  Trash2,
+  Filter,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+import CreateWorkspaceForm from "./CreateWorkspaceForm";
+import WorkspaceUsageView from "./WorkspaceUsageView";
+import AgencyVoiceWallet from "./AgencyVoiceWallet";
+
+const AgencyWorkspaces = () => {
+  const { mode } = useTheme();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const dark = mode === "dark";
+  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
+  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'    : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
+
+  const [viewMode, setViewMode] = useState<'LIST' | 'CREATE' | 'EDIT' | 'USAGE' | 'VOICE_WALLET'>('LIST');
+  const [selectedWorkspace, setSelectedWorkspace] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const userInfo = React.useMemo(() => {
+    try { return getUserInfo(); } catch { return {}; }
+  }, []);
+  const agencyId = userInfo.modelable_id;
+
+  const { data: workspacesResponse, isLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/workspaces`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
+      return res.json();
+    },
+    enabled: !!agencyId
+  });
+
+  const workspaces = (workspacesResponse?.workspaces || []).map((ws: any) => ({
+    id: ws.id,
+    name: ws.name,
+    createdAt: ws.created_at ? format(new Date(ws.created_at), "MMM dd, yyyy") : "—",
+    status: (ws.status === 'active' || ws.status === 'ACTIVE') ? 'Active' : 'Suspended',
+    hasLogin: true,
+  }));
+
+  const [localWorkspaces, setLocalWorkspaces] = useState<any[]>([]);
+  useEffect(() => {
+    if (workspaces.length > 0) setLocalWorkspaces(workspaces);
+  }, [workspacesResponse]);
+
+  const displayWorkspaces = localWorkspaces.length > 0 ? localWorkspaces : workspaces;
+  const filteredWorkspaces = displayWorkspaces.filter((ws: any) =>
+    ws.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (workspace: any) => {
+      const isActive = workspace.status === 'Active';
+      const res = await apiRequest("POST", `/api/agencies/${agencyId}/workspaces/${workspace.id}/${isActive ? 'suspend' : 'activate'}`);
+      return res.json();
+    },
+    onSuccess: (_, workspace) => {
+      const newStatus = workspace.status === 'Active' ? 'Suspended' : 'Active';
+      setLocalWorkspaces(prev => prev.map(ws => ws.id === workspace.id ? { ...ws, status: newStatus } : ws));
+      toast({ title: `Workspace ${newStatus}` });
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (workspace: any) => {
+      const res = await apiRequest("DELETE", `/api/agencies/${agencyId}/workspaces/${workspace.id}`);
+      return res.json();
+    },
+    onSuccess: (_, workspace) => {
+      setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
+      toast({ title: "Workspace deleted", variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+    },
+  });
+
+  if (viewMode === 'VOICE_WALLET') {
+    return <AgencyVoiceWallet workspace={selectedWorkspace} onBack={() => { setViewMode('LIST'); setSelectedWorkspace(null); }} />;
+  }
+  if (viewMode === 'CREATE' || viewMode === 'EDIT') {
+    return <CreateWorkspaceForm onCancel={() => { setViewMode('LIST'); setSelectedWorkspace(null); }} initialData={selectedWorkspace} />;
+  }
+  if (viewMode === 'USAGE') {
+    return <WorkspaceUsageView workspace={selectedWorkspace} onBack={() => { setViewMode('LIST'); setSelectedWorkspace(null); }} />;
+  }
+
+  return (
+    <div className={cn("min-h-screen flex flex-col font-sans transition-all duration-300", bg)}>
+      
+      {/* ── Header ── (Matched with Team) */}
+      <div className={cn("px-8 py-5 border-b flex items-center justify-between transition-colors", card, border)}>
+        <div className="flex items-center gap-4">
+          <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+            <Network className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className={cn("text-[15px] font-bold tracking-tight", text)}>Workspaces</h1>
+            <p className={cn("text-[11px] mt-0.5", sub)}>
+              {filteredWorkspaces.length} total · {filteredWorkspaces.filter((ws: any) => ws.status === 'Active').length} active
+            </p>
+          </div>
+        </div>
+        <button 
+          onClick={() => setViewMode('CREATE')}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
+        >
+          <Plus size={14} /> Add Workspace
+        </button>
+      </div>
+
+      {/* ── Search & Filter Bar ── (Matched with Team) */}
+      <div className={cn("px-8 py-3 border-b flex items-center justify-between gap-4", card, border)}>
+        <div className="relative w-full max-w-xs group">
+          <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors", sub)} />
+          <input
+            placeholder="Search workspaces..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={cn(
+              "pl-9 pr-3 h-8 w-full text-[12px] rounded-lg border outline-none transition-colors",
+              dark
+                ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600"
+                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300"
+            )}
+          />
+        </div>
+
+        <div className="flex items-center gap-4">
+            <label className={cn("flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest cursor-pointer transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
+              <Checkbox className="border-slate-300 w-3.5 h-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+              Show Inactive
+            </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger className={cn("flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest outline-none transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
+                Newest first <ChevronDown size={12} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className={cn("w-40 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
+                <DropdownMenuItem className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Newest first</DropdownMenuItem>
+                <DropdownMenuItem className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Oldest first</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar pb-24">
+        <div className="max-w-[1400px] mx-auto">
+
+          {/* ── Card Grid Area ── */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className={cn("h-72 rounded-2xl border animate-pulse", card, border)}>
+                  <div className="flex flex-col items-center p-8 space-y-4">
+                    <div className={cn("w-16 h-16 rounded-full", dark ? "bg-slate-800" : "bg-slate-200")} />
+                    <div className={cn("h-4 w-32 rounded", dark ? "bg-slate-800" : "bg-slate-200")} />
+                    <div className={cn("h-3 w-24 rounded", dark ? "bg-slate-800/60" : "bg-slate-100")} />
+                    <div className={cn("h-3 w-20 rounded", dark ? "bg-slate-800/60" : "bg-slate-100")} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredWorkspaces.length === 0 ? (
+            <div className={cn("rounded-2xl border p-20 flex flex-col items-center justify-center", card, border)}>
+              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4", dark ? "bg-slate-800" : "bg-slate-100")}>
+                <Network className="w-8 h-8 text-slate-400" />
+              </div>
+              <p className={cn("text-[15px] font-bold mb-1", text)}>No Workspaces Found</p>
+              <p className={cn("text-[12px]", sub)}>Try adjusting your search query or add a new workspace</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredWorkspaces.map((ws: any) => (
+                <div
+                  key={ws.id}
+                  className={cn(
+                    "group relative flex flex-col items-center p-6 rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+                    card, border,
+                    dark ? "hover:border-primary/30" : "hover:border-primary/20"
+                  )}
+                >
+                  {/* Status Badge — top right */}
+                  <div className="absolute top-4 right-4">
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                      ws.status === 'Active'
+                        ? "text-emerald-500 bg-emerald-500/5 border-emerald-500/20"
+                        : "text-rose-500 bg-rose-500/5 border-rose-500/20"
+                    )}>
+                      <span className={cn("w-1 h-1 rounded-full", ws.status === 'Active' ? "bg-emerald-500" : "bg-rose-500")} />
+                      {ws.status}
+                    </span>
+                  </div>
+
+                  {/* Circular Avatar */}
+                  <div className={cn(
+                    "w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4 shadow-lg transition-transform group-hover:scale-110",
+                    "bg-gradient-to-br from-primary to-primary/60"
+                  )}>
+                    {ws.name.slice(0, 2).toUpperCase()}
+                  </div>
+
+                  {/* Info */}
+                  <div className="text-center w-full mb-5">
+                    <h3 className={cn("text-[15px] font-bold tracking-tight mb-2 truncate px-2", text)}>{ws.name}</h3>
+                    <div className="flex flex-col items-center">
+                      <span className={cn("text-[10px] font-bold uppercase tracking-widest opacity-40", sub)}>
+                        ID: {ws.id}
+                      </span>
+                      <p className={cn("text-[11px] font-medium mt-0.5", sub)}>
+                        Created on {ws.createdAt}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Bar */}
+                  <div className={cn("flex items-center gap-2 w-full pt-4 mt-auto border-t", dark ? "border-slate-800" : "border-slate-100")}>
+                    <button
+                      onClick={() => { setSelectedWorkspace(ws); setViewMode('EDIT'); }}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-[11px] font-bold transition-all",
+                        dark
+                          ? "bg-slate-800 hover:bg-primary text-slate-300 hover:text-white"
+                          : "bg-slate-100 hover:bg-primary text-slate-600 hover:text-white"
+                      )}
+                    >
+                      <Monitor size={13} /> Manage
+                    </button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className={cn(
+                          "w-9 h-9 flex items-center justify-center rounded-xl border transition-all outline-none shrink-0",
+                          dark
+                            ? "border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white"
+                            : "border-slate-200 hover:bg-white text-slate-400 hover:text-slate-900"
+                        )}>
+                          <MoreHorizontal size={15} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className={cn("w-52 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
+                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('USAGE'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                          <BarChart3 size={14} className="text-primary" /> Usage Reports
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('VOICE_WALLET'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                          <Wallet size={14} className="text-primary" /> Voice Wallet
+                        </DropdownMenuItem>
+                        <div className={cn("my-1 h-px", dark ? "bg-slate-800" : "bg-slate-100")} />
+                        <DropdownMenuItem onClick={() => toggleStatusMutation.mutate(ws)} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                          <Ban size={14} /> {ws.status === 'Active' ? 'Suspend Access' : 'Activate Access'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => { if (confirm(`Delete "${ws.name}"?`)) deleteMutation.mutate(ws); }}
+                          className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                        >
+                          <Trash2 size={14} /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination Footer */}
+          {filteredWorkspaces.length > 4 && (
+            <div className={cn(
+              "mt-12 px-6 py-3.5 rounded-2xl border flex items-center justify-between shadow-sm transition-all",
+              dark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50/80 border-slate-100 shadow-slate-200/50"
+            )}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className={cn("text-[11px] font-bold uppercase tracking-widest", sub)}>
+                  Showing <span className={text}>{filteredWorkspaces.length}</span> Total Workspaces
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button className={cn(
+                  "p-2 rounded-xl border transition-all hover:scale-105 active:scale-95",
+                  dark ? "border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800" : "border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm"
+                )}>
+                  <ChevronLeft size={14} />
+                </button>
+                
+                <div className="px-3 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-primary/25 border border-primary/20">
+                  1
+                </div>
+                
+                <button className={cn(
+                  "p-2 rounded-xl border transition-all hover:scale-105 active:scale-95",
+                  dark ? "border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800" : "border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm"
+                )}>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AgencyWorkspaces;

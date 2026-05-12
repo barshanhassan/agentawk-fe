@@ -1,0 +1,267 @@
+import { useState, useEffect } from "react";
+import { Switch, Route, useLocation, Redirect } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import AppSidebar from "@/components/AppSidebar";  // Now our horizontal top bar
+// Remove this line if you're deleting TopNavbar
+// import TopNavbar from "@/components/TopNavbar";
+
+import InsightsDashboard from "@/pages/InsightsDashboard";
+import ConversationsInbox from "@/pages/ConversationsInbox";
+import BotConversations from "@/pages/BotConversations";
+import ConversationLogsPage from "@/pages/ConversationLogsPage";
+import CallLogsPage from "@/pages/CallLogsPage";
+import NotificationsPage from "@/pages/NotificationsPage";
+import TemplateManager from "@/pages/TemplateManager";
+import CampaignManager from "@/pages/CampaignManager";
+import UserManagementPage from "@/pages/UserManagementPage";
+import ContactsPage from "@/pages/ContactsPage";
+import BillingPage from "@/pages/BillingPage";
+import WhatsAppManagerPage from "@/pages/WhatsAppManagerPage";
+import SettingsPage from "@/pages/SettingsPage";
+import TeamManagementSection from "@/components/sections/TeamManagementSection";
+import WorkspaceManagementPage from "@/pages/WorkspaceManagementPage";
+import SmartFlowsPage from "@/pages/SmartFlowsPage";
+import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
+import NotFound from "@/pages/not-found";
+import LoginPage from "@/pages/LoginPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import AgencyDashboard from "@/pages/Agency/AgencyDashboard";
+import AgencyWorkspaces from "@/pages/Agency/AgencyWorkspaces";
+import AgencyTeam from "@/pages/Agency/AgencyTeam";
+import AgencyRoles from "@/pages/Agency/AgencyRoles";
+import AgencyLogs from "@/pages/Agency/AgencyLogs";
+import WorkspaceLogs from "@/pages/Agency/WorkspaceLogs";
+import AgencyPlans from "@/pages/Agency/AgencyPlans";
+import AgencyAPI from "@/pages/Agency/AgencyAPI";
+import AgencyBillingPlans from "@/pages/Agency/AgencyBillingPlans";
+import AgencyBillingManage from "@/pages/Agency/AgencyBillingManage";
+import AgencyLegal from "@/pages/Agency/AgencyLegal";
+import AgencyHelp from "@/pages/Agency/AgencyHelp";
+import AgencyGeneralSettings from "@/pages/Agency/AgencyGeneralSettings";
+import AgencyNotificationsSettings from "@/pages/Agency/AgencyNotificationsSettings";
+import AgencyWhiteLabelSettings from "@/pages/Agency/AgencyWhiteLabelSettings";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import AgencyLayout from "@/components/AgencyLayout";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SiteProvider, useSite } from "@/contexts/SiteContext";
+import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./lib/i18n";
+
+function DashboardDispatcher({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?: boolean }) {
+  const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
+  const userRole = userInfo.role;
+  
+  if (userRole === "AGENCY" || userRole === "agency" || siteType === "AGENCY" || isAgencyRoute || window.location.host.startsWith("agency.")) {
+    return <AgencyDashboard />;
+  }
+  return <InsightsDashboard />;
+}
+
+function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?: boolean }) {
+  return (
+    <Switch>
+      <Route path="/login" component={LoginPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+
+      <Route path="/">
+        <ProtectedRoute>
+          <DashboardDispatcher siteType={siteType} isAgencyRoute={isAgencyRoute} />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/insights">
+        <ProtectedRoute><DashboardDispatcher siteType={siteType} isAgencyRoute={isAgencyRoute} /></ProtectedRoute>
+      </Route>
+
+      <Route path="/workspace">
+        <Redirect to="/insights" />
+      </Route>
+
+      <Route path="/conversations/inbox">
+        <ProtectedRoute><ConversationsInbox /></ProtectedRoute>
+      </Route>
+
+      <Route path="/conversations/bot">
+        <ProtectedRoute><BotConversations /></ProtectedRoute>
+      </Route>
+      <Route path="/conversations/conversation-logs">
+        <ProtectedRoute><ConversationLogsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/conversations/call-logs">
+        <ProtectedRoute><CallLogsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/templates">
+        <ProtectedRoute><TemplateManager /></ProtectedRoute>
+      </Route>
+      <Route path="/campaigns">
+        <ProtectedRoute><CampaignManager /></ProtectedRoute>
+      </Route>
+      <Route path="/contacts">
+        <ProtectedRoute><ContactsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/users">
+        <ProtectedRoute><UserManagementPage /></ProtectedRoute>
+      </Route>
+      <Route path="/teams">
+        <ProtectedRoute>
+          <div className="p-6"><TeamManagementSection /></div>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/workspaces">
+        <ProtectedRoute><WorkspaceManagementPage /></ProtectedRoute>
+      </Route>
+      <Route path="/billing">
+        <ProtectedRoute><BillingPage /></ProtectedRoute>
+      </Route>
+      <Route path="/whatsapp-manager">
+        <ProtectedRoute><WhatsAppManagerPage /></ProtectedRoute>
+      </Route>
+      <Route path="/settings/workspace/:section">
+        <ProtectedRoute><SettingsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute><SettingsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/notifications">
+        <ProtectedRoute><NotificationsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/automations/:id">
+        <ProtectedRoute><SmartFlowBuilderPage /></ProtectedRoute>
+      </Route>
+      <Route path="/automations">
+        <ProtectedRoute><SmartFlowsPage /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/settings/white-label">
+        <ProtectedRoute><AgencyWhiteLabelSettings /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/settings/notifications">
+        <ProtectedRoute><AgencyNotificationsSettings /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/settings/general">
+        <ProtectedRoute><AgencyGeneralSettings /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/help">
+        <ProtectedRoute><AgencyHelp /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/legal">
+        <ProtectedRoute><AgencyLegal /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/billing/plans">
+        <ProtectedRoute><AgencyBillingPlans /></ProtectedRoute>
+      </Route>
+      <Route path="/agency/billing/manage">
+        <ProtectedRoute><AgencyBillingManage /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/saas/api">
+        <ProtectedRoute><AgencyAPI /></ProtectedRoute>
+      </Route>
+      <Route path="/agency/saas/plans">
+        <ProtectedRoute><AgencyPlans /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/audit-logs/workspace">
+        <ProtectedRoute><WorkspaceLogs /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/audit-logs/agency">
+        <ProtectedRoute><AgencyLogs /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/roles">
+        <ProtectedRoute><AgencyRoles /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/team">
+        <ProtectedRoute><AgencyTeam /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency/workspaces">
+        <ProtectedRoute><AgencyWorkspaces /></ProtectedRoute>
+      </Route>
+
+      <Route path="/agency">
+        <ProtectedRoute><AgencyDashboard /></ProtectedRoute>
+      </Route>
+
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function AppContent() {
+  const [location] = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const checkAuthStatus = () => {
+    const token = localStorage.getItem("auth_token");
+    return !!token;
+  };
+
+  useEffect(() => {
+    setIsLoggedIn(checkAuthStatus());
+  }, [location]);
+
+  const { siteData, loading } = useSite();
+
+  const isBuilderRoute = location.startsWith("/automations/") && location.split("/").length === 3;
+  const isAuthRoute = location === "/login" || location === "/forgot-password";
+  const siteType = siteData?.app?.site_type || "WORKSPACE";
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading application...</div>;
+  }
+
+  const isAgencyRoute = location.startsWith("/agency");
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <I18nextProvider i18n={i18n}>
+        <ThemeProvider>
+          <GlobalBrandingFetcher />
+          <TooltipProvider>
+            {isAuthRoute ? (
+              <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
+            ) : (siteType === "AGENCY" || isAgencyRoute || window.location.host.startsWith("agency.")) ? (
+              <AgencyLayout>
+                <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
+              </AgencyLayout>
+            ) : (
+              <div className="flex h-screen overflow-hidden bg-background">
+                {/* New: Horizontal Top Bar (only shown when logged in) */}
+                {isLoggedIn && !isBuilderRoute && <AppSidebar />}
+
+                {/* Main content area - now full width, with top padding */}
+                <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-16" : ""}`}>
+                  <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
+                </main>
+
+                <Toaster />
+              </div>
+            )}
+          </TooltipProvider>
+        </ThemeProvider>
+      </I18nextProvider>
+    </QueryClientProvider>
+  );
+}
+
+function App() {
+  return (
+    <SiteProvider>
+      <AppContent />
+    </SiteProvider>
+  );
+}
+
+export default App;

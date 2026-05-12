@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 812" fill="none">
+  <!-- Phone frame background -->
+  <rect width="375" height="812" rx="40" fill="#1E293B"/>
+  
+  <!-- Screen -->
+  <rect x="10" y="10" width="355" height="792" rx="30" fill="#0D1117"/>
+  
+  <!-- Telegram header -->
+  <rect x="10" y="10" width="355" height="60" rx="30" rx-bottom="0" fill="#1F2937"/>
+  <circle cx="40" cy="40" r="15" fill="#10B981"/>
+  <text x="65" y="45" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#F9FAFB">Roof Center</text>
+  
+  <!-- Chat background -->
+  <rect x="10" y="70" width="355" height="682" fill="#0D1117"/>
+  
+  <!-- Pattern background -->
+  <defs>
+    <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#1F2937" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect x="10" y="70" width="355" height="682" fill="url(#dots)"/>
+  
+  <!-- Message 1 - Incoming -->
+  <g>
+    <rect x="30" y="90" width="200" height="auto" rx="12" fill="#374151"/>
+    <foreignObject x="30" y="90" width="200" height="100">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="padding: 12px; font-family: Arial, sans-serif; font-size: 14px; color: #F9FAFB; line-height: 1.4;">
+        Hello, I have a question
+      </div>
+    </foreignObject>
+  </g>
+  
+  <!-- Message 2 - Quick reply buttons -->
+  <g>
+    <rect x="30" y="140" width="280" height="auto" rx="12" fill="#374151"/>
+    <foreignObject x="30" y="140" width="280" height="120">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="padding: 12px; font-family: Arial, sans-serif; font-size: 14px; color: #F9FAFB; line-height: 1.4;">
+        <div style="margin-bottom: 10px;">Hello Arnold! Thanks for reaching out to Roof Center. How can we assist you today?</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+          <button style="background: #10B981; color: white; padding: 8px 16px; border: none; border-radius: 16px; font-size: 12px; cursor: pointer;">See our locations</button>
+        </div>
+      </div>
+    </foreignObject>
+  </g>
+  
+  <!-- Message 3 - Incoming -->
+  <g>
+    <rect x="30" y="280" width="240" height="auto" rx="12" fill="#374151"/>
+    <foreignObject x="30" y="280" width="240" height="100">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="padding: 12px; font-family: Arial, sans-serif; font-size: 14px; color: #F9FAFB; line-height: 1.4;">
+        Hello Arnold! Thanks for reaching out to Roof Center. How can we assist you today?
+      </div>
+    </foreignObject>
+  </g>
+  
+  <!-- Message 4 - Quick reply button -->
+  <g>
+    <foreignObject x="30" y="400" width="280" height="80">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="padding: 0; font-family: Arial, sans-serif; font-size: 14px; color: #F9FAFB; line-height: 1.4;">
+        <button style="background: #10B981; color: white; padding: 10px 20px; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; margin-right: 8px;">Talk to a human</button>
+      </div>
+    </foreignObject>
+  </g>
+  
+  <!-- Message 5 - Outgoing -->
+  <g>
+    <rect x="145" y="500" width="200" height="auto" rx="12" fill="#10B981"/>
+    <foreignObject x="145" y="500" width="200" height="80">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="padding: 12px; font-family: Arial, sans-serif; font-size: 14px; color: white; line-height: 1.4;">
+        One of our agents will be calling you shortly. Kindly hold on...
+      </div>
+    </foreignObject>
+  </g>
+  
+  <!-- Input bar -->
+  <rect x="10" y="752" width="355" height="60" fill="#1F2937"/>
+  <circle cx="335" cy="782" r="15" fill="#10B981"/>
+  <text x="30" y="787" font-family="Arial, sans-serif" font-size="14" fill="#9CA3AF">Message</text>
+  
+  <!-- Bottom buttons -->
+  <circle cx="50" cy="782" r="12" fill="#374151"/>
+  <circle cx="80" cy="782" r="12" fill="#374151"/>
+  <circle cx="110" cy="782" r="12" fill="#374151"/>
+</svg>

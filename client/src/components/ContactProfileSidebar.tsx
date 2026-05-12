@@ -1,0 +1,1433 @@
+
+
+import React, { useState, useEffect } from "react";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    X,
+    ChevronDown,
+    User,
+    Image as ImageIcon,
+    NotebookPen,
+    BarChart3,
+    Tag,
+    ClipboardList,
+    Headset,
+    RefreshCw,
+    PauseCircle,
+    StopCircle,
+    Plus
+} from "lucide-react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import CustomDropdown from "@/components/CustomDropdown";
+import { getAvatarColor } from "@/lib/avatar-utils";
+import ContactDetailsModal from "./ContactDetailsModal";
+
+interface ContactProfileSidebarProps {
+    // Conversation Data
+    conversation: any;
+    conversations: any[]; // Needed specifically for displayName helper context if needed, but ideally we pass resolved values
+
+    // Basic Details
+    basicDetails: any;
+    onUpdateBasicDetails: (details: any) => void;
+
+    // Chat Assignment
+    assignedAgent: string | null;
+    onAssignAgent: (agentId: string) => void;
+    agentOptions: { id: string; name: string }[];
+
+    // Teams
+    involvedTeams: string[];
+    onUpdateInvolvedTeams: (teams: string[]) => void;
+    teamOptions: { id: string; name: string }[];
+
+    // Tags
+    tags: string[];
+    onUpdateTags: (tags: string[]) => void;
+    tagOptions: { id: string; name: string }[];
+
+    // Custom Attributes
+    customAttributes: Record<string, string>;
+    onUpdateCustomAttributes: (attributes: Record<string, string>) => void;
+
+    // Notes
+    notes: string[];
+    onUpdateNotes: (notes: string[]) => void;
+
+    // Messages for Media Tab
+    messages?: any[];
+    onScrollToMessage?: (messageId: number) => void;
+}
+
+// Helper function to get display name - defaults to phone number if displayName not set
+const getDisplayName = (conversation: any): string => {
+    return conversation?.displayName?.trim() || conversation?.phoneNumber || conversation?.name || "Unknown";
+};
+
+export default function ContactProfileSidebar({
+    conversation,
+    conversations, // optional if we strictly use passed conversation
+    basicDetails,
+    onUpdateBasicDetails,
+    assignedAgent,
+    onAssignAgent,
+    agentOptions,
+    involvedTeams,
+    onUpdateInvolvedTeams,
+    teamOptions,
+    tags,
+    onUpdateTags,
+    tagOptions,
+    customAttributes,
+    onUpdateCustomAttributes,
+    notes,
+    onUpdateNotes,
+    messages = [],
+    onScrollToMessage,
+}: ContactProfileSidebarProps) {
+
+    // Edit basic details modal state
+    const [isEditBasicDetailsOpen, setIsEditBasicDetailsOpen] = useState(false);
+    const [editedBasicDetails, setEditedBasicDetails] = useState(basicDetails || {});
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+    // Add teams modal state
+    const [isAddTeamsModalOpen, setIsAddTeamsModalOpen] = useState(false);
+    const [selectedTeamsForModal, setSelectedTeamsForModal] = useState<string[]>([]);
+
+    // Add tags modal state
+    const [isAddTagsModalOpen, setIsAddTagsModalOpen] = useState(false);
+    const [selectedTagsForModal, setSelectedTagsForModal] = useState<string[]>([]);
+
+    // Add custom attribute modal state
+    const [isAddAttributeModalOpen, setIsAddAttributeModalOpen] = useState(false);
+    const [newAttributeKey, setNewAttributeKey] = useState("");
+    const [newAttributeValue, setNewAttributeValue] = useState("");
+
+    // Add note modal state
+    const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
+    const [newNote, setNewNote] = useState("");
+
+    // Add opportunity modal state
+    const [isAddOpportunityModalOpen, setIsAddOpportunityModalOpen] = useState(false);
+    const [newOpportunity, setNewOpportunity] = useState({
+        pipeline: "",
+        stage: "",
+        title: "",
+        value: "",
+        currency: "USD",
+        closingDate: "",
+        confidence: "5",
+        agent: "",
+        contact: "",
+        tags: [] as string[],
+        note: ""
+    });
+
+    // Add task modal state
+    const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+    const [newTask, setNewTask] = useState({ note: "", date: "", time: "", agent: "", contact: "" });
+
+    // Active Tab State
+    const [activeTab, setActiveTab] = useState("details");
+
+    // Pause Smart Flow State
+    const [isFlowPaused, setIsFlowPaused] = useState(false);
+    const [flowPauseTimer, setFlowPauseTimer] = useState(900); // 15 minutes
+    const [maxTime, setMaxTime] = useState(900); // Track max time for progress circle
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isFlowPaused && flowPauseTimer > 0) {
+            interval = setInterval(() => {
+                setFlowPauseTimer((prev) => prev - 1);
+            }, 1000);
+        } else if (flowPauseTimer === 0) {
+            setIsFlowPaused(false);
+            setFlowPauseTimer(900);
+            setMaxTime(900);
+        }
+        return () => clearInterval(interval);
+    }, [isFlowPaused, flowPauseTimer]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleAdd15Minutes = () => {
+        const maxLimit = 9999 * 60; // 9999 minutes in seconds
+        const addedAmount = 900;
+
+        let amountToAdd = addedAmount;
+        if (flowPauseTimer + addedAmount > maxLimit) {
+            amountToAdd = maxLimit - flowPauseTimer;
+        }
+
+        if (amountToAdd > 0) {
+            setFlowPauseTimer((prev) => prev + amountToAdd);
+            setMaxTime((prevMax) => prevMax + amountToAdd);
+        }
+    };
+
+    const handleStopPause = () => {
+        setIsFlowPaused(false);
+        setFlowPauseTimer(900);
+        setMaxTime(900);
+    };
+
+    const handleStartPause = () => {
+        setIsFlowPaused(true);
+        // Reset max time if starting a new session (though timer state handles initial 900)
+        setMaxTime(Math.max(900, flowPauseTimer));
+    };
+
+    const handleSaveBasicDetails = () => {
+        onUpdateBasicDetails(editedBasicDetails);
+        setIsEditBasicDetailsOpen(false);
+    };
+
+    const handleClearField = (field: string) => {
+        setEditedBasicDetails({ ...editedBasicDetails, [field]: "" });
+    };
+
+    const handleOpenTeamsModal = () => {
+        setSelectedTeamsForModal(involvedTeams || []);
+        setIsAddTeamsModalOpen(true);
+    };
+
+    const handleSaveTeams = () => {
+        onUpdateInvolvedTeams(selectedTeamsForModal);
+        setIsAddTeamsModalOpen(false);
+    };
+
+    const handleOpenTagsModal = () => {
+        setSelectedTagsForModal(tags || []);
+        setIsAddTagsModalOpen(true);
+    };
+
+    const handleSaveTags = () => {
+        onUpdateTags(selectedTagsForModal);
+        setIsAddTagsModalOpen(false);
+    };
+
+    const handleAddAttribute = () => {
+        if (newAttributeKey.trim() && newAttributeValue.trim()) {
+            onUpdateCustomAttributes({ ...customAttributes, [newAttributeKey]: newAttributeValue });
+            setNewAttributeKey("");
+            setNewAttributeValue("");
+            setIsAddAttributeModalOpen(false);
+        }
+    };
+
+    const handleAddNote = () => {
+        const currentNotes = notes || [];
+        let updatedNotes: string[];
+
+        if (newNote.trim()) {
+            // If there's a new note, replace the last one or add it
+            if (currentNotes.length > 0) {
+                updatedNotes = [...currentNotes.slice(0, currentNotes.length - 1), newNote.trim()];
+            } else {
+                updatedNotes = [newNote.trim()];
+            }
+        } else {
+            // If newNote is empty, clear all notes
+            updatedNotes = [];
+        }
+
+        onUpdateNotes(updatedNotes);
+        setNewNote("");
+        setIsAddNoteModalOpen(false);
+    };
+
+    if (!conversation) return null;
+
+    const displayName = getDisplayName(conversation);
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(/\s+/).filter((p: string) => p.length > 0);
+        if (parts.length === 0) return "U";
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    };
+    const initials = getInitials(displayName);
+
+    return (
+        <>
+            <Card className="w-96 border-l-0 rounded-l-none" data-testid="contact-panel">
+                <CardContent className="space-y-6 pt-8">
+                    <div className="flex flex-col items-center gap-3">
+                        <button
+                            className="flex flex-col items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none"
+                            onClick={() => setIsDetailsModalOpen(true)}
+                        >
+                            <Avatar className="h-20 w-20">
+                                <AvatarFallback className={`text-2xl ${getAvatarColor(displayName)}`}>{initials}</AvatarFallback>
+                            </Avatar>
+                            <div className="text-center">
+                                <h3 className="font-semibold text-lg hover:underline">{displayName}</h3>
+                                <p className="text-sm text-muted-foreground">{conversation?.phoneNumber}</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {/* Tabs */}
+                        <div className="flex justify-center w-full">
+                            <div className="bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 flex gap-1 items-center justify-between w-full">
+                                {[
+                                    { id: "details", icon: User, label: "Details" },
+                                    { id: "media", icon: ImageIcon, label: "Media" },
+                                    { id: "custom-fields", icon: NotebookPen, label: "Custom Fields" },
+                                    { id: "opportunities", icon: BarChart3, label: "Opportunities" },
+                                    { id: "tags", icon: Tag, label: "Assigned Tags" },
+                                    { id: "tasks", icon: ClipboardList, label: "Create Task" },
+                                ].map((tab) => (
+                                    <TooltipProvider key={tab.id}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button
+                                                    onClick={() => setActiveTab(tab.id)}
+                                                    className={`p-2 rounded-md transition-all flex items-center justify-center flex-1 ${activeTab === tab.id
+                                                        ? "bg-background text-foreground shadow-sm"
+                                                        : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
+                                                        }`}
+                                                >
+                                                    <tab.icon size={18} />
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{tab.label}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Chat Assignment Section - Only visible in "details" tab */}
+                        {activeTab === "details" && (
+                            <>
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-semibold text-sm">Chat Assignment</h4>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-1">
+                                            {(!assignedAgent || assignedAgent !== "self") ? (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1 h-8 text-xs btn-outline-primary font-normal"
+                                                    onClick={() => onAssignAgent("self")}
+                                                >
+                                                    {assignedAgent ? "Reassign to Me" : "Assign to Me"}
+                                                </Button>
+                                            ) : (
+                                                <div className="flex-1 text-xs text-muted-foreground p-2 bg-muted rounded text-center h-8 flex items-center justify-center">
+                                                    Assigned to You
+                                                </div>
+                                            )}
+
+                                            <CustomDropdown
+                                                options={agentOptions.filter(a => a.id !== "self")}
+                                                selected={assignedAgent && assignedAgent !== "self" ? [assignedAgent] : []}
+                                                onChange={(selected) => {
+                                                    if (selected.length > 0) {
+                                                        onAssignAgent(selected[0]);
+                                                    }
+                                                }}
+                                                placeholder=""
+                                                width="auto"
+                                                className="h-8 w-8 px-[0.5rem] justify-center btn-outline-primary border-primary text-primary hover:bg-primary hover:text-white dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-white"
+                                                triggerContent={<ChevronDown size={14} />}
+                                                popoutWidth="220px"
+                                                popoutAlign="right"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator className="my-4" />
+
+                                {/* Support Number */}
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-3">Support Number</h4>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Headset size={16} />
+                                        <span>0123-123</span>
+                                    </div>
+                                </div>
+
+                                <Separator className="my-4" />
+
+                                {/* In Smart Flow */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-semibold text-sm">In Smart Flow</h4>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                            <RefreshCw size={14} />
+                                        </Button>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        This contact is not currently part of any Smart Flow.
+                                    </p>
+                                </div>
+
+                                <Separator className="my-4" />
+
+                                {/* Pause Automated Messages */}
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-3">Pause Automated Messages</h4>
+                                    {!isFlowPaused ? (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start gap-2 btn-outline-primary"
+                                            onClick={handleStartPause}
+                                        >
+                                            <PauseCircle size={16} />
+                                            Pause Smart Flow
+                                        </Button>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-4 py-2">
+                                            {/* Timer Circle */}
+                                            <div className="relative h-32 w-32 flex items-center justify-center">
+                                                {/* Ensure transform is applied correctly to reverse direction */}
+                                                <svg
+                                                    className="h-full w-full"
+                                                    viewBox="0 0 100 100"
+                                                    style={{ transform: "rotate(90deg) scaleX(-1)" }}
+                                                >
+                                                    {/* Background circle */}
+                                                    <circle
+                                                        className="text-muted/20"
+                                                        strokeWidth="8"
+                                                        stroke="currentColor"
+                                                        fill="transparent"
+                                                        r="42"
+                                                        cx="50"
+                                                        cy="50"
+                                                    />
+                                                    {/* Progress circle */}
+                                                    <circle
+                                                        className="text-green-500 transition-all duration-1000 ease-linear"
+                                                        strokeWidth="8"
+                                                        strokeDasharray={264}
+                                                        strokeDashoffset={264 - (264 * flowPauseTimer) / maxTime}
+                                                        strokeLinecap="round"
+                                                        stroke="currentColor"
+                                                        fill="transparent"
+                                                        r="42"
+                                                        cx="50"
+                                                        cy="50"
+                                                    />
+                                                </svg>
+                                                <span className="absolute text-xl font-bold font-mono">
+                                                    {formatTime(flowPauseTimer)}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex gap-2 w-full">
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1 gap-2 btn-outline-destructive"
+                                                    onClick={handleStopPause}
+                                                >
+                                                    <StopCircle size={16} />
+                                                    Stop
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1 gap-2 btn-outline-primary"
+                                                    onClick={handleAdd15Minutes}
+                                                >
+                                                    <Plus size={16} />
+                                                    15 Minutes
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {/* Media Tab Content */}
+                        {activeTab === "media" && (
+                            <div className="space-y-4">
+                                {(() => {
+                                    // Aggregate all media
+                                    const mediaItems: any[] = [];
+
+                                    messages.forEach(msg => {
+                                        if (msg.images && msg.images.length > 0) {
+                                            msg.images.forEach((img: any) => {
+                                                mediaItems.push({ ...img, type: 'image', time: msg.time, from: msg.from, messageId: msg.id });
+                                            });
+                                        }
+                                        if (msg.video) {
+                                            mediaItems.push({ ...msg.video, type: 'video', time: msg.time, from: msg.from, messageId: msg.id });
+                                        }
+                                        if (msg.audio) {
+                                            mediaItems.push({ ...msg.audio, type: 'audio', time: msg.time, from: msg.from, messageId: msg.id });
+                                        }
+                                        if (msg.attachments && msg.attachments.length > 0) {
+                                            msg.attachments.forEach((att: any) => {
+                                                mediaItems.push({ ...att, type: 'document', time: msg.time, from: msg.from, messageId: msg.id });
+                                            });
+                                        }
+                                    });
+
+                                    // Reverse to show newest first
+                                    mediaItems.reverse();
+
+                                    if (mediaItems.length === 0) {
+                                        return (
+                                            <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                                <ImageIcon size={32} className="mb-2 opacity-50" />
+                                                <p className="text-sm">No media messages were found.</p>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {mediaItems.map((item, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="relative group border rounded-md overflow-hidden bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                                                    onClick={() => onScrollToMessage?.(item.messageId)}
+                                                >
+                                                    {item.type === 'image' && (
+                                                        <div className="aspect-square relative">
+                                                            <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <div className="p-2 bg-white/20 rounded-full text-white backdrop-blur-sm">
+                                                                    <ImageIcon size={16} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {item.type === 'video' && (
+                                                        <div className="aspect-square relative flex items-center justify-center bg-black/5">
+                                                            {item.thumbnail ? (
+                                                                <img src={item.thumbnail} alt={item.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                                                                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white/50">
+                                                                        <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-current border-b-[6px] border-b-transparent"></div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                                <div className="p-2 bg-black/50 rounded-full text-white backdrop-blur-sm">
+                                                                    <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {item.type === 'audio' && (
+                                                        <div className="aspect-square flex flex-col items-center justify-center p-3 relative">
+                                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+                                                                <div className="ml-1 w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-current border-b-[5px] border-b-transparent"></div>
+                                                            </div>
+                                                            <span className="text-xs text-center font-medium truncate w-full">Audio</span>
+                                                            <span className="text-[10px] text-muted-foreground">{item.duration || "0:05"}</span>
+                                                        </div>
+                                                    )}
+                                                    {item.type === 'document' && (
+                                                        <div className="aspect-square flex flex-col items-center justify-center p-3 text-center">
+                                                            <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-2">
+                                                                <NotebookPen size={20} />
+                                                            </div>
+                                                            <span className="text-xs font-medium truncate w-full px-1" title={item.name}>{item.name}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{(item.size / 1024).toFixed(0)} KB</span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/60 to-transparent text-white text-[10px] opacity-0 group-hover:opacity-100 transition-opacity truncate px-2">
+                                                        {item.time} • {item.from === 'agent' ? 'You' : 'User'}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
+
+                        {/* Custom Fields Tab */}
+                        {activeTab === "custom-fields" && (
+                            <div className="space-y-4">
+                                <Button variant="outline" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="w-full btn-outline-primary">
+                                    <Plus size={14} className="mr-2" /> Add Custom Attribute
+                                </Button>
+                                {customAttributes && Object.keys(customAttributes).length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {Object.entries(customAttributes).map(([key, value]) => (
+                                            <div
+                                                key={key}
+                                                className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                                            >
+                                                <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newAttrs = { ...customAttributes };
+                                                        delete newAttrs[key];
+                                                        onUpdateCustomAttributes(newAttrs);
+                                                    }}
+                                                    className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                        <NotebookPen size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm">No custom fields found.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Opportunities Tab */}
+                        {activeTab === "opportunities" && (
+                            <div className="space-y-4">
+                                <Button variant="outline" size="sm" className="w-full btn-outline-primary" onClick={() => setIsAddOpportunityModalOpen(true)}>
+                                    <Plus size={14} className="mr-2" /> Add Opportunity
+                                </Button>
+                                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                    <BarChart3 size={32} className="mb-2 opacity-50" />
+                                    <p className="text-sm">No opportunities found.</p>
+                                </div>
+                            </div>
+                        )}
+
+
+                        {/* Assigned Tags Tab */}
+                        {activeTab === "tags" && (
+                            <div className="space-y-4">
+                                <CustomDropdown
+                                    options={tagOptions}
+                                    selected={tags || []}
+                                    onChange={onUpdateTags}
+                                    placeholder="Select tags"
+                                    width="100%"
+                                />
+                                {tags && tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 pb-1">
+                                        {tags.map((tagId) => {
+                                            const tag = tagOptions.find(t => t.id === tagId);
+                                            return (
+                                                <div
+                                                    key={tagId}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                                                >
+                                                    <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newTags = tags.filter(t => t !== tagId);
+                                                            onUpdateTags(newTags);
+                                                        }}
+                                                        className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Create Task Tab */}
+                        {activeTab === "tasks" && (
+                            <div className="space-y-4">
+                                <Button variant="outline" size="sm" className="w-full btn-outline-primary" onClick={() => setIsAddTaskModalOpen(true)}>
+                                    <Plus size={14} className="mr-2" /> Add Task
+                                </Button>
+                                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                    <ClipboardList size={32} className="mb-2 opacity-50" />
+                                    <p className="text-sm">No tasks found.</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 
+                            NOTE: Do not delete these commented out sections as their code might be reusable later.
+                        */}
+
+                        {/*
+                        <Separator />
+                        
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-sm">Basic Details</h4>
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    setEditedBasicDetails(basicDetails || {});
+                                    setIsEditBasicDetailsOpen(true);
+                                }} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-edit-basic-details">
+                                    Edit
+                                </Button>
+                            </div>
+                            <div className="space-y-1 text-sm">
+                                {basicDetails && (
+                                    <>
+                                        {basicDetails.displayName && (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-muted-foreground">Name</span>
+                                                <span className="text-sm font-semibold truncate">{basicDetails.displayName}</span>
+                                            </div>
+                                        )}
+                                        {basicDetails.number && (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-muted-foreground">Number</span>
+                                                <span className="text-sm font-semibold truncate">{basicDetails.number}</span>
+                                            </div>
+                                        )}
+                                        {basicDetails.email && (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-muted-foreground">Email</span>
+                                                <span className="text-sm font-semibold truncate">{basicDetails.email}</span>
+                                            </div>
+                                        )}
+                                        {basicDetails.gender && (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-muted-foreground">Gender</span>
+                                                <span className="text-sm font-semibold truncate">{basicDetails.gender}</span>
+                                            </div>
+                                        )}
+                                        {basicDetails.whatsappOptOut && (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-muted-foreground">WhatsApp Opt-out</span>
+                                                <span className="text-sm font-semibold truncate">{basicDetails.whatsappOptOut}</span>
+                                            </div>
+                                        )}
+                                        {basicDetails.address && (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs text-muted-foreground">Address</span>
+                                                <span className="text-sm font-semibold truncate">{basicDetails.address}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-sm">Involved Teams</h4>
+                                <Button variant="ghost" size="sm" onClick={handleOpenTeamsModal} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-teams">
+                                    Add
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {involvedTeams?.map((teamId) => {
+                                    const team = teamOptions.find(t => t.id === teamId);
+                                    return (
+                                        <div
+                                            key={teamId}
+                                            className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs max-w-full"
+                                        >
+                                            <span className="truncate max-w-[calc(100%-20px)]">{team?.name}</span>
+                                            <button
+                                                onClick={() => {
+                                                    const newTeams = involvedTeams.filter(t => t !== teamId);
+                                                    onUpdateInvolvedTeams(newTeams);
+                                                }}
+                                                className="hover:text-purple-900 flex-shrink-0 border rounded"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-sm">Tags</h4>
+                                <Button variant="ghost" size="sm" onClick={handleOpenTagsModal} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-tags">
+                                    Add
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {tags?.map((tagId) => {
+                                    const tag = tagOptions.find(t => t.id === tagId);
+                                    return (
+                                        <div
+                                            key={tagId}
+                                            className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs max-w-full"
+                                        >
+                                            <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
+                                            <button
+                                                onClick={() => {
+                                                    const newTags = tags.filter(t => t !== tagId);
+                                                    onUpdateTags(newTags);
+                                                }}
+                                                className="hover:text-green-900 flex-shrink-0 border rounded"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <Separator />
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-sm">Custom Attributes</h4>
+                                <Button variant="ghost" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-add-attribute">
+                                    Add
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {customAttributes && Object.entries(customAttributes).map(([key, value]) => (
+                                    <div
+                                        key={key}
+                                        className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                                    >
+                                        <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
+                                        <button
+                                            onClick={() => {
+                                                const newAttrs = { ...customAttributes };
+                                                delete newAttrs[key];
+                                                onUpdateCustomAttributes(newAttrs);
+                                            }}
+                                            className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-sm">Notes</h4>
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    const currentNotes = notes || [];
+                                    setNewNote(currentNotes[currentNotes.length - 1] || ""); // Prefill with last note
+                                    setIsAddNoteModalOpen(true);
+                                }} className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs" data-testid="button-set-note">
+                                    Set
+                                </Button>
+                            </div>
+                            <div className="space-y-2">
+                                {notes?.map((note, index) => (
+                                    <div key={index} className="text-xs bg-slate-200/75 dark:bg-slate-800 p-2 rounded">
+                                        {note}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        */}
+                    </div>
+                </CardContent>
+            </Card >
+
+            {/* Edit Basic Details Modal */}
+            < Dialog open={isEditBasicDetailsOpen} onOpenChange={setIsEditBasicDetailsOpen} >
+                <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+                    <DialogHeader className="px-1 mb-2">
+                        <DialogTitle>Edit Basic Details</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="px-1 space-y-4 overflow-y-auto flex-1">
+                        {/* Name */}
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">Name</label>
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    value={editedBasicDetails.displayName || ""}
+                                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, displayName: e.target.value })}
+                                    placeholder="Enter name"
+                                />
+                                <button
+                                    onClick={() => handleClearField("displayName")}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Number */}
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">Number</label>
+                            <div className="flex gap-2">
+                                <Input
+                                    value={editedBasicDetails.number}
+                                    disabled
+                                    placeholder="Enter number"
+                                    className="bg-muted text-muted-foreground cursor-not-allowed mr-6"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">Email</label>
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    value={editedBasicDetails.email}
+                                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, email: e.target.value })}
+                                    placeholder="Enter email"
+                                />
+                                <button
+                                    onClick={() => handleClearField("email")}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Gender */}
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">Gender</label>
+                            <div className="flex gap-2 items-center">
+                                <Select value={editedBasicDetails.gender} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, gender: value })}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select gender" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Male">Male</SelectItem>
+                                        <SelectItem value="Female">Female</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <button
+                                    onClick={() => handleClearField("gender")}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* WhatsApp Opt-out */}
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">WhatsApp Opt-out</label>
+                            <div className="flex gap-2 items-center">
+                                <Select value={editedBasicDetails.whatsappOptOut} onValueChange={(value) => setEditedBasicDetails({ ...editedBasicDetails, whatsappOptOut: value })}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select option" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Yes">Yes</SelectItem>
+                                        <SelectItem value="No">No</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <button
+                                    onClick={() => handleClearField("whatsappOptOut")}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Address */}
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">Address</label>
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    value={editedBasicDetails.address}
+                                    onChange={(e) => setEditedBasicDetails({ ...editedBasicDetails, address: e.target.value })}
+                                    placeholder="Enter address"
+                                />
+                                <button
+                                    onClick={() => handleClearField("address")}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-end pt-2 px-1">
+                        <Button onClick={handleSaveBasicDetails}>Save Changes</Button>
+                    </div>
+                </DialogContent>
+            </Dialog >
+
+            {/* Add Teams Modal */}
+            < Dialog open={isAddTeamsModalOpen} onOpenChange={setIsAddTeamsModalOpen} >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Update Involved Teams</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex flex-col gap-3">
+                            {teamOptions.map(team => (
+                                <div key={team.id} className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id={`team-${team.id}`}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        checked={selectedTeamsForModal.includes(team.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedTeamsForModal([...selectedTeamsForModal, team.id]);
+                                            } else {
+                                                setSelectedTeamsForModal(selectedTeamsForModal.filter(id => id !== team.id));
+                                            }
+                                        }}
+                                    />
+                                    <label htmlFor={`team-${team.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        {team.name}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex justify-end">
+                        <Button onClick={handleSaveTeams}>Save Changes</Button>
+                    </div>
+                </DialogContent>
+            </Dialog >
+
+            {/* Add Tags Modal */}
+            < Dialog open={isAddTagsModalOpen} onOpenChange={setIsAddTagsModalOpen} >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Update Tags</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex flex-col gap-3">
+                            {tagOptions.map(tag => (
+                                <div key={tag.id} className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id={`tag-${tag.id}`}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        checked={selectedTagsForModal.includes(tag.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedTagsForModal([...selectedTagsForModal, tag.id]);
+                                            } else {
+                                                setSelectedTagsForModal(selectedTagsForModal.filter(id => id !== tag.id));
+                                            }
+                                        }}
+                                    />
+                                    <label htmlFor={`tag-${tag.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        {tag.name}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex justify-end">
+                        <Button onClick={handleSaveTags}>Save Changes</Button>
+                    </div>
+                </DialogContent>
+            </Dialog >
+
+            {/* Add Custom Attribute Modal */}
+            < Dialog open={isAddAttributeModalOpen} onOpenChange={setIsAddAttributeModalOpen} >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Add Custom Attribute</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Attribute Name</label>
+                            <Input
+                                placeholder="e.g. Plan Type"
+                                value={newAttributeKey}
+                                onChange={(e) => setNewAttributeKey(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Value</label>
+                            <Input
+                                placeholder="e.g. Premium"
+                                value={newAttributeValue}
+                                onChange={(e) => setNewAttributeValue(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end">
+                        <Button onClick={handleAddAttribute} disabled={!newAttributeKey.trim() || !newAttributeValue.trim()}>
+                            Add Attribute
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog >
+
+            {/* Add Note Modal */}
+            < Dialog open={isAddNoteModalOpen} onOpenChange={setIsAddNoteModalOpen} >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Set Current Note</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Note Content</label>
+                            <Input
+                                placeholder="Enter note here..."
+                                value={newNote}
+                                onChange={(e) => setNewNote(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">Setting a new note will update the most recent one or start a new one.</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end">
+                        <Button onClick={handleAddNote}>
+                            Save Note
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog >
+
+            {/* Add Opportunity Modal */}
+            <Dialog open={isAddOpportunityModalOpen} onOpenChange={setIsAddOpportunityModalOpen}>
+                <DialogContent className="bg-white dark:bg-background">
+                    <DialogHeader>
+                        <DialogTitle>Add Opportunity</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                        <div>
+                            <label className="text-sm font-medium">Pipeline and stage</label>
+                            <Select value={newOpportunity.pipeline} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, pipeline: value, stage: "" })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select pipeline and stage" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="sales">Sales Pipeline</SelectItem>
+                                    <SelectItem value="marketing">Marketing Pipeline</SelectItem>
+                                    <SelectItem value="support">Support Pipeline</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {newOpportunity.pipeline && (
+                            <div>
+                                <label className="text-sm font-medium">Stage</label>
+                                <Select value={newOpportunity.stage} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, stage: value })}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select stage" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="lead">Lead</SelectItem>
+                                        <SelectItem value="qualified">Qualified</SelectItem>
+                                        <SelectItem value="proposal">Proposal</SelectItem>
+                                        <SelectItem value="negotiation">Negotiation</SelectItem>
+                                        <SelectItem value="won">Won</SelectItem>
+                                        <SelectItem value="lost">Lost</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        <div>
+                            <label className="text-sm font-medium">Opportunity Title</label>
+                            <Input
+                                placeholder="Enter opportunity title..."
+                                value={newOpportunity.title}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, title: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Opportunity value</label>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="number"
+                                    placeholder="Enter value..."
+                                    value={newOpportunity.value}
+                                    onChange={(e) => setNewOpportunity({ ...newOpportunity, value: e.target.value })}
+                                    className="flex-1"
+                                />
+                                <Select value={newOpportunity.currency} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, currency: value })}>
+                                    <SelectTrigger className="w-24">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="USD">USD</SelectItem>
+                                        <SelectItem value="EUR">EUR</SelectItem>
+                                        <SelectItem value="GBP">GBP</SelectItem>
+                                        <SelectItem value="PKR">PKR</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Closing date</label>
+                            <Input
+                                type="date"
+                                value={newOpportunity.closingDate}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, closingDate: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Confidence</label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="5"
+                                    value={newOpportunity.confidence}
+                                    onChange={(e) => setNewOpportunity({ ...newOpportunity, confidence: e.target.value })}
+                                    className="flex-1"
+                                />
+                                <span className="text-sm font-medium w-12 text-right">{newOpportunity.confidence}%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Agent</label>
+                            <Select
+                                value={newOpportunity.agent}
+                                onValueChange={(value) => setNewOpportunity({ ...newOpportunity, agent: value })}
+                                disabled={!newOpportunity.pipeline}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={newOpportunity.pipeline ? "Select agent" : "Select pipeline first"}>
+                                        {newOpportunity.agent && (() => {
+                                            const agent = agentOptions.find(a => a.id === newOpportunity.agent);
+                                            const getAgentColor = (id: string) => {
+                                                if (id === "self") return "bg-primary";
+                                                if (id === "agent-1") return "bg-blue-500";
+                                                if (id === "agent-2") return "bg-green-500";
+                                                if (id === "agent-3") return "bg-purple-500";
+                                                if (id === "agent-4") return "bg-orange-500";
+                                                return "bg-gray-500";
+                                            };
+                                            return agent ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {agentOptions.map((agent) => {
+                                        const getAgentColor = (id: string) => {
+                                            if (id === "self") return "bg-primary";
+                                            if (id === "agent-1") return "bg-blue-500";
+                                            if (id === "agent-2") return "bg-green-500";
+                                            if (id === "agent-3") return "bg-purple-500";
+                                            if (id === "agent-4") return "bg-orange-500";
+                                            return "bg-gray-500";
+                                        };
+                                        return (
+                                            <SelectItem key={agent.id} value={agent.id}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Contact</label>
+                            <div className="text-xs text-muted-foreground mb-1">WhatsApp number</div>
+                            <Input
+                                placeholder="Select contact"
+                                value={newOpportunity.contact}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Assigned tags</label>
+                            <CustomDropdown
+                                options={tagOptions}
+                                selected={newOpportunity.tags}
+                                onChange={(tags) => setNewOpportunity({ ...newOpportunity, tags })}
+                                placeholder="Select tags"
+                                width="100%"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Note</label>
+                            <Textarea
+                                placeholder="Enter note..."
+                                value={newOpportunity.note}
+                                onChange={(e) => setNewOpportunity({ ...newOpportunity, note: e.target.value })}
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => {
+                            setIsAddOpportunityModalOpen(false);
+                            setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
+                        }}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => {
+                            // Handle save opportunity logic here
+                            console.log("New Opportunity:", newOpportunity);
+                            setIsAddOpportunityModalOpen(false);
+                            setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
+                        }}>
+                            Save Opportunity
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Task Modal */}
+            <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+                <DialogContent className="bg-white dark:bg-background">
+                    <DialogHeader>
+                        <DialogTitle>Add Task</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-sm font-medium">Note</label>
+                            <Textarea
+                                placeholder="Enter note..."
+                                value={newTask.note}
+                                onChange={(e) => setNewTask({ ...newTask, note: e.target.value })}
+                                rows={3}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium">Select date</label>
+                                <Input
+                                    type="date"
+                                    value={newTask.date}
+                                    onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Select time</label>
+                                <Input
+                                    type="time"
+                                    value={newTask.time}
+                                    onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Agent</label>
+                            <Select value={newTask.agent} onValueChange={(value) => setNewTask({ ...newTask, agent: value })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select agent">
+                                        {newTask.agent && (() => {
+                                            const agent = agentOptions.find(a => a.id === newTask.agent);
+                                            const getAgentColor = (id: string) => {
+                                                if (id === "self") return "bg-primary";
+                                                if (id === "agent-1") return "bg-blue-500";
+                                                if (id === "agent-2") return "bg-green-500";
+                                                if (id === "agent-3") return "bg-purple-500";
+                                                if (id === "agent-4") return "bg-orange-500";
+                                                return "bg-gray-500";
+                                            };
+                                            return agent ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {agentOptions.map((agent) => {
+                                        const getAgentColor = (id: string) => {
+                                            if (id === "self") return "bg-primary";
+                                            if (id === "agent-1") return "bg-blue-500";
+                                            if (id === "agent-2") return "bg-green-500";
+                                            if (id === "agent-3") return "bg-purple-500";
+                                            if (id === "agent-4") return "bg-orange-500";
+                                            return "bg-gray-500";
+                                        };
+                                        return (
+                                            <SelectItem key={agent.id} value={agent.id}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-5 h-5 rounded-full ${getAgentColor(agent.id)} flex items-center justify-center text-[10px] font-semibold text-white`}>
+                                                        {agent.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                    </div>
+                                                    <span>{agent.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Contact</label>
+                            <Input
+                                placeholder="Enter contact..."
+                                value={newTask.contact}
+                                onChange={(e) => setNewTask({ ...newTask, contact: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => {
+                            setIsAddTaskModalOpen(false);
+                            setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
+                        }}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => {
+                            // Handle save task logic here
+                            console.log("New Task:", newTask);
+                            setIsAddTaskModalOpen(false);
+                            setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
+                        }}>
+                            Save Task
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <ContactDetailsModal
+                open={isDetailsModalOpen}
+                onOpenChange={setIsDetailsModalOpen}
+                contact={conversation}
+            />
+        </>
+    );
+}
