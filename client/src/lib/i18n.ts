@@ -479,16 +479,22 @@ const resources = {
           "title": "Workspaces",
           "desc": "Workspaces (sub-accounts) belonging to either you or your customers.",
           "add": "Add Workspace",
+<<<<<<< HEAD
           "searchPlaceholder": "Search workspaces, teams...",
           "showInactive": "Show inactive",
           "sortNewest": "Newest first",
           "sortOldest": "Oldest first",
+=======
+>>>>>>> origin/Agency1
           "filter": {
             "showInactive": "Show inactive",
             "fromNewest": "From newest",
             "fromOldest": "From oldest"
           },
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/Agency1
           "table": {
             "name": "NAME",
             "login": "LOGIN",
@@ -818,6 +824,7 @@ const resources = {
   }
 };
 
+<<<<<<< HEAD
 // Deep merge helper
 function deepMerge(base: Record<string, any>, override: Record<string, any>): Record<string, any> {
   const result = { ...base };
@@ -845,6 +852,8 @@ const enFull = resources.en.translation;
 (resources as any).pt = { translation: deepMerge(enFull, ptJson) };
 (resources as any).es = { translation: deepMerge(enFull, esJson) };
 
+=======
+>>>>>>> origin/Agency1
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

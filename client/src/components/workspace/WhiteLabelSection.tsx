@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
 import { BadgeCheck, Info, ChevronsUpDown, Mail, Copy } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,7 +56,6 @@ const ColorPicker = ({ label, value, onChange }: ColorPickerProps) => (
 
 export default function WhiteLabelSection() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
   const { data: brandingData, isLoading } = useQuery<any>({
     queryKey: ["/api/workspaces/branding"],
@@ -295,7 +293,10 @@ export default function WhiteLabelSection() {
       };
       input.click();
     } else if (action === "gallery") {
-      setLocation("/settings?tab=Media Gallery");
+      toast({
+        title: "Media Gallery",
+        description: "Opening media gallery...",
+      });
     } else if (action === "remove") {
       toast({
         title: "Logo Removed",
@@ -334,10 +335,10 @@ export default function WhiteLabelSection() {
           </TabsList>
 
           <TabsContent value="logo" className="mt-0 focus-visible:outline-none">
-            <div className="bg-[#ffffff] dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 space-y-8 shadow-sm backdrop-blur-sm">
+            <div className="bg-[#ffffff] dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 space-y-12 shadow-sm backdrop-blur-sm">
 
               {/* Light Mode Logo Section */}
-              <div className="space-y-3 text-left">
+              <div className="space-y-5 text-left">
                 <div className="flex items-center gap-3">
                   <div className="bg-blue-100/50 dark:bg-blue-900/30 p-2 rounded-lg">
                     <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -345,14 +346,14 @@ export default function WhiteLabelSection() {
                   <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Light Mode Logo</Label>
                 </div>
 
-                <div className="w-fit">
+                <div className="max-w-[540px]">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-6 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 w-[320px] h-[120px] transition-all duration-300 hover:border-primary/40 hover:shadow-md cursor-pointer group">
+                      <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-8 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 h-[180px] transition-all duration-300 hover:border-primary/40 hover:shadow-md cursor-pointer group">
                         <img
                           src="/white-label/ezconn-logo.svg"
                           alt="Light Logo"
-                          className="max-w-full max-h-14 object-contain"
+                          className="max-w-full max-h-full object-contain"
                         />
                       </div>
                     </DropdownMenuTrigger>
@@ -377,7 +378,7 @@ export default function WhiteLabelSection() {
               </div>
 
               {/* Dark Mode Logo Section */}
-              <div className="space-y-3 text-left">
+              <div className="space-y-5 text-left">
                 <div className="flex items-center gap-3">
                   <div className="bg-blue-100/50 dark:bg-blue-900/30 p-2 rounded-lg">
                     <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -385,14 +386,14 @@ export default function WhiteLabelSection() {
                   <Label className="text-lg font-bold text-gray-900 dark:text-gray-100">Dark Mode Logo</Label>
                 </div>
 
-                <div className="w-fit">
+                <div className="max-w-[540px]">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <div className="border-2 border-dashed border-slate-700 dark:border-slate-600 rounded-2xl p-6 flex items-center justify-center bg-[#020617] w-[320px] h-[120px] transition-all duration-300 hover:border-primary/40 overflow-hidden isolate shadow-xl hover:shadow-2xl cursor-pointer group">
+                      <div className="border-2 border-dashed border-slate-700 dark:border-slate-600 rounded-2xl p-8 flex items-center justify-center bg-[#020617] h-[180px] transition-all duration-300 hover:border-primary/40 overflow-hidden isolate shadow-xl hover:shadow-2xl cursor-pointer group">
                         <img
                           src="/white-label/ezconn-logo-dark.svg"
                           alt="Dark Logo"
-                          className="max-w-full max-h-14 object-contain"
+                          className="max-w-full max-h-full object-contain"
                         />
                       </div>
                     </DropdownMenuTrigger>
@@ -419,22 +420,24 @@ export default function WhiteLabelSection() {
           </TabsContent>
 
           <TabsContent value="favicon" className="mt-0 focus-visible:outline-none">
-            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-left text-gray-600 dark:text-gray-400">
-                <Info className="h-4 w-4 text-blue-500 shrink-0" />
-                <p className="text-sm font-semibold">
-                  Upload the favicon that will be displayed at the browser tab.
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
+              <div className="flex items-start gap-5 text-left bg-blue-50/60 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <div className="bg-blue-500 rounded-full p-1 mt-0.5">
+                  <Info className="h-4 w-4 text-white" />
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">
+                  Upload the favicon that will be displayed at the browser tab. This is a critical element of your visual brand that helps users recognize your platform in a crowded browser.
                 </p>
               </div>
 
-              <div className="space-y-4 text-left">
+              <div className="space-y-6 text-left">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl p-2 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 w-20 h-20 overflow-hidden transition-all duration-300 hover:border-primary/40 group hover:shadow-md cursor-pointer">
+                    <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-10 flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950/50 w-44 h-44 overflow-hidden transition-all duration-300 hover:border-primary/40 group hover:shadow-lg cursor-pointer">
                       <img
                         src="/white-label/favicon.png"
                         alt="Favicon Preview"
-                        className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                       />
                     </div>
                   </DropdownMenuTrigger>
@@ -447,38 +450,36 @@ export default function WhiteLabelSection() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
-                    Recommended size: 64px * 64px
-                  </span>
-                </div>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">
+                  Recommended size: 64px * 64px
+                </span>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="colors" className="mt-0">
-            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-8 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-left text-gray-600 dark:text-gray-400">
-                <Info className="h-4 w-4 text-blue-500 shrink-0" />
-                <p className="text-sm font-semibold">
-                  Select the color that will be set to your account and Workspaces.
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
+              <div className="flex items-start gap-5 text-left bg-blue-50/60 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <Info className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">
+                  Customize the color palette for your Workspace. These settings will be applied across your dashboard and client-facing interfaces.
                 </p>
               </div>
 
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                  <ColorPicker
-                    label="Main theme color (Buttons, active menu, selected tabs)"
-                    value={colors.mainTheme}
-                    onChange={(val) => handleColorChange('mainTheme', val)}
-                  />
+              <div className="space-y-10">
+                <ColorPicker
+                  label="Main theme color (Buttons, active menu, selected tabs)"
+                  value={colors.mainTheme}
+                  onChange={(val) => handleColorChange('mainTheme', val)}
+                />
 
-                  <ColorPicker
-                    label="Link color (Clickable text, anchors)"
-                    value={colors.links}
-                    onChange={(val) => handleColorChange('links', val)}
-                  />
+                <ColorPicker
+                  label="Link color (Clickable text, anchors)"
+                  value={colors.links}
+                  onChange={(val) => handleColorChange('links', val)}
+                />
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <ColorPicker
                     label="Incoming chat bubbles"
                     value={colors.incomingBubble}
@@ -502,56 +503,58 @@ export default function WhiteLabelSection() {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end pt-6">
                 <Button
-                  className="px-8 h-10 text-sm transition-all btn-outline-primary"
+                  className="px-10 h-12 text-sm transition-all btn-outline-primary"
                   variant="outline"
                   onClick={handleSaveColors}
                   disabled={updateBrandingMutation.isPending}
                 >
-                  {updateBrandingMutation.isPending ? "Saving..." : "Save"}
+                  {updateBrandingMutation.isPending ? "Applying..." : "Apply Changes"}
                 </Button>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="custom-domain" className="mt-0">
-            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-8 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center">
-                  <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-l-xl px-4 py-2 text-sm font-medium text-gray-500 border-r-0 h-10 flex items-center">
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm space-y-10 backdrop-blur-sm">
+
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center shadow-sm">
+                  <div className="bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-blue-900/20 rounded-l-2xl px-5 py-3 text-sm font-bold text-blue-600 dark:text-blue-400 border-r-0 h-14 flex items-center">
                     https://
                   </div>
                   <Input
                     placeholder="app"
                     value={subdomain}
                     onChange={(e) => setSubdomain(e.target.value)}
-                    className="rounded-l-none border-gray-200 dark:border-slate-700 w-24 h-10 bg-white dark:bg-slate-950 font-medium focus-visible:ring-primary/20"
+                    className="rounded-l-none border-gray-200 dark:border-slate-700 w-36 h-14 bg-white dark:bg-slate-950 font-semibold focus-visible:ring-primary/20"
                   />
                 </div>
 
-                <span className="text-gray-400 font-bold">.</span>
+                <span className="text-gray-400 dark:text-slate-600 font-bold text-2xl self-center">.</span>
 
                 <Input
                   placeholder="example.com"
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
-                  className="border-gray-200 dark:border-slate-700 w-48 h-10 bg-white dark:bg-slate-950 font-medium shadow-sm focus-visible:ring-primary/20"
+                  className="border-gray-200 dark:border-slate-700 w-72 h-14 bg-white dark:bg-slate-950 font-semibold shadow-sm focus-visible:ring-primary/20"
                 />
 
-                <Button variant="outline" className="h-10 px-6 btn-outline-primary shadow-sm text-sm">
-                  Connect
+                <Button variant="outline" className="h-14 px-10 btn-outline-primary shadow-sm">
+                  Connect Domain
                 </Button>
               </div>
 
-              <div className="space-y-4 text-left">
-                <p className="font-bold text-base text-gray-900 dark:text-gray-100">
+              <div className="space-y-6 text-left bg-blue-50/60 dark:bg-blue-900/10 p-8 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100">
                   Make your Workspace shine with your own custom domain!
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                  This section lets you ditch the our branding and use your Workspace domain name. This adds a professional touch and builds trust with agents.
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-semibold">
+                  This section lets you ditch our branding and use your unique Workspace domain name. This adds a professional touch, strengthens your brand authority, and builds trust with your agents and clients.
                 </p>
-                <div className="flex items-center gap-2 text-gray-500 text-[11px] font-bold">
+                <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-xl text-amber-700 dark:text-amber-400 text-sm font-bold">
+                  <Info className="w-4 h-4" />
                   <span>Important Note: This custom domain applies to this specific Workspace only.</span>
                 </div>
               </div>
@@ -559,27 +562,27 @@ export default function WhiteLabelSection() {
           </TabsContent>
 
           <TabsContent value="notification-email" className="mt-0">
-            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-10 shadow-sm backdrop-blur-sm">
 
               {!notificationEmail && (
-                <div className="flex flex-col items-center justify-center text-center space-y-6 py-6 animate-in fade-in duration-500">
-                  <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
-                    <Mail className="w-10 h-10 text-white" />
+                <div className="flex flex-col items-center justify-center text-center space-y-8 py-10 animate-in fade-in zoom-in duration-500">
+                  <div className="w-28 h-28 rounded-3xl bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center shadow-xl rotate-3">
+                    <Mail className="w-14 h-14 text-white -rotate-3" />
                   </div>
 
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Notification E-mail</h3>
-                    <p className="text-gray-500 dark:text-gray-400 max-w-sm text-sm font-medium mx-auto">
-                      Integrate your e-mail to send branded agent invitation and forgot password emails.
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">Notification E-mail</h3>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-sm text-base font-medium mx-auto">
+                      Integrate your custom e-mail domain to send white-labeled agent invitations and security notifications.
                     </p>
                   </div>
 
                   <Button
-                    className="px-10 h-10 transition-all btn-outline-primary shadow-sm"
+                    className="px-12 h-12 transition-all btn-outline-primary shadow-lg hover:shadow-primary/20"
                     variant="outline"
                     onClick={handleConnectEmail}
                   >
-                    Connect now
+                    Configure Now
                   </Button>
                 </div>
               )}
@@ -623,47 +626,45 @@ export default function WhiteLabelSection() {
                         </div>
                       )}
 
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-left text-gray-600 dark:text-gray-400">
-                          <p className="text-sm font-semibold">
-                            Enter the domain to send from
-                          </p>
-                          <Info className="h-4 w-4 text-blue-500" />
-                        </div>
-                        <div className="flex items-center gap-3">
+                      <div className="space-y-6">
+                        <Label className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                          Domain Setup
+                          <Info className="w-4 h-4 text-primary" />
+                        </Label>
+                        <div className="flex items-center gap-4">
                           <Input
                             type="text"
                             placeholder="info"
                             value={notificationEmail.prefix}
                             onChange={(e) => setNotificationEmail({ ...notificationEmail, prefix: e.target.value })}
                             disabled={!!notificationEmail.id}
-                            className="w-32 h-10 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-sm font-medium shadow-sm focus-visible:ring-primary/20"
+                            className="w-40 h-14 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-lg font-bold shadow-sm"
                           />
-                          <span className="font-bold text-gray-400 text-lg">@</span>
+                          <span className="font-black text-gray-400 text-2xl">@</span>
                           <Input
                             type="text"
-                            placeholder="your-domain.com"
+                            placeholder="brand.com"
                             value={notificationEmail.domain}
                             onChange={(e) => setNotificationEmail({ ...notificationEmail, domain: e.target.value })}
                             disabled={!!notificationEmail.id}
-                            className="w-48 h-10 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-sm font-medium shadow-sm focus-visible:ring-primary/20"
+                            className="flex-1 h-14 bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-lg font-bold shadow-sm"
                           />
                           {notificationEmail.id ? (
                             <Button
                               variant="outline"
-                              className="h-10 px-6 text-red-500 hover:bg-red-50 transition-all font-bold text-sm"
+                              className="h-14 px-8 text-red-500 hover:bg-red-50 transition-all font-bold"
                               onClick={() => setShowDeleteConfirm(true)}
                             >
                               Reset
                             </Button>
                           ) : (
                             <Button
-                              className="h-10 px-6 font-bold transition-all btn-outline-primary text-sm shadow-sm"
+                              className="h-14 px-10 font-bold transition-all btn-outline-primary"
                               variant="outline"
                               onClick={handleSubmitNotificationEmail}
                               disabled={isSubmitting}
                             >
-                              {isSubmitting ? "Processing..." : "Continue"}
+                              {isSubmitting ? "Processing..." : "Submit Domain"}
                             </Button>
                           )}
                         </div>
@@ -725,14 +726,14 @@ export default function WhiteLabelSection() {
                             </table>
                           </div>
 
-                          <div className="flex justify-end mt-8 pt-4 border-t border-gray-100 dark:border-slate-800">
+                          <div className="flex justify-end mt-4 pt-6 border-t border-gray-100 dark:border-slate-800">
                             <Button
-                              className="px-8 h-10 font-bold transition-all btn-outline-primary shadow-sm text-sm"
+                              className="px-12 h-14 font-extrabold transition-all btn-outline-primary shadow-lg hover:shadow-primary/20"
                               variant="outline"
                               onClick={handleVerifyEmail}
                               disabled={isVerifying}
                             >
-                              {isVerifying ? "Verifying..." : "Verify DNS Changes"}
+                              {isVerifying ? "Verifying Authority..." : "Verify DNS Changes"}
                             </Button>
                           </div>
                         </div>

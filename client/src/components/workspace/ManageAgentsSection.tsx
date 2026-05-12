@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Users, User, UserPlus, Settings, Mail, Phone, Languages, ShieldCheck, HelpCircle, UserCog, Info, MessageSquare, Users2, Smartphone, AlertCircle, CheckCircle2, Send, Zap, Instagram, Building2, Trash2, Plus, ChevronDown, Check } from "lucide-react";
+import { Users, User, UserPlus, Settings, Mail, Phone, Languages, ShieldCheck, HelpCircle, UserCog, Info, MessageSquare, Users2, Smartphone, AlertCircle, CheckCircle2, Send, Zap, Instagram, Building2, Trash2, Plus } from "lucide-react";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
@@ -28,14 +28,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { countries } from "@/lib/countries";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Search } from "lucide-react";
 
 
 
@@ -76,15 +68,7 @@ export default function ManageAgentSection() {
     original: m
   }));
 
-  interface Tag {
-    name: string;
-    className?: string;
-  }
-
-  const TAGS: Tag[] = (tagsApiData?.tags || []).map((t: any) => ({ 
-    name: t.name,
-    className: t.className || t.color // Agar color hai to usey as className use kar sakte hain ya sirf t.className
-  }));
+  const TAGS = (tagsApiData?.tags || []).map((t: any) => ({ name: t.name }));
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -144,10 +128,6 @@ export default function ManageAgentSection() {
   const [language, setLanguage] = useState("pt-br");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState(countries.find(c => c.iso2 === "us") || countries[0]);
-  const [whatsappCountry, setWhatsappCountry] = useState(countries.find(c => c.iso2 === "us") || countries[0]);
-  const [phoneSearch, setPhoneSearch] = useState("");
-  const [whatsappSearch, setWhatsappSearch] = useState("");
   const [phoneNotifications, setPhoneNotifications] = useState(false);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
 
@@ -177,10 +157,7 @@ export default function ManageAgentSection() {
 
 
   // CHAT_AGENTS is derived from real workspace members
-  const CHAT_AGENTS = agents.map(a => ({ 
-    name: a.name,
-    image: a.original.avatar_url || a.original.image
-  }));
+  const CHAT_AGENTS = agents.map(a => ({ name: a.name }));
 
 
   const CHAT_CHANNELS = [
@@ -222,7 +199,7 @@ export default function ManageAgentSection() {
   };
 
   const toggleAllTags = (checked: boolean) => {
-    setSelectedTags(checked ? TAGS.map((t: Tag) => t.name) : []);
+    setSelectedTags(checked ? TAGS.map(t => t.name) : []);
   };
 
   const toggleTag = (tagName: string) => {
@@ -440,82 +417,21 @@ export default function ManageAgentSection() {
                   <div className="space-y-2 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone number</Label>
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 flex items-center h-10 border border-gray-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 focus-within:ring-1 focus-within:ring-blue-600 transition-all overflow-hidden">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex items-center gap-2 px-3 h-full border-r border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors outline-none shrink-0 min-w-[80px]">
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={`https://flagcdn.com/w40/${phoneCountry.iso2}.png`}
-                                  alt={phoneCountry.name}
-                                  className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
-                                />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{phoneCountry.code}</span>
-                              </div>
-                              <ChevronDown size={12} className="text-gray-400" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-[300px] p-0 rounded-xl shadow-2xl border-gray-200 dark:border-slate-800 z-[100]">
-                            <div className="p-2 border-b border-gray-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
-                              <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input
-                                  placeholder="Search country..."
-                                  value={phoneSearch}
-                                  onChange={(e) => setPhoneSearch(e.target.value)}
-                                  className="pl-9 h-9 border-gray-100 dark:border-slate-800 focus-visible:ring-1 focus-visible:ring-blue-600 bg-gray-50 dark:bg-slate-950 text-sm"
-                                />
-                              </div>
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto py-1 scrollbar-hide">
-                              {Object.entries(
-                                countries
-                                  .filter(c => c.name.toLowerCase().includes(phoneSearch.toLowerCase()) || c.code.includes(phoneSearch))
-                                  .reduce((acc, country) => {
-                                    const firstLetter = country.name[0].toUpperCase();
-                                    if (!acc[firstLetter]) acc[firstLetter] = [];
-                                    acc[firstLetter].push(country);
-                                    return acc;
-                                  }, {} as Record<string, typeof countries>)
-                              ).map(([letter, group]) => (
-                                <div key={letter}>
-                                  <div className="px-3 py-1.5 text-[11px] font-black text-gray-400 bg-gray-50/50 dark:bg-slate-800/30 uppercase tracking-widest">{letter}</div>
-                                  {group.map((c) => (
-                                    <DropdownMenuItem
-                                      key={c.iso2 + c.code}
-                                      onClick={() => {
-                                        setPhoneCountry(c);
-                                        setPhoneSearch("");
-                                      }}
-                                      className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 outline-none group"
-                                    >
-                                      <img
-                                        src={`https://flagcdn.com/w40/${c.iso2}.png`}
-                                        alt={c.name}
-                                        className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
-                                      />
-                                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">{c.name} ({c.code})</span>
-                                      {phoneCountry.iso2 === c.iso2 && <Check className="w-4 h-4 ml-auto text-blue-600" />}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </div>
-                              ))}
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <div className="relative flex-1">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pr-2 border-r border-gray-200 dark:border-slate-800">
+                          <img
+                            src="https://flagcdn.com/w40/us.png"
+                            alt="US Flag"
+                            className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+                          />
+                        </div>
                         <Input
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          placeholder={phoneCountry.placeholder || "(407) 231-1234"}
-                          className="flex-1 h-full border-0 focus-visible:ring-0 bg-transparent text-gray-900 dark:text-white placeholder:text-gray-300 font-medium px-4"
+                          placeholder="(407) 231-1234"
+                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300"
                         />
                       </div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
-                        <Switch
-                          checked={phoneNotifications}
-                          onCheckedChange={setPhoneNotifications}
-                          className="data-[state=checked]:bg-blue-600 bg-gray-200"
-                        />
+                        <Switch className="data-[state=checked]:bg-blue-600 bg-gray-200" />
                         <span className="text-xs text-gray-700 font-medium">Enable notifications</span>
                         <Info className="w-4 h-4 text-gray-400" />
                       </div>
@@ -525,82 +441,21 @@ export default function ManageAgentSection() {
                   <div className="space-y-2 text-left">
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp number</Label>
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 flex items-center h-10 border border-gray-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 focus-within:ring-1 focus-within:ring-blue-600 transition-all overflow-hidden">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex items-center gap-2 px-3 h-full border-r border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors outline-none shrink-0 min-w-[80px]">
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={`https://flagcdn.com/w40/${whatsappCountry.iso2}.png`}
-                                  alt={whatsappCountry.name}
-                                  className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
-                                />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{whatsappCountry.code}</span>
-                              </div>
-                              <ChevronDown size={12} className="text-gray-400" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-[300px] p-0 rounded-xl shadow-2xl border-gray-200 dark:border-slate-800 z-[100]">
-                            <div className="p-2 border-b border-gray-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
-                              <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input
-                                  placeholder="Search country..."
-                                  value={whatsappSearch}
-                                  onChange={(e) => setWhatsappSearch(e.target.value)}
-                                  className="pl-9 h-9 border-gray-100 dark:border-slate-800 focus-visible:ring-1 focus-visible:ring-blue-600 bg-gray-50 dark:bg-slate-950 text-sm"
-                                />
-                              </div>
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto py-1 scrollbar-hide">
-                              {Object.entries(
-                                countries
-                                  .filter(c => c.name.toLowerCase().includes(whatsappSearch.toLowerCase()) || c.code.includes(whatsappSearch))
-                                  .reduce((acc, country) => {
-                                    const firstLetter = country.name[0].toUpperCase();
-                                    if (!acc[firstLetter]) acc[firstLetter] = [];
-                                    acc[firstLetter].push(country);
-                                    return acc;
-                                  }, {} as Record<string, typeof countries>)
-                              ).map(([letter, group]) => (
-                                <div key={letter}>
-                                  <div className="px-3 py-1.5 text-[11px] font-black text-gray-400 bg-gray-50/50 dark:bg-slate-800/30 uppercase tracking-widest">{letter}</div>
-                                  {group.map((c) => (
-                                    <DropdownMenuItem
-                                      key={c.iso2 + c.code}
-                                      onClick={() => {
-                                        setWhatsappCountry(c);
-                                        setWhatsappSearch("");
-                                      }}
-                                      className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 outline-none group"
-                                    >
-                                      <img
-                                        src={`https://flagcdn.com/w40/${c.iso2}.png`}
-                                        alt={c.name}
-                                        className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
-                                      />
-                                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">{c.name} ({c.code})</span>
-                                      {whatsappCountry.iso2 === c.iso2 && <Check className="w-4 h-4 ml-auto text-blue-600" />}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </div>
-                              ))}
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <div className="relative flex-1">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pr-2 border-r border-gray-200 dark:border-slate-800">
+                          <img
+                            src="https://flagcdn.com/w40/us.png"
+                            alt="US Flag"
+                            className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+                          />
+                        </div>
                         <Input
-                          value={whatsappNumber}
-                          onChange={(e) => setWhatsappNumber(e.target.value)}
-                          placeholder={whatsappCountry.placeholder || "(407) 231-1234"}
-                          className="flex-1 h-full border-0 focus-visible:ring-0 bg-transparent text-gray-900 dark:text-white placeholder:text-gray-300 font-medium px-4"
+                          placeholder="(407) 231-1234"
+                          className="pl-14 h-10 border-gray-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-blue-600 bg-white dark:bg-slate-950 text-gray-400 placeholder:text-gray-300"
                         />
                       </div>
                       <div className="flex items-center gap-2 whitespace-nowrap">
-                        <Switch
-                          checked={whatsappNotifications}
-                          onCheckedChange={setWhatsappNotifications}
-                          className="data-[state=checked]:bg-blue-600 bg-gray-200"
-                        />
+                        <Switch className="data-[state=checked]:bg-blue-600 bg-gray-200" />
                         <span className="text-xs text-gray-700 font-medium">Enable notifications</span>
                         <Info className="w-4 h-4 text-gray-400" />
                       </div>

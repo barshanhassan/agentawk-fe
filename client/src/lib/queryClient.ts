@@ -30,7 +30,6 @@ export async function apiRequest(
   if (processedUrl.startsWith("/api")) {
     processedUrl = processedUrl.substring(4);
   }
-  
   const fullUrl = `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
 
   console.log("Requesting:", fullUrl);

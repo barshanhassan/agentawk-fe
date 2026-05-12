@@ -8,8 +8,7 @@ import {
   Moon,
   Sun,
   ChevronRight,
-  Circle,
-  Search
+  Circle
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getAvatarColor } from "@/lib/avatar-utils";
@@ -73,23 +72,8 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className={cn("h-14 flex items-center justify-between px-6 border-b transition-colors duration-300 shrink-0",
+        <header className={cn("h-14 flex items-center justify-end px-6 border-b transition-colors duration-300 shrink-0",
           mode === "dark" ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-200")}>
-          {/* Search */}
-          <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg border w-72 transition-colors focus-within:ring-1",
-            mode === "dark"
-              ? "bg-slate-800 border-slate-700 focus-within:ring-slate-600"
-              : "bg-slate-50 border-slate-200 focus-within:ring-blue-300")}>
-            <Search size={14} className={mode === "dark" ? "text-slate-500 shrink-0" : "text-slate-400 shrink-0"} />
-            <input
-              type="text"
-              placeholder="Search workspaces, teams..."
-              className={cn(
-                "flex-1 bg-transparent outline-none text-[13px] placeholder:text-slate-400",
-                mode === "dark" ? "text-slate-200" : "text-slate-700"
-              )}
-            />
-          </div>
           <div className="flex items-center gap-4">
             {/* Notifications */}
             <Popover onOpenChange={(open) => { if (!open) setIsNotifSettings(false); }}>

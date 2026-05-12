@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getUserInfo } from "@/lib/auth";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
   Bell,
-  Settings,
   Save,
-  Globe
+  Globe,
+  Settings,
+  Mail
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +31,9 @@ const AgencyNotificationsSettings = () => {
   const userInfo = getUserInfo();
   const agencyId = userInfo.modelable_id;
 
+  const [notifEmail, setNotifEmail] = useState("");
+  const [notifLanguage, setNotifLanguage] = useState("en-US");
+
   const { data: agencyResponse } = useQuery({
     queryKey: [`/api/agencies/${agencyId}`],
     queryFn: async () => {
@@ -39,8 +42,29 @@ const AgencyNotificationsSettings = () => {
     }
   });
 
-  const [notifEmail, setNotifEmail] = useState("");
-  const [notifLanguage, setNotifLanguage] = useState("en-US");
+  // Force hide browser scrollbar for this page
+  useEffect(() => {
+    const targets: { el: HTMLElement; orig: string }[] = [];
+
+    const hide = (el: HTMLElement | null) => {
+      if (!el) return;
+      targets.push({ el, orig: el.style.overflowY });
+      el.style.overflowY = 'hidden';
+    };
+
+    hide(document.documentElement as HTMLElement);
+    hide(document.body);
+
+    let node = document.querySelector('main') as HTMLElement | null;
+    while (node) {
+      hide(node);
+      node = node.parentElement as HTMLElement | null;
+    }
+
+    return () => {
+      targets.forEach(({ el, orig }) => { el.style.overflowY = orig; });
+    };
+  }, []);
 
   useEffect(() => {
     if (agencyResponse?.agency) {
@@ -67,78 +91,116 @@ const AgencyNotificationsSettings = () => {
     { code: "en-US", label: t("common.languages.en"), flag: "us" },
   ];
 
-  const selectedLang = LANGUAGES.find(l => l.code === notifLanguage) || LANGUAGES[1];
+  const selectedLang = LANGUAGES.find(l => l.code === notifLanguage) || LANGUAGES[0];
+  const dark = mode === 'dark';
+
+  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
+  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'    : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
 
   return (
-    <div className={cn("p-6 font-sans transition-colors duration-300", 
-      mode === "dark" ? "text-white" : "text-slate-900")}>
-      <Card className={cn("shadow-sm overflow-hidden transition-colors rounded-lg", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
-        {/* Header Section */}
-        <div className={cn("p-5 border-b flex items-center gap-4 transition-colors", 
-          mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-          <Settings className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
-          <h2 className={cn("font-bold text-[15px] tracking-tight", 
-            mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.notifications.title")}</h2>
+    <div className={cn("h-screen overflow-hidden transition-colors flex flex-col font-sans", bg)}>
+      
+      {/* ── Header Card ── */}
+      <div className={cn('px-8 py-5 border-b flex items-center justify-between', card, border)}>
+        <div className="flex items-center gap-4">
+          <div className={cn('p-2.5 rounded-xl shadow-sm', dark ? 'bg-primary/15' : 'bg-primary/10')}>
+            <Bell className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className={cn('text-[15px] font-bold', text)}>{t("agency.settings.notifications.title")}</h1>
+            <p className={cn('text-[11px] mt-0.5', sub)}>
+              {t("agency.settings.notifications.updated")}
+            </p>
+          </div>
         </div>
-        
-        <CardContent className="p-6">
-          <div className="max-w-[450px]">
-            {/* Notification Email */}
-            <div>
-              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.notifications.email")}</label>
-              <Input 
-                value={notifEmail}
-                onChange={(e) => setNotifEmail(e.target.value)}
-                placeholder="admin@example.com"
-                className={cn("text-[13px] h-9 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
-                  mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
-              />
-              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>{t("agency.settings.notifications.emailDesc")}</p>
-            </div>
+      </div>
 
-            <div className={cn("h-px w-full my-6", mode === "dark" ? "bg-slate-800" : "bg-slate-100")}></div>
-
-            {/* Notification Language */}
-            <div>
-              <label className={cn("text-[13px] font-semibold block mb-1.5", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.notifications.language")}</label>
-              <Select value={notifLanguage} onValueChange={setNotifLanguage}>
-                <SelectTrigger className={cn("text-[13px] h-9 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
-                  mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                  <SelectValue placeholder={t("agency.settings.notifications.selectLanguage")}>
-                    <div className="flex items-center gap-2">
-                      <img src={`https://flagcdn.com/w20/${selectedLang.flag}.png`} width="20" alt={selectedLang.flag} className="rounded-sm" />
-                      <span>{selectedLang.label}</span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className={cn("border shadow-2xl transition-colors", 
-                  mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
-                  {LANGUAGES.map(lang => (
-                    <SelectItem key={lang.code} value={lang.code} className="text-[13px]">
-                      <div className="flex items-center gap-2">
-                        <img src={`https://flagcdn.com/w20/${lang.flag}.png`} width="20" alt={lang.flag} className="rounded-sm" />
-                        <span>{lang.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className={cn("text-[12px] font-medium mt-1.5", mode === "dark" ? "text-slate-300" : "text-slate-800")}>{t("agency.settings.notifications.languageDesc")}</p>
-
-              <div className="flex justify-end pt-5">
-                <button 
-                  onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
-                  disabled={updateMutation.isPending}
-                  className={cn("px-8 py-1.5 rounded text-[13px] font-medium transition-colors border",
-                  mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
-                  {updateMutation.isPending ? t("common.saving") : t("common.save")}
-                </button>
+      <div className="flex-1 overflow-hidden p-8">
+        <div className={cn("rounded-2xl border overflow-hidden shadow-sm h-fit max-h-full", card, border)}>
+          <div className="p-8 max-w-[550px] space-y-8">
+            
+            {/* Notification Email Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-primary">
+                <Mail size={16} strokeWidth={2.5} />
+                <label className={cn("text-[12px] font-black uppercase tracking-widest", text)}>
+                  {t("agency.settings.notifications.email")}
+                </label>
+              </div>
+              
+              <div className="space-y-2">
+                <Input 
+                  value={notifEmail}
+                  onChange={(e) => setNotifEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  className={cn("text-[13px] h-11 px-4 rounded-xl transition-all border shadow-none focus-visible:ring-primary/20 focus-visible:border-primary/50", 
+                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                />
+                <p className={cn("text-[11px] font-bold leading-relaxed", sub)}>
+                  {t("agency.settings.notifications.emailDesc")}
+                </p>
               </div>
             </div>
+
+            <div className={cn("h-px w-full", dark ? "bg-slate-800/50" : "bg-slate-100")}></div>
+
+            {/* Notification Language Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-primary">
+                <Globe size={16} strokeWidth={2.5} />
+                <label className={cn("text-[12px] font-black uppercase tracking-widest", text)}>
+                  {t("agency.settings.notifications.language")}
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Select value={notifLanguage} onValueChange={setNotifLanguage}>
+                  <SelectTrigger className={cn("text-[13px] h-11 px-4 rounded-xl transition-all border shadow-none focus-visible:ring-primary/20", 
+                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
+                    <SelectValue placeholder={t("agency.settings.notifications.selectLanguage")}>
+                      <div className="flex items-center gap-2">
+                        <img src={`https://flagcdn.com/w20/${selectedLang.flag}.png`} width="20" alt={selectedLang.flag} className="rounded-sm" />
+                        <span className="font-bold">{selectedLang.label}</span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className={cn("border shadow-2xl rounded-xl overflow-hidden", 
+                    dark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}>
+                    {LANGUAGES.map(lang => (
+                      <SelectItem key={lang.code} value={lang.code} className="text-[13px] font-bold focus:bg-primary/10 focus:text-primary">
+                        <div className="flex items-center gap-2">
+                          <img src={`https://flagcdn.com/w20/${lang.flag}.png`} width="20" alt={lang.flag} className="rounded-sm" />
+                          <span>{lang.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className={cn("text-[11px] font-bold leading-relaxed", sub)}>
+                  {t("agency.settings.notifications.languageDesc")}
+                </p>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="pt-4">
+              <button 
+                onClick={() => updateMutation.mutate({ notification_email: notifEmail, notification_language: notifLanguage })}
+                disabled={updateMutation.isPending}
+                className={cn(
+                  "px-10 py-3 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all shadow-lg",
+                  "bg-primary text-white hover:bg-primary/90 shadow-primary/20 active:scale-95 disabled:opacity-50"
+                )}>
+                {updateMutation.isPending ? t("common.saving") : t("common.save")}
+              </button>
+            </div>
+
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

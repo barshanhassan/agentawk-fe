@@ -18,7 +18,6 @@ interface SiteContextType {
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
 
 const LIVE_URL = "https://ezconn-backend-396801134474.us-central1.run.app";
-
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,9 +26,10 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const ignite = async () => {
       try {
-        const host = window.location.host; 
+        const host = window.location.host; // e.g. "agency.localhost:5173"
         const isAgency = host.startsWith("agency.");
 
+        // Try backend first, fall back to hostname detection
         try {
           const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app/api";
           const response = await fetch(`${API_BASE_URL}/ignite?hostname=${host}`);
@@ -39,9 +39,10 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
         } catch {
-          // Backend ignite failed
+          // Backend ignite failed, use hostname detection below
         }
 
+        // Hostname-based fallback
         setSiteData({
           app: {
             name: isAgency ? "EZCONN Agency" : "EZCONN",

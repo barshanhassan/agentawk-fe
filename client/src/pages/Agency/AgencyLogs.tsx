@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getUserInfo } from "@/lib/auth";
 import { 
   Calendar, 
@@ -32,6 +32,30 @@ const AgencyLogs = () => {
   const [selectedDate, setSelectedDate] = useState(t("agency.logs.filters.today"));
   const [selectedAgent, setSelectedAgent] = useState(t("agency.logs.filters.all_agents"));
   const [page, setPage] = useState(1);
+
+  // Force hide all scrollbars for this page
+  useEffect(() => {
+    const targets: { el: HTMLElement; orig: string }[] = [];
+
+    const hide = (el: HTMLElement | null) => {
+      if (!el) return;
+      targets.push({ el, orig: el.style.overflowY });
+      el.style.overflowY = 'hidden';
+    };
+
+    hide(document.documentElement as HTMLElement);
+    hide(document.body);
+
+    let node = document.querySelector('main') as HTMLElement | null;
+    while (node) {
+      hide(node);
+      node = node.parentElement as HTMLElement | null;
+    }
+
+    return () => {
+      targets.forEach(({ el, orig }) => { el.style.overflowY = orig; });
+    };
+  }, []);
 
   const logCategories = [
     t("agency.logs.categories.workspace_created"), t("agency.logs.categories.workspace_deleted"), t("agency.logs.categories.contacts_limit_changed"),
@@ -68,141 +92,180 @@ const AgencyLogs = () => {
   const total = logsResponse?.total || 0;
   const perPage = logsResponse?.per_page || 20;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const dark = mode === 'dark';
+
+  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
+  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'    : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
 
   return (
-    <div className={cn("flex flex-col h-full font-sans transition-colors duration-300", 
-      mode === "dark" ? "text-white" : "text-slate-900")}>
-
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar: Filter Categories */}
-        <div className={cn("w-72 border-r overflow-y-auto transition-colors flex flex-col", 
-          mode === "dark" ? "border-slate-800" : "border-slate-300")}>
-          <div className={cn("p-4 border-b h-14 flex items-center shrink-0", 
-            mode === "dark" ? "border-slate-800" : "border-slate-300")}>
-            <h1 className="text-sm font-bold tracking-tight">{t("agency.logs.title")}</h1>
+    <div className={cn("h-screen overflow-hidden transition-colors flex flex-col font-sans", bg)}>
+      
+      {/* ── Header Card ── */}
+      <div className={cn('px-8 py-5 border-b flex items-center justify-between', card, border)}>
+        <div className="flex items-center gap-4">
+          <div className={cn('p-2.5 rounded-xl shadow-sm', dark ? 'bg-primary/15' : 'bg-primary/10')}>
+            <Layers className="w-5 h-5 text-primary" />
           </div>
-          <div className="flex flex-col flex-1">
-            {logCategories.map((category, i) => (
-              <div key={i} className={cn("flex items-center gap-3 p-4 border-b transition-colors cursor-pointer group", 
-                mode === "dark" ? "hover:bg-[#1e293b] border-slate-800/50" : "hover:bg-slate-50 border-slate-200")}>
-                <Checkbox id={`cat-${i}`} className="border-slate-300 data-[state=checked]:bg-green-500 shrink-0" />
-                <label htmlFor={`cat-${i}`} className="text-sm font-medium text-slate-800 group-hover:text-green-600 cursor-pointer select-none transition-colors">
-                  {category}
-                </label>
-              </div>
-            ))}
+          <div>
+            <h1 className={cn('text-[15px] font-bold', text)}>{t("agency.logs.title")}</h1>
+            <p className={cn('text-[11px] mt-0.5', sub)}>
+              {total} total activities recorded
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Right Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Filters */}
-          <div className={cn("p-4 border-b h-14 flex items-center gap-8 transition-colors", 
-            mode === "dark" ? "border-slate-800" : "border-slate-300")}>
+      <div className="flex-1 overflow-hidden p-8">
+        {/* Unified Main Card - Restricted height to match viewport and made compact */}
+        <div className={cn("flex rounded-2xl border overflow-hidden shadow-sm h-full max-h-[calc(100vh-220px)]", card, border)}>
+          
+          {/* Left Sidebar: Filter Categories */}
+          <div className={cn("w-72 border-r flex flex-col shrink-0 h-full", border)}>
+            <div className={cn("p-4 border-b bg-slate-50/50 dark:bg-slate-900/30", border)}>
+              <h2 className={cn("text-[11px] font-bold uppercase tracking-widest", sub)}>Categories</h2>
+            </div>
+            <div className="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
+              {logCategories.map((category, i) => (
+                <div key={i} className={cn("flex items-center gap-3 p-3.5 border-b last:border-0 transition-colors cursor-pointer group", 
+                  dark ? "hover:bg-slate-800/25 border-slate-800/50" : "hover:bg-slate-50 border-slate-100")}>
+                  <Checkbox id={`cat-${i}`} className="border-slate-300 data-[state=checked]:bg-primary shrink-0" />
+                  <label htmlFor={`cat-${i}`} className={cn("text-[12px] font-medium group-hover:text-primary cursor-pointer select-none transition-colors", 
+                    dark ? "text-slate-400" : "text-slate-600")}>
+                    {category}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Section: Filters + Logs Table */}
+          <div className="flex-1 flex flex-col min-w-0">
             
-            {/* Date Filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:text-green-600 text-slate-900 transition-colors">
-                  <Calendar size={18} className="text-slate-900" />
-                  <span className="text-sm font-bold">{selectedDate}</span>
-                  <ChevronDown size={14} className="opacity-50" />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                {dateRanges.map((range) => (
-                  <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer hover:bg-green-50 text-green-700">
-                    {range}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Agent Filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:text-green-600 text-slate-900 transition-colors">
-                  <Users size={18} className="text-slate-900" />
-                  <span className="text-sm font-bold">{t("agency.logs.filters.select_agents")}</span>
-                  <ChevronDown size={14} className="opacity-50" />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className={cn("w-48", mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                {agents.map((agent) => (
-                  <DropdownMenuItem key={agent} onClick={() => setSelectedAgent(agent)} className="cursor-pointer hover:bg-green-50 text-green-700">
-                    {agent}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Table Headers */}
-          <div className={cn("grid grid-cols-12 px-4 py-3 border-b transition-colors", 
-            mode === "dark" ? "bg-[#1e293b]/50 border-slate-800" : "bg-white border-slate-300")}>
-            <div className="col-span-3 text-[10px] font-bold text-slate-900 uppercase tracking-widest">{t("agency.logs.table.action_date")}</div>
-            <div className="col-span-6 text-[10px] font-bold text-slate-900 uppercase tracking-widest text-center">{t("agency.logs.table.action")}</div>
-            <div className="col-span-3 text-[10px] font-bold text-slate-900 uppercase tracking-widest text-right">{t("agency.logs.table.performed_by")}</div>
-          </div>
-
-          {/* Table Content */}
-          <div className="flex-1 relative flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto flex flex-col">
-              {!isLoading && logs.length > 0 && (
-                <div className={cn("divide-y transition-colors", mode === "dark" ? "divide-slate-800/50" : "divide-slate-100")}>
-                  {logs.map((log: any, i: number) => (
-                    <div key={i} className={cn("grid grid-cols-12 px-4 py-4 transition-colors items-center", 
-                      mode === "dark" ? "hover:bg-[#1e293b]/20" : "hover:bg-slate-50")}>
-                      <div className="col-span-3 text-[13px] text-gray-400 font-medium">
-                        {log.created_at ? format(new Date(log.created_at), "yyyy-MM-dd hh:mm a") : "N/A"}
-                      </div>
-                      <div className={cn("col-span-6 text-[13px] text-center font-bold", mode === "dark" ? "text-gray-300" : "text-slate-900")}>
-                        {log.action || log.message}
-                      </div>
-                      <div className={cn("col-span-3 text-[13px] text-right font-bold", mode === "dark" ? "text-gray-300" : "text-slate-700")}>
-                        {log.user?.name || log.user?.email || "System"}
-                      </div>
-                    </div>
+            {/* Integrated Top Filters Bar */}
+            <div className={cn("px-6 py-3 border-b flex items-center gap-8 transition-colors bg-slate-50/30 dark:bg-slate-900/10", border)}>
+              {/* Date Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className={cn("flex items-center gap-2 cursor-pointer hover:text-primary transition-colors", text)}>
+                    <Calendar size={16} className="text-primary opacity-70" />
+                    <span className="text-[12px] font-bold">{selectedDate}</span>
+                    <ChevronDown size={14} className="opacity-40" />
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={cn("w-48", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                  {dateRanges.map((range) => (
+                    <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer text-[12px]">
+                      {range}
+                    </DropdownMenuItem>
                   ))}
-                </div>
-              )}
-              
-              {!isLoading && logs.length === 0 && (
-                <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
-                  {t("agency.logs.table.empty")}
-                </div>
-              )}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              {isLoading && (
-                <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
-                  {t("agency.logs.table.loading")}
-                </div>
-              )}
+              {/* Agent Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className={cn("flex items-center gap-2 cursor-pointer hover:text-primary transition-colors", text)}>
+                    <Users size={16} className="text-primary opacity-70" />
+                    <span className="text-[12px] font-bold">{selectedAgent}</span>
+                    <ChevronDown size={14} className="opacity-40" />
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={cn("w-48", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
+                  {agents.map((agent) => (
+                    <DropdownMenuItem key={agent} onClick={() => setSelectedAgent(agent)} className="cursor-pointer text-[12px]">
+                      {agent}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            {/* Pagination */}
-            <div className={cn("flex items-center justify-between p-4 border-t transition-colors mt-auto", 
-              mode === "dark" ? "bg-[#1e293b]/30 border-slate-800" : "bg-white border-slate-200")}>
-              <span className="text-sm text-slate-500 font-medium">
-                {t("agency.logs.pagination.showing", { start: logs.length === 0 ? 0 : 1, end: logs.length, total: total })}
-              </span>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className={cn("p-1 transition-colors border rounded-md", page === 1 ? "text-slate-300 border-slate-100" : "text-slate-500 border-slate-200 hover:text-green-600 hover:border-green-600")}>
-                  <ChevronLeft size={16} />
-                </button>
-                <button className="w-8 h-8 rounded-md bg-green-500 text-white text-sm font-bold flex items-center justify-center shadow-sm">
-                  {page}
-                </button>
-                <button 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className={cn("p-1 transition-colors border rounded-md", page >= totalPages ? "text-slate-300 border-slate-100" : "text-slate-500 border-slate-200 hover:text-green-600 hover:border-green-600")}>
-                  <ChevronRight size={16} />
-                </button>
+            {/* Logs Table Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Table Headers */}
+              <div className={cn("grid grid-cols-12 px-6 py-2.5 border-b transition-colors", 
+                dark ? "bg-slate-900/30 border-slate-800 text-slate-600" : "bg-slate-50/60 border-slate-100 text-slate-400")}>
+                <div className="col-span-3 text-[10px] font-bold uppercase tracking-widest">{t("agency.logs.table.action_date")}</div>
+                <div className="col-span-6 text-[10px] font-bold uppercase tracking-widest text-center">{t("agency.logs.table.action")}</div>
+                <div className="col-span-3 text-[10px] font-bold uppercase tracking-widest text-right">{t("agency.logs.table.performed_by")}</div>
+              </div>
+
+              {/* Table Content */}
+              <div className="flex-1 overflow-y-auto flex flex-col custom-scrollbar">
+                {!isLoading && logs.length > 0 && (
+                  <div className={cn("divide-y transition-colors", dark ? "divide-slate-800/50" : "divide-slate-50")}>
+                    {logs.map((log: any, i: number) => (
+                      <div key={i} className={cn("group grid grid-cols-12 px-6 py-3.5 border-b last:border-0 transition-colors items-center", 
+                        dark ? "border-slate-800 hover:bg-slate-800/25" : "border-slate-100 hover:bg-slate-50/70")}>
+                        
+                        <div className="col-span-3 flex items-center gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 opacity-60" />
+                          <div className={cn("text-[13px] font-medium truncate", sub)}>
+                            {log.created_at ? format(new Date(log.created_at), "yyyy-MM-dd hh:mm a") : "N/A"}
+                          </div>
+                        </div>
+
+                        <div className={cn("col-span-6 text-[13px] text-center font-bold px-4", text)}>
+                          {log.action || log.message}
+                        </div>
+
+                        <div className="col-span-3 text-right flex items-center justify-end gap-2">
+                          <div className={cn("text-[13px] font-bold", dark ? "text-slate-400" : "text-slate-700")}>
+                            {log.user?.name || log.user?.email || "System"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {!isLoading && logs.length === 0 && (
+                  <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
+                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-3", dark ? "bg-slate-800" : "bg-slate-50")}>
+                      <Layers className="w-6 h-6 text-slate-300" />
+                    </div>
+                    <p className={cn("text-[13px] font-bold", text)}>{t("agency.logs.table.empty")}</p>
+                  </div>
+                )}
+
+                {isLoading && (
+                  <div className="flex-1 flex items-center justify-center py-10">
+                    <div className="flex items-center gap-2 text-slate-400 text-[13px] font-medium">
+                      <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      {t("agency.logs.table.loading")}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination Footer */}
+              <div className={cn("flex items-center justify-between px-6 py-4 border-t transition-colors mt-auto", 
+                dark ? "bg-slate-900/20 border-slate-800" : "bg-slate-50/30 border-slate-100")}>
+                <span className={cn("text-[11px] font-medium", sub)}>
+                  {t("agency.logs.pagination.showing", { start: logs.length === 0 ? 0 : 1, end: logs.length, total: total })}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className={cn("p-1.5 transition-colors border rounded-lg", 
+                      page === 1 ? "text-slate-300 border-slate-100 dark:border-slate-800" : "text-slate-500 border-slate-200 hover:text-primary hover:border-primary dark:border-slate-700")}>
+                    <ChevronLeft size={14} />
+                  </button>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white text-[12px] font-bold shadow-sm">
+                    {page}
+                  </div>
+                  <button 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                    className={cn("p-1.5 transition-colors border rounded-lg", 
+                      page >= totalPages ? "text-slate-300 border-slate-100 dark:border-slate-800" : "text-slate-500 border-slate-200 hover:text-primary hover:border-primary dark:border-slate-700")}>
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

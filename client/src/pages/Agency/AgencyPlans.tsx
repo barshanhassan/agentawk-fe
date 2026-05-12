@@ -1,42 +1,81 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Sparkles } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 
 const AgencyPlans = () => {
   const { mode } = useTheme();
-  const isDark = mode === "dark";
+  const dark = mode === "dark";
+
+  // Force hide all scrollbars for this page
+  useEffect(() => {
+    const targets: { el: HTMLElement; orig: string }[] = [];
+
+    const hide = (el: HTMLElement | null) => {
+      if (!el) return;
+      targets.push({ el, orig: el.style.overflowY });
+      el.style.overflowY = 'hidden';
+    };
+
+    hide(document.documentElement as HTMLElement);
+    hide(document.body);
+
+    let node = document.querySelector('main') as HTMLElement | null;
+    while (node) {
+      hide(node);
+      node = node.parentElement as HTMLElement | null;
+    }
+
+    return () => {
+      targets.forEach(({ el, orig }) => { el.style.overflowY = orig; });
+    };
+  }, []);
   
+  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
+  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'    : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
+
   return (
-    <div className={cn("p-6 font-sans transition-colors duration-300 w-full h-[80vh] flex flex-col items-center justify-center", 
-      isDark ? "text-white" : "text-slate-900")}>
+    <div className={cn("h-screen overflow-hidden transition-colors flex flex-col items-center justify-center font-sans", bg)}>
       
-      <div className={cn("relative p-10 rounded-3xl shadow-xl border flex flex-col items-center justify-center max-w-md w-full text-center overflow-hidden transition-all",
-        isDark ? "border-[#00e55e]/20 bg-[#00e55e]/10" : "border-[#00e55e]/30 bg-[#f2fdf5]")}>
+      {/* ── Main Content Area ── */}
+      <div className={cn("relative p-12 rounded-[40px] shadow-2xl border flex flex-col items-center justify-center max-w-lg w-full text-center overflow-hidden transition-all duration-500",
+        card, border)}>
         
-        {/* Decorative Background Blurs */}
-        <div className={cn("absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl opacity-20 pointer-events-none", 
-          isDark ? "bg-[#00e55e]" : "bg-[#00e55e]")} />
-        <div className={cn("absolute -bottom-24 -left-24 w-56 h-56 rounded-full blur-3xl opacity-20 pointer-events-none", 
-          isDark ? "bg-blue-500" : "bg-blue-400")} />
+        {/* Decorative Background Glows */}
+        <div className={cn("absolute -top-32 -right-32 w-72 h-72 rounded-full blur-[100px] opacity-20 pointer-events-none", 
+          "bg-primary")} />
+        <div className={cn("absolute -bottom-32 -left-32 w-72 h-72 rounded-full blur-[100px] opacity-10 pointer-events-none", 
+          "bg-blue-500")} />
 
         {/* Icon Container */}
-        <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-6 z-10 shadow-sm transition-transform hover:scale-105",
-          isDark ? "bg-slate-800 border border-slate-700" : "bg-slate-50 border border-slate-100")}>
-          <Sparkles className={cn("w-8 h-8", isDark ? "text-[#00e55e]" : "text-[#00e55e]")} strokeWidth={1.5} />
+        <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mb-8 z-10 shadow-lg transition-transform hover:scale-110 duration-300",
+          dark ? "bg-slate-900/50 border border-slate-800" : "bg-white border border-slate-100")}>
+          <Sparkles className="w-10 h-10 text-primary" strokeWidth={1.5} />
         </div>
         
         {/* Text Content */}
-        <h1 className={cn("text-3xl font-black mb-3 z-10 tracking-tight", 
-          isDark ? "text-white" : "text-slate-900")}>
+        <h1 className={cn("text-4xl font-black mb-4 z-10 tracking-tight", text)}>
           Coming Soon...
         </h1>
         
-        <p className={cn("font-medium text-[15px] z-10 leading-relaxed px-2", 
-          isDark ? "text-slate-400" : "text-slate-500")}>
-          We're crafting something amazing for your SaaS plans. Stay tuned, this feature is currently under active development.
-        </p>
+        <div className="space-y-4 px-4 z-10">
+          <p className={cn("font-bold text-[16px] leading-relaxed", dark ? "text-slate-300" : "text-slate-700")}>
+            We're crafting something amazing for your SaaS plans.
+          </p>
+          <p className={cn("text-[13px] font-medium leading-relaxed opacity-80", sub)}>
+            Stay tuned, this feature is currently under active development and will be available soon with premium features.
+          </p>
+        </div>
 
+        {/* Bottom Decorative Element */}
+        <div className="mt-10 flex items-center gap-2 opacity-50 z-10">
+          <div className="w-2 h-2 rounded-full bg-primary" />
+          <div className="w-2 h-2 rounded-full bg-primary opacity-50" />
+          <div className="w-2 h-2 rounded-full bg-primary opacity-20" />
+        </div>
 
       </div>
       

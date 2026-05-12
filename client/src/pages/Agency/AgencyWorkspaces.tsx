@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getUserInfo } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Network,
   Plus,
@@ -14,6 +15,7 @@ import {
   Wallet,
   Ban,
   Trash2,
+  Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,14 +34,18 @@ import { cn } from "@/lib/utils";
 import CreateWorkspaceForm from "./CreateWorkspaceForm";
 import WorkspaceUsageView from "./WorkspaceUsageView";
 import AgencyVoiceWallet from "./AgencyVoiceWallet";
-import { useTranslation } from "react-i18next";
 
 const AgencyWorkspaces = () => {
-  const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
   const dark = mode === "dark";
+  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
+  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'    : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
 
   const [viewMode, setViewMode] = useState<'LIST' | 'CREATE' | 'EDIT' | 'USAGE' | 'VOICE_WALLET'>('LIST');
   const [selectedWorkspace, setSelectedWorkspace] = useState<any>(null);
@@ -55,7 +61,8 @@ const AgencyWorkspaces = () => {
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
       return res.json();
-    }
+    },
+    enabled: !!agencyId
   });
 
   const workspaces = (workspacesResponse?.workspaces || []).map((ws: any) => ({
@@ -113,178 +120,218 @@ const AgencyWorkspaces = () => {
   }
 
   return (
-    <div className={cn("p-6 min-h-screen", dark ? "bg-[#0f172a] text-white" : "bg-slate-50 text-slate-900")}>
-
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold">Workspaces</h1>
-          <p className={cn("text-sm mt-0.5", dark ? "text-slate-400" : "text-slate-500")}>
-            Manage all your client workspaces
-          </p>
+    <div className={cn("min-h-screen flex flex-col font-sans transition-all duration-300", bg)}>
+      
+      {/* ── Header ── (Matched with Team) */}
+      <div className={cn("px-8 py-5 border-b flex items-center justify-between transition-colors", card, border)}>
+        <div className="flex items-center gap-4">
+          <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+            <Network className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className={cn("text-[15px] font-bold tracking-tight", text)}>Workspaces</h1>
+            <p className={cn("text-[11px] mt-0.5", sub)}>
+              {filteredWorkspaces.length} total · {filteredWorkspaces.filter((ws: any) => ws.status === 'Active').length} active
+            </p>
+          </div>
         </div>
-        <button
+        <button 
           onClick={() => setViewMode('CREATE')}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
         >
-          <Plus size={16} />
-          Add Workspace
+          <Plus size={14} /> Add Workspace
         </button>
       </div>
 
-      {/* Main Card */}
-      <div className={cn("rounded-xl border overflow-hidden", dark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+      {/* ── Search & Filter Bar ── (Matched with Team) */}
+      <div className={cn("px-8 py-3 border-b flex items-center justify-between gap-4", card, border)}>
+        <div className="relative w-full max-w-xs group">
+          <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors", sub)} />
+          <input
+            placeholder="Search workspaces..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={cn(
+              "pl-9 pr-3 h-8 w-full text-[12px] rounded-lg border outline-none transition-colors",
+              dark
+                ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600"
+                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300"
+            )}
+          />
+        </div>
 
-        {/* Empty State */}
-        {!isLoading && filteredWorkspaces.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
-            <div className={cn("w-20 h-20 rounded-2xl flex items-center justify-center mb-5", dark ? "bg-primary/10" : "bg-primary/10")}>
-              <Network size={36} className="text-primary" />
-            </div>
-            <h3 className={cn("text-lg font-bold mb-2", dark ? "text-white" : "text-slate-800")}>
-              No Workspaces Yet
-            </h3>
-            <p className={cn("text-sm mb-6 max-w-xs", dark ? "text-slate-400" : "text-slate-500")}>
-              Start managing your clients by creating your first workspace in just a few clicks.
-            </p>
-            <button
-              onClick={() => setViewMode('CREATE')}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
-            >
-              <Plus size={16} />
-              Add Your First Workspace
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Filter Bar */}
-            <div className={cn("flex items-center justify-between px-5 py-3 border-b", dark ? "border-slate-700" : "border-slate-100")}>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder={t("agency.workspaces.searchPlaceholder") || "Search workspaces..."}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn("pl-9 h-9 text-sm", dark ? "bg-slate-800 border-slate-700 text-white" : "border-slate-200")}
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <label className={cn("flex items-center gap-2 text-sm cursor-pointer", dark ? "text-slate-400" : "text-slate-500")}>
-                  <Checkbox className="border-slate-300 w-4 h-4" />
-                  {t("agency.workspaces.showInactive") || "Show inactive"}
-                </label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className={cn("flex items-center gap-1.5 text-sm outline-none", dark ? "text-slate-400" : "text-slate-500")}>
-                    {t("agency.workspaces.sortNewest") || "Newest first"} <ChevronDown size={14} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className={cn(dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                    <DropdownMenuItem>{t("agency.workspaces.sortNewest") || "Newest first"}</DropdownMenuItem>
-                    <DropdownMenuItem>{t("agency.workspaces.sortOldest") || "Oldest first"}</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+        <div className="flex items-center gap-4">
+            <label className={cn("flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest cursor-pointer transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
+              <Checkbox className="border-slate-300 w-3.5 h-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+              Show Inactive
+            </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger className={cn("flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest outline-none transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
+                Newest first <ChevronDown size={12} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className={cn("w-40 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
+                <DropdownMenuItem className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Newest first</DropdownMenuItem>
+                <DropdownMenuItem className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Oldest first</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+      </div>
 
-            {/* Table */}
-            <table className="w-full text-left">
-              <thead className={cn("border-b text-xs font-semibold uppercase tracking-wider", dark ? "border-slate-700 text-slate-400" : "border-slate-100 text-slate-400")}>
-                <tr>
-                  <th className="px-5 py-3">{t("agency.workspaces.table.name")}</th>
-                  <th className="px-5 py-3">{t("agency.workspaces.table.createdAt")}</th>
-                  <th className="px-5 py-3 text-center">{t("agency.workspaces.table.status")}</th>
-                  <th className="px-5 py-3 text-center">{t("agency.workspaces.table.login")}</th>
-                  <th className="px-5 py-3 text-right">{t("agency.workspaces.table.action")}</th>
-                </tr>
-              </thead>
-              <tbody className={cn("divide-y", dark ? "divide-slate-700" : "divide-slate-100")}>
-                {isLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i}>
-                      <td colSpan={5} className="px-5 py-4">
-                        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse w-3/4" />
-                      </td>
-                    </tr>
-                  ))
-                ) : filteredWorkspaces.map((ws: any) => (
-                  <tr key={ws.id} className={cn("group transition-colors", dark ? "hover:bg-slate-800/50" : "hover:bg-slate-50")}>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
-                          {ws.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <span className={cn("font-medium text-sm", dark ? "text-slate-200" : "text-slate-700")}>
-                          {ws.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className={cn("px-5 py-4 text-sm", dark ? "text-slate-400" : "text-slate-500")}>
-                      {ws.createdAt}
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
-                        ws.status === 'Active'
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-red-50 text-red-500"
-                      )}>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", ws.status === 'Active' ? "bg-emerald-500" : "bg-red-500")} />
-                        {ws.status}
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar pb-24">
+        <div className="max-w-[1400px] mx-auto">
+
+          {/* ── Card Grid Area ── */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className={cn("h-72 rounded-2xl border animate-pulse", card, border)}>
+                  <div className="flex flex-col items-center p-8 space-y-4">
+                    <div className={cn("w-16 h-16 rounded-full", dark ? "bg-slate-800" : "bg-slate-200")} />
+                    <div className={cn("h-4 w-32 rounded", dark ? "bg-slate-800" : "bg-slate-200")} />
+                    <div className={cn("h-3 w-24 rounded", dark ? "bg-slate-800/60" : "bg-slate-100")} />
+                    <div className={cn("h-3 w-20 rounded", dark ? "bg-slate-800/60" : "bg-slate-100")} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredWorkspaces.length === 0 ? (
+            <div className={cn("rounded-2xl border p-20 flex flex-col items-center justify-center", card, border)}>
+              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4", dark ? "bg-slate-800" : "bg-slate-100")}>
+                <Network className="w-8 h-8 text-slate-400" />
+              </div>
+              <p className={cn("text-[15px] font-bold mb-1", text)}>No Workspaces Found</p>
+              <p className={cn("text-[12px]", sub)}>Try adjusting your search query or add a new workspace</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredWorkspaces.map((ws: any) => (
+                <div
+                  key={ws.id}
+                  className={cn(
+                    "group relative flex flex-col items-center p-6 rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+                    card, border,
+                    dark ? "hover:border-primary/30" : "hover:border-primary/20"
+                  )}
+                >
+                  {/* Status Badge — top right */}
+                  <div className="absolute top-4 right-4">
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                      ws.status === 'Active'
+                        ? "text-emerald-500 bg-emerald-500/5 border-emerald-500/20"
+                        : "text-rose-500 bg-rose-500/5 border-rose-500/20"
+                    )}>
+                      <span className={cn("w-1 h-1 rounded-full", ws.status === 'Active' ? "bg-emerald-500" : "bg-rose-500")} />
+                      {ws.status}
+                    </span>
+                  </div>
+
+                  {/* Circular Avatar */}
+                  <div className={cn(
+                    "w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4 shadow-lg transition-transform group-hover:scale-110",
+                    "bg-gradient-to-br from-primary to-primary/60"
+                  )}>
+                    {ws.name.slice(0, 2).toUpperCase()}
+                  </div>
+
+                  {/* Info */}
+                  <div className="text-center w-full mb-5">
+                    <h3 className={cn("text-[15px] font-bold tracking-tight mb-2 truncate px-2", text)}>{ws.name}</h3>
+                    <div className="flex flex-col items-center">
+                      <span className={cn("text-[10px] font-bold uppercase tracking-widest opacity-40", sub)}>
+                        ID: {ws.id}
                       </span>
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <button className={cn("inline-flex items-center gap-1 text-xs font-medium transition-colors", dark ? "text-slate-400 hover:text-primary" : "text-slate-400 hover:text-primary")}>
-                        Login <ExternalLink size={11} />
-                      </button>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className={cn("p-1.5 rounded-lg outline-none transition-colors", dark ? "hover:bg-slate-700 text-slate-400" : "hover:bg-slate-100 text-slate-400")}>
-                            <MoreHorizontal size={16} />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className={cn("w-48 p-1", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
-                          <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('EDIT'); }} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <Monitor size={15} /> Manage
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('USAGE'); }} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <BarChart3 size={15} /> Usage
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('VOICE_WALLET'); }} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <Wallet size={15} /> Voice Wallet
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleStatusMutation.mutate(ws)} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <Ban size={15} /> {ws.status === 'Active' ? 'Suspend' : 'Activate'}
-                          </DropdownMenuItem>
-                          <div className={cn("my-1 h-px", dark ? "bg-slate-700" : "bg-slate-100")} />
-                          <DropdownMenuItem
-                            onClick={() => { if (confirm(`Delete "${ws.name}"?`)) deleteMutation.mutate(ws); }}
-                            className="flex items-center gap-2 text-sm cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50"
-                          >
-                            <Trash2 size={15} /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <p className={cn("text-[11px] font-medium mt-0.5", sub)}>
+                        Created on {ws.createdAt}
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Pagination */}
-            {filteredWorkspaces.length > 0 && (
-              <div className={cn("flex items-center justify-end gap-2 px-5 py-3 border-t", dark ? "border-slate-700" : "border-slate-100")}>
-                <button className={cn("p-1.5 rounded-lg border transition-colors", dark ? "border-slate-700 text-slate-400 hover:border-slate-500" : "border-slate-200 text-slate-400 hover:border-slate-300")}>
+                  {/* Action Bar */}
+                  <div className={cn("flex items-center gap-2 w-full pt-4 mt-auto border-t", dark ? "border-slate-800" : "border-slate-100")}>
+                    <button
+                      onClick={() => { setSelectedWorkspace(ws); setViewMode('EDIT'); }}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-[11px] font-bold transition-all",
+                        dark
+                          ? "bg-slate-800 hover:bg-primary text-slate-300 hover:text-white"
+                          : "bg-slate-100 hover:bg-primary text-slate-600 hover:text-white"
+                      )}
+                    >
+                      <Monitor size={13} /> Manage
+                    </button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className={cn(
+                          "w-9 h-9 flex items-center justify-center rounded-xl border transition-all outline-none shrink-0",
+                          dark
+                            ? "border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white"
+                            : "border-slate-200 hover:bg-white text-slate-400 hover:text-slate-900"
+                        )}>
+                          <MoreHorizontal size={15} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className={cn("w-52 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
+                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('USAGE'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                          <BarChart3 size={14} className="text-primary" /> Usage Reports
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('VOICE_WALLET'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                          <Wallet size={14} className="text-primary" /> Voice Wallet
+                        </DropdownMenuItem>
+                        <div className={cn("my-1 h-px", dark ? "bg-slate-800" : "bg-slate-100")} />
+                        <DropdownMenuItem onClick={() => toggleStatusMutation.mutate(ws)} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                          <Ban size={14} /> {ws.status === 'Active' ? 'Suspend Access' : 'Activate Access'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => { if (confirm(`Delete "${ws.name}"?`)) deleteMutation.mutate(ws); }}
+                          className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                        >
+                          <Trash2 size={14} /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination Footer */}
+          {filteredWorkspaces.length > 4 && (
+            <div className={cn(
+              "mt-12 px-6 py-3.5 rounded-2xl border flex items-center justify-between shadow-sm transition-all",
+              dark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50/80 border-slate-100 shadow-slate-200/50"
+            )}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className={cn("text-[11px] font-bold uppercase tracking-widest", sub)}>
+                  Showing <span className={text}>{filteredWorkspaces.length}</span> Total Workspaces
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button className={cn(
+                  "p-2 rounded-xl border transition-all hover:scale-105 active:scale-95",
+                  dark ? "border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800" : "border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm"
+                )}>
                   <ChevronLeft size={14} />
                 </button>
-                <button className="w-7 h-7 rounded-lg bg-primary text-primary-foreground text-xs font-bold">1</button>
-                <button className={cn("p-1.5 rounded-lg border transition-colors", dark ? "border-slate-700 text-slate-400 hover:border-slate-500" : "border-slate-200 text-slate-400 hover:border-slate-300")}>
+                
+                <div className="px-3 h-8 rounded-xl bg-primary flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-primary/25 border border-primary/20">
+                  1
+                </div>
+                
+                <button className={cn(
+                  "p-2 rounded-xl border transition-all hover:scale-105 active:scale-95",
+                  dark ? "border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800" : "border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm"
+                )}>
                   <ChevronRight size={14} />
                 </button>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

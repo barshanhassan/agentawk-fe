@@ -21,7 +21,6 @@ import {
   ShoppingCart,
   CircleDollarSign,
   CreditCard,
-  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -98,7 +97,6 @@ const bottomItems = [
   { label: "Settings", icon: <Settings size={18} />, href: "/agency/settings/general" },
   { label: "Notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications" },
   { label: "White Label", icon: <Monitor size={18} />, href: "/agency/settings/white-label" },
-  { label: "Security", icon: <Lock size={18} />, href: "#" },
   { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/agency/help" },
 ];
 
@@ -124,7 +122,7 @@ const AgencySidebar = () => {
     <div className={cn(
       "relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out z-50 shrink-0",
       isCollapsed ? "w-[70px]" : "w-[240px]",
-      dark ? "bg-[#0f172a] border-slate-800" : "bg-white border-slate-200"
+      dark ? "bg-[#18181b] border-zinc-800" : "bg-[#fafaf9] border-slate-200"
     )}>
 
       {/* Collapse toggle */}
@@ -157,151 +155,118 @@ const AgencySidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-5">
-        {menuGroups.map((group) => (
-          <div key={group.section}>
-            {!isCollapsed && (
-              <p className={cn("px-4 mb-1 text-[10px] font-bold tracking-widest", dark ? "text-slate-500" : "text-slate-400")}>
-                {group.section}
-              </p>
-            )}
-            <div className="space-y-0.5 px-2">
-              {group.items.map((item) => {
-                const active = isActive(item.href) || isParentActive(item);
-                const open = expanded === item.label;
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-2 px-2">
+        {menuGroups.flatMap(group => group.items).map((item) => {
+          const active = isActive(item.href) || isParentActive(item);
+          const open = expanded === item.label;
 
-                return (
-                  <div key={item.label}>
-                    <div
-                      onClick={() => {
-                        if (item.hasSubmenu) {
-                          if (isCollapsed) setIsCollapsed(false);
-                          setExpanded(open ? null : item.label);
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
-                        active
-                          ? "bg-primary/10 text-primary"
-                          : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
-                        isCollapsed && "justify-center"
-                      )}
-                    >
-                      <span className={cn("shrink-0", active ? "text-primary" : "")}>
-                        {item.icon}
-                      </span>
+          return (
+            <div key={item.label}>
+              <div
+                onClick={() => {
+                  if (item.hasSubmenu) {
+                    if (isCollapsed) setIsCollapsed(false);
+                    setExpanded(open ? null : item.label);
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
+                  isCollapsed && "justify-center"
+                )}
+              >
+                <span className={cn("shrink-0", active ? "text-primary" : "")}>
+                  {item.icon}
+                </span>
 
-                      {!isCollapsed && (
-                        <>
-                          {item.hasSubmenu ? (
-                            <span className="flex-1 text-[13px] font-medium">{item.label}</span>
-                          ) : (
-                            <Link href={item.href} className="flex-1 text-[13px] font-medium">
-                              {item.label}
-                            </Link>
-                          )}
-                          {item.hasSubmenu && (
-                            <ChevronDown size={13} className={cn("transition-transform shrink-0", open ? "rotate-180" : "", dark ? "text-slate-500" : "text-slate-400")} />
-                          )}
-                        </>
-                      )}
-
-                      {/* Tooltip when collapsed */}
-                      {isCollapsed && (
-                        <div className={cn(
-                          "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
-                          dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
-                        )}>
-                          {item.label}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Submenu */}
-                    {!isCollapsed && item.hasSubmenu && open && item.subItems && (
-                      <div className="mt-0.5 ml-4 pl-4 border-l space-y-0.5 border-slate-200 dark:border-slate-700">
-                        {item.subItems.map((sub) => (
-                          <Link key={sub.label} href={sub.href}>
-                            <div className={cn(
-                              "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] font-medium cursor-pointer transition-all",
-                              isActive(sub.href)
-                                ? "text-primary bg-primary/5"
-                                : (dark ? "text-slate-500 hover:text-slate-300" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50")
-                            )}>
-                              <div className="flex items-center gap-2">
-                                {sub.icon}
-                                <span>{sub.label}</span>
-                              </div>
-                              {sub.status && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">{sub.status}</span>
-                              )}
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+                {!isCollapsed && (
+                  <>
+                    {item.hasSubmenu ? (
+                      <span className="flex-1 text-[13px] font-medium">{item.label}</span>
+                    ) : (
+                      <Link href={item.href} className="flex-1 text-[13px] font-medium">
+                        {item.label}
+                      </Link>
                     )}
+                    {item.hasSubmenu && (
+                      <ChevronDown size={13} className={cn("transition-transform shrink-0", open ? "rotate-180" : "", dark ? "text-slate-500" : "text-slate-400")} />
+                    )}
+                  </>
+                )}
+
+                {/* Tooltip when collapsed */}
+                {isCollapsed && (
+                  <div className={cn(
+                    "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
+                    dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                  )}>
+                    {item.label}
                   </div>
-                );
-              })}
+                )}
+              </div>
+
+              {/* Submenu */}
+              {!isCollapsed && item.hasSubmenu && open && item.subItems && (
+                <div className="mt-0.5 ml-4 pl-4 border-l space-y-0.5 border-slate-200 dark:border-slate-700">
+                  {item.subItems.map((sub) => (
+                    <Link key={sub.label} href={sub.href}>
+                      <div className={cn(
+                        "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] font-medium cursor-pointer transition-all",
+                        isActive(sub.href)
+                          ? "text-primary bg-primary/5"
+                          : (dark ? "text-slate-500 hover:text-slate-300" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50")
+                      )}>
+                        <div className="flex items-center gap-2">
+                          {sub.icon}
+                          <span>{sub.label}</span>
+                        </div>
+                        {sub.status && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">{sub.status}</span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Bottom items */}
-        <div>
-          {!isCollapsed && (
-            <p className={cn("px-4 mb-1 text-[10px] font-bold tracking-widest", dark ? "text-slate-500" : "text-slate-400")}>
-              ACCOUNT
-            </p>
-          )}
-          <div className="space-y-0.5 px-2">
-            {bottomItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link key={item.label} href={item.href}>
-                  <div className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
-                    active
-                      ? (dark ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-700")
-                      : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
-                    isCollapsed && "justify-center"
-                  )}>
-                    <span className={cn("shrink-0", active ? (dark ? "text-blue-400" : "text-blue-600") : "")}>
-                      {item.icon}
-                    </span>
-                    {!isCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
-                    {isCollapsed && (
-                      <div className={cn(
-                        "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
-                        dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
-                      )}>
-                        {item.label}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+        {bottomItems.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <div key={item.label}>
+              <Link href={item.href}>
+                <div className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
+                  active
+                    ? (dark ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-700")
+                    : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
+                  isCollapsed && "justify-center"
+                )}>
+                  <span className={cn("shrink-0", active ? (dark ? "text-blue-400" : "text-blue-600") : "")}>
+                    {item.icon}
+                  </span>
+                  {!isCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
+                  {isCollapsed && (
+                    <div className={cn(
+                      "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
+                      dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                    )}>
+                      {item.label}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            </div>
+          );
+        })}
       </nav>
 
-      {/* User footer */}
-      {!isCollapsed && (
-        <div className={cn("px-4 py-3 border-t shrink-0", dark ? "border-slate-800" : "border-slate-100")}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
-              {(user?.first_name?.[0] || "U")}
-            </div>
-            <div className="overflow-hidden">
-              <p className={cn("text-[12px] font-semibold truncate", dark ? "text-white" : "text-slate-900")}>
-                {user?.first_name} {user?.last_name || ""}
-              </p>
-              <p className="text-[11px] text-slate-400 truncate">{user?.email || ""}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* User footer removed */}
     </div>
   );
 };

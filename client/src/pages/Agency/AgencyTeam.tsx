@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 
 const AVATAR_COLORS = [
   'bg-violet-500', 'bg-blue-500', 'bg-emerald-500',
-  'bg-amber-500',  'bg-rose-500', 'bg-cyan-500',
+  'bg-amber-500', 'bg-rose-500', 'bg-cyan-500',
   'bg-indigo-500', 'bg-teal-500',
 ];
 
@@ -87,13 +87,13 @@ const AgencyTeam = () => {
     );
   }
 
-  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
-  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const bg = dark ? 'bg-[#0b1120]' : 'bg-slate-50/80';
+  const card = dark ? 'bg-[#0f1829]' : 'bg-white';
   const border = dark ? 'border-slate-800' : 'border-slate-200';
-  const text   = dark ? 'text-white'    : 'text-slate-900';
-  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
+  const text = dark ? 'text-white' : 'text-slate-900';
+  const sub = dark ? 'text-slate-500' : 'text-slate-400';
 
-  const activeCount   = rawMembers.filter((m: any) => (m.status?.toUpperCase() || 'ACTIVE') === 'ACTIVE').length;
+  const activeCount = rawMembers.filter((m: any) => (m.status?.toUpperCase() || 'ACTIVE') === 'ACTIVE').length;
   const inactiveCount = rawMembers.length - activeCount;
 
   return (
@@ -146,16 +146,16 @@ const AgencyTeam = () => {
           {!isLoading && members.length > 0 && (
             <div
               className={cn(
-                'grid items-center px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest border-b',
-                dark ? 'text-slate-600 border-slate-800 bg-slate-900/30' : 'text-slate-400 border-slate-100 bg-slate-50/60'
+                'grid items-center px-6 py-3 text-[11px] font-bold uppercase tracking-wider border-b',
+                dark ? 'text-slate-500 border-slate-800 bg-slate-900/30' : 'text-slate-500 border-slate-100 bg-slate-50/50'
               )}
-              style={{ gridTemplateColumns: '3.5rem 1fr 9rem 7rem 5rem' }}
+              style={{ gridTemplateColumns: '4.5rem 1fr 9rem 8rem 8rem' }}
             >
               <span />
               <span>User</span>
-              <span>Role</span>
-              <span>Status</span>
-              <span className="text-right">Actions</span>
+              <span className="text-center">Role</span>
+              <span className="text-center">Status</span>
+              <span className="text-right pr-4">Actions</span>
             </div>
           )}
 
@@ -200,15 +200,15 @@ const AgencyTeam = () => {
                 <div
                   key={member.id}
                   className={cn(
-                    'group grid items-center px-5 py-3 border-b last:border-0 transition-colors',
-                    dark ? 'border-slate-800 hover:bg-slate-800/25' : 'border-slate-100 hover:bg-slate-50/70'
+                    'group grid items-center px-6 py-3.5 border-b last:border-0 transition-colors',
+                    dark ? 'border-slate-800 hover:bg-slate-800/40' : 'border-slate-100 hover:bg-slate-50/50'
                   )}
-                  style={{ gridTemplateColumns: '3.5rem 1fr 9rem 7rem 5rem' }}
+                  style={{ gridTemplateColumns: '4.5rem 1fr 9rem 8rem 8rem' }}
                 >
                   {/* Avatar */}
                   <div className="flex items-center">
                     <div className={cn(
-                      'w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-[12px] shrink-0 select-none',
+                      'w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-[13px] shrink-0 select-none shadow-sm',
                       avatarBg
                     )}>
                       {member.name.charAt(0).toUpperCase()}
@@ -218,57 +218,61 @@ const AgencyTeam = () => {
                   {/* Name + email */}
                   <div className="min-w-0 pr-4">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <p className={cn('text-[13px] font-bold truncate', text)}>{member.name}</p>
+                      <p className={cn('text-[14px] font-bold tracking-tight truncate', text)}>{member.name}</p>
                       {member.is_owner && (
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 shrink-0">
                           <Crown size={8} /> Owner
                         </span>
                       )}
                     </div>
-                    <p className={cn('text-[11px] truncate', sub)}>{member.email}</p>
+                    <p className={cn('text-[11px] font-medium truncate', dark ? 'text-slate-500' : 'text-slate-400')}>{member.email}</p>
                   </div>
 
                   {/* Role */}
-                  <div>
+                  <div className="flex justify-center">
                     <span className={cn(
-                      'inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-full border',
+                      'inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-lg border',
                       dark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200'
                     )}>
                       {member.role}
                     </span>
                   </div>
 
-                  {/* Status */}
-                  <div>
+                  {/* Status Badge */}
+                  <div className="flex justify-center">
                     <span className={cn(
-                      'inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full',
+                      'inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-lg',
                       member.status === 'ACTIVE'
-                        ? 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10'
-                        : dark ? 'text-slate-500 bg-slate-800' : 'text-slate-400 bg-slate-100'
+                        ? 'text-slate-700 bg-white dark:text-emerald-400 dark:bg-emerald-500/10'
+                        : dark ? 'text-slate-500 bg-slate-800' : 'text-slate-500 bg-slate-100'
                     )}>
                       <span className={cn('w-1.5 h-1.5 rounded-full', member.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-slate-400')} />
                       {member.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                     </span>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Actions Buttons */}
+                  <div className="flex items-center justify-end gap-2 pr-4">
                     {!member.is_owner && (
                       <>
                         <button
                           onClick={() => { setEditingMember(member); setViewMode('EDIT'); }}
-                          title="Edit"
-                          className={cn('p-1.5 rounded-lg transition-colors',
-                            dark ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+                          className={cn(
+                            'p-1.5 rounded-lg border transition-all shadow-sm',
+                            dark 
+                              ? 'border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white' 
+                              : 'border-slate-200 hover:bg-slate-50 text-slate-400 hover:text-slate-900'
                           )}
                         >
                           <Pencil size={13} />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(member)}
-                          title="Remove"
-                          className={cn('p-1.5 rounded-lg transition-colors',
-                            dark ? 'hover:bg-red-500/10 text-slate-500 hover:text-red-400' : 'hover:bg-red-50 text-slate-400 hover:text-red-500'
+                          className={cn(
+                            'p-1.5 rounded-lg border transition-all shadow-sm',
+                            dark 
+                              ? 'border-slate-700 hover:bg-red-500/10 text-slate-500 hover:text-red-400' 
+                              : 'border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600'
                           )}
                         >
                           <Trash2 size={13} />

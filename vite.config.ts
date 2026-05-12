@@ -7,6 +7,17 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
+    ...(process.env.NODE_ENV !== "production" &&
+      process.env.REPL_ID !== undefined
+      ? [
+        await import("@replit/vite-plugin-cartographer").then((m) =>
+          m.cartographer(),
+        ),
+        await import("@replit/vite-plugin-dev-banner").then((m) =>
+          m.devBanner(),
+        ),
+      ]
+      : []),
   ],
   resolve: {
     alias: {
@@ -16,6 +27,10 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
+  },
   server: {
     host: true,
     allowedHosts: ['localhost', 'agency.localhost', '.laglobal.local'],
@@ -25,12 +40,20 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://localhost:3001",
+        target: "http://127.0.0.1:3001",
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
-    },
-
+      "/uploads": {
+        target: "http://127.0.0.1:3001",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/socket.io": {
+        target: "http://127.0.0.1:3001",
+        ws: true,
+        changeOrigin: true,
+      },
   },
 });
