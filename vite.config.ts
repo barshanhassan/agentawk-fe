@@ -55,5 +55,6 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
+    },
   },
 });
