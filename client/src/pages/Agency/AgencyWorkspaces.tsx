@@ -35,6 +35,24 @@ import CreateWorkspaceForm from "./CreateWorkspaceForm";
 import WorkspaceUsageView from "./WorkspaceUsageView";
 import AgencyVoiceWallet from "./AgencyVoiceWallet";
 
+const AVATAR_COLORS = [
+  "from-violet-500 to-purple-700",
+  "from-blue-500 to-cyan-600",
+  "from-emerald-500 to-teal-700",
+  "from-orange-500 to-amber-600",
+  "from-rose-500 to-pink-700",
+  "from-indigo-500 to-blue-700",
+  "from-fuchsia-500 to-violet-700",
+  "from-teal-500 to-green-700",
+  "from-yellow-500 to-orange-600",
+  "from-sky-500 to-indigo-600",
+];
+
+const getAvatarColor = (id: string | number) => {
+  const index = Number(id) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[index];
+};
+
 const AgencyWorkspaces = () => {
   const { mode } = useTheme();
   const { toast } = useToast();
@@ -68,7 +86,11 @@ const AgencyWorkspaces = () => {
   const workspaces = (workspacesResponse?.workspaces || []).map((ws: any) => ({
     id: ws.id,
     name: ws.name,
-    createdAt: ws.created_at ? format(new Date(ws.created_at), "MMM dd, yyyy") : "—",
+    createdAt: ws.created_at
+      ? format(new Date(ws.created_at), "MMM dd, yyyy")
+      : ws.updated_at
+      ? format(new Date(ws.updated_at), "MMM dd, yyyy")
+      : format(new Date(), "MMM dd, yyyy"),
     status: (ws.status === 'active' || ws.status === 'ACTIVE') ? 'Active' : 'Suspended',
     hasLogin: true,
   }));
@@ -228,8 +250,8 @@ const AgencyWorkspaces = () => {
 
                   {/* Circular Avatar */}
                   <div className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4 shadow-lg transition-transform group-hover:scale-110",
-                    "bg-gradient-to-br from-primary to-primary/60"
+                    "w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4 shadow-lg transition-transform group-hover:scale-110 bg-gradient-to-br",
+                    getAvatarColor(ws.id)
                   )}>
                     {ws.name.slice(0, 2).toUpperCase()}
                   </div>
