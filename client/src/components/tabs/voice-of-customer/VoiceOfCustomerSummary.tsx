@@ -1,19 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+import { Smile, Meh, Frown, TrendingUp } from "lucide-react";
 
 export default function VoiceOfCustomerSummary() {
-  // Mock data for sentiment score
-  const sentimentScore = 78;
-  const totalConversations = 1250;
+  const { mode } = useTheme();
+  const dark = mode === "dark";
 
-  // Mock data for sentiment distribution
+  const card    = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
+  const text    = dark ? "text-white"     : "text-slate-900";
+  const sub     = dark ? "text-slate-400" : "text-slate-500";
+  const grid    = dark ? "#1e293b" : "#f1f5f9";
+  const axis    = dark ? "#64748b" : "#94a3b8";
+  const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
+
+  const sentimentScore = 78;
+
   const sentimentDistribution = [
-    { name: "Positive", percentage: 65 },
-    { name: "Neutral", percentage: 25 },
-    { name: "Negative", percentage: 10 },
+    { name: "Positive", percentage: 65, color: "bg-emerald-500", icon: <Smile size={14} className="text-emerald-500" /> },
+    { name: "Neutral",  percentage: 25, color: "bg-orange-500",  icon: <Meh size={14} className="text-orange-500" /> },
+    { name: "Negative", percentage: 10, color: "bg-rose-500",    icon: <Frown size={14} className="text-rose-500" /> },
   ];
 
-  // Mock data for sentiment trend
   const sentimentTrendData = [
     { date: "Oct 24", positive: 45, neutral: 15, negative: 8 },
     { date: "Oct 25", positive: 52, neutral: 18, negative: 7 },
@@ -25,101 +33,80 @@ export default function VoiceOfCustomerSummary() {
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border border-border rounded-md p-2 shadow-md">
-          <p className="text-sm font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2">
-              <span className="text-sm">{entry.name}:</span>
-              <span className="text-sm font-medium" style={{ color: entry.color }}>
-                {entry.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
+    if (!active || !payload?.length) return null;
+    return (
+      <div className={cn("px-3 py-2 rounded-xl border shadow-2xl text-[11px]", tooltip)}>
+        <p className="font-semibold mb-1 opacity-60">{label}</p>
+        {payload.map((e: any, i: number) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: e.color || e.stroke || e.fill }} />
+            <span className="opacity-70">{e.name}:</span>
+            <span className="font-bold">{e.value}</span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-4">
-      {/* Row 1: Sentiment Score and Distribution */}
+    <div className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Sentiment Score Card - 25% width */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Sentiment Score</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-3xl font-bold">{sentimentScore}%</div>
-            <div className="text-xs text-muted-foreground">Total conversations</div>
-          </CardContent>
-        </Card>
+        {/* Sentiment Score Card */}
+        <div className={cn("rounded-2xl border p-6 transition-all duration-300 hover:shadow-xl", card)}>
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className={cn("p-2 rounded-xl", dark ? "bg-primary/15" : "bg-primary/10")}>
+              <TrendingUp size={16} className="text-primary" />
+            </div>
+            <h3 className={cn("text-[13px] font-bold", text)}>Sentiment Score</h3>
+          </div>
+          <div className="space-y-1">
+            <div className={cn("text-4xl font-black tabular-nums", text)}>{sentimentScore}%</div>
+            <p className={cn("text-[11px] font-medium opacity-60", sub)}>Total conversations: 1,250</p>
+          </div>
+        </div>
 
-        {/* Sentiment Distribution Card - 75% width */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 lg:col-span-3">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Sentiment Distribution</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        {/* Sentiment Distribution Card */}
+        <div className={cn("rounded-2xl border p-6 transition-all duration-300 hover:shadow-xl lg:col-span-3", card)}>
+          <h3 className={cn("text-[13px] font-bold mb-6", text)}>Sentiment Distribution</h3>
+          <div className="grid grid-cols-1 gap-6">
             {sentimentDistribution.map((item) => (
-              <div key={item.name} className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground w-16">{item.name}</span>
-                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                    {item.name === "Positive" && (
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    )}
-                    {item.name === "Neutral" && (
-                      <div
-                        className="bg-orange-500 h-2 rounded-full"
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    )}
-                    {item.name === "Negative" && (
-                      <div
-                        className="bg-red-500 h-2 rounded-full"
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    )}
+              <div key={item.name} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {item.icon}
+                    <span className={cn("text-[11px] font-bold uppercase tracking-widest opacity-60", sub)}>{item.name}</span>
                   </div>
-                  <span className="text-sm font-semibold w-12 text-right">{item.percentage}%</span>
+                  <span className={cn("text-[11px] font-black", text)}>{item.percentage}%</span>
+                </div>
+                <div className={cn("w-full rounded-full h-2", dark ? "bg-slate-800" : "bg-slate-100")}>
+                  <div
+                    className={cn("h-2 rounded-full transition-all duration-1000", item.color)}
+                    style={{ width: `${item.percentage}%` }}
+                  />
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Row 2: Sentiment Trend Analysis */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-sm">Sentiment Trend Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={sentimentTrendData}
-              margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }} iconType="circle" />
-              <Line type="monotone" dataKey="positive" stroke="#22c55e" strokeWidth={2} dot={false} name="Positive Sentiment" />
-              <Line type="monotone" dataKey="neutral" stroke="#f97316" strokeWidth={2} dot={false} name="Neutral Sentiment" />
-              <Line type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} dot={false} name="Negative Sentiment" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      {/* Sentiment Trend Analysis */}
+      <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+        <h3 className={cn("text-[13px] font-bold mb-1", text)}>Sentiment Trend Analysis</h3>
+        <p className={cn("text-[11px] mb-6", sub)}>Analysis over time based on conversation volume</p>
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={sentimentTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+            <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
+            <Line type="monotone" dataKey="positive" stroke="#22c55e" strokeWidth={2.5} dot={false} name="Positive Sentiment" activeDot={{ r: 4, fill: "#22c55e", strokeWidth: 0 }} />
+            <Line type="monotone" dataKey="neutral"  stroke="#f97316" strokeWidth={2.5} dot={false} name="Neutral Sentiment" activeDot={{ r: 4, fill: "#f97316", strokeWidth: 0 }} />
+            <Line type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2.5} dot={false} name="Negative Sentiment" activeDot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
-

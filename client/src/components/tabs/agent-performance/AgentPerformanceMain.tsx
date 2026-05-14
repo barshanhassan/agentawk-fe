@@ -1,346 +1,178 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, MessageSquare, Zap, List, ThumbsUp } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
 
-// Utility function to abbreviate large numbers
-const abbreviateNumber = (num: number): string => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "K";
-  }
-  return num.toString();
-};
+const abbreviateNumber = (num: number) => num >= 1000000 ? (num/1000000).toFixed(1)+"M" : num >= 1000 ? (num/1000).toFixed(1)+"K" : num.toString();
 
 const agentAvailabilityData = [
-  { name: "John Smith", team: "Sales Team", loginTime: "09:30 AM", status: "Online", statusColor: "bg-green-500" },
-  { name: "Sarah Johnson", team: "Support Team", loginTime: "08:45 AM", status: "Busy", statusColor: "bg-orange-500" },
-  { name: "Mike Wilson", team: "Technical Team", loginTime: "10:15 AM", status: "Online", statusColor: "bg-green-500" },
-  { name: "Emma Davis", team: "Sales Team", loginTime: "09:00 AM", status: "Away", statusColor: "bg-yellow-500" },
+  { name: "John Smith",    team: "Sales Team",     loginTime: "09:30 AM", status: "Online", dot: "bg-emerald-500" },
+  { name: "Sarah Johnson", team: "Support Team",   loginTime: "08:45 AM", status: "Busy",   dot: "bg-orange-500" },
+  { name: "Mike Wilson",   team: "Technical Team", loginTime: "10:15 AM", status: "Online", dot: "bg-emerald-500" },
+  { name: "Emma Davis",    team: "Sales Team",     loginTime: "09:00 AM", status: "Away",   dot: "bg-yellow-500" },
 ];
 
-const agentPerformanceMetricsData = [
-  { name: "John Smith", accepted: 45, solved: 42, date: "Oct 28, 2025", avgResponse: "1m 45s", avgResolution: "12m 30s" },
+const agentMetricsData = [
+  { name: "John Smith",    accepted: 45, solved: 42, date: "Oct 28, 2025", avgResponse: "1m 45s", avgResolution: "12m 30s" },
   { name: "Sarah Johnson", accepted: 38, solved: 35, date: "Oct 28, 2025", avgResponse: "2m 10s", avgResolution: "18m 45s" },
-  { name: "Mike Wilson", accepted: 52, solved: 48, date: "Oct 28, 2025", avgResponse: "1m 20s", avgResolution: "10m 15s" },
-  { name: "Emma Davis", accepted: 28, solved: 26, date: "Oct 28, 2025", avgResponse: "3m 05s", avgResolution: "22m 30s" },
+  { name: "Mike Wilson",   accepted: 52, solved: 48, date: "Oct 28, 2025", avgResponse: "1m 20s", avgResolution: "10m 15s" },
+  { name: "Emma Davis",    accepted: 28, solved: 26, date: "Oct 28, 2025", avgResponse: "3m 05s", avgResolution: "22m 30s" },
+];
+
+const statusBars = [
+  { label: "Online",  count: 8, pct: 80, color: "bg-emerald-500" },
+  { label: "Busy",    count: 5, pct: 50, color: "bg-orange-500"  },
+  { label: "Away",    count: 2, pct: 20, color: "bg-yellow-500"  },
+  { label: "Offline", count: 0, pct: 0,  color: "bg-slate-400"   },
 ];
 
 export default function AgentPerformanceMain() {
-  const [availabilitySearch, setAvailabilitySearch] = useState("");
-  const [performanceSearch, setPerformanceSearch] = useState("");
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const card    = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
+  const text    = dark ? "text-white"     : "text-slate-900";
+  const sub     = dark ? "text-slate-400" : "text-slate-500";
+  const divider = dark ? "border-slate-800" : "border-slate-100";
+  const rowHover = dark ? "hover:bg-slate-800/50" : "hover:bg-slate-50";
+  const thCls   = dark ? "text-slate-500 border-slate-800" : "text-slate-400 border-slate-100";
+  const inputCls = dark ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400";
 
-  // Filter Availability Data
-  const filteredAvailability = agentAvailabilityData.filter(agent =>
-    agent.name.toLowerCase().includes(availabilitySearch.toLowerCase()) ||
-    agent.team.toLowerCase().includes(availabilitySearch.toLowerCase())
+  const [availSearch, setAvailSearch] = useState("");
+  const [perfSearch,  setPerfSearch]  = useState("");
+
+  const filteredAvail = agentAvailabilityData.filter(a =>
+    a.name.toLowerCase().includes(availSearch.toLowerCase()) || a.team.toLowerCase().includes(availSearch.toLowerCase())
   );
+  const filteredPerf = agentMetricsData.filter(a => a.name.toLowerCase().includes(perfSearch.toLowerCase()));
 
-  // Filter Performance Data
-  const filteredPerformance = agentPerformanceMetricsData.filter(agent =>
-    agent.name.toLowerCase().includes(performanceSearch.toLowerCase())
+  const kpiCards = [
+    { title: "Conversations", icon: <MessageSquare size={14} className="text-primary" />,
+      rows: [{ l: "Total handled", v: abbreviateNumber(1250) }, { l: "Completed", v: abbreviateNumber(980) }, { l: "In progress", v: "45" }] },
+    { title: "Performance", icon: <Zap size={14} className="text-primary" />,
+      rows: [{ l: "Avg response time", v: "2m 15s" }, { l: "Avg resolution time", v: "15m 30s" }, { l: "Resolution rate", v: "92%" }] },
+    { title: "Queue", icon: <List size={14} className="text-primary" />,
+      rows: [{ l: "Active now", v: "12" }, { l: "Pending", v: "8" }, { l: "Forwarded", v: "3" }] },
+    { title: "Feedback", icon: <ThumbsUp size={14} className="text-primary" />,
+      rows: [{ l: "Great", v: "156", c: "text-emerald-500" }, { l: "Average", v: "42", c: "text-yellow-500" }, { l: "Poor", v: "8", c: "text-rose-500" }] },
+  ];
+
+  const tableHeaders = (cols: string[]) => (
+    <tr className={cn("border-b text-left", divider)}>
+      {cols.map(h => <th key={h} className={cn("pb-2 px-3 text-[10px] font-bold uppercase tracking-widest", thCls)}>{h}</th>)}
+    </tr>
   );
-
-  // Mock KPI data
-  const kpiData = {
-    conversations: {
-      handled: 1250,
-      completed: 980,
-      inProgress: 45,
-    },
-    performance: {
-      avgResponseTime: "2m 15s",
-      avgResolutionTime: "15m 30s",
-      resolutionRate: "92%",
-    },
-    queue: {
-      activeNow: 12,
-      pending: 8,
-      forwarded: 3,
-    },
-    feedback: {
-      great: 156,
-      average: 42,
-      poor: 8,
-    },
-  };
 
   return (
-    <div className="space-y-4">
-      {/* Row 1: 4 KPI Cards */}
+    <div className="space-y-5">
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Conversations */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Conversations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Total handled</span>
-              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.conversations.handled)}</span>
+        {kpiCards.map((kpi, i) => (
+          <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1", card, dark ? "hover:border-primary/30" : "hover:border-primary/20")}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className={cn("p-2 rounded-xl", dark ? "bg-primary/15" : "bg-primary/10")}>{kpi.icon}</div>
+              <h3 className={cn("text-[13px] font-bold", text)}>{kpi.title}</h3>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Completed</span>
-              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.conversations.completed)}</span>
+            <div className="space-y-2">
+              {kpi.rows.map((r: any, ri: number) => (
+                <div key={ri} className="flex justify-between items-center">
+                  <span className={cn("text-[11px]", sub)}>{r.l}</span>
+                  <span className={cn("text-[13px] font-bold tabular-nums", r.c || text)}>{r.v}</span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">In progress</span>
-              <span className="text-sm font-semibold">{kpiData.conversations.inProgress}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Performance */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Performance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Avg response time</span>
-              <span className="text-sm font-semibold">{kpiData.performance.avgResponseTime}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Avg resolution time</span>
-              <span className="text-sm font-semibold">{kpiData.performance.avgResolutionTime}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Resolution rate</span>
-              <span className="text-sm font-semibold">{kpiData.performance.resolutionRate}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Queue */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Queue</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Active now</span>
-              <span className="text-sm font-semibold">{kpiData.queue.activeNow}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Pending</span>
-              <span className="text-sm font-semibold">{kpiData.queue.pending}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Forwarded</span>
-              <span className="text-sm font-semibold">{kpiData.queue.forwarded}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Feedback */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Feedback</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Great</span>
-              <span className="text-sm font-semibold">{kpiData.feedback.great}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Average</span>
-              <span className="text-sm font-semibold">{kpiData.feedback.average}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Poor</span>
-              <span className="text-sm font-semibold">{kpiData.feedback.poor}</span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
-      {/* Row 2: Agent Availability Board */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Agent Availability Board</CardTitle>
-            <div className="relative w-48">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search agents..."
-                className="pl-10 h-8 text-xs border-input"
-                value={availabilitySearch}
-                onChange={(e) => setAvailabilitySearch(e.target.value)}
-              />
+      {/* Agent Availability Board */}
+      <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className={cn("text-[13px] font-bold", text)}>Agent Availability Board</h3>
+          <div className="relative">
+            <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
+            <input placeholder="Search agents..." value={availSearch} onChange={e => setAvailSearch(e.target.value)}
+              className={cn("pl-9 pr-3 h-8 w-44 text-[11px] rounded-lg border outline-none", inputCls)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Status Bars */}
+          <div className="space-y-3">
+            <div className="flex justify-between mb-2">
+              <span className={cn("text-[11px] font-bold uppercase tracking-widest", sub)}>Agent Status</span>
+              <span className={cn("text-[11px] font-bold", sub)}>Total: 15</span>
+            </div>
+            {statusBars.map((s, i) => (
+              <div key={i}>
+                <div className="flex justify-between mb-1">
+                  <span className={cn("text-[11px]", sub)}>{s.label}</span>
+                  <span className={cn("text-[11px] font-bold", text)}>{s.count}</span>
+                </div>
+                <div className={cn("w-full rounded-full h-1.5", dark ? "bg-slate-800" : "bg-slate-100")}>
+                  <div className={cn("h-1.5 rounded-full", s.color)} style={{ width: `${s.pct}%` }} />
+                </div>
+              </div>
+            ))}
+            <div className={cn("pt-3 grid grid-cols-2 gap-1.5 border-t", divider)}>
+              {statusBars.map((s, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <div className={cn("w-1.5 h-1.5 rounded-full", s.color)} />
+                  <span className={cn("text-[10px]", sub)}>{s.label} ({s.count})</span>
+                </div>
+              ))}
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left: Agent Status Overview */}
-            <div className="space-y-4">
-              <div className="w-full flex justify-between">
-                <h3 className="text-xs font-semibold text-muted-foreground">Agent Status Overview</h3>
-                <h3 className="text-xs text-muted-foreground">Total: 15</h3>
-              </div>
-
-              {/* Status Items with Progress Bars */}
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-muted-foreground">Online</span>
-                    <span className="text-xs font-semibold">8</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: "80%" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-muted-foreground">Busy</span>
-                    <span className="text-xs font-semibold">5</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-orange-500 h-2 rounded-full" style={{ width: "50%" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-muted-foreground">Away</span>
-                    <span className="text-xs font-semibold">2</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "20%" }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-muted-foreground">Offline</span>
-                    <span className="text-xs font-semibold">0</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-gray-400 h-2 rounded-full" style={{ width: "0%" }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="pt-2 space-y-2 grid grid-cols-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-xs text-muted-foreground">Online (8)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                  <span className="text-xs text-muted-foreground">Busy (5)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                  <span className="text-xs text-muted-foreground">Away (2)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                  <span className="text-xs text-muted-foreground">Offline (0)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Agents Table */}
-            <div className="lg:col-span-2">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="select-none">
-                    <tr className="border-b">
-                      <th className="text-left pt-0 pb-2 px-3 font-medium text-muted-foreground">Agent</th>
-                      <th className="text-left pt-0 pb-2 px-3 font-medium text-muted-foreground">Team</th>
-                      <th className="text-left pt-0 pb-2 px-3 font-medium text-muted-foreground">Login Time</th>
-                      <th className="text-left pt-0 pb-2 px-3 font-medium text-muted-foreground">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAvailability.length > 0 ? (
-                      filteredAvailability.map((agent, index) => (
-                        <tr key={index} className="border-b hover:bg-muted/50">
-                          <td className="py-2 px-3">{agent.name}</td>
-                          <td className="py-2 px-3">{agent.team}</td>
-                          <td className="py-2 px-3">{agent.loginTime}</td>
-                          <td className="py-2 px-3">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${agent.statusColor}`}></div>
-                              <span>{agent.status}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="py-4 text-center text-muted-foreground">
-                          No agents found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Row 3: Agent Performance Metrics */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Agent Performance Metrics</CardTitle>
-            <div className="relative w-72">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search by agent..."
-                className="pl-10 h-8 text-xs border-input"
-                value={performanceSearch}
-                onChange={(e) => setPerformanceSearch(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Agent</th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Accepted</th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Solved</th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Avg Response Time</th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Avg Resolution Time</th>
-                </tr>
-              </thead>
+          {/* Agents Table */}
+          <div className="lg:col-span-2 overflow-x-auto">
+            <table className="w-full">
+              <thead>{tableHeaders(["Agent", "Team", "Login Time", "Status"])}</thead>
               <tbody>
-                {filteredPerformance.length > 0 ? (
-                  filteredPerformance.map((agent, index) => (
-                    <tr key={index} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3">{agent.name}</td>
-                      <td className="py-2 px-3">{agent.accepted}</td>
-                      <td className="py-2 px-3">{agent.solved}</td>
-                      <td className="py-2 px-3">{agent.date}</td>
-                      <td className="py-2 px-3">{agent.avgResponse}</td>
-                      <td className="py-2 px-3">{agent.avgResolution}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="py-4 text-center text-muted-foreground">
-                      No agent records found
+                {filteredAvail.length > 0 ? filteredAvail.map((a, i) => (
+                  <tr key={i} className={cn("border-b transition-colors", divider, rowHover)}>
+                    <td className={cn("py-2.5 px-3 text-[12px] font-semibold", text)}>{a.name}</td>
+                    <td className={cn("py-2.5 px-3 text-[11px]", sub)}>{a.team}</td>
+                    <td className={cn("py-2.5 px-3 text-[11px] tabular-nums", sub)}>{a.loginTime}</td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-1.5">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", a.dot)} />
+                        <span className={cn("text-[11px] font-semibold", text)}>{a.status}</span>
+                      </div>
                     </td>
                   </tr>
-                )}
+                )) : <tr><td colSpan={4} className={cn("py-6 text-center text-[11px]", sub)}>No agents found</td></tr>}
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Agent Performance Metrics */}
+      <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className={cn("text-[13px] font-bold", text)}>Agent Performance Metrics</h3>
+          <div className="relative">
+            <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
+            <input placeholder="Search by agent..." value={perfSearch} onChange={e => setPerfSearch(e.target.value)}
+              className={cn("pl-9 pr-3 h-8 w-52 text-[11px] rounded-lg border outline-none", inputCls)} />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>{tableHeaders(["Agent", "Accepted", "Solved", "Date", "Avg Response", "Avg Resolution"])}</thead>
+            <tbody>
+              {filteredPerf.length > 0 ? filteredPerf.map((a, i) => (
+                <tr key={i} className={cn("border-b transition-colors", divider, rowHover)}>
+                  <td className={cn("py-2.5 px-3 text-[12px] font-semibold", text)}>{a.name}</td>
+                  <td className="py-2.5 px-3 text-[12px] font-bold text-primary">{a.accepted}</td>
+                  <td className="py-2.5 px-3 text-[12px] font-bold text-emerald-500">{a.solved}</td>
+                  <td className={cn("py-2.5 px-3 text-[11px]", sub)}>{a.date}</td>
+                  <td className={cn("py-2.5 px-3 text-[11px] tabular-nums", text)}>{a.avgResponse}</td>
+                  <td className={cn("py-2.5 px-3 text-[11px] tabular-nums", text)}>{a.avgResolution}</td>
+                </tr>
+              )) : <tr><td colSpan={6} className={cn("py-6 text-center text-[11px]", sub)}>No records found</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
-

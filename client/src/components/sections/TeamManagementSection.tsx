@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -355,218 +356,301 @@ export default function TeamManagementSection() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header Section - Outside Card */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Team Management</h1>
-        <Button
-          onClick={() => setShowCreateTeamModal(true)}
-          className="btn-outline-primary gap-2 h-9 font-normal"
-          variant="outline"
-        >
-          <Plus size={16} />
-          Create Team
-        </Button>
-      </div>
+    <div className="animate-in fade-in duration-700">
+        {/* Unified Main Card */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+            
+            {/* 1. Branded Header Section */}
+            <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                <div className="flex items-center gap-6">
+                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                        <Users size={20} strokeWidth={2.5} />
+                    </div>
+                    <div className="space-y-0.5">
+                        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                            Team Management
+                        </h1>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            Create and manage cross-functional teams and their supervisors
+                        </p>
+                    </div>
+                </div>
 
-      {/* Search Section */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search teams..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-          />
-        </div>
-        <CustomDropdown
-          options={supervisorOptions}
-          selected={filterSupervisor}
-          onChange={(selectedIds) => setFilterSupervisor(selectedIds)}
-          placeholder="Supervisor"
-          width="190px"
-        />
-        <CustomDropdown
-          options={statusOptions}
-          selected={filterStatus}
-          onChange={(selectedIds) => setFilterStatus(selectedIds as TeamStatus[])}
-          placeholder="Status"
-          width="120px"
-        />
-      </div>
-
-      {/* Table Card */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardContent className="pt-2">
-          {/* Table */}
-          <div className="overflow-x-auto mt-6">
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("teamName")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Team Name
-                      {renderSortIcon("teamName")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("teamSupervisor")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Team Supervisor
-                      {renderSortIcon("teamSupervisor")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("numberOfAgents")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Number of Agents
-                      {renderSortIcon("numberOfAgents")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status
-                      {renderSortIcon("status")}
-                    </div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredAndSortedData().length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No teams found.
-                    </td>
-                  </tr>
-                ) : (
-                  getFilteredAndSortedData().map((team) => {
-                    const supervisor = initialEmployees.find(emp => emp.id === team.supervisorId);
-                    return (
-                      <tr key={team.id} className="border-b hover:bg-muted/50">
-                        <td className="py-2 px-3">{team.teamName}</td>
-                        <td className="py-2 px-3">{supervisor?.name || "N/A"}</td>
-                        <td className="py-2 px-3">{team.agents.length}</td>
-                        <td className="py-2 px-3">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${team.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                            }`}>
-                            {team.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1 hover:bg-muted rounded">
-                                  <MoreVertical size={14} className="text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                                <DropdownMenuItem onClick={() => handleEditTeam(team)}>
-                                  <Edit2 size={14} className="mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleCopyTeam(team)}>
-                                  <Copy size={14} className="mr-2" />
-                                  Copy
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDeleteTeam(team)} className="text-destructive">
-                                  <Trash2 size={14} className="mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{totalFilteredTeams()} results</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                  onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                >
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li
-                          key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                          onClick={() => {
-                            setRowsPerPage(option);
-                            setPage(1); // Reset to first page when rows per page changes
-                            setRowsDropdownOpen(false);
-                          }}
-                        >
-                          {option}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <span className="text-muted-foreground">Page {page} of {Math.ceil(totalFilteredTeams() / rowsPerPage)}</span>
-              <div className="flex gap-1">
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                >
-                  <ChevronsLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredTeams() / rowsPerPage), prev + 1))}
-                  disabled={page === Math.ceil(totalFilteredTeams() / rowsPerPage)}
-                >
-                  <ChevronRight size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(Math.ceil(totalFilteredTeams() / rowsPerPage))}
-                  disabled={page === Math.ceil(totalFilteredTeams() / rowsPerPage)}
-                >
-                  <ChevronsRight size={16} />
-                </button>
-              </div>
+                <div className="flex items-center gap-3">
+                    <Button 
+                        onClick={() => setShowCreateTeamModal(true)}
+                        className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+                    >
+                        <Plus size={14} strokeWidth={2.5} />
+                        <span>Create Team</span>
+                    </Button>
+                </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            {/* 2. Unified Filter Row Section */}
+            <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
+                {/* Search */}
+                <div className="relative group flex-1 min-w-[240px] max-w-sm">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    <input
+                        type="text"
+                        placeholder="Search teams..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-8 h-8.5 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-lg text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400 focus:ring-1 focus:ring-blue-500/20"
+                    />
+                </div>
+
+                {/* Filters */}
+                <div className="flex items-center gap-2 ml-auto">
+                    <CustomDropdown
+                        options={supervisorOptions}
+                        selected={filterSupervisor}
+                        onChange={(selectedIds) => setFilterSupervisor(selectedIds)}
+                        placeholder="Supervisor"
+                        width="160px"
+                    />
+                    <CustomDropdown
+                        options={statusOptions}
+                        selected={filterStatus}
+                        onChange={(selectedIds) => setFilterStatus(selectedIds as TeamStatus[])}
+                        placeholder="Status"
+                        width="120px"
+                    />
+                </div>
+            </div>
+
+            {/* 3. Table Content Area */}
+            <div className="flex-1 overflow-auto min-h-[150px]">
+                <table className="w-full text-left border-separate border-spacing-0">
+                    <thead className="sticky top-0 z-10 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md">
+                        <tr>
+                            <th 
+                                onClick={() => handleColumnSort("teamName")}
+                                className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    Team Name
+                                    {renderSortIcon("teamName")}
+                                </div>
+                            </th>
+                            <th 
+                                onClick={() => handleColumnSort("teamSupervisor")}
+                                className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    Team Supervisor
+                                    {renderSortIcon("teamSupervisor")}
+                                </div>
+                            </th>
+                            <th 
+                                onClick={() => handleColumnSort("numberOfAgents")}
+                                className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    Agents
+                                    {renderSortIcon("numberOfAgents")}
+                                </div>
+                            </th>
+                            <th 
+                                onClick={() => handleColumnSort("status")}
+                                className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    Status
+                                    {renderSortIcon("status")}
+                                </div>
+                            </th>
+                            <th className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 w-20">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                        {getFilteredAndSortedData().length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="py-20 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="p-4 rounded-full bg-slate-50 dark:bg-slate-800">
+                                            <Search className="w-8 h-8 text-slate-300" />
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-400">No teams found matching your criteria</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            getFilteredAndSortedData().map((team) => {
+                                const supervisor = initialEmployees.find(emp => emp.id === team.supervisorId);
+                                return (
+                                    <tr 
+                                        key={team.id} 
+                                        className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-all duration-200"
+                                    >
+                                        <td className="px-5 py-2.5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                                    {team.teamName.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+                                                    {team.teamName}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                                    <Users size={12} className="text-slate-400" />
+                                                </div>
+                                                <span className="text-[13px] font-medium text-slate-600 dark:text-slate-300">
+                                                    {supervisor?.name || "N/A"}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-2.5">
+                                            <div className="flex justify-center">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-[12px] font-bold text-slate-600 dark:text-slate-400">
+                                                    {team.agents.length}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-2.5">
+                                            <span className={cn(
+                                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
+                                                team.status === "Active" 
+                                                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" 
+                                                    : "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400"
+                                            )}>
+                                                {team.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-2.5">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                    >
+                                                        <MoreVertical size={14} className="text-slate-400" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-36 p-1 rounded-xl shadow-xl border-slate-200 dark:border-slate-800">
+                                                    <DropdownMenuItem 
+                                                        onClick={() => handleEditTeam(team)}
+                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
+                                                    >
+                                                        <Edit2 size={13} className="text-blue-500" />
+                                                        Edit Team
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                        onClick={() => handleCopyTeam(team)}
+                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
+                                                    >
+                                                        <Copy size={13} className="text-slate-400" />
+                                                        Copy Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                        onClick={() => handleDeleteTeam(team)}
+                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-rose-600 rounded-lg cursor-pointer transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                                                    >
+                                                        <Trash2 size={13} />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* 4. Footer / Pagination Section */}
+            <div className="px-5 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
+                <div className="flex items-center gap-4 text-[11px] font-medium text-slate-500">
+                    <span>{totalFilteredTeams()} teams total</span>
+                    <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
+                    <div className="flex items-center gap-2">
+                        <span>Show</span>
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                type="button"
+                                className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 transition-colors"
+                                onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                            >
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{rowsPerPage}</span>
+                                <ChevronDown size={10} className="text-slate-400" />
+                            </button>
+                            {rowsDropdownOpen && (
+                                <div className="absolute bottom-full left-0 mb-1 z-50 w-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden animate-in slide-in-from-bottom-1">
+                                    {[10, 25, 50].map(option => (
+                                        <button
+                                            key={option}
+                                            className="w-full px-3 py-1.5 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-300 transition-colors"
+                                            onClick={() => {
+                                                setRowsPerPage(option);
+                                                setPage(1);
+                                                setRowsDropdownOpen(false);
+                                            }}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mr-2">
+                        <span>Page</span>
+                        <span className="text-slate-900 dark:text-white">{page}</span>
+                        <span>of</span>
+                        <span>{Math.ceil(totalFilteredTeams() / rowsPerPage)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(1)}
+                            disabled={page === 1}
+                        >
+                            <ChevronsLeft size={12} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                            disabled={page === 1}
+                        >
+                            <ChevronLeft size={12} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredTeams() / rowsPerPage), prev + 1))}
+                            disabled={page === Math.ceil(totalFilteredTeams() / rowsPerPage)}
+                        >
+                            <ChevronRight size={12} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(Math.ceil(totalFilteredTeams() / rowsPerPage))}
+                            disabled={page === Math.ceil(totalFilteredTeams() / rowsPerPage)}
+                        >
+                            <ChevronsRight size={12} />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
       {/* Create Team Modal */}
       <Dialog open={showCreateTeamModal} onOpenChange={setShowCreateTeamModal}>
         <DialogContent className="max-w-xl">

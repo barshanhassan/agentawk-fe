@@ -3,6 +3,8 @@ import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
 import AgentPerformanceMain from "./AgentPerformanceMain";
 import AgentConversion from "./AgentConversion";
+import { Users2, Target, Filter } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const teams = [
   { id: "team-1", name: "Sales Team" },
@@ -37,71 +39,87 @@ export default function AgentPerformanceTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        {/* Left side - Tabs */}
-        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1">
-          <button
-            onClick={() => handleTabChange("agent-performance-main")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${agentPerformanceTab === "agent-performance-main"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-          >
-            Agent Performance
-          </button>
-          <button
-            onClick={() => handleTabChange("agent-conversion")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${agentPerformanceTab === "agent-conversion"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-          >
-            Agent Conversion
-          </button>
+    <div className="space-y-4">
+      {/* ── Sub-header: Minimalist Sub-tabs & Professional Filters ── */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-1.5 rounded-xl bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60">
+        
+        {/* Left: Compact Sub-tabs Switcher (Restored original colors) */}
+        <div className="flex items-center p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-lg shadow-inner">
+          {[
+            { id: "agent-performance-main", label: "Agent Performance", icon: <Users2 size={12} /> },
+            { id: "agent-conversion", label: "Agent Conversion", icon: <Target size={12} /> },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300",
+                agentPerformanceTab === tab.id
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Right side - Dropdowns */}
+        {/* Right: High-density Filters */}
         <div className="flex items-center gap-3">
-          <CustomDropdown
-            options={teams}
-            selected={selectedTeams}
-            onChange={setSelectedTeams}
-            placeholder="Teams"
-          />
-          <CustomDropdown
-            options={agents}
-            selected={selectedAgents}
-            onChange={setSelectedAgents}
-            placeholder="Agents"
-          />
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
+            <Filter size={11} className="text-slate-400" />
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Filters:</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CustomDropdown
+              options={teams}
+              selected={selectedTeams}
+              onChange={setSelectedTeams}
+              placeholder="Teams"
+              className="h-8 min-w-[100px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
+            />
+            <CustomDropdown
+              options={agents}
+              selected={selectedAgents}
+              onChange={setSelectedAgents}
+              placeholder="Agents"
+              className="h-8 min-w-[100px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Filter Summary */}
+      {/* Filter Chips / Summary */}
       {(selectedTeams.length > 0 || selectedAgents.length > 0) && (
-        <div className="bg-muted/50 rounded-lg p-3 mb-6">
-          <p className="text-sm text-muted-foreground">
-            Filtered by:&nbsp;
-            {selectedTeams.length > 0 && (
-              <span className="text-foreground font-medium">
-                {selectedTeams.map(teamId => teams.find(t => t.id === teamId)?.name).join(", ")}
+        <div className="flex items-center gap-2 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
+          <span className="text-[10px] font-medium text-slate-400">Filtering by:</span>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedTeams.map(id => (
+              <span key={id} className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold border border-slate-200 dark:border-slate-700">
+                {teams.find(t => t.id === id)?.name}
               </span>
-            )}
-            {selectedTeams.length > 0 && selectedAgents.length > 0 && " and "}
-            {selectedAgents.length > 0 && (
-              <span className="text-foreground font-medium">
-                {selectedAgents.map(agentId => agents.find(a => a.id === agentId)?.name).join(", ")}
+            ))}
+            {selectedAgents.map(id => (
+              <span key={id} className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold border border-slate-200 dark:border-slate-700">
+                {agents.find(a => a.id === id)?.name}
               </span>
-            )}
-          </p>
+            ))}
+            <button 
+              onClick={() => { setSelectedTeams([]); setSelectedAgents([]); }}
+              className="text-[9px] font-bold text-slate-400 hover:text-rose-500 transition-colors ml-1"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Tab Content */}
-      {agentPerformanceTab === "agent-performance-main" && <AgentPerformanceMain />}
-      {agentPerformanceTab === "agent-conversion" && <AgentConversion />}
+      {/* Tab Content with Entry Animation */}
+      <div className="mt-2">
+        {agentPerformanceTab === "agent-performance-main" && <AgentPerformanceMain />}
+        {agentPerformanceTab === "agent-conversion" && <AgentConversion />}
+      </div>
     </div>
   );
 }
-

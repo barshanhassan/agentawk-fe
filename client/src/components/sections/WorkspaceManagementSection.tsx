@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { getUserInfo } from "@/lib/auth";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, PlusCircle, MinusCircle } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -255,115 +256,267 @@ export default function WorkspaceManagementSection() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Workspace Management</h1>
-        <Button onClick={() => setShowCreateWorkspaceModal(true)} className="btn-outline-primary gap-2 h-9 font-normal" variant="outline">
-          <Plus size={16} />
-          Create Workspace
-        </Button>
-      </div>
+    <div className="animate-in fade-in duration-700">
+        {/* Unified Main Card */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+            
+            {/* 1. Branded Header Section */}
+            <div className="py-1.5 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                <div className="flex items-center gap-6">
+                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                        <LayoutGrid size={20} strokeWidth={2.5} />
+                    </div>
+                    <div className="space-y-0.5">
+                        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                            Workspace Management
+                        </h1>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            Organize and oversee your multi-tenant workspaces and user assignments
+                        </p>
+                    </div>
+                </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search workspaces..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-          />
-        </div>
-        <CustomDropdown
-          options={statusOptions}
-          selected={filterStatus}
-          onChange={(selectedIds) => setFilterStatus(selectedIds as WorkspaceStatus[])}
-          placeholder="Status"
-          width="120px"
-        />
-      </div>
-
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardContent className="pt-2">
-          <div className="overflow-x-auto mt-6">
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleColumnSort("name")}>
-                    <div className="flex items-center gap-2">Workspace Name{renderSortIcon("name")}</div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleColumnSort("users")}>
-                    <div className="flex items-center gap-2">Number of Users{renderSortIcon("users")}</div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30" onClick={() => handleColumnSort("status")}>
-                    <div className="flex items-center gap-2">Status{renderSortIcon("status")}</div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredAndSortedData().length === 0 ? (
-                  <tr><td colSpan={4} className="text-center py-8 text-muted-foreground">No workspaces found.</td></tr>
-                ) : (
-                  getFilteredAndSortedData().map((ws) => (
-                    <tr key={ws.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3">{ws.name}</td>
-                      <td className="py-2 px-3">{ws.users.length}</td>
-                      <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${ws.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                          }`}>
-                          {ws.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3">
-                        <div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild><button className="p-1 hover:bg-muted rounded"><MoreVertical size={14} className="text-muted-foreground" /></button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                              <DropdownMenuItem onClick={() => handleEditWorkspace(ws)}><Edit2 size={14} className="mr-2" />Edit</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteWorkspace(ws)} className="text-destructive"><Trash2 size={14} className="mr-2" />Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{totalFilteredWorkspaces()} results</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button type="button" className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors" onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}>
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li key={option} className="px-3 py-2 text-xs cursor-pointer hover:bg-muted" onClick={() => { setRowsPerPage(option); setPage(1); setRowsDropdownOpen(false); }}>{option}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <span className="text-muted-foreground">Page {page} of {Math.ceil(totalFilteredWorkspaces() / rowsPerPage)}</span>
-              <div className="flex gap-1">
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" onClick={() => setPage(1)} disabled={page === 1}><ChevronsLeft size={16} /></button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" onClick={() => setPage(prev => Math.max(1, prev - 1))} disabled={page === 1}><ChevronLeft size={16} /></button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredWorkspaces() / rowsPerPage), prev + 1))} disabled={page === Math.ceil(totalFilteredWorkspaces() / rowsPerPage)}><ChevronRight size={16} /></button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" onClick={() => setPage(Math.ceil(totalFilteredWorkspaces() / rowsPerPage))} disabled={page === Math.ceil(totalFilteredWorkspaces() / rowsPerPage)}><ChevronsRight size={16} /></button>
-              </div>
+                <div className="flex items-center gap-3">
+                    <Button 
+                        onClick={() => setShowCreateWorkspaceModal(true)}
+                        className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+                    >
+                        <Plus size={14} strokeWidth={2.5} />
+                        <span>Create Workspace</span>
+                    </Button>
+                </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            {/* 2. Unified Filter Row Section */}
+            <div className="px-5 py-2.5 bg-slate-50/50 dark:bg-transparent border-b border-slate-200 dark:border-slate-800/80 flex items-center gap-3 flex-wrap">
+                {/* Search Bar - Modernized */}
+                <div className="relative group flex-1 min-w-[300px] max-w-sm">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Search className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 group-focus-within:scale-110 transition-all duration-300" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search workspaces by name..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all shadow-sm"
+                    />
+                </div>
+
+                {/* Filters */}
+                <div className="flex items-center gap-2">
+                    <CustomDropdown
+                        options={statusOptions}
+                        selected={filterStatus}
+                        onChange={(selectedIds) => setFilterStatus(selectedIds as WorkspaceStatus[])}
+                        placeholder="Status Filter"
+                        width="140px"
+                    />
+                </div>
+            </div>
+
+            {/* 3. Table Content Area */}
+            <div className="flex-1 overflow-auto min-h-[150px]">
+                <table className="w-full text-left border-separate border-spacing-0">
+                    <thead className="sticky top-0 z-10 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md">
+                        <tr>
+                            <th 
+                                onClick={() => handleColumnSort("name")}
+                                className="px-5 py-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    Workspace Name
+                                    {renderSortIcon("name")}
+                                </div>
+                            </th>
+                            <th 
+                                onClick={() => handleColumnSort("users")}
+                                className="px-5 py-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors text-center"
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    Users
+                                    {renderSortIcon("users")}
+                                </div>
+                            </th>
+                            <th 
+                                onClick={() => handleColumnSort("status")}
+                                className="px-5 py-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    Status
+                                    {renderSortIcon("status")}
+                                </div>
+                            </th>
+                            <th className="px-5 py-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 w-20">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                        {getFilteredAndSortedData().length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-20 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="p-4 rounded-full bg-slate-50 dark:bg-slate-800">
+                                            <Search className="w-8 h-8 text-slate-300" />
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-400">No workspaces found matching your criteria</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            getFilteredAndSortedData().map((ws) => (
+                                <tr 
+                                    key={ws.id} 
+                                    className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-all duration-200"
+                                >
+                                    <td className="px-5 py-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                                {ws.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+                                                {ws.name}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-5 py-2">
+                                        <div className="flex justify-center">
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-[12px] font-bold text-slate-600 dark:text-slate-400">
+                                                {ws.users.length}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-5 py-2">
+                                        <span className={cn(
+                                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
+                                            ws.status === "Active" 
+                                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" 
+                                                : "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400"
+                                        )}>
+                                            {ws.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-5 py-2">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                >
+                                                    <MoreVertical size={14} className="text-slate-400" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-36 p-1 rounded-xl shadow-xl border-slate-200 dark:border-slate-800">
+                                                <DropdownMenuItem 
+                                                    onClick={() => handleEditWorkspace(ws)}
+                                                    className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
+                                                >
+                                                    <Edit2 size={13} className="text-blue-500" />
+                                                    Edit Workspace
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    onClick={() => handleDeleteWorkspace(ws)}
+                                                    className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-rose-600 rounded-lg cursor-pointer transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                                                >
+                                                    <Trash2 size={13} />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* 4. Footer / Pagination Section */}
+            <div className="px-5 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
+                <div className="flex items-center gap-4 text-[11px] font-medium text-slate-500">
+                    <span>{totalFilteredWorkspaces()} results total</span>
+                    <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
+                    <div className="flex items-center gap-2">
+                        <span>Show</span>
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                type="button"
+                                className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 transition-colors"
+                                onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                            >
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{rowsPerPage}</span>
+                                <ChevronDown size={10} className="text-slate-400" />
+                            </button>
+                            {rowsDropdownOpen && (
+                                <div className="absolute bottom-full left-0 mb-1 z-50 w-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden animate-in slide-in-from-bottom-1">
+                                    {[10, 25, 50].map(option => (
+                                        <button
+                                            key={option}
+                                            className="w-full px-3 py-1.5 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-300 transition-colors"
+                                            onClick={() => {
+                                                setRowsPerPage(option);
+                                                setPage(1);
+                                                setRowsDropdownOpen(false);
+                                            }}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mr-2">
+                        <span>Page</span>
+                        <span className="text-slate-900 dark:text-white">{page}</span>
+                        <span>of</span>
+                        <span>{Math.ceil(totalFilteredWorkspaces() / rowsPerPage)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(1)}
+                            disabled={page === 1}
+                        >
+                            <ChevronsLeft size={12} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                            disabled={page === 1}
+                        >
+                            <ChevronLeft size={12} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredWorkspaces() / rowsPerPage), prev + 1))}
+                            disabled={page === Math.ceil(totalFilteredWorkspaces() / rowsPerPage)}
+                        >
+                            <ChevronRight size={12} />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800"
+                            onClick={() => setPage(Math.ceil(totalFilteredWorkspaces() / rowsPerPage))}
+                            disabled={page === Math.ceil(totalFilteredWorkspaces() / rowsPerPage)}
+                        >
+                            <ChevronsRight size={12} />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
       {/* --- Modals --- */}
       <Dialog open={showCreateWorkspaceModal} onOpenChange={setShowCreateWorkspaceModal}>

@@ -208,7 +208,7 @@ export default function AppSidebar() {
               align="start"
               sideOffset={8}
               className={cn(
-                "w-64 p-2 transition-all duration-200 border rounded-2xl shadow-2xl no-focus-outline",
+                "w-60 p-1.5 transition-all duration-200 border rounded-2xl shadow-2xl no-focus-outline",
                 theme === "dark" ? "bg-[#1e293b] border-slate-700 text-slate-300" : "bg-white border-slate-100 text-slate-600"
               )}
             >
@@ -219,13 +219,13 @@ export default function AppSidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
+                        "flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 text-[13px]",
                         isActive(item.href) 
-                          ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold" 
+                          ? "bg-blue-500/10 text-blue-600 font-bold" 
                           : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-blue-600"
                       )}
                     >
-                      <item.icon size={18} className={isActive(item.href) ? "text-white" : "text-gray-400"} />
+                      <item.icon size={15} className={isActive(item.href) ? "text-blue-600" : "text-gray-400"} />
                       <span>{item.label}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -238,13 +238,13 @@ export default function AppSidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
+                        "flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 text-[13px]",
                         isActive(item.href) 
-                          ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold" 
+                          ? "bg-blue-500/10 text-blue-600 font-bold" 
                           : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-blue-600"
                       )}
                     >
-                      <item.icon size={18} className={isActive(item.href) ? "text-white" : "text-gray-400"} />
+                      <item.icon size={15} className={isActive(item.href) ? "text-blue-600" : "text-gray-400"} />
                       <span>{item.label}</span>
                     </Link>
                   </DropdownMenuItem>

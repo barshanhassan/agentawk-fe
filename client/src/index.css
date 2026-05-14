@@ -453,3 +453,21 @@
 .settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(:disabled):hover * {
   color: hsl(var(--primary-foreground)) !important;
 }
+
+/* Custom Scrollbar for High-Density Menus */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}

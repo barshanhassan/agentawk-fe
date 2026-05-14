@@ -3,6 +3,8 @@ import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
 import CSATSummary from "./CSATSummary";
 import CSATDetails from "./CSATDetails";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
 
 const teams = [
   { id: "team-1", name: "Sales Team" },
@@ -21,6 +23,8 @@ const agents = [
 ];
 
 export default function CSATDashboardTab() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { activeSubTab, setActiveSubTab } = useTab();
   const [csatDashboardTab, setCSATDashboardTab] = useState(
     activeSubTab.csatDashboard === "csat-dashboard-summary" ? "summary" : "details"
@@ -28,7 +32,6 @@ export default function CSATDashboardTab() {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 
-  // Sync local state with context when context changes
   useEffect(() => {
     setCSATDashboardTab(activeSubTab.csatDashboard === "csat-dashboard-summary" ? "summary" : "details");
   }, [activeSubTab.csatDashboard]);
@@ -41,50 +44,57 @@ export default function CSATDashboardTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Left side - Tabs */}
-        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1">
+        <div className={cn("flex items-center space-x-1 rounded-xl p-1", dark ? "bg-slate-800" : "bg-slate-100")}>
           <button
             onClick={() => handleTabChange("summary")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${csatDashboardTab === "summary"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
+            className={cn(
+              "px-5 py-1.5 rounded-lg text-xs font-bold transition-all",
+              csatDashboardTab === "summary"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             Summary
           </button>
           <button
             onClick={() => handleTabChange("details")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${csatDashboardTab === "details"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
+            className={cn(
+              "px-5 py-1.5 rounded-lg text-xs font-bold transition-all",
+              csatDashboardTab === "details"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             Details
           </button>
         </div>
 
         {/* Right side - Dropdowns */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <CustomDropdown
             options={teams}
             selected={selectedTeams}
             onChange={setSelectedTeams}
             placeholder="Teams"
+            width="180px"
           />
           <CustomDropdown
             options={agents}
             selected={selectedAgents}
             onChange={setSelectedAgents}
             placeholder="Agents"
+            width="180px"
           />
         </div>
       </div>
 
       {/* Tab Content */}
-      {csatDashboardTab === "summary" && <CSATSummary />}
-      {csatDashboardTab === "details" && <CSATDetails />}
+      <div className="animate-in fade-in-50 duration-500">
+        {csatDashboardTab === "summary" && <CSATSummary />}
+        {csatDashboardTab === "details" && <CSATDetails />}
+      </div>
     </div>
   );
 }
-
