@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Search, RefreshCw, MoreVertical, Download, FileText } from "react-feather";
-import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare } from "lucide-react";
+import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Activity } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -536,10 +536,10 @@ export default function ConversationLogsPage() {
     return (
         <div className="animate-in fade-in duration-700 p-6">
             {/* Unified Master Card */}
-            <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-col">
                 
                 {/* 1. Branded Header Section */}
-                <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent rounded-t-[20px]">
                     <div className="flex items-center gap-6">
                         <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
                             <MessageSquare size={20} strokeWidth={2.5} />
@@ -614,7 +614,7 @@ export default function ConversationLogsPage() {
 
                 {/* 3. Unified Filter Row Section */}
                 <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
-                    <div className="relative group flex-1 min-w-[200px] max-w-sm">
+                    <div className="relative group flex-1 min-w-[200px] max-w-[280px]">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         </div>
@@ -629,11 +629,11 @@ export default function ConversationLogsPage() {
 
                     <div className="flex items-center gap-2 ml-auto">
                         <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
-                            <SelectTrigger className="h-8.5 w-[140px] rounded-lg border-slate-200 dark:border-slate-800 text-[12px] font-medium bg-white dark:bg-slate-800/50">
+                            <SelectTrigger style={{ borderRadius: '6px' }} className="h-9 w-[140px] !rounded-md border border-input bg-white dark:bg-slate-800/50 text-[12px] font-medium shadow-sm hover:bg-slate-50 transition-all">
                                 <Calendar className="h-3.5 w-3.5 mr-2 text-slate-400" />
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
+                            <SelectContent className="rounded-xl border border-input dark:border-slate-800 shadow-xl">
                                 <SelectItem value="last-7-days" className="text-xs">Last 7 Days</SelectItem>
                                 <SelectItem value="last-14-days" className="text-xs">Last 14 Days</SelectItem>
                                 <SelectItem value="last-30-days" className="text-xs">Last 30 Days</SelectItem>
@@ -646,14 +646,14 @@ export default function ConversationLogsPage() {
                         {dateRangePreset === "custom" && (
                             <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="h-8.5 px-3 rounded-lg border-slate-200 dark:border-slate-800 text-[11px] font-medium gap-2">
+                                    <Button variant="outline" style={{ borderRadius: '6px' }} className="h-9 px-3 !rounded-md border border-input bg-white dark:bg-slate-800/50 text-[11px] font-medium gap-2 shadow-sm">
                                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                         <span>
                                             {customDateRange?.from ? format(customDateRange.from, 'dd/MM') : "Start"} - {customDateRange?.to ? format(customDateRange.to, 'dd/MM') : "End"}
                                         </span>
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-2xl border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden" align="end">
+                                <PopoverContent className="w-auto p-0 rounded-2xl border border-input dark:border-slate-800 shadow-2xl overflow-hidden" align="end">
                                     <CalendarComponent
                                         mode="range"
                                         selected={customDateRange}
@@ -670,6 +670,19 @@ export default function ConversationLogsPage() {
                             onChange={setSelectedStatus}
                             placeholder="Status"
                             width="140px"
+                            className="!w-[140px]"
+                            popoutAlign="right"
+                            triggerContent={
+                                <>
+                                    <div className="flex items-center gap-2 truncate">
+                                        <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                        <span className={cn("truncate text-[12px]", selectedStatus.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                                            {selectedStatus.length === 0 ? "Status" : `Status (${selectedStatus.length})`}
+                                        </span>
+                                    </div>
+                                    <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
+                                </>
+                            }
                         />
                     </div>
                 </div>

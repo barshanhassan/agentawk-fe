@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle, Users } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, PlusCircle, MinusCircle, Users, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -358,10 +358,10 @@ export default function TeamManagementSection() {
   return (
     <div className="animate-in fade-in duration-700">
         {/* Unified Main Card */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+        <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-col">
             
             {/* 1. Branded Header Section */}
-            <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+            <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent rounded-t-[20px]">
                 <div className="flex items-center gap-6">
                     <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
                         <Users size={20} strokeWidth={2.5} />
@@ -387,17 +387,18 @@ export default function TeamManagementSection() {
                 </div>
             </div>
 
-            {/* 2. Unified Filter Row Section */}
             <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
                 {/* Search */}
-                <div className="relative group flex-1 min-w-[240px] max-w-sm">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <div className="relative group flex-1 min-w-[200px] max-w-[280px]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    </div>
                     <input
                         type="text"
                         placeholder="Search teams..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-8 h-8.5 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-lg text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400 focus:ring-1 focus:ring-blue-500/20"
+                        className="block w-full pl-9 pr-3 h-9 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
                     />
                 </div>
 
@@ -408,14 +409,39 @@ export default function TeamManagementSection() {
                         selected={filterSupervisor}
                         onChange={(selectedIds) => setFilterSupervisor(selectedIds)}
                         placeholder="Supervisor"
-                        width="160px"
+                        width="140px"
+                        className="!w-[140px]"
+                        triggerContent={
+                            <>
+                                <div className="flex items-center gap-2 truncate">
+                                    <Users className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                    <span className={cn("truncate text-[12px]", filterSupervisor.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                                        {filterSupervisor.length === 0 ? "Supervisor" : `Supervisor (${filterSupervisor.length})`}
+                                    </span>
+                                </div>
+                                <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
+                            </>
+                        }
                     />
                     <CustomDropdown
                         options={statusOptions}
                         selected={filterStatus}
                         onChange={(selectedIds) => setFilterStatus(selectedIds as TeamStatus[])}
                         placeholder="Status"
-                        width="120px"
+                        width="140px"
+                        className="!w-[140px]"
+                        popoutAlign="right"
+                        triggerContent={
+                            <>
+                                <div className="flex items-center gap-2 truncate">
+                                    <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                    <span className={cn("truncate text-[12px]", filterStatus.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                                        {filterStatus.length === 0 ? "Status" : `Status (${filterStatus.length})`}
+                                    </span>
+                                </div>
+                                <ChevronDown className="h-3.5 w-3.5 text-slate-400/50 shrink-0" />
+                            </>
+                        }
                     />
                 </div>
             </div>

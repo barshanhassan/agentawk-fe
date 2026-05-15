@@ -78,40 +78,50 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   return (
     <div className="relative" style={{ width }} ref={dropdownRef}>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
+        style={{ borderRadius: '6px' }}
         className={cn(
-          "w-full flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors",
+          "h-9 w-full flex items-center justify-between px-3 text-left bg-white dark:bg-slate-800/50 border border-input shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer focus:outline-none text-[12px] font-medium text-slate-700 dark:text-slate-200 transition-all",
           className
         )}
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            setIsOpen(!isOpen);
+          }
+        }}
       >
         {triggerContent ? (
           triggerContent
         ) : (
           <>
-            <span className="truncate text-sm font-normal flex items-center gap-2">
+            <span className="truncate flex items-center gap-2">
               {selected.length === 0 ? (
-                placeholder
+                <span className="text-slate-500 dark:text-slate-400">{placeholder}</span>
               ) : showSelectedOption ? (
                 <>
                   {selectedOption?.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
                   <span>{selectedOption?.name || placeholder}</span>
                 </>
               ) : (
-                `${placeholder} (${selected.length})`
+                <span className="text-slate-900 dark:text-white font-bold">{placeholder} ({selected.length})</span>
               )}
             </span>
-            <span className="ml-2 text-muted-foreground dark:text-gray-400">
-              <ChevronDown className="h-4 w-4" />
+            <span className="ml-2 text-slate-400">
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", isOpen && "rotate-180")} />
             </span>
           </>
         )}
-      </button>
+      </div>
       {isOpen && (
         <div
-          className={`absolute z-10 mt-2 bg-white dark:bg-background border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] animate-in fade-in-80 ${popoutAlign === 'right' ? 'right-0' : 'left-0'}`}
-          style={{ width: popoutWidth ?? '100%' }}
+          className={cn(
+            "absolute z-[100] mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl shadow-slate-200/50 dark:shadow-none animate-in fade-in-0 zoom-in-95 duration-100",
+            popoutAlign === 'right' ? 'right-0' : 'left-0'
+          )}
+          style={{ width: popoutWidth ?? 'max-content', minWidth: '160px' }}
         >
           {showSearch && (
             <div className="flex items-center px-3 py-2 border-b dark:border-slate-700">

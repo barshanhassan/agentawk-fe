@@ -29,12 +29,12 @@ import VoiceOfCustomerTab from "@/components/tabs/voice-of-customer/VoiceOfCusto
 import CSATDashboardTab from "@/components/tabs/csat-dashboard/CSATDashboardTab";
 import ExportModal from "@/components/ExportModal";
 
-import { 
-  LayoutDashboard, 
-  UserCheck, 
-  MessageSquare, 
-  Cpu, 
-  Mic, 
+import {
+  LayoutDashboard,
+  UserCheck,
+  MessageSquare,
+  Cpu,
+  Mic,
   Star,
   TrendingUp
 } from "lucide-react";
@@ -46,12 +46,12 @@ function InsightsDashboardContent() {
   const [localActiveTab, setLocalActiveTab] = useState(activeTab);
 
   const tabs = [
-    { id: "overview",           label: "Overview",           ctx: "overview",         icon: <LayoutDashboard size={13} /> },
-    { id: "agent-performance",  label: "Performance",        ctx: "agentPerformance", icon: <UserCheck size={13} /> },
-    { id: "whatsapp-pricing",   label: "WhatsApp",           ctx: "whatsapp",         icon: <MessageSquare size={13} /> },
-    { id: "bot-dashboard",      label: "Bot",                ctx: "botDashboard",      icon: <Cpu size={13} /> },
-    { id: "voice-of-customer",  label: "Voice",              ctx: "voiceOfCustomer",  icon: <Mic size={13} /> },
-    { id: "csat-dashboard",     label: "CSAT",               ctx: "csatDashboard",     icon: <Star size={13} /> },
+    { id: "overview", label: "Overview", ctx: "overview", icon: <LayoutDashboard size={14} /> },
+    { id: "agent-performance", label: "Performance", ctx: "agentPerformance", icon: <UserCheck size={14} /> },
+    { id: "whatsapp-pricing", label: "WhatsApp", ctx: "whatsapp", icon: <MessageSquare size={14} /> },
+    { id: "bot-dashboard", label: "Bot", ctx: "botDashboard", icon: <Cpu size={14} /> },
+    { id: "voice-of-customer", label: "Voice", ctx: "voiceOfCustomer", icon: <Mic size={14} /> },
+    { id: "csat-dashboard", label: "CSAT", ctx: "csatDashboard", icon: <Star size={14} /> },
   ];
 
   return (
@@ -76,7 +76,7 @@ function InsightsDashboardContent() {
         {/* Right side group: Tabs + Actions */}
         <div className="flex items-center gap-3">
           {/* Navigation Tabs - More compact with icons */}
-          <div className="flex items-center gap-0.5 bg-slate-100/80 dark:bg-slate-800/60 rounded-xl p-1 border border-slate-200/60 dark:border-slate-700/50 w-fit">
+          <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl p-1 border border-slate-200/50 dark:border-slate-700/50 w-fit shadow-sm">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -85,10 +85,10 @@ function InsightsDashboardContent() {
                   setActiveTab(tab.ctx);
                 }}
                 className={cn(
-                  "px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 whitespace-nowrap flex items-center gap-1.5",
+                  "px-4 py-2 rounded-xl text-[12px] font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 relative group",
                   localActiveTab === tab.id
-                    ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
-                    : "text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/5"
+                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25 scale-[1.02]"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/50 shadow-none hover:shadow-sm"
                 )}
                 data-testid={`tab-${tab.id}`}
               >
@@ -98,17 +98,17 @@ function InsightsDashboardContent() {
             ))}
           </div>
 
-          <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700" />
+          <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700" />
 
           <div className="flex items-center gap-2">
             {/* Date Range Selector */}
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger 
-                className="w-[130px] h-8 rounded-lg bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold shadow-sm no-focus-outline"
+              <SelectTrigger
+                className="w-[120px] h-7 rounded-lg bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold shadow-sm no-focus-outline"
               >
                 <div className="flex items-center gap-2 text-blue-500">
-                  <Calendar className="h-3 w-3" />
-                  <span className="text-[10px] font-bold"><SelectValue /></span>
+                  <Calendar className="h-2.5 w-2.5" />
+                  <span className="text-[9.5px] font-bold"><SelectValue /></span>
                 </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl no-focus-outline">
@@ -125,8 +125,8 @@ function InsightsDashboardContent() {
             {dateRange === "custom" && (
               <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
                 <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-8 rounded-lg px-3 gap-2 font-semibold bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 transition-all duration-300 hover:bg-white dark:hover:bg-slate-700"
                   >
                     <Calendar className="h-3 w-3 text-blue-500" />
@@ -155,10 +155,11 @@ function InsightsDashboardContent() {
             {/* Export Button - Height aligned with Date Range and Tabs */}
             <Button
               onClick={() => setIsExportModalOpen(true)}
-              className="h-8 px-4 rounded-xl bg-blue-500 text-white font-bold text-[10px] shadow-sm shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-600"
+              variant="outline"
+              className="h-7 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[9.5px] shadow-sm transition-all duration-300 active:scale-95 flex items-center gap-2 hover:bg-blue-500 hover:text-white hover:border-blue-500 shadow-none"
               data-testid="export-button"
             >
-              <Download size={12} />
+              <Download size={10} />
               <span>Export</span>
             </Button>
           </div>
