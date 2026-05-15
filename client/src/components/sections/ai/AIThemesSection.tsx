@@ -1,12 +1,28 @@
-import React, { useState } from "react";
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import {
+  Sparkles,
+  HelpCircle,
+  Edit2,
+  Trash2,
+  FileText,
+  Plus,
+  ChevronLeft,
+  ExternalLink,
+  AlertCircle,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sparkles, HelpCircle, Edit, Trash2, FileText } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Theme {
   id: string;
@@ -23,18 +39,23 @@ interface ThemeItem {
 }
 
 export default function AIThemesSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { toast } = useToast();
-  const { data: themesData, isLoading } = useQuery({
+
+  const { isLoading } = useQuery({
     queryKey: ["/api/ai/themes"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/ai/themes");
       return res.json();
-    }
+    },
   });
 
-  const [viewMode, setViewMode] = useState<"list" | "edit">("list");
-  const [selectedTheme, setSelectedTheme] = useState<any>(null);
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<ThemeItem | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     subtitle: "",
@@ -74,8 +95,67 @@ export default function AIThemesSection() {
     },
   ];
 
-  const handleDeleteItem = (id: string) => {
-    setThemeItems(themeItems.filter(item => item.id !== id));
+  // ── Design tokens ─────────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const selectCls = cn(
+    inputCls,
+    "appearance-none cursor-pointer pr-10 bg-no-repeat",
+    dark
+      ? "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]"
+      : "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]",
+    "[background-position:right_1rem_center]"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
+
+  // ── Helpers ──────────────────────────────────────────────────
+  const renderIcon = (iconType: string, size: "sm" | "md" = "md") => {
+    const sizeCls = size === "sm" ? "w-12 h-12" : "w-16 h-16";
+    if (iconType === "baserow") {
+      return (
+        <div className={cn(sizeCls, "rounded-xl bg-primary/10 flex items-center justify-center shrink-0")}>
+          <div className="space-y-1">
+            <div className="flex gap-1">
+              <div className="w-4 h-1.5 bg-primary/60 rounded-sm"></div>
+              <div className="w-4 h-1.5 bg-primary/60 rounded-sm"></div>
+            </div>
+            <div className="w-9 h-1.5 bg-primary rounded-sm"></div>
+            <div className="flex gap-1">
+              <div className="w-4 h-1.5 bg-primary/80 rounded-sm"></div>
+              <div className="w-1.5 h-1.5 bg-primary/80 rounded-sm"></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className={cn(sizeCls, "rounded-xl bg-slate-500/10 flex items-center justify-center shrink-0 border", border)}>
+        <HelpCircle className={cn(size === "sm" ? "w-6 h-6" : "w-8 h-8", sub)} />
+      </div>
+    );
   };
 
   const handlePublish = () => {
@@ -85,118 +165,267 @@ export default function AIThemesSection() {
         name: formData.name,
       };
       setThemeItems([...themeItems, newItem]);
-      setFormData({
-        name: "",
-        subtitle: "",
-        smartFlow: "",
-        channel: "",
-        payload: "",
-        spreadsheet: "",
-      });
+      setFormData({ name: "", subtitle: "", smartFlow: "", channel: "", payload: "", spreadsheet: "" });
       setIsCreateFormOpen(false);
+      toast({ title: "Created", description: "Theme item published." });
     }
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: "",
-      subtitle: "",
-      smartFlow: "",
-      channel: "",
-      payload: "",
-      spreadsheet: "",
-    });
+    setFormData({ name: "", subtitle: "", smartFlow: "", channel: "", payload: "", spreadsheet: "" });
     setIsCreateFormOpen(false);
   };
 
-  const renderIcon = (iconType: string) => {
-    if (iconType === "baserow") {
-      return (
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg flex items-center justify-center">
-          <div className="space-y-1">
-            <div className="flex gap-1">
-              <div className="w-5 h-1.5 bg-cyan-400 rounded-sm"></div>
-              <div className="w-5 h-1.5 bg-cyan-400 rounded-sm"></div>
-            </div>
-            <div className="w-11 h-1.5 bg-blue-600 rounded-sm"></div>
-            <div className="flex gap-1">
-              <div className="w-5 h-1.5 bg-blue-700 rounded-sm"></div>
-              <div className="w-2 h-1.5 bg-blue-700 rounded-sm"></div>
-            </div>
-          </div>
-        </div>
-      );
+  const handleDeleteItem = () => {
+    if (itemToDelete) {
+      setThemeItems(themeItems.filter((i) => i.id !== itemToDelete.id));
+      toast({ title: "Deleted", description: "Theme item removed." });
     }
-    return (
-      <div className="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-lg flex items-center justify-center border-2 border-gray-200 dark:border-slate-700">
-        <HelpCircle className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-      </div>
-    );
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
   };
 
-  // If a theme is selected, show the detailed view or create form
-  if (selectedTheme) {
-    // Show create form
-    if (isCreateFormOpen) {
-      return (
-        <div className="p-6 h-full flex flex-col">
-          <div className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Header */}
-              <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {renderIcon(selectedTheme.icon)}
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">AI Theme</h2>
-                    <p className="text-sm text-muted-foreground">Create an AI theme to attach products to it</p>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // ── Header subtitle/buttons per view ─────────────────────────
+  const headerTitle = selectedTheme ? selectedTheme.name : "AI Themes";
+  const headerSub = isCreateFormOpen
+    ? "Create an AI theme to attach products to it"
+    : selectedTheme
+      ? selectedTheme.description
+      : "Organize and manage your AI Themes";
+
+  return (
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>{headerTitle}</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>{headerSub}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {selectedTheme && !isCreateFormOpen && (
+                <>
+                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Add New
+                  </button>
+                  <button onClick={() => setSelectedTheme(null)} className={outlineBtn}>
+                    <ChevronLeft size={12} /> Back
+                  </button>
+                </>
+              )}
+              {selectedTheme && isCreateFormOpen && (
+                <button onClick={handleCancel} className={outlineBtn}>
+                  <ChevronLeft size={12} /> Back
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ── DEFAULT: Theme Cards Grid ── */}
+          {!selectedTheme && (
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {themes.map((theme) => (
+                  <div
+                    key={theme.id}
+                    className={cn(
+                      "p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-primary/40 flex flex-col",
+                      softBg,
+                      softBorder
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {renderIcon(theme.icon, "sm")}
+                        <h3 className={cn("text-[14px] font-black tracking-tight", text)}>{theme.name}</h3>
+                      </div>
+                      <a
+                        href="#"
+                        onClick={(e) => e.preventDefault()}
+                        className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                          dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary"
+                        )}
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    </div>
+
+                    <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
+                      {theme.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-1.5">
+                        {theme.badges?.map((badge, idx) => (
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className={cn(
+                              "h-5 px-2 rounded-md text-[9px] font-black uppercase tracking-widest",
+                              badge.variant === "beta"
+                                ? "border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-400"
+                                : "border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
+                            )}
+                          >
+                            {badge.text}
+                          </Badge>
+                        ))}
+                      </div>
+                      {theme.available ? (
+                        <button onClick={() => setSelectedTheme(theme)} className={primaryOutlineBtn}>
+                          Select
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className={cn(
+                            "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest cursor-not-allowed opacity-50",
+                            dark ? "border-slate-800 text-slate-500" : "border-slate-200 text-slate-400"
+                          )}
+                        >
+                          Soon
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── TABLE VIEW (theme selected, not in create form) ── */}
+          {selectedTheme && !isCreateFormOpen && (
+            <div className="p-8">
+              {themeItems.length === 0 ? (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No items found</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Add your first item to this theme.
+                    </p>
+                  </div>
+                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Create Now
+                  </button>
+                </div>
+              ) : (
+                <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                          <th className={cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest", sub)}>
+                            <div className="flex items-center gap-2">
+                              <FileText size={12} /> Name
+                            </div>
+                          </th>
+                          <th className={cn("px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest", sub)}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {themeItems.map((item) => (
+                          <tr
+                            key={item.id}
+                            className={cn("border-b transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/80")}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <FileText size={14} className="text-primary" />
+                                </div>
+                                <span className={cn("text-[13px] font-black", text)}>{item.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => toast({ title: "Edit", description: "Edit theme item." })}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
+                                  title="Edit"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button
+                                  onClick={() => { setItemToDelete(item); setShowDeleteConfirm(true); }}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className={cn("px-6 py-3 border-t text-[10px] font-black uppercase tracking-widest", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                    Showing {themeItems.length} of {themeItems.length} items
                   </div>
                 </div>
-                <button
-                  onClick={handleCancel}
-                  className="text-primary hover:text-primary/80 font-medium text-sm"
-                >
-                  Back
-                </button>
-              </div>
+              )}
+            </div>
+          )}
 
-              {/* Form Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="max-w-4xl space-y-6">
-                  {/* Name Field */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">Name</label>
+          {/* ── CREATE FORM VIEW ── */}
+          {selectedTheme && isCreateFormOpen && (
+            <div className="p-8">
+              <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
+                <div className="max-w-3xl space-y-6">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Name</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={inputCls}
                       placeholder="Enter theme name"
                     />
                   </div>
 
-                  {/* Subtitle Field */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">Subtitle</label>
+                  {/* Subtitle */}
+                  <div className="space-y-2">
+                    <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Subtitle</label>
                     <input
                       type="text"
                       value={formData.subtitle}
                       onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={inputCls}
                       placeholder="Enter subtitle"
                     />
                   </div>
 
                   {/* TRIGGER SECTION */}
-                  <div className="pt-4">
-                    <h3 className="text-sm font-semibold text-primary mb-4">TRIGGER SECTION</h3>
+                  <div className="pt-2 space-y-4">
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-primary">Trigger Section</h3>
 
-                    {/* Smart Flow */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2 text-foreground">Smart Flow</label>
+                    <div className="space-y-2">
+                      <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Smart Flow</label>
                       <select
                         value={formData.smartFlow}
                         onChange={(e) => setFormData({ ...formData, smartFlow: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={selectCls}
                       >
                         <option value="">Select Smart Flow</option>
                         <option value="flow1">Flow 1</option>
@@ -204,13 +433,12 @@ export default function AIThemesSection() {
                       </select>
                     </div>
 
-                    {/* Channel */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2 text-foreground">Channel</label>
+                    <div className="space-y-2">
+                      <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Channel</label>
                       <select
                         value={formData.channel}
                         onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={selectCls}
                       >
                         <option value="">Select Channel</option>
                         <option value="whatsapp">WhatsApp</option>
@@ -218,30 +446,28 @@ export default function AIThemesSection() {
                       </select>
                     </div>
 
-                    {/* Payload */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-foreground">Payload</label>
+                    <div className="space-y-2">
+                      <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Payload</label>
                       <input
                         type="text"
                         value={formData.payload}
                         onChange={(e) => setFormData({ ...formData, payload: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={inputCls}
                         placeholder="Enter payload"
                       />
                     </div>
                   </div>
 
                   {/* BASEROW.IO SECTION */}
-                  <div className="pt-4">
-                    <h3 className="text-sm font-semibold text-primary mb-4">BASEROW.IO SECTION</h3>
+                  <div className="pt-2 space-y-4">
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-primary">Baserow.io Section</h3>
 
-                    {/* Select a Spreadsheet */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-foreground">Select a Spreadsheet</label>
+                    <div className="space-y-2">
+                      <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Select a Spreadsheet</label>
                       <select
                         value={formData.spreadsheet}
                         onChange={(e) => setFormData({ ...formData, spreadsheet: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={selectCls}
                       >
                         <option value="">Select Spreadsheet</option>
                         <option value="sheet1">Spreadsheet 1</option>
@@ -250,188 +476,53 @@ export default function AIThemesSection() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Footer */}
-              <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 p-6 flex justify-end gap-3">
-                <button
-                  onClick={handleCancel}
-                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium text-foreground hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <Button
-                  variant="outline"
-                  onClick={handlePublish}
-                  disabled={!formData.name.trim()}
-                  className="btn-outline-primary h-9 px-6 font-medium"
-                >
-                  Publish
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Show table view
-    return (
-      <div className="p-6 h-full flex flex-col">
-        {/* Header */}
-        <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900 flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            {renderIcon(selectedTheme.icon)}
-            <div>
-              <h3 className="font-semibold text-lg">{selectedTheme.name}</h3>
-              <p className="text-sm text-muted-foreground">{selectedTheme.description}</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="btn-outline-primary h-9 px-4"
-              onClick={() => setIsCreateFormOpen(true)}
-            >
-              Add
-            </Button>
-            <button
-              onClick={() => setSelectedTheme(null)}
-              className="text-primary hover:text-primary/80 font-medium text-sm"
-            >
-              Back
-            </button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="flex-1 overflow-hidden flex flex-col border rounded-lg bg-white dark:bg-slate-900">
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50 dark:bg-slate-800/50 sticky top-0">
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-muted-foreground">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {themeItems.map((item, index) => (
-                  <tr
-                    key={item.id}
-                    className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
-                      }`}
+                {/* Footer Actions */}
+                <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
+                  <button onClick={handleCancel} className={outlineBtn}>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePublish}
+                    disabled={!formData.name.trim()}
+                    className={primaryBtn}
                   >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <FileText size={16} className="text-muted-foreground" />
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                          title="Edit"
-                        >
-                          <Edit size={16} className="text-blue-600 dark:text-blue-400" />
-                        </button>
-                        <button
-                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                          title="Delete"
-                          onClick={() => handleDeleteItem(item.id)}
-                        >
-                          <Trash2 size={16} className="text-red-600 dark:text-red-400" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="border-t p-4 bg-gray-50 dark:bg-slate-800/50 text-xs text-muted-foreground">
-            Showing {themeItems.length} of {themeItems.length} items
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default view - show theme cards
-  return (
-    <div className="p-6 h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-6">
-        <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
-          <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-        </div>
-        <div className="space-y-1 flex-1">
-          <CardTitle className="text-lg font-semibold">AI Themes</CardTitle>
-          <CardDescription>Organize and manage your AI Themes</CardDescription>
-        </div>
-      </CardHeader>
-      <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {themes.map((theme) => (
-          <div
-            key={theme.id}
-            className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col hover:shadow-md transition-shadow"
-          >
-            {/* Icon */}
-            <div className="mb-4">{renderIcon(theme.icon)}</div>
-
-            {/* Title */}
-            <h3 className="text-lg font-semibold mb-2 text-foreground">
-              {theme.name}
-            </h3>
-
-            {/* Description */}
-            <p className="text-sm text-muted-foreground mb-4 flex-grow">
-              {theme.description}
-            </p>
-
-            {/* Badges and Button */}
-            <div className="flex items-center justify-between mt-auto pt-4">
-              <div className="flex gap-2">
-                {theme.badges?.map((badge, index) => (
-                  <Badge
-                    key={index}
-                    variant="outline"
-                    className={
-                      badge.variant === "beta"
-                        ? "text-red-600 border-red-600 text-xs px-2 py-0.5"
-                        : "text-green-600 border-green-600 text-xs px-2 py-0.5"
-                    }
-                  >
-                    {badge.text}
-                  </Badge>
-                ))}
+                    <Sparkles size={12} /> Publish
+                  </button>
+                </div>
               </div>
-              {theme.available ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedTheme(theme)}
-                  className="btn-outline-primary h-8 px-4 text-xs font-semibold"
-                >
-                  Select
-                </Button>
-              ) : (
-                <button
-                  disabled
-                  className="px-4 py-1.5 border border-gray-300 dark:border-slate-700 text-gray-400 dark:text-gray-500 rounded-md text-sm cursor-not-allowed"
-                >
-                  Soon...
-                </button>
-              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Item?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{itemToDelete?.name || "This item"}</span> will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteItem}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

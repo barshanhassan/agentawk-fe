@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Bot, 
-  MoreVertical, 
-  Pencil, 
-  FileText, 
-  Trash2, 
-  Plug, 
-  ChevronLeft, 
-  ChevronRight, 
-  User, 
-  Settings, 
-  Globe, 
-  Sparkles, 
+import {
+  Bot,
+  MoreVertical,
+  Pencil,
+  FileText,
+  Trash2,
+  Plug,
+  ChevronLeft,
+  User,
+  Settings,
+  Globe,
+  Sparkles,
   Info,
   RotateCcw,
   Zap,
-  Plus
+  Plus,
+  AlertCircle,
+  Upload,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,63 +30,65 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-// Mock Data
-const mockAgents = [
-  {
-    id: 1,
-    name: "Customer Support Bot",
-    reference_id: "asst_123456789",
-    model: "gpt-4o",
-    total_quries: 1250,
-    status: "ACTIVE",
-    allow_in_feeder: true,
-  },
-  {
-    id: 2,
-    name: "Sales Assistant",
-    reference_id: "asst_987654321",
-    model: "gpt-3.5-turbo",
-    total_quries: 450,
-    status: "PAUSED",
-    allow_in_feeder: false,
-  },
-];
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const gptModels = [
-  { name: "gpt-4o", value: "gpt-4o" },
-  { name: "gpt-4-turbo", value: "gpt-4-turbo" },
+  { name: "gpt-4o",        value: "gpt-4o" },
+  { name: "gpt-4-turbo",   value: "gpt-4-turbo" },
   { name: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
 ];
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-
 export default function AIChatAssistantsSection() {
-  const [viewMode, setViewMode] = useState<"list" | "edit" | "logs">("list");
-  const queryClient = useQueryClient();
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [viewMode, setViewMode] = useState<"list" | "edit">("list");
+
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
+    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
 
   const { data: agentsData, isLoading } = useQuery({
     queryKey: ["/api/ai/agents"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/ai/agents");
       return res.json();
-    }
+    },
   });
 
   const agents = agentsData?.agents || [];
@@ -103,7 +105,7 @@ export default function AIChatAssistantsSection() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete assistant.", variant: "destructive" });
-    }
+    },
   });
 
   const statusMutation = useMutation({
@@ -112,22 +114,21 @@ export default function AIChatAssistantsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
-    }
+    },
   });
 
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<any>(null);
-  
-  // Edit Form State
+
   const [activeTab, setActiveTab] = useState<"personality" | "configurations" | "knowledge" | "functions">("personality");
   const [formData, setFormData] = useState({
     name: "",
     instructions: "",
     model: "gpt-4o",
     prompt_strategy: "fixed",
-    creativity: 1.0, // Temperature
-    diversity: 0.5, // Top P
+    creativity: 1.0,
+    diversity: 0.5,
     max_chunk_size_tokens: 1000,
     chunk_overlap_tokens: 200,
     response_tokens: 1000,
@@ -162,6 +163,7 @@ export default function AIChatAssistantsSection() {
         source_type: "pdf",
       });
     }
+    setActiveTab("personality");
     setViewMode("edit");
   };
 
@@ -171,14 +173,14 @@ export default function AIChatAssistantsSection() {
       try {
         if (selectedAgent) {
           await apiRequest("POST", `/api/ai/agents/${selectedAgent.id}/update`, formData);
-          toast({ title: "Success", description: "Assistant updated successfully." });
+          toast({ title: "Saved", description: "Assistant updated successfully." });
         } else {
           await apiRequest("POST", "/api/ai/agents/create", formData);
-          toast({ title: "Success", description: "Assistant created successfully." });
+          toast({ title: "Saved", description: "Assistant created successfully." });
         }
         queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
         setViewMode("list");
-      } catch (error) {
+      } catch {
         toast({ title: "Error", description: "Failed to save assistant.", variant: "destructive" });
       }
     }
@@ -189,11 +191,6 @@ export default function AIChatAssistantsSection() {
     statusMutation.mutate({ id, status: newStatus });
   };
 
-  const handleDeleteRequest = (agent: any) => {
-    setAgentToDelete(agent);
-    setShowDeleteConfirm(true);
-  };
-
   const confirmDeleteAgent = () => {
     if (agentToDelete) {
       deleteMutation.mutate(agentToDelete.id);
@@ -202,478 +199,557 @@ export default function AIChatAssistantsSection() {
     }
   };
 
-  return (
-    <div className="p-6">
-      {/* Header Page Alerts (Placeholder) */}
+  if (isLoading && viewMode === "list") {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-      {viewMode === "list" && (
-        <div className="space-y-6">
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 p-4">
-            <div className="flex items-center justify-between">
+  /* ── EDIT VIEW ── */
+  if (viewMode === "edit") {
+    return (
+      <form onSubmit={handleSave}>
+        <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+          <CardContent className="p-0">
+            {/* Header */}
+            <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
               <div className="flex items-center gap-4">
-                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md">
-                   <img src="/images/integrations/chat_gpt.svg" className="h-8 w-8" alt="AI" />
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+                  <Bot className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium">AI Chat Assistants</h3>
-                  <p className="text-sm text-muted-foreground">Feed your assistant with custom data.</p>
+                  <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>
+                    {selectedAgent ? "Edit Assistant" : "Create New Assistant"}
+                  </h1>
+                  <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
+                    Configure your AI assistant settings.
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                       <div className="flex items-center gap-3 text-sm font-medium border px-3 py-1.5 rounded-md bg-slate-50 dark:bg-slate-800">
-                          <span>Total Active: {totalActive}</span>
-                          <Separator orientation="vertical" className="h-4" />
-                          <span>Limit: {limit}</span>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                       </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Your current workspace limit for AI Assistants.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <Button onClick={() => handleEdit(null)} className="btn-outline-primary flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Assistant
-                </Button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setViewMode("list")} className={outlineBtn}>
+                  Cancel
+                </button>
+                <button type="submit" className={primaryBtn}>
+                  <Sparkles size={12} /> Publish
+                </button>
               </div>
+            </div>
+
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
+              <div className={cn("px-8 border-b flex justify-start overflow-x-auto", softBorder)}>
+                <TabsList className="h-auto p-0 gap-8 bg-transparent border-none flex justify-start rounded-none">
+                  {[
+                    { value: "personality",    label: "Personality",    icon: User },
+                    { value: "configurations", label: "Configurations", icon: Settings },
+                    { value: "knowledge",      label: "Assistants",     icon: Globe },
+                    { value: "functions",      label: "Functions",      icon: Sparkles },
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className={cn(
+                        "flex items-center gap-2 px-1 py-5 rounded-none text-[11px] font-black uppercase tracking-widest transition-all shadow-none bg-transparent border-b-2 border-transparent",
+                        "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary",
+                        "hover:text-primary",
+                        dark ? "text-slate-500" : "text-slate-400"
+                      )}
+                    >
+                      <tab.icon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              {/* ── Personality ── */}
+              <TabsContent value="personality" className="p-8 outline-none">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="md:col-span-2 space-y-5">
+                    <div className="space-y-2">
+                      <FieldLabel dark={dark}>Assistant Name</FieldLabel>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="e.g. Sales Helper"
+                        maxLength={250}
+                        className={inputCls}
+                      />
+                      <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{formData.name.length}/250</p>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel dark={dark}>Instructions</FieldLabel>
+                      <Textarea
+                        rows={12}
+                        value={formData.instructions}
+                        onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                        placeholder="You are a helpful assistant..."
+                        className={cn(
+                          "rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
+                          "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
+                          dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+                        )}
+                      />
+                      <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{formData.instructions.length}/100000</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <FieldLabel dark={dark}>Select Model</FieldLabel>
+                      <Select value={formData.model} onValueChange={(val) => setFormData({ ...formData, model: val })}>
+                        <SelectTrigger className={inputCls}>
+                          <SelectValue placeholder="Select Model" />
+                        </SelectTrigger>
+                        <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                          {gptModels.map((m) => (
+                            <SelectItem key={m.value} value={m.value} className="text-[12px] font-bold">{m.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <FieldLabel dark={dark}>Model Strategy</FieldLabel>
+                      <div className="grid grid-cols-2 gap-3">
+                        {([
+                          { v: "fixed",   label: "Fixed",   desc: "Static predefined prompt.", icon: <RotateCcw size={16} /> },
+                          { v: "dynamic", label: "Dynamic", desc: "Variable injection.",       icon: <Sparkles size={16} /> },
+                        ] as const).map((opt) => {
+                          const active = formData.prompt_strategy === opt.v;
+                          return (
+                            <button
+                              key={opt.v}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, prompt_strategy: opt.v })}
+                              className={cn(
+                                "p-3 rounded-[1rem] border text-left transition-all",
+                                active
+                                  ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/10"
+                                  : cn(softBorder, softBg, "hover:border-primary/30")
+                              )}
+                            >
+                              <div className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center mb-2 transition-all",
+                                active ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-primary/10 text-primary"
+                              )}>
+                                {opt.icon}
+                              </div>
+                              <p className={cn("text-[12px] font-black tracking-tight", text)}>{opt.label}</p>
+                              <p className={cn("text-[10px] font-medium opacity-60 mt-0.5", sub)}>{opt.desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* ── Configurations ── */}
+              <TabsContent value="configurations" className="p-8 outline-none">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+                  <div className="space-y-6">
+                    <SliderRow
+                      dark={dark}
+                      label="Temperature (Creativity)"
+                      value={formData.creativity}
+                      min={0} max={2} step={0.01}
+                      onChange={(v) => setFormData({ ...formData, creativity: v })}
+                      leftLabel="More Precise"
+                      rightLabel="More Creative"
+                    />
+
+                    <SliderRow
+                      dark={dark}
+                      label="Top P (Diversity)"
+                      value={formData.diversity}
+                      min={0} max={1} step={0.01}
+                      onChange={(v) => setFormData({ ...formData, diversity: v })}
+                      leftLabel="Less Diversity"
+                      rightLabel="More Diversity"
+                    />
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <FieldLabel dark={dark}>Response Tokens</FieldLabel>
+                      <Input
+                        type="number"
+                        value={formData.response_tokens}
+                        onChange={(e) => setFormData({ ...formData, response_tokens: parseInt(e.target.value) || 0 })}
+                        className={inputCls}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <FieldLabel dark={dark}>Conversation History Limit</FieldLabel>
+                      <div className="flex gap-2">
+                        {[0, 5, 10, 20].map((val) => {
+                          const active = formData.history_limit === val;
+                          return (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, history_limit: val })}
+                              className={cn(
+                                "flex-1 h-11 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border",
+                                active
+                                  ? "bg-primary text-white border-primary shadow-md shadow-primary/20"
+                                  : dark
+                                    ? "bg-slate-950/50 border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary"
+                                    : "bg-white border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+                              )}
+                            >
+                              {val === 0 ? "Auto" : val}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* ── Knowledge ── */}
+              <TabsContent value="knowledge" className="p-8 outline-none space-y-5">
+                <h4 className={cn("text-[12px] font-black uppercase tracking-widest", text)}>Add Assistant Files</h4>
+
+                <div className="flex gap-2">
+                  {([
+                    { v: "pdf",     label: "PDF Files" },
+                    { v: "website", label: "Website / URL" },
+                    { v: "text",    label: "Text Input" },
+                  ] as const).map((opt) => {
+                    const active = formData.source_type === opt.v;
+                    return (
+                      <button
+                        key={opt.v}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, source_type: opt.v })}
+                        className={cn(
+                          "flex-1 h-11 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border",
+                          active
+                            ? "border-primary text-primary bg-primary/5"
+                            : dark
+                              ? "border-slate-800 text-slate-400 hover:border-primary/40 hover:text-primary"
+                              : "border-slate-200 text-slate-500 hover:border-primary/40 hover:text-primary"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className={cn("p-8 rounded-[1.5rem] border-2 border-dashed text-center", softBg, softBorder)}>
+                  {formData.source_type === "pdf" && (
+                    <div className="space-y-3">
+                      <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <FileText size={20} />
+                      </div>
+                      <h3 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Upload PDF Files</h3>
+                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>Upload your PDF knowledge base files here.</p>
+                      <button
+                        type="button"
+                        onClick={() => toast({ title: "Upload PDF", description: "File selection dialog would open here." })}
+                        className={cn(primaryOutlineBtn, "mx-auto")}
+                      >
+                        <Upload size={12} /> Select Files
+                      </button>
+                    </div>
+                  )}
+
+                  {formData.source_type === "website" && (
+                    <div className="space-y-3 max-w-xl mx-auto">
+                      <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all",
+                        dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
+                        <span className={cn("px-3 text-[10px] font-black uppercase tracking-widest border-r h-full flex items-center",
+                          dark ? "text-slate-500 border-slate-800 bg-slate-900/40" : "text-slate-400 border-slate-200 bg-slate-50")}>https://</span>
+                        <Input placeholder="example.com" className={cn(inputCls, "h-full border-0 rounded-none focus-visible:ring-0")} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toast({ title: "Fetching", description: "Crawling website for knowledge base content..." })}
+                        className={cn(primaryOutlineBtn, "mx-auto")}
+                      >
+                        Fetch Pages
+                      </button>
+                    </div>
+                  )}
+
+                  {formData.source_type === "text" && (
+                    <Textarea
+                      rows={8}
+                      placeholder="Enter text content..."
+                      className={cn(
+                        "w-full rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
+                        "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
+                        dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+                      )}
+                    />
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* ── Functions ── */}
+              <TabsContent value="functions" className="p-8 outline-none">
+                <div className="flex flex-col items-center justify-center text-center space-y-4 py-10">
+                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                    <Zap size={22} />
+                  </div>
+                  <div className="space-y-1 max-w-md">
+                    <h3 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Function Calling</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Define custom functions that the AI can call to interact with your business logic or external APIs.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
+                    className={primaryOutlineBtn}
+                  >
+                    <Plus size={12} /> Add Function
+                  </button>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Footer */}
+            <div className={cn("px-6 py-4 border-t flex justify-end gap-2", border, softBg)}>
+              <button type="button" onClick={() => setViewMode("list")} className={outlineBtn}>
+                Cancel
+              </button>
+              <button type="submit" className={primaryBtn}>
+                <Sparkles size={12} /> Publish
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    );
+  }
+
+  /* ── LIST VIEW ── */
+  return (
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between gap-4", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+                <Bot className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>AI Chat Assistants</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
+                  Feed your assistant with custom data.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={cn("flex items-center gap-3 px-3 h-10 rounded-xl border text-[10px] font-black uppercase tracking-widest", dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600")}>
+                <span>Active: {totalActive}</span>
+                <div className="w-px h-3" style={{ backgroundColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }} />
+                <span>Limit: {limit}</span>
+                <Info size={11} className="opacity-50" />
+              </div>
+              <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
+                <Plus size={12} /> Add Assistant
+              </button>
             </div>
           </div>
 
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
-             {agents && agents.length > 0 ? (
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-800 border-b">
-                    <tr>
-                      <th className="px-6 py-3 font-medium text-muted-foreground">Name</th>
-                      <th className="px-6 py-3 font-medium text-muted-foreground">Model</th>
-                      <th className="px-6 py-3 font-medium text-muted-foreground">AI Calls</th>
-                      <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
-                      <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {agents?.map((agent: any) => (
-                     <tr key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                       <td className="px-6 py-4">
-                         <div className="font-medium text-slate-900 dark:text-slate-100">{agent.name}</div>
-                         <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                           <Info className="h-3 w-3" />
-                           {agent.reference_id}
-                         </div>
-                       </td>
-                       <td className="px-6 py-4">{agent.model}</td>
-                       <td className="px-6 py-4">{agent.total_quries}</td>
-                       <td className="px-6 py-4">
-                          <Switch 
-                            checked={agent.status === "ACTIVE"} 
-                            onCheckedChange={() => handleStatusToggle(agent.id, agent.status)}
-                          />
-                       </td>
-                       <td className="px-6 py-4 text-right">
-                         <div className="flex items-center justify-end gap-2">
-                           <Button variant="ghost" size="icon" onClick={() => handleEdit(agent)}>
-                             <Pencil className="h-4 w-4 text-slate-500" />
-                           </Button>
-                           <Button 
-                             variant="ghost" 
-                             size="icon"
-                             onClick={() => toast({ title: "View Logs", description: `Opening activity logs for ${agent.name}...` })}
-                           >
-                             <FileText className="h-4 w-4 text-slate-500" />
-                           </Button>
-                           <DropdownMenu>
-                             <DropdownMenuTrigger asChild>
-                               <Button variant="ghost" size="icon">
-                                 <MoreVertical className="h-4 w-4 text-slate-500" />
-                               </Button>
-                             </DropdownMenuTrigger>
-                             <DropdownMenuContent align="end">
-                               <DropdownMenuItem onClick={() => toast({ title: "AI Feeder", description: `Opening AI Feeder for ${agent.name}...` })}>
-                                 <Plug className="h-4 w-4 mr-2" />
-                                 AI Feeder
-                               </DropdownMenuItem>
-                               <DropdownMenuItem 
-                                 className="text-red-600"
-                                 onClick={() => handleDeleteRequest(agent)}
-                               >
-                                 <Trash2 className="h-4 w-4 mr-2" />
-                                 Delete
-                               </DropdownMenuItem>
-                             </DropdownMenuContent>
-                           </DropdownMenu>
-                         </div>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             ) : (
-                <div className="p-12 flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full">
-                     <img src="/images/integrations/chat_gpt.svg" className="h-12 w-12 opacity-50" alt="AI" />
-                  </div>
-                  <h3 className="font-semibold text-lg">Create your first AI Assistant</h3>
-                  <p className="text-muted-foreground max-w-md">
+          {/* Body */}
+          <div className="p-6">
+            {agents.length === 0 ? (
+              <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Bot className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-1.5 max-w-sm">
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Create your first AI Assistant</h3>
+                  <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
                     Get started by creating a new AI assistant to help automate your conversations.
                   </p>
-                  <Button onClick={() => handleEdit(null)} className="mt-4 btn-outline-primary flex items-center gap-2" variant="outline">
-                    <Plus className="w-4 h-4" />
-                    Add Assistant
-                  </Button>
                 </div>
-             )}
-          </div>
-        </div>
-      )}
-
-      {viewMode === "edit" && (
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 p-4 flex items-center justify-between">
-             <div className="flex items-center gap-4">
-                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md">
-                   <img src="/images/integrations/chat_gpt.svg" className="h-8 w-8" alt="AI" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium">{selectedAgent ? "Edit Assistant" : "Create New Assistant"}</h3>
-                  <p className="text-sm text-muted-foreground">Configure your AI assistant settings.</p>
-                </div>
-             </div>
-             <div className="flex items-center gap-3">
-               <Button type="button" variant="outline" onClick={() => setViewMode("list")}>
-                 Back
-               </Button>
-               <Button type="submit" variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
-                 Publish
-               </Button>
-             </div>
-          </div>
-
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-             {/* Tabs Header */}
-              <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="w-full">
-                <div className="px-6 pt-6">
-                  <TabsList className="w-full justify-start h-auto p-1 bg-slate-100 dark:bg-slate-800">
-                    <TabsTrigger value="personality" className="flex-1">
-                      <User className="h-4 w-4 mr-2" />
-                      Personality
-                    </TabsTrigger>
-                    <TabsTrigger value="configurations" className="flex-1">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configurations
-                    </TabsTrigger>
-                    <TabsTrigger value="knowledge" className="flex-1">
-                      <Globe className="h-4 w-4 mr-2" />
-                      Assistants
-                    </TabsTrigger>
-                    <TabsTrigger value="functions" className="flex-1">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Functions
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <div className="p-8">
-                  {/* Personality Tab */}
-                  <TabsContent value="personality" className="mt-0 outline-none">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                      <div className="md:col-span-2 space-y-6">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Assistant Name</label>
-                          <Input
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="e.g. Sales Helper"
-                            maxLength={250}
+                <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
+                  <Plus size={12} /> Add Assistant
+                </button>
+              </div>
+            ) : (
+              <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                <table className="w-full">
+                  <thead>
+                    <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
+                      <th className={cn("py-4 px-6 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Name</th>
+                      <th className={cn("py-4 px-6 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Model</th>
+                      <th className={cn("py-4 px-6 text-left text-[10px] font-black uppercase tracking-widest", sub)}>AI Calls</th>
+                      <th className={cn("py-4 px-6 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Status</th>
+                      <th className={cn("py-4 px-6 text-right text-[10px] font-black uppercase tracking-widest", sub)}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agents.map((agent: any) => (
+                      <tr key={agent.id} className={cn("border-b last:border-0 transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/60")}>
+                        <td className="py-3 px-6">
+                          <p className={cn("text-[12px] font-black", text)}>{agent.name}</p>
+                          <p className={cn("text-[10px] font-medium opacity-60 mt-0.5 flex items-center gap-1", sub)}>
+                            <Info size={9} /> {agent.reference_id}
+                          </p>
+                        </td>
+                        <td className={cn("py-3 px-6 text-[12px] font-bold", text)}>
+                          <Badge variant="outline" className="h-5 px-2 rounded-md border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">
+                            {agent.model}
+                          </Badge>
+                        </td>
+                        <td className={cn("py-3 px-6 text-[12px] font-bold", text)}>{agent.total_quries?.toLocaleString() ?? "0"}</td>
+                        <td className="py-3 px-6">
+                          <Switch
+                            checked={agent.status === "ACTIVE"}
+                            onCheckedChange={() => handleStatusToggle(agent.id, agent.status)}
+                            className="data-[state=checked]:bg-primary"
                           />
-                          <p className="text-xs text-muted-foreground text-right">{formData.name.length}/250</p>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Instructions</label>
-                          <Textarea
-                            rows={12}
-                            value={formData.instructions}
-                            onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                            placeholder="You are a helpful assistant..."
-                            className="resize-none"
-                          />
-                          <p className="text-xs text-muted-foreground text-right">0/100000</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-8">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Select Model</label>
-                          <Select
-                            value={formData.model}
-                            onValueChange={(val) => setFormData({ ...formData, model: val })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Model" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {gptModels.map(model => (
-                                <SelectItem key={model.value} value={model.value}>{model.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Model Strategy</label>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div
-                              className={`border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-all ${formData.prompt_strategy === 'fixed' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : 'bg-transparent'}`}
-                              onClick={() => setFormData({ ...formData, prompt_strategy: 'fixed' })}
+                        </td>
+                        <td className="py-3 px-6 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => handleEdit(agent)}
+                              className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-primary/10 hover:text-primary text-slate-400" : "hover:bg-primary/10 hover:text-primary text-slate-500")}
                             >
-                              <div className="mb-2">
-                                <RotateCcw className={`h-6 w-6 ${formData.prompt_strategy === 'fixed' ? 'text-blue-600' : 'text-slate-400'}`} />
-                              </div>
-                              <p className="font-semibold text-sm">Fixed</p>
-                              <p className="text-xs text-muted-foreground mt-1">Uses a static predefined prompt.</p>
-                            </div>
-                            <div
-                              className={`border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-all ${formData.prompt_strategy === 'dynamic' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : 'bg-transparent'}`}
-                              onClick={() => setFormData({ ...formData, prompt_strategy: 'dynamic' })}
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              onClick={() => toast({ title: "Logs", description: `Opening logs for ${agent.name}` })}
+                              className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-primary/10 hover:text-primary text-slate-400" : "hover:bg-primary/10 hover:text-primary text-slate-500")}
                             >
-                              <div className="mb-2">
-                                <Sparkles className={`h-6 w-6 ${formData.prompt_strategy === 'dynamic' ? 'text-blue-600' : 'text-slate-400'}`} />
-                              </div>
-                              <p className="font-semibold text-sm">Dynamic</p>
-                              <p className="text-xs text-muted-foreground mt-1">Allows variable injection.</p>
-                            </div>
+                              <FileText size={12} />
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500")}>
+                                  <MoreVertical size={12} />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[160px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
+                                <DropdownMenuItem
+                                  onClick={() => toast({ title: "AI Feeder", description: `Opening AI Feeder for ${agent.name}` })}
+                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                >
+                                  <Plug size={12} /> AI Feeder
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => { setAgentToDelete(agent); setShowDeleteConfirm(true); }}
+                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                >
+                                  <Trash2 size={12} /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  {/* Configurations Tab */}
-                  <TabsContent value="configurations" className="mt-0 outline-none">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                      <div className="space-y-8">
-                        <div className="space-y-4">
-                          <div className="flex justify-between">
-                            <label className="text-sm font-medium flex items-center gap-2">
-                              Temperature (Creativity)
-                              <Info className="h-4 w-4 text-muted-foreground" />
-                            </label>
-                            <span className="text-sm font-bold text-blue-600">{formData.creativity}</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0" max="2" step="0.01"
-                            value={formData.creativity}
-                            onChange={(e) => setFormData({ ...formData, creativity: parseFloat(e.target.value) })}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>More Precise</span>
-                            <span>More Creative</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex justify-between">
-                            <label className="text-sm font-medium flex items-center gap-2">
-                              Top P (Diversity)
-                              <Info className="h-4 w-4 text-muted-foreground" />
-                            </label>
-                            <span className="text-sm font-bold text-blue-600">{formData.diversity}</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0" max="1" step="0.01"
-                            value={formData.diversity}
-                            onChange={(e) => setFormData({ ...formData, diversity: parseFloat(e.target.value) })}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Less Diversity</span>
-                            <span>More Diversity</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Response Tokens</label>
-                          <Input
-                            type="number"
-                            value={formData.response_tokens}
-                            onChange={(e) => setFormData({ ...formData, response_tokens: parseInt(e.target.value) })}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Conversation History Limit</label>
-                          <div className="flex gap-2">
-                            {[0, 5, 10, 20].map((val) => (
-                              <button
-                                key={val}
-                                type="button"
-                                onClick={() => setFormData({ ...formData, history_limit: val })}
-                                className={`flex-1 py-2 px-3 border rounded-md text-sm transition-colors ${formData.history_limit === val ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'}`}
-                              >
-                                {val === 0 ? 'Auto' : val}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  {/* Knowledge Tab */}
-                  <TabsContent value="knowledge" className="mt-0 outline-none">
-                    <div className="space-y-6">
-                      <h4 className="font-medium text-sm">Add Assistant Files</h4>
-
-                      <div className="flex gap-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setFormData({ ...formData, source_type: 'pdf' })}
-                          className={`flex-1 ${formData.source_type === 'pdf' ? 'btn-outline-primary font-bold shadow-sm' : 'text-muted-foreground'}`}
-                        >
-                          PDF Files
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setFormData({ ...formData, source_type: 'website' })}
-                          className={`flex-1 ${formData.source_type === 'website' ? 'btn-outline-primary font-bold shadow-sm' : 'text-muted-foreground'}`}
-                        >
-                          Website / URL
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setFormData({ ...formData, source_type: 'text' })}
-                          className={`flex-1 ${formData.source_type === 'text' ? 'btn-outline-primary font-bold shadow-sm' : 'text-muted-foreground'}`}
-                        >
-                          Text Input
-                        </Button>
-                      </div>
-
-                      <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-lg border border-dashed text-center">
-                        {formData.source_type === 'pdf' && (
-                          <div className="space-y-4">
-                            <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600">
-                              <FileText className="h-6 w-6" />
-                            </div>
-                            <h3 className="font-medium">Upload PDF Files</h3>
-                            <p className="text-sm text-muted-foreground">Upload your PDF knowledge base files here.</p>
-                            <Button 
-                              type="button"
-                              variant="outline" 
-                              className="mt-2 btn-outline-primary h-9 px-6 font-medium"
-                              onClick={() => toast({ title: "Upload PDF", description: "File selection dialog would open here." })}
-                            >
-                              Select Files
-                            </Button>
-                          </div>
-                        )}
-
-                        {formData.source_type === 'website' && (
-                          <div className="space-y-4 max-w-lg mx-auto">
-                            <div className="flex gap-2">
-                              <span className="flex items-center px-3 border rounded-l-md bg-slate-100 dark:bg-slate-800 text-muted-foreground">https://</span>
-                              <Input placeholder="example.com" className="rounded-l-none" />
-                              <Button 
-                                type="button"
-                                variant="outline"
-                                className="btn-outline-primary"
-                                onClick={() => toast({ title: "Fetching Pages", description: "Crawling website for knowledge base content..." })}
-                              >
-                                Fetch Pages
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        {formData.source_type === 'text' && (
-                          <div className="space-y-4">
-                            <Textarea rows={8} placeholder="Enter text content..." />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  {/* Functions Tab (Placeholder) */}
-                  <TabsContent value="functions" className="mt-0 outline-none">
-                    <div className="flex flex-col items-center justify-center p-12 text-center space-y-4">
-                      <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-2">
-                        <Zap className="h-8 w-8 text-purple-600" />
-                      </div>
-                      <h3 className="text-lg font-medium">Function Calling</h3>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        Define custom functions that the AI can call to interact with your business logic or external APIs.
-                      </p>
-                      <Button 
-                        type="button"
-                        variant="outline"
-                        className="btn-outline-primary"
-                        onClick={() => toast({ title: "Functions", description: "Custom function creator coming soon." })}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Function
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </div>
-              </Tabs>
-
-             {/* Footer Actions */}
-             <div className="p-4 border-t bg-slate-50 dark:bg-slate-800 flex justify-end gap-3">
-               <Button type="button" variant="ghost" onClick={() => setViewMode("list")}>
-                 Cancel
-               </Button>
-               <Button type="submit" variant="outline" className="btn-outline-primary h-9 px-6 font-medium">
-                 Publish
-               </Button>
-             </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </form>
-      )}
+        </CardContent>
+      </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Delete Assistant
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Are you sure you want to delete the assistant <span className="font-bold text-slate-900 dark:text-white">"{agentToDelete?.name}"</span>? 
-              This action cannot be undone and all active conversations with this assistant will stop.
-            </p>
+      {/* Delete Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Assistant?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">"{agentToDelete?.name}"</span> will be permanently removed and all active conversations with this assistant will stop.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteAgent}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-red-600 hover:bg-red-700"
-              onClick={confirmDeleteAgent}
-            >
-              Yes, delete assistant
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+/* ── Helpers ── */
+function FieldLabel({ dark, children }: { dark: boolean; children: React.ReactNode }) {
+  const sub = dark ? "text-slate-400" : "text-slate-500";
+  return (
+    <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>{children}</label>
+  );
+}
+
+function SliderRow({
+  dark,
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  leftLabel,
+  rightLabel,
+}: {
+  dark: boolean;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
+  leftLabel: string;
+  rightLabel: string;
+}) {
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub  = dark ? "text-slate-500" : "text-slate-400";
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <FieldLabel dark={dark}>{label}</FieldLabel>
+        <span className="text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">{value}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full accent-primary"
+      />
+      <div className="flex justify-between">
+        <span className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", sub)}>{leftLabel}</span>
+        <span className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", sub)}>{rightLabel}</span>
+      </div>
     </div>
   );
 }

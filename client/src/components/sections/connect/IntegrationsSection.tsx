@@ -1,42 +1,66 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { 
+import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  Plug, 
-  ExternalLink, 
-  ArrowLeftRight, 
-  Flame,
-  Loader2
+import {
+  Plug,
+  ExternalLink,
+  Loader2,
+  ShieldCheck,
+  Plus,
+  ArrowRight,
+  Check,
+  Info,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function IntegrationsSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
+
+  // ── Design tokens ─────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 pl-11 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
 
   const { data: integrationsData, isLoading } = useQuery({
     queryKey: ["/api/integrations"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/integrations");
       return res.json();
-    }
+    },
   });
 
   const createMutation = useMutation({
@@ -46,151 +70,111 @@ export default function IntegrationsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations"] });
-      toast({ title: "Connected", description: "Integration connected successfully." });
+      toast({ title: "Connected", description: "Integration connected successfully!" });
       setConnectingId(null);
       setFormData({});
     },
-    onError: (err: any) => {
+    onError: () => {
       toast({ title: "Error", description: "Failed to connect. Please check your credentials.", variant: "destructive" });
-    }
+    },
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string | number, status: string }) => {
+    mutationFn: async ({ id, status }: { id: string | number; status: string }) => {
       await apiRequest("PATCH", `/api/integrations/${id}`, { action: status === "ACTIVE" ? "activate" : "pause" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations"] });
-      toast({ title: "Updated", description: "Integration status changed successfully." });
+      toast({ title: "Updated", description: "Integration status updated." });
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update integration.", variant: "destructive" });
-    }
+    },
   });
 
   const staticIntegrations = [
     {
       id: "MICROSOFT",
-      name: "Microsoft Text-To-Speech",
-      description: "Seamlessly link your Azure Text-To-Speech application to create lifelike voices for pre-recorded calls, audio messages across channels, and pre-recorded voice files or canned responses.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/tts.png" alt="Microsoft TTS" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: true,
-      actionLabel: "Connect",
+      name: "Microsoft TTS",
+      category: "Voice & Speech",
+      description: "Harness Azure's lifelike AI voices for high-fidelity audio messages, canned responses, and automated voice interactions.",
+      icon: "/images/integrations/tts.png",
+      actionLabel: "Connect Service",
       fields: [
-        { key: "key", label: "Azure API Key" },
-        { key: "region", label: "Region (e.g. eastus)" }
-      ]
+        { key: "key", label: "Azure API Key", placeholder: "Enter your subscription key" },
+        { key: "region", label: "Region", placeholder: "e.g. eastus" },
+      ],
     },
     {
       id: "CLOUDINARY",
       name: "Cloudinary",
-      description: "Integrate Cloudinary for streamlined image uploads to Cloudinary folders. Organize and optimize your visual marketing with ease, delivering captivating content to your audience and enhancing engagement.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/cloudinary.svg" alt="Cloudinary" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: true,
-      actionLabel: "Connect",
+      category: "Media Delivery",
+      description: "The professional standard for image and video management. Optimize, transform, and deliver assets at lightning speed.",
+      icon: "/images/integrations/cloudinary.svg",
+      actionLabel: "Link Account",
       fields: [
-        { key: "cloud_name", label: "Cloud Name" },
-        { key: "api_key", label: "API Key" },
-        { key: "api_secret", label: "API Secret" }
-      ]
+        { key: "cloud_name", label: "Cloud Name", placeholder: "Your unique cloud identifier" },
+        { key: "api_key", label: "API Key", placeholder: "Access API Key" },
+        { key: "api_secret", label: "API Secret", placeholder: "Secure Secret" },
+      ],
     },
     {
       id: "ACTIVECAMPAIGN",
       name: "ActiveCampaign",
-      description: "Integrate ActiveCampaign to add contacts to ActiveCampaign.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/activecampaign.svg" alt="ActiveCampaign" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: true,
-      actionLabel: "Connect",
+      category: "Marketing Automation",
+      description: "Synchronize your customer intelligence. Automatically pipeline contacts into advanced marketing automation flows.",
+      icon: "/images/integrations/activecampaign.svg",
+      actionLabel: "Sync Gateway",
       fields: [
-        { key: "api_url", label: "API URL" },
-        { key: "api_key", label: "API Key" }
-      ]
+        { key: "api_url", label: "API URL", placeholder: "https://youraccount.api-us1.com" },
+        { key: "api_key", label: "API Key", placeholder: "Account API Key" },
+      ],
     },
     {
       id: "CHATGPT",
       name: "OpenAI",
-      description: "Enter your OpenAI API to provide more tailored and accurate responses about your business, product and services. Automatically convert speech to text using Whisper Voice to Text technology.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/chat_gpt.svg" alt="OpenAI" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: true,
-      actionLabel: "Connect",
-      fields: [
-        { key: "api_key", label: "OpenAI API Key" }
-      ]
+      category: "Artificial Intelligence",
+      description: "Deploy world-class LLMs to analyze context and generate human-like responses. Power Whisper for precise voice-to-text.",
+      icon: "/images/integrations/chat_gpt.svg",
+      actionLabel: "Authorize LLM",
+      fields: [{ key: "api_key", label: "OpenAI Key", placeholder: "sk-..." }],
     },
     {
       id: "MAKE",
       name: "Make.com",
-      description: "Integrate with over 1600 external apps and effortlessly create and automate tasks using one robust visual platform, Make.com.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/make.png" alt="Make.com" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: false,
-      actionLabel: "More info",
-      externalUrl: "https://make.com"
+      category: "Workflow Automation",
+      description: "Connect to 1,600+ third-party applications. Build complex visual workflows and automate tasks without a single line of code.",
+      icon: "/images/integrations/make.png",
+      actionLabel: "View Blueprint",
+      externalUrl: "https://make.com",
     },
     {
       id: "ELEVENLABS",
       name: "ElevenLabs",
-      description: "Integrate to quickly generate AI voices in multiple languages.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/elevenlabs.png" alt="ElevenLabs" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: true,
-      actionLabel: "Connect",
-      fields: [
-        { key: "api_key", label: "ElevenLabs API Key" }
-      ]
+      category: "Neural Synthesis",
+      description: "The most realistic AI voice generator. Synthesize top-tier audio in 29+ languages with emotional range and clarity.",
+      icon: "/images/integrations/elevenlabs.png",
+      actionLabel: "Connect Engine",
+      fields: [{ key: "api_key", label: "ElevenLabs API Key", placeholder: "Enter your API Key" }],
     },
     {
       id: "CAL",
       name: "Cal.com",
-      description: "Integrate your Cal.com account and manage your calendar from the Smart flows.",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/cal_dot_com.png" alt="Cal.com" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: false,
-      actionLabel: "Manage Account",
-      fields: [
-        { key: "api_key", label: "Cal.com API Key" }
-      ]
+      category: "Scheduling",
+      description: "Open-source scheduling infrastructure. Manage availability and booking sessions directly within your smart automation flows.",
+      icon: "/images/integrations/cal_dot_com.png",
+      actionLabel: "Manage Sync",
+      fields: [{ key: "api_key", label: "Cal.com API Key", placeholder: "Account API Key" }],
     },
     {
       id: "BASEROW",
       name: "Baserow.io",
-      description: "Integrate external database for data manipulation",
-      icon: (
-        <div className="border rounded-lg p-2 bg-white dark:bg-slate-950 inline-block">
-          <img src="/images/integrations/baserow.png" alt="Baserow" className="h-12 w-auto object-contain" />
-        </div>
-      ),
-      hasToggle: false,
-      actionLabel: "Manage",
-      fields: [
-        { key: "token", label: "Baserow API Token" }
-      ]
-    }
+      category: "Data Management",
+      description: "No-code relational database. Manipulate complex datasets and synchronize external tables with your workspace records.",
+      icon: "/images/integrations/baserow.png",
+      actionLabel: "Manage Tables",
+      fields: [{ key: "token", label: "API Token", placeholder: "Enter Baserow Token" }],
+    },
   ];
 
   const handleConnect = (item: any) => {
@@ -198,13 +182,11 @@ export default function IntegrationsSection() {
       window.open(item.externalUrl, "_blank");
       return;
     }
-    
     const existing = integrationsData?.integrations?.find((i: any) => i.type === item.id);
     if (existing) {
-      toast({ title: "Already Connected", description: `${item.name} is already connected.` });
+      toast({ title: "Active Session", description: `${item.name} is already operational.` });
       return;
     }
-
     setConnectingId(item.id);
   };
 
@@ -218,7 +200,7 @@ export default function IntegrationsSection() {
     if (integration) {
       toggleMutation.mutate({ id: integration.id, status: checked ? "ACTIVE" : "PAUSED" });
     } else {
-      toast({ title: "Info", description: "Please connect this integration first.", variant: "default" });
+      toast({ title: "Action Required", description: "Initial authentication required." });
     }
   };
 
@@ -226,102 +208,190 @@ export default function IntegrationsSection() {
     return integrationsData?.integrations?.some((i: any) => i.type === type && i.status === "ACTIVE");
   };
 
-  const currentConnecting = staticIntegrations.find(i => i.id === connectingId);
+  const currentConnecting = staticIntegrations.find((i) => i.id === connectingId);
+  const connectedCount = integrationsData?.integrations?.length || 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex flex-row items-center gap-4 pb-6">
-        <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
-          <Plug className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Integrations</h2>
-          <p className="text-sm text-muted-foreground">Unlock the full potential of your account by seamlessly integrating with external application.</p>
-        </div>
-      </div>
-      
-      <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-6">
-        {staticIntegrations.map((item) => {
-          const connected = isConnected(item.id);
-          return (
-            <Card key={item.id} className="flex flex-col shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="flex-row items-start justify-between space-y-0 pb-2">
-                <div className="">
-                  {item.icon}
-                </div>
-                <ExternalLink className="w-5 h-5 text-muted-foreground hover:text-primary cursor-pointer" onClick={() => handleConnect(item)} />
-              </CardHeader>
-              <CardContent className="flex-1 space-y-3 pt-4">
-                <CardTitle className="text-base font-semibold">{item.name}</CardTitle>
-                <CardDescription className="text-sm line-clamp-4 leading-relaxed">
-                  {item.description}
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="border-t pt-4 flex items-center justify-between">
-                <div>
-                   <Switch 
-                    checked={connected} 
-                    onCheckedChange={(c) => toggleIntegration(item.id, c)} 
-                    disabled={!integrationsData?.integrations?.some((i: any) => i.type === item.id)}
-                  />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className={`gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground group ${connected ? "bg-primary/5 cursor-default hover:bg-primary/5" : ""}`}
-                  onClick={() => handleConnect(item)}
-                >
-                  {connected ? (
-                    <><Plug className="w-4 h-4" /> Connected</>
-                  ) : (
-                    <><ArrowLeftRight className="w-4 h-4 transition-transform group-hover:scale-110" /> {item.actionLabel}</>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Connection Modal */}
-      <Dialog open={!!connectingId} onOpenChange={(open) => !open && setConnectingId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Connect {currentConnecting?.name}</DialogTitle>
-            <DialogDescription>
-              Please enter your credentials to link your {currentConnecting?.name} account.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {currentConnecting?.fields?.map((field: any) => (
-              <div key={field.key} className="space-y-2">
-                <Label>{field.label}</Label>
-                <Input 
-                  value={formData[field.key] || ""} 
-                  onChange={(e) => setFormData({...formData, [field.key]: e.target.value})}
-                  placeholder={`Enter ${field.label}...`}
-                />
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Plug className="w-5 h-5 text-primary" />
               </div>
-            ))}
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Integrations</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  Connect external applications to unlock your account's full potential.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant="outline" className="h-7 px-3 rounded-md border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">
+                {staticIntegrations.length} Available
+              </Badge>
+              <Badge variant="outline" className="h-7 px-3 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                <Check size={10} className="mr-1" /> {connectedCount} Connected
+              </Badge>
+            </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConnectingId(null)}>Cancel</Button>
-            <Button 
-              className="btn-outline-primary"
-              variant="outline"
-              onClick={submitConnection}
-              disabled={createMutation.isPending}
-            >
-              {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Connect Account
-            </Button>
-          </DialogFooter>
+          {/* Integrations Grid */}
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {staticIntegrations.map((item) => {
+                const connected = isConnected(item.id);
+                const canToggle = integrationsData?.integrations?.some((i: any) => i.type === item.id);
+
+                return (
+                  <div
+                    key={item.id}
+                    className={cn(
+                      "p-6 rounded-[1.5rem] border transition-all hover:shadow-md flex flex-col",
+                      connected
+                        ? "border-primary/30 bg-primary/5"
+                        : cn(softBg, softBorder, "hover:border-primary/40")
+                    )}
+                  >
+                    {/* Top Row: Icon + Category + External */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border shrink-0", dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200")}>
+                        <img src={item.icon} alt={item.name} className="h-7 w-7 object-contain" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn("h-5 px-2 rounded-md text-[9px] font-black uppercase tracking-widest", dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-100 text-slate-500")}>
+                          {item.category}
+                        </Badge>
+                        <button
+                          onClick={() => handleConnect(item)}
+                          className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                            dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary"
+                          )}
+                        >
+                          <ExternalLink size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Title + Description */}
+                    <div className="space-y-2 mb-5 flex-1">
+                      <h3 className={cn("text-[14px] font-black tracking-tight flex items-center gap-2", text)}>
+                        {item.name}
+                        {connected && (
+                          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                          </span>
+                        )}
+                      </h3>
+                      <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed line-clamp-3", sub)}>
+                        {item.description}
+                      </p>
+                    </div>
+
+                    {/* Footer: Switch + Action */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={connected}
+                          onCheckedChange={(c) => toggleIntegration(item.id, c)}
+                          disabled={!canToggle}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                        <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>
+                          {connected ? "On" : "Off"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleConnect(item)}
+                        className={cn(
+                          "h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                          connected
+                            ? "border-primary bg-primary text-white hover:bg-primary/90"
+                            : "border-primary text-primary hover:bg-primary hover:text-white"
+                        )}
+                      >
+                        {connected ? "Manage" : item.actionLabel}
+                        <ArrowRight size={12} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Connection Modal ── */}
+      <Dialog open={!!connectingId} onOpenChange={(open) => !open && setConnectingId(null)}>
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
+          <div className="p-6 space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <ShieldCheck size={18} />
+                </div>
+                <div className="text-left">
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                    Connect {currentConnecting?.name}
+                  </DialogTitle>
+                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    Securely link your platform credentials.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {currentConnecting?.fields?.map((field: any) => (
+                <div key={field.key} className="space-y-2">
+                  <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>
+                    {field.label}
+                  </label>
+                  <div className="relative">
+                    <div className={cn("absolute left-4 top-1/2 -translate-y-1/2", sub)}>
+                      <Info size={14} />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData[field.key] || ""}
+                      onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                      placeholder={field.placeholder || `Enter ${field.label}...`}
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
+              <button onClick={() => setConnectingId(null)} className={outlineBtn}>
+                Discard
+              </button>
+              <button
+                onClick={submitConnection}
+                disabled={createMutation.isPending}
+                className={primaryBtn}
+              >
+                {createMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                Authorize
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

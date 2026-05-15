@@ -1,50 +1,25 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
-  Cpu, 
-  Plus, 
-  Trash2, 
-  QrCode, 
-  Link as LinkIcon, 
-  Pencil, 
-  ArrowLeft,
-  Info,
-  X,
-  Image as ImageIcon,
-  Loader2
+import {
+  Cpu,
+  Plus,
+  Trash2,
+  QrCode,
+  Link as LinkIcon,
+  Edit2,
+  ChevronLeft,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
-import { format } from "date-fns";
 
 interface AIProduct {
   id?: string | number;
@@ -63,12 +38,49 @@ interface AITheme {
   type?: string;
 }
 
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
+
 export default function AIProductsSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
   const [viewMode, setViewMode] = useState<"list" | "manage_theme" | "edit_product">("list");
   const [selectedTheme, setSelectedTheme] = useState<AITheme | null>(null);
   const [currentProduct, setCurrentProduct] = useState<AIProduct | null>(null);
+  const [deleteTheme, setDeleteTheme] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<any>(null);
+
+  // ── Design tokens ─────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
+
+  const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
 
   // Queries
   const { data: themes, isLoading: themesLoading } = useQuery({
@@ -76,7 +88,7 @@ export default function AIProductsSection() {
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/ai/themes");
       return res.json();
-    }
+    },
   });
 
   const { data: products, isLoading: productsLoading } = useQuery({
@@ -87,7 +99,7 @@ export default function AIProductsSection() {
       const res = await apiRequest("GET", `/api/ai/themes/${themeId}/products`);
       return res.json();
     },
-    enabled: !!selectedTheme && viewMode !== "list"
+    enabled: !!selectedTheme && viewMode !== "list",
   });
 
   // Mutations
@@ -99,7 +111,7 @@ export default function AIProductsSection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/themes"] });
       toast({ title: "Created", description: "AI Theme created successfully." });
-    }
+    },
   });
 
   const deleteThemeMutation = useMutation({
@@ -111,7 +123,8 @@ export default function AIProductsSection() {
       toast({ title: "Deleted", description: "Theme and associated products removed." });
       setViewMode("list");
       setSelectedTheme(null);
-    }
+      setDeleteTheme(false);
+    },
   });
 
   const saveProductMutation = useMutation({
@@ -126,7 +139,7 @@ export default function AIProductsSection() {
       }
       toast({ title: "Success", description: "Product saved successfully." });
       setViewMode("manage_theme");
-    }
+    },
   });
 
   const deleteProductMutation = useMutation({
@@ -136,7 +149,8 @@ export default function AIProductsSection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/themes", selectedTheme?.id, "products"] });
       toast({ title: "Deleted", description: "Product removed." });
-    }
+      setProductToDelete(null);
+    },
   });
 
   const handleManageTheme = (theme: any) => {
@@ -159,283 +173,339 @@ export default function AIProductsSection() {
     saveProductMutation.mutate(currentProduct);
   };
 
-  const ThemeIcon = ({ type, className = "h-12 w-12" }: { type: string | undefined, className?: string }) => {
+  const ThemeIcon = ({ type, className = "w-7 h-7" }: { type?: string; className?: string }) => {
     const [error, setError] = useState(false);
-    if (!type || error) return <Cpu className={`${className} text-blue-500`} />;
+    if (!type || error) return <Cpu className={cn(className, "text-primary")} />;
     return (
       <img
         src={`/images/integrations/${type}.png`}
-        className={`${className} object-contain`}
+        className={cn(className, "object-contain")}
         alt={type}
         onError={() => setError(true)}
       />
     );
   };
 
-  const renderProductList = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-row items-center justify-between pb-6">
-        <div className="flex items-center gap-4">
-           <div className="p-2 border rounded-lg bg-white dark:bg-slate-800">
-             <ThemeIcon type={selectedTheme?.type} className="h-8 w-8" />
-           </div>
-           <div>
-             <h3 className="text-lg font-medium">{selectedTheme?.name}</h3>
-             <p className="text-sm text-muted-foreground">{selectedTheme?.subtitle}</p>
-           </div>
-        </div>
-        <div className="flex gap-3">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" className="text-red-600 hover:bg-red-50 hover:text-red-700">Delete</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>This will delete the theme and all associated products.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => selectedTheme && deleteThemeMutation.mutate(selectedTheme.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button variant="outline" onClick={handleCreateProduct} className="btn-outline-primary">Create</Button>
-        </div>
-      </div>
-
-      <div className="border rounded-md bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
-        {productsLoading ? (
-            <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-        ) : products && products.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product: any) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium flex items-center gap-2">
-                     <span className="text-muted-foreground"><Cpu className="w-4 h-4" /></span>
-                     {product.name}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => { /* Show QR logic */ }}>
-                              <QrCode className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>QR Code</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                       <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => { 
-                                navigator.clipboard.writeText(product.trigger_url || "");
-                                toast({ title: "Copied", description: "Trigger URL copied to clipboard." });
-                             }}>
-                              <LinkIcon className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Copy Link</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                       <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 hover:text-red-600">
-                             <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Product?</AlertDialogTitle>
-                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteProductMutation.mutate(product.id)} className="bg-red-600">Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="p-12 text-center text-muted-foreground">
-             <h3 className="text-lg font-medium text-foreground">No Products Found</h3>
-             <p>Create a product to get started.</p>
-             <Button variant="outline" onClick={handleCreateProduct} className="mt-4 btn-outline-primary">Create</Button>
-          </div>
-        )}
-      </div>
-       <div className="mt-4">
-          <Button variant="outline" onClick={() => setViewMode("list")}>Back to Themes</Button>
-       </div>
-    </div>
-  );
-
-  const renderProductEditor = () => (
-    <div className="flex flex-col h-full max-w-3xl">
-       <div className="flex flex-row items-center justify-between pb-6">
-        <div className="flex items-center gap-4">
-           <div className="p-2 border rounded-lg bg-white dark:bg-slate-800">
-             <ThemeIcon type={selectedTheme?.type} className="h-8 w-8" />
-           </div>
-           <div>
-             <h3 className="text-lg font-medium">{currentProduct?.id ? "Edit Product" : "New Product"}</h3>
-             <p className="text-sm text-muted-foreground">{selectedTheme?.name}</p>
-           </div>
-        </div>
-        <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setViewMode("manage_theme")}>Back</Button>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-         <div className="grid w-full items-center gap-1.5">
-            <label className="text-sm font-medium leading-none">Name <span className="text-red-500">*</span></label>
-            <Input 
-              value={currentProduct?.name || ""} 
-              onChange={(e) => setCurrentProduct((prev: AIProduct | null) => prev ? ({...prev, name: e.target.value}) : null)}
-              placeholder="Product Name" 
-            />
-         </div>
-
-         <div className="grid w-full items-center gap-1.5">
-            <label className="text-sm font-medium leading-none flex items-center gap-2">
-              Trigger URL
-            </label>
-            <Input 
-              readOnly
-              value={currentProduct?.trigger_url || "Generated after save"} 
-              className="bg-muted font-mono text-sm"
-            />
-         </div>
-
-         <div className="grid w-full items-center gap-1.5">
-            <label className="text-sm font-medium leading-none flex items-center gap-2">
-              Payload
-            </label>
-            <Input 
-               value={currentProduct?.payload || ""} 
-               onChange={(e) => setCurrentProduct((prev: AIProduct | null) => prev ? ({...prev, payload: e.target.value}) : null)}
-               placeholder="optional JSON payload"
-            />
-         </div>
-
-         <div className="flex justify-end gap-3 pt-6">
-            <Button variant="secondary" onClick={() => setViewMode("manage_theme")}>Cancel</Button>
-            <Button 
-                onClick={handleSaveProduct} 
-                disabled={!currentProduct?.name || saveProductMutation.isPending} 
-                variant="outline" 
-                className="btn-outline-primary h-9 px-6 font-medium"
-            >
-               {saveProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-               {currentProduct?.id ? "Update" : "Create"}
-            </Button>
-         </div>
-      </div>
-    </div>
-  );
+  // Header content per view
+  const headerTitle =
+    viewMode === "edit_product"
+      ? currentProduct?.id
+        ? "Edit Product"
+        : "New Product"
+      : viewMode === "manage_theme"
+        ? selectedTheme?.name || "Manage Theme"
+        : "AI Products";
+  const headerSub =
+    viewMode === "edit_product"
+      ? selectedTheme?.name || "Configure your product"
+      : viewMode === "manage_theme"
+        ? selectedTheme?.subtitle || "Manage products in this theme"
+        : "Organize and manage your AI Products";
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      {viewMode === "list" && (
-        <>
-          <div className="flex flex-row items-center justify-between pb-6">
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
-               <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600">
-                 <Cpu className="w-8 h-8" />
-               </div>
-               <div className="space-y-1">
-                 <h3 className="text-lg font-medium">AI Products</h3>
-                 <p className="text-sm text-muted-foreground">Organize and manage your AI Products</p>
-               </div>
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Cpu className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>{headerTitle}</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>{headerSub}</p>
+              </div>
             </div>
-            <Button variant="outline" className="btn-outline-primary" onClick={() => {
-                // In a real app, open a "Create Theme" dialog
-                createThemeMutation.mutate({ name: "New Inventory", subtitle: "Managed items", type: "baserow" });
-            }}>
-                <Plus className="w-4 h-4 mr-2" /> Theme
-            </Button>
-          </div>
-          
-          <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
 
-          {themesLoading ? (
-            <div className="flex-1 flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-primary" /></div>
-          ) : themes && themes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {themes.map((theme: any) => (
-                <div
-                  key={theme.id}
-                  className="border rounded-lg shadow-sm bg-white dark:bg-slate-900 flex flex-col hover:shadow-md transition-all overflow-hidden"
+            <div className="flex items-center gap-2 shrink-0">
+              {viewMode === "list" && (
+                <button
+                  onClick={() => createThemeMutation.mutate({ name: "New Inventory", subtitle: "Managed items", type: "baserow" })}
+                  className={primaryOutlineBtn}
                 >
-                  <div className="p-6 flex-1">
-                    <div className="flex items-center mb-4">
-                      <div className="border rounded-lg p-2 bg-slate-50 dark:bg-slate-800">
+                  <Plus size={12} /> Add Theme
+                </button>
+              )}
+              {viewMode === "manage_theme" && (
+                <>
+                  <button onClick={handleCreateProduct} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Add Product
+                  </button>
+                  <button onClick={() => setDeleteTheme(true)} className={cn(outlineBtn, "hover:!border-rose-500/40 hover:!text-rose-500")}>
+                    <Trash2 size={12} /> Delete
+                  </button>
+                  <button onClick={() => { setViewMode("list"); setSelectedTheme(null); }} className={outlineBtn}>
+                    <ChevronLeft size={12} /> Back
+                  </button>
+                </>
+              )}
+              {viewMode === "edit_product" && (
+                <button onClick={() => setViewMode("manage_theme")} className={outlineBtn}>
+                  <ChevronLeft size={12} /> Back
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ── LIST VIEW (Themes grid) ── */}
+          {viewMode === "list" && (
+            <div className="p-8">
+              {themesLoading ? (
+                <div className="flex items-center justify-center h-48">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : themes && themes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {themes.map((theme: any) => (
+                    <div
+                      key={theme.id}
+                      className={cn(
+                        "p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-primary/40 flex flex-col",
+                        softBg,
+                        softBorder
+                      )}
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                         <ThemeIcon type={theme.type} />
                       </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1 text-foreground">
-                        {theme.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <h3 className={cn("text-[14px] font-black tracking-tight mb-1", text)}>{theme.name}</h3>
+                      <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1 line-clamp-2", sub)}>
                         {theme.subtitle}
                       </p>
+                      <button onClick={() => handleManageTheme(theme)} className={cn(primaryOutlineBtn, "self-end")}>
+                        Manage
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950/50 border-t flex justify-end">
-                    <Button variant="outline" onClick={() => handleManageTheme(theme)} className="btn-outline-primary">
-                      Manage
-                    </Button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg bg-slate-50/50 dark:bg-slate-900/50">
-               <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-4">
-                  <Cpu className="h-10 w-10 text-slate-400" />
-               </div>
-               <h3 className="text-lg font-semibold mb-2">No AI Products Found</h3>
-               <p className="text-muted-foreground max-w-sm mb-6">
-                 You haven't created any AI products yet. Create one to get started with automation.
-               </p>
+              ) : (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Cpu className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No AI Products found</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      You haven't created any AI products yet. Create one to get started with automation.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => createThemeMutation.mutate({ name: "New Inventory", subtitle: "Managed items", type: "baserow" })}
+                    className={primaryOutlineBtn}
+                  >
+                    <Plus size={12} /> Add Theme
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </>
-      )}
 
-      {viewMode === "manage_theme" && renderProductList()}
-      {viewMode === "edit_product" && renderProductEditor()}
-    </div>
+          {/* ── MANAGE THEME (Products table) ── */}
+          {viewMode === "manage_theme" && (
+            <div className="p-8">
+              {productsLoading ? (
+                <div className="flex items-center justify-center h-48">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : products && products.length > 0 ? (
+                <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                          <th className={cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Name</th>
+                          <th className={cn("px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest", sub)}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {products.map((product: any) => (
+                          <tr
+                            key={product.id}
+                            className={cn("border-b transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/80")}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <Cpu size={14} className="text-primary" />
+                                </div>
+                                <span className={cn("text-[13px] font-black", text)}>{product.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => toast({ title: "QR Code", description: "QR code for this product." })}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
+                                  title="QR Code"
+                                >
+                                  <QrCode size={13} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(product.trigger_url || "");
+                                    toast({ title: "Copied", description: "Trigger URL copied to clipboard." });
+                                  }}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-cyan-500/40 hover:text-cyan-500 text-slate-400" : "border-slate-200 hover:border-cyan-500/40 hover:text-cyan-500 text-slate-500")}
+                                  title="Copy Link"
+                                >
+                                  <LinkIcon size={13} />
+                                </button>
+                                <button
+                                  onClick={() => handleEditProduct(product)}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
+                                  title="Edit"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button
+                                  onClick={() => setProductToDelete(product)}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className={cn("px-6 py-3 border-t text-[10px] font-black uppercase tracking-widest", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                    Showing {products.length} of {products.length} products
+                  </div>
+                </div>
+              ) : (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Cpu className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No products found</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Create a product to get started.
+                    </p>
+                  </div>
+                  <button onClick={handleCreateProduct} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Create Now
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── EDIT PRODUCT ── */}
+          {viewMode === "edit_product" && (
+            <div className="p-8">
+              <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
+                <div className="max-w-2xl space-y-6">
+                  <div className="space-y-2">
+                    <label className={labelCls}>
+                      Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      value={currentProduct?.name || ""}
+                      onChange={(e) => setCurrentProduct((prev) => (prev ? { ...prev, name: e.target.value } : null))}
+                      placeholder="Product name"
+                      className={inputCls}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={labelCls}>Trigger URL</label>
+                    <input
+                      readOnly
+                      value={currentProduct?.trigger_url || "Generated after save"}
+                      className={cn(inputCls, "font-mono text-[12px] opacity-60")}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={labelCls}>Payload</label>
+                    <input
+                      value={currentProduct?.payload || ""}
+                      onChange={(e) => setCurrentProduct((prev) => (prev ? { ...prev, payload: e.target.value } : null))}
+                      placeholder="Optional JSON payload"
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+
+                <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
+                  <button onClick={() => setViewMode("manage_theme")} className={outlineBtn}>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveProduct}
+                    disabled={!currentProduct?.name || saveProductMutation.isPending}
+                    className={primaryBtn}
+                  >
+                    {saveProductMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                    {currentProduct?.id ? "Update" : "Create"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Delete Theme Dialog ── */}
+      <AlertDialog open={deleteTheme} onOpenChange={setDeleteTheme}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Theme?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{selectedTheme?.name || "This theme"}</span> and all associated products will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => selectedTheme && deleteThemeMutation.mutate(selectedTheme.id)}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Delete Product Dialog ── */}
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Product?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{productToDelete?.name || "This product"}</span> will be permanently removed. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteProductMutation.mutate(productToDelete.id)}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

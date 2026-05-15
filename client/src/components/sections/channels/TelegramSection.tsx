@@ -1,24 +1,19 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  RefreshCw, 
-  Trash2, 
-  MoreVertical, 
-  Plug, 
-  Eye, 
-  EyeOff, 
-  CornerUpLeft, 
-  Pen, 
-  X,
-  Check
-} from "lucide-react";
+import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ChevronLeft,
+  MoreVertical,
+  Plus,
+  ExternalLink,
+  RefreshCw,
+  Bot,
+  Trash2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Copy,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,51 +21,48 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock data
-const mockTelegramBots = [
-  {
-    id: 1,
-    name: "My Business Bot",
-    username: "my_business_bot",
-    token: "123456789:ABCdefGHIjklMNOpqrsTUVwxyz",
-    status: "ACTIVE",
-    allow_in_feeder: true,
-    auto_reply_automation_id: null,
-    avatar: null
-  },
-];
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function TelegramSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const { toast } = useToast();
   const [view, setView] = useState<"list" | "manage">("list");
   const queryClient = useQueryClient();
-  
-  const handleConnect = () => {
-    toast({
-      title: "Connecting...",
-      description: "Redirecting to Telegram connection flow.",
-    });
-  };
+
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
 
   const { data: channels, isLoading } = useQuery({
     queryKey: ["/api/integrations/channels"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/integrations/channels");
       return res.json();
-    }
+    },
   });
 
   const bots = channels?.telegram || [];
@@ -82,456 +74,248 @@ export default function TelegramSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({
-        title: "Deleted",
-        description: "Bot removed successfully.",
-      });
+      toast({ title: "Deleted", description: "Telegram bot disconnected." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete bot.", variant: "destructive" });
-    }
   });
+
   const [showToken, setShowToken] = useState<Record<number, boolean>>({});
-
-  // Dialog states
-  const [showDefaultReply, setShowDefaultReply] = useState(false);
-  const [selectedBot, setSelectedBot] = useState<typeof mockTelegramBots[0] | null>(null);
-  const [autoReplyInterval, setAutoReplyInterval] = useState("0");
-  const [editingBotId, setEditingBotId] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [botToDelete, setBotToDelete] = useState<typeof mockTelegramBots[0] | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    name: "",
-    username: "",
-    token: ""
-  });
+  const [botToDelete, setBotToDelete] = useState<any>(null);
 
-  const { toast } = useToast();
+  const handleConnect = () => {
+    toast({ title: "Connecting...", description: "Starting Telegram bot setup." });
+  };
 
   const toggleTokenVisibility = (id: number) => {
-    setShowToken(prev => ({ ...prev, [id]: !prev[id] }));
+    setShowToken((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleSaveDefaultReply = () => {
-    toast({
-      title: "Success",
-      description: "Default reply settings saved successfully.",
-    });
-    setShowDefaultReply(false);
+  const copyToken = (token: string) => {
+    navigator.clipboard.writeText(token);
+    toast({ title: "Copied", description: "Bot token copied to clipboard." });
   };
 
-  const toggleFeeder = (botId: number) => {
-    toast({
-      title: "Info",
-      description: "AI Feeder toggle will be implemented with real mutation soon.",
-    });
-  };
-
-  const handleEditBot = (bot: typeof mockTelegramBots[0]) => {
-    setEditingBotId(bot.id);
-    setEditFormData({
-      name: bot.name,
-      username: bot.username,
-      token: bot.token
-    });
-  };
-
-  const handleSaveBot = () => {
-    if (!editingBotId) return;
-    setEditingBotId(null);
-    toast({
-      title: "Success",
-      description: "Bot settings update will be implemented with real mutation soon.",
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingBotId(null);
-  };
-
-  const handleDeleteBot = (bot: typeof mockTelegramBots[0]) => {
-    setBotToDelete(bot);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDeleteBot = () => {
-    if (botToDelete) {
-      deleteMutation.mutate(botToDelete.id);
-      setShowDeleteConfirm(false);
-      setBotToDelete(null);
-    }
-  };
-
-  const handleAddNewBot = () => {
-    handleConnect();
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      {view === "list" && (
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Telegram</h2>
-              <img src="/images/automations/telegram.svg" alt="Telegram" className="h-5 w-5" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Connect your Telegram Bot to automate conversations.
-            </p>
-          </div>
-          <Separator className="bg-gray-200 dark:bg-slate-800" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm">Telegram</h3>
-                <img src="/images/automations/telegram.svg" alt="Telegram" className="h-5 w-5" />
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-sky-500/15" : "bg-sky-500/10")}>
+                <img src="/images/automations/telegram.svg" alt="Telegram" className="w-5 h-5" />
               </div>
-            </div>
-
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                The Telegram integration allows you to automate conversations on your Telegram Bot.
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                variant="outline"
-                className="btn-outline-primary"
-                onClick={() => setView("manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
-        </div>
-        </div>
-      )}
-
-      {view === "manage" && (
-        <div className="space-y-6">
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-            {/* Header */}
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-medium">Telegram</h3>
-                    <img src="/images/automations/telegram.svg" alt="Telegram" className="h-6 w-6" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Integrate your Telegram Bot to unlock 2-Way interactive dynamic conversations
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  className="btn-outline-primary"
-                  onClick={handleAddNewBot}
-                >
-                  + Add New
-                </Button>
-                <Button variant="outline" onClick={() => setView("list")}>
-                  Back
-                </Button>
-              </div>
-            </div>
-            <Separator className="bg-gray-200 dark:bg-slate-800" />
-
-            {/* Content */}
-            {!hasBots ? (
-              <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 py-24">
-                <div className="bg-gradient-to-tr from-blue-50 to-blue-100 dark:from-slate-800 dark:to-slate-700 p-4 rounded-full">
-                  <img src="/images/automations/telegram.svg" alt="Telegram" className="h-12 w-12" />
-                </div>
-                <h2 className="text-lg font-semibold">Telegram is not integrated yet</h2>
-                <p className="text-muted-foreground max-w-md text-sm">
-                  Integrate this communication channel to automate conversations.
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Telegram</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  {view === "list"
+                    ? "Connect your Telegram Bot to automate conversations."
+                    : "Integrate your Telegram Bot to unlock 2-Way interactive dynamic conversations"}
                 </p>
-                <div className="pt-2">
-                  <Button 
-                    className="btn-outline-primary min-w-[150px]"
-                    variant="outline"
-                    onClick={handleConnect}
-                  >
-                    Connect now
-                  </Button>
-                </div>
               </div>
-            ) : (
-              <div className="p-6 divide-y">
-                {bots.map((bot: any) => (
-                  <div key={bot.id} className="pb-6">
-                    <div className="flex items-start py-5">
-                      {/* Avatar */}
-                      <div className="mr-6 text-center">
-                        <div className="relative group cursor-pointer inline-block" onClick={() => toast({ title: "Avatar", description: "Avatar update feature coming soon." })}>
-                          <div className="p-4 bg-white dark:bg-slate-800 border rounded-full w-[100px] h-[100px] flex items-center justify-center">
-                            <img src="/images/automations/telegram.svg" className="w-10 h-10" alt="Bot Avatar" />
-                          </div>
-                          <div className="absolute inset-0 flex justify-center items-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                            <RefreshCw className="text-white h-5 w-5" />
-                          </div>
-                        </div>
-                      </div>
+            </div>
 
-                      {/* Details */}
-                      <div className="grow space-y-5">
-                        {/* Token Name Row */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <label className="text-sm font-medium">Token Name</label>
-                          <div className="col-span-2">
-                            <input
-                              type="text"
-                              className={`w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm ${editingBotId === bot.id ? 'border-blue-500 ring-1 ring-blue-500' : ''}`}
-                              value={editingBotId === bot.id ? editFormData.name : bot.name}
-                              disabled={editingBotId !== bot.id}
-                              onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
-                            />
-                          </div>
-                          <div>
-                            {editingBotId === bot.id ? (
-                              <div className="flex items-center gap-2">
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={handleSaveBot}>
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleCancelEdit}>
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <ul className="flex space-x-4 items-center">
-                                <li>
-                                  {bot.status === "ACTIVE" ? (
-                                    <Badge variant="outline" className="text-xs text-green-600 border-green-600">
-                                      {bot.status}
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="text-xs text-red-500 border-red-400">
-                                      {bot.status}
-                                    </Badge>
-                                  )}
-                                </li>
-                                <li>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
-                                    onClick={() => handleDeleteBot(bot)}
-                                    title="Delete bot"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                        <MoreVertical className="h-4 w-4" />
-                                      </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-56">
-                                      {bot.status === "ACTIVE" && (
-                                        <DropdownMenuItem onClick={() => { setSelectedBot(bot); setShowDefaultReply(true); }}>
-                                          <div className="flex items-center gap-3">
-                                            <CornerUpLeft className="h-4 w-4" />
-                                            <span>Auto Reply</span>
-                                          </div>
-                                        </DropdownMenuItem>
-                                      )}
-                                      <DropdownMenuItem onClick={() => handleEditBot(bot)}>
-                                        <div className="flex items-center gap-3">
-                                          <Pen className="h-4 w-4" />
-                                          <span>Edit</span>
-                                        </div>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleFeeder(bot.id); }}>
-                                        <div className="flex items-center justify-between w-full gap-3">
-                                          <div className="flex items-center gap-2">
-                                            <Plug className="h-4 w-4" />
-                                            <span>AI Feeder</span>
-                                          </div>
-                                          <Switch checked={bot.allow_in_feeder} />
-                                        </div>
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </li>
-                              </ul>
-                            )}
-                          </div>
-                        </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {view === "manage" && (
+                <>
+                  <button onClick={handleConnect} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Add New
+                  </button>
+                  <button onClick={() => setView("list")} className={outlineBtn}>
+                    <ChevronLeft size={12} /> Back
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
 
-                        {/* Telegram Code Row */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <label className="text-sm font-medium">Telegram Code</label>
-                          <div className="col-span-2">
-                            <input
-                              type="text"
-                              className={`w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm ${editingBotId === bot.id ? 'border-blue-500 ring-1 ring-blue-500' : ''}`}
-                              value={editingBotId === bot.id ? editFormData.username : `@${bot.username}`}
-                              readOnly={editingBotId !== bot.id}
-                              onChange={(e) => setEditFormData({...editFormData, username: e.target.value})}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Token Label Row */}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <label className="text-sm font-medium">Token Label</label>
-                          <div className="col-span-2 flex items-center gap-2">
-                            <input
-                              type={showToken[bot.id] ? "text" : "password"}
-                              className={`w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm ${editingBotId === bot.id ? 'border-blue-500 ring-1 ring-blue-500' : ''}`}
-                              value={editingBotId === bot.id ? editFormData.token : bot.token}
-                              disabled={editingBotId !== bot.id}
-                              onChange={(e) => setEditFormData({...editFormData, token: e.target.value})}
-                            />
-                          </div>
-                          <div>
-                            <button 
-                              className="text-blue-500 hover:text-blue-600"
-                              onClick={() => toggleTokenVisibility(bot.id)}
-                            >
-                              {showToken[bot.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Feature Buttons (Auto Reply) */}
-                        {bot.status === "ACTIVE" && (
-                          <div className="pt-2">
-                            <button 
-                              className="min-w-[15rem] border border-dashed px-3 py-5 rounded-md flex justify-center items-center hover:bg-slate-50 dark:hover:bg-slate-800 group"
-                              onClick={() => {
-                                setSelectedBot(bot);
-                                setShowDefaultReply(true);
-                              }}
-                            >
-                              <img src="/images/automations/telegram.svg" className="w-6 h-6 mr-3" alt="Telegram" />
-                              <div className="text-sm">Auto Reply</div>
-                            </button>
-                          </div>
-                        )}
-                      </div>
+          {/* ── LIST VIEW ── */}
+          {view === "list" && (
+            <div className="p-8">
+              <div className={cn("p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-sky-500/40 flex flex-col", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                      <img src="/images/automations/telegram.svg" alt="Telegram" className="w-5 h-5" />
                     </div>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Telegram</h3>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                  <a
+                    href="https://core.telegram.org/bots"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
 
-      {/* Default Reply Dialog */}
-      <Dialog open={showDefaultReply} onOpenChange={setShowDefaultReply}>
-        <DialogContent className="max-w-4xl p-0">
-          <div className="grid grid-cols-3">
-            <div className="col-span-1 bg-slate-50 dark:bg-slate-900 p-5 flex justify-center items-center">
-              <img src="/images/settings/telegram-chat.png" className="w-full h-auto" alt="Telegram" />
-            </div>
-            <div className="col-span-2 p-6">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-semibold">Send instant replies to incoming Messages</DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Default Reply gets triggered when your contact sends you a message and it doesn't match any Keywords.
+                <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
+                  The Telegram integration allows you to automate conversations on your Telegram Bot.
                 </p>
-              </DialogHeader>
 
-              <div className="mt-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Select a Smart Flow</Label>
-                    <Select>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select a Smart Flow" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">Welcome Message</SelectItem>
-                        <SelectItem value="2">Customer Support</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">trigger</Label>
-                    <Select value={autoReplyInterval} onValueChange={setAutoReplyInterval}>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">Once per conversation</SelectItem>
-                        <SelectItem value="24">Once every 24 hours</SelectItem>
-                        <SelectItem value="247">Always</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="text-sm">
-                  {autoReplyInterval === "0" && (
-                    <p>The <strong>Once per conversation</strong> option will be triggered once per conversation.</p>
-                  )}
-                  {autoReplyInterval === "24" && (
-                    <p>The <strong>Once every 24 hours</strong> option will be triggered once every 24 hours.</p>
-                  )}
-                  {autoReplyInterval === "247" && (
-                    <p>The <strong>Always</strong> option will be triggered <strong>Every time</strong> the contact sends a message that is not a Smart Flow keyword trigger, whether you're collecting data or the AI is asking a question.</p>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowDefaultReply(false)}
-                  >
-                    Close
-                  </Button>
-                  <Button 
-                    className="btn-outline-primary"
-                    variant="outline"
-                    onClick={handleSaveDefaultReply}
-                  >
-                    Save
-                  </Button>
-                </div>
+                <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
+                  Manage
+                </button>
               </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          )}
 
-      {/* Delete Bot Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Delete Telegram Bot
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Are you sure you want to delete the Telegram bot <span className="font-bold text-slate-900 dark:text-white">"{botToDelete?.name}"</span>? 
-              This action cannot be undone and all associated automations will stop working.
-            </p>
+          {/* ── MANAGE VIEW ── */}
+          {view === "manage" && (
+            <div className="p-8 space-y-5">
+              {!hasBots ? (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center">
+                    <img src="/images/automations/telegram.svg" alt="Telegram" className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Telegram is not integrated yet</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Integrate this communication channel to automate conversations.
+                    </p>
+                  </div>
+                  <button onClick={handleConnect} className={primaryOutlineBtn}>
+                    Connect now
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bots.map((bot: any) => {
+                    const tokenVisible = !!showToken[bot.id];
+                    const token = bot.token || bot.bot_token || "";
+                    const maskedToken = token ? `${token.slice(0, 8)}${"•".repeat(Math.max(0, token.length - 12))}${token.slice(-4)}` : "—";
+                    return (
+                      <div key={bot.id} className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                        {/* Bot Header */}
+                        <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-4", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center shrink-0">
+                              <Bot className="w-5 h-5 text-sky-500" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className={cn("text-[13px] font-black truncate", text)}>{bot.name || bot.username || "Telegram Bot"}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {bot.username && (
+                                  <Badge variant="outline" className="h-5 px-2 rounded-md border-sky-500/20 bg-sky-500/5 text-sky-600 dark:text-sky-400 text-[9px] font-black uppercase tracking-widest">
+                                    @{bot.username}
+                                  </Badge>
+                                )}
+                                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => toast({ title: "Syncing...", description: "Bot data refreshed." })}
+                              className={outlineBtn}
+                            >
+                              <RefreshCw size={12} /> Sync
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}>
+                                  <MoreVertical size={14} />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[200px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] flex justify-between"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Bot size={12} className="text-primary" /> AI Feeder
+                                  </span>
+                                  <Switch
+                                    checked={bot.allow_in_feeder}
+                                    onCheckedChange={() => toast({ title: "Updated", description: "AI Feeder setting saved." })}
+                                    className="data-[state=checked]:bg-primary"
+                                  />
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => { setBotToDelete(bot); setShowDeleteConfirm(true); }}
+                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                >
+                                  <Trash2 size={12} /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+
+                        {/* Bot Token */}
+                        <div className="px-6 py-4">
+                          <div className="space-y-2">
+                            <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>Bot Token</label>
+                            <div className={cn("flex items-center gap-2 px-3 h-11 rounded-xl border", card, border)}>
+                              <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>
+                                {tokenVisible ? token : maskedToken}
+                              </code>
+                              <button
+                                onClick={() => toggleTokenVisibility(bot.id)}
+                                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                                title={tokenVisible ? "Hide token" : "Show token"}
+                              >
+                                {tokenVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                              </button>
+                              <button
+                                onClick={() => copyToken(token)}
+                                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                                title="Copy token"
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Telegram Bot?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{botToDelete?.name || botToDelete?.username}</span> will be permanently disconnected.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => { deleteMutation.mutate(botToDelete.id); setShowDeleteConfirm(false); }}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-red-600 hover:bg-red-700"
-              onClick={confirmDeleteBot}
-            >
-              Yes, delete bot
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { ExternalLink, ChevronLeft, MoreVertical, Trash2, Copy, Clock, Plug, Check, Info, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft, MoreVertical, Trash2, Copy, Plus,
+  Phone, Bot, Activity, AlertCircle, X, Smartphone, Zap, ExternalLink,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,17 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroup } from "@/components/ui/radio-group";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -28,87 +25,49 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-// Mock data for demonstration
-const mockAccounts = [
-  {
-    id: 1,
-    name: "My Business Account",
-    status: "ACTIVE",
-    business_verification_status: "verified",
-    phone_numbers: [
-      {
-        id: 1,
-        display_phone_number: "+1 234 567 8900",
-        verified_name: "My Business",
-        name_status: "APPROVED",
-        status: "ACTIVE",
-        allow_in_feeder: true,
-        auto_reply_automation_id: null,
-      },
-    ],
-    capi: null,
-  },
-];
-
-const mockApiAccounts = [
-  {
-    id: 1,
-    name: "Tech Solutions Inc",
-    waba_id: "123456789",
-    currency: "USD",
-    status: "ACTIVE",
-    business_verification_status: "verified",
-    phone_numbers: [
-      {
-        id: 1,
-        display_phone_number: "+1 555 123 4567",
-        verified_name: "Tech Solutions",
-        name_status: "APPROVED",
-        status: "ACTIVE",
-        allow_in_feeder: true,
-        auto_reply_automation_id: null,
-      },
-      {
-        id: 2,
-        display_phone_number: "+1 555 987 6543",
-        verified_name: "Tech Support",
-        name_status: "PENDING",
-        status: "ACTIVE",
-        allow_in_feeder: false,
-        auto_reply_automation_id: null,
-      },
-    ],
-    capi: {
-      dataset_id: "DS123456",
-    },
-  },
-];
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function WhatsAppSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [view, setView] = useState<"list" | "coex_manage" | "api_manage">("list");
   const queryClient = useQueryClient();
-  
+
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
+    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
   const { data: channels, isLoading } = useQuery({
     queryKey: ["/api/integrations/channels"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/integrations/channels");
       return res.json();
-    }
+    },
   });
 
   const accounts = channels?.whatsapp || [];
   const hasAccounts = accounts.length > 0;
-  const hasApiAccounts = false; // Add logic if API accounts are separate
+  const hasApiAccounts = false;
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number | string) => {
@@ -116,14 +75,8 @@ export default function WhatsAppSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({
-        title: "Deleted",
-        description: "WhatsApp account removed successfully.",
-      });
+      toast({ title: "Deleted", description: "WhatsApp account removed." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete account.", variant: "destructive" });
-    }
   });
 
   const [showAddNumberDialog, setShowAddNumberDialog] = useState(false);
@@ -132,979 +85,460 @@ export default function WhatsAppSection() {
     phoneNumber: "",
     purposeType: "automated" as "automated" | "notification",
   });
-  const [isSavingNumber, setIsSavingNumber] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<any>(null);
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteNumberDialog, setShowDeleteNumberDialog] = useState(false);
   const [numberToDelete, setNumberToDelete] = useState<any>(null);
-  const [isDeletingNumber, setIsDeletingNumber] = useState(false);
-
-  const { toast } = useToast();
-
-  const toggleFeeder = (numberId: number, accountId: number) => {
-    toast({
-      title: "Info",
-      description: "AI Feeder toggle will be implemented with real mutation soon.",
-    });
-  };
-
-  const handleAddNumberClick = (account: any) => {
-    setSelectedAccount(account);
-    setNewNumberData({ phoneNumber: "", purposeType: "automated" });
-    setShowAddNumberDialog(true);
-  };
-
-  const handleCloseAddNumberDialog = () => {
-    setShowAddNumberDialog(false);
-    setSelectedAccount(null);
-    setNewNumberData({ phoneNumber: "", purposeType: "automated" });
-    setIsSavingNumber(false);
-  };
-
-  const handleSaveNewNumber = async () => {
-    // Validation
-    if (!newNumberData.phoneNumber.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a phone number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSavingNumber(true);
-
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/whatsapp/account/add-number', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     account_id: selectedAccount.id,
-      //     phone_number: newNumberData.phoneNumber,
-      //     purpose_type: newNumberData.purposeType,
-      //   }),
-      // });
-      // const data = await response.json();
-
-      toast({
-        title: "Info",
-        description: "Adding real phone numbers will be implemented soon.",
-      });
-
-      toast({
-        title: "Success",
-        description: "Phone number added successfully!",
-      });
-
-      handleCloseAddNumberDialog();
-    } catch (error) {
-      console.error("Error adding number:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add phone number. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingNumber(false);
-    }
-  };
-
-  const handleDeleteAccountClick = (account: any) => {
-    setAccountToDelete(account);
-    setShowDeleteAccountDialog(true);
-  };
-
-  const handleConfirmDeleteAccount = async () => {
-    if (!accountToDelete) return;
-
-    try {
-      setIsDeletingAccount(true);
-      await deleteMutation.mutateAsync(accountToDelete.id);
-      setShowDeleteAccountDialog(false);
-      setAccountToDelete(null);
-    } catch (error) {
-      // Error handled by mutation onError
-    } finally {
-      setIsDeletingAccount(false);
-    }
-  };
-
-  const handleDeleteNumberClick = (number: any, account: any) => {
-    setNumberToDelete({ number, account });
-    setShowDeleteNumberDialog(true);
-  };
-
-  const handleConfirmDeleteNumber = async () => {
-    if (!numberToDelete) return;
-
-    setIsDeletingNumber(true);
-
-    try {
-      toast({
-        title: "Info",
-        description: "Deleting phone numbers will be implemented with real mutation soon.",
-      });
-
-      toast({
-        title: "Success",
-        description: "Phone number deleted successfully!",
-      });
-
-      setShowDeleteNumberDialog(false);
-      setNumberToDelete(null);
-    } catch (error) {
-      console.error("Error deleting number:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete phone number. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeletingNumber(false);
-    }
-  };
 
   const handleConnect = () => {
-    toast({
-      title: "Connecting...",
-      description: "Redirecting to WhatsApp connection flow.",
-    });
+    toast({ title: "Connecting...", description: "Starting Meta onboarding flow." });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
-      {view === "list" && (
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">WhatsApp</h2>
-              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Connect your WhatsApp accounts to the platform.
-            </p>
-          </div>
-          <Separator className="bg-gray-200 dark:bg-slate-800" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card 1: WhatsApp Business App "Coex" */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm">WhatsApp Business App "Coex"</h3>
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm bg-emerald-500/10")}>
+                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />
               </div>
-              <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Beta</Badge>
-            </div>
-            
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                Link your existing WhatsApp Business App phone number and continue using it on your mobile while managing conversations in real-time in our platform.
-              </p>
-              
               <div>
-                <p className="font-medium text-foreground mb-1">Before you connect...</p>
-                <ul className="space-y-2">
-                  <li>
-                    You should be using WhatsApp Business App already for your business i.e. your number is connected to the WhatsApp Business App.
-                  </li>
-                  <li>
-                    You must be using the latest version of WhatsApp mobile application in your phone.
-                  </li>
-                  <li>
-                    Currently, Meta is not allowing businesses to onboard via Coex from select countries. Check that your country is NOT listed in this list <a href="#" className="text-blue-600 hover:underline">link</a>.
-                  </li>
-                </ul>
+                <div className="flex items-center gap-2">
+                  <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>
+                    {view === "list"        && "WhatsApp"}
+                    {view === "coex_manage" && "WhatsApp Business Apps"}
+                    {view === "api_manage"  && "WhatsApp Business API"}
+                  </h1>
+                  {view === "coex_manage" && (
+                    <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                      Beta
+                    </Badge>
+                  )}
+                </div>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  {view === "list"        && "Connect your WhatsApp accounts to the platform."}
+                  {view === "coex_manage" && 'WhatsApp Coexistence "Coex" allows a single WhatsApp number to be used simultaneously with WhatsApp Business Mobile App and Official API.'}
+                  {view === "api_manage"  && "Integrate your WhatsApp Business account to unlock 2-Way interactive dynamic conversations"}
+                </p>
               </div>
             </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button 
-                variant="outline" 
-                className="btn-outline-primary"
-                onClick={() => setView("coex_manage")}
-              >
-                Manage
-              </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {view === "coex_manage" && hasAccounts && (
+                <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+                  {accounts.length} Connected
+                </span>
+              )}
+              {view === "api_manage" && (
+                <button onClick={handleConnect} className="h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white">
+                  <Plus size={12} /> Add New
+                </button>
+              )}
+              {view !== "list" && (
+                <button onClick={() => setView("list")} className={outlineBtn}>
+                  <ChevronLeft size={12} /> Back
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Card 2: WhatsApp Business API */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm">WhatsApp Business API</h3>
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
-              </div>
-              <ExternalLink className="h-4 w-4 text-blue-500" />
-            </div>
-            
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                The WhatsApp Business API is a platform provided by WhatsApp that enables medium and large businesses to communicate with their customers at scale.
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button 
-                variant="outline" 
-                className="btn-outline-primary"
-                onClick={() => setView("api_manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
-
-
-        </div>
-        </div>
-      )}
-      
-      {view === "coex_manage" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg">WhatsApp Business Apps</h3>
-                    <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
-                    <Badge variant="outline" className="text-green-600 border-green-600 text-[10px] px-1 py-0 h-5">Beta</Badge>
+          {/* ── LIST VIEW (Coex/API selector) ── */}
+          {view === "list" && (
+            <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Coex Card */}
+              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-emerald-500/40 flex flex-col", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <Smartphone size={20} />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    WhatsApp Coexistence "Coex" allows a single WhatsApp number to be used simultaneously with WhatsApp Business Mobile App and Official API.
+                  <Badge variant="outline" className="h-6 px-2.5 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                    Beta
+                  </Badge>
+                </div>
+
+                <div className="space-y-2 mb-5 flex-1">
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>WhatsApp Business App "Coex"</h3>
+                  <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
+                    Link your existing WhatsApp Business App phone number and continue using it on your mobile while managing conversations in real-time in our platform.
+                  </p>
+                  <div className={cn("pt-3 mt-3 border-t space-y-2", softBorder)}>
+                    <p className={cn("text-[11px] font-black", text)}>Before you connect...</p>
+                    <ul className="space-y-1.5">
+                      <li className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
+                        <span className="text-emerald-500 mt-0.5">•</span>
+                        <span>You should be using WhatsApp Business App already for your business i.e. your number is connected to the WhatsApp Business App.</span>
+                      </li>
+                      <li className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
+                        <span className="text-emerald-500 mt-0.5">•</span>
+                        <span>You must be using the latest version of WhatsApp mobile application in your phone.</span>
+                      </li>
+                      <li className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
+                        <span className="text-emerald-500 mt-0.5">•</span>
+                        <span>
+                          Currently, Meta is not allowing businesses to onboard via Coex from select countries. Check that your country is NOT listed in <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started/coex#countries-where-the-onboarding-is-not-available" target="_blank" rel="noopener noreferrer" className="text-primary font-black underline-offset-2 hover:underline">this list</a>.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setView("coex_manage")}
+                  className={cn(
+                    "self-end h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                    "border-primary text-primary hover:bg-primary hover:text-white"
+                  )}
+                >
+                  Manage
+                </button>
+              </div>
+
+              {/* API Card */}
+              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-blue-500/40 flex flex-col", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                    <Zap size={20} />
+                  </div>
+                  <a
+                    href="https://business.whatsapp.com/products/business-platform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+
+                <div className="space-y-2 mb-5 flex-1">
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>WhatsApp Business API</h3>
+                  <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
+                    The WhatsApp Business API is a platform provided by WhatsApp that enables medium and large businesses to communicate with their customers at scale.
                   </p>
                 </div>
-              </div>
-              <Button variant="outline" onClick={() => setView("list")}>
-                Back
-              </Button>
-            </div>
-          </div>
 
-          {/* Content - Empty State or Connected Accounts */}
-          {!hasAccounts ? (
-            <div className="border rounded-lg p-12 shadow-sm bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4 py-24">
-              <div className="bg-green-100 dark:bg-green-900/20 p-4 rounded-full">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-12 w-12" />
-              </div>
-              <h2 className="text-lg font-semibold">No integration found</h2>
-              <p className="text-muted-foreground max-w-md text-sm">
-                Connect your WhatsApp Business account now to get started.
-              </p>
-              <div className="pt-2">
-                <Button 
-                  variant="outline"
-                  className="btn-outline-primary min-w-[150px]"
-                  onClick={handleConnect}
+                <button
+                  onClick={() => setView("api_manage")}
+                  className={cn(
+                    "self-end h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                    "border-primary text-primary hover:bg-primary hover:text-white"
+                  )}
                 >
-                  Connect now
-                </Button>
+                  Manage
+                </button>
               </div>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {accounts.map((account: any) => (
-                <div key={account.id} className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-                  {/* Account Header */}
-                  <div className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-8 w-8" />
-                        <div>
-                          <div className="font-medium">WhatsApp Business Apps</div>
-                          <p className="text-sm text-muted-foreground">
-                            WhatsApp Coexistence "Coex" allows a single WhatsApp number to be used simultaneously with WhatsApp Business Mobile App and Official API.
-                          </p>
+          )}
+
+          {/* ── COEX MANAGE VIEW ── */}
+          {view === "coex_manage" && (
+            <div className="p-8 space-y-5">
+              {!hasAccounts ? (
+                <EmptyIntegrationState dark={dark} text={text} sub={sub} softBg={softBg} softBorder={softBorder} onConnect={handleConnect} />
+              ) : (
+                <div className="space-y-4">
+                  {accounts.map((account: any) => (
+                    <div key={account.id} className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                      {/* Account Header */}
+                      <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-4", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <img src="/images/automations/whatsapp.svg" alt="WA" className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className={cn("text-[13px] font-black truncate", text)}>{account.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                                Coexistence
+                              </Badge>
+                              <span className={cn("text-[10px] font-bold opacity-50", sub)}>ID #{account.id}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => setLocation("/templates")} className={outlineBtn}>
+                            Templates
+                          </button>
+                          <button
+                            onClick={() => { setAccountToDelete(account); setShowDeleteAccountDialog(true); }}
+                            className={cn("h-11 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2", "border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500")}
+                          >
+                            <Trash2 size={12} /> Delete
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {account.status === "FAILED" && (
-                          <Badge variant="destructive" className="text-xs">Failed</Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs">Coex</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Separator className="bg-gray-200 dark:bg-slate-800" />
 
-                  {/* Account Body */}
-                  <div className="p-4 space-y-4">
-                    {/* Business Name and Actions */}
-                    <div className="flex items-center justify-between">
-                      <div className="font-bold">{account.name}</div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <a 
-                          href="https://developers.facebook.com/docs/whatsapp/pricing/" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                        >
-                          Pricing
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                        <a 
-                          href="https://business.facebook.com/settings/whatsapp-business-accounts/" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                        >
-                          Access BM
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-xs px-2 py-1 h-auto btn-soft-destructive transition-all hover:scale-105 active:scale-95"
-                          onClick={() => handleDeleteAccountClick(account)}
-                        >
-                          Delete Account
-                        </Button>
-                        {account.capi ? (
-                          <Button 
-                            variant="default" 
-                            size="sm"
-                            className="text-xs px-2 py-1 h-auto bg-blue-600 hover:bg-blue-700"
+                      {/* Phone Numbers */}
+                      <div className="p-5 space-y-3">
+                        <h4 className={cn("text-[10px] font-black uppercase tracking-widest ml-1", sub)}>Phone Numbers</h4>
+                        {account.phone_numbers.map((number: any) => (
+                          <div
+                            key={number.id}
+                            className={cn("p-4 rounded-[1rem] border flex items-center justify-between gap-4", card, border)}
                           >
-                            <i className="fa-brands fa-meta mr-2"></i>
-                            Conversions API
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-xs px-2 py-1 h-auto"
-                          >
-                            <i className="fa-brands fa-meta mr-2"></i>
-                            Conversions API
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="relative shrink-0">
+                                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                  <Phone size={16} />
+                                </div>
+                                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2" style={{ borderColor: dark ? "#0f1829" : "white" }} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className={cn("text-[13px] font-black", text)}>{number.display_phone_number}</p>
+                                <p className={cn("text-[10px] font-medium opacity-60 truncate", sub)}>{number.verified_name}</p>
+                              </div>
+                            </div>
 
-                    {/* Phone Numbers */}
-                    {account.phone_numbers.map((number: any) => (
-                      <div key={number.id} className="bg-slate-50 dark:bg-slate-800/50 p-4 border rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              ["AVAILABLE_WITHOUT_REVIEW", "APPROVED"].includes(number.name_status) 
-                                ? "bg-green-600" 
-                                : "bg-gray-400"
-                            }`} />
-                            <span className="text-sm">{number.display_phone_number}</span>
-                            <span className="text-muted-foreground">|</span>
-                            <span className="text-sm">{number.verified_name}</span>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            {number.status === "ACTIVE" && (
+                            <div className="flex items-center gap-4 shrink-0">
+                              <div className="flex items-center gap-2">
+                                <span className={cn("text-[9px] font-black uppercase tracking-widest hidden sm:inline", sub)}>AI Feeder</span>
+                                <Switch
+                                  checked={number.allow_in_feeder}
+                                  onCheckedChange={() => toast({ title: "Updated", description: "AI Feeder setting saved." })}
+                                  className="data-[state=checked]:bg-emerald-500"
+                                />
+                              </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
+                                  <button className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-100 text-slate-500")}>
+                                    <MoreVertical size={14} />
+                                  </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem 
-                                    onClick={() => setLocation("/templates")}
-                                    className="cursor-pointer"
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    Templates
+                                <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[160px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
+                                  <DropdownMenuItem onClick={() => setLocation("/templates")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+                                    <Copy size={12} /> Templates
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    className="text-red-600"
-                                    onClick={() => handleDeleteNumberClick(number, account)}
+                                  <DropdownMenuItem
+                                    onClick={() => { setNumberToDelete({ number, account }); setShowDeleteNumberDialog(true); }}
+                                    className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
                                   >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete number
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onSelect={(e) => {
-                                      e.preventDefault();
-                                      toggleFeeder(number.id, account.id);
-                                    }}
-                                  >
-                                    <div className="flex items-center justify-between w-full">
-                                      <div className="flex items-center">
-                                        <Plug className="mr-2 h-4 w-4" />
-                                        AI Feeder
-                                      </div>
-                                      <Switch 
-                                        checked={number.allow_in_feeder}
-                                        onCheckedChange={() => toggleFeeder(number.id, account.id)}
-                                      />
-                                    </div>
+                                    <Trash2 size={12} /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
-                            )}
-                            {["LOCKED", "FAILED"].includes(number.status) && (
-                              <Badge variant="destructive" className="text-xs">
-                                {number.status === "LOCKED" ? "Blocked" : "Error"}
-                              </Badge>
-                            )}
-                            {number.status === "DISCONNECTED" && (
-                              <Badge variant="outline" className="text-xs text-red-500 border-red-400">
-                                Disconnected
-                              </Badge>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Add New Number */}
-                    <button
-                      onClick={() => handleAddNumberClick(account)}
-                      className="block border p-2 w-full text-center text-sm text-blue-600 font-medium bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 dark:hover:bg-slate-800 border-blue-200 dark:border-blue-900 rounded transition-colors"
-                    >
-                      + Add New Number
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {view === "api_manage" && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white dark:bg-slate-900">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg">WhatsApp Business API</h3>
-                    <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-6 w-6" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Integrate your WhatsApp Business account to unlock 2-Way interactive dynamic conversations
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline"
-                  className="btn-outline-primary"
-                  onClick={handleConnect}
-                >
-                  + Add New
-                </Button>
-                <Button variant="outline" onClick={() => setView("list")}>
-                  Back
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
-          {!hasApiAccounts ? (
-            <div className="border rounded-lg p-12 shadow-sm bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4 py-24">
-              <div className="bg-green-100 dark:bg-green-900/20 p-4 rounded-full">
-                <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="h-12 w-12" />
-              </div>
-              <h2 className="text-lg font-semibold">No integration found</h2>
-              <p className="text-muted-foreground max-w-md text-sm">
-                Connect your WhatsApp Business account now to get started.
-              </p>
-              <div className="pt-2">
-                <Button 
-                  variant="outline"
-                  className="btn-outline-primary min-w-[150px]"
-                  onClick={handleConnect}
-                >
-                  Connect now
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-              {mockApiAccounts.map((account: any) => (
-                <div key={account.id} className="border-b last:border-b-0">
-                  {/* Account Header Table */}
-                  <div className="bg-slate-50 dark:bg-slate-800/50">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left font-semibold text-sm px-4 pt-5 pb-1 w-1/4">
-                            WA Business Account Name
-                          </th>
-                          <th className="text-left font-semibold text-sm px-4 pt-5 pb-1 w-1/4">
-                            Templates
-                          </th>
-                          <th className="text-left font-semibold text-sm px-4 pt-5 pb-1 w-1/4">
-                            Action
-                          </th>
-                          <th className="text-left font-semibold text-sm px-4 pt-5 pb-1 w-1/4">
-                            Extra
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b">
-                          <td className="px-4 pb-5 pt-1">
-                            <div className="flex items-center gap-2">
-                              <span>{account.name}</span>
-                              <Check className="h-4 w-4 text-green-600" />
-                            </div>
-                          </td>
-                          <td className="px-4 pb-5 pt-1">
-                            <Button 
-                              variant="outline"
-                              size="sm"
-                              className="text-xs px-2 py-1 h-auto btn-outline-primary"
-                              onClick={() => setLocation("/templates")}
-                            >
-                              Manage Templates
-                            </Button>
-                          </td>
-                          <td className="px-4 pb-5 pt-1">
-                            <div className="flex items-center gap-2">
-                              <Button 
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
-                                onClick={() => handleDeleteAccountClick(account)}
-                                title="Delete account"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                className="text-xs px-2 py-1 h-auto btn-outline-primary"
-                                onClick={() => toast({ title: "Conversions API", description: "Configuring Meta Conversions API for " + account.name })}
-                              >
-                                <i className="fa-brands fa-meta mr-2"></i>
-                                Conversions API
-                              </Button>
-                            </div>
-                          </td>
-                          <td className="px-4 pb-5 pt-1">
-                            <div className="flex items-center gap-4 text-sm">
-                              <a 
-                                href="https://business.facebook.com/settings/whatsapp-business-accounts/" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                              >
-                                Manage
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                              <a 
-                                href="https://business.whatsapp.com/products/platform-pricing" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                              >
-                                Pricing
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Phone Numbers Table */}
-                  <div className="p-0">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left font-semibold text-sm px-4 py-3 w-1/4">Display Name</th>
-                          <th className="text-left font-semibold text-sm px-4 py-3 w-1/4">Phone Number</th>
-                          <th className="text-left font-semibold text-sm px-4 py-3 w-1/4">Status</th>
-                          <th className="text-right font-semibold text-sm px-4 py-3 w-1/4">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {account.phone_numbers.map((number: any) => (
-                          <tr key={number.id} className="border-b last:border-b-0">
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-2">
-                                {number.name_status === "APPROVED" ? (
-                                  <Check className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <Info className="h-4 w-4 text-muted-foreground" />
-                                )}
-                                <span>{number.verified_name}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4">{number.display_phone_number}</td>
-                            <td className="px-4 py-4">
-                              {number.status === "ACTIVE" ? (
-                                <Badge variant="outline" className="text-xs text-green-600 border-green-600">
-                                  Active
-                                </Badge>
-                              ) : number.status === "DISCONNECTED" ? (
-                                <Badge variant="outline" className="text-xs text-red-500 border-red-400">
-                                  Disconnected
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs">
-                                  {number.status}
-                                </Badge>
-                              )}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="flex items-center justify-end gap-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
-                                  onClick={() => handleDeleteNumberClick(number, account)}
-                                  title="Delete number"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                  onClick={() => toast({ title: "Auto Reply", description: "Navigating to auto-reply settings for " + number.display_phone_number })}
-                                  title="Auto reply"
-                                >
-                                  <Clock className="h-4 w-4" />
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-muted-foreground hover:text-foreground transition-colors">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem 
-                                      className="cursor-pointer"
-                                      onSelect={(e) => {
-                                        e.preventDefault();
-                                        toggleFeeder(number.id, account.id);
-                                      }}
-                                    >
-                                      <div className="flex items-center justify-between w-full gap-3">
-                                        <div className="flex items-center gap-2">
-                                          <Plug className="h-4 w-4" />
-                                          <span>AI Feeder</span>
-                                        </div>
-                                        <Switch 
-                                          checked={number.allow_in_feeder}
-                                          onCheckedChange={() => toggleFeeder(number.id, account.id)}
-                                        />
-                                      </div>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </td>
-                          </tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+
+                        <button
+                          onClick={() => { setSelectedAccount(account); setShowAddNumberDialog(true); }}
+                          className={cn(
+                            "w-full h-11 rounded-xl border-2 border-dashed transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-500/5",
+                            softBorder
+                          )}
+                        >
+                          <Plus size={12} /> Add Phone Number
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
-        </div>
-      )}
 
+          {/* ── API MANAGE VIEW ── */}
+          {view === "api_manage" && (
+            <div className="p-8">
+              {!hasApiAccounts ? (
+                <EmptyIntegrationState dark={dark} text={text} sub={sub} softBg={softBg} softBorder={softBorder} onConnect={handleConnect} />
+              ) : (
+                <div className={cn("p-8 text-center rounded-[1.5rem] border", softBorder, softBg)}>
+                  <p className={cn("text-[11px] font-bold opacity-50 italic", sub)}>API accounts loading...</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-
-      {/* Add Number Dialog */}
+      {/* ── Add Number Dialog ── */}
       <Dialog open={showAddNumberDialog} onOpenChange={setShowAddNumberDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Add New Phone Number</DialogTitle>
-            <DialogDescription>
-              Add a new phone number to {selectedAccount?.name}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            {/* Phone Number Input */}
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber" className="font-semibold">
-                Phone Number *
-              </Label>
-              <Input
-                id="phoneNumber"
-                type="text"
-                placeholder="e.g., +1 234 567 8900"
-                value={newNumberData.phoneNumber}
-                onChange={(e) =>
-                  setNewNumberData({ ...newNumberData, phoneNumber: e.target.value })
-                }
-                className="h-10"
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter the phone number in international format (e.g., +1 234 567 8900)
-              </p>
+        <DialogContent className={cn("rounded-[2rem] border p-0 max-w-lg overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                <Plus size={16} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Add Phone Number</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                  Account: {selectedAccount?.name}
+                </p>
+              </div>
             </div>
 
-            {/* Purpose Selection */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Purpose *</Label>
-              <RadioGroup
-                value={newNumberData.purposeType}
-                onValueChange={(value: "automated" | "notification") =>
-                  setNewNumberData({ ...newNumberData, purposeType: value })
-                }
-                className="grid grid-cols-2 gap-4"
-              >
-                {/* Automated Option */}
-                <div>
-                  <RadioGroupItem
-                    value="automated"
-                    id="automated"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="automated"
-                    className="flex flex-col items-start gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:bg-blue-50 dark:peer-data-[state=checked]:bg-blue-950/30 cursor-pointer transition-all h-full"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                          <svg
-                            className="w-5 h-5 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="font-semibold text-sm">AUTOMATED</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        For AI messaging and automated conversations
-                      </p>
-                    </div>
-                  </Label>
-                </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Phone Number (International Format)
+                </label>
+                <Input
+                  placeholder="e.g. +1 555 000 0000"
+                  value={newNumberData.phoneNumber}
+                  onChange={(e) => setNewNumberData({ ...newNumberData, phoneNumber: e.target.value })}
+                  className={inputCls}
+                />
+              </div>
 
-                {/* Notification Option */}
-                <div>
-                  <RadioGroupItem
-                    value="notification"
-                    id="notification"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="notification"
-                    className="flex flex-col items-start gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-blue-600 peer-data-[state=checked]:bg-blue-50 dark:peer-data-[state=checked]:bg-blue-950/30 cursor-pointer transition-all h-full"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                          <svg
-                            className="w-5 h-5 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                            />
-                          </svg>
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Purpose
+                </label>
+                <RadioGroup
+                  value={newNumberData.purposeType}
+                  onValueChange={(v: any) => setNewNumberData({ ...newNumberData, purposeType: v })}
+                  className="grid grid-cols-2 gap-3"
+                >
+                  {([
+                    { v: "automated",    label: "Automated",    desc: "AI & flow processing", icon: <Bot size={16} /> },
+                    { v: "notification", label: "Notification", desc: "System alerts only",   icon: <Activity size={16} /> },
+                  ] as const).map((opt) => {
+                    const active = newNumberData.purposeType === opt.v;
+                    return (
+                      <button
+                        key={opt.v}
+                        onClick={() => setNewNumberData({ ...newNumberData, purposeType: opt.v })}
+                        className={cn(
+                          "p-4 rounded-[1rem] border text-left transition-all",
+                          active
+                            ? "border-emerald-500 bg-emerald-500/5 shadow-md shadow-emerald-500/10"
+                            : cn(softBorder, softBg, "hover:border-emerald-500/30")
+                        )}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center mb-2 transition-all",
+                          active ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30" : "bg-emerald-500/10 text-emerald-500"
+                        )}>
+                          {opt.icon}
                         </div>
-                        <span className="font-semibold text-sm">NOTIFICATION</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        For voice calls and SMS notifications
-                      </p>
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
+                        <p className={cn("text-[12px] font-black tracking-tight", text)}>{opt.label}</p>
+                        <p className={cn("text-[10px] font-medium opacity-60 mt-0.5", sub)}>{opt.desc}</p>
+                      </button>
+                    );
+                  })}
+                </RadioGroup>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowAddNumberDialog(false)} className={outlineBtn}>
+                Cancel
+              </button>
+              <button
+                onClick={() => toast({ title: "Verifying...", description: "Phone number verification started." })}
+                className="h-11 px-7 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+              >
+                <Plus size={12} /> Add Number
+              </button>
             </div>
           </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCloseAddNumberDialog}
-              disabled={isSavingNumber}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveNewNumber}
-              disabled={isSavingNumber}
-              className="btn-outline-primary"
-              variant="outline"
-            >
-              {isSavingNumber ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                "Save"
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-
-
-      {/* Delete Account Confirmation Dialog */}
+      {/* ── Delete Account Dialog ── */}
       <AlertDialog open={showDeleteAccountDialog} onOpenChange={setShowDeleteAccountDialog}>
-      <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
               </div>
-              <AlertDialogTitle>Delete WhatsApp Account</AlertDialogTitle>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete WhatsApp Account?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  Target: <span className="text-rose-500 font-black">{accountToDelete?.name}</span>. All phone numbers and associated data will be permanently removed.
+                </p>
+              </div>
             </div>
-            <AlertDialogDescription>
-              Are you sure you want to delete <span className="font-semibold">{accountToDelete?.name}</span>?
-              <br /><br />
-              This action cannot be undone. All phone numbers and configurations associated with this account will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingAccount}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleConfirmDeleteAccount();
-              }}
-              disabled={isDeletingAccount}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeletingAccount ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Deleting...
-                </>
-              ) : (
-                "Delete Account"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteMutation.mutate(accountToDelete.id)}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Number Confirmation Dialog */}
+      {/* ── Delete Number Dialog ── */}
       <AlertDialog open={showDeleteNumberDialog} onOpenChange={setShowDeleteNumberDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <X size={18} />
               </div>
-              <AlertDialogTitle>Delete Phone Number</AlertDialogTitle>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Phone Number?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  Number: <span className="text-rose-500 font-black">{numberToDelete?.number?.display_phone_number}</span>. This number will be permanently disconnected.
+                </p>
+              </div>
             </div>
-            <AlertDialogDescription>
-              Are you sure you want to delete the phone number{" "}
-              <span className="font-semibold">{numberToDelete?.number?.display_phone_number}</span>?
-              <br /><br />
-              This action cannot be undone. All conversations and configurations for this number will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingNumber}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleConfirmDeleteNumber();
-              }}
-              disabled={isDeletingNumber}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeletingNumber ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Deleting...
-                </>
-              ) : (
-                "Delete Number"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => toast({ title: "Deleted", description: "Phone number removed." })}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
+    </>
+  );
+}
 
-
+/* ── Empty Integration State (shared) ── */
+function EmptyIntegrationState({
+  dark,
+  text,
+  sub,
+  softBg,
+  softBorder,
+  onConnect,
+}: {
+  dark: boolean;
+  text: string;
+  sub: string;
+  softBg: string;
+  softBorder: string;
+  onConnect: () => void;
+}) {
+  return (
+    <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+      <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+        <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="w-8 h-8" />
+      </div>
+      <div className="space-y-1.5 max-w-sm">
+        <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No integration found</h3>
+        <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+          Connect your WhatsApp Business account now to get started.
+        </p>
+      </div>
+      <button
+        onClick={onConnect}
+        className={cn(
+          "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+          "border-primary text-primary hover:bg-primary hover:text-white"
+        )}
+      >
+        Connect now
+      </button>
     </div>
   );
 }

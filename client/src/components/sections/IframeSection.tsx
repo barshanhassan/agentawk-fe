@@ -1,23 +1,30 @@
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Globe, Edit, Trash2, Eye, Plus, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
+import { Globe, Edit2, Trash2, Plus, Loader2, ChevronLeft, AlertCircle } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-interface IframeItem {
-  id: string;
-  name: string;
-  menuText: string;
-  htmlCode: string;
-}
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function IframeSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { toast } = useToast();
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [menuText, setMenuText] = useState("");
@@ -25,6 +32,42 @@ export default function IframeSection() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
   const [menuTitleInput, setMenuTitleInput] = useState("");
+  const [iframeToDelete, setIframeToDelete] = useState<any>(null);
+
+  // ── Design tokens ─────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const textareaCls = cn(
+    "w-full rounded-xl text-[12px] font-mono transition-all px-4 py-3 border outline-none resize-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
+
+  const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
 
   const { data, isLoading } = useQuery<{ iframes: any[]; menu_title: string }>({
     queryKey: ["/api/iframes"],
@@ -59,6 +102,7 @@ export default function IframeSection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/iframes"] });
       toast({ title: "Success", description: "Iframe deleted successfully" });
+      setIframeToDelete(null);
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -78,230 +122,266 @@ export default function IframeSection() {
 
   const handleSave = () => {
     if (name.trim() && menuText.trim() && htmlCode.trim()) {
-      saveMutation.mutate({
-        id: editingId,
-        name,
-        menu_text: menuText,
-        html_code: htmlCode,
-      });
+      saveMutation.mutate({ id: editingId, name, menu_text: menuText, html_code: htmlCode });
     }
   };
 
   const handleEditIframe = (iframe: any) => {
-     setName(iframe.name);
-     setMenuText(iframe.menu_text);
-     setHtmlCode(iframe.html_code);
-     setEditingId(iframe.id);
-     setIsCreateOpen(true);
+    setName(iframe.name);
+    setMenuText(iframe.menu_text);
+    setHtmlCode(iframe.html_code);
+    setEditingId(iframe.id);
+    setIsCreateOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this iframe?")) {
-      deleteMutation.mutate(id);
-    }
+  const openCreate = () => {
+    setEditingId(null);
+    setName("");
+    setMenuText("");
+    setHtmlCode("");
+    setIsCreateOpen(true);
   };
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      {!isCreateOpen && (
-        <>
-          <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-6">
-            <Globe className="w-8 h-8 text-black dark:text-white" />
-            <div className="space-y-1 flex-1">
-              <CardTitle className="text-lg flex items-center justify-between">
-                {menuTitle}
-                <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    className="text-foreground border-slate-200 dark:border-slate-700"
-                    onClick={() => setIsEditTitleModalOpen(true)}
-                  >
-                    Edit Menu Title
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="btn-outline-primary"
-                    onClick={() => {
-                        setEditingId(null);
-                        setName("");
-                        setMenuText("");
-                        setHtmlCode("");
-                        setIsCreateOpen(true);
-                    }}
-                    disabled={iframes.length >= 3}
-                  >
-                    <Plus size={16} /> Add New
-                  </Button>
-                </div>
-              </CardTitle>
-              <CardDescription>Embed another webpage or resource inside your current page.</CardDescription>
-            </div>
-          </CardHeader>
-          <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
-
-          <Card className="flex-1 overflow-hidden flex flex-col border-0 shadow-none">
-            <div className="p-4 bg-gray-50 dark:bg-slate-800/50 text-sm text-muted-foreground border-b border-gray-200 dark:border-slate-700">
-              You can create a maximum of 3 items
-            </div>
-            <div className="flex-1 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-white dark:bg-slate-900">
-                    <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-foreground tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-right font-semibold text-xs uppercase text-foreground tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={2} className="px-4 py-8 text-center">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
-                      </td>
-                    </tr>
-                  ) : iframes.map((iframe: any) => (
-                    <tr
-                      key={iframe.id}
-                      className="border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors"
-                    >
-                      <td className="px-4 py-4 font-medium text-foreground">{iframe.name}</td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors" 
-                            title="Edit"
-                            onClick={() => handleEditIframe(iframe)}
-                          >
-                            <Edit size={16} className="text-slate-600 dark:text-slate-400" />
-                          </button>
-                          <button 
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-slate-700 rounded transition-colors" 
-                            title="Delete"
-                            onClick={() => handleDelete(iframe.id)}
-                          >
-                            <Trash2 size={16} className="text-red-500" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {iframes.length === 0 && (
-                    <tr>
-                      <td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">
-                        No iframes created yet. Click "+ Create New" to add one.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </>
-      )}
-
-      {isCreateOpen && (
-        <div className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-          <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
-             <div>
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Globe size={20} />
-                  {editingId ? "Edit Iframe" : "Create New Iframe"}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">Embed another webpage or resource inside your current page.</p>
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Globe className="w-5 h-5 text-primary" />
               </div>
-              <Button 
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-                className="text-foreground border-slate-200 dark:border-slate-700"
-              >
-                Back
-              </Button>
-          </div>
-
-          <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-            <div>
-              <label className="text-sm font-medium block mb-2">Name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>
+                  {isCreateOpen ? (editingId ? "Edit Iframe" : "Create Iframe") : menuTitle}
+                </h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  Embed another webpage or resource inside your current page.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium block mb-2">Sidebar menu text</label>
-              <Input
-                value={menuText}
-                onChange={(e) => setMenuText(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium block mb-2">HTML Code</label>
-              <Textarea
-                value={htmlCode}
-                onChange={(e) => setHtmlCode(e.target.value)}
-                className="min-h-[200px] font-mono text-sm"
-              />
+            <div className="flex items-center gap-2 shrink-0">
+              {!isCreateOpen ? (
+                <>
+                  <button onClick={() => setIsEditTitleModalOpen(true)} className={outlineBtn}>
+                    <Edit2 size={12} /> Edit Menu Title
+                  </button>
+                  <button onClick={openCreate} disabled={iframes.length >= 3} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Add New
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => setIsCreateOpen(false)} className={outlineBtn}>
+                  <ChevronLeft size={12} /> Back
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 p-6 flex justify-end gap-3">
-             <Button 
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSave}
-                className="btn-outline-primary flex items-center gap-2"
-                variant="outline"
-                disabled={!name || !menuText || !htmlCode || saveMutation.isPending}
-              >
-                {saveMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Publish
-              </Button>
-          </div>
-        </div>
-      )}
+          {/* ── LIST VIEW ── */}
+          {!isCreateOpen && (
+            <div className="p-8">
+              <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                <div className={cn("px-6 py-3 border-b text-[10px] font-black uppercase tracking-widest", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                  You can create a maximum of 3 items
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                        <th className={cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Name</th>
+                        <th className={cn("px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest", sub)}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={2} className="px-6 py-12 text-center">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                          </td>
+                        </tr>
+                      ) : iframes.length === 0 ? (
+                        <tr>
+                          <td colSpan={2} className="px-6 py-16 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Globe className="w-7 h-7 text-primary" />
+                              </div>
+                              <div className="space-y-1">
+                                <h3 className={cn("text-[13px] font-black", text)}>No iframes yet</h3>
+                                <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                                  Click "Add New" to embed your first iframe.
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        iframes.map((iframe: any) => (
+                          <tr
+                            key={iframe.id}
+                            className={cn("border-b transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/80")}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <Globe size={14} className="text-primary" />
+                                </div>
+                                <span className={cn("text-[13px] font-black", text)}>{iframe.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleEditIframe(iframe)}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
+                                  title="Edit"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button
+                                  onClick={() => setIframeToDelete(iframe)}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className={cn("px-6 py-3 border-t text-[10px] font-black uppercase tracking-widest", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                  Showing {iframes.length} of {iframes.length} iframes
+                </div>
+              </div>
+            </div>
+          )}
 
-      {/* Edit Menu Title Modal */}
-      {isEditTitleModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-md p-6 space-y-6">
+          {/* ── CREATE / EDIT FORM ── */}
+          {isCreateOpen && (
+            <div className="p-8">
+              <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className={labelCls}>Name</label>
+                    <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Enter iframe name" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={labelCls}>Sidebar Menu Text</label>
+                    <input value={menuText} onChange={(e) => setMenuText(e.target.value)} className={inputCls} placeholder="Text shown in the sidebar" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={labelCls}>HTML Code</label>
+                    <textarea
+                      value={htmlCode}
+                      onChange={(e) => setHtmlCode(e.target.value)}
+                      rows={10}
+                      className={textareaCls}
+                      placeholder="Paste your embed / iframe HTML here..."
+                    />
+                  </div>
+                </div>
+
+                <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
+                  <button onClick={() => setIsCreateOpen(false)} className={outlineBtn}>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={!name || !menuText || !htmlCode || saveMutation.isPending}
+                    className={primaryBtn}
+                  >
+                    {saveMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                    Publish
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Edit Menu Title Modal ── */}
+      <Dialog open={isEditTitleModalOpen} onOpenChange={setIsEditTitleModalOpen}>
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
+          <div className="p-6 space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Edit2 size={18} />
+                </div>
+                <div className="text-left">
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                    Edit Menu Title
+                  </DialogTitle>
+                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    Change the label shown in the sidebar.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-foreground">Edit Menu Title</h3>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Menu Title</label>
-              <Input 
+              <label className={labelCls}>Menu Title</label>
+              <input
                 value={menuTitleInput || menuTitle}
                 onChange={(e) => setMenuTitleInput(e.target.value)}
-                className="w-full"
+                className={inputCls}
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditTitleModalOpen(false)}
-                className="text-foreground border-slate-200 dark:border-slate-700"
-              >
+            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
+              <button onClick={() => setIsEditTitleModalOpen(false)} className={outlineBtn}>
                 Cancel
-              </Button>
-              <Button 
+              </button>
+              <button
                 onClick={() => titleMutation.mutate(menuTitleInput || menuTitle)}
-                className="btn-outline-primary flex items-center gap-2"
-                variant="outline"
                 disabled={titleMutation.isPending}
+                className={primaryBtn}
               >
-                {titleMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {titleMutation.isPending && <Loader2 size={12} className="animate-spin" />}
                 Save
-              </Button>
+              </button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={!!iframeToDelete} onOpenChange={(open) => !open && setIframeToDelete(null)}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Iframe?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{iframeToDelete?.name || "This iframe"}</span> will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteMutation.mutate(iframeToDelete.id)}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

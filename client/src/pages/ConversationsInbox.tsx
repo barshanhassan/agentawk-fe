@@ -49,9 +49,117 @@ import { Textarea } from "@/components/ui/textarea";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import ContactProfileSidebar from "@/components/ContactProfileSidebar";
 
+interface Conversation {
+  id: number;
+  name: string;
+  displayName: string;
+  phoneNumber: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  status: string;
+  assignedAgent: string | null;
+  channel: string;
+}
+
+interface Message {
+  id: number;
+  from: 'agent' | 'user';
+  text: string;
+  time: string;
+  images?: Array<{ url: string; name: string; size: number }>;
+  attachments?: Array<{ url: string; name: string; size: number }>;
+  video?: { url: string; name: string; size: number; thumbnail?: string };
+  audio?: { url: string; name: string; size: number };
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}
+
+interface Team {
+  id: string;
+  name: string;
+}
+
+interface Filter {
+  id: string;
+  column: string;
+  operator: string;
+  value: string;
+}
+
+interface BackendConversation {
+  id: number | string;
+  contacts?: { full_name?: string; first_name?: string; mobile_number?: string };
+  last_message_text?: string;
+  updated_at?: string;
+  unread_count?: number;
+  status?: string;
+  users?: { name?: string };
+  modelable_type?: string;
+}
+
+interface BackendMessage {
+  id: number;
+  direction: 'OUTGOING' | 'INCOMING';
+  message_text: string;
+  created_at: string;
+}
+
+interface SocketData {
+  inbox_id: string;
+  message?: { text?: string };
+}
+
+interface AgentOption {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}
+
+interface BasicDetails {
+  displayName: string;
+  number: string;
+  email: string;
+  gender: string;
+  whatsappOptOut: string;
+  address: string;
+}
+
+interface Contact {
+  id: number;
+  name: string;
+  number: string;
+  pfp?: string;
+  callConsent: string;
+  callsUsed?: number;
+  callsMax?: number;
+  renewsIn?: string;
+  expiryDays?: number;
+  expiryHours?: number;
+}
+
+interface Template {
+  id: number;
+  name: string;
+  body: string;
+  header?: string;
+  footer?: string;
+  buttons?: any[];
+  variables: string[];
+}
+
+interface Emoji {
+  native: string;
+}
+
 
 // Helper function to get display name - defaults to phone number if displayName not set
-const getDisplayName = (conversation: any): string => {
+const getDisplayName = (conversation?: Conversation | null): string => {
+  if (!conversation) return "Unknown";
   return conversation.displayName?.trim() || conversation.phoneNumber || conversation.name || "Unknown";
 };
 
@@ -69,7 +177,7 @@ export default function ConversationsInbox() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMessage = (data: any) => {
+    const handleNewMessage = (data: SocketData) => {
       console.log("Real-time message received:", data);
       
       // Invalidate inbox list to update snippets/unread counts
@@ -107,7 +215,7 @@ export default function ConversationsInbox() {
   const backendConversations = inboxResponse?.inbox || [];
   
   // Map backend conversations to frontend format
-  const conversations = backendConversations.map((item: any) => ({
+  const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => ({
     id: Number(item.id),
     name: item.contacts?.full_name || item.contacts?.first_name || 'Unknown',
     displayName: item.contacts?.full_name || item.contacts?.first_name || '',
@@ -133,7 +241,7 @@ export default function ConversationsInbox() {
 
   // Filter State
   const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState<any[]>([]);
+  const [filters, setFilters] = useState<Filter[]>([]);
   const [draggedFilterId, setDraggedFilterId] = useState<string | null>(null);
   const [openFilterColumnDropdown, setOpenFilterColumnDropdown] = useState<string | null>(null);
   const [openFilterOperatorDropdown, setOpenFilterOperatorDropdown] = useState<string | null>(null);
@@ -160,7 +268,7 @@ export default function ConversationsInbox() {
     enabled: !!selectedConversation
   });
 
-  const messages = (messagesResponse?.messages || []).map((m: any) => ({
+  const messages: Message[] = (messagesResponse?.messages || []).map((m: BackendMessage) => ({
     id: m.id,
     from: m.direction === 'OUTGOING' ? 'agent' : 'user',
     text: m.message_text || '',
@@ -261,7 +369,7 @@ export default function ConversationsInbox() {
     }
   });
 
-  const agentOptions = (membersResponse?.members || []).map((m: any) => ({
+  const agentOptions: AgentOption[] = (membersResponse?.members || []).map((m: { id: number; first_name?: string; last_name?: string; email: string }) => ({
     id: m.id.toString(),
     name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
     icon: React.createElement("div", { 
@@ -274,7 +382,7 @@ export default function ConversationsInbox() {
   // Helper function to get agent name by ID
   const getAgentName = (agentId: string | null) => {
     if (!agentId) return "Unassigned";
-    const agent = agentOptions.find((a: any) => a.id === agentId);
+    const agent = agentOptions.find((a: AgentOption) => a.id === agentId);
     return agent?.name || agentId;
   };
 
@@ -293,7 +401,7 @@ export default function ConversationsInbox() {
         }
       } else {
         // User opened it, remove from closed list
-        const newClosedProfiles = closedProfiles.filter((id: any) => id !== selectedConversation);
+        const newClosedProfiles = closedProfiles.filter((id: number) => id !== selectedConversation);
         localStorage.setItem('closed_contact_profiles', JSON.stringify(newClosedProfiles));
       }
     }
@@ -311,46 +419,46 @@ export default function ConversationsInbox() {
   }, [selectedConversation]);
 
   // Calculate pending messages count
-  const getPendingMessagesCount = (conv: any): number => {
+  const getPendingMessagesCount = (conv: Conversation): number => {
     // We can use unread_count from the backend conversation object
     return conv.unread || 0;
   };
 
   // Filter and sort conversations
-  const getFilteredConversations = () => {
-    let filtered = conversations;
+  const getFilteredConversations = (): Conversation[] => {
+    let filtered: Conversation[] = conversations;
 
     // Filter by tab
     if (activeTab !== "all") {
       if (activeTab === "active") {
         // Only show active chats assigned to me
-        filtered = filtered.filter((conv: any) => conv.status === "active" && conv.assignedAgent === "self");
+        filtered = filtered.filter((conv: Conversation) => conv.status === "active" && conv.assignedAgent === "self");
       } else {
-        filtered = filtered.filter((conv: any) => conv.status === activeTab);
+        filtered = filtered.filter((conv: Conversation) => conv.status === activeTab);
       }
     }
 
     // Filter by search query
     if (searchQuery.trim()) {
-      filtered = filtered.filter((conv: any) =>
+      filtered = filtered.filter((conv: Conversation) =>
         getDisplayName(conv).toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Filter by Select Agents Dropdown
     if (selectedFilterAgents.length > 0) {
-      filtered = filtered.filter((conv: any) => selectedFilterAgents.includes(conv.assignedAgent || ""));
+      filtered = filtered.filter((conv: Conversation) => selectedFilterAgents.includes(conv.assignedAgent || ""));
     }
 
     // Filter by Select Channels Dropdown
     if (selectedFilterChannels.length > 0) {
-      filtered = filtered.filter((conv: any) => selectedFilterChannels.includes(conv.channel || ""));
+      filtered = filtered.filter((conv: Conversation) => selectedFilterChannels.includes(conv.channel || ""));
     }
 
     // Advanced Filters
     if (filters.length > 0) {
-      filtered = filtered.filter((conv: any) => {
-        return filters.every((filter: any) => {
+      filtered = filtered.filter((conv: Conversation) => {
+        return filters.every((filter: Filter) => {
           let itemValue = "";
           if (filter.column === "name") {
             itemValue = getDisplayName(conv);
@@ -379,7 +487,7 @@ export default function ConversationsInbox() {
 
     // Filter by teams (Legacy/Existing)
     if (filterTeams.length > 0) {
-      filtered = filtered.filter((conv: any) => {
+      filtered = filtered.filter((conv: Conversation) => {
         const convTeams = involvedTeamsByConv[conv.id] || [];
         return filterTeams.some(teamId => convTeams.includes(teamId));
       });
@@ -387,16 +495,16 @@ export default function ConversationsInbox() {
 
     // Filter by agents (Legacy/Existing - usually superceded by Select Agents above)
     if (filterAgents.length > 0) {
-      filtered = filtered.filter((conv: any) => {
+      filtered = filtered.filter((conv: Conversation) => {
         return filterAgents.includes(conv.assignedAgent || "");
       });
     }
 
     // Sort by time
-      filtered.sort((a: any, b: any) => {
+      filtered.sort((a: Conversation, b: Conversation) => {
       // Get dynamic time from messages if available, relative to NOW.
       // Note: We use the *latest* message time.
-      const getLastTime = (con: any) => {
+      const getLastTime = (con: Conversation) => {
         return con.time;
       };
 
@@ -414,7 +522,7 @@ export default function ConversationsInbox() {
   // Mark messages as read when conversation is selected
   const handleSelectConversation = (convId: number) => {
     setSelectedConversation(convId);
-    const conv = conversations.find((c: any) => c.id === convId);
+    const conv = conversations.find((c: Conversation) => c.id === convId);
     setAssignedAgent(conv?.assignedAgent || null);
 
     // TODO: hit API to mark as read
@@ -509,7 +617,7 @@ export default function ConversationsInbox() {
   });
 
   // Basic details state per conversation
-  const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, any>>({
+  const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, BasicDetails>>({
     1: { displayName: "John Doe", number: "+1 234 567 8900", email: "john@example.com", gender: "Male", whatsappOptOut: "No", address: "123 Main St" },
     2: { displayName: "Jane Smith", number: "+1 234 567 8901", email: "jane@example.com", gender: "Female", whatsappOptOut: "No", address: "" },
     3: { displayName: "Michael Chen", number: "+1 234 567 8902", email: "", gender: "", whatsappOptOut: "No", address: "" },
@@ -565,7 +673,7 @@ export default function ConversationsInbox() {
   });
 
   // Update handlers for ContactProfileSidebar
-  const handleUpdateBasicDetails = (details: any) => {
+  const handleUpdateBasicDetails = (details: BasicDetails) => {
     if (selectedConversation) {
       setBasicDetailsByConv({ ...basicDetailsByConv, [selectedConversation]: details });
 
@@ -618,7 +726,7 @@ export default function ConversationsInbox() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [callPermissionChecked, setCallPermissionChecked] = useState(false);
   const [hasCallPermission, setHasCallPermission] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
   const [searchContactsQuery, setSearchContactsQuery] = useState("");
   const [limitReached, setLimitReached] = useState(false);
@@ -667,7 +775,7 @@ export default function ConversationsInbox() {
   }, [showFilter]);
 
   // Handle emoji selection from emoji-mart
-  const handleEmojiSelect = (emoji: any) => {
+  const handleEmojiSelect = (emoji: Emoji) => {
     setMessageText(messageText + emoji.native);
     setShowEmojiPicker(false);
   };
@@ -808,7 +916,7 @@ export default function ConversationsInbox() {
     }
   ];
 
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
 
   // Helper to split text by newlines and insert <br /> tags
@@ -906,7 +1014,7 @@ export default function ConversationsInbox() {
 
     // Create a new conversation for each phone number
     const newConversations = validPhoneNumbers.map((phoneNumber, index) => {
-      const newId = Math.max(...conversations.map((c: any) => c.id), 0) + index + 1;
+      const newId = Math.max(...conversations.map((c: Conversation) => c.id), 0) + index + 1;
 
       // Replace variables in template body
       let messageText = selectedTemplate.body;
@@ -930,31 +1038,9 @@ export default function ConversationsInbox() {
     // Add phone numbers to basic details
     const newBasicDetails = { ...basicDetailsByConv };
     newConversations.forEach(conv => {
-      newBasicDetails[conv.id] = { number: conv.phoneNumber, email: "", gender: "", whatsappOptOut: "No", address: "" };
+      newBasicDetails[conv.id] = { displayName: conv.displayName, number: conv.phoneNumber, email: "", gender: "", whatsappOptOut: "No", address: "" };
     });
     setBasicDetailsByConv(newBasicDetails);
-
-    // const newMessagesData = { ...conversationMessagesData };
-    // newConversations.forEach(conv => {
-    //   // Replace variables in template body for the message
-    //   let messageText = selectedTemplate.body;
-    //   selectedTemplate.variables.forEach((variable: string) => {
-    //     messageText = messageText.replace(`{{${variable}}}`, templateVariables[variable] || `{{${variable}}}`);
-    //   });
-
-    //   newMessagesData[conv.id] = [
-    //     {
-    //       id: 1,
-    //       from: "agent",
-    //       text: messageText,
-    //       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    //     }
-    //   ];
-    // });
-    // setConversationMessagesData(newMessagesData);
-
-    // Add new conversations to the list
-    // setConversations([...newConversations, ...conversations]);
 
     // Reset form and close modal
     setTemplatePhoneNumbers([""]);
@@ -1042,8 +1128,10 @@ export default function ConversationsInbox() {
       // Use data from contact
       setHasCallPermission(contact.callConsent === "Active");
       setSelectedContact({
+        id: contact.id,
         name: contact.name,
         number: phoneNumber,
+        pfp: contact.pfp,
         callConsent: contact.callConsent,
         callsUsed: contact.callsUsed,
         callsMax: contact.callsMax,
@@ -1055,6 +1143,7 @@ export default function ConversationsInbox() {
       const hasPermission = Math.random() > 0.5;
       setHasCallPermission(hasPermission);
       setSelectedContact({
+        id: 0,
         name: "Unknown Contact",
         number: phoneNumber,
         callConsent: hasPermission ? "Active" : "Denied",
@@ -1095,7 +1184,7 @@ export default function ConversationsInbox() {
 
   // Function to check if there are any agent messages in the current conversation
   const hasAgentMessages = () => {
-    return (messages || []).some((msg: any) => msg.from === "agent");
+    return (messages || []).some((msg: Message) => msg.from === "agent");
   };
 
   // Handle scroll to message from Contact Profile Sidebar
@@ -1149,8 +1238,8 @@ export default function ConversationsInbox() {
                   const count = tabKey === "all"
                     ? conversations.length
                     : tabKey === "active"
-                      ? conversations.filter((c: any) => c.status === "active" && c.assignedAgent === "self").length
-                      : conversations.filter((c: any) => c.status === tabKey).length;
+                      ? conversations.filter((c: Conversation) => c.status === "active" && c.assignedAgent === "self").length
+                      : conversations.filter((c: Conversation) => c.status === tabKey).length;
                   return (
                     <button
                       key={tab}
@@ -1186,7 +1275,7 @@ export default function ConversationsInbox() {
                     {/* Select Agents Dropdown */}
                     <div className="relative">
                       <CustomDropdown
-                        options={agentOptions.map((a: any) => ({ id: a.id, name: a.name, icon: a.icon }))}
+                        options={agentOptions.map((a: Agent) => ({ id: a.id, name: a.name, icon: a.icon }))}
                         selected={selectedFilterAgents}
                         onChange={setSelectedFilterAgents}
                         placeholder="Agents"
@@ -1405,7 +1494,7 @@ export default function ConversationsInbox() {
                     <p className="text-sm text-muted-foreground">No conversations found</p>
                   </div>
                 ) : (
-                  getFilteredConversations().map((conv: any) => (
+                  getFilteredConversations().map((conv: Conversation) => (
                     <div
                       key={conv.id}
                       className={`p-3 rounded-md cursor-pointer transition-colors ${selectedConversation === conv.id ? "bg-accent" : "hover:bg-muted/50"
@@ -1451,11 +1540,6 @@ export default function ConversationsInbox() {
                                       conv.status === "completed" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
                                         "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
                                     }`}
-                                // className={`text-xs flex-shrink-0 ${conv.status === "queued" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800" :
-                                //   conv.status === "active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
-                                //     conv.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" :
-                                //       "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
-                                //   }`}
                                 >
                                   {conv.status}
                                 </Badge>
@@ -1497,9 +1581,9 @@ export default function ConversationsInbox() {
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarFallback className={getAvatarColor(getDisplayName(conversations.find((c: any) => c.id === selectedConversation) || {}))}>
+                    <AvatarFallback className={getAvatarColor(getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation)))}>
                       {(() => {
-                        const name = getDisplayName(conversations.find((c: any) => c.id === selectedConversation) || {});
+                        const name = getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation));
                         const parts = name.trim().split(/\s+/).filter((p: string) => p.length > 0);
                         if (parts.length === 0) return "U";
                         if (parts.length === 1) return parts[0][0].toUpperCase();
@@ -1508,7 +1592,7 @@ export default function ConversationsInbox() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-sm font-semibold">{getDisplayName(conversations.find((c: any) => c.id === selectedConversation) || {})}</h3>
+                    <h3 className="text-sm font-semibold">{getDisplayName(conversations.find((c: Conversation) => c.id === selectedConversation))}</h3>
                     <p className="text-xs text-muted-foreground">Active now</p>
                   </div>
                 </div>
@@ -1560,8 +1644,8 @@ export default function ConversationsInbox() {
                               setAssignedAgent(null);
                             }
                           }}
-                          disabled={conversations.find((c: any) => c.id === selectedConversation)?.assignedAgent !== "self"}
-                          className={conversations.find((c: any) => c.id === selectedConversation)?.assignedAgent !== "self" ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.assignedAgent !== "self"}
+                          className={conversations.find((c: Conversation) => c.id === selectedConversation)?.assignedAgent !== "self" ? "opacity-50 cursor-not-allowed" : ""}
                         >
                           <UserX size={16} className="mr-2" />
                           Unassign Chat
@@ -1574,8 +1658,8 @@ export default function ConversationsInbox() {
                               setAssignedAgent(null);
                             }
                           }}
-                          disabled={conversations.find((c: any) => c.id === selectedConversation)?.status === "completed"}
-                          className={conversations.find((c: any) => c.id === selectedConversation)?.status === "completed" ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "completed"}
+                          className={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "completed" ? "opacity-50 cursor-not-allowed" : ""}
                         >
                           <CheckCircle size={16} className="mr-2" />
                           Mark as Completed
@@ -1588,8 +1672,8 @@ export default function ConversationsInbox() {
                               setAssignedAgent(null);
                             }
                           }}
-                          disabled={conversations.find((c: any) => c.id === selectedConversation)?.status === "spam"}
-                          className={conversations.find((c: any) => c.id === selectedConversation)?.status === "spam" ? "opacity-50 cursor-not-allowed" : ""}
+                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "spam"}
+                          className={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "spam" ? "opacity-50 cursor-not-allowed" : ""}
                         >
                           <AlertOctagon size={16} className="mr-2" />
                           Mark as Spam
@@ -1605,7 +1689,7 @@ export default function ConversationsInbox() {
 
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {(messages || []).map((msg: any, index: number, allMessages: any[]) => {
+                  {(messages || []).map((msg: Message, index: number, allMessages: Message[]) => {
                     const showDateDivider = index === 0 || formatMessageDate(msg.time) !== formatMessageDate(allMessages[index - 1].time);
                     return (
                       <React.Fragment key={msg.id}>
@@ -1621,7 +1705,7 @@ export default function ConversationsInbox() {
                             {/* Images */}
                             {msg.images && msg.images.length > 0 && (
                               <div className="mt-2 space-y-2">
-                                {msg.images.map((image: any, idx: number) => (
+                                {msg.images.map((image: { url: string; name: string; size: number }, idx: number) => (
                                   <div key={idx} className="space-y-1">
                                     <img
                                       src={image.url}
@@ -1653,7 +1737,7 @@ export default function ConversationsInbox() {
                             {/* Attachments */}
                             {msg.attachments && msg.attachments.length > 0 && (
                               <div className="mt-2 space-y-1">
-                                {msg.attachments.map((attachment: any, idx: number) => (
+                                {msg.attachments.map((attachment: { url: string; name: string; size: number }, idx: number) => (
                                   <div key={idx} className="flex items-center justify-between gap-2 text-xs bg-black/10 dark:bg-white/10 rounded p-2">
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                       <Paperclip size={12} className="flex-shrink-0" />
@@ -1678,14 +1762,14 @@ export default function ConversationsInbox() {
                             {/* Video */}
                             {msg.video && (
                               <div className="mt-2 text-xs bg-black/10 dark:bg-white/10 rounded overflow-hidden">
-                                <video src={msg.video.url} controls className="p-1 w-full max-h-64 object-contain bg-black/5" poster={msg.video.thumbnail} />
+                                <video src={msg.video!.url} controls className="p-1 w-full max-h-64 object-contain bg-black/5" poster={msg.video!.thumbnail} />
                                 <div className="flex items-center gap-2 p-2">
                                   <div className="flex items-center gap-1 flex-1 min-w-0">
                                     <div className="p-1 bg-black/10 rounded-full">
                                       <div className="ml-0.5 w-0 h-0 border-t-[3px] border-t-transparent border-l-[6px] border-l-current border-b-[3px] border-b-transparent"></div>
                                     </div>
-                                    <span className="truncate">{msg.video.name}</span>
-                                    <span className="opacity-70 flex-shrink-0">({(msg.video.size / 1024 / 1024).toFixed(1)}MB)</span>
+                                    <span className="truncate">{msg.video!.name}</span>
+                                    <span className="opacity-70 flex-shrink-0">({(msg.video!.size / 1024 / 1024).toFixed(1)}MB)</span>
                                   </div>
                                 </div>
                               </div>
@@ -1703,7 +1787,7 @@ export default function ConversationsInbox() {
                                     }}
                                     controlsList="nodownload"
                                   >
-                                    <source src={msg.audio.url} type="audio/webm" />
+                                    <source src={msg.audio!.url} type="audio/webm" />
                                     Your browser does not support the audio element.
                                   </audio>
                                   <div className="flex items-center justify-between mt-2">
@@ -1711,7 +1795,7 @@ export default function ConversationsInbox() {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDownload(msg.audio.url, `voice-message-${msg.id}.webm`);
+                                        handleDownload(msg.audio!.url, `voice-message-${msg.id}.webm`);
                                       }}
                                       className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                                       title="Download voice message"
@@ -1937,7 +2021,7 @@ export default function ConversationsInbox() {
         {
           showContactPanel && (
             <ContactProfileSidebar
-              conversation={conversations.find((c: any) => c.id === selectedConversation)}
+              conversation={conversations.find((c: Conversation) => c.id === selectedConversation)}
               conversations={conversations}
               basicDetails={basicDetailsByConv[selectedConversation || 0]}
               onUpdateBasicDetails={handleUpdateBasicDetails}
@@ -1947,12 +2031,12 @@ export default function ConversationsInbox() {
               involvedTeams={involvedTeamsByConv[selectedConversation || 0]}
               onUpdateInvolvedTeams={handleUpdateInvolvedTeams}
               teamOptions={teamOptions}
-              tags={tagsByConv[conversations.find((c: any) => c.id === selectedConversation)?.id || 0] || []}
+              tags={tagsByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || []}
               onUpdateTags={handleUpdateTags}
               tagOptions={tagOptions}
-              customAttributes={customAttributesByConv[conversations.find((c: any) => c.id === selectedConversation)?.id || 0] || {}}
+              customAttributes={customAttributesByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || {}}
               onUpdateCustomAttributes={handleUpdateCustomAttributes}
-              notes={notesByConv[conversations.find((c: any) => c.id === selectedConversation)?.id || 0] || []}
+              notes={notesByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || []}
               onUpdateNotes={handleUpdateNotes}
               messages={messages || []}
               onScrollToMessage={handleScrollToMessage}
@@ -2102,16 +2186,16 @@ export default function ConversationsInbox() {
                           </div>
                         </div>
 
-                        <div className="git statusborder-t pt-4 space-y-2">
+                        <div className="border-t pt-4 space-y-2">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium">Tries {selectedContact.callsUsed}/{selectedContact.callsMax}</span>
                             <span className="text-xs text-muted-foreground">Renews in {selectedContact.renewsIn}</span>
                           </div>
                           <div className="flex gap-1">
-                            {Array.from({ length: selectedContact.callsMax }).map((_, index) => (
+                            {Array.from({ length: selectedContact.callsMax ?? 0 }).map((_, index) => (
                               <div
                                 key={index}
-                                className={`flex-1 h-2 rounded-full transition-colors ${index < selectedContact.callsUsed ? "bg-primary" : "bg-muted"
+                                className={`flex-1 h-2 rounded-full transition-colors ${index < (selectedContact.callsUsed ?? 0) ? "bg-primary" : "bg-muted"
                                   }`}
                               />
                             ))}

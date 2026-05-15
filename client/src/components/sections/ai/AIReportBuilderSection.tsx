@@ -1,31 +1,86 @@
-import React, { useState } from "react";
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { FileText, Edit, Play, History, Download, Trash2, Sparkles, Plus } from "lucide-react";
-
-interface Report {
-  id: string;
-  name: string;
-  type: string;
-  lastRun?: string;
-}
-
+import { useState } from "react";
+import {
+  FileText,
+  Edit2,
+  Play,
+  History,
+  Download,
+  Trash2,
+  Sparkles,
+  Plus,
+  ChevronLeft,
+  AlertCircle,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function AIReportBuilderSection() {
-  const queryClient = useQueryClient();
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState<any>(null);
+
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const selectCls = cn(
+    inputCls,
+    "appearance-none cursor-pointer pr-10 bg-no-repeat",
+    dark
+      ? "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]"
+      : "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]",
+    "[background-position:right_1rem_center]"
+  );
+
+  const textareaCls = cn(
+    "w-full rounded-xl text-[13px] font-medium transition-all px-4 py-3 border outline-none resize-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
 
   const { data: reports, isLoading } = useQuery({
     queryKey: ["/api/ai/reports"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/ai/reports");
       return res.json();
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -38,7 +93,7 @@ export default function AIReportBuilderSection() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete report.", variant: "destructive" });
-    }
+    },
   });
 
   const [formData, setFormData] = useState({
@@ -48,253 +103,288 @@ export default function AIReportBuilderSection() {
     prompt: "",
   });
 
-  const handleDeleteReport = (id: string | number) => {
-    deleteMutation.mutate(id);
-  };
-
-  const handlePublish = async () => {
+  const handlePublish = () => {
     if (formData.name.trim() && formData.prompt.trim()) {
-      try {
-        // Create endpoint would go here
-        toast({ title: "Info", description: "Creating reports not fully implemented yet." });
-        setIsCreateFormOpen(false);
-      } catch (error) {
-        toast({ title: "Error", description: "Failed to publish report.", variant: "destructive" });
-      }
+      toast({ title: "Info", description: "Creating reports not fully implemented yet." });
+      setIsCreateFormOpen(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: "",
-      reportType: "Text type",
-      llmModel: "gpt-4o-mini",
-      prompt: "",
-    });
+    setFormData({ name: "", reportType: "Text type", llmModel: "gpt-4o-mini", prompt: "" });
     setIsCreateFormOpen(false);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const hasReports = reports && reports.length > 0;
+
   return (
-    <div className="p-6 h-full flex flex-col">
-      {!isCreateFormOpen && (
-        <>
-          <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-6">
-            <div className="p-3 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg">
-              <FileText className="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-            <div className="space-y-1 flex-1">
-              <CardTitle className="text-lg flex items-center justify-between">
-                Report Builder
-                <Button 
-                  variant="outline" 
-                  className="btn-outline-primary h-9 px-4"
-                  onClick={() => setIsCreateFormOpen(true)}
-                >
-                  <Plus size={16} />
-                  Add New
-                </Button>
-              </CardTitle>
-              <CardDescription>Generate reports with Artificial Intelligence</CardDescription>
-            </div>
-          </CardHeader>
-          <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
-
-          <div className="flex-1 overflow-hidden flex flex-col border rounded-lg bg-white dark:bg-slate-900">
-            <div className="flex-1 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 dark:bg-slate-800/50 sticky top-0">
-                    <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <FileText size={14} />
-                        Name
-                      </div>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-muted-foreground">Type</th>
-                    <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-muted-foreground">Last Run</th>
-                    <th className="px-4 py-3 text-left font-semibold text-xs uppercase text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reports?.map((report: any, index: number) => (
-                    <tr
-                      key={report.id}
-                      className={`border-b hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors ${
-                        index % 2 === 0 ? "bg-white dark:bg-slate-900/20" : "bg-gray-50/50 dark:bg-slate-800/10"
-                      }`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <FileText size={16} className="text-muted-foreground" />
-                          <span className="font-medium">{report.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-amber-700 dark:text-amber-500 font-medium">{report.type}</span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {report.lastRun || "-"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button 
-                            className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                            title="Edit"
-                          >
-                            <Edit size={16} className="text-blue-600 dark:text-blue-400" />
-                          </button>
-                          <button 
-                            className="p-1.5 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                            title="Run"
-                          >
-                            <Play size={16} className="text-green-600 dark:text-green-400" />
-                          </button>
-                          {report.lastRun && (
-                            <>
-                              <button 
-                                className="p-1.5 bg-gray-500/10 hover:bg-gray-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                                title="History"
-                              >
-                                <History size={16} className="text-gray-600 dark:text-gray-400" />
-                              </button>
-                              <button 
-                                className="p-1.5 bg-purple-500/10 hover:bg-purple-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                                title="Download"
-                              >
-                                <Download size={16} className="text-purple-600 dark:text-purple-400" />
-                              </button>
-                            </>
-                          )}
-                          <button 
-                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm rounded transition-all hover:scale-110"
-                            title="Delete"
-                            onClick={() => handleDeleteReport(report.id)}
-                          >
-                            <Trash2 size={16} className="text-red-600 dark:text-red-400" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Report Builder</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  Generate reports with Artificial Intelligence
+                </p>
+              </div>
             </div>
 
-            <div className="border-t p-4 bg-gray-50 dark:bg-slate-800/50 text-xs text-muted-foreground">
-              Showing {reports?.length || 0} of {reports?.length || 0} reports
+            <div className="flex items-center gap-2 shrink-0">
+              {!isCreateFormOpen ? (
+                <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
+                  <Plus size={12} /> Add New
+                </button>
+              ) : (
+                <button onClick={handleCancel} className={outlineBtn}>
+                  <ChevronLeft size={12} /> Back
+                </button>
+              )}
             </div>
           </div>
-        </>
-      )}
 
-      {/* Create/Edit Form */}
-      {isCreateFormOpen && (
-        <div className="h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg">
-                  <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
+          {/* ── LIST VIEW ── */}
+          {!isCreateFormOpen && (
+            <div className="p-8">
+              {!hasReports ? (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No reports found</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Create your first AI-generated report to get started.
+                    </p>
+                  </div>
+                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Create Now
+                  </button>
                 </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Report Builder</h2>
-                  <p className="text-sm text-muted-foreground">Generate reports with Artificial Intelligence</p>
-                </div>
-              </div>
-              <button 
-                onClick={handleCancel}
-                className="text-primary hover:text-primary/80 font-medium text-sm"
-              >
-                Back
-              </button>
-            </div>
+              ) : (
+                <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                          <th className={cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest", sub)}>
+                            <div className="flex items-center gap-2">
+                              <FileText size={12} /> Name
+                            </div>
+                          </th>
+                          <th className={cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Type</th>
+                          <th className={cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest", sub)}>Last Run</th>
+                          <th className={cn("px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest", sub)}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reports.map((report: any) => (
+                          <tr
+                            key={report.id}
+                            className={cn("border-b transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/80")}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <FileText size={14} className="text-primary" />
+                                </div>
+                                <span className={cn("text-[13px] font-black", text)}>{report.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant="outline" className="h-5 px-2 rounded-md border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">
+                                {report.type}
+                              </Badge>
+                            </td>
+                            <td className={cn("px-6 py-4 text-[12px] font-bold", sub)}>
+                              {report.lastRun || "—"}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => toast({ title: "Edit", description: "Edit report." })}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}
+                                  title="Edit"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button
+                                  onClick={() => toast({ title: "Run", description: "Running report..." })}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-emerald-500/40 hover:text-emerald-500 text-slate-400" : "border-slate-200 hover:border-emerald-500/40 hover:text-emerald-500 text-slate-500")}
+                                  title="Run"
+                                >
+                                  <Play size={13} />
+                                </button>
+                                {report.lastRun && (
+                                  <>
+                                    <button
+                                      onClick={() => toast({ title: "History", description: "View history." })}
+                                      className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-slate-500/40 hover:text-slate-300 text-slate-400" : "border-slate-200 hover:border-slate-500/40 hover:text-slate-700 text-slate-500")}
+                                      title="History"
+                                    >
+                                      <History size={13} />
+                                    </button>
+                                    <button
+                                      onClick={() => toast({ title: "Download", description: "Downloading report..." })}
+                                      className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-purple-500/40 hover:text-purple-500 text-slate-400" : "border-slate-200 hover:border-purple-500/40 hover:text-purple-500 text-slate-500")}
+                                      title="Download"
+                                    >
+                                      <Download size={13} />
+                                    </button>
+                                  </>
+                                )}
+                                <button
+                                  onClick={() => { setReportToDelete(report); setShowDeleteConfirm(true); }}
+                                  className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-            {/* Form Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="max-w-4xl space-y-6">
-                {/* Name Field */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter report name"
-                  />
-                </div>
-
-                {/* Report Type */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Select report type</label>
-                  <select
-                    value={formData.reportType}
-                    onChange={(e) => setFormData({ ...formData, reportType: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Text type">Text type</option>
-                    <option value="Graph type">Graph type</option>
-                  </select>
-                </div>
-
-                {/* LLM Model */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Select LLM model</label>
-                  <select
-                    value={formData.llmModel}
-                    onChange={(e) => setFormData({ ...formData, llmModel: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="gpt-4o-mini">gpt-4o-mini</option>
-                    <option value="gpt-4o">gpt-4o</option>
-                    <option value="gpt-4-turbo">gpt-4-turbo</option>
-                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                  </select>
-                </div>
-
-                {/* Prompt */}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground flex items-center justify-between">
-                    Prompt
-                    <button className="p-1.5 bg-purple-500/10 hover:bg-purple-500/20 backdrop-blur-sm rounded transition-all">
-                      <Sparkles size={16} className="text-purple-600 dark:text-purple-400" />
-                    </button>
-                  </label>
-                  <textarea
-                    value={formData.prompt}
-                    onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    rows={12}
-                    placeholder="Enter your prompt here..."
-                  />
-                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Generate result as a PDF file link</span>
+                  <div className={cn("px-6 py-3 border-t text-[10px] font-black uppercase tracking-widest", softBorder, sub, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                    Showing {reports.length} of {reports.length} reports
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ── CREATE FORM VIEW ── */}
+          {isCreateFormOpen && (
+            <div className="p-8">
+              <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
+                <div className="max-w-3xl space-y-6">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Name</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className={inputCls}
+                      placeholder="Enter report name"
+                    />
+                  </div>
+
+                  {/* Report Type */}
+                  <div className="space-y-2">
+                    <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Select report type</label>
+                    <select
+                      value={formData.reportType}
+                      onChange={(e) => setFormData({ ...formData, reportType: e.target.value })}
+                      className={selectCls}
+                    >
+                      <option value="Text type">Text type</option>
+                      <option value="Graph type">Graph type</option>
+                    </select>
+                  </div>
+
+                  {/* LLM Model */}
+                  <div className="space-y-2">
+                    <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Select LLM model</label>
+                    <select
+                      value={formData.llmModel}
+                      onChange={(e) => setFormData({ ...formData, llmModel: e.target.value })}
+                      className={selectCls}
+                    >
+                      <option value="gpt-4o-mini">gpt-4o-mini</option>
+                      <option value="gpt-4o">gpt-4o</option>
+                      <option value="gpt-4-turbo">gpt-4-turbo</option>
+                      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                    </select>
+                  </div>
+
+                  {/* Prompt */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className={cn("block text-[10px] font-black uppercase tracking-widest", sub)}>Prompt</label>
+                      <button
+                        onClick={() => toast({ title: "AI", description: "Generating suggestion..." })}
+                        className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", "border-primary/30 text-primary hover:bg-primary hover:text-white")}
+                        title="AI Suggest"
+                      >
+                        <Sparkles size={14} />
+                      </button>
+                    </div>
+                    <textarea
+                      value={formData.prompt}
+                      onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                      className={textareaCls}
+                      rows={10}
+                      placeholder="Enter your prompt here..."
+                    />
+                    <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                      Generate result as a PDF file link
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className={cn("flex justify-end gap-2 pt-6 border-t", softBorder)}>
+                  <button onClick={handleCancel} className={outlineBtn}>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePublish}
+                    disabled={!formData.name.trim() || !formData.prompt.trim()}
+                    className={primaryBtn}
+                  >
+                    <Sparkles size={12} /> Publish
+                  </button>
+                </div>
               </div>
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* Footer */}
-            <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 p-6 flex justify-end gap-3">
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-medium text-foreground hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Report?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{reportToDelete?.name || "This report"}</span> will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => { deleteMutation.mutate(reportToDelete.id); setShowDeleteConfirm(false); }}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                Cancel
-              </button>
-              <Button
-                variant="outline"
-                onClick={handlePublish}
-                disabled={!formData.name.trim() || !formData.prompt.trim()}
-                className="btn-outline-primary h-9 px-6 font-medium"
-              >
-                Publish
-              </Button>
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

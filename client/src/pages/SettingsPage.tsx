@@ -237,7 +237,7 @@ export default function SettingsPage() {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-      <div className="h-screen overflow-hidden" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div className="h-[calc(100vh-4rem)] overflow-hidden" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         <div className="flex h-full">
           {/* Left Sidebar Navigation */}
           <Card className="h-full w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 rounded-none flex-shrink-0 z-10 flex flex-col overflow-hidden">

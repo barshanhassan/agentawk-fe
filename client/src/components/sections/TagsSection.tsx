@@ -1,7 +1,23 @@
-import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Trash2,
+  Edit2,
+} from "react-feather";
+import {
+  ChevronsUpDown,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  MoreVertical,
+  Loader2,
+  Tag as TagIcon,
+  AlertCircle,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -9,31 +25,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import CustomDropdown from "../CustomDropdown";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type TagStatus = "Active" | "Inactive";
-
-interface Option {
-  id: string;
-  name: string;
-}
-
-const statusOptions: Option[] = [
-  { id: "Active", name: "Active" },
-  { id: "Inactive", name: "Inactive" },
-];
 
 interface Tag {
   id: string;
@@ -43,34 +48,75 @@ interface Tag {
 }
 
 export default function TagsSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
-  const [filterStatus, setFilterStatus] = useState<TagStatus[]>([]);
+  const [filterStatus, setFilterStatus] = useState<TagStatus | "">("");
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
+  // ── Design tokens ─────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  // Fetch Tags
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const selectCls = cn(
+    inputCls,
+    "appearance-none cursor-pointer pr-10 bg-no-repeat",
+    dark
+      ? "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]"
+      : "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]",
+    "[background-position:right_1rem_center]"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
+
+  const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
+
+  // Queries
   const { data: tagsData, isLoading } = useQuery<any>({
     queryKey: ["/api/tags/list"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/tags/list");
       return res.json();
-    }
+    },
   });
 
   const allTags: Tag[] = (tagsData?.tags || []).map((t: any) => ({
     id: t.id.toString(),
     name: t.name,
     status: t.status || "Active",
-    lastEdited: t.updated_at ? new Date(t.updated_at).toISOString().split('T')[0] : (t.created_at ? new Date(t.created_at).toISOString().split('T')[0] : "-")
+    lastEdited: t.updated_at
+      ? new Date(t.updated_at).toISOString().split("T")[0]
+      : t.created_at
+        ? new Date(t.created_at).toISOString().split("T")[0]
+        : "-",
   }));
 
-  // Create Tag Mutation
   const createMutation = useMutation({
     mutationFn: async (name: string) => {
       const res = await apiRequest("POST", "/api/tags", { name, status: "Active" });
@@ -82,12 +128,11 @@ export default function TagsSection() {
       setShowCreateModal(false);
       setNewName("");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
-  // Update Tag Mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const res = await apiRequest("PATCH", `/api/tags/${id}`, data);
       return res.json();
     },
@@ -97,10 +142,9 @@ export default function TagsSection() {
       setShowEditModal(false);
       setEditingItem(null);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
-  // Delete Tag Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/tags/${id}`);
@@ -111,30 +155,22 @@ export default function TagsSection() {
       setShowDeleteModal(false);
       setItemToDelete(null);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" })
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
-  // Create Tag Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newName, setNewName] = useState("");
-
-  // Edit Tag Modal State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Tag | null>(null);
   const [editName, setEditName] = useState("");
   const [editStatus, setEditStatus] = useState<TagStatus>("Active");
-
-  // Delete Tag Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Tag | null>(null);
 
   const handleColumnSort = (column: string) => {
     if (sort?.column === column) {
-      if (sort.direction === "asc") {
-        setSort({ column, direction: "desc" });
-      } else {
-        setSort(null); // Unsort
-      }
+      if (sort.direction === "asc") setSort({ column, direction: "desc" });
+      else setSort(null);
     } else {
       setSort({ column, direction: "asc" });
     }
@@ -142,47 +178,30 @@ export default function TagsSection() {
 
   const renderSortIcon = (column: string) => {
     const isActive = sort?.column === column;
-    const color = isActive ? "text-foreground" : "text-muted-foreground";
-
-    if (!isActive) {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronsUpDown size={14} className={color} /></div>;
-    }
-    if (sort?.direction === "asc") {
-      return <div className="w-4 h-4 flex items-center justify-center"><ChevronUp size={14} className={color} /></div>;
-    }
-    return <div className="w-4 h-4 flex items-center justify-center"><ChevronDown size={14} className={color} /></div>;
+    if (!isActive) return <ChevronsUpDown size={12} className="opacity-40" />;
+    if (sort?.direction === "asc") return <ChevronUp size={12} className="text-primary" />;
+    return <ChevronDown size={12} className="text-primary" />;
   };
 
   const getFilteredAndSortedData = () => {
     let data = [...allTags];
-
-    if (search) {
-      data = data.filter(item =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (filterStatus.length > 0) {
-      data = data.filter(item => filterStatus.includes(item.status));
-    }
-
+    if (search) data = data.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
+    if (filterStatus) data = data.filter((i) => i.status === filterStatus);
     if (sort) {
       data.sort((a, b) => {
         const aVal = a[sort.column as keyof Tag];
         const bVal = b[sort.column as keyof Tag];
-        let comparison = 0;
-        if (typeof aVal === "string" && typeof bVal === "string") {
-          comparison = aVal.localeCompare(bVal);
-        }
-        return sort.direction === "asc" ? comparison : -comparison;
+        let cmp = 0;
+        if (typeof aVal === "string" && typeof bVal === "string") cmp = aVal.localeCompare(bVal);
+        return sort.direction === "asc" ? cmp : -cmp;
       });
     }
-
     return data;
   };
 
   const filteredAndSorted = getFilteredAndSortedData();
   const totalFilteredItems = filteredAndSorted.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredItems / rowsPerPage));
   const paginatedData = filteredAndSorted.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const handleEdit = (item: Tag) => {
@@ -192,24 +211,9 @@ export default function TagsSection() {
     setShowEditModal(true);
   };
 
-  const handleDelete = (item: Tag) => {
-    setItemToDelete(item);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (itemToDelete) {
-      deleteMutation.mutate(itemToDelete.id);
-    }
-  };
-
   const handleCreate = () => {
     if (!newName.trim()) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+      toast({ title: "Missing Fields", description: "Please enter a tag name.", variant: "destructive" });
       return;
     }
     createMutation.mutate(newName);
@@ -217,336 +221,335 @@ export default function TagsSection() {
 
   const handleSaveEdit = () => {
     if (!editName.trim()) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+      toast({ title: "Missing Fields", description: "Please enter a tag name.", variant: "destructive" });
       return;
     }
-    if (editingItem) {
-      updateMutation.mutate({
-        id: editingItem.id,
-        data: { name: editName, status: editStatus }
-      });
-    }
+    if (editingItem) updateMutation.mutate({ id: editingItem.id, data: { name: editName, status: editStatus } });
   };
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setRowsDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const thCls = cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest cursor-pointer select-none", sub);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold mb-1">Tags</h2>
-          <p className="text-sm text-muted-foreground">You can create tags here to categorize your conversations.</p>
-        </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-outline-primary gap-2 h-9 font-normal"
-          variant="outline"
-        >
-          <Plus size={16} />
-          Add Tag
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search tags..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-          />
-        </div>
-        <CustomDropdown
-          options={statusOptions}
-          selected={filterStatus}
-          onChange={(selectedIds) => setFilterStatus(selectedIds as TagStatus[])}
-          placeholder="Status"
-          width="120px"
-        />
-      </div>
-
-      <Card className="border-0">
-        <CardContent className="p-0 px-1 mt-1">
-          <div className="overflow-x-auto mt-6">
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <TagIcon className="w-5 h-5 text-primary" />
               </div>
-            ) : (
-              <table className="w-full text-xs">
-                <thead className="select-none">
-                  <tr className="border-b">
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleColumnSort("name")}
-                    >
-                      <div className="flex items-center gap-2 max-w-[15rem]" style={{ width: "100vw" }}>
-                        Name
-                        {renderSortIcon("name")}
-                      </div>
-                    </th>
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleColumnSort("status")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Status
-                        {renderSortIcon("status")}
-                      </div>
-                    </th>
-                    <th
-                      className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                      onClick={() => handleColumnSort("lastEdited")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Last Edited
-                        {renderSortIcon("lastEdited")}
-                      </div>
-                    </th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-8 text-muted-foreground">
-                        No tags found.
-                      </td>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Tags</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  Create tags to categorize your conversations.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => setShowCreateModal(true)} className={primaryOutlineBtn}>
+                <Plus size={12} /> Add Tag
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-8 space-y-5">
+            {/* Filters */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 max-w-xs">
+                <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4", sub)} />
+                <input
+                  type="text"
+                  placeholder="Search tags..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={cn(inputCls, "pl-11")}
+                />
+              </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as TagStatus | "")}
+                className={cn(selectCls, "max-w-[160px]")}
+              >
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            {/* Table */}
+            <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className={cn("border-b", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                      <th className={thCls} onClick={() => handleColumnSort("name")}>
+                        <div className="flex items-center gap-2">Name {renderSortIcon("name")}</div>
+                      </th>
+                      <th className={thCls} onClick={() => handleColumnSort("status")}>
+                        <div className="flex items-center gap-2">Status {renderSortIcon("status")}</div>
+                      </th>
+                      <th className={thCls} onClick={() => handleColumnSort("lastEdited")}>
+                        <div className="flex items-center gap-2">Last Edited {renderSortIcon("lastEdited")}</div>
+                      </th>
+                      <th className={cn("px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest", sub)}>Actions</th>
                     </tr>
-                  ) : (
-                    paginatedData.map((item) => (
-                      <tr key={item.id} className="border-b hover:bg-muted/50">
-                        <td className="py-2 px-3 max-w-[15rem]">
-                          <div className="break-all">
-                            {item.name}
-                          </div>
+                  </thead>
+                  <tbody>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center">
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
                         </td>
-                        <td className="py-2 px-3">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                            }`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3">{item.lastEdited}</td>
-                        <td className="py-2 px-3">
-                          <div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1 hover:bg-muted rounded">
-                                  <MoreVertical size={14} className="text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEdit(item)}>
-                                  <Edit2 size={14} className="mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive">
-                                  <Trash2 size={14} className="mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                      </tr>
+                    ) : paginatedData.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                              <TagIcon className="w-7 h-7 text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className={cn("text-[13px] font-black", text)}>No tags found</h3>
+                              <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                                Create your first tag to categorize conversations.
+                              </p>
+                            </div>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {!isLoading && (
-            <div className="flex items-center justify-between mt-4 text-xs">
-              <span className="text-muted-foreground">{totalFilteredItems} results</span>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Rows per page:</span>
-                <div className="relative w-15" ref={dropdownRef}>
-                  <button
-                    type="button"
-                    className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                    onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                  >
-                    <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                    <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                  </button>
-                  {rowsDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
-                      <ul className="py-1">
-                        {[10, 25, 50].map(option => (
-                          <li
-                            key={option}
-                            className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                            onClick={() => {
-                              setRowsPerPage(option);
-                              setPage(1);
-                              setRowsDropdownOpen(false);
-                            }}
-                          >
-                            {option}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <span className="text-muted-foreground">Page {page} of {Math.max(1, Math.ceil(totalFilteredItems / rowsPerPage))}</span>
-                <div className="flex gap-1">
-                  <button
-                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                  >
-                    <ChevronsLeft size={16} />
-                  </button>
-                  <button
-                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                    onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredItems / rowsPerPage), prev + 1))}
-                    disabled={page === Math.ceil(totalFilteredItems / rowsPerPage) || totalFilteredItems === 0}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                  <button
-                    className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                    onClick={() => setPage(Math.ceil(totalFilteredItems / rowsPerPage))}
-                    disabled={page === Math.ceil(totalFilteredItems / rowsPerPage) || totalFilteredItems === 0}
-                  >
-                    <ChevronsRight size={16} />
-                  </button>
-                </div>
+                    ) : (
+                      paginatedData.map((item) => (
+                        <tr
+                          key={item.id}
+                          className={cn("border-b transition-colors", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/80")}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <TagIcon size={14} className="text-primary" />
+                              </div>
+                              <span className={cn("text-[13px] font-black break-all", text)}>{item.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={cn(
+                                "inline-flex h-5 px-2 items-center rounded-md text-[9px] font-black uppercase tracking-widest border",
+                                item.status === "Active"
+                                  ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
+                                  : "border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-400"
+                              )}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className={cn("px-6 py-4 text-[12px] font-bold", sub)}>{item.lastEdited}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex justify-end">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}>
+                                    <MoreVertical size={14} />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-40", card, border)}>
+                                  <DropdownMenuItem onClick={() => handleEdit(item)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
+                                    <Edit2 size={13} /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => { setItemToDelete(item); setShowDeleteModal(true); }}
+                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
+                                  >
+                                    <Trash2 size={13} /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
+
+              {!isLoading && (
+                <div className={cn("px-6 py-3 border-t flex items-center justify-between flex-wrap gap-3", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                  <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>
+                    {totalFilteredItems} results
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>Rows</span>
+                    <select
+                      value={rowsPerPage}
+                      onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+                      className={cn(selectCls, "h-8 w-20 text-[11px] px-3")}
+                    >
+                      {[10, 25, 50].map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>
+                      Page {page} of {totalPages}
+                    </span>
+                    <div className="flex gap-1">
+                      {[
+                        { Icon: ChevronsLeft, onClick: () => setPage(1), disabled: page === 1 },
+                        { Icon: ChevronLeft, onClick: () => setPage((p) => Math.max(1, p - 1)), disabled: page === 1 },
+                        { Icon: ChevronRight, onClick: () => setPage((p) => Math.min(totalPages, p + 1)), disabled: page === totalPages || totalFilteredItems === 0 },
+                        { Icon: ChevronsRight, onClick: () => setPage(totalPages), disabled: page === totalPages || totalFilteredItems === 0 },
+                      ].map(({ Icon, onClick, disabled }, i) => (
+                        <button
+                          key={i}
+                          onClick={onClick}
+                          disabled={disabled}
+                          className={cn("w-8 h-8 rounded-lg border flex items-center justify-center transition-all disabled:opacity-40", softBorder, dark ? "hover:border-primary/40 hover:text-primary text-slate-400" : "hover:border-primary/40 hover:text-primary text-slate-500")}
+                        >
+                          <Icon size={14} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
+      {/* ── Create Modal ── */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Create Tag</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
+          <div className="p-6 space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <TagIcon size={18} />
+                </div>
+                <div className="text-left">
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Create Tag</DialogTitle>
+                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    Add a new tag to categorize conversations.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <label className={labelCls}>Name <span className="text-rose-500">*</span></label>
               <div className="relative">
-                <Input
+                <input
                   placeholder="Enter tag name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value.slice(0, 100))}
-                  className="pr-12"
+                  className={cn(inputCls, "pr-16")}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                <span className={cn("absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold", sub)}>
                   {newName.length}/100
                 </span>
               </div>
             </div>
-          </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowCreateModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button 
-              onClick={handleCreate} 
-              className="btn-outline-primary" 
-              variant="outline"
-              disabled={createMutation.isPending}
-            >
-              {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
-            </Button>
+
+            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
+              <button onClick={() => setShowCreateModal(false)} className={outlineBtn}>Cancel</button>
+              <button onClick={handleCreate} disabled={createMutation.isPending} className={primaryBtn}>
+                {createMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                <Plus size={12} /> Create
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* ── Edit Modal ── */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Edit Tag</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Name<span className="text-red-500 pl-0.5">*</span></label>
-              <div className="relative">
-                <Input
-                  placeholder="Enter tag name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value.slice(0, 100))}
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  {editName.length}/100
-                </span>
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
+          <div className="p-6 space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Edit2 size={18} />
+                </div>
+                <div className="text-left">
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Edit Tag</DialogTitle>
+                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    Update tag name and status.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className={labelCls}>Name <span className="text-rose-500">*</span></label>
+                <div className="relative">
+                  <input
+                    placeholder="Enter tag name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value.slice(0, 100))}
+                    className={cn(inputCls, "pr-16")}
+                  />
+                  <span className={cn("absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold", sub)}>
+                    {editName.length}/100
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Status <span className="text-rose-500">*</span></label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as TagStatus)}
+                  className={selectCls}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Status<span className="text-red-500 pl-0.5">*</span></label>
-              <Select value={editStatus} onValueChange={(value: TagStatus) => setEditStatus(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
+              <button onClick={() => setShowEditModal(false)} className={outlineBtn}>Cancel</button>
+              <button onClick={handleSaveEdit} disabled={updateMutation.isPending} className={primaryBtn}>
+                {updateMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                Save Changes
+              </button>
             </div>
-          </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowEditModal(false)} variant="outline" className="border-input [border-color:hsl(var(--input))] font-normal">Cancel</Button>
-            <Button 
-              onClick={handleSaveEdit} 
-              className="btn-outline-primary" 
-              variant="outline"
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Delete Tag</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-foreground">
-              Are you sure you want to delete <span className="font-semibold break-all">{itemToDelete?.name}</span>? This action cannot be undone.
-            </p>
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Tag?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black break-all">{itemToDelete?.name || "This tag"}</span> will be permanently removed. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => itemToDelete && deleteMutation.mutate(itemToDelete.id)}
+                disabled={deleteMutation.isPending}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                {deleteMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                Delete
+              </AlertDialogAction>
+            </div>
           </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowDeleteModal(false)} variant="outline" className="border-input">Cancel</Button>
-            <Button 
-              onClick={handleConfirmDelete} 
-              className="btn-outline-destructive" 
-              variant="outline"
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

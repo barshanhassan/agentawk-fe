@@ -30,7 +30,8 @@
     "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
+    "ignoreDeprecations": "6.0",
     "types": [
       "node",
       "vite/client"

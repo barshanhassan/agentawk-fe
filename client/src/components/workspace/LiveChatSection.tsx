@@ -1,10 +1,29 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
+import {
+  MessageSquare,
+  UserCheck,
+  Trash2,
+  FolderSearch,
+  Wand2,
+  CheckCircle2,
+  Settings,
+  Plus,
+  Info,
+  History,
+  PenTool,
+  PauseCircle,
+  Sparkles,
+  AlertTriangle,
+  Award,
+  Heart,
+  ShieldCheck,
+  Folder,
+  X,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -12,18 +31,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info, CheckCircle2, AlertTriangle, Folder, Plus, Eye, Pencil, Trash, Inbox } from "lucide-react";
-import { useState, useEffect } from "react";
-import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
 
-export default function LiveChatSettings() {
+export default function LiveChatSection() {
+  const { mode } = useTheme();
   const { toast } = useToast();
+  const dark = mode === "dark";
 
-  const { data: settingsData, isLoading } = useQuery<any>({
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+  const tabBorder  = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
+    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const primaryBtn =
+    "h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20";
+
+  const outlineBtn = cn(
+    "h-11 w-11 rounded-xl border flex items-center justify-center shrink-0 transition-all hover:border-primary/40 hover:text-primary",
+    dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-white text-slate-600"
+  );
+
+  const { data: settings, isLoading } = useQuery<any>({
     queryKey: ["/api/workspaces/live-chat-settings"],
   });
 
@@ -34,747 +75,807 @@ export default function LiveChatSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/live-chat-settings"] });
-      toast({
-        title: "Success",
-        description: "Settings saved successfully!",
-      });
+      toast({ title: "Saved", description: "Live chat configuration updated." });
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update settings",
-        variant: "destructive",
-      });
-    }
   });
-  const [agentAction, setAgentAction] = useState<"keep" | "remove">("keep");
+
+  const [agentAction, setAgentAction] = useState("keep");
   const [saveAgentDetails, setSaveAgentDetails] = useState(false);
   const [agentDataFormat, setAgentDataFormat] = useState("full-name");
-  const [customField, setCustomField] = useState("Payload");
-  const [saveConversationJson, setSaveConversationJson] = useState(true);
+  const [customField, setCustomField] = useState("AuditLog");
+
+  const [saveConversationJson, setSaveConversationJson] = useState(false);
   const [jsonCustomField, setJsonCustomField] = useState("Json");
+
   const [includeSignature, setIncludeSignature] = useState(false);
+
   const [correctionModel, setCorrectionModel] = useState("gpt-4o-mini");
-  const [correctionPrompt, setCorrectionPrompt] = useState(
-    "Contexto: Você é um especialista em comunicação e aprimoramento de textos para atendimento ao cliente o Suporte ao Cliente da Reply Agent.\n\nObjetivo: Revisar e aprimorar o texto fornecido, garantindo que ele:"
-  );
-  const [folders, setFolders] = useState(["Usman", "Pasta Teste", "Returns", "121", "Sales"]);
-  const [pauseSmartFlow, setPauseSmartFlow] = useState<"manually" | "automatically">("automatically");
-  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
-  const [hoveredFolderIndex, setHoveredFolderIndex] = useState<number | null>(null);
-  const [editingFolderIndex, setEditingFolderIndex] = useState<number | null>(null);
+  const [correctionPrompt, setCorrectionPrompt] = useState("");
+
+  const [pauseSmartFlow, setPauseSmartFlow] = useState("automatically");
+
+  // Folders state
+  const [folders, setFolders] = useState<{ id: number; name: string; assignedTo: string }[]>([
+    { id: 1, name: "Usman", assignedTo: "" },
+    { id: 2, name: "Pasta Teste", assignedTo: "" },
+    { id: 3, name: "Returns", assignedTo: "" },
+    { id: 4, name: "121", assignedTo: "" },
+    { id: 5, name: "Sales", assignedTo: "" },
+  ]);
+  const [folderFormOpen, setFolderFormOpen] = useState(false);
+  const [editingFolderId, setEditingFolderId] = useState<number | null>(null);
+  const [folderName, setFolderName] = useState("");
+  const [folderAssignedTo, setFolderAssignedTo] = useState("");
+
+  const openAddFolder = () => {
+    setEditingFolderId(null);
+    setFolderName("");
+    setFolderAssignedTo("");
+    setFolderFormOpen(true);
+  };
+
+  const openEditFolder = (f: { id: number; name: string; assignedTo: string }) => {
+    setEditingFolderId(f.id);
+    setFolderName(f.name);
+    setFolderAssignedTo(f.assignedTo);
+    setFolderFormOpen(true);
+  };
+
+  const saveFolder = () => {
+    if (!folderName.trim()) return;
+    if (editingFolderId !== null) {
+      setFolders(folders.map((f) => (f.id === editingFolderId ? { ...f, name: folderName, assignedTo: folderAssignedTo } : f)));
+    } else {
+      setFolders([...folders, { id: Date.now(), name: folderName, assignedTo: folderAssignedTo }]);
+    }
+    setFolderFormOpen(false);
+  };
 
   useEffect(() => {
-    if (settingsData) {
-      if (settingsData.value === "keep" || settingsData.value === "remove") setAgentAction(settingsData.value);
-      setSaveAgentDetails(settingsData.save_to_custom_field === 1);
-      if (settingsData.data_format) setAgentDataFormat(settingsData.data_format);
-      if (settingsData.custom_field) setCustomField(settingsData.custom_field);
-      
-      setSaveConversationJson(settingsData.save_chat === 1);
-      if (settingsData.chat_field) setJsonCustomField(settingsData.chat_field);
-
-      setIncludeSignature(settingsData.append_username === 1);
-
-      if (settingsData.ai_model) setCorrectionModel(settingsData.ai_model);
-      if (settingsData.ai_prompt) setCorrectionPrompt(settingsData.ai_prompt);
-
-      setPauseSmartFlow(settingsData.automatically_pause_automation ? "automatically" : "manually");
+    if (settings) {
+      setAgentAction(settings.value || "keep");
+      setSaveAgentDetails(settings.save_to_custom_field === 1);
+      setAgentDataFormat(settings.data_format || "full-name");
+      setCustomField(settings.custom_field || "AuditLog");
+      setSaveConversationJson(settings.save_chat === 1);
+      setJsonCustomField(settings.chat_field || "Json");
+      setIncludeSignature(settings.append_username === 1);
+      setCorrectionModel(settings.ai_model || "gpt-4o-mini");
+      setCorrectionPrompt(settings.ai_prompt || "");
+      setPauseSmartFlow(settings.automatically_pause_automation ? "automatically" : "keep");
     }
-  }, [settingsData]);
-
-  const handleSave_Folder = () => {
-    if (newFolderName.trim()) {
-      if (editingFolderIndex !== null) {
-        // Edit existing
-        const updatedFolders = [...folders];
-        updatedFolders[editingFolderIndex] = newFolderName;
-        setFolders(updatedFolders);
-        setEditingFolderIndex(null);
-      } else {
-        // Create new
-        setFolders([...folders, newFolderName]);
-      }
-      setNewFolderName("");
-      setIsCreatingFolder(false);
-    }
-  };
-
-  const handleEditFolder = (index: number) => {
-    setNewFolderName(folders[index]);
-    setEditingFolderIndex(index);
-    setIsCreatingFolder(true);
-  };
-
-  const handleDeleteFolder = (index: number) => {
-    if (confirm("Are you sure you want to delete this folder?")) {
-      const updatedFolders = folders.filter((_, i) => i !== index);
-      setFolders(updatedFolders);
-      if (editingFolderIndex === index) {
-        setIsCreatingFolder(false);
-        setEditingFolderIndex(null);
-        setNewFolderName("");
-      }
-    }
-  };
-
-  const handleViewFolder = (folderName: string) => {
-    alert(`Viewing content of folder: ${folderName}`);
-  };
-
-  const handleCancelFolder = () => {
-    setIsCreatingFolder(false);
-    setNewFolderName("");
-    setEditingFolderIndex(null);
-  };
-
-  const handleAddCustomField = () => {
-    console.log("New custom field added:", customField);
-    alert(`Custom field "${customField}" added!`);
-    setCustomField("");
-  };
-
-  const handleSaveAgents = () => {
-    updateMutation.mutate({
-      agentAction,
-      saveAgentDetails,
-      agentDataFormat,
-      customField
-    });
-  };
-
-  const handleSaveCompletion = () => {
-    updateMutation.mutate({
-      saveConversationJson,
-      jsonCustomField
-    });
-  };
-
-  const handleSaveSignature = () => {
-    updateMutation.mutate({
-      includeSignature
-    });
-  };
-
-  const handleSaveCorrection = () => {
-    updateMutation.mutate({
-      correctionModel,
-      correctionPrompt
-    });
-  };
-
-  const handleSavePause = () => {
-    updateMutation.mutate({
-      pauseSmartFlow
-    });
-  };
+  }, [settings]);
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading Live Chat settings...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
+  const tabs = [
+    { value: "agents", label: "Agents", icon: UserCheck },
+    { value: "completion", label: "Completion", icon: History },
+    { value: "signature", label: "Signature", icon: PenTool },
+    { value: "correction", label: "Correction", icon: Wand2 },
+    { value: "folders", label: "Folders", icon: FolderSearch },
+    { value: "pause", label: "Pause", icon: PauseCircle },
+  ];
+
   return (
-    <>
-      <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-        <Inbox className="w-8 h-8 text-black dark:text-white" />
-        <div className="space-y-1">
-          <CardTitle className="text-lg font-semibold">Live Chat</CardTitle>
-          <CardDescription>Manage how your Workspace Live Chat behaves.</CardDescription>
+    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <CardContent className="p-0">
+        {/* ── Header ── */}
+        <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+          <div className="flex items-center gap-4">
+            <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+              <MessageSquare className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Live Chat</h1>
+              <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
+                Manage your live chat settings
+              </p>
+            </div>
+          </div>
+          <div className={cn("px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5", dark ? "border-slate-800 bg-slate-950/50 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600")}>
+            <Sparkles size={11} className="text-primary" /> v2.4 Optimized
+          </div>
         </div>
-      </CardHeader>
-      <Separator className="bg-gray-200 dark:bg-slate-800" />
 
-      <CardContent className="pt-6">
-        {/* Main content container */}
-        <div className="max-w-4xl mx-0 space-y-6">
-
-          {/* Tabs */}
+        <div>
           <Tabs defaultValue="agents" className="w-full">
-            <TabsList className="grid grid-cols-6 bg-gray-100 dark:bg-slate-800 rounded-t-lg">
-              <TabsTrigger value="agents">Agents</TabsTrigger>
-              <TabsTrigger value="completion">Completion</TabsTrigger>
-              <TabsTrigger value="signature">Signature</TabsTrigger>
-              <TabsTrigger value="correction">Correction</TabsTrigger>
-              <TabsTrigger value="folders">Folders</TabsTrigger>
-              <TabsTrigger value="pause">Pause</TabsTrigger>
-            </TabsList>
-
-            {/* Agents Tab */}
-            <TabsContent value="agents" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
-
-                {/* Conversation DONE options */}
-                <div className="space-y-4 text-left">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    When the conversation is marked DONE in Live Chat or SmartFlow:
-                  </h3>
-
-                  <RadioGroup
-                    value={agentAction}
-                    onValueChange={(value) => setAgentAction(value as "keep" | "remove")}
-                    className="space-y-3"
+            {/* Tabs Bar */}
+            <div className={cn("px-8 border-b flex justify-start overflow-x-auto", tabBorder)}>
+              <TabsList className="h-auto p-0 gap-8 bg-transparent border-none flex justify-start rounded-none">
+                {tabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className={cn(
+                      "flex items-center gap-2 px-1 py-5 rounded-none text-[11px] font-black uppercase tracking-widest transition-all shadow-none bg-transparent border-b-2 border-transparent",
+                      "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary",
+                      "hover:text-primary",
+                      dark ? "text-slate-500" : "text-slate-400"
+                    )}
                   >
-                    {["keep", "remove"].map((action) => (
-                      <div
-                        key={action}
-                        className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all ${agentAction === action
-                            ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
-                            : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700"
-                          }`}
-                        onClick={() => setAgentAction(action as "keep" | "remove")}
-                      >
-                        <RadioGroupItem value={action} id={action} />
-                        <div>
-                          <Label htmlFor={action} className="font-medium cursor-pointer capitalize text-gray-900 dark:text-gray-100">
-                            {action}
-                          </Label>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {action === "keep"
-                              ? "Keep the assigned Agent to the conversation."
-                              : "Remove the assigned Agent from conversation."}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
+                    <tab.icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-                {/* Save agent details */}
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700">
-                  <div className="space-y-1 max-w-[85%] text-left">
-                    <Label htmlFor="save-agent" className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                      Save the details of the agent who marked the conversation as DONE into a custom field.
-                    </Label>
+            {/* ── AGENTS TAB ── */}
+            <TabsContent value="agents" className="p-8 outline-none space-y-8">
+              <SectionHeading
+                dark={dark}
+                title="When conversation is marked DONE"
+                description="Choose how to handle the assigned agent when conversations are closed in Live Chat or Smart Flow."
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <OptionCard
+                  dark={dark}
+                  active={agentAction === "keep"}
+                  onClick={() => setAgentAction("keep")}
+                  icon={<UserCheck size={18} />}
+                  title="Keep Agent"
+                  description="Keep the assigned agent attached to the conversation."
+                />
+                <OptionCard
+                  dark={dark}
+                  active={agentAction === "remove"}
+                  onClick={() => setAgentAction("remove")}
+                  icon={<Trash2 size={18} />}
+                  title="Remove Agent"
+                  description="Unassign the agent when conversation is completed."
+                />
+              </div>
+
+              <div className={cn("p-5 rounded-[1.25rem] border flex items-center justify-between gap-6", softBg, softBorder)}>
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <Settings size={16} />
                   </div>
-                  <Switch
-                    id="save-agent"
-                    checked={saveAgentDetails}
-                    onCheckedChange={setSaveAgentDetails}
-                  />
+                  <div>
+                    <p className={cn("text-[13px] font-black tracking-tight", text)}>Save Agent Details</p>
+                    <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                      Store the details of the agent who closed the conversation into a custom field.
+                    </p>
+                  </div>
                 </div>
+                <Switch checked={saveAgentDetails} onCheckedChange={setSaveAgentDetails} className="data-[state=checked]:bg-primary" />
+              </div>
 
-                {/* Info box */}
-                {saveAgentDetails && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <div className="flex items-start gap-3 text-left">
-                      <Info className="h-5 w-5 text-black dark:text-white mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-blue-900 dark:text-blue-200">
-                        Save the details of the agent who marked the conversation as DONE.
-                        You can save: First Name, Last Name, Phone Number, WhatsApp Number, Role, and Email.
+              {saveAgentDetails && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-2">
+                    <FieldLabel dark={dark}>Data Format</FieldLabel>
+                    <Select value={agentDataFormat} onValueChange={setAgentDataFormat}>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                        <SelectItem value="full-name" className="text-[12px] font-bold">Full Name</SelectItem>
+                        <SelectItem value="email" className="text-[12px] font-bold">Email</SelectItem>
+                        <SelectItem value="id" className="text-[12px] font-bold">User ID</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel dark={dark}>Custom Field</FieldLabel>
+                    <div className="flex gap-2">
+                      <Input value={customField} onChange={(e) => setCustomField(e.target.value)} className={inputCls} placeholder="e.g. AuditLog" />
+                      <button className={outlineBtn}><Plus size={16} /></button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <SaveFooter
+                dark={dark}
+                onClick={() => updateMutation.mutate({ agentAction, saveAgentDetails, agentDataFormat, customField })}
+                loading={updateMutation.isPending}
+                primaryBtn={primaryBtn}
+              />
+            </TabsContent>
+
+            {/* ── COMPLETION TAB ── */}
+            <TabsContent value="completion" className="p-8 outline-none space-y-8">
+              <SectionHeading
+                dark={dark}
+                title="Conversation Archive"
+                description="Save the conversation transcript as JSON in a custom field once it's marked DONE."
+              />
+
+              <div className={cn("p-6 rounded-[1.5rem] border", softBg, softBorder)}>
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary mt-0.5">
+                      <History size={16} />
+                    </div>
+                    <div>
+                      <p className={cn("text-[13px] font-black tracking-tight", text)}>Save as JSON</p>
+                      <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
+                        When a conversation is marked DONE in Live Chat or Smart Flow, the entire transcript will be stored in your chosen custom field.
                       </p>
                     </div>
                   </div>
-                )}
+                  <Switch checked={saveConversationJson} onCheckedChange={setSaveConversationJson} className="data-[state=checked]:bg-primary mt-1" />
+                </div>
 
-                {/* Agent data format */}
-                <div className="space-y-2 text-left">
-                  <Label className="text-sm font-medium text-gray-900 dark:text-white">Agent data format</Label>
-                  <div className="flex items-center gap-3">
-                    {["full-name", "json"].map((format) => (
-                      <button
-                        key={format}
-                        className={`flex-1 px-4 py-3 rounded-lg border text-left transition-all ${agentDataFormat === format
-                            ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm font-medium text-blue-900 dark:text-blue-100"
-                            : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300"
-                          }`}
-                        onClick={() => setAgentDataFormat(format)}
-                      >
-                        {format === "full-name" ? "Full name" : "JSON"}
-                      </button>
+                {saveConversationJson && (
+                  <div className="pt-5 mt-5 border-t flex items-end gap-3 animate-in slide-in-from-top-2 duration-300" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
+                    <div className="flex-1 space-y-2">
+                      <FieldLabel dark={dark}>Target Custom Field</FieldLabel>
+                      <Select value={jsonCustomField} onValueChange={setJsonCustomField}>
+                        <SelectTrigger className={inputCls}>
+                          <SelectValue placeholder="Select custom field" />
+                        </SelectTrigger>
+                        <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                          <SelectItem value="Json" className="text-[12px] font-bold">JSON History</SelectItem>
+                          <SelectItem value="Payload" className="text-[12px] font-bold">Raw Payload</SelectItem>
+                          <SelectItem value="User Data" className="text-[12px] font-bold">Extended Profile</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <button className={outlineBtn}><Plus size={16} /></button>
+                  </div>
+                )}
+              </div>
+
+              <SaveFooter
+                dark={dark}
+                onClick={() => updateMutation.mutate({ saveConversationJson, jsonCustomField })}
+                loading={updateMutation.isPending}
+                primaryBtn={primaryBtn}
+              />
+            </TabsContent>
+
+            {/* ── SIGNATURE TAB ── */}
+            <TabsContent value="signature" className="p-8 outline-none space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                {/* Left: Toggle + Benefits + Warning */}
+                <div className="lg:col-span-3 space-y-6">
+                  {/* Toggle */}
+                  <div className={cn("p-5 rounded-[1.5rem] border flex items-start gap-4", softBg, softBorder)}>
+                    <Switch
+                      checked={includeSignature}
+                      onCheckedChange={setIncludeSignature}
+                      className="data-[state=checked]:bg-primary mt-0.5"
+                    />
+                    <div>
+                      <p className={cn("text-[13px] font-black tracking-tight", text)}>
+                        Include a signature in Agent messages sent through Live Chat
+                      </p>
+                      <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
+                        The agent's name will be prepended to every outgoing message.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Benefits */}
+                  <div className="space-y-4">
+                    {[
+                      {
+                        icon: <Award size={14} />,
+                        title: "Professionalism",
+                        desc: "Signing messages with a name gives a polished and professional touch, showcasing the company's commitment to high-quality service.",
+                      },
+                      {
+                        icon: <Heart size={14} />,
+                        title: "Personalization",
+                        desc: "Adding the agent's name makes the conversation feel more personal and human, which helps build trust and rapport with the customer.",
+                      },
+                      {
+                        icon: <ShieldCheck size={14} />,
+                        title: "Accountability",
+                        desc: "Customers know who they are interacting with, ensuring a sense of responsibility for the agent to provide excellent service.",
+                      },
+                    ].map((b) => (
+                      <div key={b.title} className="flex items-start gap-3">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary mt-0.5 shrink-0">
+                          {b.icon}
+                        </div>
+                        <div>
+                          <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>{b.title}</p>
+                          <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>{b.desc}</p>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
 
-                {/* Custom field input */}
-                <div className="space-y-2 text-left">
-                  <Label className="text-sm font-medium text-gray-900 dark:text-white">Custom field</Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      placeholder="Enter custom field name"
-                      className="flex-1 bg-white dark:bg-slate-950 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 focus:border-blue-500 focus:ring focus:ring-blue-200"
-                      value={customField}
-                      onChange={(e) => setCustomField(e.target.value)}
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-10 w-10"
-                      onClick={handleAddCustomField}
-                    >
-                      +
-                    </Button>
+                  {/* Warning */}
+                  <div className={cn(
+                    "p-4 rounded-[1.25rem] border flex items-start gap-3",
+                    "bg-amber-500/10 border-amber-500/20"
+                  )}>
+                    <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-500 shrink-0">
+                      <AlertTriangle size={14} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                        Attention needed
+                      </p>
+                      <p className={cn("text-[11px] font-medium leading-relaxed mt-1 text-amber-700/80 dark:text-amber-300/80")}>
+                        The signature feature is exclusively for the WhatsApp channels (Official and QR Code).
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Save button */}
-                <div className="flex justify-start pt-4">
-                  <Button
-                    className="px-8 btn-outline-primary"
-                    variant="outline"
-                    onClick={handleSaveAgents}
-                  >
-                    Save
-                  </Button>
+                {/* Right: Phone Preview */}
+                <div className="lg:col-span-2 flex justify-center lg:justify-end">
+                  <SignaturePhonePreview dark={dark} signatureName="Maria" showSignature={includeSignature} />
                 </div>
-
               </div>
+
+              <SaveFooter
+                dark={dark}
+                onClick={() => updateMutation.mutate({ includeSignature })}
+                loading={updateMutation.isPending}
+                primaryBtn={primaryBtn}
+              />
             </TabsContent>
 
-            {/* Completion Tab */}
-            <TabsContent value="completion" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
+            {/* ── CORRECTION TAB ── */}
+            <TabsContent value="correction" className="p-8 outline-none space-y-8">
+              <SectionHeading
+                dark={dark}
+                title="AI Correction"
+                description="Configure the AI model and prompt used to refine agent responses before sending."
+              />
 
-                <div className="space-y-4 text-left">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    When the conversation is marked as DONE in Live Chat or Smart Flow:
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      id="save-json"
-                      checked={saveConversationJson}
-                      onCheckedChange={setSaveConversationJson}
-                    />
-                    <Label htmlFor="save-json" className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                      Save the last conversation as JSON into a custom field.
-                    </Label>
-                  </div>
-                </div>
-
-                {/* Custom Field Select */}
-                {saveConversationJson && (
-                  <div className="space-y-2 text-left">
-                    <Label className="text-sm font-medium text-gray-900 dark:text-white">Select custom field</Label>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1">
-                        <Select value={jsonCustomField} onValueChange={setJsonCustomField}>
-                          <SelectTrigger className="w-full bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 dark:text-white">
-                            <SelectValue placeholder="Select custom field" />
-                          </SelectTrigger>
-                          <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                            <SelectItem value="Json" className="dark:focus:bg-slate-800 dark:text-white">Json</SelectItem>
-                            <SelectItem value="Payload" className="dark:focus:bg-slate-800 dark:text-white">Payload</SelectItem>
-                            <SelectItem value="User Data" className="dark:focus:bg-slate-800 dark:text-white">User Data</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 btn-outline-primary"
-                        onClick={() => { }}
-                      >
-                        +
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Save Button */}
-                <div className="flex justify-start pt-4">
-                  <Button
-                    className="px-8 btn-outline-primary"
-                    variant="outline"
-                    onClick={handleSaveCompletion}
-                  >
-                    Save
-                  </Button>
-                </div>
-
-              </div>
-            </TabsContent>
-
-            {/* Signature Tab */}
-            <TabsContent value="signature" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6">
-
-                <div className="flex flex-col lg:flex-row gap-12">
-                  {/* Left Column: Settings */}
-                  <div className="flex-1 space-y-8">
-
-                    {/* Toggle */}
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        id="include-signature"
-                        checked={includeSignature}
-                        onCheckedChange={setIncludeSignature}
-                      />
-                      <Label htmlFor="include-signature" className="font-medium text-gray-900 dark:text-white text-sm">
-                        Include a signature in Agent messages sent through Live Chat.
-                      </Label>
-                    </div>
-
-                    {/* Benefits List */}
-                    <div className="space-y-6">
-                      <div className="flex gap-3 items-start">
-                        <CheckCircle2 className="w-5 h-5 text-black dark:text-white mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1 text-left">
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Professionalism</h4>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Signing message with a name gives a polished and professional touch, showcasing the company's commitment to high-quality service.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 items-start">
-                        <CheckCircle2 className="w-5 h-5 text-black dark:text-white mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1 text-left">
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Personalization</h4>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Adding the agent's name makes the conversation feel more personal and human, which helps build trust and rapport with the customer.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 items-start">
-                        <CheckCircle2 className="w-5 h-5 text-black dark:text-white mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1 text-left">
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Accountability</h4>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Customers know who they are interacting with, ensuring a sense of responsibility for the agent to provide excellent service.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Alert */}
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-4 flex gap-3 items-start text-left">
-                      <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm mb-1">Attention needed</h4>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-300/80">
-                          The signature feature is exclusively for the WhatsApp channels (Official and QR Code).
-                        </p>
-                      </div>
-                    </div>
-
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 space-y-5">
+                  <div className="space-y-2">
+                    <FieldLabel dark={dark}>AI Model</FieldLabel>
+                    <Select value={correctionModel} onValueChange={setCorrectionModel}>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                        <SelectItem value="gpt-4o-mini" className="text-[12px] font-bold">GPT-4o Mini (Fast)</SelectItem>
+                        <SelectItem value="gpt-4o" className="text-[12px] font-bold">GPT-4o (Smart)</SelectItem>
+                        <SelectItem value="claude-3-haiku" className="text-[12px] font-bold">Claude 3 Haiku</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  {/* Right Column: Mobile Mockup */}
-                  <div className="flex-1 flex items-center justify-center pt-8 lg:pt-0">
-                    <div className="relative w-[280px] h-[580px] bg-black rounded-[3rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden ring-4 ring-gray-200 dark:ring-gray-700">
-
-                      {/* Dynamic Island / Notch Area */}
-                      <div className="absolute top-0 w-full h-8 bg-black flex justify-between px-8 items-center z-20">
-                        <span className="text-white text-[10px] font-semibold tracking-wide">9:41</span>
-                        <div className="w-16 h-5 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-1"></div>
-                        <div className="flex gap-1">
-                          <div className="w-3 h-3 bg-white rounded-full opacity-80" />
-                          <div className="w-3 h-3 bg-white rounded-full opacity-80" />
-                        </div>
-                      </div>
-
-                      {/* App Header (WhatsApp Style) */}
-                      <div className="bg-[#075E54] h-[80px] pt-8 px-4 flex items-center gap-3 shadow-md z-10 relative">
-                        <div className="text-white text-lg">←</div>
-                        <div className="w-8 h-8 bg-gray-300 rounded-full border border-white/20 flex-shrink-0">
-                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Maria`} alt="Avatar" className="w-full h-full rounded-full" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-white font-semibold text-sm leading-tight">Maria</span>
-                          <span className="text-white/80 text-[10px] leading-tight">online</span>
-                        </div>
-                      </div>
-
-                      {/* Chat Area */}
-                      <div className="bg-[#E5DDD5] dark:bg-[#0b141a] h-full p-4 relative flex flex-col pt-4">
-                        {/* Date Divider */}
-                        <div className="flex justify-center mb-6">
-                          <span className="bg-[#E1F3FB] dark:bg-[#1f2c34] text-gray-500 dark:text-gray-300 text-[10px] px-2 py-1 rounded shadow-sm">
-                            Today
-                          </span>
-                        </div>
-
-                        {/* Customer Message (Received) */}
-                        <div className="self-start bg-white dark:bg-[#1f2c34] p-2 pl-3 rounded-lg rounded-tl-none shadow-sm max-w-[85%] mb-4 relative text-left">
-                          <p className="text-sm text-gray-800 dark:text-gray-100 leading-snug pb-2">
-                            Hi, I need help with my order #12345.
-                          </p>
-                          <span className="text-[9px] text-gray-400 absolute bottom-1 right-1.5">14:30</span>
-                        </div>
-
-                        {/* Agent Message (Sent) */}
-                        <div className="self-end bg-[#DCF8C6] dark:bg-[#005c4b] p-2 pl-3 pr-2 rounded-lg rounded-tr-none shadow-sm max-w-[85%] relative text-left">
-                          {/* Signature Preview */}
-                          {includeSignature && (
-                            <div className="mp-1 mb-1 text-[10px] font-bold text-[#075E54] dark:text-[#25d366]">
-                              ~ Maria
-                            </div>
-                          )}
-
-                          <p className="text-sm text-gray-800 dark:text-gray-100 leading-snug pb-3 min-w-[120px]">
-                            Hello! I'd be happy to check that for you. One moment please.
-                          </p>
-
-                          <div className="flex justify-end items-center gap-1 absolute bottom-1 right-1.5">
-                            <span className="text-[9px] text-gray-500 dark:text-gray-300">14:32</span>
-                            <div className="flex">
-                              <span className="text-[8px] text-[#4FB6EC]">✓✓</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                  <div className={cn("p-5 rounded-[1.25rem] border bg-primary/5 border-primary/20")}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles size={14} className="text-primary" />
+                      <h5 className="text-[10px] font-black uppercase tracking-widest text-primary">Capabilities</h5>
                     </div>
-                  </div>
-
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-start pt-6">
-                  <Button
-                    className="px-8 btn-outline-primary"
-                    variant="outline"
-                    onClick={handleSaveSignature}
-                  >
-                    Save
-                  </Button>
-                </div>
-
-              </div>
-            </TabsContent>
-
-            {/* Correction Tab */}
-            <TabsContent value="correction" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6">
-
-                <div className="space-y-6 mb-8 text-left">
-                  <h3 className="text-gray-900 dark:text-white font-medium">Correct and enhance agent text in Live Chat</h3>
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-12">
-                  {/* Left Column: Benefits */}
-                  <div className="flex-1 space-y-8">
-                    <div className="flex gap-3 items-start">
-                      <CheckCircle2 className="w-5 h-5 text-gray-900 dark:text-white mt-0.5 flex-shrink-0" />
-                      <div className="space-y-1 text-left">
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">AI-Powered Text Refinement for Professional Communication</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                          Leverage ChatGPT AI to enhance and correct agent messages, ensuring clear, grammatically accurate, and professional communication that elevates customer interactions.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3 items-start">
-                      <CheckCircle2 className="w-5 h-5 text-gray-900 dark:text-white mt-0.5 flex-shrink-0" />
-                      <div className="space-y-1 text-left">
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Perfect Agent Messaging with ChatGPT AI</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                          Improve communication by ChatGPT AI to refine and correct grammar in agent text, delivering polished, professionally-quality messages every time.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Settings */}
-                  <div className="flex-1 space-y-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <Label className="text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                        Live Chat AI Chat Assistant button prompt
-                      </Label>
-                      <div className="w-[180px]">
-                        <Select value={correctionModel} onValueChange={setCorrectionModel}>
-                          <SelectTrigger className="w-full bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 dark:text-white h-9">
-                            <SelectValue placeholder="Select model" />
-                          </SelectTrigger>
-                          <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                            <SelectItem value="gpt-4o-mini" className="dark:focus:bg-slate-800 dark:text-white">gpt-4o-mini</SelectItem>
-                            <SelectItem value="gpt-4" className="dark:focus:bg-slate-800 dark:text-white">gpt-4</SelectItem>
-                            <SelectItem value="gpt-3.5-turbo" className="dark:focus:bg-slate-800 dark:text-white">gpt-3.5-turbo</SelectItem>
-                            <SelectItem value="add-new" className="dark:focus:bg-primary dark:focus:text-white focus:bg-primary focus:text-white font-medium text-primary">+ Add New Model</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <Textarea
-                      className="min-h-[150px] resize-y text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-950 border-gray-300 dark:border-slate-700 focus:border-blue-500"
-                      value={correctionPrompt}
-                      onChange={(e) => setCorrectionPrompt(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-start pt-8">
-                  <Button
-                    className="px-8 btn-outline-primary"
-                    variant="outline"
-                    onClick={handleSaveCorrection}
-                  >
-                    Save
-                  </Button>
-                </div>
-
-              </div>
-            </TabsContent>
-
-            {/* Folders Tab */}
-            <TabsContent value="folders" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 min-h-[400px]">
-                <div className="space-y-6 text-left mb-8">
-                  <p className="text-gray-900 dark:text-white font-medium">Create custom folders to streamline and optimize your Live Chat management.</p>
-                </div>
-
-                <div className="flex flex-col lg:flex-row h-full gap-8">
-                  {/* Left Column: Folder List */}
-                  <div className="w-full lg:w-1/2 lg:border-r lg:border-gray-100 dark:lg:border-slate-800 lg:pr-8">
-                    <ul className="space-y-0">
-                      {folders.map((folder, index) => (
-                        <li
-                          key={index}
-                          className="flex items-center justify-between py-4 border-b border-gray-100 dark:border-slate-800 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-800 px-2 rounded-md transition-colors cursor-pointer group"
-                          onMouseEnter={() => setHoveredFolderIndex(index)}
-                          onMouseLeave={() => setHoveredFolderIndex(null)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Folder className="w-5 h-5 text-black dark:text-white" />
-                            <span className="text-gray-700 dark:text-gray-200 font-medium text-sm">{folder}</span>
-                          </div>
-                          {hoveredFolderIndex === index && (
-                            <div className="flex items-center gap-3 text-black dark:text-white">
-                              <Eye
-                                className="w-4 h-4 hover:text-gray-700 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); handleViewFolder(folder); }}
-                              />
-                              <Pencil
-                                className="w-4 h-4 hover:text-gray-700 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); handleEditFolder(index); }}
-                              />
-                              <Trash
-                                className="w-4 h-4 hover:text-red-600 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); handleDeleteFolder(index); }}
-                              />
-                            </div>
-                          )}
+                    <ul className="space-y-2">
+                      {["Grammar Fix", "Tone Adjustment", "Translation", "Expansion"].map((f) => (
+                        <li key={f} className={cn("flex items-center gap-2 text-[11px] font-bold opacity-80", text)}>
+                          <CheckCircle2 size={12} className="text-primary shrink-0" /> {f}
                         </li>
                       ))}
                     </ul>
                   </div>
+                </div>
 
-                  {/* Right Column: Action or Form */}
-                  <div className="w-full lg:w-1/2 flex flex-col justify-center py-12 lg:py-0">
-                    {!isCreatingFolder ? (
-                      <div className="flex flex-col items-center text-center space-y-4">
-                        <p className="text-gray-900 dark:text-white font-medium">Add folder to organize your conversations.</p>
-                        <Button
-                          variant="outline"
-                          className="btn-outline-primary gap-2"
-                          onClick={() => setIsCreatingFolder(true)}
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add folder
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="bg-white dark:bg-slate-900 rounded-lg p-1 space-y-6 w-full max-w-md mx-auto">
-                        <div className="space-y-4">
-                          <div className="space-y-2 text-left">
-                            <Label className="text-base font-medium text-gray-900 dark:text-white">Display name</Label>
-                            <Input
-                              value={newFolderName}
-                              onChange={(e) => setNewFolderName(e.target.value)}
-                              className="bg-white dark:bg-slate-950 dark:border-slate-800 dark:text-white"
-                            />
-                          </div>
-                          <div className="space-y-2 text-left">
-                            <Label className="text-base font-medium text-gray-900 dark:text-white">Assigned to</Label>
-                            <Select>
-                              <SelectTrigger className="w-full bg-white dark:bg-slate-950 dark:border-slate-800 text-gray-500 dark:text-gray-300">
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                                <SelectItem value="agent1" className="dark:focus:bg-slate-800 dark:text-white">Agent 1</SelectItem>
-                                <SelectItem value="agent2" className="dark:focus:bg-slate-800 dark:text-white">Agent 2</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div className="flex justify-end gap-3 pt-2">
-                          <Button
-                            variant="outline"
-                            className="px-6 py-2 h-10 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                            onClick={handleCancelFolder}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            className="px-8 py-2 h-10 btn-outline-primary shadow-none font-medium"
-                            variant="outline"
-                            onClick={handleSave_Folder}
-                          >
-                            Save
-                          </Button>
-                        </div>
-                      </div>
+                <div className="lg:col-span-2 space-y-2">
+                  <FieldLabel dark={dark}>Custom Correction Prompt</FieldLabel>
+                  <textarea
+                    value={correctionPrompt}
+                    onChange={(e) => setCorrectionPrompt(e.target.value)}
+                    placeholder="Rewrite my response to be more professional and clear..."
+                    className={cn(
+                      "w-full min-h-[220px] rounded-xl border p-4 text-[13px] font-medium leading-relaxed resize-none transition-all",
+                      "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 focus:outline-none",
+                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
                     )}
+                  />
+                  <div className={cn("flex items-center gap-2 text-[10px] font-bold opacity-50 pl-1", sub)}>
+                    <Info size={11} /> Use natural language to describe how the AI should refine messages.
                   </div>
                 </div>
               </div>
+
+              <SaveFooter
+                dark={dark}
+                onClick={() => updateMutation.mutate({ correctionModel, correctionPrompt })}
+                loading={updateMutation.isPending}
+                primaryBtn={primaryBtn}
+              />
             </TabsContent>
 
-            {/* Pause Tab */}
-            <TabsContent value="pause" className="mt-0">
-              <div className="bg-white dark:bg-slate-900 border border-t-0 border-gray-200 dark:border-slate-800 rounded-b-lg p-6 space-y-6">
+            {/* ── FOLDERS TAB ── */}
+            <TabsContent value="folders" className="p-8 outline-none space-y-6">
+              <SectionHeading
+                dark={dark}
+                title="Conversation Folders"
+                description="Create custom folders to streamline and optimize your Live Chat management."
+              />
 
-                <div className="space-y-4 text-left">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                    Automatically pause the Smart Flow when initiating a conversation?
-                  </h3>
-
-                  <RadioGroup
-                    value={pauseSmartFlow}
-                    onValueChange={(value) => setPauseSmartFlow(value as "manually" | "automatically")}
-                    className="space-y-3"
-                  >
-                    {/* Manually Option */}
-                    <div
-                      className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${pauseSmartFlow === "manually"
-                          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
-                          : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
-                        }`}
-                      onClick={() => setPauseSmartFlow("manually")}
-                    >
-                      <div className="flex items-center gap-3">
-                        <RadioGroupItem value="manually" id="manually" />
-                        <Label htmlFor="manually" className="font-medium cursor-pointer text-gray-700 dark:text-gray-200">Manually</Label>
-                      </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Do not pause the Smart Flow when an agent send a message</span>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left: Folder list */}
+                <div className={cn("rounded-[1.5rem] border overflow-hidden", softBg, softBorder)}>
+                  {folders.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Folder className="w-8 h-8 text-primary/40 mx-auto mb-3" />
+                      <p className={cn("text-[11px] font-bold opacity-60", sub)}>No folders yet</p>
                     </div>
-
-                    {/* Automatically Option */}
-                    <div
-                      className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${pauseSmartFlow === "automatically"
-                          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-sm"
-                          : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
-                        }`}
-                      onClick={() => setPauseSmartFlow("automatically")}
-                    >
-                      <div className="flex items-center gap-3">
-                        <RadioGroupItem value="automatically" id="automatically" />
-                        <Label htmlFor="automatically" className="font-medium cursor-pointer text-gray-700 dark:text-gray-200">Automatically</Label>
-                      </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Pause the Smart Flow when an agent send a message</span>
-                    </div>
-                  </RadioGroup>
+                  ) : (
+                    <ul className="divide-y" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
+                      {folders.map((f) => {
+                        const active = editingFolderId === f.id;
+                        return (
+                          <li key={f.id}>
+                            <button
+                              onClick={() => openEditFolder(f)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-5 py-3.5 transition-all text-left",
+                                active
+                                  ? "bg-primary/5"
+                                  : dark
+                                    ? "hover:bg-slate-900/50"
+                                    : "hover:bg-slate-100/60"
+                              )}
+                            >
+                              <Folder
+                                size={16}
+                                className={cn("shrink-0", active ? "text-primary" : "text-primary/70")}
+                              />
+                              <span
+                                className={cn(
+                                  "text-[12px] font-bold flex-1 truncate",
+                                  active ? "text-primary" : text
+                                )}
+                              >
+                                {f.name}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
 
-                {/* Save Button */}
-                <div className="flex justify-start pt-4">
-                  <Button
-                    className="px-8 btn-outline-primary"
-                    variant="outline"
-                    onClick={handleSavePause}
-                  >
-                    Save
-                  </Button>
-                </div>
+                {/* Right: Form or Empty State */}
+                <div className={cn("rounded-[1.5rem] border p-6 flex flex-col", softBg, softBorder)}>
+                  {folderFormOpen ? (
+                    <div className="flex flex-col gap-5 flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className={cn("text-[12px] font-black uppercase tracking-widest", text)}>
+                          {editingFolderId !== null ? "Edit Folder" : "New Folder"}
+                        </h4>
+                        <button
+                          onClick={() => setFolderFormOpen(false)}
+                          className={cn("p-1.5 rounded-lg transition-colors", dark ? "hover:bg-slate-800 text-slate-400" : "hover:bg-slate-200 text-slate-500")}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
 
+                      <div className="space-y-2">
+                        <FieldLabel dark={dark}>Display Name</FieldLabel>
+                        <Input
+                          value={folderName}
+                          onChange={(e) => setFolderName(e.target.value)}
+                          placeholder="e.g. Sales, Support, Returns"
+                          className={inputCls}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <FieldLabel dark={dark}>Assigned To</FieldLabel>
+                        <Select value={folderAssignedTo} onValueChange={setFolderAssignedTo}>
+                          <SelectTrigger className={inputCls}>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                            <SelectItem value="all" className="text-[12px] font-bold">All Agents</SelectItem>
+                            <SelectItem value="sales-team" className="text-[12px] font-bold">Sales Team</SelectItem>
+                            <SelectItem value="support-team" className="text-[12px] font-bold">Support Team</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex justify-end gap-2 mt-auto pt-4">
+                        <button
+                          onClick={() => setFolderFormOpen(false)}
+                          className={cn(
+                            "h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all",
+                            dark
+                              ? "border-slate-800 text-slate-300 hover:border-slate-700"
+                              : "border-slate-200 text-slate-700 hover:border-slate-300"
+                          )}
+                        >
+                          Cancel
+                        </button>
+                        <button onClick={saveFolder} className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}>
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center flex-1 py-6 gap-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                        <Folder className="w-6 h-6 text-primary" />
+                      </div>
+                      <p className={cn("text-[12px] font-medium opacity-70 max-w-[220px] leading-relaxed", sub)}>
+                        Add folder to organize your conversations.
+                      </p>
+                      <button
+                        onClick={openAddFolder}
+                        className={cn(
+                          "h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                          "border-primary/40 text-primary hover:bg-primary hover:text-white"
+                        )}
+                      >
+                        <Plus size={12} /> Add Folder
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </TabsContent>
 
+            {/* ── PAUSE TAB ── */}
+            <TabsContent value="pause" className="p-8 outline-none space-y-6">
+              <h3 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                Automatically pause the Smart Flow when initiating a conversation?
+              </h3>
+
+              <div className={cn("rounded-[1.5rem] border overflow-hidden", softBg, softBorder)}>
+                <RadioRow
+                  dark={dark}
+                  active={pauseSmartFlow === "keep"}
+                  onClick={() => setPauseSmartFlow("keep")}
+                  label="Manually"
+                  description="Do not pause the Smart Flow when an agent send a message"
+                />
+                <div className="border-t" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }} />
+                <RadioRow
+                  dark={dark}
+                  active={pauseSmartFlow === "automatically"}
+                  onClick={() => setPauseSmartFlow("automatically")}
+                  label="Automatically"
+                  description="Pause the Smart Flow when an agent send a message"
+                />
+              </div>
+
+              <SaveFooter
+                dark={dark}
+                onClick={() => updateMutation.mutate({ pauseSmartFlow })}
+                loading={updateMutation.isPending}
+                primaryBtn={primaryBtn}
+              />
+            </TabsContent>
           </Tabs>
         </div>
       </CardContent>
-    </>
+    </Card>
+  );
+}
+
+/* ── Helpers ── */
+
+function SectionHeading({ dark, title, description }: { dark: boolean; title: string; description?: string }) {
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub  = dark ? "text-slate-500" : "text-slate-400";
+  return (
+    <div className="space-y-1.5">
+      <h3 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>{title}</h3>
+      {description && (
+        <p className={cn("text-[11px] font-medium leading-relaxed opacity-60 max-w-2xl", sub)}>{description}</p>
+      )}
+    </div>
+  );
+}
+
+function FieldLabel({ dark, children }: { dark: boolean; children: React.ReactNode }) {
+  const sub = dark ? "text-slate-400" : "text-slate-500";
+  return (
+    <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>{children}</label>
+  );
+}
+
+function OptionCard({
+  dark,
+  active,
+  onClick,
+  icon,
+  title,
+  description,
+}: {
+  dark: boolean;
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub  = dark ? "text-slate-500" : "text-slate-400";
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "p-5 rounded-[1.5rem] border cursor-pointer transition-all relative group",
+        active
+          ? "border-primary/50 bg-primary/5 shadow-md shadow-primary/10"
+          : dark
+            ? "border-slate-800 hover:border-slate-700"
+            : "border-slate-200 hover:border-primary/30"
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={cn(
+            "w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0",
+            active ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-primary/10 text-primary"
+          )}
+        >
+          {icon}
+        </div>
+        <div className="flex-1 pr-6">
+          <p className={cn("text-[13px] font-black tracking-tight", text)}>{title}</p>
+          <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>{description}</p>
+        </div>
+      </div>
+      <div
+        className={cn(
+          "absolute top-5 right-5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
+          active ? "border-primary" : dark ? "border-slate-700" : "border-slate-300"
+        )}
+      >
+        {active && <div className="w-2 h-2 rounded-full bg-primary" />}
+      </div>
+    </div>
+  );
+}
+
+function RadioRow({
+  dark,
+  active,
+  onClick,
+  label,
+  description,
+}: {
+  dark: boolean;
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  description: string;
+}) {
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub  = dark ? "text-slate-500" : "text-slate-400";
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-4 px-6 py-4 text-left transition-all",
+        active
+          ? "bg-primary/5"
+          : dark
+            ? "hover:bg-slate-900/40"
+            : "hover:bg-slate-100/60"
+      )}
+    >
+      <div
+        className={cn(
+          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+          active ? "border-primary" : dark ? "border-slate-700" : "border-slate-300"
+        )}
+      >
+        {active && <div className="w-2 h-2 rounded-full bg-primary" />}
+      </div>
+      <span className={cn("text-[12px] font-black tracking-tight w-32 shrink-0", active ? "text-primary" : text)}>
+        {label}
+      </span>
+      <span className={cn("text-[11px] font-medium opacity-60 flex-1", sub)}>{description}</span>
+    </button>
+  );
+}
+
+function SignaturePhonePreview({
+  dark,
+  signatureName,
+  showSignature,
+}: {
+  dark: boolean;
+  signatureName: string;
+  showSignature: boolean;
+}) {
+  return (
+    <div className="relative">
+      {/* Phone frame */}
+      <div className={cn(
+        "w-[240px] h-[480px] rounded-[2.5rem] border-[8px] shadow-2xl overflow-hidden flex flex-col",
+        dark ? "border-slate-900 bg-slate-900" : "border-slate-900 bg-slate-900"
+      )}>
+        {/* Status bar */}
+        <div className="bg-black text-white px-5 py-2 flex items-center justify-between text-[10px] font-bold shrink-0">
+          <span>9:41</span>
+          <div className="flex items-center gap-1">
+            <div className="w-1 h-1 rounded-full bg-white opacity-80" />
+            <div className="w-1 h-1 rounded-full bg-white opacity-80" />
+          </div>
+        </div>
+
+        {/* WhatsApp header */}
+        <div className="bg-[#075E54] text-white px-3 py-2.5 flex items-center gap-2 shrink-0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-[10px] font-black">
+            M
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-bold leading-tight">{signatureName}</p>
+            <p className="text-[9px] opacity-80 leading-tight">online</p>
+          </div>
+        </div>
+
+        {/* Chat body */}
+        <div
+          className="flex-1 px-3 py-3 space-y-2 overflow-hidden"
+          style={{
+            backgroundColor: "#ECE5DD",
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0)",
+            backgroundSize: "10px 10px",
+          }}
+        >
+          {/* Today divider */}
+          <div className="flex justify-center pb-1">
+            <span className="px-2 py-0.5 rounded-md bg-white/80 text-[9px] font-bold text-slate-600 shadow-sm">Today</span>
+          </div>
+
+          {/* Customer message */}
+          <div className="flex justify-start">
+            <div className="bg-white rounded-lg rounded-tl-sm px-2.5 py-1.5 max-w-[80%] shadow-sm">
+              <p className="text-[10px] text-slate-800 leading-snug">Hi, I need help with my order #12345.</p>
+              <p className="text-[8px] text-slate-400 text-right mt-0.5">14:30</p>
+            </div>
+          </div>
+
+          {/* Agent message */}
+          <div className="flex justify-end">
+            <div className="bg-[#DCF8C6] rounded-lg rounded-tr-sm px-2.5 py-1.5 max-w-[80%] shadow-sm">
+              {showSignature && (
+                <p className="text-[9px] font-bold text-teal-700 leading-snug">~ {signatureName}</p>
+              )}
+              <p className="text-[10px] text-slate-800 leading-snug">Hello! I'd be happy to check that for you. One moment please.</p>
+              <p className="text-[8px] text-slate-500 text-right mt-0.5">14:32 ✓✓</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SaveFooter({
+  dark,
+  onClick,
+  loading,
+  primaryBtn,
+}: {
+  dark: boolean;
+  onClick: () => void;
+  loading: boolean;
+  primaryBtn: string;
+}) {
+  const sub = dark ? "text-slate-500" : "text-slate-400";
+  const border = dark ? "border-slate-800" : "border-slate-100";
+  return (
+    <div className={cn("flex items-center justify-end gap-3 pt-6 border-t", border)}>
+      <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
+        <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
+        Settings apply across the entire Workspace
+      </p>
+      <button onClick={onClick} disabled={loading} className={primaryBtn}>
+        {loading ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
   );
 }

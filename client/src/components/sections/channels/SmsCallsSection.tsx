@@ -1,19 +1,19 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  RefreshCw, 
-  Trash2, 
-  MoreVertical, 
-  Plug, 
-  Eye, 
-  EyeOff, 
-  Phone, 
-  Cpu, 
-  Check, 
-  X,
-  Copy
+import { useState } from "react";
+import {
+  ChevronLeft,
+  MoreVertical,
+  Plus,
+  ExternalLink,
+  RefreshCw,
+  Phone,
+  Trash2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Copy,
 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,77 +21,47 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock data
-const mockSmsAccounts = [
-  {
-    id: 1,
-    name: "Main Twilio Account",
-    sid: "AC1234567890abcdef1234567890abcdef",
-    token: "abcdef1234567890abcdef1234567890",
-    status: "VERIFIED",
-    sip: {
-      username: "sip_user_1",
-      password: "sip_password_1",
-      visible: false
-    },
-    numbers: [
-      {
-        id: 1,
-        number: "+1 234 567 8900",
-        type: "automated", // automated or notification
-        status: "VERIFIED",
-        forward_type: "NONE", // NONE, NUMBER, AGENT, TEAM
-        forward_to: "",
-      },
-      {
-        id: 2,
-        number: "+1 987 654 3210",
-        type: "notification",
-        status: "VERIFIED",
-        forward_type: "NUMBER",
-        forward_to: "+1 555 000 1111",
-      }
-    ]
-  },
-];
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SmsCallsSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const { toast } = useToast();
   const [view, setView] = useState<"list" | "manage">("list");
   const queryClient = useQueryClient();
-  
-  const handleConnect = () => {
-    toast({
-      title: "Connecting...",
-      description: "Redirecting to Twilio connection flow.",
-    });
-  };
+
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
 
   const { data: channels, isLoading } = useQuery({
     queryKey: ["/api/integrations/channels"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/integrations/channels");
       return res.json();
-    }
+    },
   });
 
   const accounts = channels?.twilio || [];
@@ -103,487 +73,248 @@ export default function SmsCallsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({
-        title: "Deleted",
-        description: "Account removed successfully.",
-      });
+      toast({ title: "Deleted", description: "Twilio account disconnected." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete account.", variant: "destructive" });
-    }
   });
 
-  const [showDeleteConfirmAccount, setShowDeleteConfirmAccount] = useState(false);
-  const [showDeleteConfirmNumber, setShowDeleteConfirmNumber] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<any>(null);
-  const [numberToDelete, setNumberToDelete] = useState<{accountId: number, numberId: number, number: string} | null>(null);
-  const { toast } = useToast();
+  const [showSecret, setShowSecret] = useState<Record<number, boolean>>({});
 
-  const toggleSipVisibility = (accountId: number, field: 'username' | 'password') => {
-      // In a real app, logic to toggle visibility
-      toast({ title: "Visibility", description: `${field === 'username' ? 'Username' : 'Password'} visibility toggled.` });
+  const toggleSecret = (id: number) => setShowSecret((p) => ({ ...p, [id]: !p[id] }));
+
+  const handleConnect = () => {
+    toast({ title: "Connecting...", description: "Starting Twilio authentication flow." });
   };
 
-  const handleUpdatePhoneNumber = (accountId: number, numberId: number, updates: any) => {
-    toast({
-      title: "Info",
-      description: "Number update will be implemented with real mutation soon.",
-    });
+  const copyToken = (val: string) => {
+    if (!val) return;
+    navigator.clipboard.writeText(val);
+    toast({ title: "Copied", description: "Copied to clipboard." });
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Success",
-      description: "Call forwarding settings saved successfully.",
-    });
-  };
-
-  const handleDeleteAccountRequest = (account: typeof mockSmsAccounts[0]) => {
-    setAccountToDelete(account);
-    setShowDeleteConfirmAccount(true);
-  };
-
-  const confirmDeleteAccount = () => {
-    if (accountToDelete) {
-      deleteMutation.mutate(accountToDelete.id);
-      setShowDeleteConfirmAccount(false);
-      setAccountToDelete(null);
-    }
-  };
-
-  const handleDeleteNumberRequest = (accountId: number, numberId: number, number: string) => {
-    setNumberToDelete({ accountId, numberId, number });
-    setShowDeleteConfirmNumber(true);
-  };
-
-  const confirmDeleteNumber = () => {
-    if (numberToDelete) {
-      toast({
-        title: "Info",
-        description: "Number deletion will be implemented with real mutation soon.",
-      });
-      setShowDeleteConfirmNumber(false);
-      setNumberToDelete(null);
-    }
-  };
-
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied",
-      description: `${label} copied to clipboard.`,
-    });
-  };
-
-  const handleAddNewNumber = (accountId: number) => {
-    toast({
-      title: "Info",
-      description: "Adding new number will be implemented with real mutation soon.",
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      {view === "list" && (
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">SMS & Calls</h2>
-              <img src="/images/automations/sms.svg" alt="SMS" className="h-5 w-5" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Connect your Twilio account for SMS and Call automation.
-            </p>
-          </div>
-          <Separator className="bg-gray-200 dark:bg-slate-800" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <img src="/images/automations/sms.svg" alt="SMS" className="h-6 w-6" />
-                <h3 className="font-semibold text-sm">SMS & Calls</h3>
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-red-500/15" : "bg-red-500/10")}>
+                <img src="/images/automations/sms.svg" alt="Twilio" className="w-5 h-5" />
               </div>
-            </div>
-
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                Integrate your Twilio account to unlock 2-Way interactive dynamic conversations.
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                variant="outline"
-                className="btn-outline-primary"
-                onClick={() => setView("manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
-        </div>
-        </div>
-      )}
-
-      {view === "manage" && (
-        <div className="space-y-6">
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-            {/* Header */}
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-medium">SMS & Calls</h3>
-                    <img src="/images/automations/sms.svg" alt="SMS" className="h-6 w-6" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Integrate your Twilio account to unlock 2-Way interactive dynamic conversations
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  className="btn-outline-primary"
-                  onClick={handleConnect}
-                >
-                  + Add New
-                </Button>
-                <Button variant="outline" onClick={() => setView("list")}>
-                  Back
-                </Button>
-              </div>
-            </div>
-            <Separator className="bg-gray-200 dark:bg-slate-800" />
-
-            {/* Content */}
-            {!hasAccounts ? (
-              <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 py-24">
-                <div className="bg-gradient-to-tr from-red-50 to-red-100 dark:from-slate-800 dark:to-slate-700 p-4 rounded-full">
-                  <img src="/images/automations/sms.svg" alt="SMS" className="h-12 w-12" />
-                </div>
-                <h2 className="text-lg font-semibold">Connect your Twilio account now</h2>
-                <p className="text-muted-foreground max-w-md text-sm">
-                  Integrate this communication channel to automate conversations.
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>SMS &amp; Calls</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  {view === "list"
+                    ? "Connect your Twilio account for SMS and Call automation."
+                    : "Integrate your Twilio account to unlock 2-Way interactive dynamic conversations"}
                 </p>
-                <div className="pt-2">
-                  <Button 
-                    className="btn-outline-primary min-w-[150px]"
-                    variant="outline"
-                    onClick={handleConnect}
-                  >
-                    Connect now
-                  </Button>
-                </div>
               </div>
-            ) : (
-              <div className="p-6 divide-y">
-                {accounts.map((account: any) => (
-                  <div key={account.id} className="pb-6">
-                    <div className="flex items-start gap-10">
-                      {/* Left Logo */}
-                      <div>
-                        <div className="border rounded-md px-5 py-10 bg-white dark:bg-slate-800">
-                           <img width="80" height="80" src="/images/automations/twilio.webp" alt="Twilio" onError={(e) => e.currentTarget.src='/images/automations/sms.svg'} />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {view === "manage" && (
+                <>
+                  <button onClick={handleConnect} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Add New
+                  </button>
+                  <button onClick={() => setView("list")} className={outlineBtn}>
+                    <ChevronLeft size={12} /> Back
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── LIST VIEW ── */}
+          {view === "list" && (
+            <div className="p-8">
+              <div className={cn("p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-red-500/40 flex flex-col", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+                      <img src="/images/automations/sms.svg" alt="Twilio" className="w-5 h-5" />
+                    </div>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>SMS &amp; Calls</h3>
+                  </div>
+                  <a
+                    href="https://www.twilio.com/docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+
+                <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
+                  Integrate your Twilio account to unlock 2-Way interactive dynamic conversations.
+                </p>
+
+                <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
+                  Manage
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── MANAGE VIEW ── */}
+          {view === "manage" && (
+            <div className="p-8 space-y-5">
+              {!hasAccounts ? (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <img src="/images/automations/sms.svg" alt="Twilio" className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Connect your Twilio account now</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Integrate this communication channel to automate conversations.
+                    </p>
+                  </div>
+                  <button onClick={handleConnect} className={primaryOutlineBtn}>
+                    Connect now
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {accounts.map((account: any) => {
+                    const sidVisible = !!showSecret[account.id];
+                    const sid = account.account_sid || account.sid || "";
+                    const maskedSid = sid ? `${sid.slice(0, 6)}${"•".repeat(Math.max(0, sid.length - 10))}${sid.slice(-4)}` : "—";
+                    return (
+                      <div key={account.id} className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                        {/* Account Header */}
+                        <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-4", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                              <img src="/images/automations/sms.svg" alt="Twilio" className="w-6 h-6" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className={cn("text-[13px] font-black truncate", text)}>{account.name || "Twilio Account"}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {account.phone_number && (
+                                  <Badge variant="outline" className="h-5 px-2 rounded-md border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400 text-[9px] font-black uppercase tracking-widest">
+                                    {account.phone_number}
+                                  </Badge>
+                                )}
+                                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => toast({ title: "Syncing...", description: "Account data refreshed." })}
+                              className={outlineBtn}
+                            >
+                              <RefreshCw size={12} /> Sync
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}>
+                                  <MoreVertical size={14} />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[180px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
+                                <DropdownMenuItem
+                                  onClick={() => { setAccountToDelete(account); setShowDeleteConfirm(true); }}
+                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                >
+                                  <Trash2 size={12} /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+
+                        {/* Credentials */}
+                        <div className="px-6 py-4 space-y-3">
+                          <div className="space-y-2">
+                            <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>Account SID</label>
+                            <div className={cn("flex items-center gap-2 px-3 h-11 rounded-xl border", card, border)}>
+                              <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>
+                                {sidVisible ? sid : maskedSid}
+                              </code>
+                              <button
+                                onClick={() => toggleSecret(account.id)}
+                                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                              >
+                                {sidVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                              </button>
+                              <button
+                                onClick={() => copyToken(sid)}
+                                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {account.phone_number && (
+                            <div className="space-y-2">
+                              <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>Phone Number</label>
+                              <div className={cn("flex items-center gap-2 px-3 h-11 rounded-xl border", card, border)}>
+                                <Phone size={14} className="text-red-500 shrink-0" />
+                                <code className={cn("text-[12px] font-mono font-bold flex-1 truncate", text)}>{account.phone_number}</code>
+                                <button
+                                  onClick={() => copyToken(account.phone_number)}
+                                  className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                                >
+                                  <Copy size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                      {/* Right Content */}
-                      <div className="flex flex-col gap-5 w-full">
-                         {/* Name */}
-                         <div className="grid grid-cols-4 items-center">
-                           <div className="font-bold col-span-1 text-sm">Name</div>
-                           <div className="col-span-3 flex space-x-4">
-                             <input 
-                               value={account.name} 
-                               className="px-3 py-2 border rounded-md disabled:opacity-50 grow text-sm" 
-                               type="text" 
-                               disabled
-                             />
-                             <div className="self-center flex items-center gap-2">
-                                <Badge variant="outline" className={`text-xs ${account.status === 'VERIFIED' ? 'text-green-600 border-green-600' : 'text-red-500'}`}>
-                                  {account.status}
-                                </Badge>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
-                                  onClick={() => handleDeleteAccountRequest(account)}
-                                  title="Delete account"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                             </div>
-                           </div>
-                         </div>
-
-                         {/* SID */}
-                         <div className="grid grid-cols-4 items-center">
-                           <div className="font-bold col-span-1 text-sm">Account SID</div>
-                           <div className="col-span-3">
-                             <input 
-                               value={account.sid} 
-                               className="w-full px-3 py-2 border rounded-md disabled:opacity-50 text-sm" 
-                               type="text" 
-                               disabled
-                             />
-                           </div>
-                         </div>
-
-                         {/* Token */}
-                         <div className="grid grid-cols-4 items-center">
-                           <div className="font-bold col-span-1 text-sm">Account Token</div>
-                           <div className="col-span-3">
-                             <input 
-                               value={'*******************' + (account.token?.slice(-4) || '')} 
-                               className="w-full px-3 py-2 border rounded-md disabled:opacity-50 bg-slate-50 dark:bg-slate-800 text-sm" 
-                               type="text" 
-                               disabled 
-                             />
-                           </div>
-                         </div>
-
-                         {/* SIP Section */}
-                         {account.sip && (
-                           <>
-                             <div className="grid grid-cols-4 items-center">
-                               <div className="font-bold col-span-1 text-sm">SIP Username</div>
-                               <div className="col-span-3 flex items-center gap-4">
-                                 <input 
-                                   value={account.sip.username} 
-                                   className="w-full px-3 py-2 border rounded-md disabled:opacity-50 bg-slate-50 dark:bg-slate-800 text-sm" 
-                                   type="text" 
-                                   disabled 
-                                 />
-                                 <div className="flex gap-2">
-                                   <Button 
-                                     variant="ghost" 
-                                     size="icon" 
-                                     className="h-8 w-8"
-                                     onClick={() => toggleSipVisibility(account.id, 'username')}
-                                   >
-                                     <Eye className="h-4 w-4" />
-                                   </Button>
-                                   <Button 
-                                     variant="ghost" 
-                                     size="icon" 
-                                     className="h-8 w-8"
-                                     onClick={() => handleCopy(account.sip.username, "Username")}
-                                   >
-                                     <Copy className="h-4 w-4" />
-                                   </Button>
-                                 </div>
-                               </div>
-                             </div>
-                             <div className="grid grid-cols-4 items-center">
-                               <div className="font-bold col-span-1 text-sm">SIP Password</div>
-                               <div className="col-span-3 flex items-center gap-4">
-                                 <input 
-                                   value="****************" 
-                                   className="w-full px-3 py-2 border rounded-md disabled:opacity-50 bg-slate-50 dark:bg-slate-800 text-sm" 
-                                   type="password" 
-                                   disabled 
-                                 />
-                                 <div className="flex gap-2">
-                                   <Button 
-                                     variant="ghost" 
-                                     size="icon" 
-                                     className="h-8 w-8"
-                                     onClick={() => toggleSipVisibility(account.id, 'password')}
-                                   >
-                                     <Eye className="h-4 w-4" />
-                                   </Button>
-                                   <Button 
-                                     variant="ghost" 
-                                     size="icon" 
-                                     className="h-8 w-8"
-                                     onClick={() => handleCopy(account.sip.password, "Password")}
-                                   >
-                                     <Copy className="h-4 w-4" />
-                                   </Button>
-                                 </div>
-                               </div>
-                             </div>
-                           </>
-                         )}
-
-                         <Separator className="my-4 bg-gray-200 dark:bg-slate-800" />
-
-                         {/* Phone Numbers */}
-                         <div className="grid grid-cols-4">
-                           <div className="font-bold col-span-1 mt-3 text-sm">Phone Numbers</div>
-                           <div className="col-span-3 space-y-4">
-                             {account.numbers.map((number: any) => (
-                               <div key={number.id} className="py-2">
-                                 <div className="grid grid-cols-2 gap-6 items-center">
-                                   <div className="col-span-1">
-                                     <input 
-                                       type="text" 
-                                       readOnly 
-                                       value={number.number} 
-                                       className="w-full px-3 py-2 border rounded-md bg-slate-50 dark:bg-slate-800 text-sm" 
-                                     />
-                                   </div>
-                                   <ul className="col-span-1 flex space-x-4 items-center">
-                                     <li>
-                                       {number.type === 'automated' ? (
-                                         <Cpu className="h-5 w-5 text-gray-500" />
-                                       ) : (
-                                         <Phone className="h-5 w-5 text-gray-500" />
-                                       )}
-                                     </li>
-                                     <li>
-                                       <Badge variant="outline" className={`text-xs ${number.status === 'VERIFIED' ? 'text-green-600 border-green-600' : 'text-red-500'}`}>
-                                         {number.status}
-                                       </Badge>
-                                     </li>
-                                     <li>
-                                       <Button 
-                                         variant="ghost" 
-                                         size="icon" 
-                                         className="h-6 w-6 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
-                                         onClick={() => handleDeleteNumberRequest(account.id, number.id, number.number)}
-                                       >
-                                         <Trash2 className="h-4 w-4" />
-                                       </Button>
-                                     </li>
-                                   </ul>
-                                 </div>
-
-                                 {/* Call Forwarding (Partial Implementation) */}
-                                 {number.status === 'VERIFIED' && (
-                                   <div className="mt-4 grid grid-cols-2 gap-4">
-                                     <div>
-                                        <Label className="text-sm font-semibold mb-1 block">Forward calls to</Label>
-                                        <Select 
-                                          value={number.forward_type} 
-                                          onValueChange={(val) => handleUpdatePhoneNumber(account.id, number.id, { forward_type: val })}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="NONE">None</SelectItem>
-                                            <SelectItem value="NUMBER">Number</SelectItem>
-                                            <SelectItem value="AGENT">Agent</SelectItem>
-                                            <SelectItem value="TEAM">Team</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                     </div>
-                                     
-                                     {number.forward_type === 'NONE' && (
-                                       <div className="flex items-center space-x-2 mt-6">
-                                          <div className="grow bg-yellow-50 border border-yellow-200 p-2 text-yellow-700 text-sm font-semibold rounded flex items-center gap-2">
-                                            <span>⚠</span> Call forwarding disabled
-                                          </div>
-                                          <Button size="sm" className="btn-outline-primary" variant="outline" onClick={handleSave}>Save</Button>
-                                       </div>
-                                     )}
-
-                                      {number.forward_type === 'NUMBER' && (
-                                       <div className="flex items-center space-x-2 mt-6">
-                                          <div className="grow">
-                                            <input 
-                                              type="text" 
-                                              className="w-full px-3 py-2 border rounded-md text-sm" 
-                                              value={number.forward_to} 
-                                              onChange={(e) => handleUpdatePhoneNumber(account.id, number.id, { forward_to: e.target.value })}
-                                              placeholder="Enter number" 
-                                            />
-                                          </div>
-                                          <Button size="sm" className="btn-outline-primary" variant="outline" onClick={handleSave}>Save</Button>
-                                       </div>
-                                     )}
-                                   </div>
-                                 )}
-                               </div>
-                             ))}
-                             
-                             <div className="pt-2">
-                               <button 
-                                 className="text-sm font-semibold text-blue-600 hover:underline"
-                                 onClick={() => handleAddNewNumber(account.id)}
-                               >
-                                 + Add New Number
-                               </button>
-                             </div>
-                           </div>
-                         </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
               </div>
-            )}
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Twilio Account?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{accountToDelete?.name || accountToDelete?.phone_number}</span> will be permanently disconnected.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => { deleteMutation.mutate(accountToDelete.id); setShowDeleteConfirm(false); }}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Delete Account Confirmation Dialog */}
-      <Dialog open={showDeleteConfirmAccount} onOpenChange={setShowDeleteConfirmAccount}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Delete SMS Account
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Are you sure you want to delete the SMS account <span className="font-bold text-slate-900 dark:text-white">"{accountToDelete?.name}"</span>? 
-              This action cannot be undone.
-            </p>
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirmAccount(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-red-600 hover:bg-red-700"
-              onClick={confirmDeleteAccount}
-            >
-              Yes, delete account
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Number Confirmation Dialog */}
-      <Dialog open={showDeleteConfirmNumber} onOpenChange={setShowDeleteConfirmNumber}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Delete Phone Number
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Are you sure you want to delete the phone number <span className="font-bold text-slate-900 dark:text-white">"{numberToDelete?.number}"</span>? 
-              This action cannot be undone.
-            </p>
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirmNumber(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-red-600 hover:bg-red-700"
-              onClick={confirmDeleteNumber}
-            >
-              Yes, delete number
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

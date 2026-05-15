@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,34 +11,34 @@ import {
 import {
   Settings,
   Copy,
-  Globe,
-  Calendar,
-  Building2,
-  Save,
-  Lock,
-  Link2,
-  HelpCircle,
-  CheckCircle2,
-  ExternalLink,
-  RotateCcw,
-  QrCode,
   Clock,
+  Calendar,
+  Lock,
+  Info,
+  CheckCircle2,
   AlertCircle,
-  Info
+  LayoutGrid,
+  Globe,
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
 
 export default function ManageSection() {
+  const { mode } = useTheme();
+  const { toast } = useToast();
+  const dark = mode === "dark";
+
+  const bg     = dark ? "bg-[#0b1120]"   : "bg-slate-50/80";
+  const card   = dark ? "bg-[#0f1829]"   : "bg-white";
+  const border = dark ? "border-slate-800" : "border-slate-200";
+  const text   = dark ? "text-white"     : "text-slate-900";
+  const sub    = dark ? "text-slate-500" : "text-slate-400";
+  const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
   const { data: workspaceData, isLoading, isError } = useQuery<any>({
     queryKey: ["/api/workspaces/current"],
   });
@@ -50,28 +50,23 @@ export default function ManageSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces/current"] });
-      setHasUnsavedChanges(false);
-      toast({
-        title: "Success",
-        description: "Workspace settings saved successfully!",
-      });
+      toast({ title: "Saved", description: "Workspace settings saved successfully." });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update workspace",
         variant: "destructive",
       });
-    }
+    },
   });
 
-  const workspaceId = workspaceData?.id?.toString() || "";
+  const workspaceId = workspaceData?.id?.toString() || "1";
   const loginUrl = "";
 
-  // State for editable fields
-  const [workspaceName, setWorkspaceName] = useState("Ezconn");
+  const [workspaceName, setWorkspaceName] = useState("");
   const [timezone, setTimezone] = useState("America/Fortaleza");
-  const [firstDayOfWeek, setFirstDayOfWeek] = useState("monday");
+  const [firstDayOfWeek, setFirstDayOfWeek] = useState("sunday");
 
   useEffect(() => {
     if (workspaceData) {
@@ -81,452 +76,287 @@ export default function ManageSection() {
     }
   }, [workspaceData]);
 
-  // Track unsaved changes
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showQR, setShowQR] = useState(false);
-
-  const { toast } = useToast();
-
-  // Get current time in selected timezone
   const getCurrentTime = () => {
     try {
-      const now = new Date();
-      return now.toLocaleTimeString('en-US', {
+      return new Date().toLocaleTimeString("en-US", {
         timeZone: timezone || "UTC",
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
       });
-    } catch (e) {
-      return "00:00 AM";
+    } catch {
+      return "—";
     }
   };
 
-  // Character count for workspace name
-  const nameCharCount = workspaceName.length;
-  const maxNameLength = 50;
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: "Text copied to clipboard",
-    });
-  };
-
-  const handleReset = () => {
-    if (workspaceData) {
-      setWorkspaceName(workspaceData.name || "");
-      if (workspaceData.timezone) setTimezone(workspaceData.timezone);
-      if (workspaceData.first_day_week) setFirstDayOfWeek(workspaceData.first_day_week.toLowerCase());
-    }
-    setHasUnsavedChanges(false);
-    toast({
-      title: "Reset Complete",
-      description: "Settings restored to last saved values",
-    });
+  const handleCopy = (val: string) => {
+    if (!val) return;
+    navigator.clipboard.writeText(val);
+    toast({ title: "Copied!", description: "Copied to clipboard." });
   };
 
   const handleSave = () => {
-    updateMutation.mutate({
-      name: workspaceName,
-      timezone,
-      firstDayOfWeek,
-    });
-  };
-
-  const handleFieldChange = (field: string, value: string) => {
-    setHasUnsavedChanges(true);
-    if (field === 'name') setWorkspaceName(value);
-    if (field === 'timezone') setTimezone(value);
-    if (field === 'firstDay') setFirstDayOfWeek(value);
+    updateMutation.mutate({ name: workspaceName, timezone, firstDayOfWeek });
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading workspace settigns...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (isError) {
-    return <div className="p-8 text-center text-red-500">Failed to load workspace settings from the server.</div>;
+    return (
+      <div className={cn("p-8 text-center rounded-[2rem] border border-rose-500/20 bg-rose-500/5")}>
+        <AlertCircle className="w-10 h-10 text-rose-500 mx-auto mb-3" />
+        <p className="text-rose-500 font-black text-sm uppercase tracking-widest">Failed to load workspace settings</p>
+      </div>
+    );
   }
 
+  const inputCls = cn(
+    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
+    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
   return (
-    <>
-      <CardHeader className="flex flex-row items-center gap-4 space-y-0 border-b pb-6">
-        <Settings className="w-8 h-8 text-black dark:text-white" />
-        <div className="flex-1 space-y-1">
-          <CardTitle className="text-lg font-semibold">Workspace Settings</CardTitle>
-          <CardDescription>Manage your Workspace settings</CardDescription>
-        </div>
-
-        {/* Quick Actions Bar */}
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopy(workspaceId)}
-                  className="gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy ID
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Quick copy workspace ID</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {hasUnsavedChanges && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Reset
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Revert to last saved values</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6 pt-6">
-        {/* Unsaved Changes Indicator */}
-        {hasUnsavedChanges && (
-          <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border-l-4 border-amber-500 rounded-r-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <CardContent className="p-0">
+        {/* ── Header ── */}
+        <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+          <div className="flex items-center gap-4">
+            <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+              <Settings className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <p className="font-medium text-amber-900 dark:text-amber-100">Unsaved Changes</p>
-              <p className="text-sm text-amber-700 dark:text-amber-300">You have unsaved changes. Click "Save Changes" to apply them.</p>
+              <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Workspace Settings</h1>
+              <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
+                Manage your Workspace settings
+              </p>
             </div>
           </div>
-        )}
+          <button
+            onClick={() => handleCopy(workspaceId)}
+            className={cn(
+              "h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+              dark
+                ? "border-slate-800 text-slate-200 hover:border-primary/40 hover:text-primary"
+                : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+            )}
+          >
+            <Copy size={12} /> Copy ID
+          </button>
+        </div>
 
-        {/* Workspace ID - Read Only */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Workspace ID
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  Unique identifier for your workspace. This cannot be changed.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="md:col-span-2 space-y-2">
+        <div>
+
+          {/* Workspace ID */}
+          <FieldRow
+            dark={dark}
+            label="Workspace ID"
+            icon={<LayoutGrid size={14} />}
+            description="Unique identifier for your Workspace"
+          >
+            <div className="relative">
+              <Input readOnly value={workspaceId} className={cn(inputCls, "pr-11 cursor-default opacity-90 font-black")} />
+              <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 mt-2">
+              <CheckCircle2 size={12} /> Configured
+            </div>
+          </FieldRow>
+
+          {/* Workspace Name */}
+          <FieldRow
+            dark={dark}
+            label="Workspace Name"
+            icon={<Settings size={14} />}
+            description="Your Workspace display name"
+            required
+          >
             <div className="relative">
               <Input
-                value={workspaceId}
-                readOnly
-                className="bg-gray-50 dark:bg-slate-800/50 cursor-not-allowed text-sm text-gray-900 dark:text-gray-400 border-gray-200 dark:border-slate-700 pr-10"
+                value={workspaceName}
+                onChange={(e) => setWorkspaceName(e.target.value)}
+                maxLength={50}
+                className={cn(inputCls, "pr-14")}
               />
-              <Lock className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <CheckCircle2 className="w-3 h-3 text-green-500" />
-              <span>Configured</span>
-            </div>
-          </div>
-        </div>
-        <Separator />
-
-        {/* Workspace Name - Editable */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Workspace Name
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  The display name for your workspace. This will be visible to all users.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="md:col-span-2 space-y-2">
-            <Input
-              value={workspaceName}
-              onChange={(e) => handleFieldChange('name', e.target.value)}
-              maxLength={maxNameLength}
-              placeholder="e.g., My Company Workspace"
-              className="text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white"
-            />
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-gray-500">
-                <Info className="w-3 h-3" />
-                <span>Use a clear, descriptive name</span>
-              </div>
-              <span className={`${nameCharCount > maxNameLength * 0.9 ? 'text-orange-500' : 'text-gray-500'}`}>
-                {nameCharCount}/{maxNameLength}
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest opacity-40">
+                {workspaceName.length}/50
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <CheckCircle2 className="w-3 h-3 text-green-500" />
-              <span>Valid workspace name</span>
-            </div>
-          </div>
-        </div>
-        <Separator />
+          </FieldRow>
 
-        {/* Timezone */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Timezone
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  Your workspace timezone affects scheduling, reports, and time displays.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="md:col-span-2 space-y-2">
-            <Select value={timezone} onValueChange={(val) => handleFieldChange('timezone', val)}>
-              <SelectTrigger className="w-full text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white">
-                <SelectValue placeholder="Select timezone" />
-              </SelectTrigger>
-              <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                <SelectItem value="America/Fortaleza" className="dark:focus:bg-slate-800 dark:text-white">
-                  Fortaleza (America/Fortaleza)
-                </SelectItem>
-                <SelectItem value="UTC" className="dark:focus:bg-slate-800 dark:text-white">
-                  UTC
-                </SelectItem>
-                <SelectItem value="Asia/Karachi" className="dark:focus:bg-slate-800 dark:text-white">
-                  Asia/Karachi
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Current Time Display */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg flex items-center gap-3">
-              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <div>
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  Current Time in Selected Timezone
-                </p>
-                <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                  {getCurrentTime()}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Info className="w-3 h-3" />
-              <span>Timezone selection is important for automation triggers</span>
-            </div>
-          </div>
-        </div>
-        <Separator />
-
-        {/* First Day of Week */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              First Day of Week
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  Choose which day starts your calendar week. Recommended: Monday for business use.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="md:col-span-2 space-y-2">
-            <Select value={firstDayOfWeek} onValueChange={(val) => handleFieldChange('firstDay', val)}>
-              <SelectTrigger className="w-full text-sm bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white">
-                <SelectValue placeholder="Select first day" />
-              </SelectTrigger>
-              <SelectContent className="dark:bg-slate-950 dark:border-slate-800">
-                <SelectItem value="monday" className="dark:focus:bg-slate-800 dark:text-white">
-                  Monday
-                </SelectItem>
-                <SelectItem value="sunday" className="dark:focus:bg-slate-800 dark:text-white">
-                  Sunday
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Mini Calendar Preview */}
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900 rounded-lg">
-              <p className="text-xs font-medium text-purple-900 dark:text-purple-100 mb-2">
-                Calendar Preview
-              </p>
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {(firstDayOfWeek === 'monday'
-                  ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-                  : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                ).map((day, i) => (
-                  <div
-                    key={day}
-                    className={`text-xs py-1 rounded ${i === 0 ? 'bg-purple-200 dark:bg-purple-800 font-semibold' : 'bg-white dark:bg-slate-800'} text-purple-900 dark:text-purple-100`}
-                  >
-                    {day}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Info className="w-3 h-3" />
-              <span>Recommended for business: Monday</span>
-            </div>
-          </div>
-        </div>
-        <Separator />
-
-        {/* Login URL */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Login URL
-              <span className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded">
-                Optional
-              </span>
-            </label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="w-4 h-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  Custom login URL for your workspace. Leave empty to use default.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <Input
-                value={loginUrl}
-                readOnly
-                placeholder="No login URL configured"
-                className="bg-gray-50 dark:bg-slate-800/50 cursor-not-allowed text-sm text-gray-900 dark:text-gray-400 border-gray-200 dark:border-slate-700"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleCopy(loginUrl)}
-                className="whitespace-nowrap text-sm px-3 btn-outline-primary gap-2"
-                disabled={!loginUrl}
-              >
-                <Copy className="w-4 h-4" />
-                Copy
-              </Button>
-            </div>
-
-            {loginUrl && (
-              <>
-                {/* QR Code Section */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowQR(!showQR)}
-                    className="gap-2"
-                  >
-                    <QrCode className="w-4 h-4" />
-                    {showQR ? 'Hide' : 'Show'} QR Code
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(loginUrl, '_blank')}
-                    className="gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Test URL
-                  </Button>
-                </div>
-
-                {showQR && (
-                  <div className="p-4 bg-white dark:bg-slate-900 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center gap-3">
-                    <div className="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
-                      <QrCode className="w-16 h-16 text-gray-400" />
-                    </div>
-                    <p className="text-xs text-gray-500 text-center">
-                      Scan to access workspace on mobile
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              {loginUrl ? (
-                <>
-                  <CheckCircle2 className="w-3 h-3 text-green-500" />
-                  <span>URL configured</span>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-3 h-3 text-yellow-500" />
-                  <span>Not configured</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-        <Separator />
-
-        {/* Save Button with validation status */}
-        <div className="flex justify-end items-center gap-4 pt-2">
-          <div className="text-sm text-gray-500">
-            {hasUnsavedChanges ? (
-              <span className="flex items-center gap-2 text-orange-600">
-                <AlertCircle className="w-4 h-4" />
-                Unsaved changes
-              </span>
-            ) : (
-              <span className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 className="w-4 h-4" />
-                All changes saved
-              </span>
-            )}
-          </div>
-          <Button
-            className="px-6 py-1 text-sm btn-outline-primary gap-2"
-            variant="outline"
-            onClick={handleSave}
-            disabled={!hasUnsavedChanges || updateMutation.isPending}
+          {/* Timezone */}
+          <FieldRow
+            dark={dark}
+            label="Timezone"
+            icon={<Globe size={14} />}
+            description="Used for automation triggers and scheduling"
+            required
           >
-            <Save className="w-4 h-4" />
-            {updateMutation.isPending ? "Saving..." : "Save Changes"}
-          </Button>
+            <Select value={timezone} onValueChange={setTimezone}>
+              <SelectTrigger className={inputCls}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                <SelectItem value="America/Fortaleza" className="text-[12px] font-bold">Fortaleza (America/Fortaleza)</SelectItem>
+                <SelectItem value="Asia/Karachi" className="text-[12px] font-bold">Karachi (Asia/Karachi)</SelectItem>
+                <SelectItem value="UTC" className="text-[12px] font-bold">UTC (Universal Time)</SelectItem>
+                <SelectItem value="America/Los_Angeles" className="text-[12px] font-bold">Pacific (America/Los_Angeles)</SelectItem>
+                <SelectItem value="America/New_York" className="text-[12px] font-bold">Eastern (America/New_York)</SelectItem>
+                <SelectItem value="Europe/London" className="text-[12px] font-bold">London (Europe/London)</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className={cn("mt-4 p-5 rounded-[1.25rem] border flex items-center justify-between", softBg, softBorder)}>
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <Clock size={18} />
+                </div>
+                <div>
+                  <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", sub)}>Current time</p>
+                  <p className={cn("text-[18px] font-black tracking-tight mt-0.5", text)}>{getCurrentTime()}</p>
+                </div>
+              </div>
+              <span className={cn("text-[10px] font-black uppercase tracking-widest opacity-40", sub)}>Live</span>
+            </div>
+          </FieldRow>
+
+          {/* First Day of Week */}
+          <FieldRow
+            dark={dark}
+            label="First Day of Week"
+            icon={<Calendar size={14} />}
+            description="Recommended for business: Monday"
+            required
+          >
+            <Select value={firstDayOfWeek} onValueChange={setFirstDayOfWeek}>
+              <SelectTrigger className={inputCls}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                <SelectItem value="sunday" className="text-[12px] font-bold">Sunday</SelectItem>
+                <SelectItem value="monday" className="text-[12px] font-bold">Monday</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className={cn("mt-4 p-5 rounded-[1.25rem] border", softBg, softBorder)}>
+              <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60 mb-3", sub)}>Calendar preview</p>
+              <div className="flex gap-2">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => {
+                  const active = d.toLowerCase() === firstDayOfWeek;
+                  return (
+                    <div
+                      key={d}
+                      className={cn(
+                        "flex-1 h-9 rounded-lg flex items-center justify-center text-[10px] font-black uppercase tracking-widest transition-all",
+                        active
+                          ? "bg-primary text-white shadow-lg shadow-primary/20"
+                          : dark
+                            ? "bg-slate-900/50 text-slate-500"
+                            : "bg-white border border-slate-200 text-slate-400"
+                      )}
+                    >
+                      {d}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </FieldRow>
+
+          {/* Login URL */}
+          <FieldRow
+            dark={dark}
+            label="Login URL"
+            icon={<Globe size={14} />}
+            description="Optional — custom login URL for your Workspace"
+            optional
+            last
+          >
+            <div className="flex gap-2">
+              <Input readOnly value="No login URL configured" className={cn(inputCls, "flex-1 cursor-default opacity-60")} />
+              <button
+                onClick={() => handleCopy(loginUrl)}
+                className={cn(
+                  "h-11 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shrink-0",
+                  dark
+                    ? "border-slate-800 text-slate-200 hover:border-primary/40 hover:text-primary"
+                    : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+                )}
+              >
+                <Copy size={12} /> Copy
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-500 mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Not configured
+            </div>
+          </FieldRow>
+
+          {/* Save Footer */}
+          <div className={cn("px-8 py-5 border-t flex justify-end items-center gap-3", border)}>
+            <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
+              <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
+              Changes save instantly across all sessions
+            </p>
+            <button
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+              className="h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20"
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+
         </div>
       </CardContent>
-    </>
+    </Card>
+  );
+}
+
+/* ── Field Row Helper ── */
+type FieldRowProps = {
+  dark: boolean;
+  label: string;
+  description?: string;
+  icon?: React.ReactNode;
+  required?: boolean;
+  optional?: boolean;
+  last?: boolean;
+  children: React.ReactNode;
+};
+
+function FieldRow({ dark, label, description, icon, required, optional, last, children }: FieldRowProps) {
+  const border = dark ? "border-slate-800" : "border-slate-100";
+  const text   = dark ? "text-white"       : "text-slate-900";
+  const sub    = dark ? "text-slate-500"   : "text-slate-400";
+
+  return (
+    <div className={cn("grid grid-cols-1 md:grid-cols-12 gap-6 px-8 py-7", !last && "border-b", border)}>
+      <div className="md:col-span-4 space-y-1.5">
+        <div className="flex items-center gap-2">
+          {icon && <div className="p-1.5 rounded-lg bg-primary/10 text-primary">{icon}</div>}
+          <h4 className={cn("text-[12px] font-black uppercase tracking-widest", text)}>{label}</h4>
+          {required && <span className="text-rose-500 text-sm leading-none">*</span>}
+          {optional && (
+            <span className={cn("text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")}>
+              Optional
+            </span>
+          )}
+        </div>
+        {description && (
+          <p className={cn("text-[11px] font-medium leading-relaxed opacity-60 pl-1", sub)}>
+            {description}
+          </p>
+        )}
+      </div>
+      <div className="md:col-span-8">
+        {children}
+      </div>
+    </div>
   );
 }

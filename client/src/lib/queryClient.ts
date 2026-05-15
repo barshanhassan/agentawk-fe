@@ -7,7 +7,7 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ezconn-backend-396801134474.us-central1.run.app/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:3001";
 
 export async function apiRequest(
   method: string,

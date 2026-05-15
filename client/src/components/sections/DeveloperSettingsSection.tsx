@@ -1,17 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Eye, EyeOff, Copy, RefreshCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
+import {
+  Eye,
+  EyeOff,
+  Copy,
+  RefreshCw,
+  Trash2,
+  Loader2,
+  Code2,
+  Webhook as WebhookIcon,
+  Plus,
+  AlertCircle,
+  ExternalLink,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type WebhookEvent = "Sent Message" | "Delivered Message" | "Read Message" | "Failed Message";
 
@@ -26,12 +39,52 @@ interface DeveloperSettings {
   webhooks: Webhook[];
 }
 
+const ALL_EVENTS: WebhookEvent[] = ["Sent Message", "Delivered Message", "Read Message", "Failed Message"];
+
 const DeveloperSettingsSection = () => {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { toast } = useToast();
+
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookModal, setShowWebhookModal] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<WebhookEvent[]>([]);
+  const [webhookToDelete, setWebhookToDelete] = useState<Webhook | null>(null);
+
+  // ── Design tokens ─────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const inputCls = cn(
+    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+  );
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
+
+  const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
+
+  const iconBtn = cn(
+    "w-11 h-11 rounded-xl border flex items-center justify-center transition-all shrink-0",
+    dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500"
+  );
 
   const { data: settings, isLoading } = useQuery<DeveloperSettings>({
     queryKey: ["/api/workspaces/developer-settings"],
@@ -54,59 +107,40 @@ const DeveloperSettingsSection = () => {
   const handleCopy = () => {
     if (settings?.apiKey) {
       navigator.clipboard.writeText(settings.apiKey);
-      toast({
-        title: "Copied to clipboard",
-        description: "The API Key has been copied to your clipboard.",
-      });
+      toast({ title: "Copied", description: "The API Key has been copied to your clipboard." });
     }
   };
 
-  const handleRegenerate = () => {
-    mutation.mutate({ regenerateKey: true });
-  };
+  const handleRegenerate = () => mutation.mutate({ regenerateKey: true });
 
   const handleCreateWebhook = () => {
-    let isValid = true;
-    if (!webhookUrl.trim()) {
-      isValid = false;
-    } else {
+    let isValid = !!webhookUrl.trim();
+    if (isValid) {
       try {
         new URL(webhookUrl);
-      } catch (_) {
+      } catch {
         isValid = false;
       }
     }
-
-    if (selectedEvents.length === 0) {
-      isValid = false;
-    }
+    if (selectedEvents.length === 0) isValid = false;
 
     if (!isValid) {
-      toast({
-        title: "Invalid Input",
-        description: "Please provide a valid URL and select at least one event.",
-        variant: "destructive",
-      });
+      toast({ title: "Invalid Input", description: "Please provide a valid URL and select at least one event.", variant: "destructive" });
       return;
     }
 
-    const newWebhook: Webhook = {
-      id: `webhook-${Date.now()}`,
-      url: webhookUrl,
-      events: selectedEvents,
-    };
-
-    const updatedWebhooks = [...(settings?.webhooks || []), newWebhook];
-    mutation.mutate({ webhooks: updatedWebhooks });
-    
-    setWebhookUrl('');
+    const newWebhook: Webhook = { id: `webhook-${Date.now()}`, url: webhookUrl, events: selectedEvents };
+    mutation.mutate({ webhooks: [...(settings?.webhooks || []), newWebhook] });
+    setWebhookUrl("");
     setSelectedEvents([]);
     setShowWebhookModal(false);
   };
 
-  const handleDeleteWebhook = (id: string) => {
-    const updatedWebhooks = (settings?.webhooks || []).filter(webhook => webhook.id !== id);
-    mutation.mutate({ webhooks: updatedWebhooks });
+  const handleDeleteWebhook = () => {
+    if (!webhookToDelete) return;
+    const updated = (settings?.webhooks || []).filter((w) => w.id !== webhookToDelete.id);
+    mutation.mutate({ webhooks: updated });
+    setWebhookToDelete(null);
   };
 
   if (isLoading) {
@@ -119,189 +153,242 @@ const DeveloperSettingsSection = () => {
 
   return (
     <>
-      <CardHeader>
-        <CardTitle className="text-lg">Developer Settings</CardTitle>
-        <p className="text-sm text-muted-foreground">Here's everything you need to start connecting your application with Digital Connect APIs.</p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <Separator />
-
-        <div>
-          <h4 className="font-semibold text-base">API Docs</h4>
-          <p className="text-sm text-muted-foreground">
-            Use our <span className="text-blue-500 cursor-pointer hover:underline">API Documentation</span> to start understanding our API capabilities.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <h4 className="font-semibold text-base">API Key</h4>
-          <p className="text-sm text-muted-foreground">Use this API Key when using our API for authentication.</p>
-          <div className="flex items-center gap-2">
-            <div className="relative max-w-[450px] w-full">
-              <Input
-                readOnly
-                type={showApiKey ? "text" : "password"}
-                value={settings?.apiKey || ''}
-                className="pr-12 w-full"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="h-8 w-8"
-                      >
-                        {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{showApiKey ? "Hide" : "Show"} key</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Code2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Developer Settings</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  Everything you need to connect your application with Digital Connect APIs.
+                </p>
               </div>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleCopy}>
-                    <Copy size={16} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Copy</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handleRegenerate}
-                    disabled={mutation.isPending}
-                  >
-                    <RefreshCw size={16} className={mutation.isPending ? "animate-spin" : ""} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Regenerate key</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h4 className="font-semibold text-base">Webhooks</h4>
-            <p className="text-sm text-muted-foreground">Configure webhooks to receive delivery reports of your WhatsApp template messages.</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="btn-outline-primary h-7 text-xs"
-            onClick={() => setShowWebhookModal(true)}
-          >
-            Configure
-          </Button>
-        </div>
+          {/* Body */}
+          <div className="p-8 space-y-6">
+            {/* API Docs */}
+            <div className={cn("flex items-center justify-between gap-4 p-5 rounded-[1.5rem] border", softBg, softBorder)}>
+              <div>
+                <p className={cn("text-[13px] font-black", text)}>API Documentation</p>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                  Understand our API capabilities and endpoints.
+                </p>
+              </div>
+              <button className={cn(primaryOutlineBtn, "shrink-0")}>
+                <ExternalLink size={12} /> View Docs
+              </button>
+            </div>
 
-        {settings?.webhooks && settings.webhooks.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="font-semibold text-base">Configured Webhooks</h4>
-            <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
-              {settings.webhooks.map((webhook) => (
-                <div key={webhook.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium break-all">{webhook.url}</p>
-                    <p className="text-xs text-muted-foreground">{webhook.events.join(', ')}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDeleteWebhook(webhook.id)}
-                    disabled={mutation.isPending}
+            {/* API Key */}
+            <div className={cn("rounded-[1.5rem] border p-6 space-y-3", softBg, softBorder)}>
+              <div>
+                <p className={cn("text-[13px] font-black", text)}>API Key</p>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                  Use this key to authenticate API requests.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 max-w-[480px]">
+                  <input
+                    readOnly
+                    type={showApiKey ? "text" : "password"}
+                    value={settings?.apiKey || ""}
+                    className={cn(inputCls, "pr-12 font-mono text-[12px]")}
+                  />
+                  <button
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors", sub, "hover:text-primary")}
                   >
-                    <Trash2 size={16} />
-                  </Button>
+                    {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
                 </div>
-              ))}
+                <button onClick={handleCopy} className={iconBtn} title="Copy">
+                  <Copy size={15} />
+                </button>
+                <button onClick={handleRegenerate} disabled={mutation.isPending} className={iconBtn} title="Regenerate">
+                  <RefreshCw size={15} className={cn(mutation.isPending && "animate-spin")} />
+                </button>
+              </div>
+            </div>
+
+            {/* Webhooks */}
+            <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder)}>
+              <div className={cn("p-6 border-b flex items-center justify-between gap-4", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <WebhookIcon size={15} />
+                  </div>
+                  <div>
+                    <p className={cn("text-[13px] font-black", text)}>Webhooks</p>
+                    <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                      Receive delivery reports for your WhatsApp template messages.
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setShowWebhookModal(true)} className={cn(primaryOutlineBtn, "shrink-0")}>
+                  <Plus size={12} /> Configure
+                </button>
+              </div>
+
+              <div className={cn("p-6", softBg)}>
+                {settings?.webhooks && settings.webhooks.length > 0 ? (
+                  <div className="space-y-3">
+                    {settings.webhooks.map((webhook) => (
+                      <div
+                        key={webhook.id}
+                        className={cn("flex items-center justify-between gap-3 p-4 rounded-xl border", softBorder, dark ? "bg-slate-900/40" : "bg-white")}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className={cn("text-[13px] font-black break-all", text)}>{webhook.url}</p>
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {webhook.events.map((e) => (
+                              <span key={e} className="inline-flex h-5 px-2 items-center rounded-md border border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">
+                                {e}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setWebhookToDelete(webhook)}
+                          disabled={mutation.isPending}
+                          className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all shrink-0", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
+                          title="Delete"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-10 flex flex-col items-center justify-center text-center space-y-3">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <WebhookIcon className="w-7 h-7 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className={cn("text-[13px] font-black", text)}>No webhooks configured</h3>
+                      <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                        Configure a webhook to receive message status updates.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-      </CardContent>
-      <CardFooter className="flex justify-end p-0 mt-4">
-        {/* Save button removed as changes are immediate via mutation */}
-      </CardFooter>
-
-      {/* Webhook Configuration Modal */}
+      {/* ── Webhook Modal ── */}
       <Dialog open={showWebhookModal} onOpenChange={setShowWebhookModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader className="mb-2">
-            <DialogTitle>Configure Webhook</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="webhook-url" className="text-sm font-medium text-foreground">Webhook URL<span className="text-red-500 pl-0.5">*</span></Label>
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
+          <div className="p-6 space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <WebhookIcon size={18} />
+                </div>
+                <div className="text-left">
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                    Configure Webhook
+                  </DialogTitle>
+                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    Receive status updates at your endpoint.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <label className={labelCls}>Webhook URL <span className="text-rose-500">*</span></label>
               <div className="relative">
-                <Input
-                  id="webhook-url"
+                <input
                   placeholder="https://example.com/api/webhook"
                   value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  maxLength={2000}
-                  className="pr-12"
+                  onChange={(e) => setWebhookUrl(e.target.value.slice(0, 2000))}
+                  className={cn(inputCls, "pr-16")}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                <span className={cn("absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold", sub)}>
                   {webhookUrl.length}/2000
                 </span>
               </div>
             </div>
 
-            <div>
-              <h4 className="text-sm font-medium text-foreground mb-2">Events<span className="text-red-500 pl-0.5">*</span></h4>
-              <p className="text-sm text-muted-foreground mb-2">Select events to retrieve message status update.</p>
-              <div className="space-y-2">
-                {(["Sent Message", "Delivered Message", "Read Message", "Failed Message"] as WebhookEvent[]).map((event) => (
-                  <div key={event} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={event}
-                      checked={selectedEvents.includes(event)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedEvents([...selectedEvents, event]);
-                        } else {
-                          setSelectedEvents(selectedEvents.filter((e) => e !== event));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={event} className="text-sm font-medium">{event}</Label>
-                  </div>
-                ))}
+            <div className="space-y-2">
+              <label className={labelCls}>Events <span className="text-rose-500">*</span></label>
+              <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                Select the events to receive status updates for.
+              </p>
+              <div className="space-y-2 pt-1">
+                {ALL_EVENTS.map((event) => {
+                  const checked = selectedEvents.includes(event);
+                  return (
+                    <div
+                      key={event}
+                      onClick={() =>
+                        setSelectedEvents(checked ? selectedEvents.filter((e) => e !== event) : [...selectedEvents, event])
+                      }
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all",
+                        checked ? "border-primary bg-primary/5" : cn(softBorder, dark ? "bg-slate-900/40 hover:border-primary/40" : "bg-white hover:border-primary/40")
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        readOnly
+                        className="rounded accent-[hsl(var(--primary))] w-4 h-4 pointer-events-none"
+                      />
+                      <span className={cn("text-[12px] font-black uppercase tracking-widest", text)}>{event}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
-          <div className="flex gap-2 justify-end mt-2">
-            <Button onClick={() => setShowWebhookModal(false)} variant="outline">Cancel</Button>
-            <Button 
-                onClick={handleCreateWebhook} 
-                className="btn-outline-primary" 
-                variant="outline"
-                disabled={mutation.isPending}
-            >
-                {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Create Webhook
-            </Button>
+
+            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
+              <button onClick={() => setShowWebhookModal(false)} className={outlineBtn}>Cancel</button>
+              <button onClick={handleCreateWebhook} disabled={mutation.isPending} className={primaryBtn}>
+                {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                <Plus size={12} /> Create
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={!!webhookToDelete} onOpenChange={(open) => !open && setWebhookToDelete(null)}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Webhook?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black break-all">{webhookToDelete?.url || "This webhook"}</span> will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteWebhook}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

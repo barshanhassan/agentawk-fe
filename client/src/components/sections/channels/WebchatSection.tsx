@@ -1,22 +1,58 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Copy, Edit2, Trash2, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import {
+  ChevronLeft,
+  Plus,
+  ExternalLink,
+  Trash2,
+  AlertCircle,
+  Copy,
+  Edit2,
+  MessageCircle,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function WebchatSection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const { toast } = useToast();
   const [view, setView] = useState<"list" | "manage">("list");
   const queryClient = useQueryClient();
-  
+
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
   const { data: channels, isLoading } = useQuery({
     queryKey: ["/api/integrations/channels"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/integrations/channels");
       return res.json();
-    }
+    },
   });
 
   const webchatInstances = channels?.webchat || [];
@@ -28,202 +64,195 @@ export default function WebchatSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
-      toast({
-        title: "Deleted",
-        description: "Webchat instance removed successfully.",
-      });
+      toast({ title: "Deleted", description: "Webchat widget removed." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete instance.", variant: "destructive" });
-    }
   });
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [instanceToDelete, setInstanceToDelete] = useState<any>(null);
+
   const handleConnect = () => {
-    toast({
-      title: "Connecting...",
-      description: "Starting Webchat setup flow.",
-    });
+    toast({ title: "Creating...", description: "Starting widget configuration." });
   };
 
-  const { toast } = useToast();
-
-  const handleExternalLink = (name: string) => {
-    toast({
-      title: "Opening",
-      description: `Opening ${name} in a new tab...`,
-    });
+  const copyEmbed = (id: string) => {
+    const snippet = `<script src="https://ezconn.com/widget.js" data-id="${id}"></script>`;
+    navigator.clipboard.writeText(snippet);
+    toast({ title: "Copied", description: "Embed code copied to clipboard." });
   };
 
-  const handleCopy = (name: string) => {
-    navigator.clipboard.writeText(`https://webchat.example.com/${name}`);
-    toast({
-      title: "Copied",
-      description: "Webchat widget code copied to clipboard.",
-    });
-  };
-
-  const handleEdit = (name: string) => {
-    toast({
-      title: "Edit",
-      description: `Opening editor for ${name}...`,
-    });
-  };
-
-  const handleDelete = (id: number | string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}?`)) {
-      deleteMutation.mutate(id);
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      {view === "list" && (
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Webchat</h2>
-              <img src="/images/automations/webchat.svg" alt="Webchat" className="h-5 w-5" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Create a Webchat interface for your website.
-            </p>
-          </div>
-          <Separator className="bg-gray-200 dark:bg-slate-800" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <img src="/images/automations/webchat.svg" alt="Webchat" className="h-6 w-6" />
-                <h3 className="font-semibold text-sm">Webchat</h3>
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header — dynamic per view */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-purple-500/15" : "bg-purple-500/10")}>
+                <img src="/images/automations/webchat.svg" alt="Webchat" className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Webchat</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  {view === "list"
+                    ? "Create a Webchat interface for your website."
+                    : "Create a Webchat interface that allows visitors to communicate with your business in real-time directly from a website."}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-4 text-xs text-muted-foreground flex-grow">
-              <p>
-                Create a Webchat interface that allows visitors to communicate with your business in real-time.
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                variant="outline"
-                className="btn-outline-primary"
-                onClick={() => setView("manage")}
-              >
-                Manage
-              </Button>
-            </div>
-          </div>
-        </div>
-        </div>
-      )}
-
-      {view === "manage" && (
-        <div className="space-y-6">
-          <div className="border rounded-lg shadow-sm bg-white dark:bg-slate-900">
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-medium">Webchat</h3>
-                    <img src="/images/automations/webchat.svg" alt="Webchat" className="h-6 w-6" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Create a Webchat interface that allows visitors to communicate with your business in real-time directly from a website.
-                  </p>
-                </div>
-              </div>
-
-                  <Button 
-                    variant="outline" 
-                    className="btn-outline-primary"
-                    onClick={handleConnect}
-                  >
-                    + Add New
-                  </Button>
-                <Button variant="outline" onClick={() => setView("list")}>
-                  Back
-                </Button>
-              </div>
-            </div>
-            <Separator className="bg-gray-200 dark:bg-slate-800" />
-
-            <div className="p-4">
-              {!hasInstances ? (
-                 <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 py-24">
-                  <div className="bg-gradient-to-tr from-blue-50 to-blue-100 dark:from-slate-800 dark:to-slate-700 p-4 rounded-full">
-                    <img src="/images/automations/webchat.svg" alt="Webchat" className="h-12 w-12" />
-                  </div>
-                  <h2 className="text-lg font-semibold">No webchat instances found</h2>
-                  <p className="text-muted-foreground max-w-md text-sm">
-                    Create a webchat widget to get started.
-                  </p>
-                  <div className="pt-2">
-                    <Button 
-                      className="btn-outline-primary min-w-[150px]"
-                      variant="outline"
-                      onClick={handleConnect}
-                    >
-                      + Create Now
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <ul>
-                  {webchatInstances.map((inst: { id: number; name: string }) => (
-                    <li key={inst.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md border mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-md flex items-center justify-center font-medium">{inst.name.charAt(0)}</div>
-                        <div>
-                          <div className="text-sm font-medium">{inst.name}</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:text-blue-600"
-                          onClick={() => handleExternalLink(inst.name)}
-                          title="View live"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:text-blue-600"
-                          onClick={() => handleCopy(inst.name)}
-                          title="Copy snippet"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:text-blue-600"
-                          onClick={() => handleEdit(inst.name)}
-                          title="Edit settings"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 btn-soft-destructive transition-all hover:scale-110 active:scale-90"
-                          onClick={() => handleDelete(inst.id, inst.name)}
-                          title="Delete instance"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+            <div className="flex items-center gap-2 shrink-0">
+              {view === "manage" && (
+                <>
+                  <button onClick={handleConnect} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Add New
+                  </button>
+                  <button onClick={() => setView("list")} className={outlineBtn}>
+                    <ChevronLeft size={12} /> Back
+                  </button>
+                </>
               )}
             </div>
           </div>
-      )}
-    </div>
+
+          {/* ── LIST VIEW ── */}
+          {view === "list" && (
+            <div className="p-8">
+              <div className={cn("p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-purple-500/40 flex flex-col", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                      <img src="/images/automations/webchat.svg" alt="Webchat" className="w-5 h-5" />
+                    </div>
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Webchat</h3>
+                  </div>
+                  <a
+                    href="https://ezconn.com/docs/webchat"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+
+                <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
+                  Create a Webchat interface that allows visitors to communicate with your business in real-time.
+                </p>
+
+                <button onClick={() => setView("manage")} className={cn(primaryOutlineBtn, "self-end")}>
+                  Manage
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── MANAGE VIEW ── */}
+          {view === "manage" && (
+            <div className="p-8 space-y-5">
+              {!hasInstances ? (
+                <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                  <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <img src="/images/automations/webchat.svg" alt="Webchat" className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>No webchat instances found</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                      Create a webchat widget to get started.
+                    </p>
+                  </div>
+                  <button onClick={handleConnect} className={primaryOutlineBtn}>
+                    <Plus size={12} /> Create Now
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {webchatInstances.map((instance: any) => (
+                    <div key={instance.id} className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
+                      {/* Instance Header */}
+                      <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-4", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
+                            <MessageCircle className="w-5 h-5 text-purple-500" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className={cn("text-[13px] font-black truncate", text)}>{instance.name || "Webchat Widget"}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <Badge variant="outline" className="h-5 px-2 rounded-md border-purple-500/20 bg-purple-500/5 text-purple-600 dark:text-purple-400 text-[9px] font-black uppercase tracking-widest">
+                                ID: {instance.id}
+                              </Badge>
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => copyEmbed(instance.id)}
+                            className={outlineBtn}
+                          >
+                            <Copy size={12} /> Copy Embed
+                          </button>
+                          <button
+                            onClick={() => toast({ title: "Edit", description: "Widget configuration." })}
+                            className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => { setInstanceToDelete(instance); setShowDeleteConfirm(true); }}
+                            className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500")}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Webchat Widget?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  <span className="text-rose-500 font-black">{instanceToDelete?.name || "This widget"}</span> will be permanently removed.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => { deleteMutation.mutate(instanceToDelete.id); setShowDeleteConfirm(false); }}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Delete
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

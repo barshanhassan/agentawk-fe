@@ -1,24 +1,67 @@
-import React, { useState } from "react";
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Plug, Copy, Eye, EyeOff, RefreshCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Code2,
+  Copy,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Trash2,
+  ShieldCheck,
+  Lock,
+  Key,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function APISection() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
   const [showKey, setShowKey] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // ── Design tokens ─────────────────────────────────────────
+  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
+  const border     = dark ? "border-slate-800" : "border-slate-200";
+  const text       = dark ? "text-white"      : "text-slate-900";
+  const sub        = dark ? "text-slate-500"  : "text-slate-400";
+  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const softBorder = dark ? "border-slate-800" : "border-slate-100";
+
+  const outlineBtn = cn(
+    "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+  );
+
+  const primaryOutlineBtn = cn(
+    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+    "border-primary text-primary hover:bg-primary hover:text-white"
+  );
+
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
 
   const { data: apiKeys, isLoading } = useQuery({
     queryKey: ["/api/integrations/api-keys"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/integrations/api-keys");
       return res.json();
-    }
+    },
   });
 
   const generateMutation = useMutation({
@@ -28,8 +71,8 @@ export default function APISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-keys"] });
-      toast({ title: "Success", description: "API Key generated successfully." });
-    }
+      toast({ title: "Authorized", description: "Your API key has been created." });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -38,94 +81,189 @@ export default function APISection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/integrations/api-keys"] });
-      toast({ title: "Deleted", description: "API Key removed." });
-    }
+      toast({ title: "Revoked", description: "The API key has been removed." });
+    },
   });
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied", description: "API Key copied to clipboard." });
+  const handleCopy = (val: string) => {
+    navigator.clipboard.writeText(val);
+    toast({ title: "Copied", description: "Token copied to clipboard." });
   };
 
   const currentKey = apiKeys?.[0];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-6">
-        <div className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 rounded-lg">
-          <Plug className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-        </div>
-        <div className="space-y-1 flex-1">
-          <CardTitle className="text-lg">API</CardTitle>
-          <CardDescription>Manage your API credentials</CardDescription>
-        </div>
-      </CardHeader>
-      <Separator className="bg-gray-200 dark:bg-slate-800 mb-6" />
-      
-      <div className="flex-1 flex flex-col items-center justify-center border rounded-lg bg-white dark:bg-slate-900 shadow-sm">
-        {currentKey ? (
-          <div className="flex flex-col items-center max-w-md w-full text-center space-y-6 p-6">
-            <div className="p-4 bg-green-500/10 rounded-full">
-              <Plug className="w-12 h-12 text-green-600 dark:text-green-500" />
-            </div>
-            <div className="space-y-2 w-full">
-                <h3 className="text-xl font-semibold text-foreground">Your API Key</h3>
-                <p className="text-sm text-muted-foreground">
-                    Use this key to authenticate your requests to the Digital Connect API.
+    <>
+      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Code2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>API</h1>
+                <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  Manage your API credentials to integrate external applications.
                 </p>
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="relative flex-1">
-                    <Input 
-                      type={showKey ? "text" : "password"} 
-                      value={currentKey.token} 
-                      readOnly 
-                      className="pr-10 font-mono text-xs"
-                    />
-                    <button 
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowKey(!showKey)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <div className={cn("px-3 py-1.5 rounded-lg border flex items-center gap-2", softBorder, dark ? "bg-slate-900/50" : "bg-white")}>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>Production Active</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-8">
+            {currentKey ? (
+              <div className={cn("rounded-[1.5rem] border p-8 space-y-6", softBg, softBorder)}>
+                {/* Status header */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Active Gateway</h3>
+                    <p className={cn("text-[11px] font-medium opacity-60", sub)}>
+                      Use this token for Digital Connect authentication.
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="h-6 px-2 rounded-md border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                    Active
+                  </Badge>
+                </div>
+
+                {/* Token row */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Lock size={12} className="text-primary" />
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>
+                      Private Token
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type={showKey ? "text" : "password"}
+                        value={currentKey.token}
+                        readOnly
+                        className={cn(
+                          "w-full h-11 pl-4 pr-12 rounded-xl font-mono text-[12px] border outline-none transition-all",
+                          dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+                        )}
+                      />
+                      <button
+                        onClick={() => setShowKey(!showKey)}
+                        className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors", sub, "hover:text-primary")}
+                      >
+                        {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(currentKey.token)}
+                      className={cn("w-11 h-11 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 text-primary" : "border-slate-200 hover:border-primary/40 text-primary")}
+                      title="Copy"
                     >
-                      {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      <Copy size={15} />
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className={cn("w-11 h-11 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-rose-500/40 hover:text-rose-500 text-slate-400" : "border-slate-200 hover:border-rose-500/40 hover:text-rose-500 text-slate-500")}
+                      title="Revoke"
+                    >
+                      <Trash2 size={15} />
                     </button>
                   </div>
-                  <Button variant="outline" size="icon" onClick={() => handleCopy(currentKey.token)}>
-                    <Copy size={16} />
-                  </Button>
-                  <Button variant="outline" size="icon" className="text-red-500 hover:text-red-600" onClick={() => deleteMutation.mutate(currentKey.id)}>
-                    <Trash2 size={16} />
-                  </Button>
                 </div>
-            </div>
-            <Button 
-                variant="outline"
-                className="btn-outline-primary"
-                onClick={() => generateMutation.mutate()}
-                disabled={generateMutation.isPending}
-            >
-                <RefreshCw size={14} className={`mr-2 ${generateMutation.isPending ? "animate-spin" : ""}`} />
-                Regenerate Key
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center max-w-md text-center space-y-6">
-              <Plug className="w-16 h-16 text-gray-400" />
-              <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">No API Key Found</h3>
-                  <p className="text-muted-foreground">
-                      Generate your API key to connect with external applications.
+
+                {/* Security notice */}
+                <div className={cn("flex items-center gap-3 p-4 rounded-xl border", "border-primary/20 bg-primary/5")}>
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Key size={13} />
+                  </div>
+                  <p className={cn("text-[11px] font-medium leading-relaxed", sub)}>
+                    <span className={cn("font-black uppercase tracking-widest", text)}>Security Notice:</span>{" "}
+                    Never expose this token in client-side code or public repositories.
                   </p>
+                </div>
+
+                {/* Renew */}
+                <div className={cn("flex justify-end pt-4 border-t", softBorder)}>
+                  <button
+                    onClick={() => generateMutation.mutate()}
+                    disabled={generateMutation.isPending}
+                    className={outlineBtn}
+                  >
+                    <RefreshCw size={12} className={cn(generateMutation.isPending && "animate-spin")} />
+                    Renew Token
+                  </button>
+                </div>
               </div>
-              <Button 
-                className="btn-outline-primary"
-                variant="outline"
-                onClick={() => generateMutation.mutate()}
-                disabled={generateMutation.isPending}
-              >
-                  {generateMutation.isPending ? "Generating..." : "Generate key"}
-              </Button>
+            ) : (
+              <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Key className="w-8 h-8 text-primary" />
+                </div>
+                <div className="space-y-1.5 max-w-sm">
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Authentication Required</h3>
+                  <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                    Initialize your secure API gateway to integrate external applications.
+                  </p>
+                </div>
+                <button
+                  onClick={() => generateMutation.mutate()}
+                  disabled={generateMutation.isPending}
+                  className={primaryBtn}
+                >
+                  {generateMutation.isPending ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
+                  {generateMutation.isPending ? "Generating..." : "Generate API Key"}
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Delete Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Revoke API Key?</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
+                  This token will be permanently removed and any integrations using it will stop working.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel className={cn(outlineBtn, "m-0")}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => { deleteMutation.mutate(currentKey.id); setShowDeleteConfirm(false); }}
+                className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+              >
+                <Trash2 size={12} /> Revoke
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
