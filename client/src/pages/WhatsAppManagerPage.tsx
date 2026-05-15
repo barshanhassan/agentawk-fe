@@ -24,6 +24,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { SiWhatsapp } from "react-icons/si";
 
 
 export default function WhatsAppManagerPage() {
@@ -379,135 +381,147 @@ export default function WhatsAppManagerPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">WhatsApp Manager</h1>
-
-      <div className="space-y-6">
-        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1 w-fit">
-          <button
-            onClick={() => setActiveTab("business-profile")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "business-profile"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-          >
-            Business Profile
-          </button>
-          <button
-            onClick={() => setActiveTab("automations")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "automations"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-          >
-            Automations
-          </button>
-          <button
-            onClick={() => setActiveTab("calls")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "calls"
-              ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-              : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
-          >
-            Calls
-          </button>
-        </div>
-        {/* WhatsApp Account Status Badges */}
-        {activeTab === "business-profile" && (
-          <div className="flex items-center gap-x-5 gap-y-2 flex-wrap">
-            {/* WhatsApp Number Badge */}
-            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
-              <span className="text-sm font-medium text-foreground dark:text-blue-300">WhatsApp Number:</span>
-              <span className="text-sm text-foreground dark:text-blue-300">{whatsAppNumber}</span>
+    <div className="p-4 pt-8 pb-4 animate-in fade-in duration-700">
+      <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+        
+        {/* 1. Integrated Header Section */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800/80 bg-blue-50/20 dark:bg-transparent space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+              <SiWhatsapp size={20} />
             </div>
-            <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
-              <span className="text-sm font-medium text-foreground dark:text-blue-300">Message limit:</span>
-              <span className="text-sm text-foreground dark:text-blue-300">1K Customers/24hr</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3 w-3 dark:text-blue-300" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
-                </TooltipContent>
-              </Tooltip>
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">WhatsApp Manager</h1>
+              <p className="text-[11px] font-medium text-slate-500">Manage business profile, automations and call settings</p>
             </div>
-            {(() => {
-              const bgColor = isConnected ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30';
-              const textColor = isConnected ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300';
-              const statusText = isConnected ? 'Connected' : 'Disconnected';
-              return (
-                <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-                  <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Status:</span>
-                  <span className={`text-sm ${textColor}`}>{statusText}</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="break-normal w-[16rem] whitespace-normal">Phone number is associated with this account and working properly</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              );
-            })()}
-            {(() => {
-              let healthStatus, bgColor, textColor;
-              if (accountHealth < 0.33) {
-                healthStatus = "Green";
-                bgColor = "bg-green-100 dark:bg-green-900/30";
-                textColor = "text-green-800 dark:text-green-300";
-              } else if (accountHealth < 0.66) {
-                healthStatus = "Yellow";
-                bgColor = "bg-yellow-100 dark:bg-yellow-900/30";
-                textColor = "text-yellow-800 dark:text-yellow-300";
-              } else {
-                healthStatus = "Red";
-                bgColor = "bg-red-100 dark:bg-red-900/30";
-                textColor = "text-red-800 dark:text-red-300";
-              }
-              return (
-                <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-                  <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Health:</span>
-                  <span className={`text-sm ${textColor}`}>{healthStatus}</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="break-normal w-[16rem] whitespace-normal">Account health is based on how messages have been received by the recipients over the last 7 days. It is determined by a combination of quality signals from conversations between business and users. Examples include user feedback signals like blocks, reports and the reasons users provide when they block a business.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              );
-            })()}
           </div>
-        )}
+
+          <div className="flex flex-col gap-3">
+            {/* Tabs Navigation */}
+            <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
+              <button
+                onClick={() => setActiveTab("business-profile")}
+                className={cn(
+                    "px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200",
+                    activeTab === "business-profile"
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                  )}
+              >
+                Business Profile
+              </button>
+              <button
+                onClick={() => setActiveTab("automations")}
+                className={cn(
+                    "px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200",
+                    activeTab === "automations"
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                  )}
+              >
+                Automations
+              </button>
+              <button
+                onClick={() => setActiveTab("calls")}
+                className={cn(
+                    "px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200",
+                    activeTab === "calls"
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                  )}
+              >
+                Calls
+              </button>
+            </div>
+
+            {/* Status Badges Row */}
+          {activeTab === "business-profile" && (
+            <div className="flex items-center gap-2.5 flex-wrap pt-1">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 rounded-xl text-[10px] font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
+                <span className="text-slate-400">Number:</span>
+                <span className="text-blue-600 dark:text-blue-400">{whatsAppNumber}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 rounded-xl text-[10px] font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
+                <span className="text-slate-400">Limit:</span>
+                <span>1K Customers/24hr</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 text-slate-400 cursor-help hover:text-blue-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-[10px]">24h conversation limit</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              {(() => {
+                const statusText = isConnected ? 'Connected' : 'Disconnected';
+                const dotColor = isConnected ? 'bg-emerald-500' : 'bg-rose-500';
+                return (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 rounded-xl text-[10px] font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
+                    <span className="text-slate-400">Status:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor} animate-pulse`} />
+                      <span>{statusText}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+              {(() => {
+                let healthStatus, healthColor;
+                if (accountHealth < 0.33) { healthStatus = "Green"; healthColor = "text-emerald-600 dark:text-emerald-400"; }
+                else if (accountHealth < 0.66) { healthStatus = "Yellow"; healthColor = "text-amber-600 dark:text-amber-400"; }
+                else { healthStatus = "Red"; healthColor = "text-rose-600 dark:text-rose-400"; }
+                return (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 rounded-xl text-[10px] font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
+                    <span className="text-slate-400">Health:</span>
+                    <span className={healthColor}>{healthStatus}</span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      </div>
+
+        {/* 2. Main Content Body */}
+        <div className="p-5 overflow-visible bg-slate-50/30 dark:bg-transparent">
+          <div className="w-full">
         {activeTab === "business-profile" && (
-          <div className="grid grid-cols-2 flex gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Side: Business Profile Form */}
             <div className="space-y-6">
               {/* Profile Photo */}
-              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-                <CardHeader>
-                  <CardTitle className="text-lg">Profile Photo</CardTitle>
-                  <p className="text-sm text-muted-foreground">This will be visible on your business profile</p>
+              {/* Profile Photo */}
+              <Card className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Profile Photo</CardTitle>
+                  <p className="text-[11px] font-medium text-slate-400">This will be visible on your business profile</p>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
-                  <div className="flex flex-col space-y-4 items-center max-w-md">
+                  <div className="flex flex-col space-y-4 items-center max-w-md w-full">
                     <div
-                      className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700"
+                      className="group flex flex-col items-center justify-center w-full aspect-square max-w-[180px] border-2 border-dashed rounded-2xl cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 dark:border-slate-700 transition-all duration-300 relative overflow-hidden"
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
                       onClick={() => document.getElementById('profilePhotoInput')?.click()}
                     >
                       {profilePhotoPreviewUrl ? (
-                        <img src={profilePhotoPreviewUrl} alt="Profile Preview" className="h-full w-full object-cover rounded-lg" />
-                      ) : (
                         <>
-                          <UploadCloud className="w-10 h-10 text-gray-400" />
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Drag or drop picture</p>
+                          <img src={profilePhotoPreviewUrl} alt="Profile Preview" className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <UploadCloud className="w-8 h-8 text-white" />
+                          </div>
                         </>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 p-4 text-center">
+                          <div className="p-3 rounded-full bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform duration-300">
+                            <UploadCloud className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Upload Photo</p>
+                            <p className="text-[9px] text-slate-400">Drag or drop picture</p>
+                          </div>
+                        </div>
                       )}
                       <input
                         id="profilePhotoInput"
@@ -517,12 +531,12 @@ export default function WhatsAppManagerPage() {
                         onChange={handleFileChange}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Recommended WhatsApp Business profile photo size: 640 x 640 pixels (max 5 MB) in JPG or PNG format, with a minimum of 192 x 192 pixels
+                    <p className="text-[9px] text-slate-400 text-center leading-relaxed max-w-[280px]">
+                      Recommended size: 640x640px (max 5MB) in JPG or PNG format. Minimum 192x192px.
                     </p>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end">
+                <CardFooter className="flex justify-end bg-slate-50/50 dark:bg-slate-800/30 px-6 py-3 border-t border-slate-100 dark:border-slate-800/50">
                   <Button
                     onClick={() => {
                       toast({
@@ -530,142 +544,135 @@ export default function WhatsAppManagerPage() {
                         description: "Profile photo settings have been updated.",
                       });
                     }}
-                    className="btn-outline-primary font-normal"
-                    variant="outline"
+                    className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 border-0 hover:bg-blue-700 uppercase tracking-widest"
+                    variant="default"
                   >
-                    Save
+                    Save Changes
                   </Button>
                 </CardFooter>
               </Card>
 
               {/* Business Name */}
-              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-                <CardHeader>
-                  <CardTitle className="text-lg">Business Name</CardTitle>
-                  <p className="text-sm text-muted-foreground">The WhatsApp Business display name is your business name that customers see on your WhatsApp Business profile. Ensure that your name follows WhatsApp's regulations.</p>
+              <Card className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Business Name</CardTitle>
+                  <p className="text-[11px] font-medium text-slate-400 leading-relaxed">The display name customers see on your profile. Ensure it follows regulations.</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Business Name</label>
-                    <div className="relative">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Display Name</label>
+                    <div className="relative group">
                       <Input
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value.slice(0, 75))}
-                        className="pr-12"
+                        className="h-10 text-[12px] font-medium border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 transition-all pr-12"
+                        placeholder="Enter business name"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-semibold text-slate-400 group-focus-within:text-blue-500 transition-colors">
                         {displayName.length}/75
                       </span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end">
+                <CardFooter className="flex justify-end bg-slate-50/50 dark:bg-slate-800/30 px-6 py-3 border-t border-slate-100 dark:border-slate-800/50">
                   <Button
                     onClick={() => handleSave("displayName", displayName)}
-                    className="btn-outline-primary font-normal"
+                    className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 border-0 hover:bg-blue-700 uppercase tracking-widest disabled:opacity-50"
                     disabled={!displayName.trim() || updateMutation.isPending}
-                    variant="outline"
+                    variant="default"
                   >
-                    {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                    {updateMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+                    Save Name
                   </Button>
                 </CardFooter>
-
               </Card>
 
               {/* Business Information */}
-              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-                <CardHeader>
-                  <CardTitle className="text-lg">Business Information</CardTitle>
-                  <p className="text-sm text-muted-foreground">Add some details about your Business</p>
+              <Card className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Business Information</CardTitle>
+                  <p className="text-[11px] font-medium text-slate-400">Additional details for your business profile</p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Category</label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoryOptions.map((opt) => (
-                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Description (optional)</label>
-                    <div className="relative">
-                      <Textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value.slice(0, 512))}
-                        placeholder="Tell us about your business"
-                        className="pr-12"
-                      />
-                      <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
-                        {description.length}/512
-                      </span>
+                <CardContent className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Category</label>
+                      <Select value={category} onValueChange={setCategory}>
+                        <SelectTrigger className="h-9 text-[11px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20">
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
+                          {categoryOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt} className="text-[11px] rounded-lg">{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Address (optional)</label>
-                    <div className="relative">
-                      <Textarea
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value.slice(0, 512))}
-                        placeholder="The address of your business"
-                        className="pr-12"
-                      />
-                      <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
-                        {address.length}/512
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">About (optional)</label>
-                    <div className="relative">
-                      <Textarea
-                        value={about}
-                        onChange={(e) => setAbout(e.target.value.slice(0, 139))}
-                        placeholder="A short description about your business"
-                        className="pr-12"
-                      />
-                      <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
-                        {about.length}/139
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Email</label>
-                    <div className="relative">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Email Address</label>
                       <Input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value.slice(0, 128))}
                         placeholder="business@example.com"
-                        className="pr-12"
+                        className="h-9 text-[11px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                        {email.length}/128
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Description (Optional)</label>
+                    <div className="relative group">
+                      <Textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value.slice(0, 512))}
+                        placeholder="Tell us about your business"
+                        className="min-h-[80px] text-[11px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 resize-none"
+                      />
+                      <span className="absolute right-3 bottom-2 text-[9px] font-semibold text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                        {description.length}/512
                       </span>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Website</label>
-                    <div className="relative">
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Business Address</label>
+                    <div className="relative group">
+                      <Textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value.slice(0, 512))}
+                        placeholder="Enter full business address"
+                        className="min-h-[60px] text-[11px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 resize-none"
+                      />
+                      <span className="absolute right-3 bottom-2 text-[9px] font-semibold text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                        {address.length}/512
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">About / Status</label>
+                      <Input
+                        value={about}
+                        onChange={(e) => setAbout(e.target.value.slice(0, 139))}
+                        placeholder="Short status"
+                        className="h-9 text-[11px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Website URL</label>
                       <Input
                         type="url"
                         value={website}
                         onChange={(e) => setWebsite(e.target.value.slice(0, 256))}
-                        placeholder="https://www.yourbusiness.com"
-                        className="pr-12"
+                        placeholder="https://example.com"
+                        className="h-9 text-[11px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                        {website.length}/256
-                      </span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-end">
+                <CardFooter className="flex justify-end bg-slate-50/50 dark:bg-slate-800/30 px-6 py-3 border-t border-slate-100 dark:border-slate-800/50">
                   <Button
                     onClick={() => {
                       toast({
@@ -673,22 +680,23 @@ export default function WhatsAppManagerPage() {
                         description: "Business information settings have been updated.",
                       });
                     }}
-                    className="btn-outline-primary font-normal"
-                    variant="outline"
+                    className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 border-0 hover:bg-blue-700 uppercase tracking-widest"
+                    variant="default"
                   >
-                    Save
+                    Save Information
                   </Button>
                 </CardFooter>
               </Card>
             </div>
 
             {/* Right Side: WhatsApp Preview */}
-            <div className="max-h-[69.5vh] w-full">
-              <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-lg">WhatsApp Profile Preview</CardTitle>
-                </CardHeader>
-                <CardContent className="h-full max-h-[62vh] w-full flex flex-col items-center">
+            <Card className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm h-fit self-start flex flex-col overflow-hidden sticky top-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">WhatsApp Profile Preview</CardTitle>
+                <p className="text-[11px] font-medium text-slate-400">Live preview of your profile appearance</p>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center p-4 h-[520px] overflow-hidden">
+                <div className="w-full max-w-[260px] transform scale-[0.85] transition-transform">
                   <PreviewV2
                     mode="profile"
                     profilePfpUrl={profilePhotoPreviewUrl ? profilePhotoPreviewUrl : undefined}
@@ -701,54 +709,57 @@ export default function WhatsAppManagerPage() {
                     profileAbout={about}
                     profilePhoneNumber={whatsAppNumber}
                   />
-                  <p className="text-[10px] py-1">Preview may not reflect the exact WhatsApp interface</p>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
+                  <Info className="w-3 h-3 text-slate-400" />
+                  <p className="text-[9px] font-medium text-slate-400">Preview may slightly differ from real interface</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {activeTab === "automations" && (
-          <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-            <CardHeader>
-              <CardTitle className="text-lg">Conversational Components</CardTitle>
-              <p className="text-sm text-muted-foreground">Automation that can enhance conversational experience. Using AI can help make these components more efficient.</p>
+          <Card className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Conversational Components</CardTitle>
+              <p className="text-[11px] font-medium text-slate-400">Enhance conversation experience with automation and AI tools.</p>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Welcome Message */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Welcome Message</h4>
-                  <p className="text-sm text-muted-foreground">Receive a webhook when people start a chat with your business.</p>
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Welcome Message</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Receive a webhook when people start a chat with your business.</p>
                 </div>
-                <Switch aria-label="Toggle welcome message" />
+                <Switch aria-label="Toggle welcome message" className="data-[state=checked]:bg-blue-600" />
               </div>
 
               {/* Ice Breakers */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Ice Breakers</h4>
-                  <p className="text-sm text-muted-foreground">These are common questions that people can easily ask you.</p>
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Ice Breakers</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Common questions that people can easily ask you in one tap.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 hover-elevate text-xs"
+                <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-2"
                   onClick={() => setShowIceBreakersModal(true)}>
-                  Edit
+                  Configure
                 </Button>
               </div>
 
               {/* Commands */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Commands</h4>
-                  <p className="text-sm text-muted-foreground">These are special keywords that tell the WhatsApp bot what to do.</p>
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Commands</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Keywords that trigger specific actions for the WhatsApp bot.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-2"
                   onClick={() => setShowCommandsModal(true)}>
-                  Edit
+                  Configure
                 </Button>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-end bg-slate-50/50 dark:bg-slate-800/30 px-6 py-3 border-t border-slate-100 dark:border-slate-800/50">
               <Button
                 onClick={() => {
                   toast({
@@ -756,68 +767,68 @@ export default function WhatsAppManagerPage() {
                     description: "Automation settings have been updated.",
                   });
                 }}
-                className="btn-outline-primary font-normal"
-                variant="outline"
+                className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 border-0 hover:bg-blue-700 uppercase tracking-widest"
+                variant="default"
               >
-                Save
+                Save Automations
               </Button>
             </CardFooter>
           </Card>
         )}
 
         {activeTab === "calls" && (
-          <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-            <CardHeader>
-              <CardTitle className="text-lg">Call Settings</CardTitle>
-              <p className="text-sm text-muted-foreground">Manage your business's call settings and availability.</p>
+          <Card className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">Call Settings</CardTitle>
+              <p className="text-[11px] font-medium text-slate-400">Manage business availability and call preferences.</p>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-1 p-3">
               {/* Allow voice calls */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Allow voice calls</h4>
-                  <p className="text-sm text-muted-foreground">Make and receive calls with this phone number. Turning on voice calls will allow you to call or request to call people on WhatsApp and send messages that include a call button.</p>
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Allow voice calls</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Enable making and receiving calls. Allows call buttons in messages.</p>
                 </div>
-                <Switch aria-label="Allow voice calls" />
+                <Switch aria-label="Allow voice calls" className="data-[state=checked]:bg-blue-600" />
               </div>
 
               {/* Allow people to request a callback for missed calls */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Allow people to request a callback for missed calls</h4>
-                  <p className="text-sm text-muted-foreground">If you're unable to answer a call, let people request a call back from you.</p>
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Callback Requests</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Let people request a call back if you're unable to answer.</p>
                 </div>
-                <Switch aria-label="Allow people to request a callback" />
+                <Switch aria-label="Allow people to request a callback" className="data-[state=checked]:bg-blue-600" />
               </div>
 
               {/* Display call buttons */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Display call buttons</h4>
-                  <p className="text-sm text-muted-foreground">Even if this feature is turned off, people could still call this number from a message containing a call button.</p>
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Display call buttons</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Control visibility of call buttons in your business messages.</p>
                 </div>
-                <Switch aria-label="Display call buttons" />
+                <Switch aria-label="Display call buttons" className="data-[state=checked]:bg-blue-600" />
               </div>
 
               {/* Available call hours */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Available call hours</h4>
-                  <p className="text-sm text-muted-foreground">Set regular calling hours for your business. If you don’t set your call hours, people will always be able to call you.</p>
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Available Call Hours</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Set regular calling hours for your business.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-2"
                   onClick={() => setShowAvailableCallHoursModal(true)}>
-                  Setup
+                  Configure
                 </Button>
               </div>
 
               {/* Temporarily unavailable call hours */}
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-semibold text-base mb-1">Temporarily unavailable call hours</h4>
-                  <p className="text-sm text-muted-foreground">Set custom times, like holidays or special events, when your business is unable to receive calls.</p>
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 transition-all hover:shadow-sm">
+                <div className="space-y-1">
+                  <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white">Holiday / Special Hours</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-md">Set custom times when your business is unable to receive calls.</p>
                 </div>
-                <Button variant="ghost" size="sm" className="hover-elevate h-7 text-xs [border-color:hsl(var(--input))]"
+                <Button variant="outline" size="sm" className="h-8 px-4 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-semibold transition-all shadow-sm active:scale-95 flex items-center gap-2"
                   onClick={() => setShowUnavailableCallHoursModal(true)}>
                   Create New
                 </Button>
@@ -827,7 +838,7 @@ export default function WhatsAppManagerPage() {
               {unavailablePeriods.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold text-base">Configured Unavailable Periods</h4>
-                  <div className="border rounded-md p-4 space-y-3 max-h-[20rem] overflow-y-auto">
+                  <div className="border rounded-md p-4 space-y-3">
                     {unavailablePeriods.map((period) => (
                       <div key={period.id} className="flex items-center justify-between bg-muted/50 p-2 rounded-md gap-2">
                         <div className="flex-1">
@@ -853,7 +864,7 @@ export default function WhatsAppManagerPage() {
 
 
             </CardContent>
-            <CardFooter className="flex justify-end">
+            <CardFooter className="flex justify-end bg-slate-50/50 dark:bg-slate-800/30 px-6 py-3 border-t border-slate-100 dark:border-slate-800/50">
               <Button
                 onClick={() => {
                   toast({
@@ -861,16 +872,17 @@ export default function WhatsAppManagerPage() {
                     description: "Call settings have been updated.",
                   });
                 }}
-                className="btn-outline-primary font-normal"
-                variant="outline"
+                className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 border-0 hover:bg-blue-700 uppercase tracking-widest"
+                variant="default"
               >
-                Save
+                Save Call Settings
               </Button>
             </CardFooter>
           </Card>
         )}
-
-      </div> {/* Closes the div with className="space-y-4" */}
+        </div>
+      </div>
+    </div>
 
       {/* Available Call Hours Modal */}
       <Dialog open={showAvailableCallHoursModal} onOpenChange={setShowAvailableCallHoursModal}>

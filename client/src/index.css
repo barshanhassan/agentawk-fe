@@ -444,6 +444,34 @@
   transition: all 0.2s ease-in-out !important;
 }
 
+.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(:disabled):hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(:disabled):hover * {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Custom Scrollbar for High-Density Menus */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
 /* Ensure tabs are always transparent with underline only */
 [data-radix-collection-item][data-state=active],
 button[data-state=active].border-b-2,

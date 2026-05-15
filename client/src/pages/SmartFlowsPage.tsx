@@ -25,8 +25,10 @@ import {
     ChevronsLeft,
     ChevronLeft,
     ChevronRight,
-    ChevronsRight
+    ChevronsRight,
+    GitMerge
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -229,225 +231,243 @@ export default function SmartFlowsPage() {
     const paginatedFlows = filteredFlows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Smart Flows</h1>
-                <Button
-                    onClick={() => setShowCreateModal(true)}
-                    className="gap-2 font-normal btn-outline-primary"
-                    variant="outline"
-                >
-                    <Plus size={16} />
-                    Create a Smart Flow
-                </Button>
-            </div>
-
-            {/* Filters */}
-            <div className="flex items-center gap-3">
-                {/* Search */}
-                <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                        type="text"
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        placeholder="Search flows..."
-                        className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-                    />
-                </div>
-
-                {/* Folder Dropdown */}
-                <CustomDropdown
-                    options={folderOptions}
-                    selected={selectedFolders}
-                    onChange={setSelectedFolders}
-                    placeholder="Folders"
-                    width="200px"
-                    showSearch={true}
-                />
-
-                {/* Create Folder Button */}
-                <button
-                    className="flex items-center justify-center h-[38px] w-[38px] rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-                    onClick={() => setShowFolderModal(true)}
-                    title="Create New Folder"
-                >
-                    <FolderTree size={16} className="text-muted-foreground" />
-                </button>
-
-
-                {/* Users Dropdown (styled as CustomDropdown) */}
-                {/* Users Dropdown */}
-                <CustomDropdown
-                    options={userOptions}
-                    selected={selectedUsers}
-                    onChange={setSelectedUsers}
-                    placeholder="All Users"
-                    width="200px"
-                    showSearch={true}
-                />
-
-                {/* Status Filter */}
-                <CustomDropdown
-                    options={statusOptions}
-                    selected={statusFilter}
-                    onChange={setStatusFilter}
-                    placeholder="All Statuses"
-                    width="180px"
-                    showSearch={false}
-                />
-            </div>
-
-            {/* Table */}
-            <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-                <CardContent className="pt-2">
-                    <div className="overflow-x-auto mt-3">
-                        <table className="w-full text-xs">
-                            <thead className="select-none">
-                                <tr className="border-b">
-                                    <th className="py-2 px-3 w-12">
-                                        <Checkbox
-                                            className="bg-white h-3.5 w-3.5"
-                                            checked={paginatedFlows.length > 0 && paginatedFlows.every((f: any) => selectedFlowIds.includes(f.id))}
-                                            onCheckedChange={(checked) => {
-                                                if (checked) {
-                                                    const newSelected = Array.from(new Set([...selectedFlowIds, ...paginatedFlows.map((f: any) => f.id)]));
-                                                    setSelectedFlowIds(newSelected);
-                                                } else {
-                                                    const pageIds = paginatedFlows.map((f: any) => f.id);
-                                                    setSelectedFlowIds(selectedFlowIds.filter(id => !pageIds.includes(id)));
-                                                }
-                                            }}
-                                        />
-                                    </th>
-                                    <th className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30">
-                                        Name
-                                    </th>
-                                    <th className="text-center py-2 px-3 font-medium text-muted-foreground text-center">
-                                        Runs
-                                    </th>
-                                    <th className="text-center py-2 px-3 font-medium text-muted-foreground text-center">
-                                        Created By
-                                    </th>
-                                    <th className="text-center py-2 px-3 font-medium text-muted-foreground text-center">
-                                        Updated
-                                    </th>
-                                    <th className="text-right py-2 px-3 font-medium text-muted-foreground">
-                                        Action
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedFlows.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="text-center py-12 text-muted-foreground">
-                                            No flows found. <Button variant="ghost" onClick={() => setShowCreateModal(true)} className="px-1 h-auto font-normal underline hover:bg-transparent">Create one</Button> to get started.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    paginatedFlows.map((flow: any) => (
-                                        <tr key={flow.id} className="border-b hover:bg-muted/50 transition-colors">
-                                            <td className="py-2 px-3">
-                                                <Checkbox
-                                                    className="bg-white h-3.5 w-3.5"
-                                                    checked={selectedFlowIds.includes(flow.id)}
-                                                    onCheckedChange={(checked) => {
-                                                        if (checked) setSelectedFlowIds([...selectedFlowIds, flow.id]);
-                                                        else setSelectedFlowIds(selectedFlowIds.filter(id => id !== flow.id));
-                                                    }}
-                                                />
-                                            </td>
-                                            <td className="py-2 px-3">
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => handleOpenFlow(flow.id)}
-                                                        className="text-foreground hover:underline font-medium break-all text-left"
-                                                    >
-                                                        {flow.name}
-                                                    </button>
-                                                    <Badge variant="outline" className={`font-medium ml-2 ${flow.status === "active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                                                        flow.status === "draft" ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" :
-                                                            flow.status === "unpublished" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
-                                                                "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                                                        }`}>
-                                                        {flow.status}
-                                                    </Badge>
-                                                </div>
-                                            </td>
-                                            <td className="py-2 px-3 text-center">{flow.total_runs}</td>
-                                            <td className="py-2 px-3 text-center">
-                                                <div className="flex justify-center">
-                                                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">
-                                                        US
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-2 px-3 text-center text-muted-foreground">
-                                                {flow.updated_at ? new Date(flow.updated_at).toLocaleDateString() : '-'}
-                                            </td>
-                                            <td className="py-2 px-3 text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <button className="p-1 hover:bg-muted rounded">
-                                                            <MoreVertical size={14} className="text-muted-foreground" />
-                                                        </button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-background border border-input">
-                                                        <DropdownMenuItem onClick={() => handleOpenFlow(flow.id)}>
-                                                            <Pencil size={14} className="mr-3" />
-                                                            Edit flow
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            <Pencil size={14} className="mr-3" />
-                                                            Rename
-                                                        </DropdownMenuItem>
-                                                        {flow.status === "active" ? (
-                                                            <DropdownMenuItem>
-                                                                <CircleArrowDown size={14} className="mr-3" />
-                                                                Unpublish
-                                                            </DropdownMenuItem>
-                                                        ) : (
-                                                            <DropdownMenuItem className="text-destructive">
-                                                                <Trash2 size={14} className="mr-3" />
-                                                                Delete
-                                                            </DropdownMenuItem>
-                                                        )}
-                                                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(flow.id.toString())}>
-                                                            <ClipboardCopy size={14} className="mr-3" />
-                                                            Copy ID
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            <FolderOpen size={14} className="mr-3" />
-                                                            Change Folder
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            <Gem size={14} className="mr-3" />
-                                                            Add this to Clonekit(s)
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <div className="px-2 py-2 flex items-center justify-between cursor-pointer hover:bg-accent rounded-sm">
-                                                            <div className="flex items-center gap-2">
-                                                                <Plug size={14} className="mr-1" />
-                                                                <span className="text-sm">AI Item</span>
-                                                            </div>
-                                                            <Switch defaultChecked={false} />
-                                                        </div>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+        <div className="px-4 pt-8 pb-4 animate-in fade-in duration-700">
+            {/* Unified Main Card */}
+            <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+                
+                {/* 1. Header Section */}
+                <div className="py-4 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                            <GitMerge size={20} strokeWidth={2.5} />
+                        </div>
+                        <div className="space-y-0.5">
+                            <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                                Smart Flows
+                            </h1>
+                            <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                                Build, manage and automate your multi-channel communication workflows
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Pagination */}
-                    <div className="flex items-center justify-between mt-4 text-xs">
-                        <span className="text-muted-foreground">{filteredFlows.length} results</span>
+                    <Button
+                        onClick={() => setShowCreateModal(true)}
+                        className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700 uppercase tracking-widest"
+                    >
+                        <Plus size={14} strokeWidth={3} />
+                        <span>Create Flow</span>
+                    </Button>
+                </div>
+
+                {/* 2. Filters Section */}
+                <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-4 bg-white dark:bg-transparent">
+                    <div className="flex items-center gap-3 flex-1">
+                        {/* Search */}
+                        <div className="relative w-64 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-3.5 h-3.5" />
+                            <Input
+                                type="text"
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                placeholder="Search flows..."
+                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+
+                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
+
+                        {/* Folder Dropdown */}
+                        <CustomDropdown
+                            options={folderOptions}
+                            selected={selectedFolders}
+                            onChange={setSelectedFolders}
+                            placeholder="Folders"
+                            width="160px"
+                            showSearch={true}
+                        />
+
+                        {/* Create Folder Button */}
+                        <button
+                            className="flex items-center justify-center h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all shadow-sm"
+                            onClick={() => setShowFolderModal(true)}
+                            title="Create New Folder"
+                        >
+                            <FolderTree size={16} />
+                        </button>
+
+                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
+
+                        {/* Users Dropdown */}
+                        <CustomDropdown
+                            options={userOptions}
+                            selected={selectedUsers}
+                            onChange={setSelectedUsers}
+                            placeholder="All Users"
+                            width="160px"
+                            showSearch={true}
+                        />
+
+                        {/* Status Filter */}
+                        <CustomDropdown
+                            options={statusOptions}
+                            selected={statusFilter}
+                            onChange={setStatusFilter}
+                            placeholder="All Statuses"
+                            width="150px"
+                            showSearch={false}
+                        />
+                    </div>
+                </div>
+
+                {/* 3. Table Section */}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
+                                <th className="py-3 px-5 w-12 text-center">
+                                    <Checkbox
+                                        className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                                        checked={paginatedFlows.length > 0 && paginatedFlows.every((f: any) => selectedFlowIds.includes(f.id))}
+                                        onCheckedChange={(checked) => {
+                                            if (checked) {
+                                                const newSelected = Array.from(new Set([...selectedFlowIds, ...paginatedFlows.map((f: any) => f.id)]));
+                                                setSelectedFlowIds(newSelected);
+                                            } else {
+                                                const pageIds = paginatedFlows.map((f: any) => f.id);
+                                                setSelectedFlowIds(selectedFlowIds.filter(id => !pageIds.includes(id)));
+                                            }
+                                        }}
+                                    />
+                                </th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Name & Status</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Runs</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Created By</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Last Updated</th>
+                                <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
+                            {paginatedFlows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="py-14 text-center bg-white dark:bg-transparent">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="p-3.5 rounded-full bg-blue-50 dark:bg-blue-800 text-blue-300 dark:text-blue-600 shadow-inner">
+                                                <FolderOpen size={32} strokeWidth={1} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">No Smart Flows found</p>
+                                                <p className="text-[11px] font-normal text-slate-400 tracking-wide">Create your first automation workflow</p>
+                                            </div>
+                                            <Button 
+                                                variant="outline" 
+                                                onClick={() => setShowCreateModal(true)} 
+                                                className="mt-1 h-7.5 px-5 rounded-lg text-[9px] font-semibold border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
+                                            >
+                                                CREATE ONE NOW
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedFlows.map((flow: any) => (
+                                    <tr key={flow.id} className="group hover:bg-blue-50/40 dark:hover:bg-blue-500/5 transition-all duration-200">
+                                        <td className="py-4 px-5 text-center">
+                                            <Checkbox
+                                                className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                                                checked={selectedFlowIds.includes(flow.id)}
+                                                onCheckedChange={(checked) => {
+                                                    if (checked) setSelectedFlowIds([...selectedFlowIds, flow.id]);
+                                                    else setSelectedFlowIds(selectedFlowIds.filter(id => id !== flow.id));
+                                                }}
+                                            />
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex flex-col gap-1.5">
+                                                <button
+                                                    onClick={() => handleOpenFlow(flow.id)}
+                                                    className="text-[13px] font-semibold text-slate-900 dark:text-white hover:text-blue-600 transition-colors text-left tracking-tight"
+                                                >
+                                                    {flow.name}
+                                                </button>
+                                                <div className="flex items-center gap-2.5">
+                                                    <Badge className={cn(
+                                                        "px-2 py-0.5 h-4.5 text-[9px] font-semibold uppercase rounded-md shadow-none border-0",
+                                                        flow.status === "active" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400" :
+                                                        flow.status === "draft" ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" :
+                                                        flow.status === "unpublished" ? "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400" :
+                                                        "bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-400"
+                                                    )}>
+                                                        {flow.status}
+                                                    </Badge>
+                                                    <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">ID: {flow.id}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-center">
+                                            <span className="text-[12px] font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                {flow.total_runs}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-center">
+                                            <div className="flex justify-center">
+                                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border border-blue-100 dark:border-blue-500/20 shadow-sm transition-transform group-hover:scale-105">
+                                                    <User size={15} className="text-blue-500" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-center">
+                                            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
+                                                {flow.updated_at ? new Date(flow.updated_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button className="p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg transition-all text-slate-400 hover:text-blue-600 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-90">
+                                                        <MoreVertical size={16} />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-56 p-2 rounded-[16px] border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900">
+                                                    <DropdownMenuItem onClick={() => handleOpenFlow(flow.id)} className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                        <Pencil size={15} className="text-slate-400" />
+                                                        Edit flow
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                        <ClipboardCopy size={15} className="text-slate-400" />
+                                                        Rename
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                        <FolderOpen size={15} className="text-slate-400" />
+                                                        Change Folder
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                        <Gem size={15} className="text-slate-400" />
+                                                        Add to Clonekit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold text-rose-600 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all gap-3">
+                                                        <Trash2 size={15} />
+                                                        Delete Flow
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* 4. Modern Pagination Footer */}
+                <div className="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">{filteredFlows.length} Results</span>
+                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
                         <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Rows per page:</span>
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Rows:</span>
                             <Select
                                 value={rowsPerPage.toString()}
                                 onValueChange={(value) => {
@@ -455,56 +475,58 @@ export default function SmartFlowsPage() {
                                     setCurrentPage(1);
                                 }}
                             >
-                                <SelectTrigger className="w-[60px] h-8 text-xs">
+                                <SelectTrigger className="w-[65px] h-7.5 text-[11px] font-semibold rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm no-focus-outline">
                                     <SelectValue placeholder={rowsPerPage} />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="rounded-[12px] border-slate-200 dark:border-slate-800 p-1">
                                     {[10, 25, 50].map((pageSize) => (
-                                        <SelectItem key={pageSize} value={pageSize.toString()} className="text-xs">
+                                        <SelectItem key={pageSize} value={pageSize.toString()} className="text-[11px] font-semibold rounded-lg cursor-pointer">
                                             {pageSize}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-
-                            <span className="text-muted-foreground ml-2">
-                                Page {currentPage} of {Math.max(1, totalPages)}
-                            </span>
-
-                            <div className="flex gap-1 ml-2">
-                                <button
-                                    className="p-1 hover:bg-muted rounded disabled:opacity-50 transition-colors"
-                                    onClick={() => setCurrentPage(1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    <ChevronsLeft size={16} />
-                                </button>
-                                <button
-                                    className="p-1 hover:bg-muted rounded disabled:opacity-50 transition-colors"
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                <button
-                                    className="p-1 hover:bg-muted rounded disabled:opacity-50 transition-colors"
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages || totalPages === 0}
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                                <button
-                                    className="p-1 hover:bg-muted rounded disabled:opacity-50 transition-colors"
-                                    onClick={() => setCurrentPage(totalPages)}
-                                    disabled={currentPage === totalPages || totalPages === 0}
-                                >
-                                    <ChevronsRight size={16} />
-                                </button>
-                            </div>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+
+                    <div className="flex items-center gap-6">
+                        <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">
+                            Page <span className="text-blue-600 font-semibold">{currentPage}</span> / {Math.max(1, totalPages)}
+                        </span>
+
+                        <div className="flex items-center gap-1">
+                            <button
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronsLeft size={16} />
+                            </button>
+                            <button
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <button
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                            <button
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                            >
+                                <ChevronsRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Create Flow Modal */}
             {showCreateModal && (

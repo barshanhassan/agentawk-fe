@@ -3,6 +3,9 @@ import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
 import VoiceOfCustomerSummary from "./VoiceOfCustomerSummary";
 import VoiceOfCustomerDetails from "./VoiceOfCustomerDetails";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+import { Users, User, ChevronDown } from "lucide-react";
 
 const teams = [
   { id: "team-1", name: "Sales Team" },
@@ -21,6 +24,8 @@ const agents = [
 ];
 
 export default function VoiceOfCustomerTab() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const { activeSubTab, setActiveSubTab } = useTab();
   const [voiceOfCustomerTab, setVoiceOfCustomerTab] = useState(
     activeSubTab.voiceOfCustomer === "voice-of-customer-summary" ? "summary" : "details"
@@ -28,7 +33,6 @@ export default function VoiceOfCustomerTab() {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 
-  // Sync local state with context when context changes
   useEffect(() => {
     setVoiceOfCustomerTab(activeSubTab.voiceOfCustomer === "voice-of-customer-summary" ? "summary" : "details");
   }, [activeSubTab.voiceOfCustomer]);
@@ -41,50 +45,82 @@ export default function VoiceOfCustomerTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Left side - Tabs */}
-        <div className="flex items-center space-x-1 bg-slate-200/75 dark:bg-slate-800 rounded-lg p-1">
+        <div className={cn("flex items-center space-x-1 rounded-xl p-1", dark ? "bg-slate-800" : "bg-slate-100")}>
           <button
             onClick={() => handleTabChange("summary")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${voiceOfCustomerTab === "summary"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
+            className={cn(
+              "px-5 py-1.5 rounded-lg text-xs font-bold transition-all",
+              voiceOfCustomerTab === "summary"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             Summary
           </button>
           <button
             onClick={() => handleTabChange("details")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${voiceOfCustomerTab === "details"
-                ? "bg-background text-foreground shadow-[0_-3px_6px_rgba(0,0,0,0.00),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.02)]"
-                : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-              }`}
+            className={cn(
+              "px-5 py-1.5 rounded-lg text-xs font-bold transition-all",
+              voiceOfCustomerTab === "details"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             Details
           </button>
         </div>
 
         {/* Right side - Dropdowns */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <CustomDropdown
             options={teams}
             selected={selectedTeams}
             onChange={setSelectedTeams}
             placeholder="Teams"
+            width="120px"
+            className="!w-[120px] !rounded-md"
+            triggerContent={
+              <>
+                <div className="flex items-center gap-2 truncate">
+                  <Users className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className={cn("truncate text-[11px]", selectedTeams.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                    {selectedTeams.length === 0 ? "Teams" : `Teams (${selectedTeams.length})`}
+                  </span>
+                </div>
+                <ChevronDown className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
+              </>
+            }
           />
           <CustomDropdown
             options={agents}
             selected={selectedAgents}
             onChange={setSelectedAgents}
             placeholder="Agents"
+            width="120px"
+            className="!w-[120px] !rounded-md"
+            popoutAlign="right"
+            triggerContent={
+              <>
+                <div className="flex items-center gap-2 truncate">
+                  <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className={cn("truncate text-[11px]", selectedAgents.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                    {selectedAgents.length === 0 ? "Agents" : `Agents (${selectedAgents.length})`}
+                  </span>
+                </div>
+                <ChevronDown className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
+              </>
+            }
           />
         </div>
       </div>
 
       {/* Tab Content */}
-      {voiceOfCustomerTab === "summary" && <VoiceOfCustomerSummary />}
-      {voiceOfCustomerTab === "details" && <VoiceOfCustomerDetails />}
+      <div className="animate-in fade-in-50 duration-500">
+        {voiceOfCustomerTab === "summary" && <VoiceOfCustomerSummary />}
+        {voiceOfCustomerTab === "details" && <VoiceOfCustomerDetails />}
+      </div>
     </div>
   );
 }
-

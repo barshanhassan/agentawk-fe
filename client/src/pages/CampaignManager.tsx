@@ -5,6 +5,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsToolti
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -828,382 +829,395 @@ export default function CampaignManager() {
 
 
   return (
-    <div className="p-6 space-y-6" data-testid="campaign-manager">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Campaign Manager</h1>
-        <Button className="gap-2 font-normal btn-outline-primary" variant="outline" onClick={() => setCreateOpen(true)} data-testid="button-create-campaign">
-          <Plus size={16} />
-          Create Campaign
-        </Button>
-      </div>
+    <div className="px-6 py-6 animate-in fade-in duration-700" data-testid="campaign-manager">
+        {/* Unified Main Card */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+            
+            {/* 1. Branded Header Section */}
+            <div className="py-3 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                <div className="flex items-center gap-6">
+                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                        <Send size={20} strokeWidth={2.5} />
+                    </div>
+                    <div className="space-y-0.5">
+                        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                            Campaign Manager
+                        </h1>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            Create, manage and monitor your outbound messaging campaigns
+                        </p>
+                    </div>
+                </div>
 
-
-
-      {/* WhatsApp Account Status */}
-      {/* <div className="flex items-center space-x-5">
-        <div className="flex items-center space-x-2 text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-md w-fit">
-          <span className="text-sm font-medium text-foreground dark:text-blue-300">Message limit:</span>
-          <span className="text-sm text-foreground dark:text-blue-300">1K Customers/24hr</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-3 w-3 dark:text-blue-300" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="break-normal w-[16rem] whitespace-normal">The number of business-initiated conversations you can start in a 24 hour rolling period.</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        {(() => {
-          const isConnected = Math.random() < 0.5;
-          const bgColor = isConnected ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30';
-          const textColor = isConnected ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300';
-          const statusText = isConnected ? 'Connected' : 'Disconnected';
-          return (
-            <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-              <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Status:</span>
-              <span className={`text-sm ${textColor}`}>{statusText}</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="break-normal w-[16rem] whitespace-normal">Phone number is associated with this account and working properly</p>
-                </TooltipContent>
-              </Tooltip>
+                <div className="flex items-center gap-3">
+                    <Button 
+                        onClick={() => setCreateOpen(true)}
+                        className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+                        data-testid="button-create-campaign"
+                    >
+                        <Plus size={14} strokeWidth={2.5} />
+                        <span>Create Campaign</span>
+                    </Button>
+                </div>
             </div>
-          );
-        })()}
-        {(() => {
-          const health = Math.random();
-          let healthStatus, bgColor, textColor;
-          if (health < 0.33) {
-            healthStatus = "Green";
-            bgColor = "bg-green-100 dark:bg-green-900/30";
-            textColor = "text-green-800 dark:text-green-300";
-          } else if (health < 0.66) {
-            healthStatus = "Yellow";
-            bgColor = "bg-yellow-100 dark:bg-yellow-900/30";
-            textColor = "text-yellow-800 dark:text-yellow-300";
-          } else {
-            healthStatus = "Red";
-            bgColor = "bg-red-100 dark:bg-red-900/30";
-            textColor = "text-red-800 dark:text-red-300";
-          }
-          return (
-            <div className={`flex items-center space-x-2 text-sm px-2 py-1 ${bgColor} rounded-md w-fit`}>
-              <span className={`text-sm font-medium text-foreground ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`}>Account Health:</span>
-              <span className={`text-sm ${textColor}`}>{healthStatus}</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className={`h-3 w-3 ${textColor.split(' ').filter(c => c.startsWith('dark:')).join(' ')}`} />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="break-normal w-[16rem] whitespace-normal">Account health is based on how messages have been received by the recipients over the last 7 days. It is determined by a combination of quality signals from conversations between business and users. Examples include user feedback signals like blocks, reports and the reasons users provide when they block a business.</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          );
-        })()}
-      </div> */}
 
-      {/* Search and Filters Section */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search campaigns..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-          />
-        </div>
-
-        {/* Status Dropdown */}
-        <CustomDropdown
-          options={[
-            { id: "draft", name: "Draft" },
-            { id: "scheduled", name: "Scheduled" },
-            { id: "delivered", name: "Delivered" },
-            { id: "archived", name: "Archived" },
-          ]}
-          selected={selectedStatus}
-          onChange={setSelectedStatus}
-          placeholder="Status"
-          width="150px"
-        />
-
-        {/* Campaign Type Dropdown */}
-        <CustomDropdown
-          options={[
-            { id: "Broadcast", name: "Broadcast" },
-            { id: "API Triggered", name: "API Triggered" },
-          ]}
-          selected={selectedCampaignTypes}
-          onChange={setSelectedCampaignTypes}
-          placeholder="Campaign Type"
-          width="182px"
-        />
-
-        {/* Message Type Dropdown */}
-        <CustomDropdown
-          options={[
-            { id: "Immediate", name: "Immediate" },
-            { id: "Scheduled", name: "Scheduled" },
-            { id: "Recurring", name: "Recurring" },
-          ]}
-          selected={selectedMessageTypes}
-          onChange={setSelectedMessageTypes}
-          placeholder="Message Type"
-          width="170px"
-        />
-      </div>
-
-      {/* Table */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardContent className="pt-2">
-          {/* Bulk Actions Toolbar */}
-          {selectedCampaigns.length > 0 && (
-            <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-              <span className="text-sm text-foreground">{selectedCampaigns.length} selected</span>
-              <div className="flex gap-2 ml-auto">
-                {getArchivableCampaigns().length > 0 && (
-                  <button
-                    className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded transition-colors"
-                    title="Archive"
-                    onClick={() => setShowBulkArchiveModal(true)}
-                  >
-                    <Archive size={14} className="text-blue-600 dark:text-blue-400" />
-                  </button>
-                )}
-                {getDeletableCampaigns().length > 0 && (
-                  <button
-                    className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded transition-colors"
-                    title="Delete"
-                    onClick={() => setShowBulkDeleteModal(true)}
-                  >
-                    <Trash2 size={14} className="text-red-600 dark:text-red-400" />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className={`overflow-x-auto ${selectedCampaigns.length > 0 ? 'mt-3' : 'mt-6'}`}>
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                    <Checkbox
-                      checked={getFilteredCampaigns().length > 0 && getFilteredCampaigns().every(c => selectedCampaigns.includes(c.id))}
-                      onCheckedChange={toggleAll}
-                      data-testid="checkbox-select-all"
+            {/* 3. Filter Row Section */}
+            <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
+                <div className="relative group flex-1 min-w-[280px] max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Input
+                        placeholder="Search campaigns..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-8.5 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-lg text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400"
+                        data-testid="input-search"
                     />
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("name")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Campaign Name
-                      {renderSortIcon("name")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("type")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Campaign Type
-                      {renderSortIcon("type")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("messageType")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Message Type
-                      {renderSortIcon("messageType")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("status")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status
-                      {renderSortIcon("status")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("sent")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Sent
-                      {renderSortIcon("sent")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("delivered")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Delivered
-                      {renderSortIcon("delivered")}
-                    </div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoadingCampaigns ? (
-                  <tr>
-                    <td colSpan={8} className="text-center py-20">
-                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
-                    </td>
-                  </tr>
-                ) : getFilteredCampaigns().length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No results
-                    </td>
-                  </tr>
-                ) : (
-                  getFilteredCampaigns().map((campaign) => (
-                    <tr key={campaign.id} className="border-b hover:bg-muted/50" data-testid={`campaign-row-${campaign.id}`}>
-                      <td className="py-2 px-3">
-                        <Checkbox
-                          checked={selectedCampaigns.includes(campaign.id)}
-                          onCheckedChange={() => toggleCampaign(campaign.id)}
-                          data-testid={`checkbox-campaign-${campaign.id}`}
-                        />
-                      </td>
-                      <td className="py-2 px-3 max-w-[10rem]">
-                        <div className="break-all">
-                          {campaign.name}
-                        </div>
-                      </td>
-                      <td className="py-2 px-3">
-                        <Badge variant="outline" className={`font-medium ${campaign.type === "Broadcast" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800" :
-                          campaign.type === "API Triggered" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" :
-                            "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
-                          }`}>
-                          {campaign.type}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-3">{campaign.messageType}</td>
-                      <td className="py-2 px-3 capitalize text-xs">
-                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${campaign.status === "delivered" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                          campaign.status === "scheduled" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
-                            "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}>
-                          {campaign.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3">{campaign.sent.toLocaleString()}</td>
-                      <td className="py-2 px-3">{campaign.delivered.toLocaleString()}</td>
-                      <td className="py-2 px-3 flex justify-start">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-1 hover:bg-muted rounded">
-                              <MoreVertical size={14} className="text-muted-foreground" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedCampaignForPerformance(campaign);
-                              setDetailsOpen(true);
-                            }} data-testid={`button-performance-${campaign.id}`}>
-                              <BarChart2 size={14} className="mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              setEditingCampaignId(campaign.id);
-                              setCreateOpen(true);
-                            }} data-testid={`button-edit-${campaign.id}`}>
-                              <Edit2 size={14} className="mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleOpenCloneDialog(campaign.id)} data-testid={`button-clone-${campaign.id}`}>
-                              <Copy size={14} className="mr-2" />
-                              Clone
-                            </DropdownMenuItem>
-                            {campaign.status !== "archived" ? (
-                              <DropdownMenuItem onClick={() => handleOpenArchiveModal(campaign)} data-testid={`button-archive-${campaign.id}`}>
-                                <Archive size={14} className="mr-2" />
-                                Archive
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem className="text-destructive" onClick={() => handleOpenDeleteModal(campaign)} data-testid={`button-delete-${campaign.id}`}>
-                                <Trash2 size={14} className="mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{getFilteredCampaigns().length} results</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-background dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground transition-colors"
-                  onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                >
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background dark:bg-background rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border border-border dark:border-slate-700 overflow-hidden">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li
-                          key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted dark:hover:bg-slate-700"
-                          onClick={() => {
-                            setRowsPerPage(option);
-                            setRowsDropdownOpen(false);
-                          }}
-                        >
-                          {option}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <span className="text-muted-foreground">Page 1 of 1</span>
-              <div className="flex gap-1">
-                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
-                  <ChevronsLeft size={16} />
-                </button>
-                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
-                  <ChevronLeft size={16} />
-                </button>
-                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
-                  <ChevronRight size={16} />
-                </button>
-                <button className="p-1 hover:bg-muted dark:hover:bg-slate-700 rounded disabled:opacity-50 transition-colors" disabled>
-                  <ChevronsRight size={16} />
-                </button>
-              </div>
+                <div className="flex items-center gap-2">
+                    <CustomDropdown
+                        options={[
+                            { id: "draft", name: "Draft" },
+                            { id: "scheduled", name: "Scheduled" },
+                            { id: "delivered", name: "Delivered" },
+                            { id: "archived", name: "Archived" },
+                        ]}
+                        selected={selectedStatus}
+                        onChange={setSelectedStatus}
+                        placeholder="Status"
+                        width="140px"
+                    />
+
+                    <CustomDropdown
+                        options={[
+                            { id: "Broadcast", name: "Broadcast" },
+                            { id: "API Triggered", name: "API Triggered" },
+                        ]}
+                        selected={selectedCampaignTypes}
+                        onChange={setSelectedCampaignTypes}
+                        placeholder="Campaign Type"
+                        width="160px"
+                    />
+
+                    <CustomDropdown
+                        options={[
+                            { id: "Immediate", name: "Immediate" },
+                            { id: "Scheduled", name: "Scheduled" },
+                            { id: "Recurring", name: "Recurring" },
+                        ]}
+                        selected={selectedMessageTypes}
+                        onChange={setSelectedMessageTypes}
+                        placeholder="Message Type"
+                        width="160px"
+                    />
+                </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            {/* 4. Bulk Actions Bar (Conditional) */}
+            {selectedCampaigns.length > 0 && (
+                <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900/30 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-blue-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                            {selectedCampaigns.length}
+                        </div>
+                        <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">Campaigns selected</span>
+                    </div>
+                    <div className="flex gap-2">
+                        {getArchivableCampaigns().length > 0 && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setShowBulkArchiveModal(true)}
+                                className="h-7 px-3 rounded-md bg-white dark:bg-slate-900 border-blue-200 text-blue-600 hover:bg-blue-50 text-[10px] font-semibold transition-all"
+                            >
+                                <Archive size={14} className="mr-2" />
+                                Archive Selected
+                            </Button>
+                        )}
+                        {getDeletableCampaigns().length > 0 && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setShowBulkDeleteModal(true)}
+                                className="h-7 px-3 rounded-md bg-white dark:bg-slate-900 border-red-200 text-red-500 hover:bg-red-50 text-[10px] font-semibold transition-all"
+                            >
+                                <Trash2 size={14} className="mr-2" />
+                                Delete Selected
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* 5. Main Table Section */}
+            <div className="flex-1 overflow-auto scrollbar-hide">
+                <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 z-20 bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80">
+                        <tr>
+                            <th className="py-2 px-3 w-10">
+                                <Checkbox
+                                    checked={getFilteredCampaigns().length > 0 && getFilteredCampaigns().every(c => selectedCampaigns.includes(c.id))}
+                                    onCheckedChange={toggleAll}
+                                    className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
+                                />
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
+                                <div className="flex items-center gap-2">
+                                    Campaign Name
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {renderSortIcon("name")}
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("type")}>
+                                <div className="flex items-center gap-2">
+                                    Campaign Type
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {renderSortIcon("type")}
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("messageType")}>
+                                <div className="flex items-center gap-2">
+                                    Message Type
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {renderSortIcon("messageType")}
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("status")}>
+                                <div className="flex items-center gap-2">
+                                    Status
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {renderSortIcon("status")}
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("sent")}>
+                                <div className="flex items-center gap-2">
+                                    Sent
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {renderSortIcon("sent")}
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("delivered")}>
+                                <div className="flex items-center gap-2">
+                                    Delivered
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {renderSortIcon("delivered")}
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
+                        {isLoadingCampaigns ? (
+                            <tr>
+                                <td colSpan={8} className="py-20 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 size={24} className="animate-spin text-blue-500" />
+                                        <p className="text-[11px] font-semibold text-slate-400">Fetching Campaigns...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : getFilteredCampaigns().length === 0 ? (
+                            <tr>
+                                <td colSpan={8} className="py-20 text-center">
+                                    <div className="flex flex-col items-center gap-3 opacity-60">
+                                        <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-2">
+                                            <Send size={32} strokeWidth={1} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[14px] font-bold text-slate-900 dark:text-white">No campaigns found</p>
+                                            <p className="text-[11px] font-medium text-slate-400">Create your first messaging campaign to reach your customers</p>
+                                        </div>
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={() => setCreateOpen(true)} 
+                                            className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
+                                        >
+                                            Create one now
+                                        </Button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            getFilteredCampaigns().map((campaign) => (
+                                <tr 
+                                    key={campaign.id} 
+                                    className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                                >
+                                    <td className="py-2 px-3">
+                                        <Checkbox
+                                            checked={selectedCampaigns.includes(campaign.id)}
+                                            onCheckedChange={() => toggleCampaign(campaign.id)}
+                                            className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
+                                        />
+                                    </td>
+                                    <td className="py-2 px-3">
+                                        <span className="text-[12px] font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate max-w-[200px] block">
+                                            {campaign.name}
+                                        </span>
+                                    </td>
+                                    <td className="py-2 px-3">
+                                        <span className={cn(
+                                            "text-[10px] font-semibold px-2 py-0.5 rounded-md border",
+                                            campaign.type === "Broadcast" ? "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800/50" :
+                                            "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/50"
+                                        )}>
+                                            {campaign.type}
+                                        </span>
+                                    </td>
+                                    <td className="py-2 px-3">
+                                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                            {campaign.messageType}
+                                        </span>
+                                    </td>
+                                    <td className="py-2 px-3">
+                                        <span className={cn(
+                                            "px-2 py-0.5 rounded-md text-[10px] font-semibold border shadow-sm",
+                                            campaign.status === "delivered" ? "bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/50" :
+                                            campaign.status === "scheduled" ? "bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800/50" :
+                                            "bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                                        )}>
+                                            {campaign.status}
+                                        </span>
+                                    </td>
+                                    <td className="py-2 px-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
+                                        {campaign.sent.toLocaleString()}
+                                    </td>
+                                    <td className="py-2 px-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
+                                        {campaign.delivered.toLocaleString()}
+                                    </td>
+                                    <td className="py-2 px-3 text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+                                                    <MoreVertical size={14} className="text-slate-400" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl">
+                                                <DropdownMenuItem 
+                                                    onClick={() => {
+                                                        setSelectedCampaignForPerformance(campaign);
+                                                        setDetailsOpen(true);
+                                                    }}
+                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                >
+                                                    <BarChart2 size={14} className="text-blue-500" />
+                                                    View Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    onClick={() => {
+                                                        setEditingCampaignId(campaign.id);
+                                                        setCreateOpen(true);
+                                                    }}
+                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                >
+                                                    <Edit2 size={14} className="text-blue-500" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    onClick={() => handleOpenCloneDialog(campaign.id)}
+                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                >
+                                                    <Copy size={14} className="text-blue-500" />
+                                                    Clone
+                                                </DropdownMenuItem>
+                                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1"></div>
+                                                {campaign.status !== "archived" ? (
+                                                    <DropdownMenuItem 
+                                                        onClick={() => handleOpenArchiveModal(campaign)}
+                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                    >
+                                                        <Archive size={14} className="text-slate-500" />
+                                                        Archive
+                                                    </DropdownMenuItem>
+                                                ) : (
+                                                    <DropdownMenuItem 
+                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-red-500 rounded-lg cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                        onClick={() => handleOpenDeleteModal(campaign)}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* 6. Pagination Footer Section */}
+            <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold text-slate-500">Rows per page:</span>
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                type="button"
+                                className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-all text-[11px] font-semibold tabular-nums"
+                                onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                            >
+                                {rowsPerPage}
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                            </button>
+                            {rowsDropdownOpen && (
+                                <div className="absolute bottom-full left-0 mb-1 z-[60] w-full rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+                                    <ul className="py-1">
+                                        {[10, 25, 50].map(option => (
+                                            <li
+                                                key={option}
+                                                className={cn(
+                                                    "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors text-center",
+                                                    rowsPerPage === option ? "bg-blue-50 text-blue-600" : "text-slate-600"
+                                                )}
+                                                onClick={() => {
+                                                    setRowsPerPage(option);
+                                                    setRowsDropdownOpen(false);
+                                                }}
+                                            >
+                                                {option}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
+                    <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
+                        {getFilteredCampaigns().length} results total
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
+                        Page 1 <span className="text-slate-300 mx-1">/</span> 1
+                    </span>
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
+                            <ChevronsLeft size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
+                            <ChevronLeft size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
+                            <ChevronRight size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
+                            <ChevronsRight size={14} />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
       {/* Create Campaign Dialog */}
       <Dialog open={createOpen} onOpenChange={(isOpen) => {

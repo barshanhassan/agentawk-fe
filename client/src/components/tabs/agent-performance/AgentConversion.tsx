@@ -1,269 +1,166 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Search, BarChart3 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+import { TrendingUp, Phone, Activity } from "lucide-react";
 
-// Utility function to abbreviate large numbers
-const abbreviateNumber = (num: number): string => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "K";
-  }
-  return num.toString();
-};
+const abbreviateNumber = (num: number) => num >= 1000 ? (num / 1000).toFixed(1) + "K" : num.toString();
 
-// Custom tooltip for Conversion Volume Trend
-const ConversionVolumeTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background border border-border rounded-md p-2 shadow-md">
-        <p className="text-sm font-medium">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="text-sm">{entry.name}:</span>
-            <span className="text-sm font-medium" style={{ color: entry.color }}>
-              {entry.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+const conversionVolumeTrendData = [
+  { date: "Oct 24", queued: 8, active: 12, pending: 5, resolved: 6 },
+  { date: "Oct 25", queued: 5, active: 8, pending: 3, resolved: 4 },
+  { date: "Oct 26", queued: 15, active: 20, pending: 10, resolved: 12 },
+  { date: "Oct 27", queued: 6, active: 9, pending: 4, resolved: 5 },
+];
 
-// Custom tooltip for Call Engagement Trend
-const CallEngagementTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background border border-border rounded-md p-2 shadow-md">
-        <p className="text-sm font-medium">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="text-sm">{entry.name}:</span>
-            <span className="text-sm font-medium" style={{ color: entry.color }}>
-              {entry.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+const callEngagementTrendData = [
+  { date: "Oct 24", inbound: 15, outbound: 8, messagesReceived: 6, messagesSent: 4 },
+  { date: "Oct 25", inbound: 12, outbound: 6, messagesReceived: 5, messagesSent: 3 },
+  { date: "Oct 26", inbound: 28, outbound: 15, messagesReceived: 12, messagesSent: 8 },
+  { date: "Oct 27", inbound: 20, outbound: 10, messagesReceived: 8, messagesSent: 5 },
+];
+
+const tagsData = [
+  { name: "Urgent", count: 24, cls: "bg-rose-500/10 text-rose-400 border border-rose-500/20" },
+  { name: "Follow-up", count: 18, cls: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
+  { name: "Resolved", count: 156, cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+  { name: "Pending", count: 42, cls: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" },
+];
 
 export default function AgentConversion() {
   const { mode } = useTheme();
+  const dark = mode === "dark";
+  const card = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub = dark ? "text-slate-400" : "text-slate-500";
+  const grid = dark ? "#1e293b" : "#f1f5f9";
+  const axis = dark ? "#64748b" : "#94a3b8";
+  const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  // Color palette
-  const colors = {
-    light: {
-      red: "#f87171",
-      orange: "#fb923c",
-      purple: "#c084fc",
-      blue: "#60a5fa",
-    },
-    dark: {
-      red: "#ef4444",
-      orange: "#f97316",
-      purple: "#a855f7",
-      blue: "#3b82f6",
-    },
-  };
-
-  const currentColors = mode === "dark" ? colors.dark : colors.light;
-
-  // Mock KPI data
-  const kpiData = {
-    conversionStatus: {
-      queued: 24,
-      active: 18,
-      pending: 12,
-      exited: 5,
-    },
-    performance: {
-      avgResponseTime: "1m 45s",
-      resolutionRate: "88%",
-      customerSatisfaction: "92%",
-    },
-    callStatistics: {
-      totalCalls: 342,
-      inboundCalls: 245,
-      outboundCalls: 97,
-    },
-  };
-
-  // Dummy data for Conversion Volume Trend
-  const conversionVolumeTrendData = [
-    { date: "Oct 24", queued: 8, active: 12, pending: 5, resolved: 6 },
-    { date: "Oct 25", queued: 5, active: 8, pending: 3, resolved: 4 },
-    { date: "Oct 26", queued: 15, active: 20, pending: 10, resolved: 12 },
-    { date: "Oct 27", queued: 6, active: 9, pending: 4, resolved: 5 },
+  const BARS_CONV = [
+    { key: "queued", name: "Queued", fill: "#f87171" },
+    { key: "active", name: "Active", fill: "#fb923c" },
+    { key: "pending", name: "Pending", fill: "#c084fc" },
+    { key: "resolved", name: "Resolved", fill: "#60a5fa" },
+  ];
+  const BARS_CALL = [
+    { key: "inbound", name: "Inbound Calls", fill: "#f87171" },
+    { key: "outbound", name: "Outbound Calls", fill: "#fb923c" },
+    { key: "messagesReceived", name: "Messages Received", fill: "#c084fc" },
+    { key: "messagesSent", name: "Messages Sent", fill: "#60a5fa" },
   ];
 
-  // Dummy data for Call Engagement Trend
-  const callEngagementTrendData = [
-    { date: "Oct 24", inbound: 15, outbound: 8, messagesReceived: 6, messagesSent: 4 },
-    { date: "Oct 25", inbound: 12, outbound: 6, messagesReceived: 5, messagesSent: 3 },
-    { date: "Oct 26", inbound: 28, outbound: 15, messagesReceived: 12, messagesSent: 8 },
-    { date: "Oct 27", inbound: 20, outbound: 10, messagesReceived: 8, messagesSent: 5 },
-  ];
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className={cn("px-3 py-2 rounded-xl border shadow-2xl text-[11px]", tooltip)}>
+        <p className="font-semibold mb-1 opacity-60">{label}</p>
+        {payload.map((e: any, i: number) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: e.fill }} />
+            <span className="opacity-70">{e.name}:</span>
+            <span className="font-bold">{e.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
-  // Dummy data for Tags
-  const tagsData = [
-    { name: "Urgent", count: 24, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" },
-    { name: "Follow-up", count: 18, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" },
-    { name: "Resolved", count: 156, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" },
-    { name: "Pending", count: 42, color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800" },
+  const kpiCards = [
+    {
+      title: "Conversion Status", icon: <Activity size={14} className="text-primary" />,
+      rows: [
+        { l: "Queued", v: "24", c: "text-rose-400" },
+        { l: "Active", v: "18", c: "text-orange-400" },
+        { l: "Pending", v: "12", c: "text-yellow-400" },
+        { l: "Exited", v: "5", c: "text-slate-400" },
+      ],
+    },
+    {
+      title: "Performance", icon: <TrendingUp size={14} className="text-primary" />,
+      rows: [
+        { l: "Avg response time", v: "1m 45s" },
+        { l: "Resolution rate", v: "88%" },
+        { l: "Customer satisfaction", v: "92%" },
+      ],
+    },
+    {
+      title: "Call Statistics", icon: <Phone size={14} className="text-primary" />,
+      rows: [
+        { l: "Total calls", v: abbreviateNumber(342), c: "text-primary" },
+        { l: "Inbound calls", v: abbreviateNumber(245), c: "text-blue-400" },
+        { l: "Outbound calls", v: abbreviateNumber(97), c: "text-violet-400" },
+      ],
+    },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Row 1: 3 KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Card 1: Conversion Status */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Conversion Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Queued</span>
-              <span className="text-sm font-semibold">{kpiData.conversionStatus.queued}</span>
+    <div className="space-y-5">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {kpiCards.map((kpi, i) => (
+          <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1", card, dark ? "hover:border-primary/30" : "hover:border-primary/20")}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className={cn("p-2 rounded-xl", dark ? "bg-primary/15" : "bg-primary/10")}>{kpi.icon}</div>
+              <h3 className={cn("text-[13px] font-bold", text)}>{kpi.title}</h3>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Active</span>
-              <span className="text-sm font-semibold">{kpiData.conversionStatus.active}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Pending</span>
-              <span className="text-sm font-semibold">{kpiData.conversionStatus.pending}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Exited</span>
-              <span className="text-sm font-semibold">{kpiData.conversionStatus.exited}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Performance */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Performance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Avg response time</span>
-              <span className="text-sm font-semibold">{kpiData.performance.avgResponseTime}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Resolution rate</span>
-              <span className="text-sm font-semibold">{kpiData.performance.resolutionRate}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Customer satisfaction</span>
-              <span className="text-sm font-semibold">{kpiData.performance.customerSatisfaction}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Call Statistics */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Call Statistics</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Total calls</span>
-              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.callStatistics.totalCalls)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Inbound calls</span>
-              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.callStatistics.inboundCalls)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Outbound calls</span>
-              <span className="text-sm font-semibold">{abbreviateNumber(kpiData.callStatistics.outboundCalls)}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 2: Conversion Volume Trend - Full Width */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Conversion Volume Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={conversionVolumeTrendData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.2} />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
-              <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
-              <Tooltip content={<ConversionVolumeTooltip />} cursor={false} />
-              <Legend
-                wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
-                iconType="circle"
-              />
-              <Bar dataKey="queued" stackId="a" fill={currentColors.red} name="Queued" />
-              <Bar dataKey="active" stackId="a" fill={currentColors.orange} name="Active" />
-              <Bar dataKey="pending" stackId="a" fill={currentColors.purple} name="Pending" />
-              <Bar dataKey="resolved" stackId="a" fill={currentColors.blue} name="Resolved" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Row 3: Call Engagement Trend (75%) and Tags (25%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Call Engagement Trend - 75% width (3 cols) */}
-        <div className="lg:col-span-3">
-          <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0 h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Call Engagement Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={callEngagementTrendData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.2} />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
-                  <Tooltip content={<CallEngagementTooltip />} cursor={false} />
-                  <Legend
-                    wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
-                    iconType="circle"
-                  />
-                  <Bar dataKey="inbound" stackId="a" fill={currentColors.red} name="Inbound Calls" />
-                  <Bar dataKey="outbound" stackId="a" fill={currentColors.orange} name="Outbound Calls" />
-                  <Bar dataKey="messagesReceived" stackId="a" fill={currentColors.purple} name="Messages Received" />
-                  <Bar dataKey="messagesSent" stackId="a" fill={currentColors.blue} name="Messages Sent" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tags - 25% width (1 col) */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Tags</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              {tagsData.map((tag, idx) => (
-                <Badge variant="outline" key={idx} className={`font-medium ${tag.color}`}>
-                  {tag.name} ({tag.count})
-                </Badge>
+            <div className="space-y-2">
+              {kpi.rows.map((r: any, ri: number) => (
+                <div key={ri} className="flex justify-between items-center">
+                  <span className={cn("text-[11px]", sub)}>{r.l}</span>
+                  <span className={cn("text-[13px] font-bold tabular-nums", r.c || text)}>{r.v}</span>
+                </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
+      </div>
+
+      {/* Conversion Volume Trend */}
+      <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+        <h3 className={cn("text-[13px] font-bold mb-1", text)}>Conversion Volume Trend</h3>
+        <p className={cn("text-[11px] mb-4", sub)}>Daily conversion breakdown by status</p>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={conversionVolumeTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
+            <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
+            {BARS_CONV.map(b => <Bar key={b.key} dataKey={b.key} stackId="a" fill={b.fill} name={b.name} radius={b.key === "resolved" ? [4, 4, 0, 0] : [0, 0, 0, 0]} />)}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Call Engagement + Tags */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className={cn("lg:col-span-3 rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>Call Engagement Trend</h3>
+          <p className={cn("text-[11px] mb-4", sub)}>Calls and messages over time</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={callEngagementTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
+              <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
+              {BARS_CALL.map(b => <Bar key={b.key} dataKey={b.key} stackId="a" fill={b.fill} name={b.name} radius={b.key === "messagesSent" ? [4, 4, 0, 0] : [0, 0, 0, 0]} />)}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Tags */}
+        <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+          <h3 className={cn("text-[13px] font-bold mb-4", text)}>Tags</h3>
+          <div className="flex flex-col gap-2.5">
+            {tagsData.map((tag, i) => (
+              <div key={i} className={cn("flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-semibold", tag.cls)}>
+                <span>{tag.name}</span>
+                <span className="font-black">{tag.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-

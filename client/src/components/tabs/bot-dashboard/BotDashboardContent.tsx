@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, Check } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { ChevronDown, Check, Bot, MessageSquare, Send, BarChart3, Users, Clock } from "lucide-react";
 import TimeHeatmap from "@/components/TimeHeatmap";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
 
 // Top Filter Dropdown Component
 interface TopFilterDropdownProps {
@@ -13,6 +14,8 @@ interface TopFilterDropdownProps {
 const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({ topFilter, setTopFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { mode } = useTheme();
+  const dark = mode === "dark";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -20,14 +23,9 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({ topFilter, setTop
         setIsOpen(false);
       }
     }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    else document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   const options = ["Top 5", "Top 10", "All"];
@@ -36,32 +34,39 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({ topFilter, setTop
     <div className="relative w-32" ref={dropdownRef}>
       <button
         type="button"
-        className="w-full flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none  text-foreground transition-colors"
+        className={cn(
+          "w-full flex items-center justify-between px-3 py-1.5 text-left border rounded-xl shadow-sm transition-all outline-none text-xs font-semibold",
+          dark 
+            ? "bg-slate-900/60 border-slate-700 text-white hover:border-slate-600" 
+            : "bg-slate-50 border-slate-200 text-slate-900 hover:border-slate-300"
+        )}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="truncate text-sm font-normal">
-          {topFilter}
-        </span>
-        <span className="ml-2 text-muted-foreground">
-          <ChevronDown className="h-4 w-4" />
-        </span>
+        <span className="truncate">{topFilter}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5", dark ? "text-slate-500" : "text-slate-400")} />
       </button>
       {isOpen && (
-        <div className="absolute z-10 w-full mt-2 bg-background dark:bg-background rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] animate-in fade-in-80">
+        <div className={cn(
+          "absolute z-10 w-full mt-2 rounded-xl border shadow-2xl overflow-hidden animate-in fade-in-80 zoom-in-95",
+          dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200"
+        )}>
           <ul className="py-1">
             {options.map(option => (
               <li
                 key={option}
-                className={`flex items-center px-3 py-2 text-sm cursor-pointer select-none transition-colors rounded-md hover:bg-accent`}
+                className={cn(
+                  "flex items-center px-3 py-2 text-xs cursor-pointer select-none transition-colors",
+                  dark ? "hover:bg-slate-800 text-slate-300 hover:text-white" : "hover:bg-slate-50 text-slate-600 hover:text-slate-900"
+                )}
                 onClick={() => {
                   setTopFilter(option);
                   setIsOpen(false);
                 }}
               >
-                <span className="flex items-center w-5 h-5 mr-2 justify-center flex-shrink-0">
-                  {topFilter === option && <Check className="h-4 w-4 text-primary" />}
+                <span className="flex items-center w-4 h-4 mr-2 justify-center flex-shrink-0">
+                  {topFilter === option && <Check className="h-3.5 w-3.5 text-primary" />}
                 </span>
-                <span className="truncate overflow-hidden">{option}</span>
+                <span className="truncate">{option}</span>
               </li>
             ))}
           </ul>
@@ -71,38 +76,18 @@ const TopFilterDropdown: React.FC<TopFilterDropdownProps> = ({ topFilter, setTop
   );
 };
 
-// Utility function to format tooltip names
-const formatTooltipName = (name: string): string => {
-  return name
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, str => str.toUpperCase())
-    .trim();
-};
-
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background border border-border rounded-md p-2 shadow-md">
-        <p className="text-sm font-medium">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="text-sm">{formatTooltipName(entry.name)}:</span>
-            <span className="text-sm font-medium" style={{ color: entry.color }}>
-              {entry.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
 export default function BotDashboardContent() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
   const [topFilter, setTopFilter] = useState("Top 10");
 
-  // Mock KPI data
+  const card    = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
+  const text    = dark ? "text-white"     : "text-slate-900";
+  const sub     = dark ? "text-slate-400" : "text-slate-500";
+  const grid    = dark ? "#1e293b" : "#f1f5f9";
+  const axis    = dark ? "#64748b" : "#94a3b8";
+  const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
+
   const kpiData = {
     botTriggered: 7,
     respondedByBot: 26,
@@ -112,7 +97,15 @@ export default function BotDashboardContent() {
     avgSessionDuration: "0 hrs 14 mins",
   };
 
-  // Dummy data for Bot vs Human Performance
+  const kpiCards = [
+    { title: "Bot Triggered", value: kpiData.botTriggered, unit: "Sessions", icon: <Bot size={14} />, color: "text-primary" },
+    { title: "Responded by Bot", value: kpiData.respondedByBot, unit: "Messages", icon: <MessageSquare size={14} />, color: "text-emerald-500" },
+    { title: "Received by Bot", value: kpiData.receivedByBot, unit: "Messages", icon: <Send size={14} />, color: "text-blue-500" },
+    { title: "Total Messages", value: kpiData.totalMessages, unit: "All messages", icon: <BarChart3 size={14} />, color: "text-violet-500" },
+    { title: "Escalated to Human", value: kpiData.escalatedToHuman, unit: "Escalations", icon: <Users size={14} />, color: "text-rose-500" },
+    { title: "Avg Session Duration", value: kpiData.avgSessionDuration, unit: "Per session", icon: <Clock size={14} />, color: "text-orange-500" },
+  ];
+
   const botVsHumanData = [
     { date: "Oct 24", triggered: 0.5, escalated: 0.2 },
     { date: "Oct 25", triggered: 0.8, escalated: 0.3 },
@@ -123,7 +116,6 @@ export default function BotDashboardContent() {
     { date: "Oct 30", triggered: 1.8, escalated: 0.5 },
   ];
 
-  // Dummy data for Popularity of Interactions (Bar chart)
   const popularityData = [
     { name: "Greeting", sentiment: 45 },
     { name: "Product Info", sentiment: 38 },
@@ -137,7 +129,6 @@ export default function BotDashboardContent() {
     { name: "Other", sentiment: 5 },
   ];
 
-  // Dummy data for Busiest Period (Heatmap-like data)
   const busiestPeriodData = [
     { time: "12 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 3, Tue: 3, Wed: 2 },
     { time: "2 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
@@ -153,140 +144,94 @@ export default function BotDashboardContent() {
     { time: "10 PM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 3, Tue: 2, Wed: 2 },
   ];
 
-
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className={cn("px-3 py-2 rounded-xl border shadow-2xl text-[11px]", tooltip)}>
+        <p className="font-semibold mb-1 opacity-60">{label}</p>
+        {payload.map((e: any, i: number) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: e.color || e.stroke || e.fill }} />
+            <span className="opacity-70">{e.name}:</span>
+            <span className="font-bold">{e.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Row 1: 6 KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        {/* Card 1: Bot Triggered */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Bot Triggered</p>
-              <p className="text-2xl font-bold">{kpiData.botTriggered}</p>
-              <p className="text-xs text-muted-foreground">Sessions</p>
+    <div className="space-y-5">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {kpiCards.map((kpi, i) => (
+          <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1", card, dark ? "hover:border-primary/30" : "hover:border-primary/20")}>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className={cn("p-1.5 rounded-lg", dark ? "bg-slate-800" : "bg-slate-100", kpi.color)}>
+                {kpi.icon}
+              </div>
+              <p className={cn("text-[11px] font-semibold truncate", sub)}>{kpi.title}</p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Responded by Bot */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Responded by Bot</p>
-              <p className="text-2xl font-bold">{kpiData.respondedByBot}</p>
-              <p className="text-xs text-muted-foreground">Messages</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Received by Bot */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Received by Bot</p>
-              <p className="text-2xl font-bold">{kpiData.receivedByBot}</p>
-              <p className="text-xs text-muted-foreground">Messages</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Total Messages */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Total Messages</p>
-              <p className="text-2xl font-bold">{kpiData.totalMessages}</p>
-              <p className="text-xs text-muted-foreground">All messages</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 5: Escalated to Human */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Escalated to Human</p>
-              <p className="text-2xl font-bold">{kpiData.escalatedToHuman}</p>
-              <p className="text-xs text-muted-foreground">Escalations</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 6: Avg Session Duration */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Avg. Session Duration</p>
-              <p className="text-2xl font-bold">{kpiData.avgSessionDuration}</p>
-              <p className="text-xs text-muted-foreground">Per session</p>
-            </div>
-          </CardContent>
-        </Card>
+            <p className={cn("text-xl font-black tabular-nums", text)}>{kpi.value}</p>
+            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{kpi.unit}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Row 2: Popularity of Interactions */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Popularity of Interactions</CardTitle>
-            <TopFilterDropdown topFilter={topFilter} setTopFilter={setTopFilter} />
+      {/* Popularity of Interactions */}
+      <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className={cn("text-[13px] font-bold", text)}>Popularity of Interactions</h3>
+            <p className={cn("text-[11px]", sub)}>Most frequent bot conversation topics</p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={popularityData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" angle={-45} textAnchor="end" height={80} />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip content={<CustomTooltip />} cursor={false} />
-              <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+          <TopFilterDropdown topFilter={topFilter} setTopFilter={setTopFilter} />
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={popularityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
+            <XAxis dataKey="name" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} angle={-45} textAnchor="end" height={60} />
+            <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
+            <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Interactions" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-      {/* Row 3: Two charts side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Bot vs Human Performance */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm">Bot vs Human Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={botVsHumanData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }} iconType="circle" />
-                <Line type="monotone" dataKey="triggered" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Triggered" />
-                <Line type="monotone" dataKey="escalated" stroke="#ef4444" strokeWidth={2} dot={false} name="Escalated to Human" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>Bot vs Human Performance</h3>
+          <p className={cn("text-[11px] mb-6", sub)}>Escalation rate comparison</p>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={botVsHumanData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+              <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
+              <Line type="monotone" dataKey="triggered" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={false} name="Triggered" activeDot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }} />
+              <Line type="monotone" dataKey="escalated" stroke="#ef4444" strokeWidth={2.5} dot={false} name="Escalated to Human" activeDot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Busiest Period */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm">Busiest Period</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TimeHeatmap
-              data={busiestPeriodData}
-              days={["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"]}
-              rowsPerTimeSlot={2}
-              cellHeight={12}
-              startDay={4}
-              valueLabel="Messages"
-            />
-          </CardContent>
-        </Card>
+        <div className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>Busiest Period</h3>
+          <p className={cn("text-[11px] mb-6", sub)}>Bot activity heatmap by time and day</p>
+          <div className="h-[300px] overflow-hidden">
+             <TimeHeatmap
+                data={busiestPeriodData}
+                days={["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"]}
+                rowsPerTimeSlot={2}
+                cellHeight={12}
+                startDay={4}
+                valueLabel="Messages"
+              />
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-

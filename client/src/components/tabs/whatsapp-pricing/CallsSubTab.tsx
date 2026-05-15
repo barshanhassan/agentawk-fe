@@ -1,51 +1,49 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+import { Phone, Clock, DollarSign } from "lucide-react";
 
-// Utility function to abbreviate large numbers
-const abbreviateNumber = (num: number): string => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-  return num.toString();
-};
+export default function CallsSubTab() {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const card = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub = dark ? "text-slate-400" : "text-slate-500";
+  const grid = dark ? "#1e293b" : "#f1f5f9";
+  const axis = dark ? "#64748b" : "#94a3b8";
+  const tip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
+  const ChartTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
     return (
-      <div className="bg-background border border-border rounded-md p-2 shadow-md">
-        <p className="text-sm font-medium">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="text-sm">{entry.name}:</span>
-            <span className="text-sm font-medium" style={{ color: entry.color }}>
-              {entry.value}
-            </span>
+      <div className={cn("px-3 py-2 rounded-xl border shadow-2xl text-[11px]", tip)}>
+        <p className="font-semibold mb-1 opacity-60">{label}</p>
+        {payload.map((e: any, i: number) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: e.stroke || e.color }} />
+            <span className="opacity-70">{e.name}:</span>
+            <span className="font-bold">{e.value}</span>
           </div>
         ))}
       </div>
     );
-  }
-  return null;
-};
-
-export default function CallsSubTab() {
-  // Mock KPI data
-  const kpiData = {
-    allCalls: {
-      businessInitiated: 0,
-      userInitiated: 0,
-    },
-    averageBillableCallDuration: {
-      businessInitiated: 0,
-      userInitiated: 0,
-    },
-    approximateTotalCharges: {
-      businessInitiated: 0,
-      userInitiated: 0,
-    },
   };
 
-  // Dummy data for charts
+  const kpiCards = [
+    {
+      title: "All Calls", icon: <Phone size={14} className="text-primary" />,
+      rows: [{ l: "Business-initiated", v: 0 }, { l: "User-initiated", v: 0 }]
+    },
+    {
+      title: "Avg Billable Duration (sec)", icon: <Clock size={14} className="text-primary" />,
+      rows: [{ l: "Business-initiated", v: 0 }, { l: "User-initiated", v: 0 }]
+    },
+    {
+      title: "Approx. Total Charges", icon: <DollarSign size={14} className="text-primary" />,
+      rows: [{ l: "Business-initiated", v: "$0" }, { l: "User-initiated", v: "$0" }]
+    },
+  ];
+
   const allCallsData = [
     { date: "Oct 24", businessInitiated: 5, userInitiated: 3 },
     { date: "Oct 25", businessInitiated: 4, userInitiated: 2 },
@@ -55,8 +53,7 @@ export default function CallsSubTab() {
     { date: "Oct 29", businessInitiated: 10, userInitiated: 6 },
     { date: "Oct 30", businessInitiated: 7, userInitiated: 4 },
   ];
-
-  const averageBillableCallDurationData = [
+  const durationData = [
     { date: "Oct 24", businessInitiated: 45, userInitiated: 32 },
     { date: "Oct 25", businessInitiated: 38, userInitiated: 28 },
     { date: "Oct 26", businessInitiated: 52, userInitiated: 40 },
@@ -65,8 +62,7 @@ export default function CallsSubTab() {
     { date: "Oct 29", businessInitiated: 55, userInitiated: 42 },
     { date: "Oct 30", businessInitiated: 50, userInitiated: 38 },
   ];
-
-  const callsAndChargesData = [
+  const chargesData = [
     { date: "Oct 24", calls: 8, charges: 0.8 },
     { date: "Oct 25", calls: 6, charges: 0.6 },
     { date: "Oct 26", calls: 13, charges: 1.3 },
@@ -76,122 +72,60 @@ export default function CallsSubTab() {
     { date: "Oct 30", calls: 11, charges: 1.1 },
   ];
 
+  const CALL_LINES = [
+    { key: "businessInitiated", name: "Business-initiated", stroke: "#22c55e" },
+    { key: "userInitiated", name: "User-initiated", stroke: "#3b82f6" },
+  ];
+  const CHARGE_LINES = [
+    { key: "calls", name: "Calls", stroke: "#22c55e" },
+    { key: "charges", name: "Charges ($)", stroke: "#ec4899" },
+  ];
+
+  const charts = [
+    { title: "All Calls", sub: "Call volume over time", data: allCallsData, lines: CALL_LINES },
+    { title: "Average Billable Call Duration (sec)", sub: "Duration trends", data: durationData, lines: CALL_LINES },
+    { title: "Calls & Approximate Charges", sub: "Cost analysis over time", data: chargesData, lines: CHARGE_LINES },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Row 1: 3 KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Card 1: All Calls */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">All Calls</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Business-initiated</span>
-              <span className="text-sm font-semibold">{kpiData.allCalls.businessInitiated}</span>
+    <div className="space-y-5">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {kpiCards.map((kpi, i) => (
+          <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1", card, dark ? "hover:border-primary/30" : "hover:border-primary/20")}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className={cn("p-2 rounded-xl", dark ? "bg-primary/15" : "bg-primary/10")}>{kpi.icon}</div>
+              <h3 className={cn("text-[13px] font-bold", text)}>{kpi.title}</h3>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">User-initiated</span>
-              <span className="text-sm font-semibold">{kpiData.allCalls.userInitiated}</span>
+            <div className="space-y-2">
+              {kpi.rows.map((r: any, ri: number) => (
+                <div key={ri} className="flex justify-between items-center">
+                  <span className={cn("text-[11px]", sub)}>{r.l}</span>
+                  <span className={cn("text-[13px] font-bold tabular-nums", text)}>{r.v}</span>
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Average Billable Call Duration */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Average Billable Call Duration (seconds)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Business-initiated</span>
-              <span className="text-sm font-semibold">{kpiData.averageBillableCallDuration.businessInitiated}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">User-initiated</span>
-              <span className="text-sm font-semibold">{kpiData.averageBillableCallDuration.userInitiated}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Approximate Total Charges */}
-        <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Approximate Total Charges</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Business-initiated</span>
-              <span className="text-sm font-semibold">${kpiData.approximateTotalCharges.businessInitiated}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">User-initiated</span>
-              <span className="text-sm font-semibold">${kpiData.approximateTotalCharges.userInitiated}</span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
-      {/* Row 2: All Calls Chart */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-sm">All Calls</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={allCallsData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }} iconType="circle" />
-              <Line type="monotone" dataKey="businessInitiated" stroke="#22c55e" strokeWidth={2} dot={false} name="Business-initiated" />
-              <Line type="monotone" dataKey="userInitiated" stroke="#3b82f6" strokeWidth={2} dot={false} name="User-initiated" />
+      {/* Charts */}
+      {charts.map((ch, i) => (
+        <div key={i} className={cn("rounded-2xl border p-5 transition-all duration-300 hover:shadow-xl", card)}>
+          <h3 className={cn("text-[13px] font-bold mb-1", text)}>{ch.title}</h3>
+          <p className={cn("text-[11px] mb-4", sub)}>{ch.sub}</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={ch.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+              <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "12px" }} iconType="circle" />
+              {ch.lines.map(l => <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.stroke} strokeWidth={2.5} dot={false} name={l.name} activeDot={{ r: 4, fill: l.stroke, strokeWidth: 0 }} />)}
             </LineChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Row 3: Average Billable Call Duration Chart */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-sm">Average Billable Call Duration (seconds)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={averageBillableCallDurationData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }} iconType="circle" />
-              <Line type="monotone" dataKey="businessInitiated" stroke="#22c55e" strokeWidth={2} dot={false} name="Business-initiated" />
-              <Line type="monotone" dataKey="userInitiated" stroke="#3b82f6" strokeWidth={2} dot={false} name="User-initiated" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Row 4: Calls & Approximate Charges Chart */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-sm">Calls & Approximate Charges</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={callsAndChargesData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }} iconType="circle" />
-              <Line type="monotone" dataKey="calls" stroke="#22c55e" strokeWidth={2} dot={false} name="Calls" />
-              <Line type="monotone" dataKey="charges" stroke="#ec4899" strokeWidth={2} dot={false} name="Charges ($)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        </div>
+      ))}
     </div>
   );
 }
-

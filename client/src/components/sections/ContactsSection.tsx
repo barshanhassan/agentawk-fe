@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar, X, Download } from "react-feather";
-import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical, Users } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import ContactDetailsModal from "@/components/ContactDetailsModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -60,83 +61,88 @@ export default function ContactsSection() {
 
   // Fetch tags
   const { data: tagsResponse } = useQuery({
-      queryKey: ["/api/tags/list"],
-      queryFn: async () => {
-          const res = await apiRequest("GET", "/api/tags/list");
-          return res.json();
-      }
+    queryKey: ["/api/tags/list"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/tags/list");
+      return res.json();
+    }
   });
 
-  const contactTagOptions = (tagsResponse?.tags || []).map((t: any) => ({
-      id: t.name, // Using name as ID for consistency with existing state logic
-      name: t.name
-  }));
+  const contactTagOptions = [
+    { id: "Marketing", name: "Marketing" },
+    { id: "Test", name: "Test" },
+    ...((tagsResponse?.tags || tagsResponse || []).map((t: any) => ({
+      id: t.name || t.id?.toString(),
+      name: t.name || t
+    })))
+  ].filter((tag, index, self) =>
+    tag.name && index === self.findIndex((t) => t.name === tag.name)
+  );
 
   // Fetch contacts
   const { data: contactsResponse, isLoading: isLoadingContacts } = useQuery({
-      queryKey: ["/api/contacts", { search, status: statusFilter }],
-      queryFn: async () => {
-          const res = await apiRequest("GET", `/api/contacts?search=${search}`);
-          return res.json();
-      }
+    queryKey: ["/api/contacts", { search, status: statusFilter }],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/contacts?search=${search}`);
+      return res.json();
+    }
   });
 
   // Map backend contacts to frontend format
-  console.log("contactsResponse from backend:", contactsResponse);
-  const contacts: Contact[] = (contactsResponse?.contacts || []).map((c: any) => ({
-      id: c.id.toString(),
-      name: c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'No Name',
-      phoneNumber: c.title || '-', // Using title as fallback if phone is missing in schema for now
-      tags: c.tag_links?.map((t: any) => t.tags.name) || [],
-      createdAt: c.created_at ? new Date(c.created_at).toISOString().split('T')[0] : '-',
-      lastActive: c.updated_at ? new Date(c.updated_at).toISOString().split('T')[0] : '-',
-      updatedBy: 'System'
+  const contacts: Contact[] = (contactsResponse?.contacts || contactsResponse || []).map((c: any) => ({
+    id: (c.id || '').toString(),
+    name: c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'No Name',
+    phoneNumber: c.title || c.phone || '-',
+    tags: (c.tag_links || []).map((tl: any) => tl.tags?.name || tl.name || tl).filter(Boolean),
+    createdAt: c.created_at ? new Date(c.created_at).toISOString().split('T')[0] : '-',
+    lastActive: c.updated_at ? new Date(c.updated_at).toISOString().split('T')[0] : '-',
+    updatedBy: 'System'
   }));
 
   // Add Mutation
   const addMutation = useMutation({
-      mutationFn: async (data: any) => {
-          const res = await apiRequest("POST", "/api/contacts", data);
-          return res.json();
-      },
-      onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
-          toast({ title: "Contact added" });
-          setShowAddContactModal(false);
-      }
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/contacts", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({ title: "Contact added" });
+      setShowAddContactModal(false);
+    }
   });
 
   // Delete Mutation
   const deleteMutation = useMutation({
-      mutationFn: async (id: string) => {
-          await apiRequest("DELETE", `/api/contacts/${id}`);
-      },
-      onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
-          toast({ title: "Contact deleted" });
-          setShowDeleteContactModal(false);
-      }
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/contacts/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({ title: "Contact deleted" });
+      setShowDeleteContactModal(false);
+    }
   });
 
   // Update Mutation
   const updateMutation = useMutation({
-      mutationFn: async ({ id, data }: { id: string, data: any }) => {
-          const res = await apiRequest("PATCH", `/api/contacts/${id}`, data);
-          return res.json();
-      },
-      onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
-          toast({ title: "Contact Updated", description: "Contact has been updated successfully" });
-          setShowEditContactModal(false);
-          setEditingContact(null);
-          setEditContactName("");
-          setEditContactPhone("");
-          setEditContactTags([]);
-          setEditTagInput("");
-      }
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/contacts/${id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({ title: "Contact Updated", description: "Contact has been updated successfully" });
+      setShowEditContactModal(false);
+      setEditingContact(null);
+      setEditContactName("");
+      setEditContactPhone("");
+      setEditContactTags([]);
+      setEditTagInput("");
+    }
   });
 
-  const currentUserName = "Demo User"; 
+  const currentUserName = "Demo User";
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sorts, setSorts] = useState<SortEntry[]>([]);
@@ -438,7 +444,7 @@ export default function ContactsSection() {
   const handleSaveBulkEdit = async () => {
     const selectedContactIds = Array.from(selectedRows);
     try {
-      await Promise.all(selectedContactIds.map(id => 
+      await Promise.all(selectedContactIds.map(id =>
         apiRequest("PATCH", `/api/contacts/${id}`, { tags: bulkEditTags })
       ));
       toast({
@@ -460,7 +466,7 @@ export default function ContactsSection() {
   const handleConfirmBulkDelete = async () => {
     const selectedContactIds = Array.from(selectedRows);
     try {
-      await Promise.all(selectedContactIds.map(id => 
+      await Promise.all(selectedContactIds.map(id =>
         apiRequest("DELETE", `/api/contacts/${id}`)
       ));
       toast({
@@ -524,10 +530,10 @@ export default function ContactsSection() {
     }
     const names = newContactName.split(' ');
     addMutation.mutate({
-        first_name: names[0],
-        last_name: names.slice(1).join(' '),
-        title: newContactPhone, // Temporary mapping
-        tags: newContactTags
+      first_name: names[0],
+      last_name: names.slice(1).join(' '),
+      title: newContactPhone, // Temporary mapping
+      tags: newContactTags
     });
   };
 
@@ -658,553 +664,503 @@ export default function ContactsSection() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header Section - Outside Card */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Contacts</h1>
-        <Button
-          onClick={() => setShowAddContactModal(true)}
-          className="btn-outline-primary gap-2 h-9 font-normal"
-          variant="outline"
-        >
-          <Plus size={16} />
-          Add Contact
-        </Button>
-      </div>
+    <>
+      <div className="animate-in fade-in duration-700">
+        {/* Unified Main Card */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
 
-      {/* Search and Filters Section - Outside Card */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search names..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
-          />
-        </div>
-
-        {/* Tags Dropdown */}
-        <CustomDropdown
-          options={contactTagOptions}
-          selected={selectedTags}
-          onChange={setSelectedTags}
-          placeholder="Tags"
-          width="130px"
-        />
-
-        {/* Created At Calendar */}
-        <Popover open={createdAtOpen} onOpenChange={setCreatedAtOpen}>
-          <PopoverTrigger asChild>
-            <button className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors">
-              <Calendar size={14} />
-              <span>
-                {createdAtRange?.from && createdAtRange?.to
-                  ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')} - ${format(createdAtRange.to, 'dd/MMM/yyyy')}`
-                  : createdAtRange?.from
-                    ? `Created At: ${format(createdAtRange.from, 'dd/MMM/yyyy')}`
-                    : "Created At"}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarComponent
-              initialFocus
-              mode="range"
-              defaultMonth={createdAtRange?.from}
-              selected={createdAtRange}
-              onSelect={(range) => {
-                // If both from and to are the same date, clear the range
-                if (
-                  range?.from &&
-                  range?.to &&
-                  range.from.toDateString() === range.to.toDateString()
-                ) {
-                  setCreatedAtRange(undefined);
-                } else {
-                  setCreatedAtRange(range);
-                }
-              }}
-              numberOfMonths={1}
-            />
-          </PopoverContent>
-        </Popover>
-
-        {/* Last Active Calendar */}
-        <Popover open={lastActiveOpen} onOpenChange={setLastActiveOpen}>
-          <PopoverTrigger asChild>
-            <button className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors">
-              <Calendar size={14} />
-              <span>
-                {lastActiveRange?.from && lastActiveRange?.to
-                  ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')} - ${format(lastActiveRange.to, 'dd/MMM/yyyy')}`
-                  : lastActiveRange?.from
-                    ? `Last Active: ${format(lastActiveRange.from, 'dd/MMM/yyyy')}`
-                    : "Last Active"}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarComponent
-              initialFocus
-              mode="range"
-              defaultMonth={lastActiveRange?.from}
-              selected={lastActiveRange}
-              onSelect={(range) => {
-                // If both from and to are the same date, clear the range
-                if (
-                  range?.from &&
-                  range?.to &&
-                  range.from.toDateString() === range.to.toDateString()
-                ) {
-                  setLastActiveRange(undefined);
-                } else {
-                  setLastActiveRange(range);
-                }
-              }}
-              numberOfMonths={1}
-            />
-          </PopoverContent>
-        </Popover>
-
-        <div className="flex gap-3 ml-auto">
-          {/* Sort Button */}
-          <div className="relative" ref={sortDropdownRef}>
-            <button
-              onClick={() => setShowSort(!showSort)}
-              className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors"
-            >
-              <ArrowUpDown size={14} />
-              <span>Sort {sorts.length > 0 && `(${sorts.length})`}</span>
-            </button>
-
-            {/* Sort Popover */}
-            {showSort && (
-              <div className="absolute z-50 bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 right-0" style={{
-                minWidth: '320px'
-              }}>
-                {sorts.length === 0 ? (
-                  <div className="text-center py-6">
-                    <h3 className="font-semibold text-sm mb-1">No sorting applied</h3>
-                    <p className="text-xs text-muted-foreground mb-4">Add sorting to organize your rows.</p>
-                    <Button onClick={addSort} className="btn-outline-primary" variant="outline">Add sort</Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {sorts.map((sort) => (
-                      <div
-                        key={sort.id}
-                        className="flex gap-2 items-center"
-                        draggable
-                        onDragStart={() => handleSortDragStart(sort.id)}
-                        onDragOver={handleSortDragOver}
-                        onDrop={() => handleSortDrop(sort.id)}
-                      >
-                        <div className="relative flex-1">
-                          <button
-                            type="button"
-                            onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)}
-                            className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
-                          >
-                            <span className="truncate text-sm font-normal">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
-                            <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                          </button>
-                          {openSortColumnDropdown === sort.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                              <ul className="py-1">
-                                {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
-                                  const isCurrentOption = option === sort.column;
-                                  const isDisabled = !canAddSort(option) && option !== sort.column;
-                                  return (
-                                    <li
-                                      key={option}
-                                      className={`px-3 py-2 text-sm ${isCurrentOption || isDisabled ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
-                                      onClick={() => {
-                                        if (!isDisabled && !isCurrentOption) {
-                                          updateSort(sort.id, option, sort.direction);
-                                          setOpenSortColumnDropdown(null);
-                                        }
-                                      }}
-                                    >
-                                      {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)}
-                            className="w-[90px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
-                          >
-                            <span className="truncate text-sm font-normal">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
-                            <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                          </button>
-                          {openSortDirectionDropdown === sort.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                              <ul className="py-1">
-                                {["asc", "desc"].map(option => (
-                                  <li
-                                    key={option}
-                                    className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
-                                    onClick={() => {
-                                      updateSort(sort.id, sort.column, option as "asc" | "desc");
-                                      setOpenSortDirectionDropdown(null);
-                                    }}
-                                  >
-                                    {option === "asc" ? "Asc" : "Desc"}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                        <button onClick={() => removeSort(sort.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
-                        <GripVertical size={14} className="text-muted-foreground cursor-grab" />
-                      </div>
-                    ))}
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button
-                        onClick={addSort}
-                        disabled={sorts.length >= 5}
-                        className="btn-outline-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                        variant="outline"
-                      >
-                        Add sort
-                      </Button>
-                      <Button onClick={() => setSorts([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset sorts</Button>
-                    </div>
-                  </div>
-                )}
+          {/* 1. Branded Header Section */}
+          <div className="py-1.5 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+            <div className="flex items-center gap-6">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                <Users size={20} strokeWidth={2.5} />
               </div>
-            )}
-          </div>
-
-          {/* Filter Button */}
-          <div className="relative" ref={filterDropdownRef}>
-            <button
-              onClick={() => setShowFilter(!showFilter)}
-              className="px-3 py-2 text-sm bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md hover:bg-accent dark:hover:bg-slate-700 focus:outline-none flex items-center gap-2 transition-colors"
-            >
-              <Filter size={14} />
-              <span>Filter {filters.length > 0 && `(${filters.length})`}</span>
-            </button>
-
-            {/* Filter Popover */}
-            {showFilter && (
-              <div className="absolute z-50 bg-white dark:bg-background border border-border dark:border-slate-700 rounded-md shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] p-3 top-full mt-2 right-0" style={{
-                minWidth: '320px'
-              }}>
-                {filters.length === 0 ? (
-                  <div className="text-center py-6">
-                    <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
-                    <p className="text-xs text-muted-foreground mb-4">Add filters to refine your rows.</p>
-                    <Button onClick={addFilter} className="btn-outline-primary" variant="outline">Add filter</Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filters.map((filter) => (
-                      <div
-                        key={filter.id}
-                        className="flex gap-2 items-center"
-                        draggable
-                        onDragStart={() => handleFilterDragStart(filter.id)}
-                        onDragOver={handleFilterDragOver}
-                        onDrop={() => handleFilterDrop(filter.id)}
-                      >
-                        <div className="relative flex-1">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
-                            className="w-[160px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
-                          >
-                            <span className="truncate text-sm font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
-                            <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                          </button>
-                          {openFilterColumnDropdown === filter.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                              <ul className="py-1">
-                                {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
-                                  const isCurrentOption = option === filter.column;
-                                  return (
-                                    <li
-                                      key={option}
-                                      className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
-                                      onClick={() => {
-                                        if (!isCurrentOption) {
-                                          updateFilter(filter.id, option, filter.operator, filter.value);
-                                          setOpenFilterColumnDropdown(null);
-                                        }
-                                      }}
-                                    >
-                                      {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)}
-                            className="w-[170px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
-                          >
-                            <span className="truncate text-sm font-normal">{filter.operator}</span>
-                            <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                          </button>
-                          {openFilterOperatorDropdown === filter.id && (
-                            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                              <ul className="py-1">
-                                {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
-                                  <li
-                                    key={option}
-                                    className="px-3 py-2 text-sm cursor-pointer hover:bg-muted"
-                                    onClick={() => {
-                                      updateFilter(filter.id, filter.column, option, filter.value);
-                                      setOpenFilterOperatorDropdown(null);
-                                    }}
-                                  >
-                                    {option}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Value..."
-                          value={filter.value}
-                          onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                          className="px-3 py-2 text-sm border border-input rounded-md flex-1 focus:outline-none  transition-colors bg-card"
-                        />
-                        <button onClick={() => removeFilter(filter.id)} className="p-2 hover:bg-muted rounded"><Trash2 size={14} /></button>
-                        <GripVertical size={14} className="text-muted-foreground cursor-grab" />
-                      </div>
-                    ))}
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button onClick={addFilter} className="btn-outline-primary flex-1" variant="outline">Add filter</Button>
-                      <Button onClick={() => setFilters([])} variant="outline" className="flex-1 border-input [border-color:hsl(var(--input))]">Reset filters</Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Table Card */}
-      <Card className="shadow-[0_-3px_6px_rgba(0,0,0,0.04),-3px_0_6px_rgba(0,0,0,0.04),3px_0_6px_rgba(0,0,0,0.04),0_4px_6px_rgba(0,0,0,0.1)] border-0">
-        <CardContent className="pt-2">
-          {/* Bulk Actions Toolbar */}
-          {selectedRows.size > 0 && (
-            <div className="flex items-center gap-3 mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-              <span className="text-sm text-foreground">{selectedRows.size} selected</span>
-              <div className="flex gap-2 ml-auto">
-                <button onClick={handleOpenBulkEdit} className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded" title="Edit">
-                  <Edit2 size={14} className="text-blue-600 dark:text-blue-400" />
-                </button>
-                <button onClick={handleExportSelectedAsCSV} className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded" title="Export as CSV">
-                  <Download size={14} className="text-blue-600 dark:text-blue-400" />
-                </button>
-                <button onClick={handleOpenBulkDelete} className="p-1 hover:bg-accent dark:hover:bg-slate-700 rounded" title="Delete">
-                  <Trash2 size={14} className="text-red-600 dark:text-red-400" />
-                </button>
+              <div className="space-y-0.5">
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                  Contacts
+                </h1>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  Manage and organize your audience with tags and custom filters
+                </p>
               </div>
             </div>
-          )}
 
-          {/* Table */}
-          <div className={`overflow-x-auto ${selectedRows.size > 0 ? 'mt-3' : 'mt-6'}`}>
-            <table className="w-full text-xs">
-              <thead className="select-none">
-                <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                    <Checkbox
-                      checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
-                      onCheckedChange={toggleAllRows}
-                    />
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("name")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Name
-                      {renderSortIcon("name")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("phoneNumber")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Phone Number
-                      {renderSortIcon("phoneNumber")}
-                    </div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Tags</th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("createdAt")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Created At
-                      {renderSortIcon("createdAt")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("lastActive")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Last Active
-                      {renderSortIcon("lastActive")}
-                    </div>
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium text-muted-foreground cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleColumnSort("updatedBy")}
-                  >
-                    <div className="flex items-center gap-2">
-                      Updated by
-                      {renderSortIcon("updatedBy")}
-                    </div>
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredAndSortedData().length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No results
-                    </td>
-                  </tr>
-                ) : (
-                  getFilteredAndSortedData().map((contact) => (
-                    <tr key={contact.id} className="border-b hover:bg-muted/50">
-                      <td className="py-2 px-3">
-                        <Checkbox
-                          checked={selectedRows.has(contact.id)}
-                          onCheckedChange={() => toggleRowSelection(contact.id)}
-                        />
-                      </td>
-                      <td className="py-2 px-3">
-                        <button
-                          className="hover:underline font-medium text-left focus:outline-none"
-                          onClick={() => {
-                            setSelectedContactForDetails(contact);
-                            setShowDetailsModal(true);
-                          }}
-                        >
-                          {contact.name}
-                        </button>
-                      </td>
-                      <td className="py-2 px-3">{contact.phoneNumber}</td>
-                      <td className="py-2 px-3 max-w-lg">
-                        <div className="flex flex-wrap gap-1">
-                          {contact.tags.map((tag) => (
-                            <span key={tag} className="px-2 py-1 bg-muted rounded text-xs">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-2 px-3">{contact.createdAt}</td>
-                      <td className="py-2 px-3">{contact.lastActive}</td>
-                      <td className="py-2 px-3">{contact.updatedBy}</td>
-                      <td className="py-2 px-3">
-                        <div className={`${selectedRows.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1 hover:bg-muted rounded">
-                                <MoreVertical size={14} className="text-muted-foreground" />
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setShowAddContactModal(true)}
+                className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+              >
+                <Plus size={14} strokeWidth={2.5} />
+                <span>Add Contact</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* 2. Unified Filter Row Section */}
+          {/* 2. Unified Filter Row Section */}
+          <div className="px-5 py-2.5 bg-slate-50/50 dark:bg-transparent border-b border-slate-200 dark:border-slate-800/80 flex items-center gap-3 flex-wrap">
+            {/* Search Bar - Modernized */}
+            <div className="relative group flex-1 min-w-[200px] max-w-[280px]">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name or number..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="block w-full pl-9 pr-3 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="flex items-center gap-2">
+              <CustomDropdown
+                options={contactTagOptions}
+                selected={selectedTags}
+                onChange={setSelectedTags}
+                placeholder="Tags"
+                width="120px"
+                className="!w-[120px]"
+              />
+
+              {/* Created At Popover */}
+              <Popover open={createdAtOpen} onOpenChange={setCreatedAtOpen}>
+                <PopoverTrigger asChild>
+                  <button style={{ borderRadius: '6px' }} className="h-9 w-[120px] px-3 flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 !rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-[11px] font-medium text-slate-600 dark:text-slate-300 shadow-sm border-0">
+                    <Calendar size={13} className="text-slate-400" />
+                    <span>{createdAtRange?.from ? format(createdAtRange.from, 'dd MMM') : "Created"}</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="range"
+                    selected={createdAtRange}
+                    onSelect={setCreatedAtRange}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+
+              {/* Sort Button & Dropdown */}
+              <div className="relative" ref={sortDropdownRef}>
+                <Button
+                  onClick={() => setShowSort(!showSort)}
+                  variant="outline"
+                  style={{ borderRadius: '6px' }}
+                  className={cn(
+                    "h-9 w-[120px] px-3 !rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
+                    showSort ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-white text-slate-600"
+                  )}
+                >
+                  <ArrowUpDown size={13} className="mr-2" />
+                  Sort {sorts.length > 0 && `(${sorts.length})`}
+                </Button>
+
+                {showSort && (
+                  <div className="absolute z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl p-4 top-full mt-2 right-0 min-w-[320px] animate-in slide-in-from-top-2 duration-200">
+                    {sorts.length === 0 ? (
+                      <div className="text-center py-6">
+                        <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">No sorting applied</h3>
+                        <p className="text-[11px] text-slate-500 mb-4">Organize your contact list efficiently.</p>
+                        <Button onClick={addSort} className="h-8 text-[11px] bg-blue-600 hover:bg-blue-700">Add sort</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {sorts.map((sort) => (
+                          <div key={sort.id} className="flex gap-2 items-center" draggable onDragStart={() => handleSortDragStart(sort.id)} onDragOver={handleSortDragOver} onDrop={() => handleSortDrop(sort.id)}>
+                            <div className="relative flex-1">
+                              <button type="button" onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                              <DropdownMenuItem onClick={() => handleEditContact(contact)}>
-                                <Edit2 size={14} className="mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleCopyContact(contact)}>
-                                <Copy size={14} className="mr-2" />
-                                Copy
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteContact(contact)} className="text-destructive">
-                                <Trash2 size={14} className="mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              {openSortColumnDropdown === sort.id && (
+                                <div className="absolute z-10 w-full mt-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                  <ul className="py-1">
+                                    {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
+                                      const isCurrentOption = option === sort.column;
+                                      const isDisabled = !canAddSort(option) && option !== sort.column;
+                                      return (
+                                        <li key={option} className={`px-3 py-2 text-[11px] font-medium transition-colors ${isCurrentOption || isDisabled ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"}`} onClick={() => { if (!isDisabled && !isCurrentOption) { updateSort(sort.id, option, sort.direction); setOpenSortColumnDropdown(null); } }}>
+                                          {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <button type="button" onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)} className="w-[80px] flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                              </button>
+                              {openSortDirectionDropdown === sort.id && (
+                                <div className="absolute z-10 w-full mt-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                  <ul className="py-1">
+                                    {["asc", "desc"].map(option => (
+                                      <li key={option} className="px-3 py-2 text-[11px] font-medium cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200" onClick={() => { updateSort(sort.id, sort.column, option as "asc" | "desc"); setOpenSortDirectionDropdown(null); }}>
+                                        {option === "asc" ? "Asc" : "Desc"}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <button onClick={() => removeSort(sort.id)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={13} /></button>
+                            <GripVertical size={13} className="text-slate-300 cursor-grab active:cursor-grabbing" />
+                          </div>
+                        ))}
+                        <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                          <Button onClick={addSort} disabled={sorts.length >= 5} className="h-8 text-[11px] flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline">Add sort</Button>
+                          <Button onClick={() => setSorts([])} variant="ghost" className="h-8 text-[11px] flex-1 text-slate-500 hover:text-slate-900 hover:bg-transparent dark:hover:text-white">Reset sorts</Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Filter Button & Dropdown */}
+              <div className="relative" ref={filterDropdownRef}>
+                <Button
+                  onClick={() => setShowFilter(!showFilter)}
+                  variant="outline"
+                  style={{ borderRadius: '6px' }}
+                  className={cn(
+                    "h-9 w-[120px] px-3 !rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
+                    showFilter ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-white text-slate-600"
+                  )}
+                >
+                  <Filter size={13} className="mr-2" />
+                  Filter {filters.length > 0 && `(${filters.length})`}
+                </Button>
+
+                {showFilter && (
+                  <div className="absolute z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl p-4 top-full mt-2 right-0 min-w-[340px] animate-in slide-in-from-top-2 duration-200">
+                    {filters.length === 0 ? (
+                      <div className="text-center py-6">
+                        <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">No filters applied</h3>
+                        <p className="text-[11px] text-slate-500 mb-4">Refine your results with smart filters.</p>
+                        <Button onClick={addFilter} className="h-8 text-[11px] bg-blue-600 hover:bg-blue-700">Add filter</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filters.map((filter) => (
+                          <div key={filter.id} className="flex gap-2 items-center" draggable onDragStart={() => handleFilterDragStart(filter.id)} onDragOver={handleFilterDragOver} onDrop={() => handleFilterDrop(filter.id)}>
+                            <div className="relative flex-1">
+                              <button type="button" onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                              </button>
+                              {openFilterColumnDropdown === filter.id && (
+                                <div className="absolute z-10 w-full mt-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                  <ul className="py-1">
+                                    {["name", "phoneNumber", "createdAt", "lastActive", "updatedBy"].map(option => {
+                                      const isCurrentOption = option === filter.column;
+                                      return (
+                                        <li key={option} className={`px-3 py-2 text-[11px] font-medium transition-colors ${isCurrentOption ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"}`} onClick={() => { if (!isCurrentOption) { updateFilter(filter.id, option, filter.operator, filter.value); setOpenFilterColumnDropdown(null); } }}>
+                                          {option === "name" ? "Name" : option === "phoneNumber" ? "Phone Number" : option === "createdAt" ? "Created At" : option === "lastActive" ? "Last Active" : "Updated by"}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="relative flex-1">
+                              <button type="button" onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                                <span className="truncate font-medium text-slate-700 dark:text-slate-200">{filter.operator}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                              </button>
+                              {openFilterOperatorDropdown === filter.id && (
+                                <div className="absolute z-10 w-full mt-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                  <ul className="py-1">
+                                    {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
+                                      <li key={option} className="px-3 py-2 text-[11px] font-medium cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200" onClick={() => { updateFilter(filter.id, filter.column, option, filter.value); setOpenFilterOperatorDropdown(null); }}>
+                                        {option}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <input type="text" placeholder="Value..." value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1" />
+                            <button onClick={() => removeFilter(filter.id)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={13} /></button>
+                            <GripVertical size={13} className="text-slate-300 cursor-grab active:cursor-grabbing" />
+                          </div>
+                        ))}
+                        <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                          <Button onClick={addFilter} className="h-8 text-[11px] flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" variant="outline">Add filter</Button>
+                          <Button onClick={() => setFilters([])} variant="ghost" className="h-8 text-[11px] flex-1 text-slate-500 hover:text-slate-900 hover:bg-transparent dark:hover:text-white">Reset filters</Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Table Content Area */}
+          <div className="flex-1 bg-white dark:bg-transparent">
+            {/* Bulk Actions Toolbar */}
+            {selectedRows.size > 0 && (
+              <div className="px-5 py-2.5 bg-blue-50/50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/20 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-blue-500/20">
+                    {selectedRows.size}
+                  </div>
+                  <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-tight">Contacts selected</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleOpenBulkEdit}
+                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                    variant="outline"
+                  >
+                    <Edit2 size={13} />
+                    <span>Edit Tags</span>
+                  </Button>
+                  <Button
+                    onClick={handleExportSelectedAsCSV}
+                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                    variant="outline"
+                  >
+                    <Download size={13} />
+                    <span>Export CSV</span>
+                  </Button>
+                  <Button
+                    onClick={handleOpenBulkDelete}
+                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-rose-200 dark:border-rose-900/30 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                    variant="outline"
+                  >
+                    <Trash2 size={13} />
+                    <span>Delete Selected</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Table Area */}
+            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+              <table className="w-full text-xs border-separate border-spacing-0">
+                <thead className="select-none sticky top-0 z-20">
+                  <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 backdrop-blur-md bg-opacity-95 dark:bg-opacity-95">
+                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">
+                      <Checkbox
+                        checked={selectedRows.size > 0 && selectedRows.size === getFilteredAndSortedData().length}
+                        onCheckedChange={toggleAllRows}
+                      />
+                    </th>
+                    <th
+                      className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-b border-slate-200 dark:border-slate-800"
+                      onClick={() => handleColumnSort("name")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Name
+                        {renderSortIcon("name")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-b border-slate-200 dark:border-slate-800"
+                      onClick={() => handleColumnSort("phoneNumber")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Phone Number
+                        {renderSortIcon("phoneNumber")}
+                      </div>
+                    </th>
+                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">Tags</th>
+                    <th
+                      className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-b border-slate-200 dark:border-slate-800"
+                      onClick={() => handleColumnSort("createdAt")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Created At
+                        {renderSortIcon("createdAt")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-b border-slate-200 dark:border-slate-800"
+                      onClick={() => handleColumnSort("lastActive")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Last Active
+                        {renderSortIcon("lastActive")}
+                      </div>
+                    </th>
+                    <th
+                      className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-b border-slate-200 dark:border-slate-800"
+                      onClick={() => handleColumnSort("updatedBy")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Updated by
+                        {renderSortIcon("updatedBy")}
+                      </div>
+                    </th>
+                    <th className="text-left py-2 px-4 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-200 dark:border-slate-800">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoadingContacts ? (
+                    <tr>
+                      <td colSpan={8} className="text-center py-20">
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                          <p className="text-[11px] font-medium text-slate-500">Loading contacts...</p>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : getFilteredAndSortedData().length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="p-3 rounded-full bg-slate-50 dark:bg-slate-800/50">
+                            <Users className="h-6 w-6 text-slate-300" />
+                          </div>
+                          <p className="text-[11px] font-medium text-slate-500">No contacts found</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    getFilteredAndSortedData().map((contact) => (
+                      <tr
+                        key={contact.id}
+                        className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-all duration-200 group"
+                      >
+                        <td className="py-1.5 px-4">
+                          <Checkbox
+                            checked={selectedRows.has(contact.id)}
+                            onCheckedChange={() => toggleRowSelection(contact.id)}
+                          />
+                        </td>
+                        <td className="py-1.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-[10px] shadow-sm border border-blue-200 dark:border-blue-800/50">
+                              {contact.name.charAt(0).toUpperCase()}
+                            </div>
+                            <button
+                              className="font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-[11px] text-left focus:outline-none"
+                              onClick={() => {
+                                setSelectedContactForDetails(contact);
+                                setShowDetailsModal(true);
+                              }}
+                            >
+                              {contact.name}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-1.5 px-4 font-medium text-slate-500 dark:text-slate-400 text-[11px]">{contact.phoneNumber}</td>
+                        <td className="py-1.5 px-4 max-w-lg">
+                          <div className="flex flex-wrap gap-1.5">
+                            {contact.tags.map((tag) => (
+                              <span key={tag} className="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[9px] font-bold border border-blue-100 dark:border-blue-500/20">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-2 px-4 text-slate-500 dark:text-slate-500 text-[11px] font-medium">{contact.createdAt}</td>
+                        <td className="py-2 px-4 text-slate-500 dark:text-slate-500 text-[11px] font-medium">{contact.lastActive}</td>
+                        <td className="py-2 px-4 text-slate-500 dark:text-slate-500 text-[11px] font-medium">{contact.updatedBy}</td>
+                        <td className="py-2 px-4">
+                          <div className={`${selectedRows.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group-hover:text-blue-600">
+                                  <MoreVertical size={14} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-36 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl">
+                                <DropdownMenuItem onClick={() => handleEditContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                                  <Edit2 size={13} className="text-slate-400" />
+                                  <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleCopyContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                                  <Copy size={13} className="text-slate-400" />
+                                  <span>Copy</span>
+                                </DropdownMenuItem>
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                                <DropdownMenuItem onClick={() => handleDeleteContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer">
+                                  <Trash2 size={13} />
+                                  <span>Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{getFilteredAndSortedData().length} results</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Rows per page:</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors"
-                  onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                >
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border dark:border-slate-700">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li
-                          key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                          onClick={() => {
-                            setRowsPerPage(option);
-                            setRowsDropdownOpen(false);
-                          }}
-                        >
-                          {option}
-                        </li>
-                      ))}
-                    </ul>
+            {/* Pagination */}
+            <div className="py-3 px-5 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
+              <div className="flex items-center gap-4">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {getFilteredAndSortedData().length} results
+                </span>
+
+                <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Rows:</span>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 h-7 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-all text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-sm"
+                      onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
+                    >
+                      <span>{rowsPerPage}</span>
+                      <ChevronDown className="h-3 w-3 text-slate-400" />
+                    </button>
+                    {rowsDropdownOpen && (
+                      <div className="absolute bottom-full mb-1.5 z-10 w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <ul className="py-1">
+                          {[10, 25, 50].map(option => (
+                            <li
+                              key={option}
+                              className="px-3 py-2 text-[11px] font-bold cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                              onClick={() => {
+                                setRowsPerPage(option);
+                                setRowsDropdownOpen(false);
+                              }}
+                            >
+                              {option}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-              <span className="text-muted-foreground">Page 1 of 1</span>
-              <div className="flex gap-1">
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
-                  <ChevronsLeft size={16} />
-                </button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
-                  <ChevronLeft size={16} />
-                </button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
-                  <ChevronRight size={16} />
-                </button>
-                <button className="p-1 hover:bg-muted rounded disabled:opacity-50" disabled>
-                  <ChevronsRight size={16} />
-                </button>
+
+              <div className="flex items-center gap-4">
+                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Page <span className="text-slate-900 dark:text-slate-200">1</span> of 1
+                </div>
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
+                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                    <ChevronsLeft size={13} className="text-slate-600 dark:text-slate-400" />
+                  </button>
+                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                    <ChevronLeft size={13} className="text-slate-600 dark:text-slate-400" />
+                  </button>
+                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                    <ChevronRight size={13} className="text-slate-600 dark:text-slate-400" />
+                  </button>
+                  <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90" disabled>
+                    <ChevronsRight size={13} className="text-slate-600 dark:text-slate-400" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Add Contact Modal */}
       <Dialog open={showAddContactModal} onOpenChange={setShowAddContactModal}>
@@ -1462,7 +1418,7 @@ export default function ContactsSection() {
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Available tags:</p>
                   <div className="flex flex-wrap gap-2">
-                    {contactTagOptions.map((tagObj) => (
+                    {contactTagOptions.map((tagObj: any) => (
                       <button
                         key={tagObj.name}
                         onClick={() => handleToggleBulkTag(tagObj.name)}
@@ -1538,7 +1494,7 @@ export default function ContactsSection() {
         onOpenChange={setShowDetailsModal}
         contact={selectedContactForDetails}
       />
-    </div>
+    </>
   );
 }
 

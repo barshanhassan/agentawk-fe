@@ -697,29 +697,29 @@ const resources = {
             "current_plan": "Current Plan",
             "next_payment": "Next Payment: {{date}}",
             "cancel_subscription": "Cancel Subscription",
-            "heads_up": "Heads Up!",
-            "downgrade_warning_title": "Downgrading your plan?",
-            "downgrade_warning_desc": "If you downgrade, your limits will be reduced at the end of your current billing cycle.",
+            "heads_up": "Heads up!",
+            "downgrade_warning_title": "",
+            "downgrade_warning_desc": "We know it's a bit annoying, but our plans don't support downgrades. 🙃 If you really need to downgrade, you'll have to create a brand-new account and start from scratch, yep, content and all. We're truly sorry for the hassle, we wish it were easier too! 💙",
             "types": {
               "free": {
                 "name": "Free",
-                "limit": "Up to 500 contacts",
-                "feature": "Basic features"
+                "limit": "Limit of 50 contacts.",
+                "feature": "Completely FREE"
               },
               "premium": {
                 "name": "Premium",
-                "limit": "Up to 10,000 contacts",
-                "feature": "Advanced features + Priority Support"
+                "limit": "Limit of 1000 contacts.",
+                "feature": "All features from Premium Workspaces."
               },
               "ignite": {
                 "name": "Ignite",
-                "limit": "Up to 50,000 contacts",
-                "feature": "All Premium features + API Access"
+                "limit": "Limit of 3000 contacts.",
+                "feature": "All features from Premium Workspaces."
               },
               "enterprise": {
                 "name": "Enterprise",
-                "limit": "Unlimited contacts",
-                "feature": "Custom solutions & Dedicated Account Manager"
+                "limit": "A special plan designed just for resellers!",
+                "feature": "All features from Premium Workspaces."
               }
             },
             "cancel_modal": {
