@@ -838,7 +838,7 @@ function deepMerge(base: Record<string, any>, override: Record<string, any>): Re
 }
 
 // English: merge hardcoded base with JSON file
-resources.en.translation = deepMerge(resources.en.translation, enJson);
+resources.en.translation = deepMerge(resources.en.translation, enJson) as typeof resources.en.translation;
 
 // pt and es: merge English (full) with their JSON, so missing keys fall back to English
 const enFull = resources.en.translation;
