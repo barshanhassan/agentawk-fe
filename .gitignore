@@ -5,3 +5,7 @@ server/public
 vite.config.ts.*
 *.tar.gz
 .firebase/
+# local env overrides (never commit)
+.env.local
+*.env.local
+client/.env.local
