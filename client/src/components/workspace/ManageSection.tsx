@@ -247,8 +247,11 @@ export default function ManageSection() {
             <div className={cn("mt-4 p-5 rounded-[1.25rem] border", softBg, softBorder)}>
               <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60 mb-3", sub)}>Calendar preview</p>
               <div className="flex gap-2">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => {
-                  const active = d.toLowerCase() === firstDayOfWeek;
+                {(firstDayOfWeek === "monday"
+                  ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                  : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+                ).map((d, i) => {
+                  const active = i === 0;
                   return (
                     <div
                       key={d}
