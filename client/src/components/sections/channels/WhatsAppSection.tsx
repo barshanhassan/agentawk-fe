@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import {
   ChevronLeft, MoreVertical, Trash2, Copy, Plus,
   Phone, Bot, Activity, AlertCircle, X, Smartphone, Zap, ExternalLink,
+  QrCode, Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,7 +37,7 @@ export default function WhatsAppSection() {
   const dark = mode === "dark";
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [view, setView] = useState<"list" | "coex_manage" | "api_manage">("list");
+  const [view, setView] = useState<"list" | "coex_manage" | "api_manage" | "qr_manage">("list");
   const queryClient = useQueryClient();
 
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
@@ -118,6 +119,7 @@ export default function WhatsAppSection() {
                     {view === "list"        && "WhatsApp"}
                     {view === "coex_manage" && "WhatsApp Business Apps"}
                     {view === "api_manage"  && "WhatsApp Business API"}
+                    {view === "qr_manage"   && "WhatsApp QR Code"}
                   </h1>
                   {view === "coex_manage" && (
                     <Badge variant="outline" className="h-5 px-2 rounded-md border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
@@ -129,6 +131,7 @@ export default function WhatsAppSection() {
                   {view === "list"        && "Connect your WhatsApp accounts to the platform."}
                   {view === "coex_manage" && 'WhatsApp Coexistence "Coex" allows a single WhatsApp number to be used simultaneously with WhatsApp Business Mobile App and Official API.'}
                   {view === "api_manage"  && "Integrate your WhatsApp Business account to unlock 2-Way interactive dynamic conversations"}
+                  {view === "qr_manage"   && "Connect your WhatsApp number in seconds by scanning a QR code — no technical setup needed."}
                 </p>
               </div>
             </div>
@@ -138,7 +141,7 @@ export default function WhatsAppSection() {
                   {accounts.length} Connected
                 </span>
               )}
-              {view === "api_manage" && (
+              {(view === "api_manage" || view === "qr_manage") && (
                 <button onClick={handleConnect} className="h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white">
                   <Plus size={12} /> Add New
                 </button>
@@ -153,7 +156,7 @@ export default function WhatsAppSection() {
 
           {/* ── LIST VIEW (Coex/API selector) ── */}
           {view === "list" && (
-            <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {/* Coex Card */}
               <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-emerald-500/40 flex flex-col", softBg, softBorder)}>
                 <div className="flex items-center justify-between mb-5">
@@ -227,6 +230,54 @@ export default function WhatsAppSection() {
 
                 <button
                   onClick={() => setView("api_manage")}
+                  className={cn(
+                    "self-end h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                    "border-primary text-primary hover:bg-primary hover:text-white"
+                  )}
+                >
+                  Manage
+                </button>
+              </div>
+
+              {/* QR Code Card */}
+              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-primary/40 flex flex-col", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <QrCode size={20} />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="h-6 px-2.5 rounded-md border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">
+                      Popular
+                    </Badge>
+                    <Badge variant="outline" className="h-6 px-2.5 rounded-md border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">
+                      Quickest
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-5 flex-1">
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>QR Code</h3>
+                  <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
+                    Our native QR Code integration makes it easy and intuitive to connect your WhatsApp number in seconds.
+                  </p>
+                  <div className={cn("pt-3 mt-3 border-t space-y-2", softBorder)}>
+                    <ul className="space-y-1.5">
+                      {[
+                        "Connect in under 60 seconds",
+                        "Scan QR code from your phone",
+                        "No technical knowledge needed",
+                      ].map((feat) => (
+                        <li key={feat} className={cn("text-[11px] font-medium opacity-70 leading-relaxed flex gap-2", sub)}>
+                          <Check size={13} className="text-primary mt-0.5 shrink-0" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setView("qr_manage")}
                   className={cn(
                     "self-end h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
                     "border-primary text-primary hover:bg-primary hover:text-white"
@@ -355,6 +406,32 @@ export default function WhatsAppSection() {
                   <p className={cn("text-[11px] font-bold opacity-50 italic", sub)}>API accounts loading...</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── QR MANAGE VIEW ── */}
+          {view === "qr_manage" && (
+            <div className="p-8">
+              <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <QrCode size={32} />
+                </div>
+                <div className="space-y-1.5 max-w-sm">
+                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Scan to connect</h3>
+                  <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
+                    Start a QR connection, then scan the code from WhatsApp on your phone to link your number in seconds.
+                  </p>
+                </div>
+                <button
+                  onClick={handleConnect}
+                  className={cn(
+                    "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                    "border-primary text-primary hover:bg-primary hover:text-white"
+                  )}
+                >
+                  <QrCode size={12} /> Generate QR Code
+                </button>
+              </div>
             </div>
           )}
         </CardContent>
