@@ -10,7 +10,6 @@ import AppSidebar from "@/components/AppSidebar";  // Now our horizontal top bar
 
 import InsightsDashboard from "@/pages/InsightsDashboard";
 import ConversationsInbox from "@/pages/ConversationsInbox";
-import BotConversations from "@/pages/BotConversations";
 import ConversationLogsPage from "@/pages/ConversationLogsPage";
 import CallLogsPage from "@/pages/CallLogsPage";
 import NotificationsPage from "@/pages/NotificationsPage";
@@ -19,10 +18,7 @@ import CampaignManager from "@/pages/CampaignManager";
 import UserManagementPage from "@/pages/UserManagementPage";
 import ContactsPage from "@/pages/ContactsPage";
 import BillingPage from "@/pages/BillingPage";
-import WhatsAppManagerPage from "@/pages/WhatsAppManagerPage";
 import SettingsPage from "@/pages/SettingsPage";
-import TeamManagementSection from "@/components/sections/TeamManagementSection";
-import WorkspaceManagementPage from "@/pages/WorkspaceManagementPage";
 import SmartFlowsPage from "@/pages/SmartFlowsPage";
 import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
 import NotFound from "@/pages/not-found";
@@ -85,9 +81,6 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
         <ProtectedRoute><ConversationsInbox /></ProtectedRoute>
       </Route>
 
-      <Route path="/conversations/bot">
-        <ProtectedRoute><BotConversations /></ProtectedRoute>
-      </Route>
       <Route path="/conversations/conversation-logs">
         <ProtectedRoute><ConversationLogsPage /></ProtectedRoute>
       </Route>
@@ -106,19 +99,8 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       <Route path="/users">
         <ProtectedRoute><UserManagementPage /></ProtectedRoute>
       </Route>
-      <Route path="/teams">
-        <ProtectedRoute>
-          <div className="p-6"><TeamManagementSection /></div>
-        </ProtectedRoute>
-      </Route>
-      <Route path="/workspaces">
-        <ProtectedRoute><WorkspaceManagementPage /></ProtectedRoute>
-      </Route>
       <Route path="/billing">
         <ProtectedRoute><BillingPage /></ProtectedRoute>
-      </Route>
-      <Route path="/whatsapp-manager">
-        <ProtectedRoute><WhatsAppManagerPage /></ProtectedRoute>
       </Route>
       <Route path="/settings/workspace/:section">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>

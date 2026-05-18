@@ -26,7 +26,9 @@ import {
   Search,
   Sparkles,
   Zap,
+  CreditCard,
 } from "lucide-react";
+import BillingPage from "@/pages/BillingPage";
 import ManageSection from "@/components/workspace/ManageSection";
 import LiveChatSection from "@/components/workspace/LiveChatSection";
 import ProfileSection from "@/components/sections/ProfileSection";
@@ -145,6 +147,7 @@ export default function SettingsPage() {
     { name: "Password Policy", icon: ShieldCheck },
     { name: "Developer Settings", icon: Code },
     { name: "Change Password", icon: Lock },
+    { name: "Billing", icon: CreditCard },
   ];
 
 
@@ -617,6 +620,9 @@ export default function SettingsPage() {
               )}
               {activeSection === "Change Password" && (
                 <ChangePasswordSection />
+              )}
+              {activeSection === "Billing" && (
+                <BillingPage />
               )}
 
               {/* Channel Sections */}
