@@ -18,12 +18,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [mode, setModeState] = useState<ThemeMode>("light");
     // User's personal color preference — persisted via /api/users/theme
     const [primaryColor, setPrimaryColorState] = useState("217 91% 60%");
-    // Workspace branding override (wins over personal color, but not agency)
+    // User's explicit pick from the Theme settings page — wins over workspace default
+    const [userOverride, setUserOverride] = useState<string | null>(null);
+    // Workspace branding override (default brand color, below an explicit user choice)
     const [workspaceOverride, setWorkspaceOverride] = useState<string | null>(null);
-    // Agency branding override — highest priority
+    // Agency branding override — highest priority (hard white-label lock)
     const [agencyOverride, setAgencyOverride] = useState<string | null>(null);
 
-    const effectivePrimary = agencyOverride ?? workspaceOverride ?? primaryColor;
+    const effectivePrimary = agencyOverride ?? userOverride ?? workspaceOverride ?? primaryColor;
 
     // Load user's personal theme from backend once on mount
     useEffect(() => {
@@ -33,7 +35,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.mode) setModeState(data.mode);
-                    if (data.primaryColor) setPrimaryColorState(data.primaryColor);
+                    if (data.primaryColor) {
+                        setPrimaryColorState(data.primaryColor);
+                        // A saved personal color is an explicit user choice — keep it
+                        // winning over the workspace default after reloads too.
+                        setUserOverride(data.primaryColor);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch theme:", error);
@@ -75,6 +82,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Saves user's personal color preference to the DB
     const setPrimaryColor = async (newColor: string) => {
         setPrimaryColorState(newColor);
+        // Explicit user pick — must immediately win over the workspace default.
+        setUserOverride(newColor);
         try {
             await apiRequest("POST", "/api/users/theme", { mode, primaryColor: newColor });
         } catch (error) {
