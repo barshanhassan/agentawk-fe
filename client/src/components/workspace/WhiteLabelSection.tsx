@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import {
   BadgeCheck,
   Mail,
@@ -109,8 +110,43 @@ export default function WhiteLabelSection() {
   const [emailUser, setEmailUser] = useState("info");
   const [emailDomain, setEmailDomain] = useState("");
 
+  const [, navigate] = useLocation();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const uploadTargetRef = useRef<string>("light");
+  const [logoPreview, setLogoPreview] = useState<Record<string, string>>({});
+
   const handleLogoAction = (action: string, type: string) => {
-    toast({ title: `${action} ${type} logo triggered` });
+    if (action === "upload") {
+      uploadTargetRef.current = type;
+      fileInputRef.current?.click();
+      return;
+    }
+    if (action === "gallery") {
+      navigate("/settings?tab=Media Gallery");
+      return;
+    }
+    if (action === "remove") {
+      setLogoPreview((p) => {
+        const next = { ...p };
+        delete next[type];
+        return next;
+      });
+      toast({ title: "Removed", description: `${type} image removed.` });
+      return;
+    }
+  };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file", description: "Please choose an image file.", variant: "destructive" });
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setLogoPreview((p) => ({ ...p, [uploadTargetRef.current]: url }));
+    toast({ title: "Uploaded", description: `${file.name} set as ${uploadTargetRef.current} image.` });
+    e.target.value = "";
   };
 
   if (isLoading) {
@@ -131,6 +167,13 @@ export default function WhiteLabelSection() {
 
   return (
     <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
       <CardContent className="p-0">
         {/* ── Header ── */}
         <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
@@ -185,7 +228,7 @@ export default function WhiteLabelSection() {
                 <LogoUpload
                   dark={dark}
                   themeLabel="Light Theme"
-                  logoSrc="/white-label/ezconn-logo.svg"
+                  logoSrc={logoPreview.light || "/white-label/ezconn-logo.svg"}
                   zoneBg={dark ? "bg-white/95" : "bg-slate-50/80"}
                   zoneBorder={dark ? "border-slate-700" : "border-slate-200"}
                   onAction={(a) => handleLogoAction(a, "light")}
@@ -193,7 +236,7 @@ export default function WhiteLabelSection() {
                 <LogoUpload
                   dark={dark}
                   themeLabel="Dark Theme"
-                  logoSrc="/white-label/ezconn-logo-dark.svg"
+                  logoSrc={logoPreview.dark || "/white-label/ezconn-logo-dark.svg"}
                   zoneBg="bg-[#020617]"
                   zoneBorder="border-slate-800"
                   onAction={(a) => handleLogoAction(a, "dark")}
@@ -223,7 +266,7 @@ export default function WhiteLabelSection() {
                         "w-32 h-32 border-2 border-dashed rounded-[1.5rem] flex items-center justify-center cursor-pointer transition-all hover:border-primary/40 group",
                         dark ? "bg-slate-950/50 border-slate-800" : "bg-slate-50 border-slate-200"
                       )}>
-                        <img src="/white-label/favicon.png" alt="Favicon" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
+                        <img src={logoPreview.favicon || "/white-label/favicon.png"} alt="Favicon" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform" />
                       </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className={cn("w-52 rounded-xl p-1.5", dark ? "bg-[#0f1829] border-slate-800" : "")}>
@@ -252,7 +295,7 @@ export default function WhiteLabelSection() {
                           <div className="w-2 h-2 rounded-full bg-green-400" />
                         </div>
                         <div className="flex-1 ml-2 bg-white rounded px-2 py-1 flex items-center gap-1.5 max-w-[200px]">
-                          <img src="/white-label/favicon.png" className="w-3 h-3 shrink-0" alt="" />
+                          <img src={logoPreview.favicon || "/white-label/favicon.png"} className="w-3 h-3 shrink-0" alt="" />
                           <span className="text-[9px] font-bold text-slate-700 truncate">Workspace — Ezconn</span>
                         </div>
                       </div>
