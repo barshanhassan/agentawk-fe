@@ -444,13 +444,13 @@
   transition: all 0.2s ease-in-out !important;
 }
 
-.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(:disabled):hover {
+.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(.border-b-2):not(:disabled):hover {
   background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
   border-color: hsl(var(--primary)) !important;
 }
 
-.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(:disabled):hover * {
+.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(.border-b-2):not(:disabled):hover * {
   color: hsl(var(--primary-foreground)) !important;
 }
 
@@ -472,10 +472,25 @@
   background: hsl(var(--muted-foreground) / 0.4);
 }
 
-/* Ensure tabs are always transparent with underline only */
+/* Tabs: never a filled box — transparent bg, theme-color underline only */
 [data-radix-collection-item][data-state=active],
 button[data-state=active].border-b-2,
+.settings-pane button.border-b-2,
 .settings-pane button.border-b-2:hover {
   background-color: transparent !important;
   box-shadow: none !important;
+}
+
+/* Tab hover: only a bottom line + text in theme color */
+.settings-pane button.border-b-2:hover,
+button.border-b-2:hover {
+  color: hsl(var(--primary)) !important;
+  border-bottom-color: hsl(var(--primary)) !important;
+}
+
+/* Active tab: theme-color underline + text */
+[data-radix-collection-item][data-state=active],
+button[data-state=active].border-b-2 {
+  color: hsl(var(--primary)) !important;
+  border-bottom-color: hsl(var(--primary)) !important;
 }
