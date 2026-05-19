@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 
-function hexToHsl(hex: string): string {
+export function hexToHsl(hex: string): string {
   hex = hex.replace(/^#/, '');
   if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
   const r = parseInt(hex.slice(0, 2), 16) / 255;

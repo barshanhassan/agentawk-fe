@@ -83,7 +83,7 @@ const AgencyBillingPlans = () => {
   }
 
   return (
-    <div className={cn("min-h-screen transition-colors flex flex-col font-sans", bg)}>
+    <div className={cn("min-h-full transition-colors flex flex-col font-sans", bg)}>
 
       {/* ── Header Card ── */}
       <div className={cn('px-8 py-5 border-b flex items-center justify-between', card, border)}>

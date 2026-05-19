@@ -94,6 +94,24 @@ const AgencyGeneralSettings = () => {
   const userInfo = getUserInfo();
   const agencyId = userInfo.modelable_id;
 
+  const dark = mode === "dark";
+  const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
+  const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
+  const border = dark ? 'border-slate-800' : 'border-slate-200';
+  const text   = dark ? 'text-white'    : 'text-slate-900';
+  const sub    = dark ? 'text-slate-500' : 'text-slate-400';
+  const fieldLabel = dark ? 'text-slate-300' : 'text-slate-700';
+  const rowBorder = dark ? 'border-slate-800' : 'border-slate-100';
+  const inputCls = dark
+    ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-slate-600'
+    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-slate-300';
+  const popSurface = dark ? 'bg-[#0f1829] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900';
+  const primaryBtn = "px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm disabled:opacity-50";
+  const outlineBtn = cn(
+    "px-4 py-2 rounded-lg text-[12px] font-semibold border transition-colors",
+    dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50"
+  );
+
   const { data: agencyResponse, isLoading } = useQuery({
     queryKey: [`/api/agencies/${agencyId}`],
     queryFn: async () => {
@@ -262,61 +280,53 @@ const AgencyGeneralSettings = () => {
 
   
   return (
-    <div className={cn("p-6 font-sans transition-colors duration-300 space-y-6", 
-      mode === "dark" ? "text-white bg-[#0f172a]" : "text-slate-900 bg-slate-50")}>
-      
+    <div className={cn("min-h-screen p-8 font-sans transition-colors duration-300 space-y-6", bg, text)}>
+
       {/* Settings Section */}
-      <Card className={cn("shadow-sm overflow-hidden transition-colors rounded-lg", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
-        <div className={cn("p-5 border-b flex items-center justify-between transition-colors", 
-          mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+      <Card className={cn("rounded-[20px] border shadow-sm overflow-hidden transition-colors", card, border)}>
+        <div className={cn("px-8 py-5 border-b flex items-center justify-between transition-colors", border)}>
           <div className="flex items-center gap-4">
-            <Settings className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+            <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+              <Settings className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <h2 className={cn("font-bold text-[15px] tracking-tight", 
-                mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.general.title")}</h2>
-              <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.general.desc")}</p>
+              <h2 className={cn("font-bold text-[15px] tracking-tight", text)}>{t("agency.settings.general.title")}</h2>
+              <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.general.desc")}</p>
             </div>
           </div>
-          <button className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-colors border",
-            mode === "dark" 
-              ? "bg-[#1e293b] hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]" 
-              : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+          <button className={outlineBtn}>
             {t("agency.settings.general.cancelWhiteLabel")}
           </button>
         </div>
         
         <CardContent className="p-0">
-          <div className="px-6">
-             <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+          <div className="px-8">
+             <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.general.name")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.general.name")}</span>
                </div>
                <div className="flex-1">
-                 <Input 
+                 <Input
                    value={generalData.name}
                    onChange={(e) => setGeneralData({ ...generalData, name: e.target.value })}
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
                  />
                </div>
              </div>
 
-             <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+             <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.general.timezone")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.general.timezone")}</span>
                </div>
                <div className="flex-1">
-                 <Select 
-                   value={generalData.timezone} 
+                 <Select
+                   value={generalData.timezone}
                    onValueChange={(val) => setGeneralData({ ...generalData, timezone: val })}
                  >
-                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}>
                      <SelectValue placeholder={t("agency.settings.general.selectTimezone")} />
                    </SelectTrigger>
-                   <SelectContent className={cn("border shadow-2xl transition-colors", 
-                     mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                   <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors", popSurface)}>
                       <SelectItem value="america-fortaleza">{t("agency.settings.general.timezones.fortaleza")} (America/Fortaleza)</SelectItem>
                       <SelectItem value="etc-gmt+12">{t("agency.settings.general.timezones.gmt_12")} (Etc/GMT+12)</SelectItem>
                       <SelectItem value="etc-gmt+11">{t("agency.settings.general.timezones.gmt_11")} (Etc/GMT+11)</SelectItem>
@@ -338,29 +348,27 @@ const AgencyGeneralSettings = () => {
 
              <div className="flex flex-col md:flex-row md:items-center py-5">
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.general.phone")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.general.phone")}</span>
                </div>
                <div className="flex-1">
                  <div className="relative">
-                   <Input 
+                   <Input
                      value={generalData.phone}
                      readOnly
                      onClick={handleOpenPhoneModal}
-                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300 pr-10 cursor-pointer", 
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg pr-10 cursor-pointer", inputCls)}
                    />
-                   <Edit2 className="absolute right-3 top-3 w-4 h-4 text-blue-500 cursor-pointer" onClick={handleOpenPhoneModal} />
+                   <Edit2 className="absolute right-3 top-3 w-4 h-4 text-primary cursor-pointer" onClick={handleOpenPhoneModal} />
                  </div>
                </div>
              </div>
           </div>
 
-          <div className={cn("p-4 border-t flex justify-end", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-            <button 
+          <div className={cn("px-8 py-4 border-t flex justify-end", border)}>
+            <button
               onClick={() => updateGeneralMutation.mutate(generalData)}
               disabled={updateGeneralMutation.isPending}
-              className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-colors border",
-              mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+              className={primaryBtn}>
               {updateGeneralMutation.isPending ? t("common.saving") : t("common.save")}
             </button>
           </div>
@@ -368,77 +376,75 @@ const AgencyGeneralSettings = () => {
       </Card>
 
       {/* Billing Details Section */}
-      <Card className={cn("shadow-sm overflow-hidden transition-colors rounded-lg", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
-        <div className={cn("p-5 border-b flex items-center gap-4 transition-colors", 
-          mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-          <CreditCard className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+      <Card className={cn("rounded-[20px] border shadow-sm overflow-hidden transition-colors", card, border)}>
+        <div className={cn("px-8 py-5 border-b flex items-center gap-4 transition-colors", border)}>
+          <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+            <CreditCard className="w-5 h-5 text-primary" />
+          </div>
           <div>
-            <h2 className={cn("font-bold text-[15px] tracking-tight", 
-              mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.billing.title")}</h2>
-            <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.billing.desc")}</p>
+            <h2 className={cn("font-bold text-[15px] tracking-tight", text)}>{t("agency.settings.billing.title")}</h2>
+            <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.billing.desc")}</p>
           </div>
         </div>
-        
+
         <CardContent className="p-0">
-          <div className="px-6">
-             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+          <div className="px-8">
+             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.company")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.company")}</span>
                </div>
                <div className="flex-1">
-                 <Input 
+                 <Input
                    value={billingData.billing_company}
                    onChange={(e) => {
                      setBillingData({ ...billingData, billing_company: e.target.value });
                      if (e.target.value) setBillingErrors(prev => ({ ...prev, billing_company: "" }));
                    }}
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                      billingErrors.billing_company && "border-red-400 focus-visible:ring-red-400",
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                     inputCls)}
                  />
                  {billingErrors.billing_company && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.billing_company}</div>}
                </div>
              </div>
 
-             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.person")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.person")}</span>
                </div>
                <div className="flex-1">
-                 <Input 
+                 <Input
                    value={billingData.billing_person}
                    onChange={(e) => {
                      setBillingData({ ...billingData, billing_person: e.target.value });
                      if (e.target.value) setBillingErrors(prev => ({ ...prev, billing_person: "" }));
                    }}
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                      billingErrors.billing_person && "border-red-400 focus-visible:ring-red-400",
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                     inputCls)}
                  />
                  {billingErrors.billing_person && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.billing_person}</div>}
                </div>
              </div>
 
-             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.taxId")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxId")}</span>
                </div>
                <div className="flex-1">
-                 <Select 
+                 <Select
                    value={billingData.tax_id}
                    onValueChange={(val) => {
                      setBillingData({ ...billingData, tax_id: val });
                      if (val) setBillingErrors(prev => ({ ...prev, tax_id: "" }));
                    }}
                  >
-                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                      billingErrors.tax_id && "border-red-400 focus-visible:ring-red-400",
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                     inputCls)}>
                      <SelectValue placeholder={t("agency.settings.billing.selectTaxId")} />
                    </SelectTrigger>
-                   <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
-                     mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                   <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
                      {TAX_IDS.map(taxId => (
                        <SelectItem key={taxId.key} value={taxId.key} className="text-[13px]">{t(`agency.settings.billing.taxTypes.${taxId.key}`, taxId.value)}</SelectItem>
                      ))}
@@ -448,75 +454,73 @@ const AgencyGeneralSettings = () => {
                </div>
              </div>
 
-             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.taxIdName")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxIdName")}</span>
                </div>
                <div className="flex-1 grid grid-cols-2 gap-4">
                  <div>
-                   <Input 
+                   <Input
                      value={billingData.tax_id_name}
                      onChange={(e) => {
                        setBillingData({ ...billingData, tax_id_name: e.target.value });
                        if (e.target.value) setBillingErrors(prev => ({ ...prev, tax_id_name: "" }));
                      }}
                      placeholder=""
-                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                        billingErrors.tax_id_name && "border-red-400 focus-visible:ring-red-400",
-                       mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                       inputCls)}
                    />
                    {billingErrors.tax_id_name && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.tax_id_name}</div>}
                  </div>
                  <div>
-                   <Input 
+                   <Input
                      value={billingData.tax_number}
                      onChange={(e) => {
                        setBillingData({ ...billingData, tax_number: e.target.value });
                        if (e.target.value) setBillingErrors(prev => ({ ...prev, tax_number: "" }));
                      }}
                      placeholder=""
-                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                        billingErrors.tax_number && "border-red-400 focus-visible:ring-red-400",
-                       mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                       inputCls)}
                    />
                    {billingErrors.tax_number && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.tax_number}</div>}
                  </div>
                </div>
              </div>
 
-             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.address")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.address")}</span>
                </div>
                <div className="flex-1">
-                 <Input 
+                 <Input
                    value={billingData.address.street}
                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, street: e.target.value } })}
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
                  />
                </div>
              </div>
 
-             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+             <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.country")}</span>
+                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.country")}</span>
                 </div>
                 <div className="flex-1">
-                  <Select 
+                  <Select
                     value={billingData.address.country_iso2}
                     onValueChange={(val) => {
                       setBillingData({ ...billingData, address: { ...billingData.address, country_iso2: val, state: "", city: "" } });
                       if (val) setBillingErrors(prev => ({ ...prev, country_iso2: "" }));
                     }}
                   >
-                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
+                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
                       billingErrors.country_iso2 && "border-red-400 focus-visible:ring-red-400",
-                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                      inputCls)}>
                       <SelectValue placeholder={t("agency.settings.billing.selectCountry")} />
                     </SelectTrigger>
-                    <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                    <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
                       {Country.getAllCountries().map(country => (
                         <SelectItem key={country.isoCode} value={country.isoCode} className="text-[13px]">
                           {country.name}
@@ -528,12 +532,12 @@ const AgencyGeneralSettings = () => {
                 </div>
               </div>
 
-              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.state")}</span>
+                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.state")}</span>
                 </div>
                 <div className="flex-1">
-                  <Select 
+                  <Select
                     value={billingData.address.state}
                     onValueChange={(val) => {
                       setBillingData({ ...billingData, address: { ...billingData.address, state: val, city: "" } });
@@ -541,13 +545,12 @@ const AgencyGeneralSettings = () => {
                     }}
                     disabled={!billingData.address.country_iso2}
                   >
-                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300 disabled:opacity-50", 
+                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg disabled:opacity-50",
                       billingErrors.state && "border-red-400 focus-visible:ring-red-400",
-                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                      inputCls)}>
                       <SelectValue placeholder={t("agency.settings.billing.selectState")} />
                     </SelectTrigger>
-                    <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                    <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
                       {billingData.address.country_iso2 && State.getStatesOfCountry(billingData.address.country_iso2).map(state => (
                         <SelectItem key={state.isoCode} value={state.isoCode} className="text-[13px]">
                           {state.name}
@@ -562,12 +565,12 @@ const AgencyGeneralSettings = () => {
                 </div>
               </div>
 
-              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.city")}</span>
+                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.city")}</span>
                 </div>
                 <div className="flex-1">
-                  <Select 
+                  <Select
                     value={billingData.address.city}
                     onValueChange={(val) => {
                       setBillingData({ ...billingData, address: { ...billingData.address, city: val } });
@@ -575,13 +578,12 @@ const AgencyGeneralSettings = () => {
                     }}
                     disabled={!billingData.address.country_iso2 || (!billingData.address.state && State.getStatesOfCountry(billingData.address.country_iso2).length > 0)}
                   >
-                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300 disabled:opacity-50", 
+                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg disabled:opacity-50",
                       billingErrors.city && "border-red-400 focus-visible:ring-red-400",
-                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                      inputCls)}>
                       <SelectValue placeholder={t("agency.settings.billing.selectCity")} />
                     </SelectTrigger>
-                    <SelectContent className={cn("border shadow-2xl transition-colors max-h-[300px]", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")}>
+                    <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
                       {billingData.address.country_iso2 && (
                         State.getStatesOfCountry(billingData.address.country_iso2).length > 0 
                           ? billingData.address.state ? City.getCitiesOfState(billingData.address.country_iso2, billingData.address.state) : []
@@ -606,25 +608,23 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.billing.zip")}</span>
+                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.zip")}</span>
                </div>
                <div className="flex-1">
-                 <Input 
+                 <Input
                    value={billingData.address.zip}
                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, zip: e.target.value } })}
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded focus-visible:ring-1 focus-visible:ring-slate-300", 
-                     mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
                  />
                </div>
              </div>
           </div>
 
-          <div className={cn("p-4 border-t flex justify-end", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-            <button 
+          <div className={cn("px-8 py-4 border-t flex justify-end", border)}>
+            <button
               onClick={handleSaveBilling}
               disabled={updateBillingMutation.isPending}
-              className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-colors border",
-              mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}>
+              className={primaryBtn}>
               {updateBillingMutation.isPending ? t("common.saving") : t("common.save")}
             </button>
           </div>
@@ -632,35 +632,38 @@ const AgencyGeneralSettings = () => {
       </Card>
 
       {/* Invoice Recipients Section */}
-      <Card className={cn("shadow-sm overflow-hidden transition-colors rounded-lg", 
-        mode === "dark" ? "bg-[#1e293b] border-slate-800" : "bg-white border-slate-300")}>
-        <div className={cn("p-5 border-b flex items-center gap-4 transition-colors", 
-          mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-          <CreditCard className={cn("w-6 h-6", mode === "dark" ? "text-slate-300" : "text-slate-800")} />
+      <Card className={cn("rounded-[20px] border shadow-sm overflow-hidden transition-colors", card, border)}>
+        <div className={cn("px-8 py-5 border-b flex items-center gap-4 transition-colors", border)}>
+          <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+            <Mail className="w-5 h-5 text-primary" />
+          </div>
           <div>
-            <h2 className={cn("font-bold text-[15px] tracking-tight", 
-              mode === "dark" ? "text-white" : "text-slate-900")}>{t("agency.settings.recipients.title")}</h2>
-            <p className={cn("text-[12px] font-medium", mode === "dark" ? "text-slate-400" : "text-slate-500")}>{t("agency.settings.recipients.desc")}</p>
+            <h2 className={cn("font-bold text-[15px] tracking-tight", text)}>{t("agency.settings.recipients.title")}</h2>
+            <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.recipients.desc")}</p>
           </div>
         </div>
-        
+
         <CardContent className="p-0">
-          <div className="px-6 py-4 space-y-4">
+          <div className="px-8 py-4 space-y-4">
             {recipients.map((recipient, index) => (
-              <div key={index} className={cn("flex flex-col md:flex-row md:items-center py-2 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
+              <div key={index} className={cn("flex flex-col md:flex-row md:items-center py-2 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.recipients.label")} {index + 1}</span>
+                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.recipients.label")} {index + 1}</span>
                 </div>
                 <div className="flex-1 flex gap-2">
-                  <Input 
+                  <Input
                     value={recipient}
                     readOnly
-                    className={cn("text-[13px] h-10 flex-1 transition-all rounded shadow-none", 
-                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                    className={cn("text-[13px] h-10 flex-1 transition-all rounded-lg shadow-none", inputCls)}
                   />
-                  <button 
+                  <button
                     onClick={() => handleDeleteRecipient(index)}
-                    className="px-4 py-1.5 rounded text-[13px] font-medium transition-colors border bg-white hover:bg-red-50 text-red-500 border-red-300 dark:bg-[#1e293b] dark:border-red-900 dark:text-red-400 dark:hover:bg-red-900/30 shadow-sm"
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-[12px] font-semibold border transition-colors shadow-sm",
+                      dark
+                        ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                        : "border-red-200 text-red-600 hover:bg-red-50"
+                    )}
                   >
                     {t("common.delete")}
                   </button>
@@ -671,26 +674,24 @@ const AgencyGeneralSettings = () => {
             {isAdding ? (
               <div className="flex flex-col md:flex-row md:items-center py-2 animate-in fade-in slide-in-from-left-2">
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>{t("agency.settings.recipients.new")}</span>
+                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.recipients.new")}</span>
                 </div>
                 <div className="flex-1 flex gap-2">
-                  <Input 
+                  <Input
                     placeholder="test@test.com"
                     value={newRecipient}
                     onChange={(e) => setNewRecipient(e.target.value)}
-                    className={cn("text-[13px] h-10 flex-1 transition-all rounded shadow-none focus-visible:ring-1 focus-visible:ring-slate-300", 
-                      mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-300 text-slate-900")} 
+                    className={cn("text-[13px] h-10 flex-1 transition-all rounded-lg shadow-none", inputCls)}
                   />
-                  <button 
+                  <button
                     onClick={handleSaveRecipient}
-                    className="px-4 py-1.5 rounded text-[13px] font-medium transition-colors border bg-[#00e55e] hover:bg-[#00c853] text-white border-[#00e55e] shadow-sm"
+                    className={primaryBtn}
                   >
                     {t("common.save")}
                   </button>
-                  <button 
+                  <button
                     onClick={() => setIsAdding(false)}
-                    className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-colors border shadow-sm",
-                      mode === "dark" ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50")}
+                    className={outlineBtn}
                   >
                     {t("common.cancel")}
                   </button>
@@ -698,10 +699,9 @@ const AgencyGeneralSettings = () => {
               </div>
             ) : (
               <div className="pt-2 pb-2">
-                <button 
+                <button
                   onClick={() => setIsAdding(true)}
-                  className={cn("px-6 py-1.5 rounded text-[13px] font-medium transition-colors border",
-                  mode === "dark" ? "bg-[#1e293b] hover:bg-[#00e55e] text-[#00e55e] hover:text-white border-[#00e55e]" : "bg-white hover:bg-[#00e55e] hover:text-white text-[#00e55e] border-[#00e55e]")}
+                  className={primaryBtn}
                 >
                   {t("agency.settings.recipients.add")}
                 </button>
@@ -712,48 +712,45 @@ const AgencyGeneralSettings = () => {
       </Card>
 
       <Dialog open={isPhoneModalOpen} onOpenChange={setIsPhoneModalOpen}>
-        <DialogContent className={cn("sm:max-w-[450px] p-0 border-0 overflow-hidden shadow-2xl", 
-          mode === "dark" ? "bg-[#1e293b] text-white" : "bg-white text-slate-900")}>
-          <DialogHeader className={cn("p-4 border-b", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-            <DialogTitle className="text-[15px] font-bold">{t("agency.settings.general.phoneModal.title")}</DialogTitle>
+        <DialogContent className={cn("sm:max-w-[450px] p-0 border overflow-hidden shadow-2xl rounded-2xl", popSurface)}>
+          <DialogHeader className={cn("px-6 py-4 border-b", border)}>
+            <DialogTitle className={cn("text-[15px] font-bold", text)}>{t("agency.settings.general.phoneModal.title")}</DialogTitle>
           </DialogHeader>
-          
+
           <div className="p-6 space-y-3">
-            <label className={cn("text-[13px] font-bold", mode === "dark" ? "text-slate-200" : "text-slate-800")}>
+            <label className={cn("text-[12px] font-semibold", fieldLabel)}>
               {t("agency.settings.general.phoneModal.label")}
             </label>
             <div className="flex flex-col gap-3">
-              <div className={cn("flex items-center flex-1 rounded border transition-colors focus-within:ring-1", 
+              <div className={cn("flex items-center flex-1 rounded-lg border transition-colors focus-within:ring-1",
                 phoneError ? "border-red-400 focus-within:ring-red-400" :
-                mode === "dark" ? "bg-[#0f172a] border-slate-700 focus-within:ring-slate-600" : "bg-white border-slate-300 focus-within:ring-slate-300")}>
-                
+                dark ? "bg-slate-900/60 border-slate-700 focus-within:ring-slate-600" : "bg-slate-50 border-slate-200 focus-within:ring-slate-300")}>
+
                 <Popover open={isCountryDropdownOpen} onOpenChange={setIsCountryDropdownOpen}>
                   <PopoverTrigger asChild>
-                    <button className={cn("flex items-center gap-2 pl-3 pr-2 py-2 h-10 border-r focus:outline-none hover:bg-slate-50 transition-colors", 
-                      phoneError ? "border-red-400" : mode === "dark" ? "border-slate-700 dark:hover:bg-slate-800/50" : "border-slate-200")}>
+                    <button className={cn("flex items-center gap-2 pl-3 pr-2 py-2 h-10 border-r focus:outline-none transition-colors",
+                      phoneError ? "border-red-400" : dark ? "border-slate-700 hover:bg-slate-800/50" : "border-slate-200 hover:bg-slate-100")}>
                       <img src={`https://flagcdn.com/w20/${selectedCountry.code.toLowerCase()}.png`} width="20" alt={selectedCountry.name} className="shadow-sm rounded-[2px]" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent 
-                    className={cn("w-[280px] p-0 shadow-2xl border", 
-                      mode === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")} 
+                  <PopoverContent
+                    className={cn("w-[280px] p-0 shadow-2xl border rounded-xl", popSurface)}
                     align="start"
                   >
-                    <div className="p-2 border-b dark:border-slate-700">
+                    <div className={cn("p-2 border-b", border)}>
                       <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                        <Input 
-                          placeholder={t("common.search")} 
+                        <Search className={cn("absolute left-2.5 top-2.5 h-4 w-4", sub)} />
+                        <Input
+                          placeholder={t("common.search")}
                           value={phoneSearchQuery}
                           onChange={(e) => setPhoneSearchQuery(e.target.value)}
-                          className={cn("h-9 pl-9 text-[13px] shadow-none focus-visible:ring-1", 
-                            mode === "dark" ? "bg-[#0f172a] border-slate-700 text-white" : "bg-white border-slate-200")}
+                          className={cn("h-9 pl-9 text-[13px] shadow-none rounded-lg", inputCls)}
                         />
                       </div>
                     </div>
                     <div className="max-h-[250px] overflow-y-auto p-1 overscroll-contain" onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
-                      {COUNTRIES.filter(c => 
-                        c.name.toLowerCase().includes(phoneSearchQuery.toLowerCase()) || 
+                      {COUNTRIES.filter(c =>
+                        c.name.toLowerCase().includes(phoneSearchQuery.toLowerCase()) ||
                         c.dial.includes(phoneSearchQuery)
                       ).map((country) => (
                         <button
@@ -764,9 +761,9 @@ const AgencyGeneralSettings = () => {
                             setIsCountryDropdownOpen(false);
                             setPhoneSearchQuery("");
                           }}
-                          className={cn("w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-sm text-left transition-colors", 
-                            mode === "dark" ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700",
-                            selectedCountry.code === country.code && (mode === "dark" ? "bg-slate-800 font-medium" : "bg-slate-100 font-medium")
+                          className={cn("w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-lg text-left transition-colors",
+                            dark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700",
+                            selectedCountry.code === country.code && (dark ? "bg-slate-800 font-medium" : "bg-slate-100 font-medium")
                           )}
                         >
                           <div className="flex items-center gap-2.5">
@@ -776,7 +773,7 @@ const AgencyGeneralSettings = () => {
                         </button>
                       ))}
                       {COUNTRIES.filter(c => c.name.toLowerCase().includes(phoneSearchQuery.toLowerCase()) || c.dial.includes(phoneSearchQuery)).length === 0 && (
-                        <div className="p-3 text-center text-[13px] text-slate-500">{t("agency.settings.general.phoneModal.noCountries")}.</div>
+                        <div className={cn("p-3 text-center text-[13px]", sub)}>{t("agency.settings.general.phoneModal.noCountries")}.</div>
                       )}
                     </div>
                   </PopoverContent>
@@ -800,25 +797,23 @@ const AgencyGeneralSettings = () => {
                     selectedCountry.code === "SA" ? t("agency.settings.general.phoneModal.placeholder_sa") :
                     t("agency.settings.general.phoneModal.placeholder_default")
                   }
-                  className={cn("flex-1 h-10 border-0 focus-visible:ring-0 text-[13px] bg-transparent", 
-                    mode === "dark" ? "text-white" : "text-slate-900")}
+                  className={cn("flex-1 h-10 border-0 focus-visible:ring-0 text-[13px] bg-transparent", text)}
                 />
               </div>
               {phoneError && <div className="text-red-400 text-[12px] italic">{phoneError}</div>}
             </div>
           </div>
 
-          <div className={cn("p-4 border-t flex justify-end gap-2", mode === "dark" ? "border-slate-800" : "border-slate-200")}>
-            <button 
+          <div className={cn("px-6 py-4 border-t flex justify-end gap-2", border)}>
+            <button
               onClick={() => setIsPhoneModalOpen(false)}
-              className={cn("px-4 py-1.5 rounded text-[13px] font-medium transition-colors border",
-                mode === "dark" ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50")}
+              className={outlineBtn}
             >
               {t("common.cancel")}
             </button>
-            <button 
+            <button
               onClick={handleSavePhone}
-              className="px-6 py-1.5 rounded text-[13px] font-medium transition-colors border bg-[#00e55e] hover:bg-[#00c853] text-white border-[#00e55e] shadow-sm"
+              className={primaryBtn}
             >
               {t("common.save")}
             </button>

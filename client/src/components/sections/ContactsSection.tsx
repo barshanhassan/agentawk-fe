@@ -53,6 +53,27 @@ interface Contact {
   updatedBy: string;
 }
 
+// Per-contact avatar colors. Full class strings kept literal so Tailwind JIT picks them up.
+const AVATAR_COLORS = [
+  "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50",
+  "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50",
+  "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50",
+  "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/50",
+  "bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800/50",
+  "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/50",
+  "bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800/50",
+  "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/50",
+];
+
+// Same name → same color (consistent across renders).
+function getAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 export default function ContactsSection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -670,9 +691,9 @@ export default function ContactsSection() {
         <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
 
           {/* 1. Branded Header Section */}
-          <div className="py-1.5 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+          <div className="py-1.5 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-transparent">
             <div className="flex items-center gap-6">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/10 shadow-inner">
                 <Users size={20} strokeWidth={2.5} />
               </div>
               <div className="space-y-0.5">
@@ -688,7 +709,7 @@ export default function ContactsSection() {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => setShowAddContactModal(true)}
-                className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+                className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90"
               >
                 <Plus size={14} strokeWidth={2.5} />
                 <span>Add Contact</span>
@@ -702,14 +723,14 @@ export default function ContactsSection() {
             {/* Search Bar - Modernized */}
             <div className="relative group flex-1 min-w-[200px] max-w-[280px]">
               <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
               </div>
               <input
                 type="text"
                 placeholder="Search by name or number..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="block w-full pl-9 pr-3 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
+                className="block w-full pl-9 pr-3 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
               />
             </div>
 
@@ -751,7 +772,7 @@ export default function ContactsSection() {
                   style={{ borderRadius: '6px' }}
                   className={cn(
                     "h-9 w-[120px] px-3 !rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
-                    showSort ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-white text-slate-600"
+                    showSort ? "bg-primary/10 text-primary border-primary/30" : "bg-white text-slate-600"
                   )}
                 >
                   <ArrowUpDown size={13} className="mr-2" />
@@ -764,14 +785,14 @@ export default function ContactsSection() {
                       <div className="text-center py-6">
                         <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">No sorting applied</h3>
                         <p className="text-[11px] text-slate-500 mb-4">Organize your contact list efficiently.</p>
-                        <Button onClick={addSort} className="h-8 text-[11px] bg-blue-600 hover:bg-blue-700">Add sort</Button>
+                        <Button onClick={addSort} className="h-8 text-[11px] bg-primary text-primary-foreground hover:bg-primary/90">Add sort</Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {sorts.map((sort) => (
                           <div key={sort.id} className="flex gap-2 items-center" draggable onDragStart={() => handleSortDragStart(sort.id)} onDragOver={handleSortDragOver} onDrop={() => handleSortDrop(sort.id)}>
                             <div className="relative flex-1">
-                              <button type="button" onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                              <button type="button" onClick={() => setOpenSortColumnDropdown(openSortColumnDropdown === sort.id ? null : sort.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
                                 <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.column === "name" ? "Name" : sort.column === "phoneNumber" ? "Phone Number" : sort.column === "createdAt" ? "Created At" : sort.column === "lastActive" ? "Last Active" : "Updated by"}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
@@ -792,7 +813,7 @@ export default function ContactsSection() {
                               )}
                             </div>
                             <div className="relative">
-                              <button type="button" onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)} className="w-[80px] flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                              <button type="button" onClick={() => setOpenSortDirectionDropdown(openSortDirectionDropdown === sort.id ? null : sort.id)} className="w-[80px] flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
                                 <span className="truncate font-medium text-slate-700 dark:text-slate-200">{sort.direction === "asc" ? "Asc" : "Desc"}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
@@ -830,7 +851,7 @@ export default function ContactsSection() {
                   style={{ borderRadius: '6px' }}
                   className={cn(
                     "h-9 w-[120px] px-3 !rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
-                    showFilter ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-white text-slate-600"
+                    showFilter ? "bg-primary/10 text-primary border-primary/30" : "bg-white text-slate-600"
                   )}
                 >
                   <Filter size={13} className="mr-2" />
@@ -843,14 +864,14 @@ export default function ContactsSection() {
                       <div className="text-center py-6">
                         <h3 className="font-semibold text-[13px] text-slate-900 dark:text-white mb-1">No filters applied</h3>
                         <p className="text-[11px] text-slate-500 mb-4">Refine your results with smart filters.</p>
-                        <Button onClick={addFilter} className="h-8 text-[11px] bg-blue-600 hover:bg-blue-700">Add filter</Button>
+                        <Button onClick={addFilter} className="h-8 text-[11px] bg-primary text-primary-foreground hover:bg-primary/90">Add filter</Button>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {filters.map((filter) => (
                           <div key={filter.id} className="flex gap-2 items-center" draggable onDragStart={() => handleFilterDragStart(filter.id)} onDragOver={handleFilterDragOver} onDrop={() => handleFilterDrop(filter.id)}>
                             <div className="relative flex-1">
-                              <button type="button" onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                              <button type="button" onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
                                 <span className="truncate font-medium text-slate-700 dark:text-slate-200">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone Number" : filter.column === "createdAt" ? "Created At" : filter.column === "lastActive" ? "Last Active" : "Updated by"}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
@@ -870,7 +891,7 @@ export default function ContactsSection() {
                               )}
                             </div>
                             <div className="relative flex-1">
-                              <button type="button" onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-colors text-[11px]">
+                              <button type="button" onClick={() => setOpenFilterOperatorDropdown(openFilterOperatorDropdown === filter.id ? null : filter.id)} className="w-full flex items-center justify-between px-3 h-8 text-left bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-colors text-[11px]">
                                 <span className="truncate font-medium text-slate-700 dark:text-slate-200">{filter.operator}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                               </button>
@@ -886,7 +907,7 @@ export default function ContactsSection() {
                                 </div>
                               )}
                             </div>
-                            <input type="text" placeholder="Value..." value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1" />
+                            <input type="text" placeholder="Value..." value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1" />
                             <button onClick={() => removeFilter(filter.id)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={13} /></button>
                             <GripVertical size={13} className="text-slate-300 cursor-grab active:cursor-grabbing" />
                           </div>
@@ -907,17 +928,17 @@ export default function ContactsSection() {
           <div className="flex-1 bg-white dark:bg-transparent">
             {/* Bulk Actions Toolbar */}
             {selectedRows.size > 0 && (
-              <div className="px-5 py-2.5 bg-blue-50/50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/20 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+              <div className="px-5 py-2.5 bg-primary/10 dark:bg-primary/10 border-b border-primary/20 dark:border-primary/20 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-blue-500/20">
+                  <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-primary/20">
                     {selectedRows.size}
                   </div>
-                  <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-tight">Contacts selected</span>
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-tight">Contacts selected</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     onClick={handleOpenBulkEdit}
-                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-primary/30 dark:border-primary/30 text-primary hover:bg-primary/10 dark:hover:bg-primary/15 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
                     variant="outline"
                   >
                     <Edit2 size={13} />
@@ -925,7 +946,7 @@ export default function ContactsSection() {
                   </Button>
                   <Button
                     onClick={handleExportSelectedAsCSV}
-                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                    className="h-7 px-3 rounded-lg bg-white dark:bg-slate-800 border-primary/30 dark:border-primary/30 text-primary hover:bg-primary/10 dark:hover:bg-primary/15 text-[10px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
                     variant="outline"
                   >
                     <Download size={13} />
@@ -1008,7 +1029,7 @@ export default function ContactsSection() {
                     <tr>
                       <td colSpan={8} className="text-center py-20">
                         <div className="flex flex-col items-center gap-3">
-                          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                          <Loader2 className="h-8 w-8 text-primary animate-spin" />
                           <p className="text-[11px] font-medium text-slate-500">Loading contacts...</p>
                         </div>
                       </td>
@@ -1028,7 +1049,7 @@ export default function ContactsSection() {
                     getFilteredAndSortedData().map((contact) => (
                       <tr
                         key={contact.id}
-                        className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-all duration-200 group"
+                        className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200 group"
                       >
                         <td className="py-1.5 px-4">
                           <Checkbox
@@ -1038,11 +1059,11 @@ export default function ContactsSection() {
                         </td>
                         <td className="py-1.5 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-[10px] shadow-sm border border-blue-200 dark:border-blue-800/50">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm border ${getAvatarColor(contact.name)}`}>
                               {contact.name.charAt(0).toUpperCase()}
                             </div>
                             <button
-                              className="font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-[11px] text-left focus:outline-none"
+                              className="font-semibold text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors text-[11px] text-left focus:outline-none"
                               onClick={() => {
                                 setSelectedContactForDetails(contact);
                                 setShowDetailsModal(true);
@@ -1056,7 +1077,7 @@ export default function ContactsSection() {
                         <td className="py-1.5 px-4 max-w-lg">
                           <div className="flex flex-wrap gap-1.5">
                             {contact.tags.map((tag) => (
-                              <span key={tag} className="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[9px] font-bold border border-blue-100 dark:border-blue-500/20">
+                              <span key={tag} className="px-2 py-0.5 bg-primary/10 dark:bg-primary/10 text-primary dark:text-primary rounded-full text-[9px] font-bold border border-primary/20 dark:border-primary/20">
                                 {tag}
                               </span>
                             ))}
@@ -1069,8 +1090,8 @@ export default function ContactsSection() {
                           <div className={`${selectedRows.size > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <button className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group-hover:text-blue-600">
-                                  <MoreVertical size={14} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                <button className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group-hover:text-primary">
+                                  <MoreVertical size={14} className="text-slate-400 group-hover:text-primary transition-colors" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-36 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl">
@@ -1110,7 +1131,7 @@ export default function ContactsSection() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       type="button"
-                      className="flex items-center gap-2 h-7 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-500/50 transition-all text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-sm"
+                      className="flex items-center gap-2 h-7 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-all text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-sm"
                       onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
                     >
                       <span>{rowsPerPage}</span>
@@ -1203,12 +1224,12 @@ export default function ContactsSection() {
                   {newContactTags.map(tag => (
                     <div
                       key={tag}
-                      className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                      className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs"
                     >
                       {tag}
                       <button
                         onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-blue-900"
+                        className="hover:text-primary/80"
                       >
                         <X size={14} />
                       </button>
@@ -1292,7 +1313,7 @@ export default function ContactsSection() {
                       {tag}
                       <button
                         onClick={() => handleRemoveEditTag(tag)}
-                        className="hover:text-blue-900"
+                        className="hover:text-primary"
                       >
                         <X size={14} />
                       </button>
@@ -1401,11 +1422,11 @@ export default function ContactsSection() {
               {/* Selected Tags */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {bulkEditTags.map((tag) => (
-                  <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs flex items-center gap-1">
+                  <span key={tag} className="px-2 py-1 bg-primary/10 text-primary rounded text-xs flex items-center gap-1">
                     {tag}
                     <button
                       onClick={() => handleRemoveBulkTag(tag)}
-                      className="hover:text-blue-900"
+                      className="hover:text-primary/80"
                     >
                       ×
                     </button>
@@ -1423,7 +1444,7 @@ export default function ContactsSection() {
                         key={tagObj.name}
                         onClick={() => handleToggleBulkTag(tagObj.name)}
                         className={`px-2 py-1 rounded text-xs transition-colors ${bulkEditTags.includes(tagObj.name)
-                          ? "bg-blue-500 text-white"
+                          ? "bg-primary text-primary-foreground"
                           : "bg-muted text-foreground hover:bg-muted/80"
                           }`}
                       >

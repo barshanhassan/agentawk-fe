@@ -55,7 +55,7 @@ export default function OverviewTab() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-16">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -117,7 +117,7 @@ export default function OverviewTab() {
   const kpiCards = [
     {
       title: "User Activity",
-      icon: <Users size={15} className="text-blue-500" />,
+      icon: <Users size={15} className="text-primary" />,
       rows: [
         { label: "Active Today", value: abbreviateNumber(kpiData.activeToday) },
         { label: "Active Week",  value: abbreviateNumber(kpiData.activeWeek) },
@@ -128,7 +128,7 @@ export default function OverviewTab() {
     },
     {
       title: "New Users",
-      icon: <UserPlus size={15} className="text-blue-500" />,
+      icon: <UserPlus size={15} className="text-primary" />,
       rows: [
         { label: "Daily",   badge: `+${kpiData.dailyNewUsersChange}%`,   value: abbreviateNumber(kpiData.dailyNewUsers) },
         { label: "Weekly",  badge: `${kpiData.weeklyNewUsersChange}%`,   value: abbreviateNumber(kpiData.weeklyNewUsers) },
@@ -137,7 +137,7 @@ export default function OverviewTab() {
     },
     {
       title: "Plan Usage",
-      icon: <BarChart2 size={15} className="text-blue-500" />,
+      icon: <BarChart2 size={15} className="text-primary" />,
       rows: [
         { label: "Current MAU", value: abbreviateNumber(kpiData.currentMAU) },
         { label: "MAU Limit",   value: abbreviateNumber(kpiData.mauLimit) },
@@ -147,7 +147,7 @@ export default function OverviewTab() {
     },
     {
       title: "Agent Capacity",
-      icon: <Cpu size={15} className="text-blue-500" />,
+      icon: <Cpu size={15} className="text-primary" />,
       rows: [
         { label: "Active Agents", value: abbreviateNumber(kpiData.activeAgents) },
         { label: "Total Seats",   value: abbreviateNumber(kpiData.totalSeats) },
@@ -172,7 +172,7 @@ export default function OverviewTab() {
           >
             {/* Card Header */}
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="p-2 rounded-xl bg-blue-500/10">
+              <div className="p-2 rounded-xl bg-primary/10">
                 {kpi.icon}
               </div>
               <h3 className={cn("text-[13px] font-bold tracking-tight", text)}>{kpi.title}</h3>
@@ -209,7 +209,7 @@ export default function OverviewTab() {
               <div className="mt-4">
                 <div className={cn("w-full rounded-full h-1.5", dark ? "bg-slate-800" : "bg-slate-100")}>
                   <div
-                    className="bg-blue-500 h-1.5 rounded-full transition-all shadow-sm shadow-blue-500/30"
+                    className="bg-primary h-1.5 rounded-full transition-all shadow-sm shadow-primary/30"
                     style={{ width: `${Math.min(kpi.progress, 100)}%` }}
                   />
                 </div>

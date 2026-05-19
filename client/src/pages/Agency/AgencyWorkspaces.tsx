@@ -68,6 +68,8 @@ const AgencyWorkspaces = () => {
   const [viewMode, setViewMode] = useState<'LIST' | 'CREATE' | 'EDIT' | 'USAGE' | 'VOICE_WALLET'>('LIST');
   const [selectedWorkspace, setSelectedWorkspace] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [showInactive, setShowInactive] = useState(false);
 
   const userInfo = React.useMemo(() => {
     try { return getUserInfo(); } catch { return {}; }
@@ -91,6 +93,11 @@ const AgencyWorkspaces = () => {
       : ws.updated_at
       ? format(new Date(ws.updated_at), "MMM dd, yyyy")
       : format(new Date(), "MMM dd, yyyy"),
+    _ts: ws.created_at
+      ? new Date(ws.created_at).getTime()
+      : ws.updated_at
+      ? new Date(ws.updated_at).getTime()
+      : 0,
     status: (ws.status === 'active' || ws.status === 'ACTIVE') ? 'Active' : 'Suspended',
     hasLogin: true,
   }));
@@ -101,9 +108,14 @@ const AgencyWorkspaces = () => {
   }, [workspacesResponse]);
 
   const displayWorkspaces = localWorkspaces.length > 0 ? localWorkspaces : workspaces;
-  const filteredWorkspaces = displayWorkspaces.filter((ws: any) =>
-    ws.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredWorkspaces = displayWorkspaces
+    .filter((ws: any) =>
+      ws.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (showInactive || ws.status === 'Active')
+    )
+    .sort((a: any, b: any) =>
+      sortOrder === 'newest' ? b._ts - a._ts : a._ts - b._ts
+    );
 
   const toggleStatusMutation = useMutation({
     mutationFn: async (workspace: any) => {
@@ -184,16 +196,16 @@ const AgencyWorkspaces = () => {
 
         <div className="flex items-center gap-4">
             <label className={cn("flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest cursor-pointer transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
-              <Checkbox className="border-slate-300 w-3.5 h-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+              <Checkbox checked={showInactive} onCheckedChange={(v) => setShowInactive(v === true)} className="border-slate-300 w-3.5 h-3.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
               Show Inactive
             </label>
             <DropdownMenu>
               <DropdownMenuTrigger className={cn("flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest outline-none transition-opacity", dark ? "text-slate-400" : "text-slate-600")}>
-                Newest first <ChevronDown size={12} />
+                {sortOrder === 'newest' ? 'Newest first' : 'Oldest first'} <ChevronDown size={12} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className={cn("w-40 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                <DropdownMenuItem className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Newest first</DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Oldest first</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Newest first</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">Oldest first</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>

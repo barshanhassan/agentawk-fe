@@ -51,7 +51,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { label: "Dashboard", icon: <LayoutDashboard size={18} />, href: "/agency" },
       { label: "Workspaces", icon: <Network size={18} />, href: "/agency/workspaces" },
-      { label: "Team", icon: <Users size={18} />, href: "/agency/team" },
+      { label: "Users", icon: <Users size={18} />, href: "/agency/team" },
       { label: "Roles", icon: <ShieldCheck size={18} />, href: "/agency/roles" },
     ],
   },
@@ -243,11 +243,11 @@ const AgencySidebar = () => {
                 <div className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
                   active
-                    ? (dark ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-700")
+                    ? "bg-primary/10 text-primary"
                     : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
                   isCollapsed && "justify-center"
                 )}>
-                  <span className={cn("shrink-0", active ? (dark ? "text-blue-400" : "text-blue-600") : "")}>
+                  <span className={cn("shrink-0", active ? "text-primary" : "")}>
                     {item.icon}
                   </span>
                   {!isCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}

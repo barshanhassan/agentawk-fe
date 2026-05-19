@@ -68,25 +68,21 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
   return (
     <div className={cn("min-h-screen transition-colors flex flex-col font-sans", bg)}>
-      {/* ── Header ── */}
-      <div className="px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">E</div>
-           <span className={cn("font-bold text-[18px] tracking-tight", text)}>Ezconn</span>
+      {/* ── Header (Users-style full-width top bar) ── */}
+      <div className={cn('px-8 py-5 border-b flex items-center justify-between', card, border)}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">E</div>
+          <span className={cn("font-bold text-[18px] tracking-tight", text)}>Ezconn</span>
         </div>
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
       </div>
 
-      <div className="w-full max-w-[1400px] px-8 py-4">
-        {/* Back Button */}
-        <button 
-          onClick={onBack}
-          className={cn("flex items-center gap-2 text-[12px] font-bold mb-8 transition-colors group", 
-            dark ? "text-emerald-500 hover:text-emerald-400" : "text-emerald-600 hover:text-emerald-700")}
-        >
-          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
-          Back to site
-        </button>
-
+      <div className="w-full max-w-[1400px] px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left Column: Cart Items Consolidated Card */}
           <div className="lg:col-span-7">

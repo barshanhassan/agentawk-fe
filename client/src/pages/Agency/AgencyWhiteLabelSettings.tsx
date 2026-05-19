@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useTheme } from "@/contexts/ThemeContext";
+import { hexToHsl } from "@/components/AgencyBrandingFetcher";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -34,7 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 
 const AgencyWhiteLabelSettings = () => {
-  const { mode } = useTheme();
+  const { mode, setAgencyPrimaryColor } = useTheme();
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -118,6 +119,7 @@ const AgencyWhiteLabelSettings = () => {
 
   const handleColorChange = (color: string) => {
     setBrandingData({ ...brandingData, color });
+    setAgencyPrimaryColor(hexToHsl(color));
     updateMutation.mutate({ color });
   };
 
