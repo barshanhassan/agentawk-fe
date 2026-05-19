@@ -11,7 +11,6 @@ import {
   Circle
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getAvatarColor } from "@/lib/avatar-utils";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -191,13 +190,13 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all outline-none group border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
                   <div className="relative">
                     <Avatar className={cn("w-9 h-9 border-2 border-white dark:border-slate-800 shadow-sm", mode === "dark" ? "" : "")}>
-                      <AvatarFallback className={cn(getAvatarColor(user?.first_name || "User"), "text-[12px] font-bold text-white")}>
+                      <AvatarFallback className="text-[12px] font-bold bg-primary text-primary-foreground">
                         {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="text-left hidden sm:block leading-tight">
-                    <p className={cn("text-[13px] font-bold transition-colors", 
+                    <p className={cn("text-[13px] font-bold transition-colors",
                       mode === "dark" ? "text-white" : "text-slate-900")}>
                       {user ? `${user.first_name} ${user.last_name || ""}` : "Loading..."}
                     </p>
@@ -215,7 +214,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                 <DropdownMenuItem className={cn("flex items-center justify-between p-3 rounded-md cursor-pointer group outline-none",
                   mode === "dark" ? "hover:bg-[#334155] focus:bg-[#334155] focus:text-white" : "hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-900")}>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                        {(user?.first_name?.[0] || "H") + (user?.last_name?.[0] || "B")}
                     </div>
                     <span className={cn("font-semibold text-[14px]", mode === "dark" ? "text-white" : "text-slate-900")}>{t("Profile")}</span>

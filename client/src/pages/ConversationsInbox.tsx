@@ -2574,12 +2574,12 @@ export default function ConversationsInbox() {
                   <button
                     onClick={() => setIsSpeakerOn(!isSpeakerOn)}
                     className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${isSpeakerOn
-                      ? "bg-blue-100 hover:bg-blue-200"
+                      ? "bg-primary/15 hover:bg-primary/25"
                       : "bg-muted hover:bg-muted/80"
                       }`}
                     title={isSpeakerOn ? "Speaker off" : "Speaker on"}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isSpeakerOn ? "text-blue-600" : "text-foreground"}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isSpeakerOn ? "text-primary" : "text-foreground"}>
                       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                       <path d="M15.54 8.46a6.5 6.5 0 0 1 0 9.07"></path>
                       <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>

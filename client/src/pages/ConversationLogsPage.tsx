@@ -539,9 +539,9 @@ export default function ConversationLogsPage() {
             <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-col">
                 
                 {/* 1. Branded Header Section */}
-                <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent rounded-t-[20px]">
+                <div className="py-2 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-transparent rounded-t-[20px]">
                     <div className="flex items-center gap-6">
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/10 shadow-inner">
                             <MessageSquare size={20} strokeWidth={2.5} />
                         </div>
                         <div className="space-y-0.5">
@@ -616,14 +616,14 @@ export default function ConversationLogsPage() {
                 <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
                     <div className="relative group flex-1 min-w-[200px] max-w-[280px]">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                            <Search className="h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
                         </div>
                         <input
                             type="text"
                             placeholder="Search customer, agent or number..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full pl-9 pr-3 h-9 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
+                            className="block w-full pl-9 pr-3 h-9 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
                         />
                     </div>
 
@@ -639,7 +639,7 @@ export default function ConversationLogsPage() {
                                 <SelectItem value="last-30-days" className="text-xs">Last 30 Days</SelectItem>
                                 <SelectItem value="this-month" className="text-xs">This Month</SelectItem>
                                 <SelectItem value="this-quarter" className="text-xs">This Quarter</SelectItem>
-                                <SelectItem value="custom" className="text-xs text-blue-500 font-bold">Custom Range</SelectItem>
+                                <SelectItem value="custom" className="text-xs text-primary font-bold">Custom Range</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -690,13 +690,13 @@ export default function ConversationLogsPage() {
                 {/* 4. Table Content Area */}
                 <div className="flex-1 overflow-auto min-h-[300px]">
                     {selectedRows.size > 0 && (
-                        <div className="flex items-center gap-3 px-5 py-2 bg-blue-50/50 dark:bg-blue-500/5 border-b border-blue-100 dark:border-blue-900/20 animate-in slide-in-from-top-2">
-                            <span className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">{selectedRows.size} Selected</span>
+                        <div className="flex items-center gap-3 px-5 py-2 bg-primary/[0.06] dark:bg-primary/5 border-b border-primary/20 dark:border-primary/20 animate-in slide-in-from-top-2">
+                            <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{selectedRows.size} Selected</span>
                             <div className="flex gap-1 ml-auto">
                                 <Button 
                                     onClick={handleExportSelectedAsCSV}
                                     variant="outline" 
-                                    className="h-7 px-3 rounded-md border-blue-200 text-blue-600 gap-2 text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all"
+                                    className="h-7 px-3 rounded-md border-primary/30 text-primary gap-2 text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all"
                                 >
                                     <Download size={12} />
                                     Export Selected
@@ -784,7 +784,7 @@ export default function ConversationLogsPage() {
                                 paginatedData.map((conv) => (
                                     <tr 
                                         key={conv.id} 
-                                        className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-all duration-200"
+                                        className="group hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200"
                                     >
                                         <td className="px-5 py-2.5">
                                             <Checkbox
@@ -846,7 +846,7 @@ export default function ConversationLogsPage() {
                                                         onClick={() => handleViewDetails(conv)}
                                                         className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
                                                     >
-                                                        <FileText size={13} className="text-blue-500" />
+                                                        <FileText size={13} className="text-primary" />
                                                         View Details
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem 
@@ -887,7 +887,7 @@ export default function ConversationLogsPage() {
                                         {[10, 25, 50].map(option => (
                                             <button
                                                 key={option}
-                                                className="w-full px-3 py-1.5 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-600 dark:text-slate-300 transition-colors font-medium"
+                                                className="w-full px-3 py-1.5 text-left hover:bg-primary/10 dark:hover:bg-primary/15 text-slate-600 dark:text-slate-300 transition-colors font-medium"
                                                 onClick={() => {
                                                     setRowsPerPage(option);
                                                     setPage(1);
@@ -1031,7 +1031,7 @@ export default function ConversationLogsPage() {
                                         <div className="space-y-6">
                                             {/* Conversation Started */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Customer initiated conversation</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:30:15 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">First message received from customer</div>
@@ -1039,7 +1039,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Bot Response */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Bot auto-response sent</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:30:18 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Automated greeting and initial assistance</div>
@@ -1047,7 +1047,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Customer Response */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Customer replied</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:30:45 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Customer sent a reply message</div>
@@ -1055,7 +1055,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Transferred to Agent */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Escalated to agent</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:31:02 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Bot escalated to human agents</div>
@@ -1063,7 +1063,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Agent Joined */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Chat was assigned to agent</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:31:15 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Chat Assigned to Sarah Johnson</div>
@@ -1071,7 +1071,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Agent Messages */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Agent provided assistance</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:31:20 AM to 10:34:45 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">8 messages exchanged</div>
@@ -1079,7 +1079,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Issue Resolved */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Issue resolved</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:34:50 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Customer confirmed satisfaction with resolution</div>
@@ -1087,7 +1087,7 @@ export default function ConversationLogsPage() {
 
                                             {/* Conversation Completed */}
                                             <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
+                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">Conversation completed</div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:35:23 AM</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Agent marked conversation as resolved</div>

@@ -60,12 +60,12 @@ function InsightsDashboardContent() {
       <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800/50">
         {/* Title Section: Elegant with Icon */}
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/10 shadow-inner">
+          <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10 shadow-inner">
             <TrendingUp size={24} strokeWidth={2.5} />
           </div>
           <div className="space-y-0.5">
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              Insights <span className="text-blue-500 font-bold opacity-90">Dashboard</span>
+              Insights <span className="text-primary font-bold opacity-90">Dashboard</span>
             </h1>
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 opacity-80">
               Track performance, analyze trends, and optimize operations
@@ -87,7 +87,7 @@ function InsightsDashboardContent() {
                 className={cn(
                   "px-4 py-2 rounded-xl text-[12px] font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 relative group",
                   localActiveTab === tab.id
-                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25 scale-[1.02]"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-slate-700/50 shadow-none hover:shadow-sm"
                 )}
                 data-testid={`tab-${tab.id}`}
@@ -106,7 +106,7 @@ function InsightsDashboardContent() {
               <SelectTrigger
                 className="w-[120px] h-7 rounded-lg bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 font-semibold shadow-sm no-focus-outline"
               >
-                <div className="flex items-center gap-2 text-blue-500">
+                <div className="flex items-center gap-2 text-primary">
                   <Calendar className="h-2.5 w-2.5" />
                   <span className="text-[9.5px] font-bold"><SelectValue /></span>
                 </div>
@@ -129,7 +129,7 @@ function InsightsDashboardContent() {
                     variant="outline"
                     className="h-8 rounded-lg px-3 gap-2 font-semibold bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 transition-all duration-300 hover:bg-white dark:hover:bg-slate-700"
                   >
-                    <Calendar className="h-3 w-3 text-blue-500" />
+                    <Calendar className="h-3 w-3 text-primary" />
                     <span className="text-[11px]">
                       {customDate
                         ? customDate.to
@@ -156,7 +156,7 @@ function InsightsDashboardContent() {
             <Button
               onClick={() => setIsExportModalOpen(true)}
               variant="outline"
-              className="h-7 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[9.5px] shadow-sm transition-all duration-300 active:scale-95 flex items-center gap-2 hover:bg-blue-500 hover:text-white hover:border-blue-500 shadow-none"
+              className="h-7 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[9.5px] shadow-sm transition-all duration-300 active:scale-95 flex items-center gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary shadow-none"
               data-testid="export-button"
             >
               <Download size={10} />

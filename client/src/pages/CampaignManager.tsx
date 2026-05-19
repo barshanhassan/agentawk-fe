@@ -834,9 +834,9 @@ export default function CampaignManager() {
         <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
             
             {/* 1. Branded Header Section */}
-            <div className="py-3 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+            <div className="py-3 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-transparent">
                 <div className="flex items-center gap-6">
-                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/10 shadow-inner">
                         <Send size={20} strokeWidth={2.5} />
                     </div>
                     <div className="space-y-0.5">
@@ -852,7 +852,7 @@ export default function CampaignManager() {
                 <div className="flex items-center gap-3">
                     <Button 
                         onClick={() => setCreateOpen(true)}
-                        className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+                        className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90"
                         data-testid="button-create-campaign"
                     >
                         <Plus size={14} strokeWidth={2.5} />
@@ -864,7 +864,7 @@ export default function CampaignManager() {
             {/* 3. Filter Row Section */}
             <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
                 <div className="relative group flex-1 min-w-[280px] max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="Search campaigns..."
                         value={searchQuery}
@@ -915,12 +915,12 @@ export default function CampaignManager() {
 
             {/* 4. Bulk Actions Bar (Conditional) */}
             {selectedCampaigns.length > 0 && (
-                <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900/30 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+                <div className="px-4 py-2 bg-primary/10 dark:bg-primary/15 border-b border-primary/20 dark:border-primary/20 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
                     <div className="flex items-center gap-3">
-                        <div className="bg-blue-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                        <div className="bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
                             {selectedCampaigns.length}
                         </div>
-                        <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">Campaigns selected</span>
+                        <span className="text-[11px] font-semibold text-primary">Campaigns selected</span>
                     </div>
                     <div className="flex gap-2">
                         {getArchivableCampaigns().length > 0 && (
@@ -928,7 +928,7 @@ export default function CampaignManager() {
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => setShowBulkArchiveModal(true)}
-                                className="h-7 px-3 rounded-md bg-white dark:bg-slate-900 border-blue-200 text-blue-600 hover:bg-blue-50 text-[10px] font-semibold transition-all"
+                                className="h-7 px-3 rounded-md bg-white dark:bg-slate-900 border-primary/30 text-primary hover:bg-primary/10 text-[10px] font-semibold transition-all"
                             >
                                 <Archive size={14} className="mr-2" />
                                 Archive Selected
@@ -958,7 +958,7 @@ export default function CampaignManager() {
                                 <Checkbox
                                     checked={getFilteredCampaigns().length > 0 && getFilteredCampaigns().every(c => selectedCampaigns.includes(c.id))}
                                     onCheckedChange={toggleAll}
-                                    className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
+                                    className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary"
                                 />
                             </th>
                             <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
@@ -1017,7 +1017,7 @@ export default function CampaignManager() {
                             <tr>
                                 <td colSpan={8} className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <Loader2 size={24} className="animate-spin text-blue-500" />
+                                        <Loader2 size={24} className="animate-spin text-primary" />
                                         <p className="text-[11px] font-semibold text-slate-400">Fetching Campaigns...</p>
                                     </div>
                                 </td>
@@ -1036,7 +1036,7 @@ export default function CampaignManager() {
                                         <Button 
                                             variant="outline" 
                                             onClick={() => setCreateOpen(true)} 
-                                            className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
+                                            className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-primary/30 text-primary hover:bg-primary/10 transition-all shadow-sm"
                                         >
                                             Create one now
                                         </Button>
@@ -1053,11 +1053,11 @@ export default function CampaignManager() {
                                         <Checkbox
                                             checked={selectedCampaigns.includes(campaign.id)}
                                             onCheckedChange={() => toggleCampaign(campaign.id)}
-                                            className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
+                                            className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary"
                                         />
                                     </td>
                                     <td className="py-2 px-3">
-                                        <span className="text-[12px] font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate max-w-[200px] block">
+                                        <span className="text-[12px] font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate max-w-[200px] block">
                                             {campaign.name}
                                         </span>
                                     </td>
@@ -1104,9 +1104,9 @@ export default function CampaignManager() {
                                                         setSelectedCampaignForPerformance(campaign);
                                                         setDetailsOpen(true);
                                                     }}
-                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/15 hover:text-primary"
                                                 >
-                                                    <BarChart2 size={14} className="text-blue-500" />
+                                                    <BarChart2 size={14} className="text-primary" />
                                                     View Details
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem 
@@ -1114,16 +1114,16 @@ export default function CampaignManager() {
                                                         setEditingCampaignId(campaign.id);
                                                         setCreateOpen(true);
                                                     }}
-                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/15 hover:text-primary"
                                                 >
-                                                    <Edit2 size={14} className="text-blue-500" />
+                                                    <Edit2 size={14} className="text-primary" />
                                                     Edit
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                     onClick={() => handleOpenCloneDialog(campaign.id)}
-                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                    className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/15 hover:text-primary"
                                                 >
-                                                    <Copy size={14} className="text-blue-500" />
+                                                    <Copy size={14} className="text-primary" />
                                                     Clone
                                                 </DropdownMenuItem>
                                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1"></div>
@@ -1175,8 +1175,8 @@ export default function CampaignManager() {
                                             <li
                                                 key={option}
                                                 className={cn(
-                                                    "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors text-center",
-                                                    rowsPerPage === option ? "bg-blue-50 text-blue-600" : "text-slate-600"
+                                                    "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors text-center",
+                                                    rowsPerPage === option ? "bg-primary/10 text-primary" : "text-slate-600"
                                                 )}
                                                 onClick={() => {
                                                     setRowsPerPage(option);

@@ -236,9 +236,9 @@ export default function SmartFlowsPage() {
             <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
                 
                 {/* 1. Header Section */}
-                <div className="py-4 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                <div className="py-4 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-transparent">
                     <div className="flex items-center gap-4">
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/10 shadow-inner">
                             <GitMerge size={20} strokeWidth={2.5} />
                         </div>
                         <div className="space-y-0.5">
@@ -253,7 +253,7 @@ export default function SmartFlowsPage() {
 
                     <Button
                         onClick={() => setShowCreateModal(true)}
-                        className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[10px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700 uppercase tracking-widest"
+                        className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[10px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90 uppercase tracking-widest"
                     >
                         <Plus size={14} strokeWidth={3} />
                         <span>Create Flow</span>
@@ -265,13 +265,13 @@ export default function SmartFlowsPage() {
                     <div className="flex items-center gap-3 flex-1">
                         {/* Search */}
                         <div className="relative w-64 group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-3.5 h-3.5" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-3.5 h-3.5" />
                             <Input
                                 type="text"
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder="Search flows..."
-                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
+                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
                             />
                         </div>
 
@@ -289,7 +289,7 @@ export default function SmartFlowsPage() {
 
                         {/* Create Folder Button */}
                         <button
-                            className="flex items-center justify-center h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all shadow-sm"
+                            className="flex items-center justify-center h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 hover:text-primary transition-all shadow-sm"
                             onClick={() => setShowFolderModal(true)}
                             title="Create New Folder"
                         >
@@ -327,7 +327,7 @@ export default function SmartFlowsPage() {
                             <tr className="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
                                 <th className="py-3 px-5 w-12 text-center">
                                     <Checkbox
-                                        className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                                        className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                         checked={paginatedFlows.length > 0 && paginatedFlows.every((f: any) => selectedFlowIds.includes(f.id))}
                                         onCheckedChange={(checked) => {
                                             if (checked) {
@@ -352,7 +352,7 @@ export default function SmartFlowsPage() {
                                 <tr>
                                     <td colSpan={6} className="py-14 text-center bg-white dark:bg-transparent">
                                         <div className="flex flex-col items-center gap-3">
-                                            <div className="p-3.5 rounded-full bg-blue-50 dark:bg-blue-800 text-blue-300 dark:text-blue-600 shadow-inner">
+                                            <div className="p-3.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary/40 dark:text-primary shadow-inner">
                                                 <FolderOpen size={32} strokeWidth={1} />
                                             </div>
                                             <div className="space-y-1">
@@ -362,7 +362,7 @@ export default function SmartFlowsPage() {
                                             <Button 
                                                 variant="outline" 
                                                 onClick={() => setShowCreateModal(true)} 
-                                                className="mt-1 h-7.5 px-5 rounded-lg text-[9px] font-semibold border-blue-200 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
+                                                className="mt-1 h-7.5 px-5 rounded-lg text-[9px] font-semibold border-primary/30 text-primary hover:bg-primary/10 transition-all shadow-sm"
                                             >
                                                 CREATE ONE NOW
                                             </Button>
@@ -371,10 +371,10 @@ export default function SmartFlowsPage() {
                                 </tr>
                             ) : (
                                 paginatedFlows.map((flow: any) => (
-                                    <tr key={flow.id} className="group hover:bg-blue-50/40 dark:hover:bg-blue-500/5 transition-all duration-200">
+                                    <tr key={flow.id} className="group hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200">
                                         <td className="py-4 px-5 text-center">
                                             <Checkbox
-                                                className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                                                className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                 checked={selectedFlowIds.includes(flow.id)}
                                                 onCheckedChange={(checked) => {
                                                     if (checked) setSelectedFlowIds([...selectedFlowIds, flow.id]);
@@ -386,7 +386,7 @@ export default function SmartFlowsPage() {
                                             <div className="flex flex-col gap-1.5">
                                                 <button
                                                     onClick={() => handleOpenFlow(flow.id)}
-                                                    className="text-[13px] font-semibold text-slate-900 dark:text-white hover:text-blue-600 transition-colors text-left tracking-tight"
+                                                    className="text-[13px] font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors text-left tracking-tight"
                                                 >
                                                     {flow.name}
                                                 </button>
@@ -411,8 +411,8 @@ export default function SmartFlowsPage() {
                                         </td>
                                         <td className="px-5 py-4 text-center">
                                             <div className="flex justify-center">
-                                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border border-blue-100 dark:border-blue-500/20 shadow-sm transition-transform group-hover:scale-105">
-                                                    <User size={15} className="text-blue-500" />
+                                                <div className="w-8 h-8 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center border border-primary/10 dark:border-primary/20 shadow-sm transition-transform group-hover:scale-105">
+                                                    <User size={15} className="text-primary" />
                                                 </div>
                                             </div>
                                         </td>
@@ -424,25 +424,25 @@ export default function SmartFlowsPage() {
                                         <td className="px-5 py-4 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <button className="p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg transition-all text-slate-400 hover:text-blue-600 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-90">
+                                                    <button className="p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg transition-all text-slate-400 hover:text-primary border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-90">
                                                         <MoreVertical size={16} />
                                                     </button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-56 p-2 rounded-[16px] border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900">
-                                                    <DropdownMenuItem onClick={() => handleOpenFlow(flow.id)} className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                    <DropdownMenuItem onClick={() => handleOpenFlow(flow.id)} className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
                                                         <Pencil size={15} className="text-slate-400" />
                                                         Edit flow
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
                                                         <ClipboardCopy size={15} className="text-slate-400" />
                                                         Rename
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
                                                         <FolderOpen size={15} className="text-slate-400" />
                                                         Change Folder
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-800 hover:text-blue-600 transition-all gap-3">
+                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
                                                         <Gem size={15} className="text-slate-400" />
                                                         Add to Clonekit
                                                     </DropdownMenuItem>
@@ -491,33 +491,33 @@ export default function SmartFlowsPage() {
 
                     <div className="flex items-center gap-6">
                         <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">
-                            Page <span className="text-blue-600 font-semibold">{currentPage}</span> / {Math.max(1, totalPages)}
+                            Page <span className="text-primary font-semibold">{currentPage}</span> / {Math.max(1, totalPages)}
                         </span>
 
                         <div className="flex items-center gap-1">
                             <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
                                 onClick={() => setCurrentPage(1)}
                                 disabled={currentPage === 1}
                             >
                                 <ChevronsLeft size={16} />
                             </button>
                             <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
                             >
                                 <ChevronLeft size={16} />
                             </button>
                             <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages || totalPages === 0}
                             >
                                 <ChevronRight size={16} />
                             </button>
                             <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
+                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
                                 onClick={() => setCurrentPage(totalPages)}
                                 disabled={currentPage === totalPages || totalPages === 0}
                             >

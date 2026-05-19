@@ -95,9 +95,9 @@ export default function WhatsAppPricingTab() {
       </div>
 
       {/* Note Banner - More Professional */}
-      <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 transition-all hover:bg-blue-500/10">
-        <AlertCircle className="w-3.5 h-3.5 text-blue-500" />
-        <p className="text-[10px] font-medium text-blue-600/80 dark:text-blue-400/80 leading-tight">
+      <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 transition-all hover:bg-primary/10">
+        <AlertCircle className="w-3.5 h-3.5 text-primary" />
+        <p className="text-[10px] font-medium text-primary/80 dark:text-primary/80 leading-tight">
           <span className="font-bold uppercase tracking-wider text-[9px] mr-1.5 opacity-70">Note:</span>
           All insights data is approximate and may differ from invoices due to small variations in data processing.
         </p>

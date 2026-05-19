@@ -163,8 +163,8 @@ export default function AppSidebar() {
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer group">
               <div className={cn(
-                "w-9 h-9 rounded-xl flex items-center justify-center font-black text-white shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
-                theme === "dark" ? "bg-blue-600 shadow-blue-600/20" : "bg-gradient-to-br from-indigo-500 to-blue-600 shadow-blue-500/20"
+                "w-9 h-9 rounded-xl flex items-center justify-center font-black text-primary-foreground shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
+                theme === "dark" ? "bg-primary shadow-primary/20" : "bg-primary shadow-primary/20"
               )}>
                 EC
               </div>
@@ -182,12 +182,12 @@ export default function AppSidebar() {
             <DropdownMenuTrigger asChild>
               <button className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group shadow-sm",
-                theme === "dark" 
-                  ? "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white" 
-                  : "bg-blue-50/50 border-blue-100/50 text-slate-700 hover:bg-white hover:shadow-md hover:scale-[1.02] hover:text-blue-600"
+                theme === "dark"
+                  ? "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  : "bg-primary/5 border-primary/10 text-slate-700 hover:bg-white hover:shadow-md hover:scale-[1.02] hover:text-primary"
               )}>
                 <div className={cn("p-1 rounded-lg transition-colors", theme === "dark" ? "bg-slate-700" : "bg-white shadow-sm")}>
-                  <LayoutGrid size={14} className={cn(theme === "dark" ? "text-blue-400" : "text-blue-500")} />
+                  <LayoutGrid size={14} className="text-primary" />
                 </div>
                 <span className="hidden md:block text-[14px] font-bold tracking-tight">Menu</span>
                 <ChevronDown size={14} className="text-gray-400 group-hover:rotate-180 transition-transform duration-300" />
@@ -210,12 +210,12 @@ export default function AppSidebar() {
                       href={item.href}
                       className={cn(
                         "flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 text-[13px]",
-                        isActive(item.href) 
-                          ? "bg-blue-500/10 text-blue-600 font-bold" 
-                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-blue-600"
+                        isActive(item.href)
+                          ? "bg-primary/10 text-primary font-bold"
+                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-primary"
                       )}
                     >
-                      <item.icon size={15} className={isActive(item.href) ? "text-blue-600" : "text-gray-400"} />
+                      <item.icon size={15} className={isActive(item.href) ? "text-primary" : "text-gray-400"} />
                       <span>{item.label}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -229,12 +229,12 @@ export default function AppSidebar() {
                       href={item.href}
                       className={cn(
                         "flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 text-[13px]",
-                        isActive(item.href) 
-                          ? "bg-blue-500/10 text-blue-600 font-bold" 
-                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-blue-600"
+                        isActive(item.href)
+                          ? "bg-primary/10 text-primary font-bold"
+                          : theme === "dark" ? "hover:bg-slate-800 hover:text-white" : "hover:bg-slate-50 hover:text-primary"
                       )}
                     >
-                      <item.icon size={15} className={isActive(item.href) ? "text-blue-600" : "text-gray-400"} />
+                      <item.icon size={15} className={isActive(item.href) ? "text-primary" : "text-gray-400"} />
                       <span>{item.label}</span>
                     </Link>
                   </DropdownMenuItem>
@@ -250,9 +250,9 @@ export default function AppSidebar() {
               className={cn(
                 "p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center",
                 isSearchOpen ? "opacity-0 pointer-events-none scale-90" : "opacity-100 scale-100",
-                theme === "dark" 
-                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white" 
-                  : "bg-blue-50/50 border-blue-100/50 text-slate-500 hover:bg-white hover:shadow-md hover:scale-[1.05] hover:text-blue-500"
+                theme === "dark"
+                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white"
+                  : "bg-primary/5 border-primary/10 text-slate-500 hover:bg-white hover:shadow-md hover:scale-[1.05] hover:text-primary"
               )}
             >
               <Search size={16} />
@@ -262,11 +262,11 @@ export default function AppSidebar() {
             <div
               className={cn(
                 "absolute left-0 z-20 flex items-center h-11 border transition-all duration-500 ease-in-out shadow-xl rounded-xl px-3",
-                theme === "dark" ? "bg-[#1e293b] border-slate-700 shadow-black/40" : "bg-white border-blue-100 shadow-blue-500/10",
+                theme === "dark" ? "bg-[#1e293b] border-slate-700 shadow-black/40" : "bg-white border-primary/20 shadow-primary/10",
                 isSearchOpen ? "w-[500px] opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-4 pointer-events-none overflow-hidden"
               )}
             >
-              <Search size={16} className="text-blue-500 mr-3 shrink-0" />
+              <Search size={16} className="text-primary mr-3 shrink-0" />
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -288,14 +288,14 @@ export default function AppSidebar() {
                       onClick={() => setSearchType(option.label)}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all",
-                        searchType === option.label 
-                          ? "bg-blue-500 text-white font-bold" 
+                        searchType === option.label
+                          ? "bg-primary text-primary-foreground font-bold"
                           : theme === "dark" ? "hover:bg-slate-800 text-slate-300" : "hover:bg-slate-50 text-slate-700"
                       )}
                     >
                       <div className="shrink-0">{option.icon}</div>
                       <span className="text-xs">{option.label}</span>
-                      {searchType === option.label && <Check size={14} className="ml-auto text-white" />}
+                      {searchType === option.label && <Check size={14} className="ml-auto text-primary-foreground" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -332,9 +332,9 @@ export default function AppSidebar() {
             <DropdownMenuTrigger asChild>
               <button className={cn(
                 "p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center relative group",
-                theme === "dark" 
-                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800" 
-                  : "bg-blue-50/50 border-blue-100/50 text-slate-500 hover:bg-white hover:shadow-md hover:text-blue-500"
+                theme === "dark"
+                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
+                  : "bg-primary/5 border-primary/10 text-slate-500 hover:bg-white hover:shadow-md hover:text-primary"
               )}>
                 <Bell size={20} className="group-hover:rotate-12 transition-transform" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
@@ -346,7 +346,7 @@ export default function AppSidebar() {
             )}>
               <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                 <h3 className="font-bold text-sm">Notifications</h3>
-                <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">3 NEW</span>
+                <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">3 NEW</span>
               </div>
               <div className="max-h-96 overflow-y-auto p-1">
                 {[
@@ -370,7 +370,7 @@ export default function AppSidebar() {
               <div className="p-2 border-t border-slate-100 dark:border-slate-800">
                 <button 
                   onClick={() => setLocation("/notifications")}
-                  className="w-full py-2 text-[12px] font-bold text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors"
+                  className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
                 >
                   View All Notifications
                 </button>
@@ -383,9 +383,9 @@ export default function AppSidebar() {
             <DropdownMenuTrigger asChild>
               <button className={cn(
                 "flex items-center gap-3 p-1.5 pr-3 rounded-2xl border transition-all duration-300 group shadow-sm",
-                theme === "dark" 
-                  ? "bg-slate-800/50 border-slate-700 hover:bg-slate-800" 
-                  : "bg-blue-50/50 border-blue-100/50 hover:bg-white hover:shadow-md hover:scale-[1.02]"
+                theme === "dark"
+                  ? "bg-slate-800/50 border-slate-700 hover:bg-slate-800"
+                  : "bg-primary/5 border-primary/10 hover:bg-white hover:shadow-md hover:scale-[1.02]"
               )}>
                 <Avatar className="w-8 h-8 ring-2 ring-white/50 shadow-sm transition-transform group-hover:scale-110">
                   <AvatarFallback className={cn("text-[10px] font-black text-white", getAvatarColor(user?.first_name || "User"))}>
@@ -405,7 +405,7 @@ export default function AppSidebar() {
                   </div>
                 </div>
 
-                <ChevronDown size={14} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+                <ChevronDown size={14} className="text-gray-400 group-hover:text-primary transition-colors" />
               </button>
             </DropdownMenuTrigger>
 
@@ -415,7 +415,7 @@ export default function AppSidebar() {
             )}>
               {/* Header */}
               <div 
-                className="p-4 mb-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 flex items-center gap-4 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900/50"
+                className="p-4 mb-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 flex items-center gap-4 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/10 transition-all border border-transparent hover:border-primary/20 dark:hover:border-primary/20"
                 onClick={() => setLocation("/settings?tab=My%20Profile")}
               >
                 <Avatar className="w-10 h-10 ring-2 ring-white shadow-md">
