@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Code,
   Lock,
-  PaintBucket,
   ChevronDown,
   Film,
   Sliders,
@@ -32,7 +31,6 @@ import BillingPage from "@/pages/BillingPage";
 import ManageSection from "@/components/workspace/ManageSection";
 import LiveChatSection from "@/components/workspace/LiveChatSection";
 import ProfileSection from "@/components/sections/ProfileSection";
-import ThemeSection from "@/components/sections/ThemeSection";
 import PreferencesSection from "@/components/sections/PreferencesSection";
 import BusinessHoursSection from "@/components/sections/BusinessHoursSection";
 import AIAssistantsSection from "@/components/sections/AIAssistantsSection";
@@ -126,7 +124,6 @@ export default function SettingsPage() {
       ],
     },
     { name: "Ai Products", icon: Cpu },
-    { name: "Theme", icon: PaintBucket },
     {
       name: "Customization",
       icon: Sliders,
@@ -543,10 +540,6 @@ export default function SettingsPage() {
                   browserNotificationsDenied={browserNotificationsDenied}
                   handleTestNotification={handleTestNotification}
                 />
-              )}
-
-              {activeSection === "Theme" && (
-                <ThemeSection />
               )}
 
               {activeSection === "Preferences" && (

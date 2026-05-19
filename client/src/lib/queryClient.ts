@@ -7,7 +7,11 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:3001").replace(/\/$/, "");
+// When VITE_API_BASE_URL is set (e.g. production), calls go directly to that
+// absolute backend URL. When it's empty (local dev), API_BASE_URL stays "" so
+// requests use relative /api/... paths and the Vite dev proxy forwards them to
+// the backend — same-origin, so no CORS/preflight ("Failed to fetch") issues.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 export async function apiRequest(
   method: string,
@@ -25,9 +29,10 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Ensure URL is absolute and correctly formatted
+  // With an absolute backend base, strip the /api prefix (NestJS serves at root).
+  // With an empty base (dev proxy mode), keep /api so Vite's proxy matches it.
   let processedUrl = url;
-  if (processedUrl.startsWith("/api")) {
+  if (API_BASE_URL && processedUrl.startsWith("/api")) {
     processedUrl = processedUrl.substring(4);
   }
   const fullUrl = `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
@@ -58,10 +63,10 @@ export const getQueryFn: <T>(options: {
     }
 
     let path = queryKey.join("/");
-    if (path.startsWith("/api")) {
+    if (API_BASE_URL && path.startsWith("/api")) {
       path = path.substring(4);
     }
-    
+
     const fullUrl = `${API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 
     const res = await fetch(fullUrl, {
