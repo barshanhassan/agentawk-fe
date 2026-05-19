@@ -53,6 +53,27 @@ interface Contact {
   updatedBy: string;
 }
 
+// Per-contact avatar colors. Full class strings kept literal so Tailwind JIT picks them up.
+const AVATAR_COLORS = [
+  "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50",
+  "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50",
+  "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50",
+  "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/50",
+  "bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800/50",
+  "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/50",
+  "bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800/50",
+  "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/50",
+];
+
+// Same name → same color (consistent across renders).
+function getAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 export default function ContactsSection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1038,7 +1059,7 @@ export default function ContactsSection() {
                         </td>
                         <td className="py-1.5 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-[10px] shadow-sm border border-blue-200 dark:border-blue-800/50">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm border ${getAvatarColor(contact.name)}`}>
                               {contact.name.charAt(0).toUpperCase()}
                             </div>
                             <button
