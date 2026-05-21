@@ -119,57 +119,57 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       </Route>
 
       <Route path="/agency/settings/white-label">
-        <ProtectedRoute><AgencyWhiteLabelSettings /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyWhiteLabelSettings /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/settings/notifications">
-        <ProtectedRoute><AgencyNotificationsSettings /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyNotificationsSettings /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/settings/general">
-        <ProtectedRoute><AgencyGeneralSettings /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.settings.*"]}><AgencyGeneralSettings /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/help">
-        <ProtectedRoute><AgencyHelp /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyHelp /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/legal">
-        <ProtectedRoute><AgencyLegal /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.legal.*"]}><AgencyLegal /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/billing/plans">
-        <ProtectedRoute><AgencyBillingPlans /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyBillingPlans /></ProtectedRoute>
       </Route>
       <Route path="/agency/billing/manage">
-        <ProtectedRoute><AgencyBillingManage /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyBillingManage /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/saas/api">
-        <ProtectedRoute><AgencyAPI /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyAPI /></ProtectedRoute>
       </Route>
       <Route path="/agency/saas/plans">
-        <ProtectedRoute><AgencyPlans /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyPlans /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/audit-logs/workspace">
-        <ProtectedRoute><WorkspaceLogs /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><WorkspaceLogs /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/audit-logs/agency">
-        <ProtectedRoute><AgencyLogs /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.*"]}><AgencyLogs /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/roles">
-        <ProtectedRoute><AgencyRoles /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.acl.*"]}><AgencyRoles /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/team">
-        <ProtectedRoute><AgencyTeam /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.users.*"]}><AgencyTeam /></ProtectedRoute>
       </Route>
 
       <Route path="/agency/workspaces">
-        <ProtectedRoute><AgencyWorkspaces /></ProtectedRoute>
+        <ProtectedRoute permissions={["agency.workspace.*"]}><AgencyWorkspaces /></ProtectedRoute>
       </Route>
 
       <Route path="/agency">

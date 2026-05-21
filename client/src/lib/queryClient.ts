@@ -1,10 +1,59 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
+
+// Error subclass carries the HTTP status so global cache handlers can branch on it
+// without re-parsing the message string.
+export class ApiError extends Error {
+  status: number;
+  body: any;
+  constructor(status: number, message: string, body?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const raw = (await res.text()) || res.statusText;
+    let humanMsg = raw;
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(raw);
+      // NestJS error shape: { message, error, statusCode }. Fall back to raw if absent.
+      if (parsed && typeof parsed === 'object') {
+        humanMsg = parsed.message || parsed.error || raw;
+      }
+    } catch {
+      // not JSON — keep raw
+    }
+    throw new ApiError(res.status, humanMsg, parsed);
   }
+}
+
+// Global error handler — mirrors replyagent's axios interceptor pattern:
+//   - 401 → clear auth + redirect to /login
+//   - Everything else (incl. 403) → generic destructive toast with the server's message
+function handleApiError(error: unknown) {
+  const isApi = error instanceof ApiError;
+  const status = isApi ? error.status : 0;
+  const description = isApi ? error.message : (error instanceof Error ? error.message : 'An error occurred');
+
+  if (status === 401) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_info');
+    if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/login')) {
+      window.location.href = '/login';
+    }
+    return;
+  }
+
+  toast({
+    title: status === 403 ? 'Access denied' : 'Error',
+    description,
+    variant: 'destructive',
+  });
 }
 
 // When VITE_API_BASE_URL is set (e.g. production), calls go directly to that
@@ -46,7 +95,12 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
+  try {
+    await throwIfResNotOk(res);
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
   return res;
 }
 
@@ -78,7 +132,12 @@ export const getQueryFn: <T>(options: {
       return null;
     }
 
-    await throwIfResNotOk(res);
+    try {
+      await throwIfResNotOk(res);
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
     return await res.json();
   };
 

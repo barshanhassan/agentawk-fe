@@ -1,5 +1,5 @@
 import React from 'react';
-import { getUserInfo } from "@/lib/auth";
+import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
@@ -38,6 +38,15 @@ type MenuItem = {
   href: string;
   hasSubmenu?: boolean;
   subItems?: SubItem[];
+  // Visible if user has ANY of these slugs. Empty/undefined = always visible.
+  permissions?: string[];
+};
+
+type BottomItem = {
+  label: string;
+  icon: React.ReactElement;
+  href: string;
+  permissions?: string[];
 };
 
 type MenuGroup = {
@@ -50,9 +59,9 @@ const menuGroups: MenuGroup[] = [
     section: "MAIN MENU",
     items: [
       { label: "Dashboard", icon: <LayoutDashboard size={18} />, href: "/agency" },
-      { label: "Workspaces", icon: <Network size={18} />, href: "/agency/workspaces" },
-      { label: "Users", icon: <Users size={18} />, href: "/agency/team" },
-      { label: "Roles", icon: <ShieldCheck size={18} />, href: "/agency/roles" },
+      { label: "Workspaces", icon: <Network size={18} />, href: "/agency/workspaces", permissions: ["agency.workspace.*"] },
+      { label: "Users", icon: <Users size={18} />, href: "/agency/team", permissions: ["agency.users.*"] },
+      { label: "Roles", icon: <ShieldCheck size={18} />, href: "/agency/roles", permissions: ["agency.acl.*"] },
     ],
   },
   {
@@ -63,6 +72,7 @@ const menuGroups: MenuGroup[] = [
         icon: <ScrollText size={18} />,
         href: "#",
         hasSubmenu: true,
+        permissions: ["agency.*"],
         subItems: [
           { label: "Agency Logs", icon: <Briefcase size={15} />, href: "/agency/audit-logs/agency" },
           { label: "Workspace Logs", icon: <Network size={15} />, href: "/agency/audit-logs/workspace" },
@@ -73,6 +83,7 @@ const menuGroups: MenuGroup[] = [
         icon: <Cloud size={18} />,
         href: "#",
         hasSubmenu: true,
+        permissions: ["agency.*"],
         subItems: [
           { label: "Plans", icon: <Briefcase size={15} />, href: "/agency/saas/plans", status: "Soon" },
           { label: "API", icon: <Plug size={15} />, href: "/agency/saas/api" },
@@ -83,21 +94,22 @@ const menuGroups: MenuGroup[] = [
         icon: <CreditCard size={18} />,
         href: "#",
         hasSubmenu: true,
+        permissions: ["agency.*"],
         subItems: [
           { label: "Plans", icon: <ShoppingCart size={15} />, href: "/agency/billing/plans" },
           { label: "Manage", icon: <CircleDollarSign size={15} />, href: "/agency/billing/manage" },
         ],
       },
-      { label: "Legal", icon: <Gavel size={18} />, href: "/agency/legal" },
+      { label: "Legal", icon: <Gavel size={18} />, href: "/agency/legal", permissions: ["agency.legal.*"] },
     ],
   },
 ];
 
-const bottomItems = [
-  { label: "Settings", icon: <Settings size={18} />, href: "/agency/settings/general" },
-  { label: "Notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications" },
-  { label: "White Label", icon: <Monitor size={18} />, href: "/agency/settings/white-label" },
-  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/agency/help" },
+const bottomItems: BottomItem[] = [
+  { label: "Settings", icon: <Settings size={18} />, href: "/agency/settings/general", permissions: ["agency.settings.*"] },
+  { label: "Notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications", permissions: ["agency.*"] },
+  { label: "White Label", icon: <Monitor size={18} />, href: "/agency/settings/white-label", permissions: ["agency.*"] },
+  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/agency/help", permissions: ["agency.*"] },
 ];
 
 const AgencySidebar = () => {
@@ -109,6 +121,16 @@ const AgencySidebar = () => {
   const user = React.useMemo(() => {
     try { return getUserInfo(); } catch { return {}; }
   }, []);
+  const userPerms = (user.permissions as string[]) ?? [];
+
+  const visibleMenuItems = React.useMemo(
+    () => menuGroups.flatMap((g) => g.items).filter((item) => hasAnyPerm(userPerms, item.permissions ?? [])),
+    [userPerms]
+  );
+  const visibleBottomItems = React.useMemo(
+    () => bottomItems.filter((item) => hasAnyPerm(userPerms, item.permissions ?? [])),
+    [userPerms]
+  );
 
   const isActive = (href: string) => href !== "#" && location === href;
   const isParentActive = (item: MenuItem) => {
@@ -156,7 +178,7 @@ const AgencySidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-2 px-2">
-        {menuGroups.flatMap(group => group.items).map((item) => {
+        {visibleMenuItems.map((item) => {
           const active = isActive(item.href) || isParentActive(item);
           const open = expanded === item.label;
 
@@ -235,7 +257,7 @@ const AgencySidebar = () => {
         })}
 
         {/* Bottom items */}
-        {bottomItems.map((item) => {
+        {visibleBottomItems.map((item) => {
           const active = isActive(item.href);
           return (
             <div key={item.label}>
