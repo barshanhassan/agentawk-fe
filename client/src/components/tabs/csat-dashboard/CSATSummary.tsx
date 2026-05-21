@@ -14,33 +14,22 @@ export default function CSATSummary() {
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tipCls  = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  const satisfactionScore    = 78;
-  const totalResponses       = 245;
-  const basedOnConversations = 1250;
-  const feedbackRate         = 19.6;
-  const responded            = 245;
-  const totalConversations   = 1250;
+  // Zero-state defaults — wire to backend csat-summary endpoint when available.
+  const satisfactionScore    = 0;
+  const totalResponses       = 0;
+  const basedOnConversations = 0;
+  const feedbackRate         = 0;
+  const responded            = 0;
+  const totalConversations   = 0;
 
   const distributionData = [
-    { name: "Great",   percentage: 65, color: "bg-emerald-500", icon: "😊" },
-    { name: "Average", percentage: 22, color: "bg-orange-500",  icon: "😐" },
-    { name: "Poor",    percentage: 13, color: "bg-rose-500",    icon: "😞" },
+    { name: "Great",   percentage: 0, color: "bg-emerald-500", icon: "😊" },
+    { name: "Average", percentage: 0, color: "bg-orange-500",  icon: "😐" },
+    { name: "Poor",    percentage: 0, color: "bg-rose-500",    icon: "😞" },
   ];
 
-  const agentRankings = [
-    { name: "Most Great",   count: 52, label: "52 great ratings",  positive: true },
-    { name: "Fewest Great", count: 18, label: "18 great ratings",  positive: false },
-  ];
-
-  const csatDistributionData = [
-    { date: "Oct 24", great: 42, average: 15, poor: 8 },
-    { date: "Oct 25", great: 48, average: 14, poor: 7 },
-    { date: "Oct 26", great: 52, average: 13, poor: 6 },
-    { date: "Oct 27", great: 58, average: 12, poor: 5 },
-    { date: "Oct 28", great: 62, average: 11, poor: 4 },
-    { date: "Oct 29", great: 68, average: 10, poor: 3 },
-    { date: "Oct 30", great: 75, average: 9,  poor: 2 },
-  ];
+  const agentRankings: Array<{ name: string; count: number; label: string; positive: boolean }> = [];
+  const csatDistributionData: Array<{ date: string; great: number; average: number; poor: number }> = [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;

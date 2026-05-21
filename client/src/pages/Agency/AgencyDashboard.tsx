@@ -54,14 +54,14 @@ const AgencyDashboard = () => {
   const statCards = [
     {
       label: "Total Workspaces",
-      value: stats?.total_workspaces ?? "—",
+      value: stats?.total_workspaces ?? 0,
       icon: <Network size={20} className="text-blue-500" />,
       bg: dark ? "bg-blue-500/10" : "bg-blue-50",
       color: "text-blue-600",
     },
     {
       label: "Team Members",
-      value: stats?.total_agents ?? "—",
+      value: stats?.total_agents ?? 0,
       icon: <Users size={20} className="text-violet-500" />,
       bg: dark ? "bg-violet-500/10" : "bg-violet-50",
       color: "text-violet-600",

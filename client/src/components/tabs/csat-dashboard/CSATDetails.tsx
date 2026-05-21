@@ -35,21 +35,9 @@ export default function CSATDetails() {
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const feedbackDropdownRef = useRef<HTMLDivElement>(null);
 
-  const agentCSATData = [
-    { agentName: "John Smith",    agentId: "A001", team: "Sales",   great: 45, average: 12, poor: 3, total: 60 },
-    { agentName: "Sarah Johnson", agentId: "A002", team: "Support", great: 52, average: 8,  poor: 2, total: 62 },
-    { agentName: "Mike Davis",    agentId: "A003", team: "Sales",   great: 38, average: 15, poor: 5, total: 58 },
-    { agentName: "Emily Brown",   agentId: "A004", team: "Support", great: 61, average: 5,  poor: 1, total: 67 },
-    { agentName: "David Wilson",  agentId: "A005", team: "Sales",   great: 42, average: 10, poor: 4, total: 56 },
-  ];
-
-  const feedbackData = [
-    { conversationId: "C001", customer: "Alice Johnson", agent: "John Smith",    rating: "Great",   date: "2024-10-30" },
-    { conversationId: "C002", customer: "Bob Smith",     agent: "Sarah Johnson", rating: "Great",   date: "2024-10-30" },
-    { conversationId: "C003", customer: "Carol White",   agent: "Mike Davis",    rating: "Average", date: "2024-10-30" },
-    { conversationId: "C004", customer: "David Brown",   agent: "Emily Brown",   rating: "Great",   date: "2024-10-30" },
-    { conversationId: "C005", customer: "Eve Davis",     agent: "David Wilson",  rating: "Poor",    date: "2024-10-30" },
-  ];
+  // CSAT data — empty until backend csat-details endpoint is implemented.
+  const agentCSATData: Array<{ agentName: string; agentId: string; team: string; great: number; average: number; poor: number; total: number }> = [];
+  const feedbackData: Array<{ conversationId: string; customer: string; agent: string; rating: string; date: string }> = [];
 
   const handleAgentSort = (column: string) => {
     setAgentSort((prev) => {

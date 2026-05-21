@@ -5,25 +5,15 @@ import { cn } from "@/lib/utils";
 
 const abbreviateNumber = (num: number) => num >= 1000000 ? (num/1000000).toFixed(1)+"M" : num >= 1000 ? (num/1000).toFixed(1)+"K" : num.toString();
 
-const agentAvailabilityData = [
-  { name: "John Smith",    team: "Sales Team",     loginTime: "09:30 AM", status: "Online", dot: "bg-emerald-500" },
-  { name: "Sarah Johnson", team: "Support Team",   loginTime: "08:45 AM", status: "Busy",   dot: "bg-orange-500" },
-  { name: "Mike Wilson",   team: "Technical Team", loginTime: "10:15 AM", status: "Online", dot: "bg-emerald-500" },
-  { name: "Emma Davis",    team: "Sales Team",     loginTime: "09:00 AM", status: "Away",   dot: "bg-yellow-500" },
-];
-
-const agentMetricsData = [
-  { name: "John Smith",    accepted: 45, solved: 42, date: "Oct 28, 2025", avgResponse: "1m 45s", avgResolution: "12m 30s" },
-  { name: "Sarah Johnson", accepted: 38, solved: 35, date: "Oct 28, 2025", avgResponse: "2m 10s", avgResolution: "18m 45s" },
-  { name: "Mike Wilson",   accepted: 52, solved: 48, date: "Oct 28, 2025", avgResponse: "1m 20s", avgResolution: "10m 15s" },
-  { name: "Emma Davis",    accepted: 28, solved: 26, date: "Oct 28, 2025", avgResponse: "3m 05s", avgResolution: "22m 30s" },
-];
-
+// Demo agent data removed — fresh workspace must show empty state.
+// TODO: wire to `GET /api/statistics/agent-availability` + `/agent-metrics`.
+const agentAvailabilityData: Array<{ name: string; team: string; loginTime: string; status: string; dot: string }> = [];
+const agentMetricsData: Array<{ name: string; accepted: number; solved: number; date: string; avgResponse: string; avgResolution: string }> = [];
 const statusBars = [
-  { label: "Online",  count: 8, pct: 80, color: "bg-emerald-500" },
-  { label: "Busy",    count: 5, pct: 50, color: "bg-orange-500"  },
-  { label: "Away",    count: 2, pct: 20, color: "bg-yellow-500"  },
-  { label: "Offline", count: 0, pct: 0,  color: "bg-slate-400"   },
+  { label: "Online",  count: 0, pct: 0, color: "bg-emerald-500" },
+  { label: "Busy",    count: 0, pct: 0, color: "bg-orange-500"  },
+  { label: "Away",    count: 0, pct: 0, color: "bg-yellow-500"  },
+  { label: "Offline", count: 0, pct: 0, color: "bg-slate-400"   },
 ];
 
 export default function AgentPerformanceMain() {
@@ -47,13 +37,13 @@ export default function AgentPerformanceMain() {
 
   const kpiCards = [
     { title: "Conversations", icon: <MessageSquare size={14} className="text-primary" />,
-      rows: [{ l: "Total handled", v: abbreviateNumber(1250) }, { l: "Completed", v: abbreviateNumber(980) }, { l: "In progress", v: "45" }] },
+      rows: [{ l: "Total handled", v: "0" }, { l: "Completed", v: "0" }, { l: "In progress", v: "0" }] },
     { title: "Performance", icon: <Zap size={14} className="text-primary" />,
-      rows: [{ l: "Avg response time", v: "2m 15s" }, { l: "Avg resolution time", v: "15m 30s" }, { l: "Resolution rate", v: "92%" }] },
+      rows: [{ l: "Avg response time", v: "—" }, { l: "Avg resolution time", v: "—" }, { l: "Resolution rate", v: "—" }] },
     { title: "Queue", icon: <List size={14} className="text-primary" />,
-      rows: [{ l: "Active now", v: "12" }, { l: "Pending", v: "8" }, { l: "Forwarded", v: "3" }] },
+      rows: [{ l: "Active now", v: "0" }, { l: "Pending", v: "0" }, { l: "Forwarded", v: "0" }] },
     { title: "Feedback", icon: <ThumbsUp size={14} className="text-primary" />,
-      rows: [{ l: "Great", v: "156", c: "text-emerald-500" }, { l: "Average", v: "42", c: "text-yellow-500" }, { l: "Poor", v: "8", c: "text-rose-500" }] },
+      rows: [{ l: "Great", v: "0", c: "text-emerald-500" }, { l: "Average", v: "0", c: "text-yellow-500" }, { l: "Poor", v: "0", c: "text-rose-500" }] },
   ];
 
   const tableHeaders = (cols: string[]) => (

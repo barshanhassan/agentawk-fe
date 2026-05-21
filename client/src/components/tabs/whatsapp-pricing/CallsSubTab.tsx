@@ -44,33 +44,10 @@ export default function CallsSubTab() {
     },
   ];
 
-  const allCallsData = [
-    { date: "Oct 24", businessInitiated: 5, userInitiated: 3 },
-    { date: "Oct 25", businessInitiated: 4, userInitiated: 2 },
-    { date: "Oct 26", businessInitiated: 8, userInitiated: 5 },
-    { date: "Oct 27", businessInitiated: 6, userInitiated: 4 },
-    { date: "Oct 28", businessInitiated: 12, userInitiated: 8 },
-    { date: "Oct 29", businessInitiated: 10, userInitiated: 6 },
-    { date: "Oct 30", businessInitiated: 7, userInitiated: 4 },
-  ];
-  const durationData = [
-    { date: "Oct 24", businessInitiated: 45, userInitiated: 32 },
-    { date: "Oct 25", businessInitiated: 38, userInitiated: 28 },
-    { date: "Oct 26", businessInitiated: 52, userInitiated: 40 },
-    { date: "Oct 27", businessInitiated: 48, userInitiated: 35 },
-    { date: "Oct 28", businessInitiated: 58, userInitiated: 45 },
-    { date: "Oct 29", businessInitiated: 55, userInitiated: 42 },
-    { date: "Oct 30", businessInitiated: 50, userInitiated: 38 },
-  ];
-  const chargesData = [
-    { date: "Oct 24", calls: 8, charges: 0.8 },
-    { date: "Oct 25", calls: 6, charges: 0.6 },
-    { date: "Oct 26", calls: 13, charges: 1.3 },
-    { date: "Oct 27", calls: 10, charges: 1.0 },
-    { date: "Oct 28", calls: 20, charges: 2.0 },
-    { date: "Oct 29", calls: 16, charges: 1.6 },
-    { date: "Oct 30", calls: 11, charges: 1.1 },
-  ];
+  // Call analytics — empty until backend whatsapp-calls-analytics endpoint exists.
+  const allCallsData: Array<{ date: string; businessInitiated: number; userInitiated: number }> = [];
+  const durationData: Array<{ date: string; businessInitiated: number; userInitiated: number }> = [];
+  const chargesData: Array<{ date: string; calls: number; charges: number }> = [];
 
   const CALL_LINES = [
     { key: "businessInitiated", name: "Business-initiated", stroke: "#22c55e" },

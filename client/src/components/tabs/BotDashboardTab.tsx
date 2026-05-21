@@ -2,13 +2,9 @@ import { useState } from "react";
 import CustomDropdown from "@/components/CustomDropdown";
 import BotDashboardContent from "./bot-dashboard/BotDashboardContent";
 
-const botOptions = [
-  { id: "bot-1", name: "Bot Alpha" },
-  { id: "bot-2", name: "Bot Beta" },
-  { id: "bot-3", name: "Bot Gamma" },
-  { id: "bot-4", name: "Bot Delta" },
-  { id: "bot-5", name: "Bot Epsilon" },
-];
+// Bot selector options — should be fetched from workspace's actual bots once
+// `GET /api/workspace/bots` is wired. Empty by default for fresh workspaces.
+const botOptions: Array<{ id: string; name: string }> = [];
 
 export default function BotDashboardTab() {
   const [selectedBots, setSelectedBots] = useState<string[]>([]);

@@ -37,22 +37,9 @@ export default function VoiceOfCustomerDetails() {
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const conversationDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Mock data
-  const agentPerformanceData = [
-    { agentName: "John Smith", agentId: "A001", team: "Sales", date: "2024-10-30", total: 45 },
-    { agentName: "Sarah Johnson", agentId: "A002", team: "Support", date: "2024-10-30", total: 52 },
-    { agentName: "Mike Davis", agentId: "A003", team: "Sales", date: "2024-10-30", total: 38 },
-    { agentName: "Emily Brown", agentId: "A004", team: "Support", date: "2024-10-30", total: 61 },
-    { agentName: "David Wilson", agentId: "A005", team: "Sales", date: "2024-10-30", total: 42 },
-  ];
-
-  const customerSentimentData = [
-    { conversationId: "C001", agent: "John Smith", team: "Sales", sentiment: "Positive", date: "2024-10-30", channel: "Chat" },
-    { conversationId: "C002", agent: "Sarah Johnson", team: "Support", sentiment: "Neutral", date: "2024-10-30", channel: "Email" },
-    { conversationId: "C003", agent: "Mike Davis", team: "Sales", sentiment: "Negative", date: "2024-10-30", channel: "Phone" },
-    { conversationId: "C004", agent: "Emily Brown", team: "Support", sentiment: "Positive", date: "2024-10-30", channel: "Chat" },
-    { conversationId: "C005", agent: "David Wilson", team: "Sales", sentiment: "Positive", date: "2024-10-30", channel: "Email" },
-  ];
+  // Voice-of-Customer tables — empty until backend voice-of-customer-details endpoint exists.
+  const agentPerformanceData: Array<{ agentName: string; agentId: string; team: string; date: string; total: number }> = [];
+  const customerSentimentData: Array<{ conversationId: string; agent: string; team: string; sentiment: string; date: string; channel: string }> = [];
 
   const handleAgentSort = (column: string) => {
     setAgentSort((prev) => {

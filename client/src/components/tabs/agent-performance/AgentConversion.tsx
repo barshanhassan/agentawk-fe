@@ -5,26 +5,10 @@ import { TrendingUp, Phone, Activity } from "lucide-react";
 
 const abbreviateNumber = (num: number) => num >= 1000 ? (num / 1000).toFixed(1) + "K" : num.toString();
 
-const conversionVolumeTrendData = [
-  { date: "Oct 24", queued: 8, active: 12, pending: 5, resolved: 6 },
-  { date: "Oct 25", queued: 5, active: 8, pending: 3, resolved: 4 },
-  { date: "Oct 26", queued: 15, active: 20, pending: 10, resolved: 12 },
-  { date: "Oct 27", queued: 6, active: 9, pending: 4, resolved: 5 },
-];
-
-const callEngagementTrendData = [
-  { date: "Oct 24", inbound: 15, outbound: 8, messagesReceived: 6, messagesSent: 4 },
-  { date: "Oct 25", inbound: 12, outbound: 6, messagesReceived: 5, messagesSent: 3 },
-  { date: "Oct 26", inbound: 28, outbound: 15, messagesReceived: 12, messagesSent: 8 },
-  { date: "Oct 27", inbound: 20, outbound: 10, messagesReceived: 8, messagesSent: 5 },
-];
-
-const tagsData = [
-  { name: "Urgent", count: 24, cls: "bg-rose-500/10 text-rose-400 border border-rose-500/20" },
-  { name: "Follow-up", count: 18, cls: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
-  { name: "Resolved", count: 156, cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-  { name: "Pending", count: 42, cls: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" },
-];
+// Conversion analytics data — empty until backend conversion-analytics endpoint exists.
+const conversionVolumeTrendData: Array<{ date: string; queued: number; active: number; pending: number; resolved: number }> = [];
+const callEngagementTrendData: Array<{ date: string; inbound: number; outbound: number; messagesReceived: number; messagesSent: number }> = [];
+const tagsData: Array<{ name: string; count: number; cls: string }> = [];
 
 export default function AgentConversion() {
   const { mode } = useTheme();
@@ -69,26 +53,26 @@ export default function AgentConversion() {
     {
       title: "Conversion Status", icon: <Activity size={14} className="text-primary" />,
       rows: [
-        { l: "Queued", v: "24", c: "text-rose-400" },
-        { l: "Active", v: "18", c: "text-orange-400" },
-        { l: "Pending", v: "12", c: "text-yellow-400" },
-        { l: "Exited", v: "5", c: "text-slate-400" },
+        { l: "Queued", v: "0", c: "text-rose-400" },
+        { l: "Active", v: "0", c: "text-orange-400" },
+        { l: "Pending", v: "0", c: "text-yellow-400" },
+        { l: "Exited", v: "0", c: "text-slate-400" },
       ],
     },
     {
       title: "Performance", icon: <TrendingUp size={14} className="text-primary" />,
       rows: [
-        { l: "Avg response time", v: "1m 45s" },
-        { l: "Resolution rate", v: "88%" },
-        { l: "Customer satisfaction", v: "92%" },
+        { l: "Avg response time", v: "—" },
+        { l: "Resolution rate", v: "—" },
+        { l: "Customer satisfaction", v: "—" },
       ],
     },
     {
       title: "Call Statistics", icon: <Phone size={14} className="text-primary" />,
       rows: [
-        { l: "Total calls", v: abbreviateNumber(342), c: "text-primary" },
-        { l: "Inbound calls", v: abbreviateNumber(245), c: "text-blue-400" },
-        { l: "Outbound calls", v: abbreviateNumber(97), c: "text-violet-400" },
+        { l: "Total calls", v: "0", c: "text-primary" },
+        { l: "Inbound calls", v: "0", c: "text-blue-400" },
+        { l: "Outbound calls", v: "0", c: "text-violet-400" },
       ],
     },
   ];

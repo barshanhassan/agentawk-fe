@@ -7,21 +7,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Users, User, ChevronDown } from "lucide-react";
 
-const teams = [
-  { id: "team-1", name: "Sales Team" },
-  { id: "team-2", name: "Support Team" },
-  { id: "team-3", name: "Technical Team" },
-  { id: "team-4", name: "Marketing Team" },
-];
-
-const agents = [
-  { id: "agent-1", name: "John Smith" },
-  { id: "agent-2", name: "Sarah Johnson" },
-  { id: "agent-3", name: "Mike Wilson" },
-  { id: "agent-4", name: "Emma Davis" },
-  { id: "agent-5", name: "Chris Brown" },
-  { id: "agent-6", name: "Lisa Anderson" },
-];
+const teams: Array<{ id: string; name: string }> = [];
+const agents: Array<{ id: string; name: string }> = [];
 
 export default function CSATDashboardTab() {
   const { mode } = useTheme();

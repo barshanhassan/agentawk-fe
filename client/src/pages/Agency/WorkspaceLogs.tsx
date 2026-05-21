@@ -86,10 +86,47 @@ const WorkspaceLogs = () => {
     }
   });
 
+  // Map filter labels → query params. Done inline so locale-specific label
+  // strings (from i18n) match exactly.
+  const buildDateRange = (label: string): { from?: string; to?: string } => {
+    const now = new Date();
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const endOfDay   = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+    if (label === t("agency.auditLogs.filters.today")) {
+      return { from: startOfDay(now).toISOString(), to: endOfDay(now).toISOString() };
+    }
+    if (label === t("agency.auditLogs.filters.yesterday")) {
+      const y = new Date(now); y.setDate(y.getDate() - 1);
+      return { from: startOfDay(y).toISOString(), to: endOfDay(y).toISOString() };
+    }
+    if (label === t("agency.auditLogs.filters.last_7_days")) {
+      const s = new Date(now); s.setDate(s.getDate() - 7);
+      return { from: startOfDay(s).toISOString(), to: endOfDay(now).toISOString() };
+    }
+    if (label === t("agency.auditLogs.filters.last_30_days")) {
+      const s = new Date(now); s.setDate(s.getDate() - 30);
+      return { from: startOfDay(s).toISOString(), to: endOfDay(now).toISOString() };
+    }
+    return {};
+  };
+
+  const resolveWorkspaceId = (label: string): string | undefined => {
+    if (label === t("agency.auditLogs.filters.all_workspaces")) return undefined;
+    const ws = (workspacesResponse?.workspaces || []).find((w: any) => w.name === label);
+    return ws?.id?.toString();
+  };
+
   const { data: logsResponse, isLoading } = useQuery({
     queryKey: [`/api/agencies/${agencyId}/audit-logs`, selectedDate, selectedWorkspace, page],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/audit-logs`);
+      const params = new URLSearchParams();
+      const { from, to } = buildDateRange(selectedDate);
+      if (from) params.set('from', from);
+      if (to)   params.set('to', to);
+      const wsId = resolveWorkspaceId(selectedWorkspace);
+      if (wsId) params.set('workspace_id', wsId);
+      params.set('page', String(page));
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/audit-logs?${params.toString()}`);
       return res.json();
     }
   });

@@ -45,8 +45,8 @@ export default function MessagesSubTab() {
 
   const kpi = {
     allMessages: [{ l: "Message Sent", v: 0 }, { l: "Message Delivered", v: 0 }, { l: "Message Received", v: 0 }],
-    allDeliv: [{ l: "Marketing", v: 0 }, { l: "Marketing Lite", v: 0 }, { l: "Utility", v: 0 }, { l: "Authentication", v: 0 }, { l: "Auth Intl", v: 0 }, { l: "Service", v: 43 }],
-    freeDeliv: [{ l: "Free Customer Service", v: 43 }, { l: "Free Entry Point", v: 0 }],
+    allDeliv: [{ l: "Marketing", v: 0 }, { l: "Marketing Lite", v: 0 }, { l: "Utility", v: 0 }, { l: "Authentication", v: 0 }, { l: "Auth Intl", v: 0 }, { l: "Service", v: 0 }],
+    freeDeliv: [{ l: "Free Customer Service", v: 0 }, { l: "Free Entry Point", v: 0 }],
     paidDeliv: [{ l: "Marketing", v: 0 }, { l: "Marketing Lite", v: 0 }, { l: "Utility", v: 0 }, { l: "Authentication", v: 0 }, { l: "Auth Intl", v: 0 }],
     approxCharge: [{ l: "Marketing", v: "$0" }, { l: "Marketing Lite", v: "$0" }, { l: "Utility", v: "$0" }, { l: "Authentication", v: "$0" }, { l: "Auth Intl", v: "$0" }],
   };
@@ -59,31 +59,11 @@ export default function MessagesSubTab() {
     { title: "Approximate Charges", icon: <DollarSign size={14} className="text-primary" />, rows: kpi.approxCharge },
   ];
 
-  const allDelData = [
-    { date: "Oct 24", marketing: 5, marketingLite: 3, utility: 2, authentication: 1, authenticationIntl: 0, service: 8 },
-    { date: "Oct 25", marketing: 4, marketingLite: 2, utility: 3, authentication: 1, authenticationIntl: 0, service: 7 },
-    { date: "Oct 26", marketing: 8, marketingLite: 5, utility: 4, authentication: 2, authenticationIntl: 1, service: 12 },
-    { date: "Oct 27", marketing: 6, marketingLite: 4, utility: 3, authentication: 2, authenticationIntl: 1, service: 10 },
-    { date: "Oct 28", marketing: 12, marketingLite: 8, utility: 6, authentication: 3, authenticationIntl: 2, service: 18 },
-    { date: "Oct 29", marketing: 10, marketingLite: 6, utility: 5, authentication: 2, authenticationIntl: 1, service: 15 },
-    { date: "Oct 30", marketing: 7, marketingLite: 4, utility: 3, authentication: 1, authenticationIntl: 0, service: 9 },
-  ];
-  const freeData = [
-    { date: "Oct 24", freeEntryPoint: 0, freeCustomerService: 8 }, { date: "Oct 25", freeEntryPoint: 0, freeCustomerService: 7 },
-    { date: "Oct 26", freeEntryPoint: 1, freeCustomerService: 12 }, { date: "Oct 27", freeEntryPoint: 0, freeCustomerService: 10 },
-    { date: "Oct 28", freeEntryPoint: 2, freeCustomerService: 18 }, { date: "Oct 29", freeEntryPoint: 1, freeCustomerService: 15 },
-    { date: "Oct 30", freeEntryPoint: 0, freeCustomerService: 9 },
-  ];
-  const paidData = allDelData.map(d => ({ date: d.date, marketing: d.marketing, marketingLite: d.marketingLite, utility: d.utility, authentication: d.authentication, authenticationIntl: d.authenticationIntl }));
-  const chargesData = [
-    { date: "Oct 24", marketing: .5, marketingLite: .3, utility: .2, authentication: .1, authenticationIntl: 0 },
-    { date: "Oct 25", marketing: .4, marketingLite: .2, utility: .3, authentication: .1, authenticationIntl: 0 },
-    { date: "Oct 26", marketing: .8, marketingLite: .5, utility: .4, authentication: .2, authenticationIntl: .1 },
-    { date: "Oct 27", marketing: .6, marketingLite: .4, utility: .3, authentication: .2, authenticationIntl: .1 },
-    { date: "Oct 28", marketing: 1.2, marketingLite: .8, utility: .6, authentication: .3, authenticationIntl: .2 },
-    { date: "Oct 29", marketing: 1, marketingLite: .6, utility: .5, authentication: .2, authenticationIntl: .1 },
-    { date: "Oct 30", marketing: .7, marketingLite: .4, utility: .3, authentication: .1, authenticationIntl: 0 },
-  ];
+  // Message analytics series — empty until backend whatsapp-messages-analytics endpoint exists.
+  const allDelData: Array<any> = [];
+  const freeData: Array<any> = [];
+  const paidData: Array<any> = [];
+  const chargesData: Array<any> = [];
 
   const charts = [
     { title: "All Deliveries", data: allDelData, lines: LINES },

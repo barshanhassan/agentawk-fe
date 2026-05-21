@@ -52,6 +52,17 @@ export default function OverviewTab() {
     }
   });
 
+  // Workspace-scoped time-series (DAU/MAU/WAU/Stickiness). Backend filters
+  // by workspace_id so a fresh workspace returns zero-valued buckets — which
+  // is the correct empty state, not the mock hump it used to show.
+  const { data: chartsData } = useQuery({
+    queryKey: ["/api/statistics/dashboard-charts"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/dashboard-charts");
+      return res.json();
+    }
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-16">
@@ -85,34 +96,12 @@ export default function OverviewTab() {
   const mauUsagePercentage = (kpiData.currentMAU / kpiData.mauLimit) * 100;
   const agentUtilizationPercentage = (kpiData.activeAgents / kpiData.totalSeats) * 100;
 
-  const dauData = [
-    { day: "Whatsapp", users: channels.whatsapp?.incoming || 0 },
-    { day: "Messenger", users: channels.messenger?.incoming || 0 },
-    { day: "Telegram", users: channels.telegram?.incoming || 0 },
-    { day: "Instagram", users: channels.instagram?.incoming || 0 },
-  ];
-
-  const stickinessData = Array.from({ length: 7 }, (_, i) => ({
-    day: `Day ${i + 1}`,
-    ratio: Math.floor(Math.random() * 30) + 10,
-  }));
-
-  const mauData = [
-    { month: "Jan", users: 120 },
-    { month: "Feb", users: 210 },
-    { month: "Mar", users: 450 },
-    { month: "Apr", users: 600 },
-    { month: "May", users: 800 },
-    { month: "Jun", users: kpiData.currentMAU },
-  ];
-
-  const wauData = [
-    { week: "Week 1", users: 400 },
-    { week: "Week 2", users: 550 },
-    { week: "Week 3", users: 700 },
-    { week: "Week 4", users: 650 },
-    { week: "Week 5", users: kpiData.activeWeek },
-  ];
+  // All chart data now comes from the backend, scoped to the current
+  // workspace via JWT. A brand-new workspace returns all-zero buckets.
+  const dauData: Array<{ day: string; users: number }> = chartsData?.dauData ?? [];
+  const mauData: Array<{ month: string; users: number }> = chartsData?.mauData ?? [];
+  const wauData: Array<{ week: string; users: number }> = chartsData?.wauData ?? [];
+  const stickinessData: Array<{ day: string; ratio: number }> = chartsData?.stickinessData ?? [];
 
   const kpiCards = [
     {

@@ -88,13 +88,15 @@ export default function BotDashboardContent() {
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
+  // Zero-valued KPI defaults — a fresh workspace shouldn't display demo numbers.
+  // TODO: wire to `GET /api/statistics/bot-analytics` (or similar) once that endpoint exists.
   const kpiData = {
-    botTriggered: 7,
-    respondedByBot: 26,
-    receivedByBot: 33,
-    totalMessages: 59,
+    botTriggered: 0,
+    respondedByBot: 0,
+    receivedByBot: 0,
+    totalMessages: 0,
     escalatedToHuman: 0,
-    avgSessionDuration: "0 hrs 14 mins",
+    avgSessionDuration: "0 hrs 0 mins",
   };
 
   const kpiCards = [
@@ -106,43 +108,10 @@ export default function BotDashboardContent() {
     { title: "Avg Session Duration", value: kpiData.avgSessionDuration, unit: "Per session", icon: <Clock size={14} />, color: "text-orange-500" },
   ];
 
-  const botVsHumanData = [
-    { date: "Oct 24", triggered: 0.5, escalated: 0.2 },
-    { date: "Oct 25", triggered: 0.8, escalated: 0.3 },
-    { date: "Oct 26", triggered: 1.2, escalated: 0.4 },
-    { date: "Oct 27", triggered: 1.5, escalated: 0.5 },
-    { date: "Oct 28", triggered: 2.0, escalated: 0.6 },
-    { date: "Oct 29", triggered: 2.3, escalated: 0.7 },
-    { date: "Oct 30", triggered: 1.8, escalated: 0.5 },
-  ];
-
-  const popularityData = [
-    { name: "Greeting", sentiment: 45 },
-    { name: "Product Info", sentiment: 38 },
-    { name: "Order Status", sentiment: 32 },
-    { name: "Payment Help", sentiment: 28 },
-    { name: "Returns", sentiment: 22 },
-    { name: "Shipping", sentiment: 18 },
-    { name: "Account", sentiment: 15 },
-    { name: "Feedback", sentiment: 12 },
-    { name: "Complaints", sentiment: 8 },
-    { name: "Other", sentiment: 5 },
-  ];
-
-  const busiestPeriodData = [
-    { time: "12 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 3, Tue: 3, Wed: 2 },
-    { time: "2 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
-    { time: "4 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
-    { time: "6 AM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 2, Tue: 2, Wed: 2 },
-    { time: "8 AM", Thu: 3, Fri: 4, Sat: 4, Sun: 3, Mon: 5, Tue: 5, Wed: 4 },
-    { time: "10 AM", Thu: 5, Fri: 6, Sat: 6, Sun: 4, Mon: 7, Tue: 7, Wed: 6 },
-    { time: "12 PM", Thu: 8, Fri: 9, Sat: 9, Sun: 7, Mon: 10, Tue: 10, Wed: 9 },
-    { time: "2 PM", Thu: 6, Fri: 7, Sat: 7, Sun: 5, Mon: 8, Tue: 8, Wed: 7 },
-    { time: "4 PM", Thu: 4, Fri: 5, Sat: 5, Sun: 3, Mon: 6, Tue: 6, Wed: 5 },
-    { time: "6 PM", Thu: 3, Fri: 4, Sat: 4, Sun: 3, Mon: 5, Tue: 5, Wed: 4 },
-    { time: "8 PM", Thu: 2, Fri: 3, Sat: 3, Sun: 2, Mon: 4, Tue: 3, Wed: 3 },
-    { time: "10 PM", Thu: 2, Fri: 2, Sat: 2, Sun: 2, Mon: 3, Tue: 2, Wed: 2 },
-  ];
+  // Chart series — empty until backend bot-analytics endpoint exists.
+  const botVsHumanData: Array<{ date: string; triggered: number; escalated: number }> = [];
+  const popularityData: Array<{ name: string; sentiment: number }> = [];
+  const busiestPeriodData: Array<{ time: string; [k: string]: number | string }> = [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;

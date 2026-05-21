@@ -14,23 +14,14 @@ export default function VoiceOfCustomerSummary() {
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  const sentimentScore = 78;
-
+  // Zero-state defaults — wire to backend voice-of-customer endpoint when ready.
+  const sentimentScore = 0;
   const sentimentDistribution = [
-    { name: "Positive", percentage: 65, color: "bg-emerald-500", icon: <Smile size={14} className="text-emerald-500" /> },
-    { name: "Neutral",  percentage: 25, color: "bg-orange-500",  icon: <Meh size={14} className="text-orange-500" /> },
-    { name: "Negative", percentage: 10, color: "bg-rose-500",    icon: <Frown size={14} className="text-rose-500" /> },
+    { name: "Positive", percentage: 0, color: "bg-emerald-500", icon: <Smile size={14} className="text-emerald-500" /> },
+    { name: "Neutral",  percentage: 0, color: "bg-orange-500",  icon: <Meh size={14} className="text-orange-500" /> },
+    { name: "Negative", percentage: 0, color: "bg-rose-500",    icon: <Frown size={14} className="text-rose-500" /> },
   ];
-
-  const sentimentTrendData = [
-    { date: "Oct 24", positive: 45, neutral: 15, negative: 8 },
-    { date: "Oct 25", positive: 52, neutral: 18, negative: 7 },
-    { date: "Oct 26", positive: 58, neutral: 20, negative: 6 },
-    { date: "Oct 27", positive: 62, neutral: 22, negative: 5 },
-    { date: "Oct 28", positive: 68, neutral: 24, negative: 4 },
-    { date: "Oct 29", positive: 72, neutral: 25, negative: 3 },
-    { date: "Oct 30", positive: 78, neutral: 25, negative: 10 },
-  ];
+  const sentimentTrendData: Array<{ date: string; positive: number; neutral: number; negative: number }> = [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;

@@ -71,18 +71,57 @@ const AgencyLogs = () => {
     t("agency.logs.filters.last_30_days")
   ];
 
-  const { data: logsResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/agency-logs`, selectedDate, page],
-    queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/agency-logs`);
-      return res.json();
+  // Map selected date label → from/to query params for the API.
+  const buildDateRange = (label: string): { from?: string; to?: string } => {
+    const now = new Date();
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const endOfDay   = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+    if (label === t("agency.logs.filters.today")) {
+      return { from: startOfDay(now).toISOString(), to: endOfDay(now).toISOString() };
     }
-  });
+    if (label === t("agency.logs.filters.yesterday")) {
+      const y = new Date(now); y.setDate(y.getDate() - 1);
+      return { from: startOfDay(y).toISOString(), to: endOfDay(y).toISOString() };
+    }
+    if (label === t("agency.logs.filters.last_7_days")) {
+      const s = new Date(now); s.setDate(s.getDate() - 7);
+      return { from: startOfDay(s).toISOString(), to: endOfDay(now).toISOString() };
+    }
+    if (label === t("agency.logs.filters.last_30_days")) {
+      const s = new Date(now); s.setDate(s.getDate() - 30);
+      return { from: startOfDay(s).toISOString(), to: endOfDay(now).toISOString() };
+    }
+    return {};
+  };
 
+  // Members query is declared FIRST so resolveAgentUserId() inside the logs
+  // queryFn can read it without temporal-dead-zone issues.
   const { data: membersResponse } = useQuery({
     queryKey: [`/api/agencies/${agencyId}/members`],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      return res.json();
+    }
+  });
+
+  // Map selected agent email → user_id from the loaded members list.
+  const resolveAgentUserId = (label: string): string | undefined => {
+    if (label === t("agency.logs.filters.all_agents")) return undefined;
+    const m = (membersResponse?.members || []).find((u: any) => u.email === label);
+    return m?.id?.toString();
+  };
+
+  const { data: logsResponse, isLoading } = useQuery({
+    queryKey: [`/api/agencies/${agencyId}/agency-logs`, selectedDate, selectedAgent, page],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      const { from, to } = buildDateRange(selectedDate);
+      if (from) params.set('from', from);
+      if (to)   params.set('to', to);
+      const userId = resolveAgentUserId(selectedAgent);
+      if (userId) params.set('user_id', userId);
+      params.set('page', String(page));
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}/agency-logs?${params.toString()}`);
       return res.json();
     }
   });
