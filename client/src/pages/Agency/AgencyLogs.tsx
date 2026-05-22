@@ -123,7 +123,11 @@ const AgencyLogs = () => {
       params.set('page', String(page));
       const res = await apiRequest("GET", `/api/agencies/${agencyId}/agency-logs?${params.toString()}`);
       return res.json();
-    }
+    },
+    // Audit logs must reflect the latest activity every time the page is opened.
+    // The global default is staleTime:Infinity, so force a refetch on mount.
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const agents = [t("agency.logs.filters.all_agents"), ...(membersResponse?.members || []).map((m: any) => m.email)];

@@ -128,7 +128,11 @@ const WorkspaceLogs = () => {
       params.set('page', String(page));
       const res = await apiRequest("GET", `/api/agencies/${agencyId}/audit-logs?${params.toString()}`);
       return res.json();
-    }
+    },
+    // Audit logs must reflect the latest activity every time the page is opened.
+    // The global default is staleTime:Infinity, so force a refetch on mount.
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const workspaces = [t("agency.auditLogs.filters.all_workspaces"), ...(workspacesResponse?.workspaces || []).map((ws: any) => ws.name)];
