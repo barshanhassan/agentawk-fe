@@ -95,6 +95,7 @@ const AgencyWorkspaces = () => {
   });
 
   const workspaces = (workspacesResponse?.workspaces || []).map((ws: any) => ({
+    ...ws, // keep all raw fields (agency_agent_id, timezone, limits, etc.) so the edit form can pre-fill
     id: ws.id,
     name: ws.name,
     createdAt: ws.created_at

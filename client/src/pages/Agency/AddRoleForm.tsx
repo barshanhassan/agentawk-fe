@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger,
+} from "@/components/ui/select";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +22,26 @@ const GROUP_META: Record<string, { icon: React.ReactNode; color: string; bg: str
 };
 
 const DEFAULT_META = { icon: <Key size={14} />, color: 'text-slate-400', bg: 'bg-slate-50 border-slate-100', darkBg: 'bg-slate-800 border-slate-700' };
+
+// FontAwesome icon choices for a role — mirrors replyagent's icons_list exactly so
+// the stored value (e.g. "fa-user-shield") matches the gateway. FA 6.4.0 is loaded
+// globally via index.html, so these render with a plain <i class="fa-solid …">.
+const ICONS_LIST = [
+  'fa-person-military-pointing',
+  'fa-lock',
+  'fa-shield-check',
+  'fa-user-shield',
+  'fa-badge-check',
+  'fa-key',
+  'fa-user-lock',
+  'fa-user',
+  'fa-user-tie',
+  'fa-user-group',
+  'fa-scale-balanced',
+  'fa-user-doctor',
+  'fa-circle-info',
+  'fa-circle-question',
+];
 
 interface Props { onCancel: () => void; initialData?: any; }
 
@@ -165,6 +188,35 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
               />
             </div>
+
+            {/* Icon picker — mirrors replyagent's "Select Icon" dropdown: the trigger
+                shows the chosen icon + its fa- name, and the dropdown lists the same
+                options (icon + name). The stored value matches the gateway exactly. */}
+            <div>
+              <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
+                dark ? 'text-slate-500' : 'text-slate-400')}>
+                {t('select_icon', 'Select Icon')}
+              </label>
+              <Select value={formData.icon} onValueChange={(icon) => setFormData(p => ({ ...p, icon }))}>
+                <SelectTrigger className={cn('h-9 text-[13px]', dark ? 'bg-[#0b1120] border-slate-700 text-white' : 'border-slate-200')}>
+                  <span className="flex items-center gap-2">
+                    <i className={cn('fa-solid w-4 text-center', formData.icon)} />
+                    {formData.icon}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className={cn('max-h-60', dark ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200')}>
+                  {ICONS_LIST.map(icon => (
+                    <SelectItem key={icon} value={icon} className={cn('text-[13px]', dark ? 'text-slate-200' : '')}>
+                      <span className="flex items-center gap-2">
+                        <i className={cn('fa-solid w-4 text-center', icon)} />
+                        {icon}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
                 dark ? 'text-slate-500' : 'text-slate-400')}>

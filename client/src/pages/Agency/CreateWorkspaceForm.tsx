@@ -117,7 +117,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
     name: initialData?.name || '',
     subdomain: initialData?.subdomain || '',
     timezone: initialData?.timezone || 'Asia/Karachi',
-    agentId: String(initialData?.agent_id || ''),
+    agentId: String(initialData?.agency_agent_id ?? initialData?.agent_id ?? ''),
     whiteLabel: initialData?.allow_branding || false,
     allowSupport: initialData?.allow_support || false,
     limitContacts: initialData?.limited_contacts || false,

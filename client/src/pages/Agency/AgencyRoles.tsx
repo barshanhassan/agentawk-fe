@@ -242,7 +242,9 @@ const AgencyRoles = () => {
                       accent.replace('bg-', 'bg-').replace('500', '500/10'),
                       'border border-current/5'
                     )}>
-                      <Shield className={cn('w-4 h-4', accent.replace('bg-', 'text-'))} />
+                      {/* Role's chosen FontAwesome icon (replyagent parity); falls back
+                          to a shield icon for older rows that have no icon stored. */}
+                      <i className={cn('fa-solid text-[15px]', role.icon || 'fa-user-shield', accent.replace('bg-', 'text-'))} />
                     </div>
                   </div>
 

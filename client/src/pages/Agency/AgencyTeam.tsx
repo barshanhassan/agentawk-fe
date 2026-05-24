@@ -77,6 +77,11 @@ const AgencyTeam = () => {
         role: m.role || 'Agent',
         status: m.status?.toUpperCase() || 'ACTIVE',
         is_owner: m.is_owner,
+        // Carry contact numbers through so the edit form can pre-fill them.
+        phone: m.phone || '',
+        phone_country: m.phone_country || '',
+        whatsapp: m.whatsapp || '',
+        whatsapp_country: m.whatsapp_country || '',
       }))
       .filter((m: any) =>
         !q || m.email.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)
