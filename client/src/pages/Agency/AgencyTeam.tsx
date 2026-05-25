@@ -75,6 +75,7 @@ const AgencyTeam = () => {
         email: m.email,
         name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
         role: m.role || 'Agent',
+        role_slug: m.role_slug || '',
         status: m.status?.toUpperCase() || 'ACTIVE',
         is_owner: m.is_owner,
         // Carry contact numbers through so the edit form can pre-fill them.

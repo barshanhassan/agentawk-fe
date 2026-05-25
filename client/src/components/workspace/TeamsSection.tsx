@@ -146,6 +146,11 @@ export default function TeamsSection() {
 
   const handleSave = () => {
     if (!teamName.trim()) return;
+    // replyagent parity: a team must have at least one member
+    if (selectedAgents.length === 0) {
+      toast({ title: "Validation", description: "Add at least one member to the team.", variant: "destructive" });
+      return;
+    }
     saveMutation.mutate({
       id: editingId,
       name: teamName,
@@ -212,6 +217,7 @@ export default function TeamsSection() {
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     placeholder="e.g. Sales Team"
+                    maxLength={60}
                     className={inputCls}
                   />
                 </div>

@@ -142,7 +142,10 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
     first_name: initialData?.name?.split(' ')[0] || '',
     last_name: initialData?.name?.split(' ').slice(1).join(' ') || '',
     email: initialData?.email || '',
-    role: initialData?.role?.toLowerCase() || '',
+    // Pre-select directly from the assigned role's slug (returned by members()).
+    // Bulletproof — no name matching. The effect below is only a fallback for
+    // older data that doesn't include role_slug.
+    role: initialData?.role_slug || '',
     phone: initialData?.phone || '',
     phone_country: initialData?.phone_country || 'US',
     whatsapp: initialData?.whatsapp || '',

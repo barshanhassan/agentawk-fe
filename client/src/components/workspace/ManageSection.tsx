@@ -25,6 +25,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { TIMEZONES } from "@/lib/timezones";
 
 export default function ManageSection() {
   const { mode } = useTheme();
@@ -62,7 +63,9 @@ export default function ManageSection() {
   });
 
   const workspaceId = workspaceData?.id?.toString() || "1";
-  const loginUrl = "";
+  // replyagent shows `{activeDomain.domain}/login`. In workspace mode the current host IS the
+  // workspace domain, so origin + /login mirrors that exactly.
+  const loginUrl = typeof window !== "undefined" ? `${window.location.origin}/login` : "";
 
   const [workspaceName, setWorkspaceName] = useState("");
   const [timezone, setTimezone] = useState("America/Fortaleza");
@@ -181,11 +184,11 @@ export default function ManageSection() {
               <Input
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}
-                maxLength={50}
+                maxLength={100}
                 className={cn(inputCls, "pr-14")}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest opacity-40">
-                {workspaceName.length}/50
+                {workspaceName.length}/100
               </span>
             </div>
           </FieldRow>
@@ -202,13 +205,12 @@ export default function ManageSection() {
               <SelectTrigger className={inputCls}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                <SelectItem value="America/Fortaleza" className="text-[12px] font-bold">Fortaleza (America/Fortaleza)</SelectItem>
-                <SelectItem value="Asia/Karachi" className="text-[12px] font-bold">Karachi (Asia/Karachi)</SelectItem>
-                <SelectItem value="UTC" className="text-[12px] font-bold">UTC (Universal Time)</SelectItem>
-                <SelectItem value="America/Los_Angeles" className="text-[12px] font-bold">Pacific (America/Los_Angeles)</SelectItem>
-                <SelectItem value="America/New_York" className="text-[12px] font-bold">Eastern (America/New_York)</SelectItem>
-                <SelectItem value="Europe/London" className="text-[12px] font-bold">London (Europe/London)</SelectItem>
+              <SelectContent className={cn("rounded-xl border shadow-2xl max-h-72", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                {TIMEZONES.map((tz) => (
+                  <SelectItem key={tz.id} value={tz.id} className="text-[12px] font-bold">
+                    {tz.name} ({tz.id})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -241,16 +243,23 @@ export default function ManageSection() {
               <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                 <SelectItem value="sunday" className="text-[12px] font-bold">Sunday</SelectItem>
                 <SelectItem value="monday" className="text-[12px] font-bold">Monday</SelectItem>
+                <SelectItem value="tuesday" className="text-[12px] font-bold">Tuesday</SelectItem>
+                <SelectItem value="wednesday" className="text-[12px] font-bold">Wednesday</SelectItem>
+                <SelectItem value="thursday" className="text-[12px] font-bold">Thursday</SelectItem>
+                <SelectItem value="friday" className="text-[12px] font-bold">Friday</SelectItem>
+                <SelectItem value="saturday" className="text-[12px] font-bold">Saturday</SelectItem>
               </SelectContent>
             </Select>
 
             <div className={cn("mt-4 p-5 rounded-[1.25rem] border", softBg, softBorder)}>
               <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60 mb-3", sub)}>Calendar preview</p>
               <div className="flex gap-2">
-                {(firstDayOfWeek === "monday"
-                  ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                  : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-                ).map((d, i) => {
+                {(() => {
+                  const WEEK = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+                  const LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  const start = Math.max(0, WEEK.indexOf((firstDayOfWeek || "sunday").slice(0, 3)));
+                  return [...LABELS.slice(start), ...LABELS.slice(0, start)];
+                })().map((d, i) => {
                   const active = i === 0;
                   return (
                     <div
@@ -282,7 +291,7 @@ export default function ManageSection() {
             last
           >
             <div className="flex gap-2">
-              <Input readOnly value="No login URL configured" className={cn(inputCls, "flex-1 cursor-default opacity-60")} />
+              <Input readOnly value={loginUrl || "No login URL configured"} className={cn(inputCls, "flex-1 cursor-default", !loginUrl && "opacity-60")} />
               <button
                 onClick={() => handleCopy(loginUrl)}
                 className={cn(
@@ -295,9 +304,15 @@ export default function ManageSection() {
                 <Copy size={12} /> Copy
               </button>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-500 mt-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Not configured
-            </div>
+            {loginUrl ? (
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 mt-2">
+                <CheckCircle2 size={12} /> Configured
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-500 mt-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Not configured
+              </div>
+            )}
           </FieldRow>
 
           {/* Save Footer */}

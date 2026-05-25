@@ -537,22 +537,18 @@ export default function ConversationsInbox() {
   };
 
   const handleExportConversations = () => {
-    // Mock data for conversations
-    const mockMessages = [
-      { number: 1, status: "Completed", direction: "Inbound", senderName: "John Doe", content: "Hello, I need help", messageStatus: "Delivered" },
-      { number: 2, status: "Completed", direction: "Outbound", senderName: "Agent Smith", content: "Hi! How can I assist?", messageStatus: "Delivered" },
-      { number: 3, status: "Completed", direction: "Inbound", senderName: "John Doe", content: "I have a billing issue", messageStatus: "Delivered" },
-    ];
+    // Export the REAL messages of the selected conversation
+    const convStatus = selectedConvObj?.status || "";
+    const contactName = selectedConvObj?.displayName || selectedConvObj?.name || "Customer";
 
-    // Create CSV
     const headers = ["Number", "Status", "Inbound/Outbound", "Sender Name", "Messages Content", "Messages Status"];
-    const rows = mockMessages.map(msg => [
-      msg.number,
-      msg.status,
-      msg.direction,
-      msg.senderName,
-      `"${msg.content}"`, // Wrap in quotes to handle commas
-      msg.messageStatus,
+    const rows = messages.map((msg, i) => [
+      i + 1,
+      convStatus,
+      msg.from === "agent" ? "Outbound" : "Inbound",
+      msg.from === "agent" ? (assignedAgent || "Agent") : contactName,
+      `"${(msg.text || "").replace(/"/g, '""')}"`, // escape quotes & wrap for commas
+      "",
     ]);
 
     const csvContent = [
@@ -616,20 +612,20 @@ export default function ConversationsInbox() {
     11: {},
   });
 
-  // Basic details state per conversation
-  const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, BasicDetails>>({
-    1: { displayName: "John Doe", number: "+1 234 567 8900", email: "john@example.com", gender: "Male", whatsappOptOut: "No", address: "123 Main St" },
-    2: { displayName: "Jane Smith", number: "+1 234 567 8901", email: "jane@example.com", gender: "Female", whatsappOptOut: "No", address: "" },
-    3: { displayName: "Michael Chen", number: "+1 234 567 8902", email: "", gender: "", whatsappOptOut: "No", address: "" },
-    4: { displayName: "Sarah Wilson", number: "+1 234 567 8903", email: "sarah@example.com", gender: "Female", whatsappOptOut: "No", address: "" },
-    5: { displayName: "Bob Johnson", number: "+1 234 567 8904", email: "bob@example.com", gender: "Male", whatsappOptOut: "No", address: "" },
-    6: { displayName: "Emma Davis", number: "+1 234 567 8905", email: "emma@example.com", gender: "Female", whatsappOptOut: "No", address: "" },
-    7: { displayName: "Alex Rodriguez", number: "+1 234 567 8906", email: "alex@example.com", gender: "Male", whatsappOptOut: "No", address: "" },
-    8: { displayName: "Lisa Anderson", number: "+1 234 567 8907", email: "lisa@example.com", gender: "Female", whatsappOptOut: "No", address: "" },
-    9: { displayName: "David Martinez", number: "+1 234 567 8908", email: "david@example.com", gender: "Male", whatsappOptOut: "No", address: "" },
-    10: { displayName: "", number: "", email: "", gender: "", whatsappOptOut: "No", address: "" },
-    11: { displayName: "", number: "", email: "", gender: "", whatsappOptOut: "No", address: "" },
-  });
+  // Basic details EDIT BUFFER per conversation (starts empty — real values come from the conversation's contact)
+  const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, BasicDetails>>({});
+
+  // Real contact details for the selected conversation; the edit buffer wins once the user changes something.
+  const selectedConvObj = conversations.find((c: Conversation) => c.id === selectedConversation);
+  const currentBasicDetails: BasicDetails =
+    (selectedConversation != null && basicDetailsByConv[selectedConversation]) || {
+      displayName: selectedConvObj?.displayName || selectedConvObj?.name || "",
+      number: selectedConvObj?.phoneNumber || "",
+      email: "",
+      gender: "",
+      whatsappOptOut: "No",
+      address: "",
+    };
 
   // Involved teams state per conversation
   const [involvedTeamsByConv, setInvolvedTeamsByConv] = useState<Record<number, string[]>>({
@@ -2023,7 +2019,7 @@ export default function ConversationsInbox() {
             <ContactProfileSidebar
               conversation={conversations.find((c: Conversation) => c.id === selectedConversation)}
               conversations={conversations}
-              basicDetails={basicDetailsByConv[selectedConversation || 0]}
+              basicDetails={currentBasicDetails}
               onUpdateBasicDetails={handleUpdateBasicDetails}
               assignedAgent={assignedAgent}
               onAssignAgent={handleAssignAgent}

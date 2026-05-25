@@ -46,8 +46,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import CustomDropdown from "@/components/CustomDropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getAvatarColor } from "@/lib/avatar-utils";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AppSidebar() {
   const [location, setLocation] = useLocation();
@@ -66,8 +67,36 @@ export default function AppSidebar() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [language, setLanguage] = useState<string[]>(["en-us"]);
-  const [workspace, setWorkspace] = useState<string[]>(["workspace-a"]);
   const [searchType, setSearchType] = useState("WhatsApp Number");
+
+  // Real workspaces this user can switch to (replyagent parity). Owner sees all
+  // agency workspaces; an agent sees only the ones assigned to them.
+  const { data: wsResp } = useQuery<any>({
+    queryKey: ["/api/workspaces/accessible"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/accessible");
+      return res.json();
+    },
+  });
+  const accessibleWorkspaces: any[] = wsResp?.workspaces || [];
+  // Current workspace = the one matching the host's subdomain (set the dropdown to it).
+  const currentSub = typeof window !== "undefined" ? window.location.hostname.split(".")[0] : "";
+  const workspaceSelected = (() => {
+    const cur = accessibleWorkspaces.find((w) => (w.sub_domain || w.slug) === currentSub);
+    return cur ? [cur.sub_domain || cur.slug] : [];
+  })();
+  // Switching navigates to the target workspace's subdomain, keeping the current
+  // root domain + port (so it works the same in local dev and production).
+  const switchWorkspace = (val: string[]) => {
+    const targetId = val[0];
+    if (!targetId || targetId === currentSub) return;
+    const target = accessibleWorkspaces.find((w) => (w.sub_domain || w.slug) === targetId);
+    if (!target) return;
+    const parts = window.location.hostname.split(".");
+    const root = parts.length > 1 ? parts.slice(1).join(".") : parts[0];
+    const port = window.location.port ? `:${window.location.port}` : "";
+    window.location.href = `${window.location.protocol}//${target.sub_domain || target.slug}.${root}${port}`;
+  };
 
   const searchOptions = [
     { label: "WhatsApp Number", icon: <SiWhatsapp size={14} /> },
@@ -82,12 +111,10 @@ export default function AppSidebar() {
     { label: "Contact ID", icon: <Hash size={14} /> }
   ];
 
-  const workspaceOptions = [
-    { id: "workspace-a", name: "Workspace A" },
-    { id: "workspace-b", name: "Workspace B" },
-    { id: "workspace-c", name: "Workspace C" },
-    { id: "create-workspace", name: "+ Create Workspace", icon: <Plus size={14} /> },
-  ];
+  const workspaceOptions = accessibleWorkspaces.map((w) => ({
+    id: w.sub_domain || w.slug,
+    name: w.name,
+  }));
 
   const statusOptions = [
     { id: "available", name: "Available", icon: <div className="w-3 h-3 bg-green-500 rounded-full" /> },
@@ -331,10 +358,10 @@ export default function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={cn(
-                "p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center relative group",
+                "relative p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group",
                 theme === "dark"
-                  ? "bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800"
-                  : "bg-primary/5 border-primary/10 text-slate-500 hover:bg-white hover:shadow-md hover:text-primary"
+                  ? "text-gray-400 hover:text-white hover:bg-slate-800"
+                  : "text-gray-500 hover:text-slate-900 hover:bg-slate-100"
               )}>
                 <Bell size={20} className="group-hover:rotate-12 transition-transform" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
@@ -382,13 +409,13 @@ export default function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={cn(
-                "flex items-center gap-3 p-1.5 pr-3 rounded-2xl border transition-all duration-300 group shadow-sm",
+                "flex items-center gap-3 px-3 py-1.5 rounded-xl cursor-pointer transition-all outline-none group border border-transparent",
                 theme === "dark"
-                  ? "bg-slate-800/50 border-slate-700 hover:bg-slate-800"
-                  : "bg-primary/5 border-primary/10 hover:bg-white hover:shadow-md hover:scale-[1.02]"
+                  ? "hover:bg-slate-800/50 hover:border-slate-700"
+                  : "hover:bg-slate-100 hover:border-slate-200"
               )}>
-                <Avatar className="w-8 h-8 ring-2 ring-white/50 shadow-sm transition-transform group-hover:scale-110">
-                  <AvatarFallback className={cn("text-[10px] font-black text-white", getAvatarColor(user?.first_name || "User"))}>
+                <Avatar className="w-9 h-9 border-2 border-white dark:border-slate-800">
+                  <AvatarFallback className="text-[12px] font-bold bg-primary text-primary-foreground">
                     {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                   </AvatarFallback>
                 </Avatar>
@@ -419,7 +446,7 @@ export default function AppSidebar() {
                 onClick={() => setLocation("/settings?tab=My%20Profile")}
               >
                 <Avatar className="w-10 h-10 ring-2 ring-white shadow-md">
-                  <AvatarFallback className={cn("text-xs font-black text-white", getAvatarColor(user?.first_name || "User"))}>
+                  <AvatarFallback className={cn("text-xs font-black text-white", "bg-primary")}>
                     {(user?.first_name?.[0] || "") + (user?.last_name?.[0] || "U")}
                   </AvatarFallback>
                 </Avatar>
@@ -452,8 +479,8 @@ export default function AppSidebar() {
                     <div>
                       <CustomDropdown
                         options={workspaceOptions}
-                        selected={workspace}
-                        onChange={(val) => setWorkspace(val)}
+                        selected={workspaceSelected}
+                        onChange={switchWorkspace}
                         placeholder="Workspace"
                         width="100%"
                         showSelectedOption={true}

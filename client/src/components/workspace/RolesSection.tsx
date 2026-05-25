@@ -104,13 +104,39 @@ export default function RolesSection() {
     queryKey: ["/api/workspaces/all-roles"],
   });
 
-  const roles = (rolesData || []).map((r: any) => ({
+  // Real permission catalog (workspace.* from acl_permissions). The deployed UI labels
+  // map to real permissions by NAME, so the meaningful permissions persist with real
+  // acl_role_permissions (replyagent logic) while the UI stays exactly as deployed.
+  const { data: permsTree } = useQuery<any>({
+    queryKey: ["/api/workspaces/permissions"],
+  });
+  const norm = (s: any) => String(s ?? "").toLowerCase().trim();
+  const realPerms: any[] = (permsTree || []).flatMap((g: any) => g.children || []);
+  const nameToSlug = new Map<string, string>(realPerms.map((p: any) => [norm(p.name), p.slug]));
+  const slugToName = new Map<string, string>(realPerms.map((p: any) => [p.slug, norm(p.name)]));
+
+  // Real-permission slugs (array) → nested {categoryId:{permId:true}} for the hardcoded UI
+  const buildNested = (slugs: string[]) => {
+    const titleSet = new Set((slugs || []).map((s) => slugToName.get(s)).filter(Boolean));
+    const nested: Record<string, Record<string, boolean>> = {};
+    PERMISSION_CATEGORIES.forEach((cat) => {
+      cat.subPermissions?.forEach((p) => {
+        if (titleSet.has(norm(p.title))) {
+          nested[cat.id] = nested[cat.id] || {};
+          nested[cat.id][p.id] = true;
+        }
+      });
+    });
+    return nested;
+  };
+
+  const roles = ((rolesData?.roles ?? rolesData) || []).map((r: any) => ({
     id: r.id.toString(),
     name: r.name,
     description: r.description,
     iconName: r.icon,
     isArchived: r.isArchived,
-    permissions: r.permissions || {},
+    permissions: Array.isArray(r.permissions) ? r.permissions : [], // real slugs
   }));
 
   const activeRoles = roles.filter((r: any) => !r.isArchived);
@@ -163,11 +189,25 @@ export default function RolesSection() {
     setPermissions(all);
   };
 
+  // Selected nested permissions → array of real permission slugs (mapped by title)
+  const collectSelectedSlugs = () => {
+    const slugs: string[] = [];
+    PERMISSION_CATEGORIES.forEach((cat) => {
+      cat.subPermissions?.forEach((p) => {
+        if (permissions[cat.id]?.[p.id]) {
+          const slug = nameToSlug.get(norm(p.title));
+          if (slug) slugs.push(slug);
+        }
+      });
+    });
+    return slugs;
+  };
+
   const handleManage = (role: any) => {
     setEditingRole(role);
     setRoleName(role.name);
     setRoleDescription(role.description || "");
-    setPermissions(role.permissions || {});
+    setPermissions(buildNested(role.permissions || []));
     const icon = ICONS.find((i) => i.name === role.iconName) || ICONS[0];
     setSelectedIcon(icon);
     setView("edit");
@@ -184,10 +224,11 @@ export default function RolesSection() {
       toast({ title: "Validation", description: "Role name is required.", variant: "destructive" });
       return;
     }
+    const slugs = collectSelectedSlugs();
     if (editingRole) {
-      updateMutation.mutate({ id: editingRole.id, data: { name: roleName, description: roleDescription, icon: selectedIcon.name, permissions } });
+      updateMutation.mutate({ id: editingRole.id, data: { name: roleName, description: roleDescription, icon: selectedIcon.name, permissions: slugs } });
     } else {
-      createMutation.mutate({ name: roleName, description: roleDescription, icon: selectedIcon.name, permissions });
+      createMutation.mutate({ name: roleName, description: roleDescription, icon: selectedIcon.name, permissions: slugs });
     }
   };
 
@@ -519,11 +560,7 @@ export default function RolesSection() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredRoles.map((role: any) => {
-                  const permCount = Object.values(role.permissions || {}).reduce(
-                    (s: number, cat: any) =>
-                      s + (typeof cat === "object" ? Object.values(cat).filter(Boolean).length : 0),
-                    0
-                  ) as number;
+                  const permCount = Array.isArray(role.permissions) ? role.permissions.length : 0;
                   const maxPerms = 15;
                   const rowPct = Math.min((permCount / maxPerms) * 100, 100);
                   const RoleIcon = ICONS.find((ic) => ic.name === role.iconName)?.icon || Shield;

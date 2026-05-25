@@ -81,7 +81,7 @@ export default function LiveChatSection() {
 
   const [agentAction, setAgentAction] = useState("keep");
   const [saveAgentDetails, setSaveAgentDetails] = useState(false);
-  const [agentDataFormat, setAgentDataFormat] = useState("full-name");
+  const [agentDataFormat, setAgentDataFormat] = useState("full_name");
   const [customField, setCustomField] = useState("AuditLog");
 
   const [saveConversationJson, setSaveConversationJson] = useState(false);
@@ -94,48 +94,83 @@ export default function LiveChatSection() {
 
   const [pauseSmartFlow, setPauseSmartFlow] = useState("automatically");
 
-  // Folders state
-  const [folders, setFolders] = useState<{ id: number; name: string; assignedTo: string }[]>([
-    { id: 1, name: "Usman", assignedTo: "" },
-    { id: 2, name: "Pasta Teste", assignedTo: "" },
-    { id: 3, name: "Returns", assignedTo: "" },
-    { id: 4, name: "121", assignedTo: "" },
-    { id: 5, name: "Sales", assignedTo: "" },
-  ]);
+  // Custom fields (for Completion tab "Save as JSON" target field — mirrors replyagent's field picker)
+  const { data: customFieldsData } = useQuery<any>({ queryKey: ["/api/custom-fields"] });
+  const customFields: { id: string; name: string }[] = Array.isArray(customFieldsData?.fields)
+    ? customFieldsData.fields.map((f: any) => ({ id: String(f.id), name: f.name || f.system_name || "" }))
+    : [];
+
+  // Folders — real conversation folders (replyagent inbox folders), no longer fake local state
+  const { data: foldersData } = useQuery<any>({ queryKey: ["/api/inbox/folders"] });
+  const folders: { id: string; name: string; assigned_to: string | null }[] = Array.isArray(foldersData)
+    ? foldersData.map((f: any) => ({
+        id: String(f.id),
+        name: f.name || "",
+        assigned_to: f.assigned_to != null ? String(f.assigned_to) : null,
+      }))
+    : [];
+
+  const { data: membersData } = useQuery<any>({ queryKey: ["/api/workspaces/members"] });
+  const agents: { id: string; label: string }[] = Array.isArray(membersData)
+    ? membersData.map((m: any) => ({
+        id: String(m.id),
+        label: m.full_name || [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || `Agent #${m.id}`,
+      }))
+    : [];
+
   const [folderFormOpen, setFolderFormOpen] = useState(false);
-  const [editingFolderId, setEditingFolderId] = useState<number | null>(null);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [folderName, setFolderName] = useState("");
-  const [folderAssignedTo, setFolderAssignedTo] = useState("");
+  const [folderAssignedTo, setFolderAssignedTo] = useState("all");
+
+  const invalidateFolders = () => queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
+  const createFolderMut = useMutation({
+    mutationFn: async (payload: any) => (await apiRequest("POST", "/api/inbox/folders", payload)).json(),
+    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: "Saved", description: "Folder created." }); },
+  });
+  const updateFolderMut = useMutation({
+    mutationFn: async ({ id, ...payload }: any) => (await apiRequest("PATCH", `/api/inbox/folders/${id}`, payload)).json(),
+    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: "Saved", description: "Folder updated." }); },
+  });
+  const deleteFolderMut = useMutation({
+    mutationFn: async (id: string) => (await apiRequest("DELETE", `/api/inbox/folders/${id}`)).json(),
+    onSuccess: () => { invalidateFolders(); setFolderFormOpen(false); toast({ title: "Deleted", description: "Folder removed." }); },
+  });
 
   const openAddFolder = () => {
     setEditingFolderId(null);
     setFolderName("");
-    setFolderAssignedTo("");
+    setFolderAssignedTo("all");
     setFolderFormOpen(true);
   };
 
-  const openEditFolder = (f: { id: number; name: string; assignedTo: string }) => {
+  const openEditFolder = (f: { id: string; name: string; assigned_to: string | null }) => {
     setEditingFolderId(f.id);
     setFolderName(f.name);
-    setFolderAssignedTo(f.assignedTo);
+    setFolderAssignedTo(f.assigned_to || "all");
     setFolderFormOpen(true);
   };
 
   const saveFolder = () => {
     if (!folderName.trim()) return;
+    const assigned = folderAssignedTo && folderAssignedTo !== "all" ? folderAssignedTo : null;
+    const payload = { name: folderName.trim(), assign_to: assigned ? "AGENT" : null, assigned_to: assigned };
     if (editingFolderId !== null) {
-      setFolders(folders.map((f) => (f.id === editingFolderId ? { ...f, name: folderName, assignedTo: folderAssignedTo } : f)));
+      updateFolderMut.mutate({ id: editingFolderId, ...payload });
     } else {
-      setFolders([...folders, { id: Date.now(), name: folderName, assignedTo: folderAssignedTo }]);
+      createFolderMut.mutate(payload);
     }
-    setFolderFormOpen(false);
+  };
+
+  const removeFolder = () => {
+    if (editingFolderId !== null) deleteFolderMut.mutate(editingFolderId);
   };
 
   useEffect(() => {
     if (settings) {
       setAgentAction(settings.value || "keep");
       setSaveAgentDetails(settings.save_to_custom_field === 1);
-      setAgentDataFormat(settings.data_format || "full-name");
+      setAgentDataFormat(settings.data_format === "json" ? "json" : "full_name");
       setCustomField(settings.custom_field || "AuditLog");
       setSaveConversationJson(settings.save_chat === 1);
       setJsonCustomField(settings.chat_field || "Json");
@@ -258,9 +293,8 @@ export default function LiveChatSection() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                        <SelectItem value="full-name" className="text-[12px] font-bold">Full Name</SelectItem>
-                        <SelectItem value="email" className="text-[12px] font-bold">Email</SelectItem>
-                        <SelectItem value="id" className="text-[12px] font-bold">User ID</SelectItem>
+                        <SelectItem value="full_name" className="text-[12px] font-bold">Full Name</SelectItem>
+                        <SelectItem value="json" className="text-[12px] font-bold">JSON</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -315,9 +349,13 @@ export default function LiveChatSection() {
                           <SelectValue placeholder="Select custom field" />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                          <SelectItem value="Json" className="text-[12px] font-bold">JSON History</SelectItem>
-                          <SelectItem value="Payload" className="text-[12px] font-bold">Raw Payload</SelectItem>
-                          <SelectItem value="User Data" className="text-[12px] font-bold">Extended Profile</SelectItem>
+                          {customFields.length === 0 ? (
+                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">No custom fields yet</div>
+                          ) : (
+                            customFields.map((f) => (
+                              <SelectItem key={f.id} value={f.name} className="text-[12px] font-bold">{f.name}</SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -572,13 +610,24 @@ export default function LiveChatSection() {
                           </SelectTrigger>
                           <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
                             <SelectItem value="all" className="text-[12px] font-bold">All Agents</SelectItem>
-                            <SelectItem value="sales-team" className="text-[12px] font-bold">Sales Team</SelectItem>
-                            <SelectItem value="support-team" className="text-[12px] font-bold">Support Team</SelectItem>
+                            {agents.map((a) => (
+                              <SelectItem key={a.id} value={a.id} className="text-[12px] font-bold">{a.label}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="flex justify-end gap-2 mt-auto pt-4">
+                      <div className="flex items-center gap-2 mt-auto pt-4">
+                        {editingFolderId !== null && (
+                          <button
+                            onClick={removeFolder}
+                            disabled={deleteFolderMut.isPending}
+                            className="h-10 px-5 rounded-xl border border-rose-500/30 text-rose-500 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-rose-500/10 disabled:opacity-50 flex items-center gap-2"
+                          >
+                            <Trash2 size={13} /> Delete
+                          </button>
+                        )}
+                        <div className="flex-1" />
                         <button
                           onClick={() => setFolderFormOpen(false)}
                           className={cn(
@@ -590,8 +639,8 @@ export default function LiveChatSection() {
                         >
                           Cancel
                         </button>
-                        <button onClick={saveFolder} className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}>
-                          Save
+                        <button onClick={saveFolder} disabled={createFolderMut.isPending || updateFolderMut.isPending} className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}>
+                          {createFolderMut.isPending || updateFolderMut.isPending ? "Saving..." : "Save"}
                         </button>
                       </div>
                     </div>

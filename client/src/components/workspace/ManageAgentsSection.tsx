@@ -32,6 +32,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { COUNTRIES } from "@/lib/countries";
 
 interface Agent {
   id: string;
@@ -79,6 +80,9 @@ export default function ManageAgentSection() {
   const [mobileAccess, setMobileAccess] = useState(false);
   const [limitIp, setLimitIp] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  // Login policy: per-weekday hours + ip (replyagent user_login_policies)
+  const [loginPolicy, setLoginPolicy] = useState<Record<string, string>>({});
+  const setPolicyField = (k: string, v: string) => setLoginPolicy((p) => ({ ...p, [k]: v }));
 
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
   const border     = dark ? "border-slate-800" : "border-slate-200";
@@ -117,6 +121,27 @@ export default function ManageAgentSection() {
     },
   });
 
+  // Real workspace roles (replyagent: role dropdown lists the workspace's acl_roles)
+  const { data: rolesApiData } = useQuery<any>({
+    queryKey: ["/api/workspaces/all-roles"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/all-roles");
+      return res.json();
+    },
+  });
+  const roles: { id: string; name: string }[] = (rolesApiData?.roles || rolesApiData || [])
+    .map((r: any) => ({ id: String(r.id), name: r.name || "Role" }));
+
+  // Real data for the agent access-scope tabs (replyagent user_accesses)
+  const { data: systemFieldsApi } = useQuery<any>({
+    queryKey: ["/api/system-fields"],
+    queryFn: async () => (await apiRequest("GET", "/api/system-fields")).json(),
+  });
+  const { data: customFieldsApi } = useQuery<any>({
+    queryKey: ["/api/custom-fields"],
+    queryFn: async () => (await apiRequest("GET", "/api/custom-fields")).json(),
+  });
+
   const agents: Agent[] = (membersData?.members || membersData || []).map((m: any) => ({
     id: m.id.toString(),
     name: m.full_name || `${m.first_name || ""} ${m.last_name || ""}`.trim(),
@@ -132,7 +157,6 @@ export default function ManageAgentSection() {
       a.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const TAGS = (tagsApiData?.tags || []).map((t: any) => ({ name: t.name }));
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -186,27 +210,17 @@ export default function ManageAgentSection() {
   const [language, setLanguage] = useState("pt-br");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("");
+  const [whatsappCountry, setWhatsappCountry] = useState("");
   const [phoneNotifications, setPhoneNotifications] = useState(false);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
 
-  const SYSTEM_FIELDS = [
-    "first_name", "last_name", "title", "primary_mobile", "primary_whatsapp",
-    "primary_email", "instagram_handler", "address", "gender", "language",
-    "locale", "timezone",
-  ];
-
-  const CUSTOM_FIELDS = [
-    "RespostaGPT", "Payload", "Ultimo Imovel", "RespostaVision", "Date time",
-    "booking_date_time", "user_confirm", "user_email", "Booking id",
-    "booking_reschedule", "reschedule_user_confirm", "eventTypeID",
-    "Roger Booking Name", "Roger Booking Email", "Roger Book Date Time",
-    "Roger Doctor Name", "Text area 2", "Json", "Resposta LLMW",
-    "current_date_time", "resposta_vision", "pergunta_gpt", "buscabaserow",
-    "endAtual", "campotexto", "Multiselect", "Nometst", "emailtst",
-  ];
-
-  const CHAT_AGENTS = agents.map((a) => ({ name: a.name }));
+  // Real {id,label} lists for the scope tabs (ids saved into user_accesses)
+  const systemFieldsList = (systemFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.name || f.slug || "Field" }));
+  const customFieldsList = (customFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.name || f.system_name || "Field" }));
+  const tagsList = (tagsApiData?.tags || []).map((t: any) => ({ id: String(t.id), label: t.name || "Tag" }));
+  const agentsList = agents.map((a) => ({ id: a.id, label: a.name || a.email }));
 
   const CHAT_CHANNELS = [
     { name: "Reply Agen Stage One", type: "telegram" },
@@ -238,10 +252,13 @@ export default function ManageAgentSection() {
     setLanguage("pt-br");
     setPhoneNumber("");
     setWhatsappNumber("");
+    setPhoneCountry("");
+    setWhatsappCountry("");
     setPhoneNotifications(false);
     setWhatsappNotifications(false);
     setMobileAccess(false);
     setLimitIp(false);
+    setLoginPolicy({});
     setTwoFA(false);
     setSelectedSystemFields([]);
     setSelectedCustomFields([]);
@@ -254,11 +271,36 @@ export default function ManageAgentSection() {
 
   const handleEdit = (agent: Agent) => {
     setEditingId(agent.id);
+    const o = agent.original || {};
     const names = agent.name.split(" ");
-    setFirstName(names[0] || "");
-    setLastName(names.slice(1).join(" ") || "");
+    setFirstName(o.first_name || names[0] || "");
+    setLastName(o.last_name || names.slice(1).join(" ") || "");
     setEmail(agent.email);
-    setRole(agent.role.toLowerCase().includes("super") ? "super-user" : "agent");
+    // real role id from the member (no more fragile name-matching)
+    setRole(o.role_id ? String(o.role_id) : "");
+    setLanguage(o.locale || "pt-br");
+    setTwoFA(!!o.tfa_required);
+    setMobileAccess(o.mobile_access == 1 || o.mobile_access === true);
+    setPhoneNumber(o.phone || "");
+    setPhoneCountry(o.phone_country || "");
+    setWhatsappNumber(o.whatsapp || "");
+    setWhatsappCountry(o.whatsapp_country || "");
+    setPhoneNotifications(!!o.receive_sms_notification);
+    setWhatsappNotifications(!!o.receive_whatsapp_notification);
+    // Login policy prefill (normalize "HH:MM:SS" → "HH:MM" for the time selects)
+    const lp = o.login_policy || {};
+    const normalized: Record<string, string> = { ip: lp.ip || "" };
+    ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].forEach((d) => {
+      normalized[`${d}_login`] = (lp[`${d}_login`] || "").slice(0, 5);
+      normalized[`${d}_logout`] = (lp[`${d}_logout`] || "").slice(0, 5);
+    });
+    setLoginPolicy(normalized);
+    setLimitIp(!!lp.limit_by_ip);
+    // Access scopes prefill (ids as strings)
+    setSelectedSystemFields(Array.isArray(o.systemFields) ? o.systemFields.map(String) : []);
+    setSelectedCustomFields(Array.isArray(o.customFields) ? o.customFields.map(String) : []);
+    setSelectedTags(Array.isArray(o.tags) ? o.tags.map(String) : []);
+    setSelectedChatAgents(Array.isArray(o.agents) ? o.agents.map(String) : []);
     setView("edit");
   };
 
@@ -271,23 +313,31 @@ export default function ManageAgentSection() {
       });
       return;
     }
+    const payload: any = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      role_id: role || undefined, // real workspace role id (omitted if none picked)
+      locale: language,
+      tfa_required: twoFA,
+      mobile_access: mobileAccess,
+      phone: phoneNumber,
+      phone_country: phoneCountry,
+      whatsapp: whatsappNumber,
+      whatsapp_country: whatsappCountry,
+      receive_sms_notification: phoneNotifications,
+      receive_whatsapp_notification: whatsappNotifications,
+      loginPolicy: { ...loginPolicy, limit_by_ip: limitIp },
+      // access scopes (channels deferred to the Channels module)
+      systemFields: selectedSystemFields,
+      customFields: selectedCustomFields,
+      tags: selectedTags,
+      agents: selectedChatAgents,
+    };
     if (view === "edit" && editingId) {
-      updateMutation.mutate({
-        id: editingId,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          role_id: role === "super-user" ? 1 : 2,
-        },
-      });
+      updateMutation.mutate({ id: editingId, data: payload });
     } else {
-      createMutation.mutate({
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        role_id: role === "super-user" ? 1 : 2,
-      });
+      createMutation.mutate(payload);
     }
   };
 
@@ -397,8 +447,13 @@ export default function ManageAgentSection() {
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                          <SelectItem value="super-user" className="text-[12px] font-bold">Super User (Full Control)</SelectItem>
-                          <SelectItem value="agent" className="text-[12px] font-bold">Standard Agent</SelectItem>
+                          {roles.length === 0 ? (
+                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">No roles yet</div>
+                          ) : (
+                            roles.map((r) => (
+                              <SelectItem key={r.id} value={r.id} className="text-[12px] font-bold">{r.name}</SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </Field>
@@ -420,8 +475,8 @@ export default function ManageAgentSection() {
                     <h4 className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Contact</h4>
 
                     {[
-                      { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, notify: phoneNotifications, notifySetter: setPhoneNotifications, placeholder: "(407) 231-1234" },
-                      { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, notify: whatsappNotifications, notifySetter: setWhatsappNotifications, placeholder: "+1 555 123 4567" },
+                      { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications, placeholder: "(407) 231-1234" },
+                      { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications, placeholder: "+1 555 123 4567" },
                     ].map((row) => (
                       <div key={row.label} className={cn("p-5 rounded-[1.25rem] border flex items-center gap-4", softBg, softBorder)}>
                         <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
@@ -429,7 +484,19 @@ export default function ManageAgentSection() {
                         </div>
                         <div className="flex-1 min-w-0 space-y-1.5">
                           <FieldLabel dark={dark}>{row.label}</FieldLabel>
-                          <Input value={row.value} onChange={(e) => row.setter(e.target.value)} placeholder={row.placeholder} className={inputCls} />
+                          <div className="flex gap-2">
+                            <Select value={row.country} onValueChange={row.countrySetter}>
+                              <SelectTrigger className={cn(inputCls, "w-[120px] shrink-0")}>
+                                <SelectValue placeholder="Code" />
+                              </SelectTrigger>
+                              <SelectContent className={cn("rounded-xl border shadow-2xl max-h-72", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                                {COUNTRIES.map((c) => (
+                                  <SelectItem key={c.code} value={c.code} className="text-[12px] font-bold">{c.code} {c.dial}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input value={row.value} onChange={(e) => row.setter(e.target.value)} placeholder={row.placeholder} className={cn(inputCls, "flex-1")} />
+                          </div>
                         </div>
                         <div className="flex items-center gap-3 pl-4 border-l" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }}>
                           <div className="text-right">
@@ -535,11 +602,13 @@ export default function ManageAgentSection() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {DAYS.map((day) => (
+                        {DAYS.map((day) => {
+                          const k = day.toLowerCase();
+                          return (
                           <TableRow key={day} className={cn("border-b last:border-0 hover:bg-transparent", softBorder)}>
                             <TableCell className={cn("py-3 px-6 text-[12px] font-black", text)}>{day}</TableCell>
                             <TableCell className="py-3 px-6">
-                              <Select>
+                              <Select value={loginPolicy[`${k}_login`] || ""} onValueChange={(v) => setPolicyField(`${k}_login`, v)}>
                                 <SelectTrigger className={cn(inputCls, "h-9")}>
                                   <SelectValue placeholder="00:00" />
                                 </SelectTrigger>
@@ -549,7 +618,7 @@ export default function ManageAgentSection() {
                               </Select>
                             </TableCell>
                             <TableCell className="py-3 px-6">
-                              <Select>
+                              <Select value={loginPolicy[`${k}_logout`] || ""} onValueChange={(v) => setPolicyField(`${k}_logout`, v)}>
                                 <SelectTrigger className={cn(inputCls, "h-9")}>
                                   <SelectValue placeholder="23:59" />
                                 </SelectTrigger>
@@ -559,7 +628,8 @@ export default function ManageAgentSection() {
                               </Select>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -571,7 +641,7 @@ export default function ManageAgentSection() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>IP Restriction</p>
-                        {limitIp && <Input placeholder="Enter static IP address..." className={cn(inputCls, "h-9 mt-2 max-w-xs")} />}
+                        {limitIp && <Input value={loginPolicy.ip || ""} onChange={(e) => setPolicyField("ip", e.target.value)} placeholder="Enter static IP address..." className={cn(inputCls, "h-9 mt-2 max-w-xs")} />}
                       </div>
                     </div>
                     <Switch checked={limitIp} onCheckedChange={setLimitIp} className="data-[state=checked]:bg-primary" />
@@ -580,11 +650,11 @@ export default function ManageAgentSection() {
 
                 {/* List selection tabs */}
                 {[
-                  { key: "system",        title: "System Fields",  desc: "Standard fields the agent can manage.",         list: SYSTEM_FIELDS,    selected: selectedSystemFields,  setter: setSelectedSystemFields },
-                  { key: "custom",        title: "Custom Fields",  desc: "Workspace-defined fields the agent can access.", list: CUSTOM_FIELDS,    selected: selectedCustomFields,  setter: setSelectedCustomFields },
-                  { key: "tags",          title: "Tags",           desc: "Tags the agent can apply to contacts.",          list: TAGS.map((t: any) => t.name), selected: selectedTags,         setter: setSelectedTags },
-                  { key: "chat-agents",   title: "Squad",          desc: "Other agents this person can view in chat.",    list: CHAT_AGENTS.map(a => a.name), selected: selectedChatAgents,    setter: setSelectedChatAgents },
-                  { key: "chat-channels", title: "Channels",       desc: "Conversation gateways the agent can access.",    list: CHAT_CHANNELS.map(c => c.name), selected: selectedChatChannels, setter: setSelectedChatChannels },
+                  { key: "system",        title: "System Fields",  desc: "Standard fields the agent can manage.",         list: systemFieldsList, selected: selectedSystemFields,  setter: setSelectedSystemFields },
+                  { key: "custom",        title: "Custom Fields",  desc: "Workspace-defined fields the agent can access.", list: customFieldsList, selected: selectedCustomFields,  setter: setSelectedCustomFields },
+                  { key: "tags",          title: "Tags",           desc: "Tags the agent can apply to contacts.",          list: tagsList,         selected: selectedTags,         setter: setSelectedTags },
+                  { key: "chat-agents",   title: "Squad",          desc: "Other agents this person can view in chat.",    list: agentsList,       selected: selectedChatAgents,    setter: setSelectedChatAgents },
+                  { key: "chat-channels", title: "Channels",       desc: "Conversation gateways the agent can access.",    list: CHAT_CHANNELS.map((c) => ({ id: c.name, label: c.name, type: c.type })), selected: selectedChatChannels, setter: setSelectedChatChannels },
                 ].map((cfg) => (
                   <TabsContent key={cfg.key} value={cfg.key} className="m-0 outline-none space-y-5">
                     <div className="flex items-start justify-between gap-4">
@@ -598,18 +668,20 @@ export default function ManageAgentSection() {
                       <div className={cn("flex items-center gap-3 px-5 py-3 border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
                         <Checkbox
                           checked={cfg.selected.length === cfg.list.length && cfg.list.length > 0}
-                          onCheckedChange={(c) => toggleAll(c as boolean, cfg.list, cfg.setter)}
+                          onCheckedChange={(c) => toggleAll(c as boolean, cfg.list.map((i: any) => i.id), cfg.setter)}
                         />
                         <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>Select All</span>
                       </div>
                       <div>
-                        {cfg.list.map((item: string) => {
-                          const checked = cfg.selected.includes(item);
-                          const ch = CHAT_CHANNELS.find((c) => c.name === item);
+                        {cfg.list.length === 0 && (
+                          <div className="px-5 py-4 text-[11px] font-medium opacity-60">No items</div>
+                        )}
+                        {cfg.list.map((item: any) => {
+                          const checked = cfg.selected.includes(item.id);
                           return (
                             <div
-                              key={item}
-                              onClick={() => toggleItem(item, cfg.selected, cfg.setter)}
+                              key={item.id}
+                              onClick={() => toggleItem(item.id, cfg.selected, cfg.setter)}
                               className={cn(
                                 "flex items-center justify-between px-5 py-3 transition-colors cursor-pointer border-b last:border-0",
                                 softBorder,
@@ -618,20 +690,20 @@ export default function ManageAgentSection() {
                             >
                               <div className="flex items-center gap-3">
                                 <Checkbox checked={checked} className="pointer-events-none" />
-                                {cfg.key === "chat-agents" && <MemberAvatar name={item} />}
-                                {cfg.key === "chat-channels" && ch && (
+                                {cfg.key === "chat-agents" && <MemberAvatar name={item.label} />}
+                                {cfg.key === "chat-channels" && item.type && (
                                   <div className={cn(
                                     "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                                    ch.type === "telegram" ? "bg-blue-500" :
-                                    ch.type === "whatsapp" ? "bg-emerald-500" :
-                                    ch.type === "messenger" ? "bg-blue-600" :
-                                    ch.type === "instagram" ? "bg-pink-500" :
+                                    item.type === "telegram" ? "bg-blue-500" :
+                                    item.type === "whatsapp" ? "bg-emerald-500" :
+                                    item.type === "messenger" ? "bg-blue-600" :
+                                    item.type === "instagram" ? "bg-pink-500" :
                                     "bg-primary"
                                   )}>
                                     <Globe size={12} className="text-white" />
                                   </div>
                                 )}
-                                <span className={cn("text-[12px] font-bold", text)}>{item}</span>
+                                <span className={cn("text-[12px] font-bold", text)}>{item.label}</span>
                               </div>
                               {checked && <Check size={14} className="text-primary" />}
                             </div>

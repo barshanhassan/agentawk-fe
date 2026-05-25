@@ -115,7 +115,9 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
 
   const [form, setForm] = useState({
     name: initialData?.name || '',
-    subdomain: initialData?.subdomain || '',
+    // The workspace's slug IS its subdomain (created via the slug on workspace
+    // create), so fall back to slug when editing so the field pre-fills.
+    subdomain: initialData?.subdomain || initialData?.slug || '',
     timezone: initialData?.timezone || 'Asia/Karachi',
     agentId: String(initialData?.agency_agent_id ?? initialData?.agent_id ?? ''),
     whiteLabel: initialData?.allow_branding || false,

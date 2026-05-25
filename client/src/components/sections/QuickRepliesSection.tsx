@@ -27,6 +27,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
   id: string;
@@ -42,21 +44,42 @@ interface Collection {
   messages: Message[];
 }
 
-const initialCollections: Collection[] = [
-  { id: "1", name: "CaioTest", visibility: "public", messages: [{ id: "m1", title: "Caio", type: "text", content: "" }] },
-  { id: "2", name: "Collection 2 by usman", visibility: "public", messages: [] },
-  { id: "3", name: "Another collection for public.", visibility: "public", messages: [] },
-  { id: "4", name: "public collection by john doe", visibility: "public", messages: [] },
-  { id: "5", name: "Teste Tiago", visibility: "public", messages: [] },
-  { id: "6", name: "Makar", visibility: "public", messages: [] },
-];
-
 export default function QuickRepliesSection() {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const [collections, setCollections] = useState<Collection[]>(initialCollections);
+  // Real data: quick_responses table — groups (parent_id null) + messages (parent_id set)
+  const { data: qrData } = useQuery<any>({
+    queryKey: ["/api/quick-response"],
+    queryFn: async () => (await apiRequest("GET", "/api/quick-response")).json(),
+  });
+  const folders = qrData?.folders || [];
+  const responses = qrData?.responses || [];
+  const collections: Collection[] = folders.map((f: any) => ({
+    id: String(f.id),
+    name: f.title,
+    visibility: (f.share || "private") as Collection["visibility"],
+    messages: responses
+      .filter((r: any) => r.parent_id != null && String(r.parent_id) === String(f.id))
+      .map((m: any) => ({ id: String(m.id), title: m.title, type: (m.type || "text") as Message["type"], content: m.text || "" })),
+  }));
+
+  const invalidateQR = () => queryClient.invalidateQueries({ queryKey: ["/api/quick-response"] });
+  const createGroupMut = useMutation({
+    mutationFn: async (payload: any) => (await apiRequest("POST", "/api/quick-response/group", payload)).json(),
+    onSuccess: () => { invalidateQR(); },
+  });
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => (await apiRequest("DELETE", `/api/quick-response/${id}`)).json(),
+    onSuccess: () => { invalidateQR(); },
+  });
+  const createMessageMut = useMutation({
+    mutationFn: async (payload: any) => (await apiRequest("POST", "/api/quick-response/message", payload)).json(),
+    onSuccess: () => { invalidateQR(); },
+  });
+
   const [view, setView] = useState<"list" | "create_collection" | "collection_detail" | "create_message">("list");
 
   const [collectionName, setCollectionName] = useState("");
@@ -65,7 +88,8 @@ export default function QuickRepliesSection() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [currentCollection, setCurrentCollection] = useState<Collection | null>(null);
+  const [currentCollectionId, setCurrentCollectionId] = useState<string | null>(null);
+  const currentCollection = collections.find((c) => c.id === currentCollectionId) || null;
 
   const [messageTitle, setMessageTitle] = useState("");
   const [messageType, setMessageType] = useState<"text" | "media">("text");
@@ -134,43 +158,42 @@ export default function QuickRepliesSection() {
       setShowError(true);
       return;
     }
-    setCollections([...collections, { id: Date.now().toString(), name: collectionName, visibility, messages: [] }]);
-    setView("list");
-    toast({ title: "Success", description: "Collection created successfully" });
+    createGroupMut.mutate(
+      { title: collectionName, share: visibility },
+      { onSuccess: () => { setView("list"); toast({ title: "Success", description: "Collection created successfully" }); } }
+    );
   };
 
   const handleUpdateCollection = () => {
-    if (currentCollection && collectionName.trim()) {
-      setCollections(collections.map((c) => (c.id === currentCollection.id ? { ...c, name: collectionName } : c)));
-      setCollectionName("");
-      setCurrentCollection(null);
-      setIsEditModalOpen(false);
-      toast({ title: "Success", description: "Collection updated successfully" });
+    if (currentCollectionId && collectionName.trim()) {
+      createGroupMut.mutate(
+        { id: currentCollectionId, title: collectionName, share: currentCollection?.visibility || "private" },
+        { onSuccess: () => { setCollectionName(""); setCurrentCollectionId(null); setIsEditModalOpen(false); toast({ title: "Success", description: "Collection updated successfully" }); } }
+      );
     }
   };
 
   const handleDeleteCollection = () => {
-    if (currentCollection) {
-      setCollections(collections.filter((c) => c.id !== currentCollection.id));
-      setCurrentCollection(null);
-      setIsDeleteModalOpen(false);
-      toast({ title: "Success", description: "Collection deleted successfully" });
+    if (currentCollectionId) {
+      deleteMut.mutate(currentCollectionId, {
+        onSuccess: () => { setCurrentCollectionId(null); setIsDeleteModalOpen(false); toast({ title: "Success", description: "Collection deleted successfully" }); },
+      });
     }
   };
 
   const openEditModal = (collection: Collection) => {
-    setCurrentCollection(collection);
+    setCurrentCollectionId(collection.id);
     setCollectionName(collection.name);
     setIsEditModalOpen(true);
   };
 
   const openDeleteModal = (collection: Collection) => {
-    setCurrentCollection(collection);
+    setCurrentCollectionId(collection.id);
     setIsDeleteModalOpen(true);
   };
 
   const openCollectionDetail = (collection: Collection) => {
-    setCurrentCollection(collection);
+    setCurrentCollectionId(collection.id);
     setView("collection_detail");
   };
 
@@ -182,15 +205,11 @@ export default function QuickRepliesSection() {
   };
 
   const handleCreateMessage = () => {
-    if (currentCollection && messageTitle.trim() && messageContent.trim()) {
-      const newMessage: Message = { id: Date.now().toString(), title: messageTitle, type: messageType, content: messageContent };
-      const updated = collections.map((c) =>
-        c.id === currentCollection.id ? { ...c, messages: [...c.messages, newMessage] } : c
+    if (currentCollectionId && messageTitle.trim() && messageContent.trim()) {
+      createMessageMut.mutate(
+        { title: messageTitle, group_id: currentCollectionId, type: messageType, text: messageContent },
+        { onSuccess: () => { setView("collection_detail"); toast({ title: "Success", description: "Message created successfully" }); } }
       );
-      setCollections(updated);
-      setCurrentCollection(updated.find((c) => c.id === currentCollection.id) || null);
-      setView("collection_detail");
-      toast({ title: "Success", description: "Message created successfully" });
     }
   };
 
