@@ -14,10 +14,21 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const DEFAULT_PRIMARY = "217 91% 60%";
+
+// Read a cookie synchronously so the first render already has the last-known
+// theme — avoids the blue→brand colour flash while branding loads from the API.
+function readCookie(name: string): string | null {
+    if (typeof document === "undefined") return null;
+    const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]+)"));
+    return m ? decodeURIComponent(m[1]) : null;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [mode, setModeState] = useState<ThemeMode>("light");
-    // User's personal color preference — persisted via /api/users/theme
-    const [primaryColor, setPrimaryColorState] = useState("217 91% 60%");
+    const [mode, setModeState] = useState<ThemeMode>(() => (readCookie("themeMode") === "dark" ? "dark" : "light"));
+    // User's personal color preference — persisted via /api/users/theme.
+    // Seed from the cached cookie (the last effective colour) so we don't flash blue.
+    const [primaryColor, setPrimaryColorState] = useState(() => readCookie("themePrimaryColor") || DEFAULT_PRIMARY);
     // User's explicit pick from the Theme settings page — wins over workspace default
     const [userOverride, setUserOverride] = useState<string | null>(null);
     // Workspace branding override (default brand color, below an explicit user choice)

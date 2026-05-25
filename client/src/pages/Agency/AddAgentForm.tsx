@@ -15,109 +15,49 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
-} from "@/components/ui/command";
 import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { COUNTRIES as countries } from "@/lib/countries";
+import { COUNTRY_PLACEHOLDERS } from "@/lib/countryPlaceholders";
 
-const countries = [
-  { name: "Afghanistan", code: "AF", dial: "+93", placeholder: "70 123 4567" },
-  { name: "Albania", code: "AL", dial: "+355", placeholder: "67 123 4567" },
-  { name: "Algeria", code: "DZ", dial: "+213", placeholder: "512 34 56 78" },
-  { name: "Andorra", code: "AD", dial: "+376", placeholder: "123 456" },
-  { name: "Angola", code: "AO", dial: "+244", placeholder: "912 345 678" },
-  { name: "Argentina", code: "AR", dial: "+54", placeholder: "9 11 1234-5678" },
-  { name: "Armenia", code: "AM", dial: "+374", placeholder: "10 123456" },
-  { name: "Australia", code: "AU", dial: "+61", placeholder: "412 345 678" },
-  { name: "Austria", code: "AT", dial: "+43", placeholder: "664 1234567" },
-  { name: "Azerbaijan", code: "AZ", dial: "+994", placeholder: "50 123 45 67" },
-  { name: "Bahrain", code: "BH", dial: "+973", placeholder: "1234 5678" },
-  { name: "Bangladesh", code: "BD", dial: "+880", placeholder: "1234-567890" },
-  { name: "Belgium", code: "BE", dial: "+32", placeholder: "412 34 56 78" },
-  { name: "Brazil", code: "BR", dial: "+55", placeholder: "11 91234-5678" },
-  { name: "Canada", code: "CA", dial: "+1", placeholder: "(416) 123-4567" },
-  { name: "Chile", code: "CL", dial: "+56", placeholder: "9 1234 5678" },
-  { name: "China", code: "CN", dial: "+86", placeholder: "131 1234 5678" },
-  { name: "Colombia", code: "CO", dial: "+57", placeholder: "300 123 4567" },
-  { name: "Czech Republic", code: "CZ", dial: "+420", placeholder: "601 123 456" },
-  { name: "Denmark", code: "DK", dial: "+45", placeholder: "12 34 56 78" },
-  { name: "Egypt", code: "EG", dial: "+20", placeholder: "101 234 5678" },
-  { name: "Ethiopia", code: "ET", dial: "+251", placeholder: "91 123 4567" },
-  { name: "Finland", code: "FI", dial: "+358", placeholder: "41 2345678" },
-  { name: "France", code: "FR", dial: "+33", placeholder: "6 12 34 56 78" },
-  { name: "Germany", code: "DE", dial: "+49", placeholder: "1512 3456789" },
-  { name: "Ghana", code: "GH", dial: "+233", placeholder: "24 123 4567" },
-  { name: "Greece", code: "GR", dial: "+30", placeholder: "691 234 5678" },
-  { name: "Hungary", code: "HU", dial: "+36", placeholder: "20 123 4567" },
-  { name: "India", code: "IN", dial: "+91", placeholder: "91234 56789" },
-  { name: "Indonesia", code: "ID", dial: "+62", placeholder: "812-3456-7890" },
-  { name: "Iran", code: "IR", dial: "+98", placeholder: "912 345 6789" },
-  { name: "Iraq", code: "IQ", dial: "+964", placeholder: "790 123 4567" },
-  { name: "Ireland", code: "IE", dial: "+353", placeholder: "83 123 4567" },
-  { name: "Israel", code: "IL", dial: "+972", placeholder: "51-234-5678" },
-  { name: "Italy", code: "IT", dial: "+39", placeholder: "312 345 6789" },
-  { name: "Japan", code: "JP", dial: "+81", placeholder: "90-1234-5678" },
-  { name: "Jordan", code: "JO", dial: "+962", placeholder: "7 9123 4567" },
-  { name: "Kazakhstan", code: "KZ", dial: "+7", placeholder: "712 345 6789" },
-  { name: "Kenya", code: "KE", dial: "+254", placeholder: "712 345678" },
-  { name: "Kuwait", code: "KW", dial: "+965", placeholder: "1234 5678" },
-  { name: "Lebanon", code: "LB", dial: "+961", placeholder: "03 123 456" },
-  { name: "Libya", code: "LY", dial: "+218", placeholder: "91 123 4567" },
-  { name: "Malaysia", code: "MY", dial: "+60", placeholder: "12-345 6789" },
-  { name: "Mexico", code: "MX", dial: "+52", placeholder: "55 1234 5678" },
-  { name: "Morocco", code: "MA", dial: "+212", placeholder: "612 345678" },
-  { name: "Netherlands", code: "NL", dial: "+31", placeholder: "6 12345678" },
-  { name: "New Zealand", code: "NZ", dial: "+64", placeholder: "21 123 4567" },
-  { name: "Nigeria", code: "NG", dial: "+234", placeholder: "803 123 4567" },
-  { name: "Norway", code: "NO", dial: "+47", placeholder: "912 34 567" },
-  { name: "Oman", code: "OM", dial: "+968", placeholder: "9123 4567" },
-  { name: "Pakistan", code: "PK", dial: "+92", placeholder: "312 3456789" },
-  { name: "Palestine", code: "PS", dial: "+970", placeholder: "599 123 456" },
-  { name: "Peru", code: "PE", dial: "+51", placeholder: "912 345 678" },
-  { name: "Philippines", code: "PH", dial: "+63", placeholder: "912 345 6789" },
-  { name: "Poland", code: "PL", dial: "+48", placeholder: "512 345 678" },
-  { name: "Portugal", code: "PT", dial: "+351", placeholder: "912 345 678" },
-  { name: "Qatar", code: "QA", dial: "+974", placeholder: "3123 4567" },
-  { name: "Romania", code: "RO", dial: "+40", placeholder: "712 345 678" },
-  { name: "Russia", code: "RU", dial: "+7", placeholder: "912 345-67-89" },
-  { name: "Saudi Arabia", code: "SA", dial: "+966", placeholder: "51 234 5678" },
-  { name: "Singapore", code: "SG", dial: "+65", placeholder: "8123 4567" },
-  { name: "South Africa", code: "ZA", dial: "+27", placeholder: "71 234 5678" },
-  { name: "South Korea", code: "KR", dial: "+82", placeholder: "10-1234-5678" },
-  { name: "Spain", code: "ES", dial: "+34", placeholder: "612 34 56 78" },
-  { name: "Sri Lanka", code: "LK", dial: "+94", placeholder: "71 234 5678" },
-  { name: "Sudan", code: "SD", dial: "+249", placeholder: "91 234 5678" },
-  { name: "Sweden", code: "SE", dial: "+46", placeholder: "71-234 56 78" },
-  { name: "Switzerland", code: "CH", dial: "+41", placeholder: "71 123 45 67" },
-  { name: "Syria", code: "SY", dial: "+963", placeholder: "912 345 678" },
-  { name: "Taiwan", code: "TW", dial: "+886", placeholder: "912 345 678" },
-  { name: "Tanzania", code: "TZ", dial: "+255", placeholder: "612 345 678" },
-  { name: "Thailand", code: "TH", dial: "+66", placeholder: "81 234 5678" },
-  { name: "Tunisia", code: "TN", dial: "+216", placeholder: "91 234 567" },
-  { name: "Turkey", code: "TR", dial: "+90", placeholder: "512 345 67 89" },
-  { name: "Uganda", code: "UG", dial: "+256", placeholder: "712 345678" },
-  { name: "Ukraine", code: "UA", dial: "+380", placeholder: "63 123 4567" },
-  { name: "United Arab Emirates", code: "AE", dial: "+971", placeholder: "50 123 4567" },
-  { name: "United Kingdom", code: "GB", dial: "+44", placeholder: "7123 456789" },
-  { name: "United States", code: "US", dial: "+1", placeholder: "(407) 231-1234" },
-  { name: "Uzbekistan", code: "UZ", dial: "+998", placeholder: "91 234 56 78" },
-  { name: "Venezuela", code: "VE", dial: "+58", placeholder: "412 123 4567" },
-  { name: "Vietnam", code: "VN", dial: "+84", placeholder: "912 345 678" },
-  { name: "Yemen", code: "YE", dial: "+967", placeholder: "71 234 567" },
-  { name: "Zambia", code: "ZM", dial: "+260", placeholder: "95 123 4567" },
-  { name: "Zimbabwe", code: "ZW", dial: "+263", placeholder: "71 234 5678" },
-];
+// Example phone placeholder for a country code. Uses the exact match when
+// available, else falls back to another country with the same dial code (same
+// number format — e.g. Aland Islands +358 borrows Finland's), then a generic hint.
+function phonePlaceholder(code: string): string {
+  if (COUNTRY_PLACEHOLDERS[code]) return COUNTRY_PLACEHOLDERS[code];
+  const dial = countries.find(c => c.code === code)?.dial;
+  if (dial) {
+    const sameDial = countries.find(c => c.dial === dial && COUNTRY_PLACEHOLDERS[c.code]);
+    if (sameDial) return COUNTRY_PLACEHOLDERS[sameDial.code];
+  }
+  return "Phone number";
+}
 
 const CountrySelector = ({ value, onChange, isDark }: { value: string; onChange: (val: any) => void; isDark: boolean }) => {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const selected = countries.find(c => c.code === value) || countries.find(c => c.code === 'US') || countries[0];
 
+  // Manual, reliable filtering over the full country list — matches by country
+  // name, dial code or ISO code (cmdk's built-in fuzzy filter was unreliable).
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return countries;
+    const qd = q.replace('+', '');
+    return countries.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.dial.replace('+', '').includes(qd) ||
+      c.code.toLowerCase().includes(q)
+    );
+  }, [query]);
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery(''); }}>
       <PopoverTrigger asChild>
-        <button className={cn(
-          'absolute left-0 top-0 bottom-0 z-10 flex items-center px-3 gap-1.5 border-r transition-colors rounded-l',
+        <button type="button" className={cn(
+          // Fixed width so the chip never grows past the input's left padding and
+          // hides the placeholder's first digits (long dial codes like +1264).
+          'absolute left-0 top-0 bottom-0 z-10 flex items-center justify-start px-3 gap-1.5 border-r transition-colors rounded-l w-[84px] overflow-hidden',
           isDark ? 'border-slate-700 bg-slate-800/50 hover:bg-slate-800' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
         )}>
           <img src={`https://flagcdn.com/w20/${selected.code.toLowerCase()}.png`} alt={selected.code} className="w-4 h-auto" />
@@ -125,37 +65,50 @@ const CountrySelector = ({ value, onChange, isDark }: { value: string; onChange:
         </button>
       </PopoverTrigger>
       <PopoverContent className={cn('w-[280px] p-0 shadow-xl border', isDark ? 'bg-[#1e293b] border-slate-700' : 'bg-white border-slate-200')} align="start" sideOffset={4}>
-        <Command className={cn(isDark ? 'bg-[#1e293b]' : 'bg-white')}>
-          <div className={cn('flex items-center px-3 border-b', isDark ? 'border-slate-700' : 'border-slate-100')}>
-            <CommandInput
-              placeholder="Search country..."
-              className={cn(
-                'h-9 text-[12px] flex-1 bg-transparent outline-none border-0 ring-0 shadow-none placeholder:text-slate-400',
-                isDark ? 'text-white' : 'text-slate-900',
-                '[&]:focus:ring-0 [&]:focus:border-0 [&]:focus-visible:ring-0'
-              )}
-            />
-          </div>
-          <CommandList className="max-h-[240px] overflow-y-auto">
-            <CommandEmpty className="text-[12px] p-4 text-center text-slate-400">No countries found.</CommandEmpty>
-            <CommandGroup>
-              {countries.map(country => (
-                <CommandItem
-                  key={country.code}
-                  value={country.name}
-                  onSelect={() => { onChange(country); setOpen(false); }}
-                  className={cn('flex items-center gap-2.5 px-3 py-2 cursor-pointer text-[12px]',
-                    isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50')}
+        {/* Search box — bordered, replyagent style */}
+        <div className="p-2">
+          <input
+            autoFocus
+            placeholder="Search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className={cn(
+              'w-full h-8 px-3 rounded-md border text-[12px] outline-none transition-colors',
+              isDark
+                ? 'bg-[#0b1120] border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600'
+                : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300'
+            )}
+          />
+        </div>
+        {/* Country list grouped by first letter (replyagent parity) */}
+        <div className="max-h-60 overflow-y-auto pb-2">
+          {filtered.length === 0 ? (
+            <div className="text-[12px] px-3 py-3 text-slate-400">No countries found.</div>
+          ) : filtered.map((country, idx) => {
+            const letter = country.name.charAt(0).toUpperCase();
+            const showHeader = idx === 0 || filtered[idx - 1].name.charAt(0).toUpperCase() !== letter;
+            return (
+              <React.Fragment key={country.code}>
+                {showHeader && (
+                  <div className={cn('px-3 pt-2 pb-1 text-[12px] font-bold', isDark ? 'text-slate-200' : 'text-slate-900')}>
+                    {letter}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { onChange(country); setOpen(false); setQuery(''); }}
+                  className={cn('flex w-full items-center gap-2.5 px-3 py-1.5 cursor-pointer text-[12px] text-left',
+                    isDark ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-50 text-slate-700')}
                 >
-                  <img src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`} alt={country.code} className="w-4 h-auto" />
-                  <span className="flex-1">{country.name}</span>
-                  <span className="text-[11px] text-slate-400">{country.dial}</span>
-                  {selected.code === country.code && <Check className="w-3 h-3 text-primary" />}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+                  <img src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`} alt={country.code} className="w-4 h-auto shrink-0" />
+                  <span className="flex-1 truncate">{country.name}</span>
+                  <span className={cn('shrink-0', isDark ? 'text-slate-400' : 'text-slate-500')}>({country.dial})</span>
+                  {selected.code === country.code && <Check className="w-3 h-3 text-primary shrink-0" />}
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -358,14 +311,14 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
                   <label className={labelCls}>Phone</label>
                   <div className="relative">
                     <CountrySelector isDark={dark} value={formData.phone_country} onChange={c => setFormData({ ...formData, phone_country: c.code })} />
-                    <Input className={cn(inputCls, 'pl-[72px]')} placeholder={countries.find(c => c.code === formData.phone_country)?.placeholder || '...'} value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                    <Input className={cn(inputCls, 'pl-[84px]')} placeholder={phonePlaceholder(formData.phone_country)} value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                   </div>
                 </div>
                 <div>
                   <label className={labelCls}>WhatsApp</label>
                   <div className="relative">
                     <CountrySelector isDark={dark} value={formData.whatsapp_country} onChange={c => setFormData({ ...formData, whatsapp_country: c.code })} />
-                    <Input className={cn(inputCls, 'pl-[72px]')} placeholder={countries.find(c => c.code === formData.whatsapp_country)?.placeholder || '...'} value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} />
+                    <Input className={cn(inputCls, 'pl-[84px]')} placeholder={phonePlaceholder(formData.whatsapp_country)} value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} />
                   </div>
                 </div>
               </div>

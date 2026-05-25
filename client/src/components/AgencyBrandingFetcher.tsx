@@ -27,12 +27,30 @@ export function hexToHsl(hex: string): string {
 }
 
 const DEFAULT_BLUE = "217 91% 60%";
+const AGENCY_COLOR_CACHE = "agencyPrimaryColor";
+
+// Reads the last effective colour persisted by ThemeContext — used as a fallback
+// seed so even the first load after this change is flash-free.
+function readThemeCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(/(?:^|; )themePrimaryColor=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
 
 export default function AgencyBrandingFetcher() {
   const { setAgencyPrimaryColor } = useTheme();
 
   const userInfo = getUserInfo();
   const agencyId = userInfo.modelable_id;
+
+  // Apply the last-known agency colour IMMEDIATELY on mount (from cache), before
+  // the user-theme / workspace-branding fetches can briefly flip the colour to the
+  // personal/default blue. The agency override is highest priority, so seeding it
+  // synchronously here is what actually kills the blue flash.
+  useEffect(() => {
+    const cached = localStorage.getItem(AGENCY_COLOR_CACHE) || readThemeCookie();
+    if (cached) setAgencyPrimaryColor(cached);
+  }, []);
 
   const { data } = useQuery<any>({
     queryKey: [`/api/agencies/${agencyId}`],
@@ -44,8 +62,13 @@ export default function AgencyBrandingFetcher() {
   });
 
   useEffect(() => {
+    // While the query is loading, `data` is undefined — keep the cached colour,
+    // never force blue. Apply (and cache) the real colour once it arrives.
+    if (!data) return;
     const color = data?.agency?.branding?.color;
-    setAgencyPrimaryColor(color ? hexToHsl(color) : DEFAULT_BLUE);
+    const hsl = color ? hexToHsl(color) : DEFAULT_BLUE;
+    setAgencyPrimaryColor(hsl);
+    try { localStorage.setItem(AGENCY_COLOR_CACHE, hsl); } catch { /* ignore */ }
   }, [data]);
 
   // Clear agency override when leaving the agency panel

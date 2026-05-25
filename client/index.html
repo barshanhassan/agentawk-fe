@@ -11,6 +11,30 @@
   <!-- FontAwesome 6 Pro (self-hosted, same assets as replyagent) so Pro-only
        icons like fa-shield-check / fa-badge-check render. Replaces the free CDN. -->
   <link rel="stylesheet" href="/fontawesome6/css/all.min.css" />
+
+  <!-- Apply the last-known white-label colour + theme mode BEFORE first paint, so
+       the page never flashes the default blue while branding loads from the API.
+       Mirrors the CSS variables set in ThemeContext. -->
+  <script>
+    (function () {
+      try {
+        var c = document.cookie.match(/(?:^|; )themePrimaryColor=([^;]+)/);
+        if (c) {
+          var color = decodeURIComponent(c[1]);
+          var s = document.documentElement.style;
+          s.setProperty('--primary', color);
+          s.setProperty('--ring', color);
+          s.setProperty('--sidebar-primary', color);
+          s.setProperty('--sidebar-ring', color);
+          s.setProperty('--chart-1', color);
+        }
+        var m = document.cookie.match(/(?:^|; )themeMode=([^;]+)/);
+        if (m && decodeURIComponent(m[1]) === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>
