@@ -428,8 +428,6 @@ const mockMenuItems = [
     { type: 'item', label: 'SMS from Twilio', icon: FaComment, color: '#008CFF' },
     { type: 'item', label: 'Instagram', icon: FaInstagram, color: '#E1306C' },
     { type: 'item', label: 'Messenger', icon: FaFacebookMessenger, color: '#0084FF' },
-    { type: 'item', label: 'TestTiagoStage', icon: FaRobot, color: '#6366F1' },
-    { type: 'item', label: 'Do Not Delete This', icon: FaRobot, color: '#6366F1' },
     { type: 'item', label: 'Whatsapp', icon: FaWhatsapp, color: '#25D366' },
     { type: 'item', label: 'Telegram', icon: FaTelegram, color: '#24A1DE' },
     { type: 'item', label: 'Randomizer', icon: FaRandom, color: '#00B8D9' },

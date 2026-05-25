@@ -33,6 +33,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { COUNTRIES } from "@/lib/countries";
+import { phoneError, onlyDigits } from "@/lib/phone";
 
 interface Agent {
   id: string;
@@ -313,6 +314,13 @@ export default function ManageAgentSection() {
       });
       return;
     }
+    // Block save if a phone/whatsapp number is too short/long (replyagent parity)
+    const pErr = phoneError(phoneNumber, phoneCountry);
+    const wErr = phoneError(whatsappNumber, whatsappCountry);
+    if (pErr || wErr) {
+      toast({ title: "Validation Error", description: pErr || wErr, variant: "destructive" });
+      return;
+    }
     const payload: any = {
       first_name: firstName,
       last_name: lastName,
@@ -495,8 +503,11 @@ export default function ManageAgentSection() {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Input value={row.value} onChange={(e) => row.setter(e.target.value)} placeholder={row.placeholder} className={cn(inputCls, "flex-1")} />
+                            <Input value={row.value} inputMode="numeric" onChange={(e) => row.setter(onlyDigits(e.target.value))} placeholder={row.placeholder} className={cn(inputCls, "flex-1")} />
                           </div>
+                          {phoneError(row.value, row.country) && (
+                            <p className="text-[11px] text-rose-500 mt-1">{phoneError(row.value, row.country)}</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 pl-4 border-l" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }}>
                           <div className="text-right">

@@ -643,12 +643,12 @@ export default function ConversationsInbox() {
   });
 
   // Team options
-  const teamOptions = [
-    { id: "team-1", name: "Sales Team" },
-    { id: "team-2", name: "Support Team" },
-    { id: "team-3", name: "Technical Team" },
-    { id: "team-4", name: "Marketing Team" },
-  ];
+  // Real teams (replaces hardcoded options)
+  const { data: teamsData } = useQuery({
+    queryKey: ["/api/teams/get-all"],
+    queryFn: async () => (await apiRequest("GET", "/api/teams/get-all")).json(),
+  });
+  const teamOptions = (Array.isArray(teamsData) ? teamsData : []).map((t: any) => ({ id: String(t.id), name: t.name }));
 
   // Tags state per conversation
   const [tagsByConv, setTagsByConv] = useState<Record<number, string[]>>({
@@ -656,12 +656,12 @@ export default function ConversationsInbox() {
   });
 
   // Tag options
-  const tagOptions = [
-    { id: "tag-1", name: "VIP" },
-    { id: "tag-2", name: "Lead" },
-    { id: "tag-3", name: "Complaint" },
-    { id: "tag-4", name: "Billing Issue" },
-  ];
+  // Real tags (replaces hardcoded options)
+  const { data: tagsData } = useQuery({
+    queryKey: ["/api/tags/list"],
+    queryFn: async () => (await apiRequest("GET", "/api/tags/list")).json(),
+  });
+  const tagOptions = (tagsData?.tags || []).map((t: any) => ({ id: String(t.id), name: t.name }));
 
   // Notes state per conversation
   const [notesByConv, setNotesByConv] = useState<Record<number, string[]>>({

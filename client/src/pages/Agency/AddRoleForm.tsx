@@ -184,6 +184,7 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
               <Input
                 className={cn('h-9 text-[13px]', dark ? 'bg-[#0b1120] border-slate-700 text-white' : 'border-slate-200')}
                 placeholder="e.g. Support Manager"
+                maxLength={100}
                 value={formData.name}
                 onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
               />
@@ -224,6 +225,7 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
               </label>
               <textarea
                 rows={3}
+                maxLength={300}
                 className={cn(
                   'w-full px-3 py-2 text-[12px] rounded-md border outline-none resize-none transition-colors',
                   dark

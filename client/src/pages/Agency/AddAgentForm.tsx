@@ -19,6 +19,7 @@ import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { COUNTRIES as countries } from "@/lib/countries";
 import { COUNTRY_PLACEHOLDERS } from "@/lib/countryPlaceholders";
+import { phoneError, onlyDigits } from "@/lib/phone";
 
 // Example phone placeholder for a country code. Uses the exact match when
 // available, else falls back to another country with the same dial code (same
@@ -209,6 +210,13 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
       toast({ title: 'Name and email are required', variant: 'destructive' });
       return;
     }
+    // Block save if a phone/whatsapp number is too short/long (replyagent parity)
+    const pErr = phoneError(formData.phone, formData.phone_country);
+    const wErr = phoneError(formData.whatsapp, formData.whatsapp_country);
+    if (pErr || wErr) {
+      toast({ title: pErr || wErr, variant: 'destructive' });
+      return;
+    }
     if (initialData) {
       updateMutation.mutate(formData);
     } else {
@@ -236,6 +244,10 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
   const labelCls = cn('block text-[10px] font-bold uppercase tracking-widest mb-1.5', dark ? 'text-slate-500' : 'text-slate-400');
 
   const sectionCls = cn('rounded-xl border p-5 space-y-4', card, border);
+
+  // Live phone/whatsapp validation errors (shown under each field)
+  const phoneErr = phoneError(formData.phone, formData.phone_country);
+  const whatsappErr = phoneError(formData.whatsapp, formData.whatsapp_country);
 
   return (
     <div className={cn('min-h-screen flex flex-col', dark ? 'bg-[#0b1120]' : 'bg-slate-50/80')}>
@@ -292,16 +304,16 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelCls}>First Name</label>
-                  <Input className={inputCls} placeholder="John" value={formData.first_name} onChange={e => setFormData({ ...formData, first_name: e.target.value })} />
+                  <Input className={inputCls} placeholder="John" maxLength={100} value={formData.first_name} onChange={e => setFormData({ ...formData, first_name: e.target.value })} />
                 </div>
                 <div>
                   <label className={labelCls}>Last Name</label>
-                  <Input className={inputCls} placeholder="Doe" value={formData.last_name} onChange={e => setFormData({ ...formData, last_name: e.target.value })} />
+                  <Input className={inputCls} placeholder="Doe" maxLength={100} value={formData.last_name} onChange={e => setFormData({ ...formData, last_name: e.target.value })} />
                 </div>
               </div>
               <div>
                 <label className={labelCls}>Email Address <span className="text-red-500">*</span></label>
-                <Input className={inputCls} type="email" placeholder="john@example.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={!!initialData} />
+                <Input className={inputCls} type="email" placeholder="john@example.com" maxLength={250} value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={!!initialData} />
                 {initialData && <p className={cn('text-[11px] mt-1', sub)}>Email cannot be changed after creation.</p>}
               </div>
             </div>
@@ -314,15 +326,17 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
                   <label className={labelCls}>Phone</label>
                   <div className="relative">
                     <CountrySelector isDark={dark} value={formData.phone_country} onChange={c => setFormData({ ...formData, phone_country: c.code })} />
-                    <Input className={cn(inputCls, 'pl-[84px]')} placeholder={phonePlaceholder(formData.phone_country)} value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                    <Input className={cn(inputCls, 'pl-[84px]')} inputMode="numeric" placeholder={phonePlaceholder(formData.phone_country)} value={formData.phone} onChange={e => setFormData({ ...formData, phone: onlyDigits(e.target.value) })} />
                   </div>
+                  {phoneErr && <p className="text-[11px] text-red-500 mt-1">{phoneErr}</p>}
                 </div>
                 <div>
                   <label className={labelCls}>WhatsApp</label>
                   <div className="relative">
                     <CountrySelector isDark={dark} value={formData.whatsapp_country} onChange={c => setFormData({ ...formData, whatsapp_country: c.code })} />
-                    <Input className={cn(inputCls, 'pl-[84px]')} placeholder={phonePlaceholder(formData.whatsapp_country)} value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} />
+                    <Input className={cn(inputCls, 'pl-[84px]')} inputMode="numeric" placeholder={phonePlaceholder(formData.whatsapp_country)} value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: onlyDigits(e.target.value) })} />
                   </div>
+                  {whatsappErr && <p className="text-[11px] text-red-500 mt-1">{whatsappErr}</p>}
                 </div>
               </div>
             </div>

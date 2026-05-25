@@ -270,11 +270,12 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               <label className={labelCls}>Workspace Name</label>
               <Input
                 placeholder="e.g. Acme Corp"
+                maxLength={100}
                 value={form.name}
                 onChange={(e) => {
                   const name = e.target.value;
                   set('name', name);
-                  if (!isEdit) set('subdomain', name.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                  if (!isEdit) set('subdomain', name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30));
                 }}
                 className={inputCls}
               />
@@ -293,8 +294,9 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 </span>
                 <Input
                   placeholder="acmecorp"
+                  maxLength={30}
                   value={form.subdomain}
-                  onChange={(e) => set('subdomain', e.target.value)}
+                  onChange={(e) => set('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
                   disabled={isEdit}
                   className={cn("rounded-none border-0 flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 h-full disabled:opacity-100", dark ? "bg-[#0f172a] text-white" : "bg-white")}
                 />
