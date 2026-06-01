@@ -78,6 +78,94 @@ export default function AppSidebar() {
       return res.json();
     },
   });
+
+  // White-label branding — drives the header logo (replyagent Branding.logo accessor parity).
+  // Falls back to "EC" + "EZCONN" when no logo is uploaded.
+  // 1) localStorage initialData → instant render on revisit (no API wait, no flicker).
+  // 2) Background refetch keeps the cache fresh.
+  // 3) 30-min TTL — well under the 1-hour signed-URL expiry so URLs stay valid.
+  const BRANDING_CACHE_KEY = "ws_branding_cache_v1";
+  const BRANDING_CACHE_TTL = 30 * 60 * 1000;
+  const cachedBranding = (() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(BRANDING_CACHE_KEY) : null;
+      if (!raw) return undefined;
+      const { data, ts } = JSON.parse(raw);
+      if (Date.now() - ts > BRANDING_CACHE_TTL) return undefined;
+      return data;
+    } catch {
+      return undefined;
+    }
+  })();
+  const { data: brandingData, isLoading: isBrandingLoading } = useQuery<any>({
+    queryKey: ["/api/workspaces/branding"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/branding");
+      return res.json();
+    },
+    initialData: cachedBranding,
+    staleTime: 5 * 60 * 1000,
+  });
+  useEffect(() => {
+    if (brandingData) {
+      try {
+        localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify({ data: brandingData, ts: Date.now() }));
+      } catch { /* ignore quota errors */ }
+    }
+  }, [brandingData]);
+
+  // Notifications — top-bell dropdown. Preview-mode shows 5, expand-mode shows up to 100.
+  // Background-refetch every 60s so new events surface without a manual reload.
+  const [notifShowAll, setNotifShowAll] = useState(false);
+  const notifLimit = notifShowAll ? 100 : 5;
+  const { data: notifResp } = useQuery<any>({
+    queryKey: ["/api/notifications", { limit: notifLimit }],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/notifications?limit=${notifLimit}`);
+      return res.json();
+    },
+    refetchInterval: 60 * 1000,
+    staleTime: 30 * 1000,
+  });
+  const notifications: any[] = notifResp?.notifications || [];
+  const unreadCount: number = notifResp?.unread || 0;
+  const totalCount: number = notifResp?.total || 0;
+
+  /** Human-readable relative time without pulling in a date library. */
+  const formatRelativeTime = (iso: string | Date | null | undefined): string => {
+    if (!iso) return "";
+    const date = typeof iso === "string" ? new Date(iso) : iso;
+    const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diffSec < 60) return "just now";
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  /** Map a notification slug to the right icon/colour. */
+  const getNotifIcon = (slug?: string): { Icon: any; color: string } => {
+    const s = (slug || "").toLowerCase();
+    if (s.includes("message") || s.includes("mail")) return { Icon: Mail, color: "text-blue-500" };
+    if (s.includes("campaign") || s.includes("broadcast") || s.includes("send")) return { Icon: Send, color: "text-green-500" };
+    if (s.includes("approved") || s.includes("complete") || s.includes("success")) return { Icon: Check, color: "text-indigo-500" };
+    if (s.includes("chat") || s.includes("conversation")) return { Icon: MessageSquare, color: "text-purple-500" };
+    return { Icon: Bell, color: "text-slate-500" };
+  };
+  // Theme-aware logo selection (replyagent parity). Small/square variant preferred for
+  // the 36x36 header badge. Workspace branding API already includes parent agency
+  // fallback baked into these URLs (workspace logo → agency logo).
+  const headerLogoUrl: string | null = theme === "dark"
+    ? brandingData?.logo_dark_small_url ||
+      brandingData?.logo_light_small_url ||
+      brandingData?.logo_dark_url ||
+      brandingData?.logo_light_url ||
+      null
+    : brandingData?.logo_light_small_url ||
+      brandingData?.logo_dark_small_url ||
+      brandingData?.logo_light_url ||
+      brandingData?.logo_dark_url ||
+      null;
   const accessibleWorkspaces: any[] = wsResp?.workspaces || [];
   // Current workspace = the one matching the host's subdomain (set the dropdown to it).
   const currentSub = typeof window !== "undefined" ? window.location.hostname.split(".")[0] : "";
@@ -186,15 +274,29 @@ export default function AppSidebar() {
       <div className="flex items-center justify-between h-full px-5">
         {/* Left: Logo + EZCONN + Menu + Search */}
         <div className="flex items-center gap-6">
-          {/* Logo + EZCONN - Premium Styling */}
+          {/* Logo — white-label aware. The uploaded logo only replaces the "EC" badge and is
+              tinted to the white-label primary color. The "EZCONN" wordmark always stays. */}
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer group">
-              <div className={cn(
-                "w-9 h-9 rounded-xl flex items-center justify-center font-black text-primary-foreground shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
-                theme === "dark" ? "bg-primary shadow-primary/20" : "bg-primary shadow-primary/20"
-              )}>
-                EC
-              </div>
+              {isBrandingLoading ? (
+                // Invisible placeholder during initial fetch — prevents the EC-badge flash
+                // before the actual branded logo arrives.
+                <div className="w-9 h-9 shrink-0" aria-hidden="true" />
+              ) : headerLogoUrl ? (
+                <img
+                  src={headerLogoUrl}
+                  alt="Workspace logo"
+                  className="w-9 h-9 object-contain shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                />
+              ) : (
+                <div className={cn(
+                  "w-9 h-9 rounded-xl flex items-center justify-center font-black text-primary-foreground shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
+                  theme === "dark" ? "bg-primary shadow-primary/20" : "bg-primary shadow-primary/20"
+                )}>
+                  EC
+                </div>
+              )}
               <span className={cn(
                 "font-black text-xl tracking-tighter uppercase hidden md:block transition-colors duration-300",
                 theme === "dark" ? "text-white" : "text-slate-900"
@@ -364,7 +466,9 @@ export default function AppSidebar() {
                   : "text-gray-500 hover:text-slate-900 hover:bg-slate-100"
               )}>
                 <Bell size={20} className="group-hover:rotate-12 transition-transform" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
+                )}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={12} className={cn(
@@ -373,35 +477,60 @@ export default function AppSidebar() {
             )}>
               <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                 <h3 className="font-bold text-sm">Notifications</h3>
-                <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">3 NEW</span>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{unreadCount} NEW</span>
+                )}
               </div>
               <div className="max-h-96 overflow-y-auto p-1">
-                {[
-                  { title: "New message from John Doe", time: "2m ago", icon: Mail, color: "text-blue-500" },
-                  { title: "Campaign \"Summer Sale\" completed", time: "1h ago", icon: Send, color: "text-green-500" },
-                  { title: "Template approved", time: "3h ago", icon: Check, color: "text-indigo-500" }
-                ].map((n, i) => (
-                  <DropdownMenuItem key={i} className="p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none">
-                    <div className="flex gap-3">
-                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-700 shrink-0", n.color)}>
-                        <n.icon size={16} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{n.title}</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">{n.time}</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-10 text-center">
+                    <Bell size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-[12px] text-gray-500 font-medium">You're all caught up</p>
+                    <p className="text-[10px] text-gray-400 mt-1">No new notifications</p>
+                  </div>
+                ) : (
+                  notifications.map((n: any) => {
+                    const { Icon, color } = getNotifIcon(n.slug);
+                    const title = n.data?.title || n.data?.message || n.slug || "Notification";
+                    return (
+                      <DropdownMenuItem
+                        key={n.id}
+                        className={cn(
+                          "p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none",
+                          !n.read && "bg-primary/5 dark:bg-primary/10"
+                        )}
+                        onClick={() => n.data?.action_url && setLocation(n.data.action_url)}
+                      >
+                        <div className="flex gap-3 w-full">
+                          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-700 shrink-0", color)}>
+                            <Icon size={16} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold truncate">{title}</p>
+                            <p className="text-[11px] text-gray-500 mt-0.5">{formatRelativeTime(n.created_at)}</p>
+                          </div>
+                          {!n.read && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
               </div>
-              <div className="p-2 border-t border-slate-100 dark:border-slate-800">
-                <button 
-                  onClick={() => setLocation("/notifications")}
-                  className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
-                >
-                  View All Notifications
-                </button>
-              </div>
+              {totalCount > 5 && (
+                <div className="p-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={(e) => {
+                      // Keep dropdown open while toggling list size.
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setNotifShowAll((v) => !v);
+                    }}
+                    className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
+                  >
+                    {notifShowAll ? "Show Less" : `View All Notifications (${totalCount})`}
+                  </button>
+                </div>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 

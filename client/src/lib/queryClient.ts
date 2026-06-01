@@ -104,6 +104,61 @@ export async function apiRequest(
   return res;
 }
 
+/**
+ * Upload via XHR so the caller can track upload progress (fetch can't).
+ * Mirrors apiRequest's auth + URL processing.
+ */
+export function apiUploadWithProgress(
+  method: string,
+  url: string,
+  formData: FormData,
+  onProgress?: (percent: number) => void,
+): Promise<Response> {
+  const token = localStorage.getItem("auth_token");
+
+  let processedUrl = url;
+  if (API_BASE_URL && processedUrl.startsWith("/api")) {
+    processedUrl = processedUrl.substring(4);
+  }
+  const fullUrl = `${API_BASE_URL}${processedUrl.startsWith("/") ? "" : "/"}${processedUrl}`;
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, fullUrl);
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.withCredentials = true;
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+
+    xhr.onload = async () => {
+      // Build a Response-like object so callers using throwIfResNotOk work.
+      const res = new Response(xhr.responseText, {
+        status: xhr.status,
+        statusText: xhr.statusText,
+      });
+      try {
+        await throwIfResNotOk(res);
+        resolve(res);
+      } catch (error) {
+        handleApiError(error);
+        reject(error);
+      }
+    };
+
+    xhr.onerror = () => {
+      const err = new ApiError(0, "Network error during upload");
+      handleApiError(err);
+      reject(err);
+    };
+
+    xhr.send(formData);
+  });
+}
+
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;

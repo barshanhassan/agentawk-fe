@@ -93,6 +93,13 @@ export default function WhiteLabelSection() {
         outgoingBubble: brandingData.outgoing_chat_color || "#9C9C9C",
         outgoingText: brandingData.outgoing_chat_text_color || "#FFFFFF",
       });
+      // Hydrate persisted logos / favicon (backend returns signed URLs).
+      setLogoPreview((prev) => ({
+        ...prev,
+        ...(brandingData.logo_light_url ? { light: brandingData.logo_light_url } : {}),
+        ...(brandingData.logo_dark_url ? { dark: brandingData.logo_dark_url } : {}),
+        ...(brandingData.favicon_url ? { favicon: brandingData.favicon_url } : {}),
+      }));
     }
   }, [brandingData]);
 
@@ -115,10 +122,20 @@ export default function WhiteLabelSection() {
   const uploadTargetRef = useRef<string>("light");
   const [logoPreview, setLogoPreview] = useState<Record<string, string>>({});
 
+  // Map UI target ("light" | "dark" | "favicon") to the backend payload key on /workspaces/branding.
+  const brandingKeyFor = (target: string): "logoLight" | "logoDark" | "favicon" | null => {
+    if (target === "light") return "logoLight";
+    if (target === "dark") return "logoDark";
+    if (target === "favicon") return "favicon";
+    return null;
+  };
+
   const handleLogoAction = (action: string, type: string) => {
     if (action === "upload") {
       uploadTargetRef.current = type;
-      fileInputRef.current?.click();
+      // Defer to next tick so the Radix Dropdown finishes closing before the
+      // file picker opens — Radix's focus management can swallow the click otherwise.
+      setTimeout(() => fileInputRef.current?.click(), 0);
       return;
     }
     if (action === "gallery") {
@@ -126,27 +143,56 @@ export default function WhiteLabelSection() {
       return;
     }
     if (action === "remove") {
+      const key = brandingKeyFor(type);
+      if (key) {
+        // Persist removal — backend clears the FK; refetch hydrates preview.
+        updateBrandingMutation.mutate({ [key]: null });
+      }
       setLogoPreview((p) => {
         const next = { ...p };
         delete next[type];
         return next;
       });
-      toast({ title: "Removed", description: `${type} image removed.` });
       return;
     }
   };
 
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast({ title: "Invalid file", description: "Please choose an image file.", variant: "destructive" });
       return;
     }
-    const url = URL.createObjectURL(file);
-    setLogoPreview((p) => ({ ...p, [uploadTargetRef.current]: url }));
-    toast({ title: "Uploaded", description: `${file.name} set as ${uploadTargetRef.current} image.` });
-    e.target.value = "";
+
+    const target = uploadTargetRef.current;
+    const brandingKey = brandingKeyFor(target);
+    if (!brandingKey) return;
+
+    // Optimistic local preview for responsiveness.
+    const localUrl = URL.createObjectURL(file);
+    setLogoPreview((p) => ({ ...p, [target]: localUrl }));
+
+    try {
+      // 1) Upload to Media Gallery (S3 — replyagent parity: logos live in gallery + branding references them).
+      const fd = new FormData();
+      fd.append("files", file);
+      const uploadRes = await apiRequest("POST", "/api/gallery/upload", fd);
+      const uploadJson = await uploadRes.json();
+      const media = uploadJson?.media?.[0];
+      if (!media?.id) throw new Error("Upload failed — no media returned");
+
+      // 2) Save the media id on the branding row. Backend returns refreshed signed URLs.
+      updateBrandingMutation.mutate({ [`${brandingKey}Id`]: String(media.id) });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.message || "Could not save image.", variant: "destructive" });
+      setLogoPreview((p) => {
+        const next = { ...p };
+        delete next[target];
+        return next;
+      });
+    }
   };
 
   if (isLoading) {

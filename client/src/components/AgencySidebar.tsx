@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 type SubItem = {
   label: string;
@@ -140,6 +142,49 @@ const AgencySidebar = () => {
 
   const dark = mode === "dark";
 
+  // White-label: agency logo (uploaded via /agency/settings/white-label) overrides
+  // the default "EC" + "EZCONN" mark. Falls back when no logo is set.
+  const agencyId = user?.modelable_id;
+  // localStorage cache → instant logo on revisit. 30-min TTL keeps signed URLs valid.
+  const AGENCY_CACHE_KEY = agencyId ? `agency_cache_v1_${agencyId}` : null;
+  const AGENCY_CACHE_TTL = 30 * 60 * 1000;
+  const cachedAgency = (() => {
+    if (!AGENCY_CACHE_KEY) return undefined;
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(AGENCY_CACHE_KEY) : null;
+      if (!raw) return undefined;
+      const { data, ts } = JSON.parse(raw);
+      if (Date.now() - ts > AGENCY_CACHE_TTL) return undefined;
+      return data;
+    } catch {
+      return undefined;
+    }
+  })();
+  const { data: agencyResp, isLoading: isAgencyLoading } = useQuery<any>({
+    queryKey: [`/api/agencies/${agencyId}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      return res.json();
+    },
+    enabled: !!agencyId,
+    initialData: cachedAgency,
+    staleTime: 5 * 60 * 1000,
+  });
+  React.useEffect(() => {
+    if (agencyResp && AGENCY_CACHE_KEY) {
+      try {
+        localStorage.setItem(AGENCY_CACHE_KEY, JSON.stringify({ data: agencyResp, ts: Date.now() }));
+      } catch { /* ignore quota errors */ }
+    }
+  }, [agencyResp, AGENCY_CACHE_KEY]);
+  // Theme-aware logo selection (replyagent parity). Light mode → small light → small dark
+  // → wide light → wide dark → null. Dark mode mirrors with dark variants first. The
+  // small/square variant is preferred for the 32x32 badge slot.
+  const b = agencyResp?.agency?.branding;
+  const agencyLogoUrl: string | null = dark
+    ? b?.logo_dark_small || b?.logo_light_small || b?.logo_dark || b?.logo_light || null
+    : b?.logo_light_small || b?.logo_dark_small || b?.logo_light || b?.logo_dark || null;
+
   return (
     <div className={cn(
       "relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out z-50 shrink-0",
@@ -158,14 +203,29 @@ const AgencySidebar = () => {
         {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
-      {/* Logo */}
+      {/* Logo — white-label aware. Uploaded agency logo wins; otherwise default mark. */}
       <div className={cn(
         "flex items-center gap-3 px-4 py-5 border-b shrink-0",
         dark ? "border-slate-800" : "border-slate-100"
       )}>
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
-          EC
-        </div>
+        {isAgencyLoading ? (
+          // Invisible placeholder during initial fetch — prevents the EC-badge flash
+          // before the actual branded logo arrives.
+          <div className="w-8 h-8 shrink-0" aria-hidden="true" />
+        ) : agencyLogoUrl ? (
+          // Plain image — replyagent parity. The agency uploads light/dark variants
+          // separately so each version renders correctly against its background.
+          <img
+            src={agencyLogoUrl}
+            alt="Agency logo"
+            className="w-8 h-8 object-contain shrink-0"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
+            EC
+          </div>
+        )}
         {!isCollapsed && (
           <div className="overflow-hidden">
             <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>

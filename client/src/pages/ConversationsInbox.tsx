@@ -356,20 +356,17 @@ export default function ConversationsInbox() {
   // Current user
   const currentUser = { id: "self", name: "Demo User" };
 
-  // Get Agency ID from localStorage
-  const userInfo = getUserInfo();
-  const agencyId = userInfo.modelable_id;
-
-  // Fetch Agency Members
+  // Fetch workspace members — inbox is workspace-scoped. Workspace users lack
+  // agency.users.* permission, so calling /agencies/:id/members would 403.
   const { data: membersResponse } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryKey: ["/api/workspaces/members"],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      const res = await apiRequest("GET", "/api/workspaces/members");
       return res.json();
     }
   });
 
-  const agentOptions: AgentOption[] = (membersResponse?.members || []).map((m: { id: number; first_name?: string; last_name?: string; email: string }) => ({
+  const agentOptions: AgentOption[] = (membersResponse?.users || membersResponse?.members || []).map((m: { id: number; first_name?: string; last_name?: string; email: string }) => ({
     id: m.id.toString(),
     name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
     icon: React.createElement("div", { 

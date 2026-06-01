@@ -18,6 +18,9 @@ import {
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from 'react-i18next';
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { getUserInfo } from "@/lib/auth";
 
 interface CheckoutProps {
   onBack: () => void;
@@ -27,6 +30,22 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
+
+  // White-label aware header: agency logo replaces "E" + "Ezconn" when uploaded.
+  const agencyId = (() => { try { return getUserInfo()?.modelable_id; } catch { return null; } })();
+  const { data: agencyResp } = useQuery<any>({
+    queryKey: [`/api/agencies/${agencyId}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      return res.json();
+    },
+    enabled: !!agencyId,
+  });
+  // Theme-aware logo selection (replyagent parity). Small/square variant preferred for 36x36 badge.
+  const b = agencyResp?.agency?.branding;
+  const agencyLogoUrl: string | null = dark
+    ? b?.logo_dark_small || b?.logo_light_small || b?.logo_dark || b?.logo_light || null
+    : b?.logo_light_small || b?.logo_dark_small || b?.logo_light || b?.logo_dark || null;
 
   const [isCreditsModalOpen, setIsCreditsModalOpen] = React.useState(false);
   const [isFutureModalOpen, setIsFutureModalOpen] = React.useState(false);
@@ -71,7 +90,16 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
       {/* ── Header (Users-style full-width top bar) ── */}
       <div className={cn('px-8 py-5 border-b flex items-center justify-between', card, border)}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">E</div>
+          {agencyLogoUrl ? (
+            <img
+              src={agencyLogoUrl}
+              alt="Agency logo"
+              className="w-9 h-9 object-contain"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">E</div>
+          )}
           <span className={cn("font-bold text-[18px] tracking-tight", text)}>Ezconn</span>
         </div>
         <button

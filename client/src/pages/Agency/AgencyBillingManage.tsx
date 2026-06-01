@@ -21,12 +21,31 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 const AgencyBillingManage = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const { toast } = useToast();
   const userInfo = getUserInfo();
+
+  // White-label aware modal header: agency logo + name replace hardcoded "E" + "EZCONN".
+  const agencyId = userInfo?.modelable_id;
+  const { data: agencyResp } = useQuery<any>({
+    queryKey: [`/api/agencies/${agencyId}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      return res.json();
+    },
+    enabled: !!agencyId,
+  });
+  // Theme-aware logo selection (replyagent parity). Small/square variant preferred for 36x36 badge.
+  const b = agencyResp?.agency?.branding;
+  const isDark = mode === "dark";
+  const agencyLogoUrl: string | null = isDark
+    ? b?.logo_dark_small || b?.logo_light_small || b?.logo_dark || b?.logo_light || null
+    : b?.logo_light_small || b?.logo_dark_small || b?.logo_light || b?.logo_dark || null;
   const [showUsageModal, setShowUsageModal] = React.useState(false);
   const [showManageModal, setShowManageModal] = React.useState(false);
   const [couponCode, setCouponCode] = React.useState("");
@@ -223,7 +242,16 @@ const AgencyBillingManage = () => {
             {/* Modal Header */}
             <div className={cn("px-8 py-6 border-b text-center", border)}>
               <div className="flex flex-col items-center gap-1.5 mb-4">
-                <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center font-black text-white text-[15px] shadow-lg shadow-primary/20">E</div>
+                {agencyLogoUrl ? (
+                  <img
+                    src={agencyLogoUrl}
+                    alt="Agency logo"
+                    className="w-9 h-9 object-contain"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                ) : (
+                  <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center font-black text-white text-[15px] shadow-lg shadow-primary/20">E</div>
+                )}
                 <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", sub)}>EZCONN</span>
               </div>
               <h2 className={cn("text-[16px] font-black text-primary")}>{t("agency.billing.manage.modalTitle")}</h2>

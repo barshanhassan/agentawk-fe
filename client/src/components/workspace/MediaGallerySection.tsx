@@ -6,7 +6,7 @@ import {
   MoreHorizontal, ArrowLeft, Filter, Loader2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, apiUploadWithProgress } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,6 +75,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadFileCount, setUploadFileCount] = useState<number>(0);
+  const [uploadTotalBytes, setUploadTotalBytes] = useState<number>(0);
 
   const queryClient = useQueryClient();
 
@@ -115,10 +118,19 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async (formData: FormData) => { await apiRequest("POST", "/api/gallery/upload", formData); },
+    mutationFn: async (formData: FormData) => {
+      await apiUploadWithProgress("POST", "/api/gallery/upload", formData, (percent) =>
+        setUploadProgress(percent),
+      );
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
       toast({ title: "Uploaded", description: "Files uploaded successfully." });
+    },
+    onSettled: () => {
+      setUploadProgress(0);
+      setUploadFileCount(0);
+      setUploadTotalBytes(0);
     },
   });
 
@@ -145,11 +157,16 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    const fileArr = Array.from(files);
     const formData = new FormData();
     if (parentId) formData.append("parent_id", parentId);
-    Array.from(files).forEach((file) => formData.append("files", file));
-    uploadMutation.mutate(formData);
-    setUploadDialogOpen(false);
+    fileArr.forEach((file) => formData.append("files", file));
+    setUploadFileCount(fileArr.length);
+    setUploadTotalBytes(fileArr.reduce((sum, f) => sum + f.size, 0));
+    setUploadProgress(0);
+    uploadMutation.mutate(formData, {
+      onSettled: () => setUploadDialogOpen(false),
+    });
   };
 
   const filteredMedia = mediaItems.filter((item: any) => {
@@ -350,8 +367,31 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                       softBg,
                       softBorder
                     )}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {getIcon(item.type, "w-10 h-10")}
+                      {item.media_type === "IMAGE" && item.url && item.url !== "#" ? (
+                        <img
+                          src={item.url}
+                          alt={item.name}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      ) : item.media_type === "VIDEO" && item.url && item.url !== "#" ? (
+                        <video
+                          src={item.url}
+                          preload="metadata"
+                          muted
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : null}
+                      <div className={cn(
+                        "absolute inset-0 flex items-center justify-center",
+                        (item.media_type === "IMAGE" || item.media_type === "VIDEO") && item.url && item.url !== "#" ? "pointer-events-none" : ""
+                      )}>
+                        {!(item.media_type === "IMAGE" && item.url && item.url !== "#") &&
+                          !(item.media_type === "VIDEO" && item.url && item.url !== "#") &&
+                          getIcon(item.type, "w-10 h-10")}
                       </div>
 
                       {/* Hover overlay */}
@@ -445,8 +485,20 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                       >
                         <TableCell className="py-3 px-6">
                           <div className="flex items-center gap-3">
-                            <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", dark ? "bg-slate-900/60" : "bg-white")}>
-                              {getIcon(item.type, "w-4 h-4")}
+                            <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden", dark ? "bg-slate-900/60" : "bg-white")}>
+                              {item.media_type === "IMAGE" && item.url && item.url !== "#" ? (
+                                <img
+                                  src={item.url}
+                                  alt={item.name}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                getIcon(item.type, "w-4 h-4")
+                              )}
                             </div>
                             <span className={cn("text-[12px] font-black truncate", text)}>{item.name}</span>
                           </div>
@@ -561,7 +613,13 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
       </AlertDialog>
 
       {/* Upload Dialog */}
-      <AlertDialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+      <AlertDialog
+        open={uploadDialogOpen}
+        onOpenChange={(open) => {
+          // Block close while an upload is running so the user sees progress through.
+          if (!uploadMutation.isPending) setUploadDialogOpen(open);
+        }}
+      >
         <AlertDialogContent className={cn("rounded-[2rem] border p-0 max-w-lg overflow-hidden", card, border)}>
           <div className="p-6 space-y-5">
             <div className="flex items-center justify-between">
@@ -570,52 +628,87 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                   <UploadCloud size={16} />
                 </div>
                 <div>
-                  <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Upload Files</h2>
-                  <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>Drag and drop or browse</p>
+                  <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                    {uploadMutation.isPending ? "Uploading..." : "Upload Files"}
+                  </h2>
+                  <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    {uploadMutation.isPending
+                      ? `${uploadFileCount} file${uploadFileCount > 1 ? "s" : ""} • ${(uploadTotalBytes / (1024 * 1024)).toFixed(1)} MB total`
+                      : "Drag and drop or browse"}
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={() => setUploadDialogOpen(false)}
-                className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-900 text-slate-400" : "hover:bg-slate-100 text-slate-500")}
-              >
-                <X size={14} />
-              </button>
+              {!uploadMutation.isPending && (
+                <button
+                  onClick={() => setUploadDialogOpen(false)}
+                  className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-900 text-slate-400" : "hover:bg-slate-100 text-slate-500")}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
 
-            <div
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFileUpload(e.dataTransfer.files); }}
-              className={cn(
-                "border-2 border-dashed rounded-[1.5rem] p-10 transition-all flex flex-col items-center text-center gap-3 relative cursor-pointer",
-                isDragging
-                  ? "bg-primary/10 border-primary"
-                  : cn(softBg, "border-slate-300 dark:border-slate-700 hover:border-primary/50")
-              )}
-            >
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                <Upload size={20} strokeWidth={2.5} />
+            {uploadMutation.isPending ? (
+              <div className={cn("rounded-[1.5rem] border p-8 flex flex-col items-center text-center gap-4", softBg, softBorder)}>
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <div className="w-full space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className={cn("text-[11px] font-black uppercase tracking-widest", text)}>
+                      {uploadProgress < 100 ? "Uploading" : "Finalizing"}
+                    </span>
+                    <span className={cn("text-[13px] font-black", "text-primary")}>{uploadProgress}%</span>
+                  </div>
+                  <div className={cn("w-full h-2 rounded-full overflow-hidden", dark ? "bg-slate-800" : "bg-slate-200")}>
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-150 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className={cn("text-[10px] font-medium opacity-60", sub)}>
+                    {uploadProgress < 100
+                      ? `${((uploadProgress / 100) * uploadTotalBytes / (1024 * 1024)).toFixed(1)} MB / ${(uploadTotalBytes / (1024 * 1024)).toFixed(1)} MB`
+                      : "Saving to storage..."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>Drop files here</p>
-                <p className={cn("text-[11px] font-medium opacity-60 mt-1", sub)}>
-                  or <span className="text-primary font-black">browse</span> to choose files
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFileUpload(e.dataTransfer.files); }}
+                className={cn(
+                  "border-2 border-dashed rounded-[1.5rem] p-10 transition-all flex flex-col items-center text-center gap-3 relative cursor-pointer",
+                  isDragging
+                    ? "bg-primary/10 border-primary"
+                    : cn(softBg, "border-slate-300 dark:border-slate-700 hover:border-primary/50")
+                )}
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Upload size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>Drop files here</p>
+                  <p className={cn("text-[11px] font-medium opacity-60 mt-1", sub)}>
+                    or <span className="text-primary font-black">browse</span> to choose files
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  multiple
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
+              </div>
+            )}
+
+            {!uploadMutation.isPending && (
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed">
+                  Maximum file size: <span className="font-black">25 MB</span> per file.
                 </p>
               </div>
-              <input
-                type="file"
-                multiple
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={(e) => handleFileUpload(e.target.files)}
-              />
-            </div>
-
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-              <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed">
-                Maximum file size: <span className="font-black">25 MB</span> per file.
-              </p>
-            </div>
+            )}
           </div>
         </AlertDialogContent>
       </AlertDialog>

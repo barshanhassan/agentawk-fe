@@ -95,20 +95,17 @@ export default function SmartFlowsPage() {
     const folders = automationsData?.folders || [];
     const flows = automationsData?.automations || [];
 
-    // Get Agency ID from localStorage
-    const userInfo = getUserInfo();
-    const agencyId = userInfo.modelable_id;
-
-    // Fetch Agency Members
+    // Fetch workspace members — this page is workspace-scoped. Workspace users do not
+    // have agency.users.* permission, so calling /agencies/:id/members would 403.
     const { data: membersResponse } = useQuery({
-        queryKey: [`/api/agencies/${agencyId}/members`],
+        queryKey: ["/api/workspaces/members"],
         queryFn: async () => {
-            const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+            const res = await apiRequest("GET", "/api/workspaces/members");
             return res.json();
         }
     });
 
-    const mockUsers = (membersResponse?.members || []).map((m: any) => ({
+    const mockUsers = (membersResponse?.users || membersResponse?.members || []).map((m: any) => ({
         id: m.id,
         name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
         picture: `https://ui-avatars.com/api/?name=${m.first_name || 'U'}&background=random`

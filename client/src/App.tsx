@@ -23,6 +23,7 @@ import SmartFlowsPage from "@/pages/SmartFlowsPage";
 import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import AgencyDashboard from "@/pages/Agency/AgencyDashboard";
 import AgencyWorkspaces from "@/pages/Agency/AgencyWorkspaces";
@@ -61,6 +62,7 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/signup" component={SignupPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
 
       <Route path="/">

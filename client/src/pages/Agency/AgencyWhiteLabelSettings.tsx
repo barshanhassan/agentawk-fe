@@ -80,7 +80,12 @@ const AgencyWhiteLabelSettings = () => {
 
   const [brandingData, setBrandingData] = useState({
     color: "#149f8f",
-    logo: "",
+    logo: "",            // legacy alias = logo_light
+    logo_light: "",
+    logo_light_small: "",
+    logo_dark: "",
+    logo_dark_small: "",
+    logo_small: "",      // legacy alias = logo_light_small
     favicon: "",
     slug: "",
     domain: ""
@@ -98,7 +103,12 @@ const AgencyWhiteLabelSettings = () => {
       const b = agencyResponse.agency.branding;
       setBrandingData({
         color: b.color || "#149f8f",
-        logo: b.logo || "",
+        logo: b.logo_light || b.logo || "",
+        logo_light: b.logo_light || b.logo || "",
+        logo_light_small: b.logo_light_small || b.logo_small || "",
+        logo_dark: b.logo_dark || "",
+        logo_dark_small: b.logo_dark_small || "",
+        logo_small: b.logo_light_small || b.logo_small || "",
         favicon: b.favicon || "",
         slug: agencyResponse.agency.slug || "",
         domain: b.domain || ""
@@ -123,7 +133,16 @@ const AgencyWhiteLabelSettings = () => {
     updateMutation.mutate({ color });
   };
 
-  const handleFileUpload = async (file: File, type: 'logo' | 'favicon') => {
+  type BrandingAsset =
+    | 'logo_light'
+    | 'logo_light_small'
+    | 'logo_dark'
+    | 'logo_dark_small'
+    | 'favicon'
+    | 'logo'         // legacy alias
+    | 'logo_small';  // legacy alias
+
+  const handleFileUpload = async (file: File, type: BrandingAsset) => {
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -142,7 +161,7 @@ const AgencyWhiteLabelSettings = () => {
     }
   };
 
-  const handleUploadClick = (type: 'logo' | 'favicon') => {
+  const handleUploadClick = (type: BrandingAsset) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -151,6 +170,11 @@ const AgencyWhiteLabelSettings = () => {
       if (file) handleFileUpload(file, type);
     };
     input.click();
+  };
+
+  const handleRemoveAsset = (type: BrandingAsset) => {
+    setBrandingData(prev => ({ ...prev, [type]: "" }));
+    updateMutation.mutate({ [type]: null });
   };
 
   const features = [
@@ -280,7 +304,7 @@ const AgencyWhiteLabelSettings = () => {
                               <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
                                 <Upload size={14} /> {t("common.uploadNew")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                              <DropdownMenuItem onClick={() => handleRemoveAsset('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
                                 <Trash2 size={14} /> {t("common.remove")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -290,7 +314,7 @@ const AgencyWhiteLabelSettings = () => {
                     </div>
                   </div>
 
-                  {/* Icon Only Logo */}
+                  {/* Icon Only Logo (App Icon) — backed by branding.mid_logo_light_small */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2.5">
                       <div className="p-1.5 rounded-lg bg-primary/10 text-primary"><Zap size={16} /></div>
@@ -300,16 +324,93 @@ const AgencyWhiteLabelSettings = () => {
                       <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", sub)}>{t("agency.settings.general.whiteLabel.smallLogo")}</p>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <div className={cn("w-16 h-16 border-2 border-dashed rounded-[1.25rem] flex items-center justify-center relative group transition-all cursor-pointer",
+                          <div className={cn("w-16 h-16 border-2 border-dashed rounded-[1.25rem] flex items-center justify-center relative group transition-all cursor-pointer overflow-hidden",
                             dark ? "bg-slate-950/50 border-slate-800 hover:border-primary/50" : "bg-slate-50/50 border-slate-200 hover:border-primary/30")}>
-                             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-black text-white text-lg shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">R</div>
+                            {brandingData.logo_small ? (
+                              <img src={brandingData.logo_small} alt="App Icon" className="w-full h-full object-contain rounded-lg" />
+                            ) : (
+                              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-black text-white text-lg shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">R</div>
+                            )}
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                          <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                          <DropdownMenuItem onClick={() => handleUploadClick('logo_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
                             <Upload size={14} /> {t("common.uploadNew")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                          <DropdownMenuItem onClick={() => handleRemoveAsset('logo_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                            <Trash2 size={14} /> {t("common.remove")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Dark Theme Branding ── (replyagent parity: separate logos for dark backgrounds) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Dark Theme Wide Logo */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary"><ImageIcon size={16} /></div>
+                      <h4 className={cn("text-[12px] font-black uppercase tracking-widest", text)}>Dark Theme Branding</h4>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", sub)}>{t("agency.settings.general.whiteLabel.fullLogo")}</p>
+                        <div className={cn("w-full h-20 border-2 border-dashed rounded-[1.25rem] flex items-center justify-center relative group transition-all cursor-pointer overflow-hidden",
+                          "bg-slate-900 border-slate-800 hover:border-primary/50")}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <div className="w-full h-full flex items-center justify-center">
+                                {brandingData.logo_dark ? (
+                                  <img src={brandingData.logo_dark} alt="Agency Dark Logo" className="max-h-10 object-contain" />
+                                ) : (
+                                  <div className="flex items-center gap-2 opacity-40 grayscale group-hover:grayscale-0 transition-all">
+                                    <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center font-black text-white text-[14px]">R</div>
+                                    <span className="text-[14px] font-black tracking-tighter text-white">REPLYAGENT</span>
+                                  </div>
+                                )}
+                              </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
+                              <DropdownMenuItem onClick={() => handleUploadClick('logo_dark')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                                <Upload size={14} /> {t("common.uploadNew")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleRemoveAsset('logo_dark')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                                <Trash2 size={14} /> {t("common.remove")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dark Theme App Icon — backed by branding.mid_logo_dark_small */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary"><Zap size={16} /></div>
+                      <h4 className={cn("text-[12px] font-black uppercase tracking-widest", text)}>Dark App Icon</h4>
+                    </div>
+                    <div className="space-y-2">
+                      <p className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", sub)}>{t("agency.settings.general.whiteLabel.smallLogo")}</p>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <div className={cn("w-16 h-16 border-2 border-dashed rounded-[1.25rem] flex items-center justify-center relative group transition-all cursor-pointer overflow-hidden",
+                            "bg-slate-900 border-slate-800 hover:border-primary/50")}>
+                            {brandingData.logo_dark_small ? (
+                              <img src={brandingData.logo_dark_small} alt="Dark App Icon" className="w-full h-full object-contain rounded-lg" />
+                            ) : (
+                              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-black text-white text-lg shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">R</div>
+                            )}
+                          </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
+                          <DropdownMenuItem onClick={() => handleUploadClick('logo_dark_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                            <Upload size={14} /> {t("common.uploadNew")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleRemoveAsset('logo_dark_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
                             <Trash2 size={14} /> {t("common.remove")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -321,7 +422,7 @@ const AgencyWhiteLabelSettings = () => {
                 <div className={cn("p-4 rounded-[1.25rem] flex gap-3 items-start border", dark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/50 border-slate-100")}>
                   <Info size={14} className="text-primary mt-0.5 shrink-0" />
                   <p className={cn("text-[11px] font-medium leading-relaxed opacity-60", sub)}>
-                    Transparent PNG or SVG recommended. Logo: 460x140px | Icon: 256x256px.
+                    Transparent PNG or SVG recommended. Logo: 460x140px | Icon: 256x256px. Upload separate light/dark versions so the logo always contrasts with the background.
                   </p>
                 </div>
               </TabsContent>
@@ -349,7 +450,7 @@ const AgencyWhiteLabelSettings = () => {
                       <DropdownMenuItem onClick={() => handleUploadClick('favicon')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px]">
                         <Upload size={14} /> {t("common.uploadNew")}
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px] text-rose-500 hover:text-rose-600">
+                      <DropdownMenuItem onClick={() => handleRemoveAsset('favicon')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px] text-rose-500 hover:text-rose-600">
                         <Trash2 size={14} /> {t("common.remove")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>

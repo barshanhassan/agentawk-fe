@@ -126,6 +126,27 @@ const LoginPage: React.FC = () => {
             </Button>
           </form>
 
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200 dark:border-slate-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-3 text-muted-foreground font-bold tracking-wider">or</span>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-3">Don't have an account?</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/signup')}
+            >
+              Create New Account
+            </Button>
+          </div>
+
           <div className="text-center text-sm text-muted-foreground pt-8">
             <p>&copy; 2025 EZCONN. <a href="https://ezauq.com/privacy-and-policy" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Privacy Policy</a> | <a href="https://ezauq.com/terms-of-service" target='_blank' rel="noopener noreferrer" className="hover:underline text-primary">Terms of Service</a></p>
           </div>
