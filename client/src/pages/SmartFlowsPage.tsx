@@ -65,7 +65,10 @@ import { Loader2 } from "lucide-react";
 export default function SmartFlowsPage() {
     const [, setLocation] = useLocation();
     const [searchText, setSearchText] = useState("");
-    const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
+    // Single-select filters (replyagent parity): one option selected at a time, with
+    // an "all" sentinel meaning no filter. The CustomDropdown is run in
+    // `showSelectedOption` mode so the trigger shows the chosen option's name.
+    const [selectedFolders, setSelectedFolders] = useState<string[]>(["all"]);
     const [statusFilter, setStatusFilter] = useState<string[]>(["all"]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showFolderModal, setShowFolderModal] = useState(false);
@@ -73,10 +76,18 @@ export default function SmartFlowsPage() {
     const [newFolderName, setNewFolderName] = useState("");
     // const [isCreating, setIsCreating] = useState(false);
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [selectedUsers, setSelectedUsers] = useState<string[]>(["all"]);
     const [selectedFlowIds, setSelectedFlowIds] = useState<number[]>([]);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+
+    // Row action modals (replyagent parity for the 3-dot menu)
+    const [renameTarget, setRenameTarget] = useState<any | null>(null);
+    const [renameValue, setRenameValue] = useState("");
+    const [changeFolderTarget, setChangeFolderTarget] = useState<any | null>(null);
+    const [changeFolderTargetId, setChangeFolderTargetId] = useState<string>("");
+    const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+
 
 
     const { toast } = useToast();
@@ -134,9 +145,11 @@ export default function SmartFlowsPage() {
             result = result.filter((flow: any) => statusFilter.includes(flow.status));
         }
 
-        // Filter by selected users
-        if (selectedUsers.length > 0 && selectedUsers.length < mockUsers.length) {
-            result = result.filter((flow: any) => selectedUsers.includes(flow.created_by.id.toString()));
+        // Filter by selected user (single-select with "all" sentinel)
+        if (selectedUsers.length > 0 && !selectedUsers.includes("all")) {
+            result = result.filter((flow: any) =>
+                flow.created_by && selectedUsers.includes(flow.created_by.id.toString())
+            );
         }
 
         // Sort (Default: Newest First)
@@ -187,30 +200,103 @@ export default function SmartFlowsPage() {
 
     const isCreating = createFlowMutation.isPending;
 
-    const handleCreateFolder = () => {
-        if (newFolderName.trim()) {
-            const newFolder = {
-                id: folders.length + 1,
-                name: newFolderName
-            };
-            // setFolders([...folders, newFolder]);
+    // Create Folder Mutation — replyagent parity (POST /automations/folder/create)
+    const createFolderMutation = useMutation({
+        mutationFn: async (data: { name: string }) => {
+            const res = await apiRequest("POST", "/api/automations/folder/create", data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
             setShowFolderModal(false);
             setNewFolderName("");
-        }
+            toast({ title: "Folder created" });
+        },
+        onError: (err: Error) => {
+            toast({
+                title: "Failed to create folder",
+                description: err.message,
+                variant: "destructive",
+            });
+        },
+    });
+
+    const handleCreateFolder = () => {
+        const name = newFolderName.trim();
+        if (!name) return;
+        createFolderMutation.mutate({ name });
     };
 
     const handleOpenFlow = (flowId: number) => {
         setLocation(`/automations/${flowId}`);
     };
 
+    // Rename mutation — PATCH /api/automations/:id (replyagent parity: updater_id bump,
+    // creator stays immutable). On success: invalidate list + close modal.
+    const renameMutation = useMutation({
+        mutationFn: async ({ id, name }: { id: number | string; name: string }) => {
+            const res = await apiRequest("PATCH", `/api/automations/${id}`, { name });
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            setRenameTarget(null);
+            setRenameValue("");
+            toast({ title: "Flow renamed" });
+        },
+        onError: (err: Error) => {
+            toast({ title: "Rename failed", description: err.message, variant: "destructive" });
+        },
+    });
+
+    // Change folder mutation — POST /api/automations/folder/change
+    const changeFolderMutation = useMutation({
+        mutationFn: async ({ automation_id, folder_id }: { automation_id: number | string; folder_id: string }) => {
+            const res = await apiRequest("POST", "/api/automations/folder/change", {
+                automation_id,
+                folder_id,
+            });
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            setChangeFolderTarget(null);
+            setChangeFolderTargetId("");
+            toast({ title: "Folder updated" });
+        },
+        onError: (err: Error) => {
+            toast({ title: "Folder change failed", description: err.message, variant: "destructive" });
+        },
+    });
+
+    // Delete flow mutation — DELETE /api/automations/:id (soft delete + channel unlinks)
+    const deleteFlowMutation = useMutation({
+        mutationFn: async (id: number | string) => {
+            const res = await apiRequest("DELETE", `/api/automations/${id}`);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            setDeleteTarget(null);
+            toast({ title: "Flow deleted" });
+        },
+        onError: (err: Error) => {
+            toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+        },
+    });
 
 
-    // Prepare dropdown options
-    const userOptions = mockUsers.map((u: any) => ({
-        id: u.id.toString(),
-        name: u.name,
-        icon: <img src={u.picture} className="w-5 h-5 rounded-full" alt={u.name} />
-    }));
+
+    // Prepare dropdown options. Each filter dropdown is single-select with an "all"
+    // sentinel at the top so the user can return to "no filter" without clearing state.
+    const userOptions = [
+        { id: "all", name: "All Users" },
+        ...mockUsers.map((u: any) => ({
+            id: u.id.toString(),
+            name: u.name,
+            icon: <img src={u.picture} className="w-5 h-5 rounded-full" alt={u.name} />,
+        })),
+    ];
 
     const folderOptions = [
         { id: "all", name: "All Folders" },
@@ -274,14 +360,15 @@ export default function SmartFlowsPage() {
 
                         <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
 
-                        {/* Folder Dropdown */}
+                        {/* Folder Dropdown — single-select, trigger shows chosen name */}
                         <CustomDropdown
                             options={folderOptions}
                             selected={selectedFolders}
                             onChange={setSelectedFolders}
-                            placeholder="Folders"
+                            placeholder="All Folders"
                             width="160px"
                             showSearch={true}
+                            showSelectedOption={true}
                         />
 
                         {/* Create Folder Button */}
@@ -295,7 +382,7 @@ export default function SmartFlowsPage() {
 
                         <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-1" />
 
-                        {/* Users Dropdown */}
+                        {/* Users Dropdown — single-select */}
                         <CustomDropdown
                             options={userOptions}
                             selected={selectedUsers}
@@ -303,15 +390,17 @@ export default function SmartFlowsPage() {
                             placeholder="All Users"
                             width="160px"
                             showSearch={true}
+                            showSelectedOption={true}
                         />
 
-                        {/* Status Filter */}
+                        {/* Status Filter — single-select */}
                         <CustomDropdown
                             options={statusOptions}
                             selected={statusFilter}
                             onChange={setStatusFilter}
                             placeholder="All Statuses"
                             width="150px"
+                            showSelectedOption={true}
                             showSearch={false}
                         />
                     </div>
@@ -407,9 +496,22 @@ export default function SmartFlowsPage() {
                                             </span>
                                         </td>
                                         <td className="px-5 py-4 text-center">
-                                            <div className="flex justify-center">
-                                                <div className="w-8 h-8 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center border border-primary/10 dark:border-primary/20 shadow-sm transition-transform group-hover:scale-105">
-                                                    <User size={15} className="text-primary" />
+                                            <div className="flex justify-center" title={
+                                                flow.created_by
+                                                    ? `${flow.created_by.first_name || ''} ${flow.created_by.last_name || ''}`.trim() || flow.created_by.email || 'User'
+                                                    : 'Unknown'
+                                            }>
+                                                <div className="w-8 h-8 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center border border-primary/10 dark:border-primary/20 shadow-sm transition-transform group-hover:scale-105 text-[10px] font-bold text-primary uppercase tracking-tight">
+                                                    {flow.created_by ? (
+                                                        (() => {
+                                                            const f = (flow.created_by.first_name || '').trim();
+                                                            const l = (flow.created_by.last_name || '').trim();
+                                                            if (f || l) return `${f.charAt(0)}${l.charAt(0)}` || f.charAt(0) || l.charAt(0);
+                                                            return (flow.created_by.email || '?').charAt(0).toUpperCase();
+                                                        })()
+                                                    ) : (
+                                                        <User size={15} className="text-primary" />
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
@@ -430,21 +532,33 @@ export default function SmartFlowsPage() {
                                                         <Pencil size={15} className="text-slate-400" />
                                                         Edit flow
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
+                                                    <DropdownMenuItem
+                                                        onClick={() => { setRenameTarget(flow); setRenameValue(flow.name || ""); }}
+                                                        className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
+                                                    >
                                                         <ClipboardCopy size={15} className="text-slate-400" />
                                                         Rename
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
+                                                    <DropdownMenuItem
+                                                        onClick={() => { setChangeFolderTarget(flow); setChangeFolderTargetId(flow.folder_id?.toString() || ""); }}
+                                                        className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
+                                                    >
                                                         <FolderOpen size={15} className="text-slate-400" />
                                                         Change Folder
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3">
+                                                    <DropdownMenuItem
+                                                        onClick={() => toast({ title: "Coming soon", description: "Clonekit (bundles) is not available yet." })}
+                                                        className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
+                                                    >
                                                         <Gem size={15} className="text-slate-400" />
                                                         Add to Clonekit
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
-                                                    <DropdownMenuItem className="rounded-xl px-3 py-2 text-[12px] font-semibold text-rose-600 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all gap-3">
+                                                    <DropdownMenuItem
+                                                        onClick={() => setDeleteTarget(flow)}
+                                                        className="rounded-xl px-3 py-2 text-[12px] font-semibold text-rose-600 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all gap-3"
+                                                    >
                                                         <Trash2 size={15} />
                                                         Delete Flow
                                                     </DropdownMenuItem>
@@ -620,18 +734,17 @@ export default function SmartFlowsPage() {
                                     onClick={() => {
                                         setShowFolderModal(false);
                                         setNewFolderName("");
-                                        setIsCreatingFolder(false); // Assuming a new state variable for folder creation
                                     }}
-                                    disabled={isCreatingFolder}
+                                    disabled={createFolderMutation.isPending}
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={!newFolderName.trim() || isCreatingFolder}
+                                    disabled={!newFolderName.trim() || createFolderMutation.isPending}
                                     className="min-w-[100px]"
                                 >
-                                    {isCreatingFolder ? (
+                                    {createFolderMutation.isPending ? (
                                         <>
                                             <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -647,6 +760,144 @@ export default function SmartFlowsPage() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Rename Flow Modal */}
+            {renameTarget && (
+                <Dialog open={!!renameTarget} onOpenChange={(open) => { if (!open) { setRenameTarget(null); setRenameValue(""); } }}>
+                    <DialogContent className="sm:max-w-[440px]">
+                        <DialogHeader>
+                            <DialogTitle>Rename Flow</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const name = renameValue.trim();
+                            if (!name) return;
+                            renameMutation.mutate({ id: renameTarget.id, name });
+                        }}>
+                            <div className="py-2">
+                                <label className="block text-sm font-semibold mb-2">Flow Name</label>
+                                <Input
+                                    type="text"
+                                    value={renameValue}
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    placeholder="Enter new name..."
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="flex gap-3 justify-end mt-5">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => { setRenameTarget(null); setRenameValue(""); }}
+                                    disabled={renameMutation.isPending}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={!renameValue.trim() || renameValue.trim() === renameTarget.name || renameMutation.isPending}
+                                    className="min-w-[100px]"
+                                >
+                                    {renameMutation.isPending ? "Saving..." : "Save"}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Change Folder Modal */}
+            {changeFolderTarget && (
+                <Dialog open={!!changeFolderTarget} onOpenChange={(open) => { if (!open) { setChangeFolderTarget(null); setChangeFolderTargetId(""); } }}>
+                    <DialogContent className="sm:max-w-[440px]">
+                        <DialogHeader>
+                            <DialogTitle>Change Folder</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-2">
+                            <label className="block text-sm font-semibold mb-2">Select Folder</label>
+                            <Select value={changeFolderTargetId} onValueChange={setChangeFolderTargetId}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Choose a folder..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {folders.length === 0 ? (
+                                        <div className="px-3 py-2 text-sm text-slate-500">No folders yet — create one first.</div>
+                                    ) : folders.map((f: any) => (
+                                        <SelectItem key={f.id.toString()} value={f.id.toString()}>
+                                            {f.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-[11px] text-slate-500 mt-2">
+                                Currently in: <span className="font-semibold">
+                                    {folders.find((f: any) => f.id?.toString() === changeFolderTarget?.folder_id?.toString())?.name || 'No folder'}
+                                </span>
+                            </p>
+                        </div>
+                        <div className="flex gap-3 justify-end mt-5">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => { setChangeFolderTarget(null); setChangeFolderTargetId(""); }}
+                                disabled={changeFolderMutation.isPending}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    if (!changeFolderTargetId) return;
+                                    changeFolderMutation.mutate({
+                                        automation_id: changeFolderTarget.id,
+                                        folder_id: changeFolderTargetId,
+                                    });
+                                }}
+                                disabled={!changeFolderTargetId || changeFolderTargetId === changeFolderTarget?.folder_id?.toString() || changeFolderMutation.isPending}
+                                className="min-w-[100px]"
+                            >
+                                {changeFolderMutation.isPending ? "Moving..." : "Move"}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Delete Flow Confirm Modal */}
+            {deleteTarget && (
+                <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+                    <DialogContent className="sm:max-w-[440px]">
+                        <DialogHeader>
+                            <DialogTitle>Delete Flow?</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-2">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                <span className="font-semibold text-slate-900 dark:text-white">"{deleteTarget.name}"</span> will be removed and any channel auto-replies linked to it will be unlinked.
+                                This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="flex gap-3 justify-end mt-5">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setDeleteTarget(null)}
+                                disabled={deleteFlowMutation.isPending}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={() => deleteFlowMutation.mutate(deleteTarget.id)}
+                                disabled={deleteFlowMutation.isPending}
+                                className="min-w-[100px]"
+                            >
+                                {deleteFlowMutation.isPending ? "Deleting..." : "Delete"}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     );

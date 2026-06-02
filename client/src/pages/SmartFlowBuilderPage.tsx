@@ -548,6 +548,47 @@ export default function SmartFlowBuilderPage() {
     const isSaving = saveMutation.isPending;
     const isPublishing = publishMutation.isPending;
 
+    // Edit (create draft from published) — replyagent parity. The published version
+    // stays untouched; new edits go onto the fresh draft, which can then be Published
+    // to atomically swap to live.
+    const editDraftMutation = useMutation({
+        mutationFn: async () => {
+            const res = await apiRequest("POST", `/api/automations/${id}/edit-draft`);
+            return res.json();
+        },
+        onSuccess: () => {
+            toast({
+                title: "Draft created",
+                description: "Live flow keeps running. Edits go to draft.",
+            });
+            queryClient.invalidateQueries({ queryKey: [`/api/automations/${id}`] });
+        },
+        onError: (err: Error) => {
+            toast({ title: "Edit failed", description: err.message, variant: "destructive" });
+        },
+    });
+
+    // Clear Queue — replyagent parity. Wipes in-flight contacts/runs/iterations/AI
+    // messages for this automation. Confirmation modal gates the call since this is
+    // destructive (no undo).
+    const [showFlushConfirm, setShowFlushConfirm] = useState(false);
+    const flushQueueMutation = useMutation({
+        mutationFn: async () => {
+            const res = await apiRequest("POST", `/api/automations/${id}/flush-queue`);
+            return res.json();
+        },
+        onSuccess: (data: any) => {
+            setShowFlushConfirm(false);
+            toast({
+                title: "Queue cleared",
+                description: data?.cleared ? `${data.cleared} item(s) removed` : "No items were in queue.",
+            });
+        },
+        onError: (err: Error) => {
+            toast({ title: "Clear failed", description: err.message, variant: "destructive" });
+        },
+    });
+
 
     const [showAddStepMenu, setShowAddStepMenu] = useState(false);
 
@@ -814,8 +855,20 @@ export default function SmartFlowBuilderPage() {
 
                     {flowStatus === "active" && (
                         <>
-                            <button className="h-9 px-4 text-sm font-medium text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200">Edit</button>
-                            <button className="h-9 px-4 text-sm font-medium text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200">Clear Queue</button>
+                            <button
+                                onClick={() => editDraftMutation.mutate()}
+                                disabled={editDraftMutation.isPending}
+                                className="h-9 px-4 text-sm font-medium text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {editDraftMutation.isPending ? "Creating draft..." : "Edit"}
+                            </button>
+                            <button
+                                onClick={() => setShowFlushConfirm(true)}
+                                disabled={flushQueueMutation.isPending}
+                                className="h-9 px-4 text-sm font-medium text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                Clear Queue
+                            </button>
                         </>
                     )}
 
@@ -3672,6 +3725,37 @@ export default function SmartFlowBuilderPage() {
                         <AlertDialogFooter>
                             <AlertDialogCancel className="border-gray-200">No</AlertDialogCancel>
                             <AlertDialogAction onClick={confirmDeleteEdge} className="bg-red-600 hover:bg-red-700 text-white border-0">Yes</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Clear Queue confirmation — replyagent parity: warns before wiping
+                    in-flight contacts/runs/iterations/AI messages for this flow */}
+                <AlertDialog open={showFlushConfirm} onOpenChange={(open) => !open && setShowFlushConfirm(false)}>
+                    <AlertDialogContent className="bg-white">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Clear Queue?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will remove all contacts currently waiting in this flow plus
+                                their run history, iteration counters, and AI messages. The flow
+                                itself (steps, connections, settings) is NOT deleted — only the
+                                in-flight execution state. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel
+                                disabled={flushQueueMutation.isPending}
+                                className="border-gray-200"
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={(e) => { e.preventDefault(); flushQueueMutation.mutate(); }}
+                                disabled={flushQueueMutation.isPending}
+                                className="bg-red-600 hover:bg-red-700 text-white border-0"
+                            >
+                                {flushQueueMutation.isPending ? "Clearing..." : "Yes, clear"}
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
