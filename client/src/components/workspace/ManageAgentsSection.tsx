@@ -32,8 +32,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
-import { COUNTRIES } from "@/lib/countries";
-import { phoneError, onlyDigits } from "@/lib/phone";
+import { phoneError } from "@/lib/phone";
+import { PhoneInputWithFlag } from "@/components/PhoneInputWithFlag";
 
 interface Agent {
   id: string;
@@ -211,8 +211,9 @@ export default function ManageAgentSection() {
   const [language, setLanguage] = useState("pt-br");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState("");
-  const [whatsappCountry, setWhatsappCountry] = useState("");
+  // Default country = US (replyagent parity — country_id 204 = United States).
+  const [phoneCountry, setPhoneCountry] = useState("US");
+  const [whatsappCountry, setWhatsappCountry] = useState("US");
   const [phoneNotifications, setPhoneNotifications] = useState(false);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
@@ -253,8 +254,8 @@ export default function ManageAgentSection() {
     setLanguage("pt-br");
     setPhoneNumber("");
     setWhatsappNumber("");
-    setPhoneCountry("");
-    setWhatsappCountry("");
+    setPhoneCountry("US");
+    setWhatsappCountry("US");
     setPhoneNotifications(false);
     setWhatsappNotifications(false);
     setMobileAccess(false);
@@ -283,9 +284,9 @@ export default function ManageAgentSection() {
     setTwoFA(!!o.tfa_required);
     setMobileAccess(o.mobile_access == 1 || o.mobile_access === true);
     setPhoneNumber(o.phone || "");
-    setPhoneCountry(o.phone_country || "");
+    setPhoneCountry(o.phone_country || "US");
     setWhatsappNumber(o.whatsapp || "");
-    setWhatsappCountry(o.whatsapp_country || "");
+    setWhatsappCountry(o.whatsapp_country || "US");
     setPhoneNotifications(!!o.receive_sms_notification);
     setWhatsappNotifications(!!o.receive_whatsapp_notification);
     // Login policy prefill (normalize "HH:MM:SS" → "HH:MM" for the time selects)
@@ -483,8 +484,8 @@ export default function ManageAgentSection() {
                     <h4 className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Contact</h4>
 
                     {[
-                      { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications, placeholder: "(407) 231-1234" },
-                      { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications, placeholder: "+1 555 123 4567" },
+                      { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications },
+                      { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications },
                     ].map((row) => (
                       <div key={row.label} className={cn("p-5 rounded-[1.25rem] border flex items-center gap-4", softBg, softBorder)}>
                         <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
@@ -492,19 +493,14 @@ export default function ManageAgentSection() {
                         </div>
                         <div className="flex-1 min-w-0 space-y-1.5">
                           <FieldLabel dark={dark}>{row.label}</FieldLabel>
-                          <div className="flex gap-2">
-                            <Select value={row.country} onValueChange={row.countrySetter}>
-                              <SelectTrigger className={cn(inputCls, "w-[120px] shrink-0")}>
-                                <SelectValue placeholder="Code" />
-                              </SelectTrigger>
-                              <SelectContent className={cn("rounded-xl border shadow-2xl max-h-72", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                                {COUNTRIES.map((c) => (
-                                  <SelectItem key={c.code} value={c.code} className="text-[12px] font-bold">{c.code} {c.dial}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input value={row.value} inputMode="numeric" onChange={(e) => row.setter(onlyDigits(e.target.value))} placeholder={row.placeholder} className={cn(inputCls, "flex-1")} />
-                          </div>
+                          <PhoneInputWithFlag
+                            country={row.country}
+                            onCountryChange={row.countrySetter}
+                            value={row.value}
+                            onChange={row.setter}
+                            inputClassName={inputCls}
+                            isDark={dark}
+                          />
                           {phoneError(row.value, row.country) && (
                             <p className="text-[11px] text-rose-500 mt-1">{phoneError(row.value, row.country)}</p>
                           )}
