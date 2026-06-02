@@ -20,7 +20,6 @@ import {
     Pencil,
     CircleArrowDown,
     FolderOpen,
-    Gem,
     Plug,
     ChevronsLeft,
     ChevronLeft,
@@ -32,7 +31,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
     Dialog,
     DialogContent,
@@ -62,6 +60,23 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
+// Replyagent date format: "YYYY-MM-DD hh:mm am/pm" (12-hour, lowercase meridiem).
+// Source: gateway-frontend AppStore (date_format=YYYY-MM-DD, time_format=hh:mm a).
+const formatDateTime = (d?: string | Date | null): string => {
+    if (!d) return '-';
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return '-';
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const day = String(dt.getDate()).padStart(2, '0');
+    let h = dt.getHours();
+    const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    const hh = String(h).padStart(2, '0');
+    const mm = String(dt.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day} ${hh}:${mm} ${ampm}`;
+};
+
 export default function SmartFlowsPage() {
     const [, setLocation] = useLocation();
     const [searchText, setSearchText] = useState("");
@@ -77,7 +92,8 @@ export default function SmartFlowsPage() {
     // const [isCreating, setIsCreating] = useState(false);
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [selectedUsers, setSelectedUsers] = useState<string[]>(["all"]);
-    const [selectedFlowIds, setSelectedFlowIds] = useState<number[]>([]);
+    // Sort order on updated_at (replyagent parity: desc=newest first, asc=oldest first).
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -116,7 +132,14 @@ export default function SmartFlowsPage() {
         }
     });
 
-    const mockUsers = (membersResponse?.users || membersResponse?.members || []).map((m: any) => ({
+    // Backend GET /workspaces/members returns a plain array of user objects, not a
+    // wrapped { users: [...] } or { members: [...] }. Be defensive: accept both shapes
+    // so other places in the codebase that wrap the response don't break this.
+    const membersList: any[] = Array.isArray(membersResponse)
+        ? membersResponse
+        : (membersResponse?.users || membersResponse?.members || []);
+
+    const mockUsers = membersList.map((m: any) => ({
         id: m.id,
         name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
         picture: `https://ui-avatars.com/api/?name=${m.first_name || 'U'}&background=random`
@@ -152,13 +175,14 @@ export default function SmartFlowsPage() {
             );
         }
 
-        // Sort (Default: Newest First)
-        return result.sort((a: any, b: any) => {
-            const dateA = new Date(a.last_updated).getTime();
-            const dateB = new Date(b.last_updated).getTime();
-            return dateB - dateA;
+        // Sort by updated_at; direction comes from the sort dropdown (replyagent parity).
+        // Fall back to last_updated for backwards-compat with older response shapes.
+        return [...result].sort((a: any, b: any) => {
+            const dateA = new Date(a.updated_at || a.last_updated || 0).getTime();
+            const dateB = new Date(b.updated_at || b.last_updated || 0).getTime();
+            return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
         });
-    }, [selectedFolders, searchText, statusFilter, selectedUsers, flows]);
+    }, [selectedFolders, searchText, statusFilter, selectedUsers, flows, sortOrder]);
 
 
     // Create Flow Mutation
@@ -404,6 +428,37 @@ export default function SmartFlowsPage() {
                             showSearch={false}
                         />
                     </div>
+
+                    {/* Sort dropdown — From newest / From oldest (replyagent parity) */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-2 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-200 shadow-sm transition-all">
+                                {sortOrder === 'desc' ? (
+                                    <ArrowDownWideNarrow size={14} className="text-slate-500" />
+                                ) : (
+                                    <ArrowUpWideNarrow size={14} className="text-slate-500" />
+                                )}
+                                <span>{sortOrder === 'desc' ? 'From newest' : 'From oldest'}</span>
+                                <ChevronDown size={12} className="text-slate-400" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl p-1.5 min-w-[160px] shadow-xl border border-slate-200 dark:border-slate-800">
+                            <DropdownMenuItem
+                                onClick={() => setSortOrder('desc')}
+                                className="rounded-lg px-3 py-2 text-[12px] font-medium cursor-pointer hover:bg-primary/10 hover:text-primary transition-all gap-2"
+                            >
+                                <ArrowDownWideNarrow size={14} className="text-slate-400" />
+                                From newest
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => setSortOrder('asc')}
+                                className="rounded-lg px-3 py-2 text-[12px] font-medium cursor-pointer hover:bg-primary/10 hover:text-primary transition-all gap-2"
+                            >
+                                <ArrowUpWideNarrow size={14} className="text-slate-400" />
+                                From oldest
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 {/* 3. Table Section */}
@@ -411,21 +466,6 @@ export default function SmartFlowsPage() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
-                                <th className="py-3 px-5 w-12 text-center">
-                                    <Checkbox
-                                        className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                        checked={paginatedFlows.length > 0 && paginatedFlows.every((f: any) => selectedFlowIds.includes(f.id))}
-                                        onCheckedChange={(checked) => {
-                                            if (checked) {
-                                                const newSelected = Array.from(new Set([...selectedFlowIds, ...paginatedFlows.map((f: any) => f.id)]));
-                                                setSelectedFlowIds(newSelected);
-                                            } else {
-                                                const pageIds = paginatedFlows.map((f: any) => f.id);
-                                                setSelectedFlowIds(selectedFlowIds.filter(id => !pageIds.includes(id)));
-                                            }
-                                        }}
-                                    />
-                                </th>
                                 <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Name & Status</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Runs</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Created By</th>
@@ -436,7 +476,7 @@ export default function SmartFlowsPage() {
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
                             {paginatedFlows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="py-14 text-center bg-white dark:bg-transparent">
+                                    <td colSpan={5} className="py-14 text-center bg-white dark:bg-transparent">
                                         <div className="flex flex-col items-center gap-3">
                                             <div className="p-3.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary/40 dark:text-primary shadow-inner">
                                                 <FolderOpen size={32} strokeWidth={1} />
@@ -458,16 +498,6 @@ export default function SmartFlowsPage() {
                             ) : (
                                 paginatedFlows.map((flow: any) => (
                                     <tr key={flow.id} className="group hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200">
-                                        <td className="py-4 px-5 text-center">
-                                            <Checkbox
-                                                className="h-4 w-4 rounded-md border-slate-400 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                                checked={selectedFlowIds.includes(flow.id)}
-                                                onCheckedChange={(checked) => {
-                                                    if (checked) setSelectedFlowIds([...selectedFlowIds, flow.id]);
-                                                    else setSelectedFlowIds(selectedFlowIds.filter(id => id !== flow.id));
-                                                }}
-                                            />
-                                        </td>
                                         <td className="px-5 py-4">
                                             <div className="flex flex-col gap-1.5">
                                                 <button
@@ -516,8 +546,8 @@ export default function SmartFlowsPage() {
                                             </div>
                                         </td>
                                         <td className="px-5 py-4 text-center">
-                                            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
-                                                {flow.updated_at ? new Date(flow.updated_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-tight">
+                                                {formatDateTime(flow.updated_at)}
                                             </span>
                                         </td>
                                         <td className="px-5 py-4 text-right">
@@ -546,13 +576,6 @@ export default function SmartFlowsPage() {
                                                     >
                                                         <FolderOpen size={15} className="text-slate-400" />
                                                         Change Folder
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => toast({ title: "Coming soon", description: "Clonekit (bundles) is not available yet." })}
-                                                        className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
-                                                    >
-                                                        <Gem size={15} className="text-slate-400" />
-                                                        Add to Clonekit
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
                                                     <DropdownMenuItem

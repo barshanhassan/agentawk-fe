@@ -366,7 +366,13 @@ export default function ConversationsInbox() {
     }
   });
 
-  const agentOptions: AgentOption[] = (membersResponse?.users || membersResponse?.members || []).map((m: { id: number; first_name?: string; last_name?: string; email: string }) => ({
+  // Backend returns a plain array; older callers wrapped it under .users / .members.
+  // Handle both shapes so future API changes don't silently empty this dropdown.
+  const membersList: any[] = Array.isArray(membersResponse)
+    ? membersResponse
+    : (membersResponse?.users || membersResponse?.members || []);
+
+  const agentOptions: AgentOption[] = membersList.map((m: { id: number; first_name?: string; last_name?: string; email: string }) => ({
     id: m.id.toString(),
     name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
     icon: React.createElement("div", { 
