@@ -130,7 +130,20 @@ export default function ContactsSection() {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       toast({ title: "Contact added" });
       setShowAddContactModal(false);
-    }
+    },
+    onError: (err: any) => {
+      // Friendlier title for the contacts cap (backend throws "Reached the limit" when
+      // limited_contacts is on and maximum_contacts has been hit).
+      const msg: string = err?.message ?? "";
+      const isLimit = /reached the limit/i.test(msg);
+      toast({
+        title: isLimit ? "Contact limit reached" : "Error",
+        description: isLimit
+          ? "This workspace has hit its maximum number of contacts. Increase the cap in the agency edit screen or delete unused contacts first."
+          : msg,
+        variant: "destructive",
+      });
+    },
   });
 
   // Delete Mutation

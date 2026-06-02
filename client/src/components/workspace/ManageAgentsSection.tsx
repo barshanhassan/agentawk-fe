@@ -170,7 +170,18 @@ export default function ManageAgentSection() {
       resetForm();
       setView("list");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => {
+      // Friendlier title for the agents_limit cap (backend throws "Reached the limit").
+      const msg: string = err?.message ?? "";
+      const isLimit = /reached the limit/i.test(msg);
+      toast({
+        title: isLimit ? "Agent limit reached" : "Error",
+        description: isLimit
+          ? "This workspace has hit its maximum number of agents. Increase the limit in the agency edit screen or remove an existing agent first."
+          : msg,
+        variant: "destructive",
+      });
+    },
   });
 
   const updateMutation = useMutation({

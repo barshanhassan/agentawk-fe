@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   LayoutGrid,
@@ -73,18 +75,35 @@ import WebchatSection from "@/components/sections/channels/WebchatSection";
 
 
 export default function SettingsPage() {
+  // Workspace settings drive feature gating (White Label, etc). Fetched once and
+  // the result is reused below to filter the sidebar children — mirrors how the
+  // agency edit form persists these flags.
+  const { data: currentWorkspace } = useQuery<any>({
+    queryKey: ["/api/workspaces/current"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/current");
+      return res.json();
+    },
+  });
+  const allowBranding = currentWorkspace?.allow_branding ?? true;
+
+  const workspaceChildren = [
+    { name: "Manage", path: "/settings/workspace/ManageSection" },
+    { name: "Live Chat", path: "/settings/workspace/live-chat" },
+    // Hide the White Label sub-item when the agency has turned branding off for this workspace.
+    ...(allowBranding
+      ? [{ name: "White Label", path: "/settings/workspace/white-label" }]
+      : []),
+    { name: "Manage User", path: "/settings/workspace/manage-agents" },
+    { name: "Roles & Permissions", path: "/settings/workspace/roles" },
+    { name: "Teams", path: "/settings/workspace/teams" },
+  ];
+
   const sections = [
     {
       name: "Workspace",
       icon: LayoutGrid,
-      children: [
-        { name: "Manage", path: "/settings/workspace/ManageSection" },
-        { name: "Live Chat", path: "/settings/workspace/live-chat" },
-        { name: "White Label", path: "/settings/workspace/white-label" },
-        { name: "Manage User", path: "/settings/workspace/manage-agents" },
-        { name: "Roles & Permissions", path: "/settings/workspace/roles" },
-        { name: "Teams", path: "/settings/workspace/teams" },
-      ],
+      children: workspaceChildren,
     },
     { name: "Media Gallery", icon: Film },
 
@@ -519,7 +538,7 @@ export default function SettingsPage() {
                 <LiveChatSection />
               )}
 
-              {activeSection === "White Label" && (
+              {activeSection === "White Label" && allowBranding && (
                 <WhiteLabelSection />)}
               {activeSection === "Manage User" && (
                 <ManageAgentsSection />)}
