@@ -95,7 +95,10 @@ export default function ManageAgentSection() {
   const inputCls = cn(
     "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
     "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+    "placeholder:font-normal [&_[data-placeholder]]:font-normal",
+    dark
+      ? "bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-600 [&_[data-placeholder]]:text-slate-600"
+      : "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 [&_[data-placeholder]]:text-slate-400"
   );
 
   const primaryBtn =
@@ -219,7 +222,7 @@ export default function ManageAgentSection() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [language, setLanguage] = useState("pt-br");
+  const [language, setLanguage] = useState("en-us");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   // Default country = US (replyagent parity — country_id 204 = United States).
@@ -262,7 +265,7 @@ export default function ManageAgentSection() {
     setLastName("");
     setEmail("");
     setRole("");
-    setLanguage("pt-br");
+    setLanguage("en-us");
     setPhoneNumber("");
     setWhatsappNumber("");
     setPhoneCountry("US");
@@ -291,7 +294,7 @@ export default function ManageAgentSection() {
     setEmail(agent.email);
     // real role id from the member (no more fragile name-matching)
     setRole(o.role_id ? String(o.role_id) : "");
-    setLanguage(o.locale || "pt-br");
+    setLanguage(o.locale || "en-us");
     setTwoFA(!!o.tfa_required);
     setMobileAccess(o.mobile_access == 1 || o.mobile_access === true);
     setPhoneNumber(o.phone || "");
@@ -483,48 +486,47 @@ export default function ManageAgentSection() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                          <SelectItem value="pt-br" className="text-[12px] font-bold">Portuguese (Brazil)</SelectItem>
                           <SelectItem value="en-us" className="text-[12px] font-bold">English (US)</SelectItem>
+                          <SelectItem value="pt-br" className="text-[12px] font-bold">Portuguese (Brazil)</SelectItem>
                           <SelectItem value="es" className="text-[12px] font-bold">Spanish</SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
                   </div>
 
-                  <div className="pt-6 border-t space-y-4 max-w-3xl" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
+                  <div className="pt-6 border-t space-y-3 max-w-4xl" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
                     <h4 className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Contact</h4>
 
-                    {[
-                      { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications },
-                      { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications },
-                    ].map((row) => (
-                      <div key={row.label} className={cn("p-5 rounded-[1.25rem] border flex items-center gap-4", softBg, softBorder)}>
-                        <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-                          <row.icon size={16} />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <FieldLabel dark={dark}>{row.label}</FieldLabel>
-                          <PhoneInputWithFlag
-                            country={row.country}
-                            onCountryChange={row.countrySetter}
-                            value={row.value}
-                            onChange={row.setter}
-                            inputClassName={inputCls}
-                            isDark={dark}
-                          />
-                          {phoneError(row.value, row.country) && (
-                            <p className="text-[11px] text-rose-500 mt-1">{phoneError(row.value, row.country)}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 pl-4 border-l" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }}>
-                          <div className="text-right">
-                            <p className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Notify</p>
-                            <p className={cn("text-[9px] font-bold opacity-50", sub)}>Push & SMS</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications },
+                        { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications },
+                      ].map((row) => (
+                        <div key={row.label} className={cn("p-3 rounded-2xl border flex items-center gap-2.5", softBg, softBorder)}>
+                          <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
+                            <row.icon size={14} />
                           </div>
-                          <Switch checked={row.notify} onCheckedChange={row.notifySetter} className="data-[state=checked]:bg-primary" />
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <FieldLabel dark={dark}>{row.label}</FieldLabel>
+                            <PhoneInputWithFlag
+                              country={row.country}
+                              onCountryChange={row.countrySetter}
+                              value={row.value}
+                              onChange={row.setter}
+                              inputClassName={inputCls}
+                              isDark={dark}
+                            />
+                            {phoneError(row.value, row.country) && (
+                              <p className="text-[11px] text-rose-500 mt-1">{phoneError(row.value, row.country)}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 pl-2.5 border-l shrink-0" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }}>
+                            <p className={cn("text-[10px] font-black uppercase tracking-widest", text)} title="Push & SMS notifications">Notify</p>
+                            <Switch checked={row.notify} onCheckedChange={row.notifySetter} className="data-[state=checked]:bg-primary" />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </TabsContent>
 

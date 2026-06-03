@@ -63,6 +63,23 @@ export default function OverviewTab() {
     }
   });
 
+  // Real workspace info for the Agent Capacity card (replaces hardcoded mock).
+  const { data: workspaceData } = useQuery<any>({
+    queryKey: ["/api/workspaces/current"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/current");
+      return res.json();
+    },
+  });
+
+  const { data: membersData } = useQuery<any>({
+    queryKey: ["/api/workspaces/members"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/members");
+      return res.json();
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-16">
@@ -74,6 +91,18 @@ export default function OverviewTab() {
   const stats = statsData || {};
   const contacts = stats.contacts || { by_status: {}, by_source: {}, total: 0 };
   const channels = stats.channels || {};
+
+  // Agent Capacity (real workspace data, not mocks)
+  // - activeAgents = current workspace member count (incl. owner)
+  // - totalSeats   = workspace.agents_limit (0/null = unlimited)
+  const activeAgentsCount = Array.isArray(membersData) ? membersData.length : 0;
+  const agentsLimitRaw = Number(workspaceData?.agents_limit ?? 0);
+  const totalSeatsCount = agentsLimitRaw > 0 ? agentsLimitRaw : activeAgentsCount;
+  const isUnlimitedSeats = agentsLimitRaw <= 0;
+
+  // Contacts limit (real workspace data — Plan Usage card)
+  const contactsLimitRaw = Number(workspaceData?.maximum_contacts ?? 0);
+  const contactsLimitActive = Boolean(workspaceData?.limited_contacts) && contactsLimitRaw > 0;
 
   const kpiData = {
     activeToday: contacts.by_status.active || 0,
@@ -88,13 +117,17 @@ export default function OverviewTab() {
     monthlyNewUsers: contacts.by_source.api || 0,
     monthlyNewUsersChange: 5.8,
     currentMAU: contacts.total || 0,
-    mauLimit: 1000,
-    activeAgents: 1,
-    totalSeats: 5,
+    mauLimit: contactsLimitActive ? contactsLimitRaw : 0,
+    activeAgents: activeAgentsCount,
+    totalSeats: totalSeatsCount,
   };
 
-  const mauUsagePercentage = (kpiData.currentMAU / kpiData.mauLimit) * 100;
-  const agentUtilizationPercentage = (kpiData.activeAgents / kpiData.totalSeats) * 100;
+  const mauUsagePercentage = contactsLimitActive && kpiData.mauLimit > 0
+    ? (kpiData.currentMAU / kpiData.mauLimit) * 100
+    : 0;
+  const agentUtilizationPercentage = kpiData.totalSeats > 0
+    ? (kpiData.activeAgents / kpiData.totalSeats) * 100
+    : 0;
 
   // All chart data now comes from the backend, scoped to the current
   // workspace via JWT. A brand-new workspace returns all-zero buckets.
@@ -129,8 +162,8 @@ export default function OverviewTab() {
       icon: <BarChart2 size={15} className="text-primary" />,
       rows: [
         { label: "Current MAU", value: abbreviateNumber(kpiData.currentMAU) },
-        { label: "MAU Limit",   value: abbreviateNumber(kpiData.mauLimit) },
-        { label: "Usage",       value: formatPercentage(mauUsagePercentage) },
+        { label: "MAU Limit",   value: contactsLimitActive ? abbreviateNumber(kpiData.mauLimit) : "Unlimited" },
+        { label: "Usage",       value: contactsLimitActive ? formatPercentage(mauUsagePercentage) : "—" },
       ],
       progress: mauUsagePercentage,
     },
@@ -139,8 +172,8 @@ export default function OverviewTab() {
       icon: <Cpu size={15} className="text-primary" />,
       rows: [
         { label: "Active Agents", value: abbreviateNumber(kpiData.activeAgents) },
-        { label: "Total Seats",   value: abbreviateNumber(kpiData.totalSeats) },
-        { label: "Utilization",   value: formatPercentage(agentUtilizationPercentage) },
+        { label: "Total Seats",   value: isUnlimitedSeats ? "Unlimited" : abbreviateNumber(kpiData.totalSeats) },
+        { label: "Utilization",   value: isUnlimitedSeats ? "—" : formatPercentage(agentUtilizationPercentage) },
       ],
       progress: agentUtilizationPercentage,
     },
