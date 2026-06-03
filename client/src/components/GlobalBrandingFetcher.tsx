@@ -29,8 +29,57 @@ function hexToHslString(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+// Per-host cache so each workspace subdomain remembers its own brand colours
+// — without this, the first paint on every load shows the default blue until
+// /api/workspaces/branding resolves (the ~2-3s flash the user reported).
+const HOST = typeof window !== "undefined" ? window.location.host : "";
+const CACHE_KEY = `workspaceBrandingCache:${HOST}`;
+
+type CachedBranding = {
+  primaryHsl?: string;
+  incomingBubble?: string;
+  incomingText?: string;
+  outgoingBubble?: string;
+  outgoingText?: string;
+  linkColor?: string;
+};
+
+function readCache(): CachedBranding | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? (JSON.parse(raw) as CachedBranding) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(v: CachedBranding) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(v));
+  } catch {
+    /* localStorage full / disabled — silently skip; next reload will pay the flash */
+  }
+}
+
+function applyCssVar(name: string, value?: string) {
+  if (value) document.documentElement.style.setProperty(name, value);
+}
+
 export default function GlobalBrandingFetcher() {
   const { setWorkspacePrimaryColor } = useTheme();
+
+  // Apply the cached branding IMMEDIATELY on mount — mirrors AgencyBrandingFetcher.
+  // Without this the workspace flashes the default blue for the ~2-3s the API takes.
+  useEffect(() => {
+    const cached = readCache();
+    if (!cached) return;
+    if (cached.primaryHsl) setWorkspacePrimaryColor(cached.primaryHsl);
+    applyCssVar("--incoming-bubble", cached.incomingBubble);
+    applyCssVar("--incoming-text", cached.incomingText);
+    applyCssVar("--outgoing-bubble", cached.outgoingBubble);
+    applyCssVar("--outgoing-text", cached.outgoingText);
+    applyCssVar("--link-color", cached.linkColor);
+  }, []);
 
   const { data: brandingData } = useQuery<any>({
     queryKey: ["/api/workspaces/branding"],
@@ -39,25 +88,36 @@ export default function GlobalBrandingFetcher() {
   useEffect(() => {
     if (!brandingData) return;
 
+    const next: CachedBranding = {};
+
     if (brandingData.color) {
-      setWorkspacePrimaryColor(hexToHslString(brandingData.color));
+      const hsl = hexToHslString(brandingData.color);
+      next.primaryHsl = hsl;
+      setWorkspacePrimaryColor(hsl);
     }
 
     if (brandingData.incoming_chat_color) {
+      next.incomingBubble = brandingData.incoming_chat_color;
       document.documentElement.style.setProperty("--incoming-bubble", brandingData.incoming_chat_color);
     }
     if (brandingData.incoming_chat_text_color) {
+      next.incomingText = brandingData.incoming_chat_text_color;
       document.documentElement.style.setProperty("--incoming-text", brandingData.incoming_chat_text_color);
     }
     if (brandingData.outgoing_chat_color) {
+      next.outgoingBubble = brandingData.outgoing_chat_color;
       document.documentElement.style.setProperty("--outgoing-bubble", brandingData.outgoing_chat_color);
     }
     if (brandingData.outgoing_chat_text_color) {
+      next.outgoingText = brandingData.outgoing_chat_text_color;
       document.documentElement.style.setProperty("--outgoing-text", brandingData.outgoing_chat_text_color);
     }
     if (brandingData.link_color) {
+      next.linkColor = brandingData.link_color;
       document.documentElement.style.setProperty("--link-color", brandingData.link_color);
     }
+
+    writeCache(next);
   }, [brandingData]);
 
   return null;
