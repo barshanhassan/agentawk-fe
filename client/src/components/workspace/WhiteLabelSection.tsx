@@ -13,7 +13,6 @@ import {
   Info,
   ChevronsUpDown,
   Sparkles,
-  MessageSquare,
   AlertCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -353,7 +352,7 @@ export default function WhiteLabelSection() {
             </TabsContent>
 
             {/* ── COLORS TAB ── */}
-            <TabsContent value="colors" className="p-8 outline-none space-y-8">
+            <TabsContent value="colors" className="p-6 outline-none space-y-4">
               <SectionHeading
                 dark={dark}
                 title="Theme Colors"
@@ -361,46 +360,26 @@ export default function WhiteLabelSection() {
               />
 
               <div>
-                <div className="flex items-center gap-2 mb-5">
+                <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-4 bg-primary rounded-full" />
                   <h4 className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Brand</h4>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <ColorPicker dark={dark} label="Main Theme" value={colors.mainTheme} onChange={(v) => handleColorChange("mainTheme", v)} />
                   <ColorPicker dark={dark} label="Links & Actions" value={colors.links} onChange={(v) => handleColorChange("links", v)} />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center gap-2 mb-5">
+                <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-4 bg-primary rounded-full" />
                   <h4 className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Chat Bubbles</h4>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <ColorPicker dark={dark} label="Incoming Bubble" value={colors.incomingBubble} onChange={(v) => handleColorChange("incomingBubble", v)} />
                   <ColorPicker dark={dark} label="Incoming Text" value={colors.incomingText} onChange={(v) => handleColorChange("incomingText", v)} />
                   <ColorPicker dark={dark} label="Outgoing Bubble" value={colors.outgoingBubble} onChange={(v) => handleColorChange("outgoingBubble", v)} />
                   <ColorPicker dark={dark} label="Outgoing Text" value={colors.outgoingText} onChange={(v) => handleColorChange("outgoingText", v)} />
-                </div>
-              </div>
-
-              {/* Chat preview */}
-              <div className={cn("p-5 rounded-[1.5rem] border", softBg, softBorder)}>
-                <div className="flex items-center gap-2 mb-3">
-                  <MessageSquare size={14} className="text-primary" />
-                  <h5 className={cn("text-[10px] font-black uppercase tracking-widest", text)}>Live Preview</h5>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-start">
-                    <div className="px-3 py-2 rounded-lg rounded-tl-sm max-w-[60%]" style={{ backgroundColor: colors.incomingBubble, color: colors.incomingText }}>
-                      <p className="text-[12px] font-medium">Hi, I have a question.</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <div className="px-3 py-2 rounded-lg rounded-tr-sm max-w-[60%]" style={{ backgroundColor: colors.outgoingBubble, color: colors.outgoingText }}>
-                      <p className="text-[12px] font-medium">Sure! How can I help?</p>
-                    </div>
-                  </div>
                 </div>
               </div>
 

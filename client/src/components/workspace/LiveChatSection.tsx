@@ -94,10 +94,14 @@ export default function LiveChatSection() {
 
   const [pauseSmartFlow, setPauseSmartFlow] = useState("automatically");
 
-  // Custom fields (for Completion tab "Save as JSON" target field — mirrors replyagent's field picker)
+  // Custom fields (for Completion tab "Save as JSON" target field — mirrors replyagent's field picker).
+  // Schema: custom_fields has `label` (display) + `slug` (system identifier) — NOT `name`/`system_name`.
+  // Filter out entries with no label so Radix Select doesn't crash on empty-string values.
   const { data: customFieldsData } = useQuery<any>({ queryKey: ["/api/custom-fields"] });
   const customFields: { id: string; name: string }[] = Array.isArray(customFieldsData?.fields)
-    ? customFieldsData.fields.map((f: any) => ({ id: String(f.id), name: f.name || f.system_name || "" }))
+    ? customFieldsData.fields
+        .map((f: any) => ({ id: String(f.id), name: String(f.label || f.slug || "").trim() }))
+        .filter((f: any) => f.name !== "")
     : [];
 
   // Folders — real conversation folders (replyagent inbox folders), no longer fake local state
@@ -112,10 +116,12 @@ export default function LiveChatSection() {
 
   const { data: membersData } = useQuery<any>({ queryKey: ["/api/workspaces/members"] });
   const agents: { id: string; label: string }[] = Array.isArray(membersData)
-    ? membersData.map((m: any) => ({
-        id: String(m.id),
-        label: m.full_name || [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || `Agent #${m.id}`,
-      }))
+    ? membersData
+        .map((m: any) => ({
+          id: m.id != null ? String(m.id) : "",
+          label: m.full_name || [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || `Agent #${m.id}`,
+        }))
+        .filter((a: any) => a.id !== "")
     : [];
 
   const [folderFormOpen, setFolderFormOpen] = useState(false);

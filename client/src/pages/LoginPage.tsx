@@ -134,7 +134,7 @@ const LoginPage: React.FC = () => {
                 onClick={() => navigate('/signup')}
                 className="text-primary font-semibold hover:underline"
               >
-                SignUP
+                SignUp
               </button>
             </p>
           </div>
