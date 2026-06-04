@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup } from "@/components/ui/radio-group";
 import {
   Dialog,
@@ -91,8 +92,68 @@ export default function WhatsAppSection() {
   const [showDeleteNumberDialog, setShowDeleteNumberDialog] = useState(false);
   const [numberToDelete, setNumberToDelete] = useState<any>(null);
 
+  // Manual WhatsApp onboarding (Phase 5C). Backend persists wa_accounts +
+  // wa_phone_numbers (PENDING) and dispatches WA_REGISTER to the microservice;
+  // status flips to ACTIVE asynchronously when WA_VERIFICATION_RESULT arrives.
+  const [showManualConnectDialog, setShowManualConnectDialog] = useState(false);
+  const emptyManualForm = {
+    waba_id: "",
+    name: "",
+    access_token: "",
+    phone_number_id: "",
+    display_phone_number: "",
+    verified_name: "",
+  };
+  const [manualForm, setManualForm] = useState(emptyManualForm);
+  const [manualErrors, setManualErrors] = useState<Record<string, string>>({});
+
   const handleConnect = () => {
     toast({ title: "Connecting...", description: "Starting Meta onboarding flow." });
+  };
+
+  const validateManualForm = () => {
+    const errs: Record<string, string> = {};
+    if (!manualForm.waba_id.trim()) errs.waba_id = "WABA ID is required";
+    if (!manualForm.name.trim()) errs.name = "Account name is required";
+    if (!manualForm.access_token.trim()) errs.access_token = "Access token is required";
+    if (!manualForm.phone_number_id.trim()) errs.phone_number_id = "Phone Number ID is required";
+    if (!manualForm.display_phone_number.trim()) errs.display_phone_number = "Display phone number is required";
+    setManualErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const manualOnboardMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/whatsapp/onboard-manual", {
+        waba_id: manualForm.waba_id.trim(),
+        name: manualForm.name.trim(),
+        access_token: manualForm.access_token.trim(),
+        phone_number_id: manualForm.phone_number_id.trim(),
+        display_phone_number: manualForm.display_phone_number.trim(),
+        ...(manualForm.verified_name.trim() ? { verified_name: manualForm.verified_name.trim() } : {}),
+      });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Account saved",
+        description:
+          data?.message ??
+          "WhatsApp account is registering. Status will turn ACTIVE once the microservice confirms.",
+      });
+      setShowManualConnectDialog(false);
+      setManualForm(emptyManualForm);
+      setManualErrors({});
+      // Refresh the channels list so the new pending account shows up.
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+    },
+    // No onError here — apiRequest's global handleApiError already toasts the
+    // backend's error message (e.g. "WABA already connected to another workspace").
+  });
+
+  const submitManualOnboard = () => {
+    if (!validateManualForm()) return;
+    manualOnboardMutation.mutate();
   };
 
   if (isLoading) {
@@ -398,7 +459,7 @@ export default function WhatsAppSection() {
 
           {/* ── API MANAGE VIEW ── */}
           {view === "api_manage" && (
-            <div className="p-8">
+            <div className="p-8 space-y-4">
               {!hasApiAccounts ? (
                 <EmptyIntegrationState dark={dark} text={text} sub={sub} softBg={softBg} softBorder={softBorder} onConnect={handleConnect} />
               ) : (
@@ -406,6 +467,25 @@ export default function WhatsAppSection() {
                   <p className={cn("text-[11px] font-bold opacity-50 italic", sub)}>API accounts loading...</p>
                 </div>
               )}
+
+              {/* Manual onboarding fallback — for users with WABA credentials but no Embedded Signup flow */}
+              <div className={cn("rounded-[1.5rem] border p-6 flex items-center justify-between gap-4", softBg, softBorder)}>
+                <div className="space-y-1">
+                  <h4 className={cn("text-[12px] font-black tracking-tight", text)}>Already have WABA credentials?</h4>
+                  <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed max-w-xl", sub)}>
+                    Paste your WhatsApp Business Account ID, phone number ID, and access token from Meta dashboard. Skip Meta Embedded Signup — the platform will register the account directly with the WhatsApp microservice.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowManualConnectDialog(true)}
+                  className={cn(
+                    "shrink-0 h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                    "border-primary text-primary hover:bg-primary hover:text-white"
+                  )}
+                >
+                  <Plus size={12} /> Connect Manually
+                </button>
+              </div>
             </div>
           )}
 
@@ -515,6 +595,158 @@ export default function WhatsAppSection() {
                 className="h-11 px-7 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
               >
                 <Plus size={12} /> Add Number
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Manual Connect Dialog (Phase 5C) ── */}
+      <Dialog open={showManualConnectDialog} onOpenChange={(open) => {
+        setShowManualConnectDialog(open);
+        if (!open) setManualErrors({});
+      }}>
+        <DialogContent className={cn("rounded-[2rem] border p-0 max-w-xl overflow-hidden", card, border)}>
+          <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                <Phone size={16} />
+              </div>
+              <div>
+                <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Connect WhatsApp Manually</h2>
+                <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                  Paste credentials from Meta dashboard. Account will register as PENDING and turn ACTIVE once verified.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Account Name <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g. EZAUQ Sales"
+                  value={manualForm.name}
+                  onChange={(e) => setManualForm({ ...manualForm, name: e.target.value })}
+                  className={inputCls}
+                  disabled={manualOnboardMutation.isPending}
+                />
+                {manualErrors.name && (
+                  <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.name}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  WABA ID <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g. 681754671655525"
+                  value={manualForm.waba_id}
+                  onChange={(e) => setManualForm({ ...manualForm, waba_id: e.target.value })}
+                  className={inputCls}
+                  disabled={manualOnboardMutation.isPending}
+                />
+                <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
+                  From Meta dashboard → WhatsApp → API Setup → WhatsApp Business Account ID
+                </p>
+                {manualErrors.waba_id && (
+                  <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.waba_id}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Phone Number ID <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g. 769635746243474"
+                  value={manualForm.phone_number_id}
+                  onChange={(e) => setManualForm({ ...manualForm, phone_number_id: e.target.value })}
+                  className={inputCls}
+                  disabled={manualOnboardMutation.isPending}
+                />
+                <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
+                  From Meta dashboard → API Setup → Phone number ID (digits only, not the +1 555 number)
+                </p>
+                {manualErrors.phone_number_id && (
+                  <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.phone_number_id}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Display Phone Number <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g. 15551414305 or +1 555 141 4305"
+                  value={manualForm.display_phone_number}
+                  onChange={(e) => setManualForm({ ...manualForm, display_phone_number: e.target.value })}
+                  className={inputCls}
+                  disabled={manualOnboardMutation.isPending}
+                />
+                {manualErrors.display_phone_number && (
+                  <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.display_phone_number}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Verified Name <span className="opacity-60 normal-case font-bold">(optional)</span>
+                </label>
+                <Input
+                  placeholder="e.g. EZAUQ Pvt Ltd"
+                  value={manualForm.verified_name}
+                  onChange={(e) => setManualForm({ ...manualForm, verified_name: e.target.value })}
+                  className={inputCls}
+                  disabled={manualOnboardMutation.isPending}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className={cn("text-[10px] font-black uppercase tracking-widest pl-1 block", sub)}>
+                  Access Token <span className="text-rose-500">*</span>
+                </label>
+                <Textarea
+                  placeholder="EAA... (paste from Meta dashboard → API Setup → Access Token)"
+                  value={manualForm.access_token}
+                  onChange={(e) => setManualForm({ ...manualForm, access_token: e.target.value })}
+                  className={cn(inputCls, "h-24 py-3 font-mono text-[11px] resize-none")}
+                  disabled={manualOnboardMutation.isPending}
+                />
+                <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
+                  Temporary tokens expire after 24 hours. For long-term use, generate a permanent System User token from Business Manager.
+                </p>
+                {manualErrors.access_token && (
+                  <p className="text-[10px] font-bold text-rose-500 pl-1">{manualErrors.access_token}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowManualConnectDialog(false)}
+                disabled={manualOnboardMutation.isPending}
+                className={cn(outlineBtn, "disabled:opacity-50 disabled:cursor-not-allowed")}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitManualOnboard}
+                disabled={manualOnboardMutation.isPending}
+                className="h-11 px-7 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+              >
+                {manualOnboardMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                    Registering...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={12} /> Connect Account
+                  </>
+                )}
               </button>
             </div>
           </div>

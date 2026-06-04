@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { getUserInfo } from "@/lib/auth";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
 import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX } from "lucide-react";
@@ -105,7 +105,10 @@ interface BackendConversation {
 interface BackendMessage {
   id: number;
   direction: 'OUTGOING' | 'INCOMING';
-  message_text: string;
+  // Per-channel tables store the body under different keys: wa_messages uses `text`,
+  // older channels use `message_text`. Accept both so the mapper can fall back.
+  text?: string;
+  message_text?: string;
   created_at: string;
 }
 
@@ -171,21 +174,36 @@ export default function ConversationsInbox() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
 
-  // WebSocket Integration
-  const socket = useSocket(1); // Defaulting to 1, ideally fetch from user session
+  // WebSocket Integration. Pull workspace_id from the JWT-backed user_info blob
+  // (set at login) instead of hardcoding 1 — otherwise multi-workspace agents see
+  // events from the wrong workspace room.
+  const workspaceId = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("user_info");
+      if (!raw) return 1;
+      const parsed = JSON.parse(raw);
+      const wsId = parsed?.workspace_id ?? parsed?.modelable_id ?? 1;
+      return Number(wsId) || 1;
+    } catch {
+      return 1;
+    }
+  }, []);
+  const socket = useSocket(workspaceId);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleNewMessage = (data: SocketData) => {
       console.log("Real-time message received:", data);
-      
-      // Invalidate inbox list to update snippets/unread counts
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-inbox-list"] });
-      
-      // If current chat is open, refresh messages
+
+      // Invalidate the EXACT keys this page uses (matches useQuery above).
+      // The old keys (/api/inbox/get-inbox-list, /api/inbox/get-chat-messages)
+      // never matched, so the UI silently never refreshed.
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+
+      // If current chat is open, refresh messages too.
       if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
-        queryClient.invalidateQueries({ queryKey: ["/api/inbox/get-chat-messages", selectedConversation] });
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       }
 
       toast({
@@ -271,7 +289,7 @@ export default function ConversationsInbox() {
   const messages: Message[] = (messagesResponse?.messages || []).map((m: BackendMessage) => ({
     id: m.id,
     from: m.direction === 'OUTGOING' ? 'agent' : 'user',
-    text: m.message_text || '',
+    text: m.text ?? m.message_text ?? '',
     time: m.created_at || new Date().toISOString(),
   }));
 
