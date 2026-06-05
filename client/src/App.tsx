@@ -21,6 +21,8 @@ import BillingPage from "@/pages/BillingPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SmartFlowsPage from "@/pages/SmartFlowsPage";
 import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
+import WhatsAppOnboardPage from "@/pages/WhatsAppOnboardPage";
+import WhatsAppConnectPage from "@/pages/WhatsAppConnectPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
@@ -106,6 +108,12 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       </Route>
       <Route path="/settings/workspace/:section">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/settings/whatsapp-onboard">
+        <ProtectedRoute><WhatsAppOnboardPage /></ProtectedRoute>
+      </Route>
+      <Route path="/settings/whatsapp-connect">
+        <ProtectedRoute><WhatsAppConnectPage /></ProtectedRoute>
       </Route>
       <Route path="/settings">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>

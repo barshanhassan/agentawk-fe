@@ -1,0 +1,149 @@
+import { useState, useEffect } from "react";
+import { Info, RotateCw } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
+import DeletionGuard from "./DeletionGuard";
+
+/**
+ * Reconnect / refresh dialog for numbers stuck in LOCKED / FAILED /
+ * DISCONNECTED state. Mirrors the replyagent flow that walks the admin
+ * through Meta-side checks before re-syncing.
+ *
+ * Backend route: `POST /api/whatsapp/reconnect/:number_id`.
+ *
+ * The dialog uses the DeletionGuard component because reconnecting a number
+ * can clobber a manual payment-method fix the user just did on Meta's side
+ * — typing the phrase makes that explicit.
+ */
+interface Props {
+  open: boolean;
+  number: any | null;
+  onClose: () => void;
+}
+
+export default function ReconnectNumberDialog({ open, number, onClose }: Props) {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [confirmation, setConfirmation] = useState(false);
+  const [guardOk, setGuardOk] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setConfirmation(false);
+      setGuardOk(false);
+    }
+  }, [open]);
+
+  const valid = confirmation && guardOk;
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/whatsapp/reconnect/${number?.id}`);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: data?.success ? "Reconnect requested" : "Could not reconnect",
+        description: data?.message ?? "",
+        variant: data?.success ? "default" : "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      onClose();
+    },
+  });
+
+  if (!number) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className={cn("rounded-[2rem] border p-0 max-w-2xl overflow-hidden", dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200")}>
+        <div className="p-7 space-y-5">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-sky-500/10 text-sky-500 mb-4">
+              <Info size={32} />
+            </div>
+            <div className={cn("text-base font-black tracking-tight", dark ? "text-white" : "text-slate-900")}>
+              Refresh number status
+            </div>
+            <div className={cn("mt-2 text-[13px] font-mono", dark ? "text-emerald-400" : "text-emerald-600")}>
+              {number.display_phone_number}
+            </div>
+          </div>
+
+          <p className={cn("text-[12px] font-bold leading-relaxed", dark ? "text-orange-400" : "text-orange-600")}>
+            Before clicking Refresh, please make sure you've checked the items below directly on Meta Business
+            Manager — otherwise the same blocked / locked state will return.
+          </p>
+
+          <ul className={cn("text-[12px] leading-relaxed space-y-2 list-disc list-inside", dark ? "text-slate-300" : "text-slate-700")}>
+            <li>
+              If your number status is <strong>Blocked</strong>, first check your WhatsApp Account & Phone number on
+              your{" "}
+              <a
+                href="https://business.facebook.com/latest/settings/whatsapp_account"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-black underline-offset-2 hover:underline"
+              >
+                Meta Business Account
+              </a>{" "}
+              and ensure a valid payment method is attached.
+            </li>
+            <li>
+              If the number was disconnected during a payment failure, settle the dispute on Meta's side first, then
+              come back and refresh — otherwise the lock will re-apply.
+            </li>
+          </ul>
+
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="reconnect_confirm"
+                checked={confirmation}
+                onCheckedChange={(c) => setConfirmation(!!c)}
+                className="mt-1"
+              />
+              <label
+                htmlFor="reconnect_confirm"
+                className={cn("text-[12px] leading-relaxed cursor-pointer", dark ? "text-slate-300" : "text-slate-700")}
+              >
+                I confirm I've reviewed this number on Meta Business Manager and resolved any payment / verification
+                issues before refreshing.
+              </label>
+            </div>
+            <DeletionGuard phrase="REFRESH" onValid={setGuardOk} />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className={cn(
+                "h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all",
+                dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400",
+              )}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => mutation.mutate()}
+              disabled={!valid || mutation.isPending}
+              className="h-10 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <RotateCw size={12} className={mutation.isPending ? "animate-spin" : ""} />{" "}
+              {mutation.isPending ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
