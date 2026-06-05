@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { ActionEditor, ConditionEditor } from "./automation/ActionEditor";
+import { StepPropertiesEditor } from "./automation/StepPropertiesEditor";
 import { useLocation, useRoute } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import ReactFlow, {
@@ -176,14 +178,27 @@ const CustomNumberInput = ({ value, onChange, min = 1, max = 100, unit }: { valu
     );
 };
 
-const StartNode = ({ data }: NodeProps<StartNodeData>) => {
+const StartNode = ({ data, id }: NodeProps<StartNodeData & { triggerEvent?: string; triggerGroups?: any[]; onSelectTrigger?: (nodeId: string, event: string) => void }>) => {
+    const [open, setOpen] = React.useState(false);
+    const currentLabel = (() => {
+        const ev = data?.triggerEvent ?? 'default';
+        for (const grp of (data?.triggerGroups ?? []) as any[]) {
+            const hit = (grp.triggers ?? []).find((t: string) => t === ev);
+            if (hit) return ev.replace(/_/g, ' ');
+        }
+        return ev.replace(/_/g, ' ');
+    })();
     return (
-        <div className="bg-white rounded-md shadow-sm border border-gray-200 w-[220px]">
-            <div className="py-1.5 px-3 border-b border-gray-200">
-                <div className="font-bold text-gray-700 text-sm">Start</div>
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 w-[260px]">
+            <div className="py-1.5 px-3 border-b border-gray-200 flex justify-between items-center">
+                <div className="font-bold text-gray-700 text-sm">Start trigger</div>
+                <button
+                    className="text-[10px] text-blue-600 hover:underline"
+                    onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+                >change</button>
             </div>
             <div className="py-1.5 px-3 relative bg-gray-50 rounded-b-md">
-                <div className="text-xs text-gray-600">Default</div>
+                <div className="text-xs text-gray-700 capitalize">{currentLabel || 'Default'}</div>
                 <Handle
                     type="source"
                     position={Position.Right}
@@ -192,6 +207,26 @@ const StartNode = ({ data }: NodeProps<StartNodeData>) => {
                     style={{ right: -5, top: '50%' }}
                 />
             </div>
+            {open && (
+                <div className="border-t border-gray-200 max-h-[280px] overflow-auto">
+                    {((data?.triggerGroups ?? []) as any[]).map((grp: any) => (
+                        <div key={grp.key}>
+                            <div className="px-3 py-1 text-[10px] uppercase font-bold text-gray-500 bg-gray-50 sticky top-0">{grp.label}</div>
+                            {(grp.triggers ?? []).map((t: string) => (
+                                <button
+                                    key={t}
+                                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        data?.onSelectTrigger?.(id, t);
+                                        setOpen(false);
+                                    }}
+                                >{t.replace(/_/g, ' ')}</button>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
@@ -422,20 +457,9 @@ const initialNodes: Node[] = [
     },
 ];
 
-const mockMenuItems = [
-    { type: 'header', label: 'Twilio Call' },
-    { type: 'item', label: 'Call from twilio', icon: FaPhone, color: '#008CFF' },
-    { type: 'item', label: 'SMS from Twilio', icon: FaComment, color: '#008CFF' },
-    { type: 'item', label: 'Instagram', icon: FaInstagram, color: '#E1306C' },
-    { type: 'item', label: 'Messenger', icon: FaFacebookMessenger, color: '#0084FF' },
-    { type: 'item', label: 'Whatsapp', icon: FaWhatsapp, color: '#25D366' },
-    { type: 'item', label: 'Telegram', icon: FaTelegram, color: '#24A1DE' },
-    { type: 'item', label: 'Randomizer', icon: FaRandom, color: '#00B8D9' },
-    { type: 'item', label: 'Delay', icon: FaClock, color: '#FFAB00' },
-    { type: 'item', label: 'Condition', icon: FaCodeBranch, color: '#6554C0' },
-    { type: 'item', label: 'Action', icon: FaBolt, color: '#36B37E' },
-    { type: 'item', label: 'Splitter', icon: FaProjectDiagram, color: '#FF5630' },
-];
+// Step menu options live in the component itself — built dynamically from
+// /api/automations/integrations + the canonical registry. The previous
+// module-level `mockMenuItems` constant was replaced.
 
 export default function SmartFlowBuilderPage() {
     const [match, params] = useRoute("/automations/:id");
@@ -447,6 +471,9 @@ export default function SmartFlowBuilderPage() {
     const [flowName, setFlowName] = useState("Loading...");
     const [flowStatus, setFlowStatus] = useState<"draft" | "active" | "unpublished">("draft");
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    // Bulk-select state — populated by ReactFlow's onSelectionChange when
+    // the user marquee-drags or Shift-clicks multiple nodes.
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [nodeIdToDelete, setNodeIdToDelete] = useState<string | null>(null);
     const [edgeIdToDelete, setEdgeIdToDelete] = useState<string | null>(null);
 
@@ -459,6 +486,101 @@ export default function SmartFlowBuilderPage() {
         },
         enabled: !!id
     });
+
+    // Fetch integrations — populates the step menu, AI assistant picker,
+    // custom field selector, channels, tag picker, etc. Replaces ALL the
+    // hardcoded option lists that used to sit inline in this file.
+    // Server response shape mirrors replyagent's GET /automation/integrations
+    // (see backend/src/automations/integrations.service.ts).
+    const { data: integrations } = useQuery({
+        queryKey: ["/api/automations/integrations"],
+        queryFn: async () => {
+            const res = await apiRequest("GET", "/api/automations/integrations");
+            return res.json();
+        },
+    });
+
+    // Channel icons + colours stay co-located here so the dynamic menu
+    // can render them — moved out of the old hardcoded dynamicMenuItems.
+    const channelIconMap: Record<string, { icon: any; color: string; label: string }> = {
+        whatsapp: { icon: FaWhatsapp, color: '#25D366', label: 'WhatsApp' },
+        telegram: { icon: FaTelegram, color: '#24A1DE', label: 'Telegram' },
+        messenger: { icon: FaFacebookMessenger, color: '#0084FF', label: 'Messenger' },
+        instagram: { icon: FaInstagram, color: '#E1306C', label: 'Instagram' },
+        webchat: { icon: FaProjectDiagram, color: '#3B82F6', label: 'Webchat' },
+        twilio_sms: { icon: FaComment, color: '#008CFF', label: 'SMS from Twilio' },
+        twilio_call: { icon: FaPhone, color: '#008CFF', label: 'Call from Twilio' },
+        zapi: { icon: FaWhatsapp, color: '#22C55E', label: 'Z-API' },
+        evolution: { icon: FaWhatsapp, color: '#8B5CF6', label: 'Evolution' },
+        email: { icon: FaComment, color: '#EF4444', label: 'Email' },
+    };
+
+    // Build the step menu dynamically off the integrations payload. Connected
+    // channels appear at the top (so users only see channels they can use),
+    // then the universal control-flow types (Action / Condition / Delay /
+    // Randomizer), then any extra step types from the backend registry.
+    const dynamicMenuItems = (() => {
+        if (!integrations) return [] as any[];
+        const items: any[] = [];
+
+        // 1. Connected channels first.
+        const channelLists: Record<string, any[]> = {
+            whatsapp: integrations.whatsapp_apps ?? [],
+            telegram: integrations.bots ?? [],
+            messenger: integrations.messenger_apps ?? [],
+            instagram: integrations.instagram_apps ?? [],
+            webchat: integrations.webchat_instances ?? [],
+            twilio_sms: integrations.twilio_accounts ?? [],
+            twilio_call: integrations.twilio_accounts ?? [],
+            zapi: integrations.zapi_instances ?? [],
+            evolution: integrations.evolution_instances ?? [],
+        };
+        const connectedChannels = Object.entries(channelLists).filter(
+            ([, list]) => Array.isArray(list) && list.length > 0,
+        );
+        if (connectedChannels.length > 0) {
+            items.push({ type: 'header', label: 'Connected channels' });
+            for (const [key] of connectedChannels) {
+                const meta = channelIconMap[key];
+                if (!meta) continue;
+                items.push({
+                    type: 'item',
+                    label: meta.label,
+                    icon: meta.icon,
+                    color: meta.color,
+                    stepType: key,
+                });
+            }
+        }
+
+        // 2. Flow control (always available).
+        items.push({ type: 'header', label: 'Flow control' });
+        items.push({ type: 'item', label: 'Randomizer', icon: FaRandom, color: '#00B8D9', stepType: 'randomizer' });
+        items.push({ type: 'item', label: 'Delay', icon: FaClock, color: '#FFAB00', stepType: 'delay' });
+        items.push({ type: 'item', label: 'Condition', icon: FaCodeBranch, color: '#6554C0', stepType: 'condition' });
+        items.push({ type: 'item', label: 'Splitter', icon: FaProjectDiagram, color: '#FF5630', stepType: 'splitter' });
+
+        // 3. Actions grouped from the canonical action registry — each group
+        // becomes a header, each action becomes an item. The icon set isn't
+        // available for every action, so we fall back to the generic Bolt.
+        const actionGroups = integrations.registry?.actions ?? [];
+        for (const grp of actionGroups) {
+            if (!grp?.actions?.length) continue;
+            items.push({ type: 'header', label: grp.label });
+            for (const act of grp.actions) {
+                items.push({
+                    type: 'item',
+                    label: act.label,
+                    icon: FaBolt,
+                    color: '#36B37E',
+                    stepType: 'action',
+                    actionSlug: act.slug,
+                });
+            }
+        }
+
+        return items;
+    })();
 
     useEffect(() => {
         if (automationResponse?.automation) {
@@ -489,24 +611,36 @@ export default function SmartFlowBuilderPage() {
             const auth = automationResponse?.automation;
             if (!auth || !auth.draft_version_id) throw new Error("No draft version found");
 
-            // We combine everything into a single "flow_config" step for now
-            // In a more granular setup, each node would be a step, but properties-blob is safer for UI state
-            const draftVersion = auth.automation_versions?.find((v: any) => v.id.toString() === auth.draft_version_id.toString());
-            const configStep = draftVersion?.automation_steps?.find((s: any) => s.type === 'flow_config');
+            // Two-pass save:
+            //   1. Persist the flow_config blob so the UI rehydrates the canvas
+            //      shape (positions, labels, icons) exactly on next open.
+            //   2. Call /sync-graph so the backend creates / updates real
+            //      automation_steps + automation_step_activities + automation_flow
+            //      rows. WITHOUT this second pass the processor would never see
+            //      structured step rows and the flow wouldn't execute.
+            const draftVersion = auth.automation_versions?.find(
+                (v: any) => v.id.toString() === auth.draft_version_id.toString(),
+            );
+            const configStep = draftVersion?.automation_steps?.find(
+                (s: any) => s.type === 'flow_config',
+            );
 
-            const payload = {
+            const blobPayload = {
                 title: 'Flow Configuration',
                 type: 'flow_config',
-                properties: { nodes, edges }
+                properties: { nodes, edges },
             };
-
             if (configStep) {
-                // Update existing
-                await apiRequest("PATCH", `/api/automations/step/${configStep.id}`, payload);
+                await apiRequest('PATCH', `/api/automations/step/${configStep.id}`, blobPayload);
             } else {
-                // Create new config step
-                await apiRequest("POST", `/api/automations/version/${auth.draft_version_id}/step`, payload);
+                await apiRequest('POST', `/api/automations/version/${auth.draft_version_id}/step`, blobPayload);
             }
+
+            // Structured reconcile.
+            await apiRequest('POST', `/api/automations/${id}/sync-graph`, {
+                nodes,
+                edges,
+            });
         },
         onSuccess: () => {
             toast({
@@ -721,6 +855,149 @@ export default function SmartFlowBuilderPage() {
     const selectedNode = nodes.find(n => n.id === selectedNodeId);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
+    // ───────────────────────────────────────────────────────────────
+    // Undo / Redo
+    //
+    // History stack of (nodes, edges) snapshots. We push on every nodes /
+    // edges change EXCEPT when the change is itself a replay from the
+    // history (the `isReplayingRef` guards that). Cmd/Ctrl + Z / Y trigger
+    // the replay.
+    // ───────────────────────────────────────────────────────────────
+    const historyRef = React.useRef<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+    const historyIndexRef = React.useRef<number>(-1);
+    const isReplayingRef = React.useRef<boolean>(false);
+
+    const pushHistory = useCallback((n: Node[], e: Edge[]) => {
+        if (isReplayingRef.current) return;
+        // Drop any "redo" entries past the current pointer.
+        historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+        historyRef.current.push({
+            nodes: JSON.parse(JSON.stringify(n)),
+            edges: JSON.parse(JSON.stringify(e)),
+        });
+        if (historyRef.current.length > 100) historyRef.current.shift();
+        historyIndexRef.current = historyRef.current.length - 1;
+    }, []);
+
+    const undo = useCallback(() => {
+        if (historyIndexRef.current <= 0) return;
+        historyIndexRef.current -= 1;
+        const snap = historyRef.current[historyIndexRef.current];
+        if (!snap) return;
+        isReplayingRef.current = true;
+        setNodes(snap.nodes);
+        setEdges(snap.edges);
+        setTimeout(() => { isReplayingRef.current = false; }, 0);
+    }, [setNodes, setEdges]);
+
+    const redo = useCallback(() => {
+        if (historyIndexRef.current >= historyRef.current.length - 1) return;
+        historyIndexRef.current += 1;
+        const snap = historyRef.current[historyIndexRef.current];
+        if (!snap) return;
+        isReplayingRef.current = true;
+        setNodes(snap.nodes);
+        setEdges(snap.edges);
+        setTimeout(() => { isReplayingRef.current = false; }, 0);
+    }, [setNodes, setEdges]);
+
+    useEffect(() => {
+        // Snapshot any time nodes or edges change (excluding replays).
+        if (isReplayingRef.current) return;
+        pushHistory(nodes, edges);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [nodes, edges]);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const meta = e.metaKey || e.ctrlKey;
+            if (!meta) return;
+            if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+            else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo(); }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [undo, redo]);
+
+    // ───────────────────────────────────────────────────────────────
+    // Stats overlay — fetch per-step + per-activity stats from backend.
+    // Surface counts as small badges on each node.
+    // ───────────────────────────────────────────────────────────────
+    const { data: stats } = useQuery({
+        queryKey: [`/api/automations/${id}/stats`],
+        queryFn: async () => {
+            const res = await apiRequest('GET', `/api/automations/${id}/stats`);
+            return res.json();
+        },
+        enabled: !!id,
+        refetchInterval: 30_000,
+    });
+
+    // ───────────────────────────────────────────────────────────────
+    // Test-trigger button — fires the start activity once for a
+    // hand-picked contact id (prompt) without going through the real
+    // trigger event. Useful for sanity-testing a flow without seeding.
+    // ───────────────────────────────────────────────────────────────
+    const handleTestTrigger = useCallback(async () => {
+        const cid = window.prompt('Test trigger for contact ID:');
+        if (!cid) return;
+        try {
+            await apiRequest('POST', `/api/automations/inbox-automate`, { contact_id: cid });
+            toast({ title: 'Test trigger fired', description: `Contact ${cid}` });
+        } catch (e: any) {
+            toast({ title: 'Test trigger failed', description: e?.message, variant: 'destructive' });
+        }
+    }, [toast]);
+
+    // ───────────────────────────────────────────────────────────────
+    // Bundle share button — exports this automation's bundle (if any)
+    // and shows a one-time copyable JSON for clone-kit distribution.
+    // ───────────────────────────────────────────────────────────────
+    const handleShareBundle = useCallback(async () => {
+        const bundleId = window.prompt('Bundle ID to export:');
+        if (!bundleId) return;
+        try {
+            const res = await apiRequest('GET', `/api/automations/clone-kit/${bundleId}/export`);
+            const json = await res.json();
+            window.prompt('Clone-kit JSON (copy to share):', JSON.stringify(json));
+        } catch (e: any) {
+            toast({ title: 'Export failed', description: e?.message, variant: 'destructive' });
+        }
+    }, [toast]);
+
+    // Inject the triggers registry + setter into every `start` node's data
+    // so StartNode's picker can read the canonical list and write back to
+    // the node's `triggerEvent`. Without this the dropdown would render
+    // empty and saved events wouldn't propagate to the sync-graph payload.
+    const selectStartTrigger = useCallback((nodeId: string, event: string) => {
+        setNodes((nds) =>
+            nds.map((n) =>
+                n.id === nodeId
+                    ? { ...n, data: { ...n.data, triggerEvent: event } }
+                    : n,
+            ),
+        );
+    }, [setNodes]);
+
+    useEffect(() => {
+        if (!integrations?.registry?.triggers) return;
+        setNodes((nds) =>
+            nds.map((n) =>
+                n.type === 'start'
+                    ? {
+                          ...n,
+                          data: {
+                              ...n.data,
+                              triggerGroups: integrations.registry.triggers,
+                              onSelectTrigger: selectStartTrigger,
+                          },
+                      }
+                    : n,
+            ),
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [integrations?.registry?.triggers, selectStartTrigger]);
+
     // Helper to close all floating editors
     const closeAllEditors = useCallback(() => {
         setIsTextEditorOpen(false);
@@ -793,10 +1070,23 @@ export default function SmartFlowBuilderPage() {
         rfInstance?.zoomOut();
     };
 
+    /**
+     * When a menu entry is picked, we resolve it back to the canonical
+     * registry — the menu item carries `stepType` (one of STEP_TYPES) and,
+     * for action umbrellas, `actionSlug` (one of ACTION_SLUGS). Both are
+     * stamped onto the React Flow node so the save-mutation can persist
+     * them into `automation_steps.type` + `activity.properties.slug`.
+     *
+     * Without this mapping the backend processor receives a UI label
+     * (e.g. "ChatGPT: ask question") instead of the slug it dispatches on,
+     * so the action would silently no-op at runtime.
+     */
     const handleAddStep = (label: string) => {
-        const menuItem: any = mockMenuItems.find(item => item.label === label);
+        const menuItem: any = dynamicMenuItems.find(item => item.label === label);
         const icon = menuItem?.icon;
         const color = menuItem?.color;
+        const stepType = menuItem?.stepType ?? 'action';
+        const actionSlug = menuItem?.actionSlug ?? null;
 
         const newNode: Node = {
             id: `step-${Date.now()}`,
@@ -805,7 +1095,14 @@ export default function SmartFlowBuilderPage() {
                 x: 250 + (nodes.length * 20),
                 y: 100 + (nodes.length * 20)
             },
-            data: { label, icon, color, onDelete: requestDelete },
+            data: {
+                label,
+                icon,
+                color,
+                stepType,
+                actionSlug,
+                onDelete: requestDelete,
+            },
         };
 
         setNodes((nds) => nds.concat(newNode));
@@ -873,7 +1170,41 @@ export default function SmartFlowBuilderPage() {
                     )}
 
                     <button className="h-9 px-4 text-sm font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-700 hover:text-white transition-all duration-200" onClick={() => setLocation("/automations")}>Exit</button>
-                    <button 
+
+                    {/* Undo / Redo */}
+                    <button
+                        onClick={undo}
+                        title="Undo (Ctrl+Z)"
+                        className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors flex items-center"
+                    ><FaUndo className="w-3 h-3" /></button>
+                    <button
+                        onClick={redo}
+                        title="Redo (Ctrl+Y)"
+                        className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors flex items-center"
+                    ><FaRedo className="w-3 h-3" /></button>
+
+                    {/* Test trigger */}
+                    <button
+                        onClick={handleTestTrigger}
+                        title="Test this flow against a contact"
+                        className="h-9 px-3 text-sm text-purple-600 border border-purple-300 rounded-md hover:bg-purple-50 transition-colors flex items-center gap-1"
+                    ><FaPlay className="w-3 h-3" /> Test</button>
+
+                    {/* Bundle share */}
+                    <button
+                        onClick={handleShareBundle}
+                        title="Export this flow as a clone kit"
+                        className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-1"
+                    ><FaCopy className="w-3 h-3" /> Share</button>
+
+                    {/* Total runs badge */}
+                    {stats?.total_runs != null && (
+                        <span className="h-9 px-3 inline-flex items-center text-xs text-gray-500 bg-gray-100 rounded-md" title="Total runs">
+                            {stats.total_runs} runs
+                        </span>
+                    )}
+
+                    <button
                         disabled={isSaving}
                         onClick={handleSave}
                         className="h-9 px-5 text-sm font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-700 hover:text-white transition-all duration-200 flex items-center gap-2"
@@ -913,8 +1244,17 @@ export default function SmartFlowBuilderPage() {
                             panOnDrag={true}
                             panOnScroll={true}
                             zoomOnScroll={true}
+                            // Multi-select: Shift+drag selects a marquee region;
+                            // Shift+click adds individual nodes to the selection.
+                            // The selected set drives the floating bulk-action bar.
+                            multiSelectionKeyCode="Shift"
+                            selectionOnDrag
+                            onSelectionChange={({ nodes: selNodes }) => {
+                                setSelectedIds(selNodes.map((n) => n.id));
+                            }}
                             onPaneClick={() => {
                                 setSelectedNodeId(null);
+                                setSelectedIds([]);
                                 setShowAddStepMenu(false);
                                 closeAllEditors();
                             }}
@@ -926,6 +1266,42 @@ export default function SmartFlowBuilderPage() {
                                 closeAllEditors();
                             }}
                         />
+                        {/* Bulk action toolbar — appears when ≥ 2 nodes are
+                            selected via Shift-drag / Shift-click. */}
+                        {selectedIds.length >= 2 && (
+                            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-1.5 flex items-center gap-3 text-xs">
+                                <span className="font-semibold text-gray-700">{selectedIds.length} selected</span>
+                                <button
+                                    className="px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                    onClick={() => {
+                                        // Duplicate every selected node with a small offset.
+                                        setNodes((nds) => {
+                                            const dupes = nds
+                                                .filter((n) => selectedIds.includes(n.id))
+                                                .map((n) => ({
+                                                    ...n,
+                                                    id: `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                                                    position: { x: n.position.x + 40, y: n.position.y + 40 },
+                                                    selected: false,
+                                                }));
+                                            return nds.concat(dupes);
+                                        });
+                                    }}
+                                >Duplicate</button>
+                                <button
+                                    className="px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100"
+                                    onClick={() => {
+                                        setNodes((nds) => nds.filter((n) => !selectedIds.includes(n.id)));
+                                        setEdges((eds) => eds.filter((e) => !selectedIds.includes(e.source) && !selectedIds.includes(e.target)));
+                                        setSelectedIds([]);
+                                    }}
+                                >Delete</button>
+                                <button
+                                    className="px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    onClick={() => setSelectedIds([])}
+                                >Clear</button>
+                            </div>
+                        )}
                     </ReactFlowProvider>
 
                     {/* Floating Controls */}
@@ -947,7 +1323,7 @@ export default function SmartFlowBuilderPage() {
                                     {showAddStepMenu && (
                                         <div className="absolute right-[55px] top-0">
                                             <div className="bg-white w-[250px] max-h-[400px] overflow-auto border border-gray-200 divide-y divide-gray-200 rounded shadow-lg">
-                                                {mockMenuItems.map((item, index) => (
+                                                {dynamicMenuItems.map((item, index) => (
                                                     item.type === 'header' ? (
                                                         <div key={index} className="px-3 py-2 bg-gray-50 font-semibold text-sm text-gray-700">{item.label}</div>
                                                     ) : (
@@ -986,6 +1362,79 @@ export default function SmartFlowBuilderPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Universal action / condition property editor — appears
+                    whenever the selected node is an action umbrella step
+                    (any of the 49 action types) or a condition step. Lives
+                    alongside the existing per-block text/image editors so
+                    both UX paths coexist while we migrate.
+
+                    Data flow: node.data.value is the action's properties
+                    object; ActionEditor reads/writes via key paths (e.g.
+                    `tag.id`, `save_to.field_id`). On save the builder's
+                    sync-graph payload sends this as the activity's
+                    `properties.value`, which the backend's
+                    `ActionHandlerService.dispatch()` reads. */}
+                {selectedNode && ['action', 'condition', 'delay', 'smart_loop', 'randomizer', 'splitter'].includes(selectedNode.data?.stepType) && (
+                    <div className="absolute top-0 bottom-0 right-0 w-[400px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[55] flex flex-col">
+                        <div className="h-14 px-4 flex items-center justify-between bg-emerald-600 text-white shrink-0">
+                            <div className="flex items-center gap-2 font-bold text-xs tracking-wide">
+                                <FaBolt className="h-3 w-3" />
+                                <span>{selectedNode.data?.stepType === 'condition' ? 'CONDITION' : 'ACTION'} PROPERTIES</span>
+                            </div>
+                            <button onClick={() => setSelectedNodeId(null)} className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-full">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            {selectedNode.data?.stepType === 'action' ? (
+                                <ActionEditor
+                                    actionSlug={selectedNode.data?.actionSlug ?? ''}
+                                    value={selectedNode.data?.value ?? {}}
+                                    onChange={(v) =>
+                                        setNodes((nds) =>
+                                            nds.map((n) =>
+                                                n.id === selectedNode.id
+                                                    ? { ...n, data: { ...n.data, value: v } }
+                                                    : n,
+                                            ),
+                                        )
+                                    }
+                                    integrations={integrations ?? {}}
+                                />
+                            ) : selectedNode.data?.stepType === 'condition' ? (
+                                <ConditionEditor
+                                    value={selectedNode.data?.condition ?? {}}
+                                    onChange={(v) =>
+                                        setNodes((nds) =>
+                                            nds.map((n) =>
+                                                n.id === selectedNode.id
+                                                    ? { ...n, data: { ...n.data, condition: v } }
+                                                    : n,
+                                            ),
+                                        )
+                                    }
+                                    integrations={integrations ?? {}}
+                                />
+                            ) : (
+                                <StepPropertiesEditor
+                                    stepType={selectedNode.data?.stepType}
+                                    value={selectedNode.data?.value ?? {}}
+                                    onChange={(v) =>
+                                        setNodes((nds) =>
+                                            nds.map((n) =>
+                                                n.id === selectedNode.id
+                                                    ? { ...n, data: { ...n.data, value: v } }
+                                                    : n,
+                                            ),
+                                        )
+                                    }
+                                    integrations={integrations ?? {}}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Right Sidebar: Node Inspector */}
                 {selectedNode && (
@@ -2520,22 +2969,16 @@ export default function SmartFlowBuilderPage() {
                                                             )}
                                                             {fieldSelectorTab === 'Custom fields' && (
                                                                 <div className="space-y-1">
-                                                                    {[
-                                                                        'RespostaGPT', 'Payload', 'Ultimo Imovel', 'RespostaVision', 'Date Time',
-                                                                        'booking_date_time', 'user_confirm', 'user_email', 'booking id',
-                                                                        'booking_resechedule', 'resechedule_user_confirm', 'eventTypeID',
-                                                                        'Roger Booking Name', 'Roger Booking Email', 'Roger Book Date Time',
-                                                                        'Roger Doctor Name', 'Text area 2', 'Json', 'Resposta LLMW',
-                                                                        'current_date_time', 'resposta_vision', 'perganta_gpt', 'buscabaserow',
-                                                                        'endAtual', 'campotexto', 'Multiselect', 'Nometst', 'emailtst',
-                                                                        'cidadetst', 'number_ia', 'campo_lista', 'tel', 'total_invetimento',
-                                                                        'nota_dinamica', 'date_oportunidade', 'confianca_oportunidade',
-                                                                        'valor_oportunidade', 'idMember', 'min max length', 'resposta_cal',
-                                                                        'audio', 'whisperer_resposta', 'event_id', 'CustomFieldJSON',
-                                                                        'test_edilson_apagar', 'lower case test', 'testing lower case paragraph',
-                                                                        'number field test', 'haider1', 'testing haider field', 'fixo_test_apagar',
-                                                                        'broadcasting', 'json_test_tiago', 'phone number'
-                                                                    ].filter(f => f.toLowerCase().includes(fieldSearchQuery.toLowerCase())).map(field => (
+                                                                    {/*
+                                                                     * Custom fields pulled live from the workspace's
+                                                                     * `custom_fields` table via /api/automations/integrations.
+                                                                     * Falls back to an empty list if the integrations
+                                                                     * query hasn't resolved yet (loading state).
+                                                                     */}
+                                                                    {((integrations?.custom_fields ?? []) as Array<{ id: number | string; label: string; slug: string }>)
+                                                                      .map((f) => f.label || f.slug)
+                                                                      .filter((f: string) => f.toLowerCase().includes(fieldSearchQuery.toLowerCase()))
+                                                                      .map((field: string) => (
                                                                         <button
                                                                             key={field}
                                                                             onClick={() => {
@@ -3128,14 +3571,11 @@ export default function SmartFlowBuilderPage() {
                                                 <AssistantDropdown
                                                     value={tempAiStudioAssistant}
                                                     onChange={setTempAiStudioAssistant}
-                                                    options={[
-                                                        "testehttp", "TestTiago", "TestsEdilson 2 Gemini", "open ai test agent", "Rental Car",
-                                                        "Test Edilson 1 DeepSeek", "Test Edilson 1 Gemini", "Test Edilson 1 Anthropic", "Test Edilson 1 OpenAI",
-                                                        "Test Tiago", "afadsfafa", "Checking ai studio model and fuciton", "TestTiagoGoogle",
-                                                        "Test Edilson 2", "Fn Test Gemini", "agent-test-jaderson", "Reply Agent Website Assistance",
-                                                        "Teste Edilson", "Anthropic with KB", "Test Anthropic", "Test DeepSeek", "Test Google",
-                                                        "Gemini", "Anthropic", "DeepSeek", "Simple Agent"
-                                                    ]}
+                                                    options={
+                                                        (integrations?.assistants ?? []).map(
+                                                            (a: { id: number | string; name: string }) => a.name,
+                                                        )
+                                                    }
                                                 />
                                             </div>
 

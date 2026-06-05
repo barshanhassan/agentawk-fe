@@ -613,7 +613,7 @@ export default function SmartFlowsPage() {
                                     <SelectValue placeholder={rowsPerPage} />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-[12px] border-slate-200 dark:border-slate-800 p-1">
-                                    {[10, 25, 50].map((pageSize) => (
+                                    {[10, 25, 50, 100].map((pageSize) =>(
                                         <SelectItem key={pageSize} value={pageSize.toString()} className="text-[11px] font-semibold rounded-lg cursor-pointer">
                                             {pageSize}
                                         </SelectItem>
