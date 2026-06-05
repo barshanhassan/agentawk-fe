@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { getUserInfo } from "@/lib/auth";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,11 +62,20 @@ interface Conversation {
   channel: string;
 }
 
+// Outbound delivery state for WhatsApp messages.
+//   pending  : queued in backend, not yet ack'd by Meta
+//   sent     : Meta accepted (single tick)
+//   delivered: phone received (double grey tick)
+//   read     : phone read (double blue tick)
+//   failed   : send error (red warning)
+type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+
 interface Message {
   id: number;
   from: 'agent' | 'user';
   text: string;
   time: string;
+  status?: MessageStatus;
   images?: Array<{ url: string; name: string; size: number }>;
   attachments?: Array<{ url: string; name: string; size: number }>;
   video?: { url: string; name: string; size: number; thumbnail?: string };
@@ -109,6 +118,7 @@ interface BackendMessage {
   // older channels use `message_text`. Accept both so the mapper can fall back.
   text?: string;
   message_text?: string;
+  status?: string;
   created_at: string;
 }
 
@@ -166,6 +176,32 @@ const getDisplayName = (conversation?: Conversation | null): string => {
   return conversation.displayName?.trim() || conversation.phoneNumber || conversation.name || "Unknown";
 };
 
+// WhatsApp-style delivery tick mark for outgoing messages.
+//   pending   -> clock
+//   sent      -> single grey ✓
+//   delivered -> double grey ✓✓
+//   read      -> double blue ✓✓
+//   failed    -> red ⚠ (with tooltip)
+const MessageStatusTick: React.FC<{ status: MessageStatus }> = ({ status }) => {
+  const size = 12;
+  if (status === 'pending') {
+    return <Clock size={size} className="text-gray-400 dark:text-slate-500" aria-label="Sending" />;
+  }
+  if (status === 'sent') {
+    return <Check size={size} className="text-gray-500 dark:text-slate-400" aria-label="Sent" />;
+  }
+  if (status === 'delivered') {
+    return <CheckCheck size={size} className="text-gray-500 dark:text-slate-400" aria-label="Delivered" />;
+  }
+  if (status === 'read') {
+    return <CheckCheck size={size} className="text-blue-500 dark:text-blue-400" aria-label="Read" />;
+  }
+  if (status === 'failed') {
+    return <AlertCircle size={size} className="text-red-500" aria-label="Failed to send" />;
+  }
+  return null;
+};
+
 export default function ConversationsInbox() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -212,9 +248,39 @@ export default function ConversationsInbox() {
       });
     };
 
+    // Delivery state delta for outgoing WhatsApp messages.
+    //   { wa_message_id, wamid, status: 'sent'|'delivered'|'read'|'failed' }
+    // Patches the cached messages list in-place so the tick mark updates without
+    // a full refetch (4 round-trips per send otherwise: pending → sent → delivered → read).
+    const handleMessageStatus = (data: {
+      wa_message_id: string;
+      wamid?: string;
+      status: MessageStatus;
+    }) => {
+      if (!selectedConversation) return;
+      const targetId = Number(data.wa_message_id);
+      if (!Number.isFinite(targetId)) return;
+
+      const key = ["/api/inbox/messages", selectedConversation];
+      queryClient.setQueryData<any>(key, (prev: any) => {
+        if (!prev?.messages) return prev;
+        let mutated = false;
+        const next = prev.messages.map((m: BackendMessage) => {
+          if (Number(m.id) === targetId && m.status !== data.status) {
+            mutated = true;
+            return { ...m, status: data.status };
+          }
+          return m;
+        });
+        return mutated ? { ...prev, messages: next } : prev;
+      });
+    };
+
     socket.on("new_message", handleNewMessage);
+    socket.on("message_status", handleMessageStatus);
     return () => {
       socket.off("new_message", handleNewMessage);
+      socket.off("message_status", handleMessageStatus);
     };
   }, [socket, selectedConversation, queryClient, toast]);
 
@@ -286,11 +352,21 @@ export default function ConversationsInbox() {
     enabled: !!selectedConversation
   });
 
+  const normalizeStatus = (s?: string): MessageStatus | undefined => {
+    if (!s) return undefined;
+    const k = s.toLowerCase();
+    if (k === 'pending' || k === 'sent' || k === 'delivered' || k === 'read' || k === 'failed') {
+      return k;
+    }
+    return undefined;
+  };
+
   const messages: Message[] = (messagesResponse?.messages || []).map((m: BackendMessage) => ({
     id: m.id,
     from: m.direction === 'OUTGOING' ? 'agent' : 'user',
     text: m.text ?? m.message_text ?? '',
     time: m.created_at || new Date().toISOString(),
+    status: normalizeStatus(m.status),
   }));
 
   // Send message mutation
@@ -1824,7 +1900,12 @@ export default function ConversationsInbox() {
                               </div>
                             )}
 
-                            <p className={`text-xs mt-1 ${msg.from === "user" ? "flex justify-end" : "text-gray-700 dark:text-slate-400"}`}>{formatMessageTime(msg.time)}</p>
+                            <p className={`text-xs mt-1 flex items-center gap-1 ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
+                              <span>{formatMessageTime(msg.time)}</span>
+                              {msg.from === "agent" && msg.status && (
+                                <MessageStatusTick status={msg.status} />
+                              )}
+                            </p>
                           </div>
                         </div>
                       </React.Fragment>
