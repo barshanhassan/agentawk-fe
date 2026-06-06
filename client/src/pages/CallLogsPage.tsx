@@ -32,8 +32,66 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { format } from "date-fns";
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+
+/**
+ * Convert a date-range preset (or custom range) into ISO `date_from` /
+ * `date_to` strings the backend `/api/logs/*` endpoints consume. Mirrors the
+ * helper in ConversationLogsPage — kept inline so both files stay
+ * self-contained and easy to grep.
+ */
+function rangeToQuery(
+    preset: string,
+    custom: DateRange | undefined,
+): { date_from?: string; date_to?: string } {
+    const now = new Date();
+    const startOfDay = (d: Date) => {
+        const x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        return x;
+    };
+    const endOfDay = (d: Date) => {
+        const x = new Date(d);
+        x.setHours(23, 59, 59, 999);
+        return x;
+    };
+    if (preset === "custom") {
+        if (custom?.from && custom?.to) {
+            return {
+                date_from: startOfDay(custom.from).toISOString(),
+                date_to: endOfDay(custom.to).toISOString(),
+            };
+        }
+        return {};
+    }
+    const today = endOfDay(now);
+    if (preset === "last-7-days") {
+        const from = new Date(now);
+        from.setDate(now.getDate() - 7);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "last-14-days") {
+        const from = new Date(now);
+        from.setDate(now.getDate() - 14);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "last-30-days") {
+        const from = new Date(now);
+        from.setDate(now.getDate() - 30);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "this-month") {
+        const from = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "this-quarter") {
+        const q = Math.floor(now.getMonth() / 3);
+        const from = new Date(now.getFullYear(), q * 3, 1);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    return {};
+}
 
 
 interface SortEntry {
@@ -46,53 +104,78 @@ interface CallLog {
     id: string;
     contact: string;
     contactNumber: string;
+    contactId?: string | null;
     agent: string;
     agentId: string;
     direction: "Inbound" | "Outbound";
     startTime: string;
     duration: string;
+    duration_seconds?: number;
     status: "Completed" | "Missed" | "Declined" | "Failed" | "In Progress";
+    status_raw?: string | null;
     sentiment: string;
     sentimentSummary: string;
     recording: boolean;
+    recordingUrl?: string | null;
+    from_number?: string;
+    to_number?: string;
+    call_sid?: string | null;
 }
-
-// Dead-code mock array removed — component reads live data from /api/logs/calls.
 
 
 export default function CallLogsPage() {
+    const queryClient = useQueryClient();
+
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
     const [selectedDirection, setSelectedDirection] = useState<string[]>([]);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+    const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
+
+    // Translate filter state into URL params backend understands.
+    const dateQuery = rangeToQuery(dateRangePreset, customDateRange);
+    const directionParam = selectedDirection.filter(Boolean).join(",");
+    const statusParam = selectedStatus.filter(Boolean).join(",");
 
     const { data: logsResponse, isLoading } = useQuery<{ logs: CallLog[]; total: number }>({
-        queryKey: ["/api/logs/calls", { page, limit: rowsPerPage, search, direction: selectedDirection[0], status: selectedStatus[0] }],
+        queryKey: [
+            "/api/logs/calls",
+            { page, limit: rowsPerPage, search, direction: directionParam, status: statusParam, dateRangePreset, customDateRange },
+        ],
         queryFn: async () => {
             const params = new URLSearchParams({
                 page: page.toString(),
                 limit: rowsPerPage.toString(),
-                search: search
             });
-            if (selectedDirection.length > 0 && selectedDirection[0]) {
-                params.append('direction', selectedDirection[0]);
-            }
-            if (selectedStatus.length > 0 && selectedStatus[0]) {
-                params.append('status', selectedStatus[0]);
-            }
+            if (search) params.set("search", search);
+            if (directionParam) params.set("direction", directionParam);
+            if (statusParam) params.set("status", statusParam);
+            if (dateQuery.date_from) params.set("date_from", dateQuery.date_from);
+            if (dateQuery.date_to) params.set("date_to", dateQuery.date_to);
             const res = await apiRequest("GET", `/api/logs/calls?${params.toString()}`);
             return res.json();
-        }
+        },
     });
 
     const { data: statsResponse } = useQuery<{ calls: any }>({
-        queryKey: ["/api/logs/stats"],
+        queryKey: ["/api/logs/stats", { dateRangePreset, customDateRange }],
         queryFn: async () => {
-            const res = await apiRequest("GET", "/api/logs/stats");
+            const params = new URLSearchParams();
+            if (dateQuery.date_from) params.set("date_from", dateQuery.date_from);
+            if (dateQuery.date_to) params.set("date_to", dateQuery.date_to);
+            const url = params.toString() ? `/api/logs/stats?${params.toString()}` : "/api/logs/stats";
+            const res = await apiRequest("GET", url);
             return res.json();
-        }
+        },
     });
+
+    const handleRefresh = () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/logs/calls"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/logs/stats"] });
+    };
 
     const callLogs = logsResponse?.logs || [];
     const stats = statsResponse?.calls || {
@@ -103,9 +186,6 @@ export default function CallLogsPage() {
         avgDuration: "0m 0s"
     };
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-    const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
-    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
-    const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
     const [callSorts, setCallSorts] = useState<SortEntry[]>([]);
     const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -114,7 +194,9 @@ export default function CallLogsPage() {
     const [speedDropdownOpen, setSpeedDropdownOpen] = useState(false);
     const speedDropdownRef = useRef<HTMLDivElement>(null);
 
-    // Modal State
+    // Modal State — opens via row "View details" action; fetches the full
+    // call detail (recording url + parsed metadata) from
+    // `/api/logs/calls/:id`.
     const [selectedCallLog, setSelectedCallLog] = useState<CallLog | null>(null);
     const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
 
@@ -122,6 +204,21 @@ export default function CallLogsPage() {
         setSelectedCallLog(call);
         setViewDetailsOpen(true);
     };
+
+    // Lazy fetch — only fires after the user opens the modal.
+    const { data: detailData, isLoading: detailLoading } = useQuery<{
+        call: CallLog;
+        metadata: any;
+        twilio_metadata: any;
+    }>({
+        queryKey: ["/api/logs/calls", selectedCallLog?.id, "detail"],
+        queryFn: async () => {
+            if (!selectedCallLog) return { call: null as any, metadata: null, twilio_metadata: null };
+            const res = await apiRequest("GET", `/api/logs/calls/${selectedCallLog.id}`);
+            return res.json();
+        },
+        enabled: !!selectedCallLog && viewDetailsOpen,
+    });
     const [expandedCallId, setExpandedCallId] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentPlayingCallId, setCurrentPlayingCallId] = useState<string | null>(null);
@@ -151,8 +248,15 @@ export default function CallLogsPage() {
         avgDuration: stats.avgDuration,
     };
 
+    /**
+     * Resolve the recording URL for a call row. Backend's `projectCall()`
+     * populates `recordingUrl` from twilio metadata (RecordingUrl) when
+     * available. If the row has no recording the audio controls fall back
+     * to a disabled state via `call.recording`.
+     */
     const getAudioUrl = (callId: string) => {
-        return "https://index-tts.github.io/examples_part2/IndexTTS/Speaker_2.wav";
+        const log = callLogs.find((c) => c.id === callId);
+        return log?.recordingUrl ?? "";
     };
 
     const toggleRowSelection = (id: string) => {
@@ -364,92 +468,30 @@ export default function CallLogsPage() {
         }
     };
 
+    /**
+     * Apply local sort only — search / direction / status / date filtering
+     * all happen server-side (single source of truth). Local sort is fine
+     * because the visible page is what's sortable.
+     */
     const getFilteredAndSortedCallLogs = () => {
-        let data = [...callLogs];
-
-        if (search) {
-            data = data.filter(item =>
-                item.contact.toLowerCase().includes(search.toLowerCase()) ||
-                item.agent.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-
-        if (selectedDirection.length > 0) {
-            data = data.filter(item => selectedDirection.includes(item.direction));
-        }
-
-        if (selectedStatus.length > 0) {
-            data = data.filter(item => selectedStatus.includes(item.status));
-        }
-
-        const currentDate = new Date(2025, 10, 4);
-        currentDate.setHours(0, 0, 0, 0);
-
-        if (dateRangePreset !== "custom") {
-            data = data.filter(item => {
-                const dateStr = item.startTime.split(" ").slice(0, 1)[0];
-                const itemDate = new Date(dateStr);
-                itemDate.setHours(0, 0, 0, 0);
-
-                switch (dateRangePreset) {
-                    case "last-7-days":
-                        const sevenDaysAgo = new Date(currentDate);
-                        sevenDaysAgo.setDate(currentDate.getDate() - 7);
-                        return itemDate >= sevenDaysAgo && itemDate <= currentDate;
-                    case "last-14-days":
-                        const fourteenDaysAgo = new Date(currentDate);
-                        fourteenDaysAgo.setDate(currentDate.getDate() - 14);
-                        return itemDate >= fourteenDaysAgo && itemDate <= currentDate;
-                    case "last-30-days":
-                        const thirtyDaysAgo = new Date(currentDate);
-                        thirtyDaysAgo.setDate(currentDate.getDate() - 30);
-                        return itemDate >= thirtyDaysAgo && itemDate <= currentDate;
-                    case "this-month":
-                        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                        return itemDate >= firstDayOfMonth && itemDate <= currentDate;
-                    case "this-quarter":
-                        const currentQuarter = Math.floor(currentDate.getMonth() / 3);
-                        const firstDayOfQuarter = new Date(currentDate.getFullYear(), currentQuarter * 3, 1);
-                        return itemDate >= firstDayOfQuarter && itemDate <= currentDate;
-                    default:
-                        return true;
+        if (callSorts.length === 0) return callLogs;
+        const data = [...callLogs];
+        data.sort((a, b) => {
+            for (const sort of callSorts) {
+                const aVal = a[sort.column as keyof CallLog];
+                const bVal = b[sort.column as keyof CallLog];
+                let comparison = 0;
+                if (typeof aVal === "string" && typeof bVal === "string") {
+                    comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                } else if (typeof aVal === "number" && typeof bVal === "number") {
+                    comparison = sort.direction === "asc" ? aVal - bVal : bVal - aVal;
+                } else if (typeof aVal === "boolean" && typeof bVal === "boolean") {
+                    comparison = sort.direction === "asc" ? (aVal === bVal ? 0 : aVal ? 1 : -1) : (aVal === bVal ? 0 : aVal ? -1 : 1);
                 }
-            });
-        } else if (customDateRange?.from && customDateRange?.to) {
-            data = data.filter(item => {
-                const dateStr = item.startTime.split(" ").slice(0, 1)[0];
-                const itemDate = new Date(dateStr);
-                itemDate.setHours(0, 0, 0, 0);
-
-                const fromDate = new Date(customDateRange.from!);
-                fromDate.setHours(0, 0, 0, 0);
-
-                const toDate = new Date(customDateRange.to!);
-                toDate.setHours(23, 59, 59, 999);
-
-                return itemDate >= fromDate && itemDate <= toDate;
-            });
-        }
-
-        if (callSorts.length > 0) {
-            data.sort((a, b) => {
-                for (const sort of callSorts) {
-                    const aVal = a[sort.column as keyof CallLog];
-                    const bVal = b[sort.column as keyof CallLog];
-                    let comparison = 0;
-                    if (typeof aVal === "string" && typeof bVal === "string") {
-                        comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-                    } else if (typeof aVal === "number" && typeof bVal === "number") {
-                        comparison = sort.direction === "asc" ? aVal - bVal : bVal - aVal;
-                    } else if (typeof aVal === "boolean" && typeof bVal === "boolean") {
-                        comparison = sort.direction === "asc" ? (aVal === bVal ? 0 : aVal ? 1 : -1) : (aVal === bVal ? 0 : aVal ? -1 : 1);
-                    }
-                    if (comparison !== 0) return comparison;
-                }
-                return 0;
-            });
-        }
-
+                if (comparison !== 0) return comparison;
+            }
+            return 0;
+        });
         return data;
     };
 
@@ -568,11 +610,9 @@ export default function CallLogsPage() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm"
-                                    onClick={() => {
-                                        // Refresh logic
-                                    }}
+                                    onClick={handleRefresh}
                                 >
-                                    <RefreshCw size={14} className="text-slate-500" />
+                                    <RefreshCw size={14} className={cn("text-slate-500", isLoading && "animate-spin")} />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent className="text-[10px]">Refresh Logs</TooltipContent>
@@ -977,84 +1017,87 @@ export default function CallLogsPage() {
 
                 {/* View Details Dialog */}
                 <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-lg">
                         <DialogHeader className="mb-2">
                             <DialogTitle>Call Details</DialogTitle>
                         </DialogHeader>
                         {selectedCallLog && (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Contact Name</label>
-                                        <p className="mt-1 text-sm">{selectedCallLog.contact}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Contact</label>
+                                        <p className="mt-1 text-sm font-medium">{selectedCallLog.contact || "Unknown"}</p>
+                                        {selectedCallLog.contactNumber && (
+                                            <p className="text-xs text-slate-500">{selectedCallLog.contactNumber}</p>
+                                        )}
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Agent Name</label>
-                                        <p className="mt-1 text-sm">{selectedCallLog.agent}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-foreground">Direction</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Direction</label>
                                         <p className="mt-1">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${selectedCallLog.direction === "Inbound" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                                                }`}>
+                                            <span className={cn(
+                                                "inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
+                                                selectedCallLog.direction === "Inbound"
+                                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                                                    : "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
+                                            )}>
                                                 {selectedCallLog.direction}
                                             </span>
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Start Time</label>
-                                        <p className="mt-1 text-sm">{selectedCallLog.startTime}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Started</label>
+                                        <p className="mt-1 text-xs font-medium">
+                                            {selectedCallLog.startTime
+                                                ? format(new Date(selectedCallLog.startTime), "dd MMM yyyy, HH:mm")
+                                                : "—"}
+                                        </p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Duration</label>
-                                        <p className="mt-1 text-sm">{selectedCallLog.duration}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Duration</label>
+                                        <p className="mt-1 text-xs font-medium">{selectedCallLog.duration}</p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Status</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</label>
                                         <p className="mt-1">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${selectedCallLog.status === "Completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                                                selectedCallLog.status === "In Progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
-                                                    selectedCallLog.status === "Missed" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                        selectedCallLog.status === "Declined" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                            selectedCallLog.status === "Failed" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                                "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300"
-                                                }`}>
+                                            <span className={cn(
+                                                "inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
+                                                selectedCallLog.status === "Completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
+                                                    selectedCallLog.status === "In Progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
+                                                        selectedCallLog.status === "Missed" || selectedCallLog.status === "Declined" || selectedCallLog.status === "Failed"
+                                                            ? "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400"
+                                                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+                                            )}>
                                                 {selectedCallLog.status}
                                             </span>
                                         </p>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-foreground">Sentiment</label>
-                                        <p className="mt-1">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${selectedCallLog.sentiment === "Positive" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                                                selectedCallLog.sentiment === "Negative" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                                                }`}>
-                                                {selectedCallLog.sentiment}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-sm font-medium text-foreground">Sentiment Summary</label>
-                                        <p className="mt-1 text-sm">{selectedCallLog.sentimentSummary}</p>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-sm font-medium text-foreground">Call Recording</label>
-                                        <div className="mt-2">
-                                            {/* 50/50 chance to show available vs unavailable recording */}
-                                            {Math.random() > 0 ? (
-                                                <audio
-                                                    controls
-                                                    className="w-full h-12"
-                                                    style={{ maxWidth: '100%' }}
-                                                >
-                                                    <source src="/api/placeholder-audio.mp3" type="audio/mpeg" />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            ) : (
-                                                <p className="text-sm text-muted-foreground">Call Recording Unavailable</p>
-                                            )}
+                                    {selectedCallLog.call_sid && (
+                                        <div>
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call SID</label>
+                                            <p className="mt-1 text-[10px] font-mono text-slate-500 truncate" title={selectedCallLog.call_sid}>
+                                                {selectedCallLog.call_sid}
+                                            </p>
                                         </div>
+                                    )}
+                                </div>
+
+                                {/* Recording — only renders if backend resolved a real RecordingUrl. */}
+                                <div className="border-t pt-4">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call Recording</label>
+                                    <div className="mt-2">
+                                        {detailLoading ? (
+                                            <p className="text-xs text-slate-400">Loading recording…</p>
+                                        ) : (detailData?.call?.recordingUrl ?? selectedCallLog.recordingUrl) ? (
+                                            <audio
+                                                controls
+                                                className="w-full h-12"
+                                                src={detailData?.call?.recordingUrl ?? selectedCallLog.recordingUrl ?? undefined}
+                                            >
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">Call recording unavailable</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

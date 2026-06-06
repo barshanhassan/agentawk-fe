@@ -32,9 +32,8 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { format } from "date-fns";
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { getQueryFn } from "@/lib/queryClient";
 
 
 interface SortEntry {
@@ -49,46 +48,130 @@ interface Conversation {
     customer: string;
     agent: string;
     agentId: string;
+    channel: "whatsapp" | "telegram" | "messenger" | "instagram" | "webchat" | "evolution" | "zapi" | "sms" | "unknown";
     startTime: string;
     duration: string;
-    status: "Active" | "Queued" | "In Progress" | "Completed" | "Pending" | "Expired" | "Spammed" | "Forwarded";
+    duration_ms?: number;
+    status: "Active" | "Queued" | "Completed" | "Unassigned" | "Deleted";
+    status_raw?: string;
     messages: number;
+    last_message?: { text: string; direction: string; at?: string } | null;
     timeline: string;
     sentiment: string;
     sentimentSummary: string;
 }
 
-// Dead-code mock array removed — component reads live data from /api/logs/conversations.
+/**
+ * Convert a date-range preset (or custom range) into ISO `date_from` /
+ * `date_to` strings the backend `/api/logs/*` endpoints consume. Returns
+ * `{}` for the "all time" case so the backend skips the date clause.
+ */
+function rangeToQuery(
+    preset: string,
+    custom: DateRange | undefined,
+): { date_from?: string; date_to?: string } {
+    const now = new Date();
+    const startOfDay = (d: Date) => {
+        const x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        return x;
+    };
+    const endOfDay = (d: Date) => {
+        const x = new Date(d);
+        x.setHours(23, 59, 59, 999);
+        return x;
+    };
+    if (preset === "custom") {
+        if (custom?.from && custom?.to) {
+            return {
+                date_from: startOfDay(custom.from).toISOString(),
+                date_to: endOfDay(custom.to).toISOString(),
+            };
+        }
+        return {};
+    }
+    const today = endOfDay(now);
+    if (preset === "last-7-days") {
+        const from = new Date(now);
+        from.setDate(now.getDate() - 7);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "last-14-days") {
+        const from = new Date(now);
+        from.setDate(now.getDate() - 14);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "last-30-days") {
+        const from = new Date(now);
+        from.setDate(now.getDate() - 30);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "this-month") {
+        const from = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    if (preset === "this-quarter") {
+        const q = Math.floor(now.getMonth() / 3);
+        const from = new Date(now.getFullYear(), q * 3, 1);
+        return { date_from: startOfDay(from).toISOString(), date_to: today.toISOString() };
+    }
+    return {};
+}
 
 
 export default function ConversationLogsPage() {
+    const queryClient = useQueryClient();
+
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+    const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
+
+    // Resolve the active date range once per render so both the list + stats
+    // queries stay in lockstep.
+    const dateQuery = rangeToQuery(dateRangePreset, customDateRange);
+
+    // Comma-joined status list — backend accepts "ACTIVE,COMPLETED" style.
+    const statusParam = selectedStatus
+        .map((s) => s.toUpperCase())
+        .filter(Boolean)
+        .join(",");
 
     const { data: logsResponse, isLoading } = useQuery<{ logs: Conversation[]; total: number }>({
-        queryKey: ["/api/logs/conversations", { page, limit: rowsPerPage, search, status: selectedStatus[0] }],
+        queryKey: [
+            "/api/logs/conversations",
+            { page, limit: rowsPerPage, search, status: statusParam, dateRangePreset, customDateRange },
+        ],
         queryFn: async () => {
             const params = new URLSearchParams({
                 page: page.toString(),
                 limit: rowsPerPage.toString(),
-                search: search
             });
-            if (selectedStatus.length > 0 && selectedStatus[0]) {
-                params.append('status', selectedStatus[0]);
-            }
-            const res = await apiRequest("GET", `/api/logs/conversations?${params.toString()}`);
+            if (search) params.set("search", search);
+            if (statusParam) params.set("status", statusParam);
+            if (dateQuery.date_from) params.set("date_from", dateQuery.date_from);
+            if (dateQuery.date_to) params.set("date_to", dateQuery.date_to);
+            const res = await apiRequest(
+                "GET",
+                `/api/logs/conversations?${params.toString()}`,
+            );
             return res.json();
-        }
+        },
     });
 
     const { data: statsResponse } = useQuery<{ conversations: any }>({
-        queryKey: ["/api/logs/stats"],
+        queryKey: ["/api/logs/stats", { dateRangePreset, customDateRange }],
         queryFn: async () => {
-            const res = await apiRequest("GET", "/api/logs/stats");
+            const params = new URLSearchParams();
+            if (dateQuery.date_from) params.set("date_from", dateQuery.date_from);
+            if (dateQuery.date_to) params.set("date_to", dateQuery.date_to);
+            const url = params.toString() ? `/api/logs/stats?${params.toString()}` : "/api/logs/stats";
+            const res = await apiRequest("GET", url);
             return res.json();
-        }
+        },
     });
 
     const conversations = logsResponse?.logs || [];
@@ -101,15 +184,13 @@ export default function ConversationLogsPage() {
     };
 
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-    const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
-    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
-    const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
     const [sorts, setSorts] = useState<SortEntry[]>([]);
     const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
 
-    // Modal State
+    // Modal State — opens via row "View details" action; fetches the full
+    // thread (last N messages) from `/api/logs/conversations/:id`.
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
 
@@ -118,15 +199,32 @@ export default function ConversationLogsPage() {
         setViewDetailsOpen(true);
     };
 
+    // Fetch the conversation thread when the modal opens. Lazy — won't fire
+    // until the user actually clicks a row.
+    const { data: detailData, isLoading: detailLoading } = useQuery<{
+        conversation: Conversation;
+        messages: Array<{ id: string; direction: string; text: string; type: string; status: string | null; created_at: string | null }>;
+    }>({
+        queryKey: ["/api/logs/conversations", selectedConversation?.id, "detail"],
+        queryFn: async () => {
+            if (!selectedConversation) return { conversation: null as any, messages: [] };
+            const res = await apiRequest(
+                "GET",
+                `/api/logs/conversations/${selectedConversation.id}?messages_limit=50`,
+            );
+            return res.json();
+        },
+        enabled: !!selectedConversation && viewDetailsOpen,
+    });
+
+    // Match the inbox_status enum (UPPERCASE) but show friendly labels —
+    // statusToLabel in the backend maps UNASSIGNED → "Queued" so we mirror
+    // those labels here.
     const statusOptions = [
-        { id: "Active", name: "Active" },
-        { id: "Queued", name: "Queued" },
-        { id: "In Progress", name: "In Progress" },
-        { id: "Completed", name: "Completed" },
-        { id: "Pending", name: "Pending" },
-        { id: "Expired", name: "Expired" },
-        { id: "Spammed", name: "Spammed" },
-        { id: "Forwarded", name: "Forwarded" },
+        { id: "ACTIVE", name: "Active" },
+        { id: "UNASSIGNED", name: "Queued" },
+        { id: "COMPLETED", name: "Completed" },
+        { id: "DELETED", name: "Deleted" },
     ];
 
     const kpiData = {
@@ -148,11 +246,12 @@ export default function ConversationLogsPage() {
     };
 
     const toggleAllRows = () => {
-        const data = getFilteredAndSortedData();
-        if (selectedRows.size === data.length) {
+        // Backend already handles search / status / date filters, so we
+        // select directly over the rendered list.
+        if (selectedRows.size === conversations.length) {
             setSelectedRows(new Set());
         } else {
-            setSelectedRows(new Set(data.map(c => c.id)));
+            setSelectedRows(new Set(conversations.map((c) => c.id)));
         }
     };
 
@@ -193,103 +292,29 @@ export default function ConversationLogsPage() {
         }
     };
 
+    /**
+     * Apply local sort only — search / status / date filtering happens
+     * server-side (single source of truth). Sorting client-side is fine
+     * because the user can only see one page at a time anyway.
+     */
     const getFilteredAndSortedData = () => {
-        let data = [...conversations];
+        if (sorts.length === 0) return conversations;
+        const data = [...conversations];
+        data.sort((a, b) => {
+            for (const sort of sorts) {
+                const aVal = a[sort.column as keyof Conversation];
+                const bVal = b[sort.column as keyof Conversation];
 
-        // Apply search
-        if (search) {
-            data = data.filter(item =>
-                item.customer.toLowerCase().includes(search.toLowerCase()) ||
-                item.agent.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-
-        // Apply status filter
-        if (selectedStatus.length > 0) {
-            data = data.filter(item => selectedStatus.includes(item.status));
-        }
-
-        // Apply date range filter
-        const currentDate = new Date(2025, 10, 4); // November 4, 2025
-        currentDate.setHours(0, 0, 0, 0); // Set to start of day
-
-        if (dateRangePreset !== "custom") {
-            data = data.filter(item => {
-                // Parse date from "2025-11-04 10:30 AM" format
-                const dateStr = item.startTime.split(" ").slice(0, 1)[0]; // Get "2025-11-04"
-                const itemDate = new Date(dateStr);
-                itemDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
-
-                switch (dateRangePreset) {
-                    case "last-7-days":
-                        const sevenDaysAgo = new Date(currentDate);
-                        sevenDaysAgo.setDate(currentDate.getDate() - 7);
-                        return itemDate >= sevenDaysAgo && itemDate <= currentDate;
-
-                    case "last-14-days":
-                        const fourteenDaysAgo = new Date(currentDate);
-                        fourteenDaysAgo.setDate(currentDate.getDate() - 14);
-                        return itemDate >= fourteenDaysAgo && itemDate <= currentDate;
-
-                    case "last-30-days":
-                        const thirtyDaysAgo = new Date(currentDate);
-                        thirtyDaysAgo.setDate(currentDate.getDate() - 30);
-                        return itemDate >= thirtyDaysAgo && itemDate <= currentDate;
-
-                    case "this-month":
-                        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                        return itemDate >= firstDayOfMonth && itemDate <= currentDate;
-
-                    case "this-quarter":
-                        const currentQuarter = Math.floor(currentDate.getMonth() / 3);
-                        const firstDayOfQuarter = new Date(currentDate.getFullYear(), currentQuarter * 3, 1);
-                        return itemDate >= firstDayOfQuarter && itemDate <= currentDate;
-
-                    default:
-                        return true;
+                let comparison = 0;
+                if (typeof aVal === "string" && typeof bVal === "string") {
+                    comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                } else if (typeof aVal === "number" && typeof bVal === "number") {
+                    comparison = sort.direction === "asc" ? aVal - bVal : bVal - aVal;
                 }
-            });
-        } else if (customDateRange?.from && customDateRange?.to) {
-            data = data.filter(item => {
-                // Parse date from "2025-11-04 10:30 AM" format
-                const dateStr = item.startTime.split(" ").slice(0, 1)[0]; // Get "2025-11-04"
-                const itemDate = new Date(dateStr);
-                itemDate.setHours(0, 0, 0, 0); // Set to start of day
-
-                const fromDate = new Date(customDateRange.from!);
-                fromDate.setHours(0, 0, 0, 0);
-
-                const toDate = new Date(customDateRange.to!);
-                toDate.setHours(23, 59, 59, 999); // Include the entire end date
-
-                return itemDate >= fromDate && itemDate <= toDate;
-            });
-        }
-
-        // Apply sorting - Excel-style multi-level sort
-        if (sorts.length > 0) {
-            data.sort((a, b) => {
-                for (const sort of sorts) {
-                    const aVal = a[sort.column as keyof Conversation];
-                    const bVal = b[sort.column as keyof Conversation];
-
-                    let comparison = 0;
-                    if (typeof aVal === "string" && typeof bVal === "string") {
-                        comparison = sort.direction === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-                    } else if (typeof aVal === "number" && typeof bVal === "number") {
-                        comparison = sort.direction === "asc" ? aVal - bVal : bVal - aVal;
-                    }
-
-                    // If values are different, return the comparison result
-                    if (comparison !== 0) {
-                        return comparison;
-                    }
-                    // If values are equal, continue to next sort criterion
-                }
-                return 0; // All criteria are equal
-            });
-        }
-
+                if (comparison !== 0) return comparison;
+            }
+            return 0;
+        });
         return data;
     };
 
@@ -385,8 +410,14 @@ export default function ConversationLogsPage() {
         document.body.removeChild(link);
     };
 
-    const paginatedData = conversations; // Backend already paginates
-    const totalPages = Math.ceil((logsResponse?.total || 0) / rowsPerPage);
+    // Backend paginates + filters; we apply only the local sort here.
+    const paginatedData = getFilteredAndSortedData();
+    const totalPages = Math.max(1, Math.ceil((logsResponse?.total || 0) / rowsPerPage));
+
+    const handleRefresh = () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/logs/conversations"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/logs/stats"] });
+    };
 
     return (
         <div className="animate-in fade-in duration-700 p-6">
@@ -416,11 +447,9 @@ export default function ConversationLogsPage() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm"
-                                    onClick={() => {
-                                        // Refresh logic
-                                    }}
+                                    onClick={handleRefresh}
                                 >
-                                    <RefreshCw size={14} className="text-slate-500" />
+                                    <RefreshCw size={14} className={cn("text-slate-500", isLoading && "animate-spin")} />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent className="text-[10px]">Refresh Logs</TooltipContent>
@@ -570,7 +599,7 @@ export default function ConversationLogsPage() {
                                         className="rounded-[4px] border-slate-300 dark:border-slate-700"
                                     />
                                 </th>
-                                <th 
+                                <th
                                     onClick={() => handleColumnSort("customer")}
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
@@ -578,7 +607,15 @@ export default function ConversationLogsPage() {
                                         Customer {renderSortIcon("customer")}
                                     </div>
                                 </th>
-                                <th 
+                                <th
+                                    onClick={() => handleColumnSort("channel")}
+                                    className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Channel {renderSortIcon("channel")}
+                                    </div>
+                                </th>
+                                <th
                                     onClick={() => handleColumnSort("agent")}
                                     className="px-5 py-3 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 >
@@ -626,7 +663,7 @@ export default function ConversationLogsPage() {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {paginatedData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="py-20 text-center">
+                                    <td colSpan={9} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3">
                                             <div className="p-4 rounded-full bg-slate-50 dark:bg-slate-800">
                                                 <Search className="w-8 h-8 text-slate-300" />
@@ -655,6 +692,24 @@ export default function ConversationLogsPage() {
                                             </div>
                                         </td>
                                         <td className="px-5 py-2.5">
+                                            {/* Channel pill — brand SVG when we have one, else a neutral
+                                                badge with the channel name. Keeps the row compact. */}
+                                            <div className="flex items-center gap-2">
+                                                {["whatsapp", "telegram", "messenger", "instagram"].includes(conv.channel) ? (
+                                                    <img
+                                                        src={`/images/automations/${conv.channel}.svg`}
+                                                        alt={conv.channel}
+                                                        className="w-4 h-4"
+                                                    />
+                                                ) : (
+                                                    <div className="w-4 h-4 rounded bg-slate-200 dark:bg-slate-700" />
+                                                )}
+                                                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 capitalize">
+                                                    {conv.channel === "sms" ? "SMS" : conv.channel === "zapi" ? "Z-API" : conv.channel}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-2.5">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
                                                     {(conv.agent ?? '—').substring(0, 1)}
@@ -663,7 +718,9 @@ export default function ConversationLogsPage() {
                                             </div>
                                         </td>
                                         <td className="px-5 py-2.5 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
-                                            {conv.startTime}
+                                            {conv.startTime
+                                                ? format(new Date(conv.startTime), "dd MMM yyyy, HH:mm")
+                                                : "—"}
                                         </td>
                                         <td className="px-5 py-2.5 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
                                             {conv.duration}
@@ -672,8 +729,9 @@ export default function ConversationLogsPage() {
                                             <span className={cn(
                                                 "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
                                                 conv.status === "Completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                                                conv.status === "Active" || conv.status === "In Progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
-                                                conv.status === "Queued" || conv.status === "Pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" :
+                                                conv.status === "Active" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
+                                                conv.status === "Queued" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" :
+                                                conv.status === "Deleted" ? "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400" :
                                                 "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                                             )}>
                                                 {conv.status}
@@ -814,141 +872,123 @@ export default function ConversationLogsPage() {
                         <DialogTitle>Conversation Details</DialogTitle>
                     </DialogHeader>
                     {selectedConversation && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Left side - Conversation Details */}
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                            {/* Left: meta */}
+                            <div className="lg:col-span-2 space-y-4">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Customer Name</label>
-                                        <p className="mt-1 text-sm">{selectedConversation.customer}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Customer</label>
+                                        <p className="mt-1 text-sm font-medium">{selectedConversation.customer}</p>
+                                        {selectedConversation.customerNumber && (
+                                            <p className="text-xs text-slate-500">{selectedConversation.customerNumber}</p>
+                                        )}
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Agent Name</label>
-                                        <p className="mt-1 text-sm">{selectedConversation.agent}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Agent</label>
+                                        <p className="mt-1 text-sm font-medium">{selectedConversation.agent || "Unassigned"}</p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Start Time</label>
-                                        <p className="mt-1 text-sm">{selectedConversation.startTime}</p>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Channel</label>
+                                        <div className="mt-1 flex items-center gap-2">
+                                            {["whatsapp", "telegram", "messenger", "instagram"].includes(selectedConversation.channel) ? (
+                                                <img
+                                                    src={`/images/automations/${selectedConversation.channel}.svg`}
+                                                    alt={selectedConversation.channel}
+                                                    className="w-4 h-4"
+                                                />
+                                            ) : null}
+                                            <span className="text-sm font-medium capitalize">
+                                                {selectedConversation.channel === "sms"
+                                                    ? "SMS"
+                                                    : selectedConversation.channel === "zapi"
+                                                        ? "Z-API"
+                                                        : selectedConversation.channel}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Duration</label>
-                                        <p className="mt-1 text-sm">{selectedConversation.duration}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-foreground">Status</label>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</label>
                                         <p className="mt-1">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${selectedConversation.status === "Completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                                                selectedConversation.status === "Active" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
-                                                    selectedConversation.status === "In Progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
-                                                        selectedConversation.status === "Queued" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
-                                                            selectedConversation.status === "Pending" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
-                                                                selectedConversation.status === "Forwarded" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
-                                                                    selectedConversation.status === "Expired" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                                        selectedConversation.status === "Spammed" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                                            "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300"
-                                                }`}>
+                                            <span className={cn(
+                                                "inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
+                                                selectedConversation.status === "Completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
+                                                    selectedConversation.status === "Active" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
+                                                        selectedConversation.status === "Queued" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" :
+                                                            "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+                                            )}>
                                                 {selectedConversation.status}
                                             </span>
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-foreground">Number of Messages</label>
-                                        <p className="mt-1 text-sm">{selectedConversation.messages}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-foreground">Sentiment</label>
-                                        <p className="mt-1">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${selectedConversation.sentiment === "Positive" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                                                selectedConversation.sentiment === "Negative" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" :
-                                                    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                                                }`}>
-                                                {selectedConversation.sentiment}
-                                            </span>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Started</label>
+                                        <p className="mt-1 text-xs font-medium">
+                                            {selectedConversation.startTime
+                                                ? format(new Date(selectedConversation.startTime), "dd MMM yyyy, HH:mm")
+                                                : "—"}
                                         </p>
                                     </div>
-                                    <div className="col-span-2">
-                                        <label className="text-sm font-medium text-foreground">Sentiment Summary</label>
-                                        <p className="mt-1 text-sm">{selectedConversation.sentimentSummary}</p>
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Duration</label>
+                                        <p className="mt-1 text-xs font-medium">{selectedConversation.duration}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Messages</label>
+                                        <p className="mt-1 text-xs font-medium">{selectedConversation.messages}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Right side - Conversation Timeline */}
-                            <div className="space-y-4">
-                                <h3 className="font-medium text-lg">Conversation Timeline</h3>
-                                <div className="space-y-4 max-h-96 overflow-y-auto">
-                                    {/* Timeline Events */}
-                                    <div className="relative pl-6">
-                                        {/* Timeline line */}
-                                        <div className="absolute left-[0.45rem] top-2 bottom-0 w-0.5 bg-gray-200 dark:bg-slate-700"></div>
-
-                                        {/* Timeline Events */}
-                                        <div className="space-y-6">
-                                            {/* Conversation Started */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Customer initiated conversation</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:30:15 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">First message received from customer</div>
-                                            </div>
-
-                                            {/* Bot Response */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Bot auto-response sent</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:30:18 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Automated greeting and initial assistance</div>
-                                            </div>
-
-                                            {/* Customer Response */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Customer replied</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:30:45 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Customer sent a reply message</div>
-                                            </div>
-
-                                            {/* Transferred to Agent */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Escalated to agent</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:31:02 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Bot escalated to human agents</div>
-                                            </div>
-
-                                            {/* Agent Joined */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Chat was assigned to agent</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:31:15 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Chat Assigned to Sarah Johnson</div>
-                                            </div>
-
-                                            {/* Agent Messages */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Agent provided assistance</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:31:20 AM to 10:34:45 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">8 messages exchanged</div>
-                                            </div>
-
-                                            {/* Issue Resolved */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Issue resolved</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:34:50 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Customer confirmed satisfaction with resolution</div>
-                                            </div>
-
-                                            {/* Conversation Completed */}
-                                            <div className="relative">
-                                                <div className="absolute -left-6 top-0.5 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900 z-10"></div>
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">Conversation completed</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">10:35:23 AM</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">Agent marked conversation as resolved</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            {/* Right: message thread (last 50, server-sourced). */}
+                            <div className="lg:col-span-3 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                                        Last messages
+                                    </h3>
+                                    {detailData?.messages?.length ? (
+                                        <span className="text-[10px] font-medium text-slate-400">
+                                            Showing latest {detailData.messages.length}
+                                        </span>
+                                    ) : null}
+                                </div>
+                                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl p-3 border border-slate-100 dark:border-slate-800/60">
+                                    {detailLoading ? (
+                                        <p className="text-xs text-slate-400 text-center py-12">Loading…</p>
+                                    ) : detailData?.messages && detailData.messages.length > 0 ? (
+                                        // Server returns newest-first; reverse so oldest renders at top
+                                        // — matches how a person reads a chat.
+                                        [...detailData.messages].reverse().map((m) => {
+                                            const outgoing = String(m.direction ?? "").toUpperCase() === "OUTGOING";
+                                            return (
+                                                <div
+                                                    key={m.id}
+                                                    className={cn("flex", outgoing ? "justify-end" : "justify-start")}
+                                                >
+                                                    <div
+                                                        className={cn(
+                                                            "max-w-[80%] rounded-2xl px-3 py-2 text-[12px] font-medium shadow-sm",
+                                                            outgoing
+                                                                ? "bg-primary text-primary-foreground rounded-br-sm"
+                                                                : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-bl-sm border border-slate-100 dark:border-slate-700",
+                                                        )}
+                                                    >
+                                                        <p className="whitespace-pre-wrap break-words">
+                                                            {m.text || <em className="opacity-60">[{m.type || "media"}]</em>}
+                                                        </p>
+                                                        <p className={cn("text-[9px] mt-1", outgoing ? "opacity-70" : "opacity-50")}>
+                                                            {m.created_at
+                                                                ? format(new Date(m.created_at), "dd MMM HH:mm")
+                                                                : ""}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-xs text-slate-400 text-center py-12">
+                                            No messages found for this conversation.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
