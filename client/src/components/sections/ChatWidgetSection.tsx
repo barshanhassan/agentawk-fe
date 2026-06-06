@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -20,25 +20,52 @@ import {
   Loader2,
   ChevronLeft,
   AlertCircle,
+  Info,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 
+function safeJsonParse(input: any): any {
+  if (input == null) return null;
+  if (typeof input !== "string") return input;
+  try {
+    return JSON.parse(input);
+  } catch {
+    return null;
+  }
+}
+
 export default function ChatWidgetSection() {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
 
+  // `actions` is the wire shape expected by the backend (and persisted on
+  // `widget_actions`). The frontend channel buttons toggle entries in this
+  // array; the per-channel dropdown sets `model_type` + `model.id`.
+  interface ChannelAction {
+    channel: string;        // e.g. 'whatsapp'
+    model_type: string;     // 'WHATSAPP_NUMBER', 'TELEGRAM_BOT', ...
+    model_id: string;       // resource id from connected channels
+    model_label?: string;   // display label (e.g. phone number)
+  }
   const emptyForm = {
+    id: null as string | null,
     name: "",
     title: "",
-    channels: [] as string[],
+    actions: [] as ChannelAction[],
     headerColor: "#1e40af",
     bodyColor: "#ffffff",
-    position: "right",
+    position: "bottom-right",
     footerText: "Powered by Ezconn",
     fontFamily: "Verdana",
   };
@@ -86,9 +113,53 @@ export default function ChatWidgetSection() {
 
   const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
 
-  const { data: widgets = [], isLoading } = useQuery<any[]>({
+  // Backend now returns `{widgets, whatsapp, telegram, messenger, instagram,
+  // zapi, twilio_numbers}` so the frontend dropdowns can populate from
+  // connected channels rather than free-text inputs.
+  const { data, isLoading } = useQuery<any>({
     queryKey: ["/api/widgets"],
+    queryFn: async () => (await apiRequest("GET", "/api/widgets")).json(),
   });
+  const widgets: any[] = data?.widgets ?? [];
+
+  // Available options per channel — shape mirrors replyagent's
+  // `getWidgetData`. Empty arrays just mean nothing's connected for that
+  // channel; the dropdown disables itself in that case.
+  const channelOptions = useMemo(
+    () => ({
+      whatsapp: (data?.whatsapp?.channels ?? []).map((c: any) => ({
+        id: String(c.id),
+        label: c.name ?? c.waba_id ?? `WABA #${c.id}`,
+        model_type: "WHATSAPP_NUMBER",
+      })),
+      telegram: (data?.telegram?.bots ?? []).map((c: any) => ({
+        id: String(c.id),
+        label: c.username ? `@${c.username}` : c.name ?? `Bot #${c.id}`,
+        model_type: "TELEGRAM_BOT",
+      })),
+      messenger: (data?.messenger?.pages ?? []).map((c: any) => ({
+        id: String(c.id),
+        label: c.name ?? `Page #${c.id}`,
+        model_type: "FACEBOOK_PAGE",
+      })),
+      instagram: (data?.instagram?.pages ?? []).map((c: any) => ({
+        id: String(c.id),
+        label: c.name ?? `IG #${c.id}`,
+        model_type: "INSTAGRAM_PAGE",
+      })),
+      zapi: (data?.zapi?.channels ?? []).map((c: any) => ({
+        id: String(c.id),
+        label: c.phone ?? c.name ?? `Z-API #${c.id}`,
+        model_type: "ZAPI_INSTANCE",
+      })),
+      twilio: (data?.twilio_numbers ?? []).map((c: any) => ({
+        id: String(c.id),
+        label: c.phone_number ?? c.friendly_name ?? `Twilio #${c.id}`,
+        model_type: "TWILIO_NUMBER",
+      })),
+    }),
+    [data],
+  );
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -120,44 +191,146 @@ export default function ChatWidgetSection() {
     },
   });
 
-  const channelOptions = ["Email", "Phone", "Custom number", "WhatsApp", "Telegram", "Facebook"];
+  // Replyagent's 8 widget channels. We render channels through their actual
+  // brand SVGs (the `automations/*.svg` files used by Inbox + Automations)
+  // rather than monochrome Lucide icons — that's what makes the row visually
+  // recognisable in replyagent's UI.
+  interface ChannelMeta {
+    key: string;
+    label: string;
+    svg?: string;          // brand SVG path
+    LucideIcon?: any;      // fallback lucide icon (when no SVG asset)
+    optionsKey?: keyof typeof channelOptions;
+    needsNumberType?: boolean; // SMS/Call use Custom number / Twilio number first
+    placeholder?: string;
+    inputType?: "text" | "email" | "tel";
+    tooltip: string;
+  }
+  const channelMetas: ChannelMeta[] = [
+    {
+      key: "email",
+      label: "Email",
+      LucideIcon: Mail,
+      inputType: "email",
+      placeholder: "Enter email address",
+      tooltip: "Visitors will email this address.",
+    },
+    {
+      key: "sms",
+      label: "SMS",
+      svg: "/images/automations/sms.svg",
+      optionsKey: "twilio",
+      needsNumberType: true,
+      placeholder: "Enter phone number",
+      tooltip: "Visitors will text this number.",
+    },
+    {
+      key: "call",
+      label: "Call",
+      LucideIcon: Phone,
+      optionsKey: "twilio",
+      needsNumberType: true,
+      placeholder: "Enter phone number",
+      tooltip: "Visitors will call this number.",
+    },
+    {
+      key: "whatsapp",
+      label: "WhatsApp",
+      svg: "/images/automations/whatsapp.svg",
+      optionsKey: "whatsapp",
+      tooltip: "Visitors will start a WhatsApp chat with the selected number.",
+    },
+    {
+      // Replyagent places Z-API immediately after WhatsApp (both green
+      // WhatsApp icons). Keep that order so the side-by-side visual matches.
+      key: "zapi",
+      label: "Z-API",
+      svg: "/images/automations/whatsapp.svg",
+      optionsKey: "zapi",
+      tooltip: "Routes through a Z-API instance.",
+    },
+    {
+      key: "telegram",
+      label: "Telegram",
+      svg: "/images/automations/telegram.svg",
+      optionsKey: "telegram",
+      tooltip: "Visitors will open Telegram and message the selected bot.",
+    },
+    {
+      key: "messenger",
+      label: "Messenger",
+      svg: "/images/automations/messenger.svg",
+      optionsKey: "messenger",
+      tooltip: "Visitors will open Messenger and message the page.",
+    },
+    {
+      key: "instagram",
+      label: "Instagram",
+      svg: "/images/automations/instagram.svg",
+      optionsKey: "instagram",
+      tooltip: "Visitors will open Instagram and DM the account.",
+    },
+  ];
 
-  const getChannelIcon = (channel: string) => {
-    const p = { size: 13, className: "text-white" };
-    switch (channel) {
-      case "WhatsApp": return <Send {...p} />;
-      case "Email": return <Mail {...p} />;
-      case "Phone": return <Phone {...p} />;
-      case "Telegram": return <Send {...p} />;
-      case "Facebook": return <Facebook {...p} />;
-      case "Custom number": return <Phone {...p} />;
-      default: return <MessageCircle {...p} />;
+  // Renders a brand SVG icon or falls back to a Lucide outline icon. Kept
+  // small + unstyled-square so the row looks identical to replyagent's
+  // image-only row icons.
+  const renderChannelIcon = (meta: ChannelMeta, size = 20) => {
+    if (meta.svg) {
+      return <img src={meta.svg} alt={meta.label} style={{ width: size, height: size }} className="object-contain" />;
     }
+    const Icon = meta.LucideIcon ?? MessageCircle;
+    return <Icon size={size - 4} className="text-primary" />;
   };
 
   const handleCreateWidget = () => {
-    if (formData.name.trim() && formData.title.trim()) {
-      saveMutation.mutate({
-        id: editingId,
-        name: formData.name,
-        title: formData.title,
-        subtitle: formData.footerText,
-        header_bg: formData.headerColor,
-        body_bg: formData.bodyColor,
-        font_family: formData.fontFamily,
-        position: formData.position,
-      });
+    if (!formData.name.trim() || !formData.title.trim()) {
+      toast({ title: "Name and title are required", variant: "destructive" });
+      return;
     }
+    saveMutation.mutate({
+      ...(editingId ? { id: editingId } : {}),
+      name: formData.name,
+      title: formData.title,
+      subtitle: formData.footerText || null,
+      header_bg: formData.headerColor,
+      body_bg: formData.bodyColor,
+      font_family: formData.fontFamily,
+      position: formData.position,
+      // Replyagent persists each channel as a widget_actions row with the
+      // resolved model id under `modelable_id`. We send both shapes so the
+      // backend can pick either.
+      actions: formData.actions.map((a) => ({
+        channel: a.channel,
+        model_type: a.model_type,
+        model: { id: a.model_id, name: a.model_label },
+        modelable_id: a.model_id,
+      })),
+    });
   };
 
   const handleEditWidget = (widget: any) => {
+    const actions: ChannelAction[] = Array.isArray(widget.actions)
+      ? widget.actions
+          .filter((a: any) => a && a.channel)
+          .map((a: any) => {
+            const modelRaw = typeof a.model === "string" ? safeJsonParse(a.model) : a.model;
+            return {
+              channel: String(a.channel).toLowerCase(),
+              model_type: a.model_type ?? "",
+              model_id: String(modelRaw?.id ?? a.modelable_id ?? ""),
+              model_label: modelRaw?.name ?? modelRaw?.label ?? "",
+            };
+          })
+      : [];
     setFormData({
+      id: String(widget.id),
       name: widget.name,
       title: widget.title,
-      channels: [],
+      actions,
       headerColor: widget.header_bg || "#1e40af",
       bodyColor: widget.body_bg || "#ffffff",
-      position: widget.position || "right",
+      position: widget.position || "bottom-right",
       footerText: widget.subtitle || "Powered by Ezconn",
       fontFamily: widget.font_family || "Verdana",
     });
@@ -178,23 +351,87 @@ export default function ChatWidgetSection() {
   };
 
   const toggleChannel = (channel: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      channels: prev.channels.includes(channel)
-        ? prev.channels.filter((c) => c !== channel)
-        : [...prev.channels, channel],
-    }));
+    setFormData((prev) => {
+      const existing = prev.actions.find((a) => a.channel === channel);
+      if (existing) {
+        return { ...prev, actions: prev.actions.filter((a) => a.channel !== channel) };
+      }
+      // Default: when ticking a channel pre-populate with the first available
+      // resource so the dropdown shows a sensible value rather than empty.
+      const opts =
+        channel === "whatsapp"
+          ? channelOptions.whatsapp
+          : channel === "telegram"
+            ? channelOptions.telegram
+            : channel === "messenger"
+              ? channelOptions.messenger
+              : channel === "instagram"
+                ? channelOptions.instagram
+                : channel === "zapi"
+                  ? channelOptions.zapi
+                  : channel === "sms" || channel === "call"
+                    ? channelOptions.twilio
+                    : [];
+      const first = opts[0];
+      return {
+        ...prev,
+        actions: [
+          ...prev.actions,
+          {
+            channel,
+            model_type: first?.model_type ?? "",
+            model_id: first?.id ?? "",
+            model_label: first?.label ?? "",
+          },
+        ],
+      };
+    });
   };
 
+  const updateChannelResource = (channel: string, id: string) => {
+    setFormData((prev) => {
+      const opts =
+        channel === "whatsapp"
+          ? channelOptions.whatsapp
+          : channel === "telegram"
+            ? channelOptions.telegram
+            : channel === "messenger"
+              ? channelOptions.messenger
+              : channel === "instagram"
+                ? channelOptions.instagram
+                : channel === "zapi"
+                  ? channelOptions.zapi
+                  : channelOptions.twilio;
+      const pick = opts.find((o) => o.id === id);
+      return {
+        ...prev,
+        actions: prev.actions.map((a) =>
+          a.channel === channel
+            ? {
+                ...a,
+                model_id: id,
+                model_label: pick?.label ?? id,
+                model_type: pick?.model_type ?? a.model_type,
+              }
+            : a,
+        ),
+      };
+    });
+  };
+
+  // Embed code uses the persisted widget slug so the snippet you copy after
+  // saving actually addresses *this* widget. Pre-save we show a placeholder
+  // so the user knows it'll be filled in after save.
+  const currentWidgetSlug = editingId
+    ? widgets.find((w: any) => String(w.id) === String(editingId))?.slug
+    : null;
   const widgetCode = `<!-- EZCONN Chat Widget -->
-<script src="https://widget.ezconn.io/embed.js"></script>
-<script>
-  EZConnWidget.init({
-    id: "widget_${widgets.length + 1}",
-    headerColor: "${formData.headerColor}",
-    position: "${formData.position}"
-  });
-</script>`;
+<script
+  src="https://widget.ezconn.io/embed.js"
+  data-widget-slug="${currentWidgetSlug ?? "WILL_BE_GENERATED_ON_SAVE"}"
+  data-position="${formData.position}"
+  defer
+></script>`;
 
   const ColorInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <div className="flex gap-2 items-center">
@@ -337,107 +574,243 @@ export default function ChatWidgetSection() {
                 {/* Form */}
                 <div className="lg:col-span-2 space-y-6">
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}>
+                    {/* Field labels mirror replyagent's `ChatWidgets.vue`
+                        verbatim — "Widget name", "Widget title", "Widget
+                        header color", "Widget title font family", "Widget
+                        body color", "Widget position on your website". */}
                     <div className="space-y-2">
-                      <label className={labelCls}>Widget Name</label>
+                      <label className={labelCls}>Widget name</label>
                       <input
                         type="text"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value.slice(0, 250) })}
                         className={inputCls}
                         placeholder="Name this widget"
+                        maxLength={250}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className={labelCls}>Welcome Message</label>
+                      <label className={labelCls}>Widget title</label>
                       <input
                         type="text"
                         value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value.slice(0, 250) })}
                         className={inputCls}
                         placeholder="Hi there, choose your preferred channel to contact us."
+                        maxLength={250}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <label className={labelCls}>Header Color</label>
+                        <label className={labelCls}>Widget header color</label>
                         <ColorInput value={formData.headerColor} onChange={(v) => setFormData({ ...formData, headerColor: v })} />
                       </div>
                       <div className="space-y-2">
-                        <label className={labelCls}>Title Font Family</label>
+                        <label className={labelCls}>Widget title font family</label>
                         <select
                           value={formData.fontFamily}
                           onChange={(e) => setFormData({ ...formData, fontFamily: e.target.value })}
                           className={selectCls}
                         >
-                          <option value="Verdana">Verdana</option>
-                          <option value="Arial">Arial</option>
-                          <option value="Times New Roman">Times New Roman</option>
-                          <option value="Helvetica">Helvetica</option>
+                          {/* Replyagent's font set — keep order for parity */}
+                          <option value="arial">Arial</option>
+                          <option value="cursive">Brush Script MT</option>
+                          <option value="georgia">Georgia</option>
+                          <option value="monospace">Monospace</option>
+                          <option value="tahoma">Tahoma</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <label className={labelCls}>Body Color</label>
+                        <label className={labelCls}>Widget body color</label>
                         <ColorInput value={formData.bodyColor} onChange={(v) => setFormData({ ...formData, bodyColor: v })} />
                       </div>
                       <div className="space-y-2">
-                        <label className={labelCls}>Position on Website</label>
+                        <label className={labelCls}>Widget position on your website</label>
                         <select
                           value={formData.position}
                           onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                           className={selectCls}
                         >
-                          <option value="right">Right Bottom</option>
-                          <option value="left">Left Bottom</option>
-                          <option value="bottom-right">Bottom Right</option>
-                          <option value="bottom-left">Bottom Left</option>
+                          {/* Order mirrors replyagent: Right bottom first */}
+                          <option value="bottom-right">Right bottom</option>
+                          <option value="bottom-left">Left bottom</option>
+                          <option value="top-right">Top right</option>
+                          <option value="top-left">Top left</option>
                         </select>
                       </div>
                     </div>
                   </div>
 
-                  {/* Channels */}
+                  {/* Channels — replyagent-style row: checkbox + brand SVG +
+                      per-channel control + info tooltip. */}
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-4", softBg, softBorder)}>
-                    <label className={cn(labelCls, "text-primary")}>Channels to Add</label>
+                    <label className={labelCls}>Select the channels to add to the widget</label>
                     <div className="space-y-3">
-                      {channelOptions.map((channel) => (
-                        <div key={channel} className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            id={channel}
-                            checked={formData.channels.includes(channel)}
-                            onChange={() => toggleChannel(channel)}
-                            className="rounded accent-[hsl(var(--primary))]"
-                          />
-                          <span className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                            {getChannelIcon(channel)}
-                          </span>
-                          {channel === "Email" && (
-                            <input type="email" placeholder="Enter email address" className={cn(inputCls, "flex-1")} />
-                          )}
-                          {channel === "Phone" && (
-                            <input type="tel" placeholder="Enter phone number" className={cn(inputCls, "flex-1")} />
-                          )}
-                          {channel === "Custom number" && (
-                            <>
-                              <select className={cn(selectCls, "flex-1")}>
-                                <option>Custom number</option>
-                              </select>
-                              <input type="tel" placeholder="Enter phone number" className={cn(inputCls, "flex-1")} />
-                            </>
-                          )}
-                          {(channel === "WhatsApp" || channel === "Telegram" || channel === "Facebook") && (
-                            <input type="text" placeholder={`Enter ${channel} ID`} className={cn(inputCls, "flex-1")} />
-                          )}
-                          <button className={cn("w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}>
-                            <Eye size={15} />
-                          </button>
-                        </div>
-                      ))}
+                      <TooltipProvider delayDuration={150}>
+                        {channelMetas.map((meta) => {
+                          const action = formData.actions.find((a) => a.channel === meta.key);
+                          const isOn = !!action;
+                          const opts = meta.optionsKey ? channelOptions[meta.optionsKey] : [];
+                          // Replyagent defaults SMS/Call to Custom number (so
+                          // the phone-number text input appears straight away).
+                          // Switching to Twilio number swaps in the connected
+                          // numbers dropdown.
+                          const numberType = (action as any)?.number_type ?? "CUSTOM_NUMBER";
+
+                          // Helper that auto-checks the channel if the user
+                          // starts interacting with its controls before ticking
+                          // the box (matches replyagent — controls are always
+                          // live, the checkbox just confirms intent on save).
+                          const ensureChannelOn = () => {
+                            if (!isOn) toggleChannel(meta.key);
+                          };
+
+                          return (
+                            <div key={meta.key} className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                id={`channel-${meta.key}`}
+                                checked={isOn}
+                                onChange={() => toggleChannel(meta.key)}
+                                className="w-4 h-4 rounded accent-[hsl(var(--primary))]"
+                              />
+                              <span className="w-6 h-6 flex items-center justify-center shrink-0">
+                                {renderChannelIcon(meta, 20)}
+                              </span>
+
+                              {/* Email row: just an email input — always active */}
+                              {meta.inputType === "email" && (
+                                <input
+                                  type="email"
+                                  placeholder={meta.placeholder}
+                                  value={action?.model_label ?? ""}
+                                  onFocus={ensureChannelOn}
+                                  onChange={(e) => {
+                                    ensureChannelOn();
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      actions: prev.actions.some((a) => a.channel === meta.key)
+                                        ? prev.actions.map((a) =>
+                                            a.channel === meta.key
+                                              ? { ...a, model_id: e.target.value, model_label: e.target.value, model_type: "EMAIL" }
+                                              : a,
+                                          )
+                                        : [
+                                            ...prev.actions,
+                                            { channel: meta.key, model_id: e.target.value, model_label: e.target.value, model_type: "EMAIL" } as any,
+                                          ],
+                                    }));
+                                  }}
+                                  className={cn(inputCls, "flex-1")}
+                                />
+                              )}
+
+                              {/* SMS / Call row: number_type dropdown + value */}
+                              {meta.needsNumberType && (
+                                <>
+                                  <select
+                                    value={numberType}
+                                    onChange={(e) => {
+                                      ensureChannelOn();
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        actions: prev.actions.some((a) => a.channel === meta.key)
+                                          ? prev.actions.map((a) =>
+                                              a.channel === meta.key
+                                                ? { ...a, number_type: e.target.value, model_id: "", model_label: "", model_type: e.target.value } as any
+                                                : a,
+                                            )
+                                          : [
+                                              ...prev.actions,
+                                              { channel: meta.key, number_type: e.target.value, model_id: "", model_label: "", model_type: e.target.value } as any,
+                                            ],
+                                      }));
+                                    }}
+                                    className={cn(selectCls, "w-44")}
+                                  >
+                                    <option value="CUSTOM_NUMBER">Custom number</option>
+                                    <option value="TWILIO_NUMBER">Twilio number</option>
+                                  </select>
+                                  {numberType === "CUSTOM_NUMBER" ? (
+                                    <input
+                                      type="tel"
+                                      placeholder={meta.placeholder}
+                                      value={action?.model_label ?? ""}
+                                      onFocus={ensureChannelOn}
+                                      onChange={(e) => {
+                                        ensureChannelOn();
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          actions: prev.actions.some((a) => a.channel === meta.key)
+                                            ? prev.actions.map((a) =>
+                                                a.channel === meta.key
+                                                  ? { ...a, model_id: e.target.value, model_label: e.target.value, model_type: "CUSTOM_NUMBER" }
+                                                  : a,
+                                              )
+                                            : [
+                                                ...prev.actions,
+                                                { channel: meta.key, number_type: "CUSTOM_NUMBER", model_id: e.target.value, model_label: e.target.value, model_type: "CUSTOM_NUMBER" } as any,
+                                              ],
+                                        }));
+                                      }}
+                                      className={cn(inputCls, "flex-1")}
+                                    />
+                                  ) : (
+                                    <select
+                                      value={action?.model_id ?? ""}
+                                      onChange={(e) => { ensureChannelOn(); updateChannelResource(meta.key, e.target.value); }}
+                                      disabled={opts.length === 0}
+                                      className={cn(selectCls, "flex-1 disabled:opacity-50")}
+                                    >
+                                      {opts.length === 0 ? (
+                                        <option value="">No Twilio numbers connected</option>
+                                      ) : (
+                                        <>
+                                          <option value="">Select Twilio number…</option>
+                                          {opts.map((o) => (
+                                            <option key={o.id} value={o.id}>{o.label}</option>
+                                          ))}
+                                        </>
+                                      )}
+                                    </select>
+                                  )}
+                                </>
+                              )}
+
+                              {/* WhatsApp / Z-API / Telegram / Messenger / Instagram:
+                                  always-active "Select an action." dropdown */}
+                              {!meta.needsNumberType && !meta.inputType && meta.optionsKey && (
+                                <select
+                                  value={action?.model_id ?? ""}
+                                  onChange={(e) => { ensureChannelOn(); updateChannelResource(meta.key, e.target.value); }}
+                                  className={selectCls + " flex-1"}
+                                >
+                                  <option value="">Select an action.</option>
+                                  {opts.map((o) => (
+                                    <option key={o.id} value={o.id}>{o.label}</option>
+                                  ))}
+                                </select>
+                              )}
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button type="button" className={cn("w-7 h-7 rounded-full flex items-center justify-center", sub, "hover:text-primary")}>
+                                    <Info size={14} />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-[11px] font-medium">
+                                  {meta.tooltip}
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          );
+                        })}
+                      </TooltipProvider>
                     </div>
                   </div>
 
@@ -483,19 +856,30 @@ export default function ChatWidgetSection() {
                   </div>
 
                   <div className={cn("rounded-[1.5rem] border p-6 space-y-3", softBg, softBorder)}>
-                    <label className={labelCls}>Embed Code</label>
-                    <div className={cn("relative rounded-xl border p-4 font-mono text-[11px] overflow-auto h-44", softBorder, dark ? "bg-slate-950/50 text-slate-300" : "bg-white text-slate-700")}>
-                      <pre className="whitespace-pre-wrap">{widgetCode}</pre>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(widgetCode);
-                          toast({ title: "Copied", description: "Embed code copied to clipboard." });
-                        }}
-                        className={cn("absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center transition-colors", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
-                      >
-                        <Copy size={13} />
-                      </button>
-                    </div>
+                    <label className={labelCls}>Code snipped to be installed on your website</label>
+                    {/* Replyagent shows an empty disabled textarea until the
+                        widget is saved (it needs the slug to be useful). We
+                        mirror that — placeholder hint + disabled state. */}
+                    {currentWidgetSlug ? (
+                      <div className={cn("relative rounded-xl border p-4 font-mono text-[11px] overflow-auto h-44", softBorder, dark ? "bg-slate-950/50 text-slate-300" : "bg-white text-slate-700")}>
+                        <pre className="whitespace-pre-wrap">{widgetCode}</pre>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(widgetCode);
+                            toast({ title: "Copied", description: "Embed code copied to clipboard." });
+                          }}
+                          className={cn("absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center transition-colors", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
+                        >
+                          <Copy size={13} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={cn("rounded-xl border p-4 h-44 flex items-center justify-center text-center", softBorder, sub)}>
+                        <p className="text-[11px] font-medium opacity-60">
+                          Save the widget to generate the embed snippet.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

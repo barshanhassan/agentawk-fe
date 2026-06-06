@@ -89,12 +89,48 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     },
   });
 
+  // Replyagent uses structured error codes (ACCESS_DENIED / SIZE_EXCEEDED /
+  // COMPRESSED_BLOCKED / etc.) so the UI can show specific toasts. The
+  // backend wraps the response under NestJS's `{statusCode, message}` envelope
+  // when we throw with a structured payload — `ApiError.body` (set by
+  // queryClient.ts) holds the parsed payload, including our `code`.
+  const extractError = (err: any): { code?: string; message?: string } => {
+    const body = err?.body ?? null;
+    // NestJS HttpException wraps the structured payload under `message`,
+    // so when we threw `{success, code, message}` the parsed body looks
+    // like `{statusCode, message: {success, code, message}}`. Handle both
+    // shapes.
+    const inner = body?.message && typeof body.message === "object" ? body.message : body;
+    if (inner && typeof inner === "object") {
+      return { code: inner.code, message: inner.message ?? body?.message };
+    }
+    return { message: err?.message };
+  };
+  const errorToast = (err: any, fallbackTitle = "Error") => {
+    const { code, message } = extractError(err);
+    const titleByCode: Record<string, string> = {
+      ACCESS_DENIED: "Belongs to another agent",
+      SIZE_EXCEEDED: "File too large",
+      COMPRESSED_BLOCKED: "Compressed files not allowed",
+      INVALID_FILE_TYPE: "Invalid file type",
+      BATCH_LIMIT: "Too many files",
+      NAME_TOO_LONG: "Name too long",
+      NAME_REQUIRED: "Name is required",
+    };
+    toast({
+      title: code && titleByCode[code] ? titleByCode[code] : fallbackTitle,
+      description: message ?? "Something went wrong.",
+      variant: "destructive",
+    });
+  };
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/gallery/media/${id}`); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
       toast({ title: "Deleted", description: "File removed." });
     },
+    onError: (err) => errorToast(err, "Delete failed"),
   });
 
   const renameMutation = useMutation({
@@ -105,6 +141,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
       toast({ title: "Renamed", description: "File name updated." });
     },
+    onError: (err) => errorToast(err, "Rename failed"),
   });
 
   const createFolderMutation = useMutation({
@@ -115,6 +152,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
       toast({ title: "Created", description: "Folder created." });
     },
+    onError: (err) => errorToast(err, "Folder create failed"),
   });
 
   const uploadMutation = useMutation({
@@ -127,6 +165,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
       queryClient.invalidateQueries({ queryKey: ["/api/gallery/listings"] });
       toast({ title: "Uploaded", description: "Files uploaded successfully." });
     },
+    onError: (err) => errorToast(err, "Upload failed"),
     onSettled: () => {
       setUploadProgress(0);
       setUploadFileCount(0);
@@ -151,13 +190,70 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
       media_type: f.media_type?.toUpperCase() || "FILE",
       size: `${(f.file_size / 1024).toFixed(1)} KB`,
       url: f.file_url,
+      // Server already swaps the stored S3 key for a 1h signed URL on
+      // listing — prefer it for image grid rendering (200px instead of
+      // full-res = faster + cheaper bandwidth).
+      thumb: f.thumb_200 ?? null,
     }));
     return [...folders, ...files];
   }, [galleryData]);
 
+  // Mirrors backend gallery.validation.ts so the user gets immediate
+  // feedback instead of round-tripping to a 422. Keep these in lockstep
+  // with SIZE_CAPS_MB / MAX_FILES_PER_UPLOAD on the server.
+  const MAX_FILES = 10;
+  const SIZE_MB: Record<string, number> = { IMAGE: 10, VIDEO: 15, AUDIO: 10, DOCUMENT: 10, FILE: 10 };
+  const COMPRESSED = new Set(["zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz", "tbz2"]);
+  const EXT_KIND: Record<string, keyof typeof SIZE_MB> = {
+    jpg: "IMAGE", jpeg: "IMAGE", png: "IMAGE", gif: "IMAGE", bmp: "IMAGE",
+    tif: "IMAGE", tiff: "IMAGE", webp: "IMAGE",
+    m4v: "VIDEO", avi: "VIDEO", mpeg: "VIDEO", mp4: "VIDEO", mkv: "VIDEO",
+    webm: "VIDEO", flv: "VIDEO", wmv: "VIDEO", mov: "VIDEO",
+    mp3: "AUDIO", wav: "AUDIO", aac: "AUDIO", ogg: "AUDIO", oga: "AUDIO", m4a: "AUDIO",
+    doc: "DOCUMENT", docx: "DOCUMENT", pdf: "DOCUMENT", xls: "DOCUMENT",
+    xlsx: "DOCUMENT", ppt: "DOCUMENT", pptx: "DOCUMENT", csv: "DOCUMENT",
+    txt: "DOCUMENT", odt: "DOCUMENT", html: "DOCUMENT", htm: "DOCUMENT",
+  };
+
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const fileArr = Array.from(files);
+
+    if (fileArr.length > MAX_FILES) {
+      toast({
+        title: "Too many files",
+        description: `Max ${MAX_FILES} files per upload.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    for (const file of fileArr) {
+      const ext = (file.name.split(".").pop() ?? "").toLowerCase();
+      if (!ext) {
+        toast({ title: "Invalid file type", description: `"${file.name}" has no extension.`, variant: "destructive" });
+        return;
+      }
+      if (COMPRESSED.has(ext)) {
+        toast({ title: "Compressed files not allowed", description: `${file.name} (.${ext}) blocked.`, variant: "destructive" });
+        return;
+      }
+      const kind = EXT_KIND[ext];
+      if (!kind) {
+        toast({ title: "Invalid file type", description: `${file.name} (.${ext}) is not supported.`, variant: "destructive" });
+        return;
+      }
+      const cap = SIZE_MB[kind];
+      if (file.size / (1024 * 1024) > cap) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds the ${cap} MB limit for ${kind.toLowerCase()} files.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const formData = new FormData();
     if (parentId) formData.append("parent_id", parentId);
     fileArr.forEach((file) => formData.append("files", file));
@@ -167,6 +263,19 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     uploadMutation.mutate(formData, {
       onSettled: () => setUploadDialogOpen(false),
     });
+  };
+
+  // Download via the server-mediated endpoint so the browser always saves
+  // (rather than potentially opening inline from a signed URL).
+  const downloadObject = (objectId: string, filename: string) => {
+    const a = document.createElement("a");
+    a.href = `/api/gallery/download/${objectId}`;
+    a.download = filename;
+    a.target = "_blank";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const filteredMedia = mediaItems.filter((item: any) => {
@@ -234,8 +343,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                     autoFocus
                     value={newFolderName}
                     placeholder="Folder name..."
+                    maxLength={100}
                     className={cn(inputCls, "h-10 w-44")}
-                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onChange={(e) => setNewFolderName(e.target.value.slice(0, 100))}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && newFolderName.trim()) {
                         createFolderMutation.mutate(newFolderName.trim());
@@ -367,9 +477,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                       softBg,
                       softBorder
                     )}>
-                      {item.media_type === "IMAGE" && item.url && item.url !== "#" ? (
+                      {item.media_type === "IMAGE" && (item.thumb || item.url) && item.url !== "#" ? (
                         <img
-                          src={item.url}
+                          src={item.thumb ?? item.url}
                           alt={item.name}
                           loading="lazy"
                           className="absolute inset-0 w-full h-full object-cover"
@@ -401,10 +511,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const link = document.createElement("a");
-                                link.href = item.url;
-                                link.download = item.name;
-                                link.click();
+                                downloadObject(item.id, item.name);
                               }}
                               className="w-8 h-8 rounded-lg bg-white text-primary flex items-center justify-center hover:scale-110 transition-transform shadow-md"
                             >
@@ -486,9 +593,9 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                         <TableCell className="py-3 px-6">
                           <div className="flex items-center gap-3">
                             <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden", dark ? "bg-slate-900/60" : "bg-white")}>
-                              {item.media_type === "IMAGE" && item.url && item.url !== "#" ? (
+                              {item.media_type === "IMAGE" && (item.thumb || item.url) && item.url !== "#" ? (
                                 <img
-                                  src={item.url}
+                                  src={item.thumb ?? item.url}
                                   alt={item.name}
                                   loading="lazy"
                                   className="w-full h-full object-cover"
@@ -515,10 +622,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const link = document.createElement("a");
-                                  link.href = item.url;
-                                  link.download = item.name;
-                                  link.click();
+                                  downloadObject(item.id, item.name);
                                 }}
                                 className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-primary/10 text-slate-400 hover:text-primary" : "hover:bg-primary/10 text-slate-500 hover:text-primary")}
                               >
@@ -565,7 +669,8 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
             <Input
               autoFocus
               value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
+              maxLength={100}
+              onChange={(e) => setRenameValue(e.target.value.slice(0, 100))}
               className={inputCls}
             />
             <div className="flex justify-end gap-2">
@@ -704,9 +809,14 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
             {!uploadMutation.isPending && (
               <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
                 <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed">
-                  Maximum file size: <span className="font-black">25 MB</span> per file.
-                </p>
+                <div className="text-[11px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed space-y-0.5">
+                  <p>
+                    Up to <span className="font-black">10 files</span> per upload. Compressed files (.zip, .rar, .7z) are blocked.
+                  </p>
+                  <p>
+                    Image <span className="font-black">10 MB</span> · Video <span className="font-black">15 MB</span> · Audio <span className="font-black">10 MB</span> · Document <span className="font-black">10 MB</span>
+                  </p>
+                </div>
               </div>
             )}
           </div>

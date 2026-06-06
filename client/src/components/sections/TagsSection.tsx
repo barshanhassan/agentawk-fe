@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Search,
   ChevronLeft,
@@ -17,6 +17,10 @@ import {
   Loader2,
   Tag as TagIcon,
   AlertCircle,
+  Folder,
+  FolderPlus,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -25,27 +29,58 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
 } from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 
-type TagStatus = "Active" | "Inactive";
+// Replyagent's `for` filter: which entity a tag is scoped to. Backend
+// translates these to Laravel namespace paths under the hood.
+type TagFor = "" | "WORKSPACE" | "CONTACT" | "COMPANY" | "OPPORTUNITY";
 
 interface Tag {
   id: string;
   name: string;
-  status: TagStatus;
+  bgColor: string;
+  textColor: string;
+  displayInbox: boolean;
+  folderId: string | null;
+  taggableType: string;
   lastEdited: string;
 }
+
+interface TagFolder {
+  id: string;
+  name: string;
+}
+
+// Default palette — replyagent's defaults plus a small curated set so the
+// color picker isn't an empty hex input. Users can still type any hex.
+const TAG_PRESETS: { bg: string; text: string }[] = [
+  { bg: "#f3f4f6", text: "#111827" },
+  { bg: "#fee2e2", text: "#991b1b" },
+  { bg: "#fef3c7", text: "#92400e" },
+  { bg: "#dcfce7", text: "#166534" },
+  { bg: "#dbeafe", text: "#1e40af" },
+  { bg: "#ede9fe", text: "#5b21b6" },
+  { bg: "#fce7f3", text: "#9f1239" },
+  { bg: "#cffafe", text: "#155e75" },
+];
 
 export default function TagsSection() {
   const { mode } = useTheme();
@@ -53,24 +88,47 @@ export default function TagsSection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // ── Filter / sort / pagination state ─────────────────────────────
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
-  const [filterStatus, setFilterStatus] = useState<TagStatus | "">("");
+  const [forFilter, setForFilter] = useState<TagFor>("");
+  const [folderFilter, setFolderFilter] = useState<string>("ALL"); // 'ALL' | 'root' | folder id
+
+  // ── Dialog state ─────────────────────────────────────────────────
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<Tag | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<Tag | null>(null);
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const [editingFolder, setEditingFolder] = useState<TagFolder | null>(null);
+
+  // ── Tag form state ──────────────────────────────────────────────
+  const emptyForm = {
+    name: "",
+    bgColor: TAG_PRESETS[0].bg,
+    textColor: TAG_PRESETS[0].text,
+    displayInbox: true,
+    folderId: "" as string,
+    taggableFor: "WORKSPACE" as Exclude<TagFor, "">,
+  };
+  const [form, setForm] = useState(emptyForm);
 
   // ── Design tokens ─────────────────────────────────────────
-  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
-  const border     = dark ? "border-slate-800" : "border-slate-200";
-  const text       = dark ? "text-white"      : "text-slate-900";
-  const sub        = dark ? "text-slate-500"  : "text-slate-400";
-  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  const card = dark ? "bg-[#0f1829]" : "bg-white";
+  const border = dark ? "border-slate-800" : "border-slate-200";
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub = dark ? "text-slate-500" : "text-slate-400";
+  const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
     "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
     "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
 
   const selectCls = cn(
@@ -79,70 +137,127 @@ export default function TagsSection() {
     dark
       ? "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]"
       : "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')]",
-    "[background-position:right_1rem_center]"
+    "[background-position:right_1rem_center]",
   );
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary",
   );
-
   const primaryOutlineBtn = cn(
     "h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white"
+    "border-primary text-primary hover:bg-primary hover:text-white",
   );
-
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
-
   const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
 
-  // Queries
+  // ── Queries ──────────────────────────────────────────────────────
   const { data: tagsData, isLoading } = useQuery<any>({
-    queryKey: ["/api/tags/list"],
+    queryKey: ["/api/tags/data", forFilter, folderFilter],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/tags/list");
+      const params = new URLSearchParams();
+      if (folderFilter && folderFilter !== "ALL") params.set("folder_id", folderFilter);
+      else params.set("folder_id", "ALL");
+      const url = `/api/tags/data?${params.toString()}`;
+      const res = await apiRequest("GET", url);
       return res.json();
     },
   });
 
-  const allTags: Tag[] = (tagsData?.tags || []).map((t: any) => ({
-    id: t.id.toString(),
-    name: t.name,
-    status: t.status || "Active",
-    lastEdited: t.updated_at
-      ? new Date(t.updated_at).toISOString().split("T")[0]
-      : t.created_at
-        ? new Date(t.created_at).toISOString().split("T")[0]
-        : "-",
-  }));
+  const allTags: Tag[] = useMemo(() => {
+    const rows: any[] = tagsData?.tags ?? [];
+    return rows
+      .filter((t) => {
+        // Frontend-side `for` filter — backend `data` endpoint doesn't accept
+        // it (mirrors replyagent's behavior where the filter is applied to
+        // the cached list). Drop tags whose taggable_type doesn't match.
+        if (!forFilter) return true;
+        const map: Record<Exclude<TagFor, "">, string> = {
+          WORKSPACE: "App\\Models\\Workspace",
+          CONTACT: "App\\Models\\Contact",
+          COMPANY: "App\\Models\\Company",
+          OPPORTUNITY: "App\\Models\\Pipeline\\Opportunity",
+        };
+        return t.taggable_type === map[forFilter];
+      })
+      .map((t) => ({
+        id: t.id.toString(),
+        name: t.name,
+        bgColor: t.bg_color ?? "#f3f4f6",
+        textColor: t.text_color ?? "#111827",
+        displayInbox: Number(t.display_inbox ?? 1) === 1,
+        folderId: t.folder_id != null ? String(t.folder_id) : null,
+        taggableType: t.taggable_type,
+        lastEdited: t.updated_at
+          ? new Date(t.updated_at).toISOString().split("T")[0]
+          : t.created_at
+            ? new Date(t.created_at).toISOString().split("T")[0]
+            : "-",
+      }));
+  }, [tagsData, forFilter]);
+
+  const folders: TagFolder[] = useMemo(() => {
+    return (tagsData?.folders ?? []).map((f: any) => ({
+      id: String(f.id),
+      name: f.name,
+    }));
+  }, [tagsData]);
+
+  // ── Mutations ────────────────────────────────────────────────────
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/tags/data"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
+  };
 
   const createMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const res = await apiRequest("POST", "/api/tags", { name, status: "Active" });
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/tags", {
+        name: form.name.trim(),
+        bg_color: form.bgColor,
+        text_color: form.textColor,
+        display_inbox: form.displayInbox,
+        folder_id: form.folderId || null,
+        taggable_type:
+          form.taggableFor === "WORKSPACE"
+            ? "App\\Models\\Workspace"
+            : form.taggableFor === "CONTACT"
+              ? "App\\Models\\Contact"
+              : form.taggableFor === "COMPANY"
+                ? "App\\Models\\Company"
+                : "App\\Models\\Pipeline\\Opportunity",
+      });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
-      toast({ title: "Success", description: "Tag created successfully!" });
+      invalidate();
+      toast({ title: "Tag created" });
       setShowCreateModal(false);
-      setNewName("");
+      setForm(emptyForm);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const res = await apiRequest("PATCH", `/api/tags/${id}`, data);
+    mutationFn: async () => {
+      if (!editingItem) throw new Error("No tag selected");
+      const res = await apiRequest("PATCH", `/api/tags/${editingItem.id}`, {
+        name: form.name.trim(),
+        bg_color: form.bgColor,
+        text_color: form.textColor,
+        display_inbox: form.displayInbox,
+        folder_id: form.folderId || null,
+      });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
-      toast({ title: "Success", description: "Tag updated successfully!" });
+      invalidate();
+      toast({ title: "Tag updated" });
       setShowEditModal(false);
       setEditingItem(null);
+      setForm(emptyForm);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -150,23 +265,46 @@ export default function TagsSection() {
       await apiRequest("DELETE", `/api/tags/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tags/list"] });
-      toast({ title: "Success", description: "Tag deleted successfully!" });
+      invalidate();
+      toast({ title: "Tag deleted" });
       setShowDeleteModal(false);
       setItemToDelete(null);
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
   });
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<Tag | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editStatus, setEditStatus] = useState<TagStatus>("Active");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<Tag | null>(null);
+  const folderMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/tags/folder", {
+        ...(editingFolder ? { id: editingFolder.id } : {}),
+        name: folderName.trim(),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: editingFolder ? "Folder renamed" : "Folder created" });
+      setShowFolderModal(false);
+      setEditingFolder(null);
+      setFolderName("");
+    },
+    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+  });
 
+  const deleteFolderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/tags/folder/${id}`);
+    },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Folder deleted" });
+      // Reset the folder filter if we just deleted the active folder.
+      setFolderFilter((cur) => (cur === itemToDelete?.id ? "ALL" : cur));
+    },
+    onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+  });
+
+  // ── Handlers ─────────────────────────────────────────────────────
   const handleColumnSort = (column: string) => {
     if (sort?.column === column) {
       if (sort.direction === "asc") setSort({ column, direction: "desc" });
@@ -183,51 +321,110 @@ export default function TagsSection() {
     return <ChevronDown size={12} className="text-primary" />;
   };
 
-  const getFilteredAndSortedData = () => {
+  const filteredAndSorted = useMemo(() => {
     let data = [...allTags];
     if (search) data = data.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
-    if (filterStatus) data = data.filter((i) => i.status === filterStatus);
     if (sort) {
       data.sort((a, b) => {
-        const aVal = a[sort.column as keyof Tag];
-        const bVal = b[sort.column as keyof Tag];
+        const aVal = (a as any)[sort.column];
+        const bVal = (b as any)[sort.column];
         let cmp = 0;
         if (typeof aVal === "string" && typeof bVal === "string") cmp = aVal.localeCompare(bVal);
         return sort.direction === "asc" ? cmp : -cmp;
       });
     }
     return data;
-  };
+  }, [allTags, search, sort]);
 
-  const filteredAndSorted = getFilteredAndSortedData();
   const totalFilteredItems = filteredAndSorted.length;
   const totalPages = Math.max(1, Math.ceil(totalFilteredItems / rowsPerPage));
   const paginatedData = filteredAndSorted.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
-  const handleEdit = (item: Tag) => {
+  const openEdit = (item: Tag) => {
     setEditingItem(item);
-    setEditName(item.name);
-    setEditStatus(item.status);
+    setForm({
+      name: item.name,
+      bgColor: item.bgColor,
+      textColor: item.textColor,
+      displayInbox: item.displayInbox,
+      folderId: item.folderId ?? "",
+      taggableFor:
+        item.taggableType === "App\\Models\\Contact"
+          ? "CONTACT"
+          : item.taggableType === "App\\Models\\Company"
+            ? "COMPANY"
+            : item.taggableType === "App\\Models\\Pipeline\\Opportunity"
+              ? "OPPORTUNITY"
+              : "WORKSPACE",
+    });
     setShowEditModal(true);
   };
 
-  const handleCreate = () => {
-    if (!newName.trim()) {
-      toast({ title: "Missing Fields", description: "Please enter a tag name.", variant: "destructive" });
-      return;
-    }
-    createMutation.mutate(newName);
+  const openCreate = () => {
+    setForm({
+      ...emptyForm,
+      folderId: folderFilter !== "ALL" && folderFilter !== "root" ? folderFilter : "",
+    });
+    setShowCreateModal(true);
   };
 
-  const handleSaveEdit = () => {
-    if (!editName.trim()) {
-      toast({ title: "Missing Fields", description: "Please enter a tag name.", variant: "destructive" });
+  const submitCreate = () => {
+    if (!form.name.trim()) {
+      toast({ title: "Missing name", description: "Please enter a tag name.", variant: "destructive" });
       return;
     }
-    if (editingItem) updateMutation.mutate({ id: editingItem.id, data: { name: editName, status: editStatus } });
+    createMutation.mutate();
+  };
+
+  const submitUpdate = () => {
+    if (!form.name.trim()) {
+      toast({ title: "Missing name", description: "Please enter a tag name.", variant: "destructive" });
+      return;
+    }
+    updateMutation.mutate();
   };
 
   const thCls = cn("px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest cursor-pointer select-none", sub);
+
+  // Color picker: small grid of presets + free hex inputs.
+  const ColorPicker = ({
+    label,
+    value,
+    onChange,
+    presetKey,
+  }: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    presetKey: "bg" | "text";
+  }) => (
+    <div className="space-y-2">
+      <label className={labelCls}>{label}</label>
+      <div className="flex items-center gap-2 flex-wrap">
+        {TAG_PRESETS.map((p) => (
+          <button
+            key={p[presetKey]}
+            type="button"
+            onClick={() => onChange(p[presetKey])}
+            className={cn(
+              "w-7 h-7 rounded-lg border-2 transition-all",
+              value === p[presetKey] ? "border-primary scale-110" : "border-transparent",
+            )}
+            style={{ backgroundColor: p[presetKey] }}
+            aria-label={`Pick ${p[presetKey]}`}
+          />
+        ))}
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          maxLength={9}
+          className={cn(inputCls, "w-28 h-9 text-[11px] font-mono")}
+          placeholder="#000000"
+        />
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -248,7 +445,17 @@ export default function TagsSection() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => setShowCreateModal(true)} className={primaryOutlineBtn}>
+              <button
+                onClick={() => {
+                  setEditingFolder(null);
+                  setFolderName("");
+                  setShowFolderModal(true);
+                }}
+                className={outlineBtn}
+              >
+                <FolderPlus size={12} /> New Folder
+              </button>
+              <button onClick={openCreate} className={primaryOutlineBtn}>
                 <Plus size={12} /> Add Tag
               </button>
             </div>
@@ -257,8 +464,8 @@ export default function TagsSection() {
           {/* Body */}
           <div className="p-8 space-y-5">
             {/* Filters */}
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 max-w-xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px] max-w-xs">
                 <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4", sub)} />
                 <input
                   type="text"
@@ -269,14 +476,64 @@ export default function TagsSection() {
                 />
               </div>
               <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as TagStatus | "")}
-                className={cn(selectCls, "max-w-[160px]")}
+                value={forFilter}
+                onChange={(e) => setForFilter(e.target.value as TagFor)}
+                className={cn(selectCls, "max-w-[180px]")}
               >
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="">All entities</option>
+                <option value="WORKSPACE">Workspace</option>
+                <option value="CONTACT">Contact</option>
+                <option value="COMPANY">Company</option>
+                <option value="OPPORTUNITY">Opportunity</option>
               </select>
+              <div className="flex items-center gap-1">
+                <select
+                  value={folderFilter}
+                  onChange={(e) => setFolderFilter(e.target.value)}
+                  className={cn(selectCls, "max-w-[200px]")}
+                >
+                  <option value="ALL">All folders</option>
+                  <option value="root">Root (no folder)</option>
+                  {folders.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                {folderFilter !== "ALL" && folderFilter !== "root" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={cn("w-10 h-11 rounded-xl border flex items-center justify-center", softBorder, sub, "hover:text-primary hover:border-primary/40")}>
+                        <MoreVertical size={14} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-40", card, border)}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          const f = folders.find((x) => x.id === folderFilter);
+                          if (!f) return;
+                          setEditingFolder(f);
+                          setFolderName(f.name);
+                          setShowFolderModal(true);
+                        }}
+                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                      >
+                        <Edit2 size={13} /> Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (confirm("Delete this folder? It must be empty.")) {
+                            deleteFolderMutation.mutate(folderFilter);
+                          }
+                        }}
+                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
+                      >
+                        <Trash2 size={13} /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
             </div>
 
             {/* Table */}
@@ -288,9 +545,7 @@ export default function TagsSection() {
                       <th className={thCls} onClick={() => handleColumnSort("name")}>
                         <div className="flex items-center gap-2">Name {renderSortIcon("name")}</div>
                       </th>
-                      <th className={thCls} onClick={() => handleColumnSort("status")}>
-                        <div className="flex items-center gap-2">Status {renderSortIcon("status")}</div>
-                      </th>
+                      <th className={cn(thCls, "cursor-default")}>Visible in Inbox</th>
                       <th className={thCls} onClick={() => handleColumnSort("lastEdited")}>
                         <div className="flex items-center gap-2">Last Edited {renderSortIcon("lastEdited")}</div>
                       </th>
@@ -328,23 +583,24 @@ export default function TagsSection() {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                <TagIcon size={14} className="text-primary" />
-                              </div>
-                              <span className={cn("text-[13px] font-black break-all", text)}>{item.name}</span>
+                              <span
+                                className="inline-flex h-7 px-3 items-center rounded-md text-[11px] font-black uppercase tracking-widest"
+                                style={{ backgroundColor: item.bgColor, color: item.textColor }}
+                              >
+                                {item.name}
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span
-                              className={cn(
-                                "inline-flex h-5 px-2 items-center rounded-md text-[9px] font-black uppercase tracking-widest border",
-                                item.status === "Active"
-                                  ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                                  : "border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-400"
-                              )}
-                            >
-                              {item.status}
-                            </span>
+                            {item.displayInbox ? (
+                              <span className="inline-flex h-5 px-2 items-center gap-1 rounded-md text-[9px] font-black uppercase tracking-widest border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400">
+                                <Eye size={10} /> Yes
+                              </span>
+                            ) : (
+                              <span className="inline-flex h-5 px-2 items-center gap-1 rounded-md text-[9px] font-black uppercase tracking-widest border border-slate-500/30 bg-slate-500/5 text-slate-500">
+                                <EyeOff size={10} /> No
+                              </span>
+                            )}
                           </td>
                           <td className={cn("px-6 py-4 text-[12px] font-bold", sub)}>{item.lastEdited}</td>
                           <td className="px-6 py-4">
@@ -355,12 +611,15 @@ export default function TagsSection() {
                                     <MoreVertical size={14} />
                                   </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-40", card, border)}>
-                                  <DropdownMenuItem onClick={() => handleEdit(item)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
+                                <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
+                                  <DropdownMenuItem onClick={() => openEdit(item)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
                                     <Edit2 size={13} /> Edit
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => { setItemToDelete(item); setShowDeleteModal(true); }}
+                                    onClick={() => {
+                                      setItemToDelete(item);
+                                      setShowDeleteModal(true);
+                                    }}
                                     className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
                                   >
                                     <Trash2 size={13} /> Delete
@@ -385,11 +644,16 @@ export default function TagsSection() {
                     <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>Rows</span>
                     <select
                       value={rowsPerPage}
-                      onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+                      onChange={(e) => {
+                        setRowsPerPage(Number(e.target.value));
+                        setPage(1);
+                      }}
                       className={cn(selectCls, "h-8 w-20 text-[11px] px-3")}
                     >
                       {[10, 25, 50].map((o) => (
-                        <option key={o} value={o}>{o}</option>
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
                       ))}
                     </select>
                     <span className={cn("text-[10px] font-black uppercase tracking-widest", sub)}>
@@ -420,63 +684,31 @@ export default function TagsSection() {
         </CardContent>
       </Card>
 
-      {/* ── Create Modal ── */}
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
+      {/* ── Create / Edit Modal ── */}
+      <Dialog
+        open={showCreateModal || showEditModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowCreateModal(false);
+            setShowEditModal(false);
+            setEditingItem(null);
+            setForm(emptyForm);
+          }
+        }}
+      >
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md max-h-[90vh] overflow-y-auto", card, border)}>
           <div className="p-6 space-y-5">
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <TagIcon size={18} />
+                  {showEditModal ? <Edit2 size={18} /> : <TagIcon size={18} />}
                 </div>
                 <div className="text-left">
-                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Create Tag</DialogTitle>
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                    {showEditModal ? "Edit Tag" : "Create Tag"}
+                  </DialogTitle>
                   <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Add a new tag to categorize conversations.
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-
-            <div className="space-y-2">
-              <label className={labelCls}>Name <span className="text-rose-500">*</span></label>
-              <div className="relative">
-                <input
-                  placeholder="Enter tag name"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value.slice(0, 100))}
-                  className={cn(inputCls, "pr-16")}
-                />
-                <span className={cn("absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold", sub)}>
-                  {newName.length}/100
-                </span>
-              </div>
-            </div>
-
-            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
-              <button onClick={() => setShowCreateModal(false)} className={outlineBtn}>Cancel</button>
-              <button onClick={handleCreate} disabled={createMutation.isPending} className={primaryBtn}>
-                {createMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                <Plus size={12} /> Create
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Edit Modal ── */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-md", card, border)}>
-          <div className="p-6 space-y-5">
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Edit2 size={18} />
-                </div>
-                <div className="text-left">
-                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Edit Tag</DialogTitle>
-                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    Update tag name and status.
+                    {showEditModal ? "Update name, colors, scope and visibility." : "Add a new tag to categorize conversations."}
                   </DialogDescription>
                 </div>
               </div>
@@ -484,37 +716,172 @@ export default function TagsSection() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className={labelCls}>Name <span className="text-rose-500">*</span></label>
+                <label className={labelCls}>
+                  Name <span className="text-rose-500">*</span>
+                </label>
                 <div className="relative">
                   <input
                     placeholder="Enter tag name"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value.slice(0, 100))}
+                    value={form.name}
+                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value.slice(0, 25) }))}
                     className={cn(inputCls, "pr-16")}
                   />
                   <span className={cn("absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold", sub)}>
-                    {editName.length}/100
+                    {form.name.length}/25
                   </span>
                 </div>
               </div>
+
+              <ColorPicker
+                label="Background colour"
+                value={form.bgColor}
+                onChange={(v) => setForm((p) => ({ ...p, bgColor: v }))}
+                presetKey="bg"
+              />
+              <ColorPicker
+                label="Text colour"
+                value={form.textColor}
+                onChange={(v) => setForm((p) => ({ ...p, textColor: v }))}
+                presetKey="text"
+              />
+
               <div className="space-y-2">
-                <label className={labelCls}>Status <span className="text-rose-500">*</span></label>
+                <label className={labelCls}>Preview</label>
+                <div>
+                  <span
+                    className="inline-flex h-8 px-3 items-center rounded-md text-[12px] font-black uppercase tracking-widest"
+                    style={{ backgroundColor: form.bgColor, color: form.textColor }}
+                  >
+                    {form.name || "Sample"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Scope dropdown intentionally removed — replyagent hardcodes
+                  `tag_for: "workspace"` in its CreateTag.vue. The For-filter
+                  on the list view still allows browsing tags by entity. */}
+
+              <div className="space-y-2">
+                <label className={labelCls}>Folder</label>
                 <select
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value as TagStatus)}
+                  value={form.folderId}
+                  onChange={(e) => setForm((p) => ({ ...p, folderId: e.target.value }))}
                   className={selectCls}
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="">Root (no folder)</option>
+                  {folders.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
                 </select>
+              </div>
+
+              <div className={cn("flex items-center justify-between p-4 rounded-xl border", softBg, softBorder)}>
+                <div>
+                  <p className={cn("text-[12px] font-black", text)}>Visible in Inbox</p>
+                  <p className={cn("text-[10px] font-medium opacity-60", sub)}>
+                    Show this tag in conversation lists.
+                  </p>
+                </div>
+                <Switch
+                  checked={form.displayInbox}
+                  onCheckedChange={(val) => setForm((p) => ({ ...p, displayInbox: val }))}
+                  className="data-[state=checked]:bg-primary"
+                />
               </div>
             </div>
 
             <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
-              <button onClick={() => setShowEditModal(false)} className={outlineBtn}>Cancel</button>
-              <button onClick={handleSaveEdit} disabled={updateMutation.isPending} className={primaryBtn}>
-                {updateMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                Save Changes
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setShowEditModal(false);
+                  setEditingItem(null);
+                  setForm(emptyForm);
+                }}
+                className={outlineBtn}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={showEditModal ? submitUpdate : submitCreate}
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className={primaryBtn}
+              >
+                {(createMutation.isPending || updateMutation.isPending) && (
+                  <Loader2 size={12} className="animate-spin" />
+                )}
+                {showEditModal ? "Save Changes" : "Create"}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Folder Modal ── */}
+      <Dialog
+        open={showFolderModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowFolderModal(false);
+            setEditingFolder(null);
+            setFolderName("");
+          }
+        }}
+      >
+        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-sm", card, border)}>
+          <div className="p-6 space-y-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Folder size={18} />
+                </div>
+                <div className="text-left">
+                  <DialogTitle className={cn("text-[13px] font-black uppercase tracking-widest", text)}>
+                    {editingFolder ? "Rename Folder" : "Create Folder"}
+                  </DialogTitle>
+                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
+                    {editingFolder ? "Pick a new name." : "Group tags under a folder."}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <label className={labelCls}>Folder name</label>
+              <input
+                value={folderName}
+                onChange={(e) => setFolderName(e.target.value.slice(0, 25))}
+                className={inputCls}
+                placeholder="Enter folder name"
+              />
+            </div>
+
+            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
+              <button
+                onClick={() => {
+                  setShowFolderModal(false);
+                  setEditingFolder(null);
+                  setFolderName("");
+                }}
+                className={outlineBtn}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!folderName.trim()) {
+                    toast({ title: "Missing name", variant: "destructive" });
+                    return;
+                  }
+                  folderMutation.mutate();
+                }}
+                disabled={folderMutation.isPending}
+                className={primaryBtn}
+              >
+                {folderMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+                {editingFolder ? "Save" : "Create"}
               </button>
             </div>
           </div>
@@ -532,7 +899,10 @@ export default function TagsSection() {
               <div>
                 <h2 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Delete Tag?</h2>
                 <p className={cn("text-[11px] font-medium opacity-60 mt-0.5 leading-relaxed", sub)}>
-                  <span className="text-rose-500 font-black break-all">{itemToDelete?.name || "This tag"}</span> will be permanently removed. This action cannot be undone.
+                  <span className="text-rose-500 font-black break-all">
+                    {itemToDelete?.name || "This tag"}
+                  </span>{" "}
+                  will be permanently removed and unlinked from every conversation, contact and opportunity.
                 </p>
               </div>
             </div>
@@ -543,7 +913,11 @@ export default function TagsSection() {
                 disabled={deleteMutation.isPending}
                 className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
               >
-                {deleteMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                {deleteMutation.isPending ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Trash2 size={12} />
+                )}
                 Delete
               </AlertDialogAction>
             </div>
