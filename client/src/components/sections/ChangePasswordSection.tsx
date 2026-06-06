@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2, Lock, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -13,117 +14,196 @@ interface PasswordErrors {
   retypePassword: string;
 }
 
+const EMPTY_ERRORS: PasswordErrors = {
+  currentPassword: "",
+  newPassword: "",
+  retypePassword: "",
+};
+
+// The complexity rules the server enforces too — kept in sync with
+// `UsersService.changePassword` so a client-side pass is never weaker than
+// the server's pass.
+const complexityRules = [
+  { label: "Minimum 8 characters", test: (p: string) => p.length >= 8 },
+  { label: "Upper case letter [A-Z]", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "Special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+  { label: "Number [0-9]", test: (p: string) => /\d/.test(p) },
+];
+
+/**
+ * Defined at MODULE scope on purpose. When this lived inside
+ * ChangePasswordSection, React re-created it on every parent render,
+ * remounting the underlying <input> and dropping focus after a single
+ * keystroke. Hoisting it out of the parent keeps the input mounted across
+ * renders so typing flows normally.
+ */
+interface PasswordFieldProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+  visible: boolean;
+  toggleVisible: () => void;
+  autoComplete: string;
+  inputCls: string;
+  labelCls: string;
+  subClass: string;
+}
+
+const PasswordField: React.FC<PasswordFieldProps> = ({
+  id,
+  label,
+  value,
+  onChange,
+  error,
+  visible,
+  toggleVisible,
+  autoComplete,
+  inputCls,
+  labelCls,
+  subClass,
+}) => (
+  <div className="space-y-2">
+    <label htmlFor={id} className={labelCls}>
+      {label}
+    </label>
+    <div className="relative max-w-sm">
+      <input
+        id={id}
+        name={id}
+        type={visible ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
+        className={cn(inputCls, error && "!border-rose-500 focus:!ring-rose-500/30")}
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={toggleVisible}
+        className={cn(
+          "absolute right-3 top-1/2 -translate-y-1/2 transition-colors",
+          subClass,
+          "hover:text-primary",
+        )}
+        aria-label={visible ? "Hide password" : "Show password"}
+      >
+        {visible ? <EyeOff size={15} /> : <Eye size={15} />}
+      </button>
+    </div>
+    {error && <p className="text-[11px] font-bold text-rose-500">{error}</p>}
+  </div>
+);
+
 const ChangePasswordSection = () => {
   const { mode } = useTheme();
   const dark = mode === "dark";
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
-  const [errors, setErrors] = useState<PasswordErrors>({ currentPassword: "", newPassword: "", retypePassword: "" });
-  const [isSaveDisabled, setIsSaveDisabled] = useState(true);
+  const [errors, setErrors] = useState<PasswordErrors>(EMPTY_ERRORS);
   const [show, setShow] = useState<{ [k: string]: boolean }>({});
 
-  // ── Design tokens ─────────────────────────────────────────
-  const card       = dark ? "bg-[#0f1829]"    : "bg-white";
-  const border     = dark ? "border-slate-800" : "border-slate-200";
-  const text       = dark ? "text-white"      : "text-slate-900";
-  const sub        = dark ? "text-slate-500"  : "text-slate-400";
-  const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
+  // Design tokens ─────────────────────────────────────────
+  const card = dark ? "bg-[#0f1829]" : "bg-white";
+  const border = dark ? "border-slate-800" : "border-slate-200";
+  const text = dark ? "text-white" : "text-slate-900";
+  const sub = dark ? "text-slate-500" : "text-slate-400";
+  const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
     "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 pr-12 border outline-none",
     "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
-
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
-
   const labelCls = cn("block text-[10px] font-black uppercase tracking-widest", sub);
 
-  const rules = [
-    { label: "Minimum 8 characters", test: (p: string) => p.length >= 8 },
-    { label: "Upper case letter [A-Z]", test: (p: string) => /[A-Z]/.test(p) },
-    { label: "Special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
-    { label: "Number [0-9]", test: (p: string) => /\d/.test(p) },
-  ];
-
+  // Live client-side validation feeds the inline rule checklist + disables
+  // Save. Server still re-validates, so a successful API call is a guarantee
+  // of correctness even when the client is bypassed.
   const validatePassword = (password: string): string => {
-    const failed = rules.filter((r) => !r.test(password)).map((r) => r.label);
+    const failed = complexityRules.filter((r) => !r.test(password)).map((r) => r.label);
     return failed.join(", ");
   };
 
   useEffect(() => {
     const newPasswordError = newPassword ? validatePassword(newPassword) : "";
-    const retypePasswordError = retypePassword && newPassword !== retypePassword ? "Passwords do not match" : "";
-    setErrors((prev) => ({ ...prev, newPassword: newPasswordError, retypePassword: retypePasswordError }));
-    setIsSaveDisabled(
-      !currentPassword || !newPassword || !retypePassword || newPasswordError !== "" || retypePasswordError !== ""
-    );
-  }, [currentPassword, newPassword, retypePassword]);
+    const retypeError =
+      retypePassword && newPassword !== retypePassword ? "Passwords do not match" : "";
+    setErrors((prev) => ({
+      ...prev,
+      newPassword: newPasswordError,
+      retypePassword: retypeError,
+    }));
+  }, [newPassword, retypePassword]);
+
+  const isSaveDisabled =
+    !currentPassword ||
+    !newPassword ||
+    !retypePassword ||
+    !!errors.newPassword ||
+    !!errors.retypePassword;
+
+  const toggleShow = (id: string) =>
+    setShow((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const mutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: {
+      currentPassword: string;
+      newPassword: string;
+      retypePassword: string;
+    }) => {
       const res = await apiRequest("POST", "/api/users/change-password", data);
       return res.json();
     },
-    onSuccess: () => {
-      toast({ title: "Password Changed", description: "Your password has been successfully updated." });
+    onSuccess: (data: any) => {
+      toast({
+        title: t("password.changedTitle", { defaultValue: "Password Changed" }),
+        description:
+          data?.message ?? t("password.changedDesc", {
+            defaultValue: "Your password has been successfully updated.",
+          }),
+      });
       setCurrentPassword("");
       setNewPassword("");
       setRetypePassword("");
+      setErrors(EMPTY_ERRORS);
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to change password. Please check your current password.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      // ApiError carries the parsed body on `error.body`. Backend returns
+      // `{ errors: { field: message } }` on validation failures — pull each
+      // field's message into the per-field error state so the wrong-input
+      // field gets highlighted. The global `handleApiError` already skips
+      // its toast when it sees a structured `errors` body, so non-field
+      // errors (network, 500, etc.) are already surfaced to the user there
+      // and don't need a second toast here.
+      const serverErrors: Partial<PasswordErrors> | undefined =
+        error?.body?.errors ?? error?.errors;
+      if (serverErrors && typeof serverErrors === "object") {
+        setErrors((prev) => ({
+          ...prev,
+          currentPassword: serverErrors.currentPassword ?? "",
+          newPassword: serverErrors.newPassword ?? prev.newPassword,
+          retypePassword: serverErrors.retypePassword ?? prev.retypePassword,
+        }));
+      }
     },
   });
 
   const handleSave = () => {
-    if (isSaveDisabled) return;
-    mutation.mutate({ currentPassword, newPassword });
+    if (isSaveDisabled || mutation.isPending) return;
+    // Reset only the currentPassword error each submit — keeps client-side
+    // complexity errors in place so the user can see why the rule fails.
+    setErrors((prev) => ({ ...prev, currentPassword: "" }));
+    mutation.mutate({ currentPassword, newPassword, retypePassword });
   };
-
-  const PasswordField = ({
-    id,
-    label,
-    value,
-    onChange,
-    error,
-  }: {
-    id: string;
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    error?: string;
-  }) => (
-    <div className="space-y-2">
-      <label className={labelCls}>{label}</label>
-      <div className="relative max-w-sm">
-        <input
-          id={id}
-          type={show[id] ? "text" : "password"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={cn(inputCls, error && "!border-rose-500 focus:!ring-rose-500/30")}
-        />
-        <button
-          type="button"
-          onClick={() => setShow((s) => ({ ...s, [id]: !s[id] }))}
-          className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors", sub, "hover:text-primary")}
-        >
-          {show[id] ? <EyeOff size={15} /> : <Eye size={15} />}
-        </button>
-      </div>
-      {error && <p className="text-[11px] font-bold text-rose-500">{error}</p>}
-    </div>
-  );
 
   return (
     <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
@@ -135,9 +215,13 @@ const ChangePasswordSection = () => {
               <Lock className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Change Password</h1>
+              <h1 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>
+                {t("change_password", { defaultValue: "Change Password" })}
+              </h1>
               <p className={cn("text-[11px] font-bold mt-0.5 opacity-60 max-w-2xl", sub)}>
-                Update the password for your user account.
+                {t("password.subtitle", {
+                  defaultValue: "Update the password for your user account.",
+                })}
               </p>
             </div>
           </div>
@@ -147,7 +231,7 @@ const ChangePasswordSection = () => {
             className={primaryBtn}
           >
             {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
-            Save
+            {t("common.save", { defaultValue: "Save" })}
           </button>
         </div>
 
@@ -156,22 +240,29 @@ const ChangePasswordSection = () => {
           {/* Requirements */}
           <div className={cn("rounded-[1.5rem] border p-6 space-y-3", softBg, softBorder)}>
             <p className={cn("text-[11px] font-black uppercase tracking-widest text-primary")}>
-              Password Requirements
+              {t("password.requirements", { defaultValue: "Password Requirements" })}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {rules.map((r) => {
+              {complexityRules.map((r) => {
                 const ok = newPassword ? r.test(newPassword) : false;
                 return (
                   <div key={r.label} className="flex items-center gap-2">
                     <div
                       className={cn(
                         "w-4 h-4 rounded-full flex items-center justify-center shrink-0",
-                        ok ? "bg-emerald-500/15 text-emerald-500" : cn(dark ? "bg-slate-800" : "bg-slate-200", sub)
+                        ok
+                          ? "bg-emerald-500/15 text-emerald-500"
+                          : cn(dark ? "bg-slate-800" : "bg-slate-200", sub),
                       )}
                     >
                       {ok ? <Check size={10} /> : <X size={10} />}
                     </div>
-                    <span className={cn("text-[12px] font-bold", ok ? "text-emerald-600 dark:text-emerald-400" : sub)}>
+                    <span
+                      className={cn(
+                        "text-[12px] font-bold",
+                        ok ? "text-emerald-600 dark:text-emerald-400" : sub,
+                      )}
+                    >
                       {r.label}
                     </span>
                   </div>
@@ -181,29 +272,56 @@ const ChangePasswordSection = () => {
           </div>
 
           {/* Form */}
-          <div className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}
+          >
             <PasswordField
               id="current-password"
-              label="Current Password"
+              label={t("password.currentLabel", { defaultValue: "Current Password" })}
               value={currentPassword}
               onChange={setCurrentPassword}
               error={errors.currentPassword}
+              visible={!!show["current-password"]}
+              toggleVisible={() => toggleShow("current-password")}
+              autoComplete="current-password"
+              inputCls={inputCls}
+              labelCls={labelCls}
+              subClass={sub}
             />
             <PasswordField
               id="new-password"
-              label="New Password"
+              label={t("password.newLabel", { defaultValue: "New Password" })}
               value={newPassword}
               onChange={setNewPassword}
               error={errors.newPassword}
+              visible={!!show["new-password"]}
+              toggleVisible={() => toggleShow("new-password")}
+              autoComplete="new-password"
+              inputCls={inputCls}
+              labelCls={labelCls}
+              subClass={sub}
             />
             <PasswordField
               id="retype-password"
-              label="Retype New Password"
+              label={t("password.retypeLabel", { defaultValue: "Retype New Password" })}
               value={retypePassword}
               onChange={setRetypePassword}
               error={errors.retypePassword}
+              visible={!!show["retype-password"]}
+              toggleVisible={() => toggleShow("retype-password")}
+              autoComplete="new-password"
+              inputCls={inputCls}
+              labelCls={labelCls}
+              subClass={sub}
             />
-          </div>
+            {/* Submit button is in the header — keep the form element wrapping
+                the inputs so Enter-to-submit works without an extra button. */}
+            <button type="submit" hidden disabled={isSaveDisabled || mutation.isPending} />
+          </form>
         </div>
       </CardContent>
     </Card>

@@ -34,6 +34,8 @@ async function throwIfResNotOk(res: Response) {
 
 // Global error handler — mirrors replyagent's axios interceptor pattern:
 //   - 401 → clear auth + redirect to /login
+//   - Validation errors (body has `errors: { field: msg }`) → silent, caller
+//     surfaces them per-field
 //   - Everything else (incl. 403) → generic destructive toast with the server's message
 function handleApiError(error: unknown) {
   const isApi = error instanceof ApiError;
@@ -46,6 +48,14 @@ function handleApiError(error: unknown) {
     if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/login')) {
       window.location.href = '/login';
     }
+    return;
+  }
+
+  // Field-level validation errors (e.g. POST /users/change-password with a wrong
+  // current password) come back as `{ errors: { field: 'message' } }`. The
+  // caller surfaces them under the offending input; a generic toast on top
+  // would just be noise.
+  if (isApi && error.body && typeof error.body === 'object' && error.body.errors) {
     return;
   }
 
