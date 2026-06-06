@@ -50,6 +50,7 @@ import DeleteNumberDialog from "./whatsapp/DeleteNumberDialog";
 import ReconnectNumberDialog from "./whatsapp/ReconnectNumberDialog";
 import DefaultReplyDialog from "./whatsapp/DefaultReplyDialog";
 import LimitReachedDialog from "./whatsapp/LimitReachedDialog";
+import QrCodeManageView from "./whatsapp/QrCodeManageView";
 
 type ViewMode = "list" | "coex_manage" | "api_manage" | "qr_manage";
 
@@ -823,28 +824,19 @@ export default function WhatsAppSection() {
             </div>
           )}
 
-          {/* ── QR MANAGE VIEW ── */}
+          {/* ── QR MANAGE VIEW (full Z-API replyagent mirror) ── */}
           {view === "qr_manage" && (
-            <div className="p-8">
-              <div className={cn("rounded-[1.5rem] border py-16 px-8 flex flex-col items-center justify-center text-center space-y-5", softBg, softBorder)}>
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <QrCode size={32} />
-                </div>
-                <div className="space-y-1.5 max-w-sm">
-                  <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Scan to connect</h3>
-                  <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                    QR Code (Z-API) integration is currently in preview. Generate a QR code, scan it from WhatsApp on
-                    your phone, and your number connects in seconds.
-                  </p>
-                </div>
-                <button
-                  onClick={() => toast({ title: "Coming soon", description: "QR Code WhatsApp connector is in preview." })}
-                  className="h-10 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
-                >
-                  <QrCode size={12} /> Generate QR Code
-                </button>
-              </div>
-            </div>
+            <QrCodeManageView
+              card={card}
+              border={border}
+              text={text}
+              sub={sub}
+              softBg={softBg}
+              softBorder={softBorder}
+              outlineBtn={outlineBtn}
+              inputCls={inputCls}
+              dark={dark}
+            />
           )}
         </CardContent>
       </Card>
