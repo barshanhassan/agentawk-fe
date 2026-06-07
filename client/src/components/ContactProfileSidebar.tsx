@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/tooltip";
 import CustomDropdown from "@/components/CustomDropdown";
 import { getAvatarColor } from "@/lib/avatar-utils";
-import ContactDetailsModal from "./ContactDetailsModal";
+import ContactProfileModal from "./ContactProfileModal";
 
 interface ContactProfileSidebarProps {
     // Conversation Data
@@ -81,6 +81,14 @@ interface ContactProfileSidebarProps {
     // Messages for Media Tab
     messages?: any[];
     onScrollToMessage?: (messageId: number) => void;
+
+    // Live profile data from the backend `/api/inbox/get-profile-data/:id` —
+    // replaces the previously-hardcoded support number / smart-flow stub.
+    profileData?: {
+        support_number?: string | null;
+        smart_flow?: { name?: string; paused?: boolean } | null;
+        channel?: { type?: string; name?: string; number?: string } | null;
+    } | null;
 }
 
 // Helper function to get display name - defaults to phone number if displayName not set
@@ -108,6 +116,7 @@ export default function ContactProfileSidebar({
     onUpdateNotes,
     messages = [],
     onScrollToMessage,
+    profileData,
 }: ContactProfileSidebarProps) {
 
     // Edit basic details modal state
@@ -312,7 +321,20 @@ export default function ContactProfileSidebar({
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <button
-                                                    onClick={() => setActiveTab(tab.id)}
+                                                    onClick={() => {
+                                                        // Media icon redirects to the workspace Media Gallery page.
+                                                        // Optional contact_id query param lets the gallery prefilter
+                                                        // uploads tied to this contact. The other tabs stay in-sidebar.
+                                                        if (tab.id === "media") {
+                                                            // SettingsPage routes by `?tab=`, not by URL path. Pass
+                                                            // the section name there or it defaults to "Manage".
+                                                            const cid = conversation?.contact?.id ?? conversation?.id ?? "";
+                                                            const url = `/settings/workspace/ManageSection?tab=${encodeURIComponent("Media Gallery")}${cid ? `&contact_id=${cid}` : ""}`;
+                                                            window.location.href = url;
+                                                            return;
+                                                        }
+                                                        setActiveTab(tab.id);
+                                                    }}
                                                     className={`p-2 rounded-md transition-all flex items-center justify-center flex-1 ${activeTab === tab.id
                                                         ? "bg-background text-foreground shadow-sm"
                                                         : "text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
@@ -375,18 +397,41 @@ export default function ContactProfileSidebar({
 
                                 <Separator className="my-4" />
 
-                                {/* Support Number */}
+                                {/* Support Number — real value from backend. The
+                                    hardcoded "0123-123" was placeholder and is
+                                    replaced by `profileData.support_number`. */}
                                 <div>
                                     <h4 className="font-semibold text-sm mb-3">Support Number</h4>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Headset size={16} />
-                                        <span>0123-123</span>
+                                        <span>{profileData?.support_number ?? "—"}</span>
                                     </div>
                                 </div>
 
                                 <Separator className="my-4" />
 
-                                {/* In Smart Flow */}
+                                {/* Chatting with channel (replyagent shows this
+                                    next to the Smart Flow section). */}
+                                {profileData?.channel?.name && (
+                                  <>
+                                    <div>
+                                        <h4 className="font-semibold text-sm mb-3">Chatting with channel</h4>
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <span className="capitalize">{profileData.channel.type ?? "channel"}</span>
+                                            <span>·</span>
+                                            <span>{profileData.channel.name}</span>
+                                            {profileData.channel.number && (
+                                              <span className="opacity-60">({profileData.channel.number})</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Separator className="my-4" />
+                                  </>
+                                )}
+
+                                {/* In Smart Flow — name + paused state come from
+                                    backend so the UI reflects the real running
+                                    automation instead of the static placeholder. */}
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <h4 className="font-semibold text-sm">In Smart Flow</h4>
@@ -395,7 +440,11 @@ export default function ContactProfileSidebar({
                                         </Button>
                                     </div>
                                     <p className="text-sm text-muted-foreground">
-                                        This contact is not currently part of any Smart Flow.
+                                        {profileData?.smart_flow?.name
+                                          ? (profileData.smart_flow.paused
+                                              ? `${profileData.smart_flow.name} (paused)`
+                                              : profileData.smart_flow.name)
+                                          : "This contact is not currently part of any Smart Flow."}
                                     </p>
                                 </div>
 
@@ -1423,10 +1472,10 @@ export default function ContactProfileSidebar({
                 </DialogContent>
             </Dialog>
 
-            <ContactDetailsModal
+            <ContactProfileModal
                 open={isDetailsModalOpen}
                 onOpenChange={setIsDetailsModalOpen}
-                contact={conversation}
+                contact={conversation as any}
             />
         </>
     );

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { getUserInfo } from "@/lib/auth";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock } from "lucide-react";
+import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -276,41 +277,135 @@ export default function ConversationsInbox() {
       });
     };
 
+    // Another agent / another tab opening a conversation marks it read on the
+    // server, which then emits `inbox_read`. Refresh the list + counts so the
+    // unread badge here also clears without a manual refresh.
+    const handleInboxRead = (_data: { inbox_id: string }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
+    };
+
     socket.on("new_message", handleNewMessage);
     socket.on("message_status", handleMessageStatus);
+    socket.on("inbox_read", handleInboxRead);
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("message_status", handleMessageStatus);
+      socket.off("inbox_read", handleInboxRead);
     };
   }, [socket, selectedConversation, queryClient, toast]);
 
-  // Fetch inbox list
-  const { data: inboxResponse, isLoading: isLoadingInbox } = useQuery({
-    queryKey: ["/api/inbox/list", { activeTab, searchQuery }],
+  // Phase 2/3 filter state — must declare BEFORE the inbox list query that
+  // reads them, otherwise React's TDZ throws "Cannot access X before
+  // initialization" on first render.
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+
+  // Global tab counts — must come from a SEPARATE call (`/inbox/count`) so
+  // they stay correct regardless of which tab is active. Otherwise the counts
+  // shown on Read / Unread / Queue / etc. all "go to zero" the moment you
+  // switch to that tab because they were computed from the page's filtered
+  // result set instead of the workspace-wide totals.
+  const { data: countsResponse } = useQuery<any>({
+    queryKey: ["/api/inbox/count", { activeFolderId, selectedChannels }],
     queryFn: async () => {
-      const res = await apiRequest("POST", "/api/inbox/list", { 
-        status: activeTab === 'all' ? undefined : activeTab, 
-        search: searchQuery 
+      const res = await apiRequest("POST", "/api/inbox/count", {
+        folder_id: activeFolderId ? activeFolderId : undefined,
+        channel_types: selectedChannels.length ? selectedChannels : undefined,
       });
       return res.json();
-    }
+    },
+    refetchInterval: 30_000,
+  });
+  const tabCounts = useMemo(() => {
+    const c = countsResponse?.counts ?? {};
+    const inboxTotal = (c.inbox ?? 0) + (c.unassigned ?? 0);
+    return {
+      all: inboxTotal,
+      read: c.read ?? 0,
+      unread: c.unread ?? 0,
+      queue: c.unassigned ?? 0,
+      upcoming: c.future ?? 0,
+      completed: c.completed ?? 0,
+    };
+  }, [countsResponse]);
+
+  // Fetch inbox list. The backend list endpoint accepts the lowercase tab
+  // names and maps them internally to the schema enum (ACTIVE / COMPLETED /
+  // UNASSIGNED). "my_chats" is purely client-side filtering (we ask the
+  // backend for "all" and then filter to assignedAgent === me).
+  const { data: inboxResponse, isLoading: isLoadingInbox } = useQuery({
+    queryKey: ["/api/inbox/list", { activeTab, searchQuery, activeFolderId, selectedChannels }],
+    queryFn: async () => {
+      // Map the replyagent tab vocab onto the backend filter params.
+      // - Read / Unread → `is_read` (1 / 0)
+      // - Queue          → status = 'queued' (UNASSIGNED)
+      // - Upcoming       → `is_upcoming: true` (snooze > NOW)
+      // - Done           → status = 'completed' (COMPLETED)
+      let status: string | undefined;
+      let is_read: number | undefined;
+      let is_upcoming: boolean | undefined;
+      if (activeTab === "queue") status = "queued";
+      else if (activeTab === "completed") status = "completed";
+      else if (activeTab === "read") is_read = 1;
+      else if (activeTab === "unread") is_read = 0;
+      else if (activeTab === "upcoming") is_upcoming = true;
+      // 'all' → no status / is_read / is_upcoming filter
+
+      const res = await apiRequest("POST", "/api/inbox/list", {
+        status,
+        is_read,
+        is_upcoming,
+        search: searchQuery,
+        folder_id: activeFolderId ? activeFolderId : undefined,
+        channel_types: selectedChannels.length ? selectedChannels : undefined,
+      });
+      return res.json();
+    },
   });
 
   const backendConversations = inboxResponse?.inbox || [];
-  
+
+  // Detect channel from the polymorphic `modelable_type`. Replyagent supports
+  // 6+ channel types; the previous version of this mapper only handled
+  // WhatsApp + Facebook + (anything-else → Instagram), so Telegram, Z-API,
+  // SMS (Twilio), and Webchat conversations were mis-labelled in the list.
+  const detectChannel = (modelableType?: string): string => {
+    const t = (modelableType || '').toLowerCase();
+    if (t.includes('whatsapp')) return 'whatsapp';
+    if (t.includes('zapi')) return 'zapi';
+    if (t.includes('telegram')) return 'telegram';
+    if (t.includes('insta')) return 'instagram';
+    if (t.includes('messenger') || t.includes('fb') || t.includes('facebook')) return 'messenger';
+    if (t.includes('twilio') || t.includes('sms')) return 'sms';
+    if (t.includes('webchat') || t.includes('wc')) return 'webchat';
+    return 'unknown';
+  };
+
+  // Map backend status enum (UPPERCASE in schema) to the lowercase vocab the
+  // tabs/filters/badges use throughout this page. UNASSIGNED is rendered as
+  // the "queue" bucket — replyagent uses the same wording.
+  const mapStatus = (raw?: string): string => {
+    const s = String(raw ?? '').toUpperCase();
+    if (s === 'COMPLETED') return 'completed';
+    if (s === 'UNASSIGNED') return 'queue';
+    if (s === 'ACTIVE') return 'active';
+    if (s === 'DELETED') return 'deleted';
+    return s.toLowerCase() || 'active';
+  };
+
   // Map backend conversations to frontend format
   const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => ({
     id: Number(item.id),
     name: item.contacts?.full_name || item.contacts?.first_name || 'Unknown',
     displayName: item.contacts?.full_name || item.contacts?.first_name || '',
-    phoneNumber: item.contacts?.mobile_number || '', 
+    phoneNumber: item.contacts?.mobile_number || '',
     lastMessage: item.last_message_text || '',
     time: item.updated_at || new Date().toISOString(),
     unread: item.unread_count || 0,
-    status: item.status?.toLowerCase() || 'pending',
+    status: mapStatus(item.status),
     assignedAgent: item.users?.name || null,
-    channel: item.modelable_type?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 
-             item.modelable_type?.toLowerCase().includes('facebook') ? 'messenger' : 'instagram'
+    channel: detectChannel(item.modelable_type),
   }));
 
 
@@ -370,9 +465,269 @@ export default function ConversationsInbox() {
   }));
 
   // Send message mutation
+  // Mark a conversation read on the backend (mirrors replyagent's
+  // `POST /inbox/seen/{inbox_id}`). Fires when the agent opens the thread so
+  // the unread badge clears immediately and other tabs of the same workspace
+  // see the change via the `inbox_read` socket event.
+  const markSeenMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/inbox/seen/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+    },
+  });
+
+  // ─── Phase 2 dialog state + mutations ─────────────────────────────
+
+  const [snoozeDialogOpen, setSnoozeDialogOpen] = useState(false);
+  const [snoozeUntil, setSnoozeUntil] = useState("");
+
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [reminderAt, setReminderAt] = useState("");
+  const [reminderText, setReminderText] = useState("");
+
+  // Reply / Note tab toggle for the compose area (replyagent has a Note tab
+  // for internal annotations that aren't sent to the customer).
+  const [composeMode, setComposeMode] = useState<"reply" | "note">("reply");
+
+  // AI transform popover state. Selects translate/correct/expand/shorten.
+  const [aiTransformOpen, setAiTransformOpen] = useState(false);
+
+  // Which message's reaction picker is open. Only one at a time so the picker
+  // doesn't double-render (and so clicking another bubble closes the previous
+  // one). null = no picker shown.
+  const [reactionPickerFor, setReactionPickerFor] = useState<number | null>(null);
+
+  // "Reply to specific message" state. Replyagent shows a small reply arrow
+  // next to each bubble on hover — clicking captures the message and shows a
+  // mini reply-to preview above the compose input.
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+
+  // (selectedChannels + activeFolderId are declared earlier — before the
+  // inbox list query that consumes them.)
+
+  // Template-send dialog (24h-window CTA opens this) + channels chip dropdown
+  // + folders CRUD modals state.
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [channelsDropdownOpen, setChannelsDropdownOpen] = useState(false);
+  const [folderModalOpen, setFolderModalOpen] = useState(false);
+  const [folderEditing, setFolderEditing] = useState<any | null>(null);
+  const [folderName, setFolderName] = useState("");
+
+  // Approved WhatsApp templates for the template dialog.
+  const { data: waTemplatesResponse } = useQuery<any>({
+    queryKey: ["/api/broadcasts/templates", "inbox-template-send"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/broadcasts/templates");
+      return res.json();
+    },
+    enabled: templateDialogOpen,
+  });
+  const waTemplates: any[] = waTemplatesResponse?.templates ?? [];
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+
+  const sendTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, {
+        wa_template_id: templateId,
+        type: "template",
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Template sent", description: "Customer can reply within 24h now." });
+      setTemplateDialogOpen(false);
+      setSelectedTemplateId("");
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const folderCreateMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/inbox/folders", { name });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Folder created" });
+      setFolderModalOpen(false);
+      setFolderName("");
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
+    },
+  });
+
+  const folderUpdateMutation = useMutation({
+    mutationFn: async (vars: { id: string; name: string }) => {
+      const res = await apiRequest("PATCH", `/api/inbox/folders/${vars.id}`, { name: vars.name });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Folder renamed" });
+      setFolderModalOpen(false);
+      setFolderEditing(null);
+      setFolderName("");
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
+    },
+  });
+
+  const folderDeleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/inbox/folders/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Folder deleted" });
+      if (activeFolderId === folderEditing?.id?.toString()) setActiveFolderId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
+    },
+  });
+
+  const snoozeMutation = useMutation({
+    mutationFn: async ({ id, until }: { id: number; until: string }) => {
+      const res = await apiRequest("PATCH", `/api/inbox/snooze/${id}`, { until });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Snoozed", description: "Conversation snoozed." });
+      setSnoozeDialogOpen(false);
+      setSnoozeUntil("");
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
+    },
+  });
+
+  const reminderMutation = useMutation({
+    mutationFn: async (vars: { inbox_id: number; schedule_at: string; text_message: string }) => {
+      const res = await apiRequest("POST", "/api/inbox/reminder", vars);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Reminder scheduled", description: "It will be sent at the chosen time." });
+      setReminderDialogOpen(false);
+      setReminderAt("");
+      setReminderText("");
+      if (selectedConversation) {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      }
+    },
+    onError: (err: Error) => {
+      toast({ title: "Couldn't schedule", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const deleteInboxMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/inbox/delete/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Deleted", description: "Conversation deleted." });
+      setSelectedConversation(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
+    },
+  });
+
+  const transformAiMutation = useMutation({
+    mutationFn: async (vars: { text: string; mode: string }) => {
+      const res = await apiRequest("POST", "/api/inbox/transform-ai", vars);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data?.output) setMessageText(data.output);
+      setAiTransformOpen(false);
+    },
+  });
+
+  const reactMutation = useMutation({
+    mutationFn: async (vars: { inboxId: number; messageId: number; reaction: string; message_type?: string }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/inbox/react/${vars.inboxId}/${vars.messageId}`,
+        { reaction: vars.reaction, message_type: vars.message_type },
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      if (selectedConversation) {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      }
+    },
+  });
+
+  // ─── Folders sidebar (uses already-existing /folders endpoints) ───
+
+  const { data: foldersResponse } = useQuery<any>({
+    queryKey: ["/api/inbox/folders"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/inbox/folders");
+      return res.json();
+    },
+  });
+  const folders: any[] = useMemo(() => {
+    if (Array.isArray(foldersResponse)) return foldersResponse;
+    if (Array.isArray(foldersResponse?.folders)) return foldersResponse.folders;
+    return [];
+  }, [foldersResponse]);
+
+  // ─── Real profile data (replaces hardcoded "Support Number 0123-123") ──
+
+  const { data: profileData } = useQuery<any>({
+    queryKey: ["/api/inbox/get-profile-data", selectedConversation],
+    queryFn: async () => {
+      if (!selectedConversation) return null;
+      const res = await apiRequest("GET", `/api/inbox/get-profile-data/${selectedConversation}`);
+      return res.json();
+    },
+    enabled: !!selectedConversation,
+  });
+
+  useEffect(() => {
+    if (!selectedConversation) return;
+    const conv = conversations.find((c) => c.id === selectedConversation);
+    if (conv && conv.unread > 0) {
+      markSeenMutation.mutate(selectedConversation);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConversation]);
+
+  // Auto-clear the right-pane selection when the currently selected
+  // conversation is no longer in the visible list (e.g. tab/filter switch
+  // moved it out, or it was deleted). Without this the thread keeps showing
+  // the previous chat with a "Unknown" header because `selectedConversation`
+  // doesn't map to anything in `conversations`. Wait until the new list has
+  // actually loaded before clearing — otherwise the in-flight refetch
+  // momentarily looks empty and we'd kick the user out of every chat on tab
+  // change.
+  useEffect(() => {
+    if (isLoadingInbox) return;
+    if (!selectedConversation) return;
+    const rows: any[] = (inboxResponse?.inbox ?? []) as any[];
+    const inList = rows.some((item) => Number(item.id) === selectedConversation);
+    if (!inList) {
+      setSelectedConversation(null);
+    }
+  }, [inboxResponse, isLoadingInbox, selectedConversation]);
+
   const sendMessageMutation = useMutation({
-    mutationFn: async (text: string) => {
-      const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, { message_text: text });
+    // Accept either a bare string (legacy) or a structured payload (the new
+    // shape with compose_mode / reply_to_message_id). Keeps backward
+    // compatibility for anywhere this mutation is fired from a quick-reply
+    // chip or the like that still passes a raw string.
+    mutationFn: async (input: string | { text: string; compose_mode?: string; reply_to_message_id?: number | null }) => {
+      const payload =
+        typeof input === "string"
+          ? { message_text: input }
+          : {
+              message_text: input.text,
+              compose_mode: input.compose_mode ?? "reply",
+              reply_to_message_id: input.reply_to_message_id ?? null,
+            };
+      const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, payload);
       return res.json();
     },
     onSuccess: () => {
@@ -390,6 +745,7 @@ export default function ConversationsInbox() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
       toast({
         title: "Status updated",
         description: "Conversation status has been updated successfully.",
@@ -400,13 +756,14 @@ export default function ConversationsInbox() {
   // Assign agent mutation
   const assignAgentMutation = useMutation({
     mutationFn: async ({ agentId }: { agentId: string | null }) => {
-      const res = await apiRequest("PATCH", `/api/inbox/assign/${selectedConversation}`, { 
+      const res = await apiRequest("PATCH", `/api/inbox/assign/${selectedConversation}`, {
         assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? currentUser.id : agentId)
       });
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
       toast({
         title: "Agent assigned",
         description: "The conversation has been assigned successfully.",
@@ -924,10 +1281,17 @@ export default function ConversationsInbox() {
     }
   };
 
-  // Handle send message
+  // Handle send message. Wraps the bare text + the composer's mode/reply
+  // context so the backend can persist this as a real reply, an internal note
+  // (Note tab), or a reply-quoted message.
   const handleSendMessage = () => {
-    // Audio recording is not yet fully implemented in backend endpoint but logic is here
-    sendMessageMutation.mutate(messageText);
+    if (!messageText.trim()) return;
+    sendMessageMutation.mutate({
+      text: messageText,
+      compose_mode: composeMode,                  // 'reply' | 'note'
+      reply_to_message_id: replyingTo?.id ?? null, // specific-message quote
+    } as any);
+    setReplyingTo(null);
   };
 
   // Remove attached file
@@ -1324,29 +1688,32 @@ export default function ConversationsInbox() {
         <div className="relative group h-full" data-sidebar>
           <Card className="flex flex-col border-r rounded-r-none h-full" style={{ width: `${sidebarWidth}px` }}>
             <CardHeader className="px-3 space-y-3 pb-3 flex-shrink-0">
-              {/* Tabs */}
+              {/* Tabs — replyagent left-nav set, exact order + counts.
+                  All / Read / Unread / Queue / Upcoming / Done.
+                  Counts come from /inbox/count (workspace-global) so they
+                  don't change when you switch tabs. */}
               <div className="px-3 flex justify-between border-b pb-0 w-full">
-                {["All", "Queued", "Active", "Completed", "Spam"].map((tab) => {
-                  const tabKey = tab.toLowerCase();
-                  const count = tabKey === "all"
-                    ? conversations.length
-                    : tabKey === "active"
-                      ? conversations.filter((c: Conversation) => c.status === "active" && c.assignedAgent === "self").length
-                      : conversations.filter((c: Conversation) => c.status === tabKey).length;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tabKey)}
-                      className={`flex flex-col items-center flex-1 px-2 py-2 text-xs font-medium border-b-2 transition-colors ${activeTab === tabKey
+                {[
+                  { key: "all",       label: "All",       count: tabCounts.all },
+                  { key: "read",      label: "Read",      count: tabCounts.read },
+                  { key: "unread",    label: "Unread",    count: tabCounts.unread },
+                  { key: "queue",     label: "Queue",     count: tabCounts.queue },
+                  { key: "upcoming",  label: "Upcoming",  count: tabCounts.upcoming },
+                  { key: "completed", label: "Done",      count: tabCounts.completed },
+                ].map(({ key, label, count }) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    className={`flex flex-col items-center flex-1 px-1.5 py-2 text-xs font-medium border-b-2 transition-colors ${
+                      activeTab === key
                         ? "border-b-primary text-foreground"
                         : "border-b-transparent text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
-                        }`}
-                    >
-                      <span>{tab}</span>
-                      <span className="text-[10px] opacity-60">{count}</span>
-                    </button>
-                  );
-                })}
+                    }`}
+                  >
+                    <span className="whitespace-nowrap">{label}</span>
+                    <span className="text-[10px] opacity-60">{count}</span>
+                  </button>
+                ))}
               </div>
 
               {/* Search and Action Buttons */}
@@ -1417,6 +1784,91 @@ export default function ConversationsInbox() {
                           minWidth: '320px',
                           marginLeft: '-140px' // Center align somewhat or adjust to keep on screen
                         }}>
+                          {/* Channels chip section (replyagent's "6 Canais"). */}
+                          <div className="mb-3 pb-3 border-b border-border/60">
+                            <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5">Channels</p>
+                            <div className="flex flex-wrap gap-1">
+                              {(["whatsapp","zapi","telegram","messenger","instagram","sms","webchat"] as const).map((ch) => {
+                                const isOn = selectedChannels.includes(ch);
+                                return (
+                                  <button
+                                    key={ch}
+                                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                                      isOn
+                                        ? "bg-primary/10 border-primary/30 text-primary"
+                                        : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary/30"
+                                    }`}
+                                    onClick={() =>
+                                      setSelectedChannels((prev) =>
+                                        isOn ? prev.filter((c) => c !== ch) : [...prev, ch],
+                                      )
+                                    }
+                                  >
+                                    {ch}
+                                  </button>
+                                );
+                              })}
+                              {selectedChannels.length > 0 && (
+                                <button
+                                  className="text-[10px] text-muted-foreground hover:text-red-500 ml-1"
+                                  onClick={() => setSelectedChannels([])}
+                                >
+                                  clear
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Folders chip section. "+" creates; right-click renames/deletes. */}
+                          <div className="mb-3 pb-3 border-b border-border/60">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <p className="text-[10px] font-semibold uppercase text-muted-foreground">Folders</p>
+                              <button
+                                className="text-[10px] font-bold text-muted-foreground hover:text-foreground"
+                                onClick={() => {
+                                  setFolderEditing(null);
+                                  setFolderName("");
+                                  setFolderModalOpen(true);
+                                }}
+                                title="Create folder"
+                              >
+                                + New
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              <button
+                                className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                                  activeFolderId === null
+                                    ? "bg-primary/10 border-primary/30 text-primary"
+                                    : "border-slate-200 dark:border-slate-700 text-muted-foreground"
+                                }`}
+                                onClick={() => setActiveFolderId(null)}
+                              >
+                                All folders
+                              </button>
+                              {folders.map((f: any) => (
+                                <button
+                                  key={String(f.id)}
+                                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                                    activeFolderId === String(f.id)
+                                      ? "bg-primary/10 border-primary/30 text-primary"
+                                      : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary/30"
+                                  }`}
+                                  onClick={() => setActiveFolderId(String(f.id))}
+                                  onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    setFolderEditing(f);
+                                    setFolderName(f.name ?? "");
+                                    setFolderModalOpen(true);
+                                  }}
+                                  title={`${f.name} — right-click to rename/delete`}
+                                >
+                                  {f.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
                           {filters.length === 0 ? (
                             <div className="text-center py-6">
                               <h3 className="font-semibold text-sm mb-1">No filters applied</h3>
@@ -1692,7 +2144,22 @@ export default function ConversationsInbox() {
                 <div className="flex items-center gap-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="hover-elevate" data-testid="button-refresh">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover-elevate"
+                        data-testid="button-refresh"
+                        onClick={() => {
+                          // Refresh BOTH the chat thread + the list + the tab
+                          // counts so anything written by another agent shows
+                          // up immediately without a full page reload.
+                          if (selectedConversation) {
+                            queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+                          }
+                          queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+                          queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
+                        }}
+                      >
                         <RefreshCw size={18} />
                       </Button>
                     </TooltipTrigger>
@@ -1722,6 +2189,30 @@ export default function ConversationsInbox() {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
+                  {/* Quick "Mark as Done" — replyagent has this as a primary
+                      header action, not buried in the kebab menu. */}
+                  {selectedConversation && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="hover-elevate gap-1.5 text-emerald-600 dark:text-emerald-400"
+                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "completed"}
+                          onClick={() => {
+                            updateStatusMutation.mutate({ id: selectedConversation, status: "completed" });
+                            setAssignedAgent(null);
+                          }}
+                          data-testid="button-mark-done"
+                        >
+                          <CheckCircle size={16} />
+                          <span className="text-xs font-medium">Mark as done</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Close this conversation</TooltipContent>
+                    </Tooltip>
+                  )}
+
                   {selectedConversation && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -1730,46 +2221,61 @@ export default function ConversationsInbox() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-white dark:bg-background">
+                        {/* Unassign — read current user from auth instead of the
+                            broken `=== "self"` sentinel. Available when the chat
+                            is assigned to me. */}
+                        {(() => {
+                          const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
+                          const me = getUserInfo() as any;
+                          const myName = me?.name || me?.email || null;
+                          const isMine = !!myName && conv?.assignedAgent === myName;
+                          return (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (selectedConversation) {
+                                  assignAgentMutation.mutate({ agentId: "null" });
+                                  setAssignedAgent(null);
+                                }
+                              }}
+                              disabled={!isMine}
+                              className={!isMine ? "opacity-50 cursor-not-allowed" : ""}
+                            >
+                              <UserX size={16} className="mr-2" />
+                              Unassign Chat
+                            </DropdownMenuItem>
+                          );
+                        })()}
+                        <DropdownMenuSeparator />
+
+                        {/* Snooze — opens datetime picker dialog */}
+                        <DropdownMenuItem
+                          onClick={() => setSnoozeDialogOpen(true)}
+                        >
+                          <Clock size={16} className="mr-2" />
+                          Snooze conversation
+                        </DropdownMenuItem>
+
+                        {/* Schedule Reminder — opens reminder dialog */}
+                        <DropdownMenuItem
+                          onClick={() => setReminderDialogOpen(true)}
+                        >
+                          <Clock size={16} className="mr-2" />
+                          Schedule reminder
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        {/* Delete conversation (soft delete) */}
                         <DropdownMenuItem
                           onClick={() => {
                             if (selectedConversation) {
-                              assignAgentMutation.mutate({ agentId: "null" }); // Pass "null" string or handled null
-                              setAssignedAgent(null);
+                              deleteInboxMutation.mutate(selectedConversation);
                             }
                           }}
-                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.assignedAgent !== "self"}
-                          className={conversations.find((c: Conversation) => c.id === selectedConversation)?.assignedAgent !== "self" ? "opacity-50 cursor-not-allowed" : ""}
+                          className="text-red-600 dark:text-red-400"
                         >
-                          <UserX size={16} className="mr-2" />
-                          Unassign Chat
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                         <DropdownMenuItem
-                          onClick={() => {
-                            if (selectedConversation) {
-                              updateStatusMutation.mutate({ id: selectedConversation, status: "completed" });
-                              setAssignedAgent(null);
-                            }
-                          }}
-                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "completed"}
-                          className={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "completed" ? "opacity-50 cursor-not-allowed" : ""}
-                        >
-                          <CheckCircle size={16} className="mr-2" />
-                          Mark as Completed
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            if (selectedConversation) {
-                              updateStatusMutation.mutate({ id: selectedConversation, status: "spam" });
-                              setAssignedAgent(null);
-                            }
-                          }}
-                          disabled={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "spam"}
-                          className={conversations.find((c: Conversation) => c.id === selectedConversation)?.status === "spam" ? "opacity-50 cursor-not-allowed" : ""}
-                        >
-                          <AlertOctagon size={16} className="mr-2" />
-                          Mark as Spam
+                          <Trash2 size={16} className="mr-2" />
+                          Delete conversation
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -1791,8 +2297,84 @@ export default function ConversationsInbox() {
                             <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">{formatMessageDate(msg.time)}</span>
                           </div>
                         )}
-                        <div className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
-                          <div id={`message-${msg.id}`} className={`max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
+                        <div className={`group/msg flex items-center gap-2 ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
+                          {/* Action icons (reply arrow + emoji react) — appear
+                              OUTSIDE the bubble on hover, on the side opposite
+                              to the bubble (left of agent, right of user) so
+                              they don't overlap content. The emoji picker uses
+                              Radix Popover so it (a) renders in a portal at
+                              document.body (escapes the ScrollArea's overflow
+                              clipping) and (b) flips to the opposite side
+                              automatically when there isn't room. */}
+                          {msg.from === "agent" && selectedConversation && (
+                            <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity flex items-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReplyingTo(msg);
+                                }}
+                                className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
+                                title="Reply to this message"
+                                data-testid={`button-reply-${msg.id}`}
+                              >
+                                <CornerUpLeft size={13} className="text-muted-foreground" />
+                              </button>
+                              <Popover
+                                open={reactionPickerFor === msg.id}
+                                onOpenChange={(open) => setReactionPickerFor(open ? msg.id : null)}
+                              >
+                                <PopoverTrigger asChild>
+                                  <button
+                                    className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
+                                    title="Add reaction"
+                                    data-testid={`button-react-${msg.id}`}
+                                  >
+                                    <Smile size={13} className="text-muted-foreground" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  side="top"
+                                  align="end"
+                                  sideOffset={8}
+                                  collisionPadding={16}
+                                  className="p-0 border-0 bg-transparent shadow-none w-auto"
+                                >
+                                  <Picker
+                                    data={data}
+                                    onEmojiSelect={(emoji: any) => {
+                                      reactMutation.mutate({
+                                        inboxId: selectedConversation,
+                                        messageId: msg.id,
+                                        reaction: emoji.native,
+                                      });
+                                      setReactionPickerFor(null);
+                                    }}
+                                    theme="light"
+                                    previewPosition="none"
+                                    skinTonePosition="search"
+                                    maxFrequentRows={1}
+                                    perLine={8}
+                                    set="native"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          )}
+
+                          <div id={`message-${msg.id}`} className={`relative max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
+                            {/* Existing reactions — chip row at top of bubble. */}
+                            {Array.isArray((msg as any).reactions) && (msg as any).reactions.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-1">
+                                {(msg as any).reactions.map((r: any, ri: number) => (
+                                  <span
+                                    key={ri}
+                                    className="text-[11px] bg-white/70 dark:bg-slate-900/70 px-1.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700"
+                                  >
+                                    {r.reaction ?? r.emoji ?? ''}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                             {msg.text && <p className="text-sm">{msg.text}</p>}
 
                             {/* Images */}
@@ -1907,6 +2489,66 @@ export default function ConversationsInbox() {
                               )}
                             </p>
                           </div>
+
+                          {/* Action icons for INCOMING (user) bubbles —
+                              positioned to the RIGHT of the bubble. Picker
+                              uses Radix Popover (portal + auto collision
+                              flip) so it never gets clipped by the scroll
+                              area, regardless of where the message sits. */}
+                          {msg.from === "user" && selectedConversation && (
+                            <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity flex items-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReplyingTo(msg);
+                                }}
+                                className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
+                                title="Reply to this message"
+                                data-testid={`button-reply-${msg.id}`}
+                              >
+                                <CornerUpLeft size={13} className="text-muted-foreground" />
+                              </button>
+                              <Popover
+                                open={reactionPickerFor === msg.id}
+                                onOpenChange={(open) => setReactionPickerFor(open ? msg.id : null)}
+                              >
+                                <PopoverTrigger asChild>
+                                  <button
+                                    className="h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-110 transition-transform"
+                                    title="Add reaction"
+                                    data-testid={`button-react-${msg.id}`}
+                                  >
+                                    <Smile size={13} className="text-muted-foreground" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  side="top"
+                                  align="start"
+                                  sideOffset={8}
+                                  collisionPadding={16}
+                                  className="p-0 border-0 bg-transparent shadow-none w-auto"
+                                >
+                                  <Picker
+                                    data={data}
+                                    onEmojiSelect={(emoji: any) => {
+                                      reactMutation.mutate({
+                                        inboxId: selectedConversation,
+                                        messageId: msg.id,
+                                        reaction: emoji.native,
+                                      });
+                                      setReactionPickerFor(null);
+                                    }}
+                                    theme="light"
+                                    previewPosition="none"
+                                    skinTonePosition="search"
+                                    maxFrequentRows={1}
+                                    perLine={8}
+                                    set="native"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          )}
                         </div>
                       </React.Fragment>
                     );
@@ -1973,10 +2615,93 @@ export default function ConversationsInbox() {
                     </div>
                   )}
 
+                  {/* WhatsApp 24h-window CTA. Meta only allows free-form
+                      replies within 24h of the last INCOMING message; outside
+                      that window agents must send an approved template. We
+                      look at the most recent inbound message timestamp and
+                      show the template CTA when > 24h have passed (and only
+                      for WhatsApp conversations). */}
+                  {(() => {
+                    const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
+                    if (!conv || conv.channel !== 'whatsapp') return null;
+                    const lastInbound = [...(messages ?? [])]
+                      .reverse()
+                      .find((m: Message) => m.from === 'user');
+                    if (!lastInbound) return null;
+                    const hoursSince = (Date.now() - new Date(lastInbound.time).getTime()) / (1000 * 60 * 60);
+                    if (hoursSince <= 24) return null;
+                    return (
+                      <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-md flex items-center gap-2">
+                        <AlertCircle size={14} className="text-amber-600 flex-shrink-0" />
+                        <p className="text-[11px] text-amber-700 dark:text-amber-300 flex-1">
+                          Last interaction was {Math.floor(hoursSince)}h ago. WhatsApp requires an approved template to reach this contact now.
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-amber-300 hover:bg-amber-100"
+                          onClick={() => setTemplateDialogOpen(true)}
+                          data-testid="button-send-template"
+                        >
+                          Send Template
+                        </Button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Reply-to preview banner — shows when a specific message
+                      was selected via the reply-arrow button. Click X to
+                      cancel. The selected message snippet is sent along with
+                      the next outbound so the recipient sees a reply quote. */}
+                  {replyingTo && (
+                    <div className="mb-2 p-2 bg-slate-50 dark:bg-slate-800/50 border-l-4 border-primary rounded-r flex items-start gap-2">
+                      <CornerUpLeft size={14} className="text-primary flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold text-primary">
+                          Replying to {replyingTo.from === "agent" ? "your message" : "this message"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">{replyingTo.text || "(media)"}</p>
+                      </div>
+                      <button
+                        onClick={() => setReplyingTo(null)}
+                        className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                        title="Cancel reply"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Reply / Note tabs (mirrors replyagent). Note mode tags
+                      the outgoing record with type='note' so it shows on the
+                      thread as an internal annotation without sending to the
+                      customer. */}
+                  <div className="flex items-center gap-4 border-b mb-2 pb-1 text-xs font-medium">
+                    {(["reply", "note"] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setComposeMode(m)}
+                        className={`pb-1 transition-colors ${
+                          composeMode === m
+                            ? "border-b-2 border-primary text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        data-testid={`tab-compose-${m}`}
+                      >
+                        {m === "reply" ? "Reply" : "Note"}
+                      </button>
+                    ))}
+                    {composeMode === "note" && (
+                      <span className="text-[10px] text-amber-600 ml-auto">
+                        Internal — not sent to customer
+                      </span>
+                    )}
+                  </div>
+
                   <div className="flex gap-2 items-center">
                     <Input
-                      placeholder="Type a message..."
-                      className="flex-1"
+                      placeholder={composeMode === "note" ? "Write an internal note..." : "Type a message..."}
+                      className={`flex-1 ${composeMode === "note" ? "bg-amber-50 dark:bg-amber-900/10" : ""}`}
                       data-testid="input-message"
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
@@ -1987,6 +2712,37 @@ export default function ConversationsInbox() {
                         }
                       }}
                     />
+
+                    {/* AI Transform — translate / correct / expand / shorten */}
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 [border-color:hsl(var(--input))]"
+                        title="AI text helper"
+                        disabled={!messageText.trim() || transformAiMutation.isPending}
+                        onClick={() => setAiTransformOpen((v) => !v)}
+                      >
+                        {transformAiMutation.isPending ? (
+                          <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                          <span className="text-xs font-bold">AI</span>
+                        )}
+                      </Button>
+                      {aiTransformOpen && (
+                        <div className="absolute bottom-12 right-0 z-50 bg-white dark:bg-slate-900 border rounded-md shadow-lg p-1 w-40">
+                          {["correct", "translate", "expand", "shorten"].map((m) => (
+                            <button
+                              key={m}
+                              onClick={() => transformAiMutation.mutate({ text: messageText, mode: m })}
+                              className="w-full text-left text-xs px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
+                            >
+                              {m.charAt(0).toUpperCase() + m.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div className="relative">
                       <Button
                         variant="ghost"
@@ -2138,6 +2894,7 @@ export default function ConversationsInbox() {
               onUpdateNotes={handleUpdateNotes}
               messages={messages || []}
               onScrollToMessage={handleScrollToMessage}
+              profileData={profileData}
             />
           )
         }
@@ -2711,10 +3468,184 @@ export default function ConversationsInbox() {
           )
         }
 
-
-
-
       </div>
-    </div >
+
+      {/* Snooze dialog — pick a future datetime; sending empty unsnoozes. */}
+      <Dialog open={snoozeDialogOpen} onOpenChange={setSnoozeDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Snooze conversation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Pick a future time. The conversation will move out of your inbox and reappear at the chosen moment.
+            </p>
+            <Input
+              type="datetime-local"
+              value={snoozeUntil}
+              onChange={(e) => setSnoozeUntil(e.target.value)}
+              data-testid="input-snooze-until"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSnoozeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                selectedConversation &&
+                snoozeMutation.mutate({
+                  id: selectedConversation,
+                  until: new Date(snoozeUntil).toISOString(),
+                })
+              }
+              disabled={!snoozeUntil || snoozeMutation.isPending}
+            >
+              {snoozeMutation.isPending ? "Snoozing…" : "Snooze"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template-send dialog (WhatsApp 24h-window CTA). Lists workspace's
+          approved templates from /api/broadcasts/templates and POSTs to the
+          existing send endpoint with type='template' + wa_template_id. */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send WhatsApp Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Pick an approved template to reach this contact outside the 24-hour reply window.
+            </p>
+            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a template…" />
+              </SelectTrigger>
+              <SelectContent>
+                {waTemplates.length === 0 ? (
+                  <div className="px-2 py-1 text-xs text-muted-foreground">No approved templates</div>
+                ) : (
+                  waTemplates.map((t: any) => (
+                    <SelectItem key={String(t.id)} value={String(t.id)}>
+                      {t.name} <span className="text-muted-foreground">({t.language})</span>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => sendTemplateMutation.mutate(selectedTemplateId)}
+              disabled={!selectedTemplateId || sendTemplateMutation.isPending}
+            >
+              {sendTemplateMutation.isPending ? "Sending…" : "Send"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Folder create / rename / delete dialog. Reuses the same modal for
+          both flows — when folderEditing is set, we're renaming; otherwise
+          we're creating. Delete button only shows in the rename mode. */}
+      <Dialog open={folderModalOpen} onOpenChange={setFolderModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{folderEditing ? "Rename folder" : "New folder"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Input
+              placeholder="Folder name"
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+              maxLength={30}
+            />
+          </div>
+          <DialogFooter className="flex items-center justify-between">
+            {folderEditing && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => folderDeleteMutation.mutate(String(folderEditing.id))}
+              >
+                Delete
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setFolderModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() =>
+                  folderEditing
+                    ? folderUpdateMutation.mutate({ id: String(folderEditing.id), name: folderName })
+                    : folderCreateMutation.mutate(folderName)
+                }
+                disabled={!folderName.trim()}
+              >
+                {folderEditing ? "Save" : "Create"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reminder dialog — schedule a future outbound reminder. Backend writes
+          remind_at on a pending message row; existing cron picks it up. */}
+      <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule reminder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Reminders are supported on WhatsApp, Telegram, and Z-API conversations only.
+            </p>
+            <div>
+              <label className="text-xs font-medium">When</label>
+              <Input
+                type="datetime-local"
+                value={reminderAt}
+                onChange={(e) => setReminderAt(e.target.value)}
+                data-testid="input-reminder-at"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium">Message</label>
+              <Textarea
+                placeholder="Reminder text…"
+                value={reminderText}
+                onChange={(e) => setReminderText(e.target.value)}
+                rows={3}
+                data-testid="input-reminder-text"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReminderDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                selectedConversation &&
+                reminderMutation.mutate({
+                  inbox_id: selectedConversation,
+                  schedule_at: new Date(reminderAt).toISOString(),
+                  text_message: reminderText,
+                })
+              }
+              disabled={!reminderAt || !reminderText.trim() || reminderMutation.isPending}
+            >
+              {reminderMutation.isPending ? "Scheduling…" : "Schedule"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

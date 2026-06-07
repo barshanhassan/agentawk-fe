@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
-import ContactDetailsModal from "@/components/ContactDetailsModal";
+import ContactProfileModal from "@/components/ContactProfileModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
@@ -1523,7 +1523,7 @@ export default function ContactsSection() {
         </DialogContent>
       </Dialog>
 
-      <ContactDetailsModal
+      <ContactProfileModal
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
         contact={selectedContactForDetails}

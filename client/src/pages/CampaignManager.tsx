@@ -163,6 +163,36 @@ export default function CampaignManager() {
     }
   });
 
+  // Channels (WhatsApp accounts) — drives which channel the new broadcast
+  // gets bound to. We auto-select the first one so the existing create form
+  // doesn't need an extra picker; users with multiple accounts can extend
+  // later. Without a channel the backend rejects the create.
+  const { data: channelsResponse } = useQuery<any>({
+    queryKey: ["/api/broadcasts/channels"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/broadcasts/channels");
+      return res.json();
+    },
+  });
+  const channels: any[] = channelsResponse?.channels ?? [];
+  const defaultChannel = channels[0] ?? null;
+
+  // Real WhatsApp templates (approved only) — replaces the previous hardcoded
+  // mock list. The shape returned by the backend (`components` array, Meta
+  // format) gets flattened into the {header, body, footer, variables, buttons}
+  // shape PreviewV2 + the form selects expect.
+  const { data: templatesResponse } = useQuery<any>({
+    queryKey: ["/api/broadcasts/templates", defaultChannel?.channelable_id ?? ""],
+    queryFn: async () => {
+      const channelParam = defaultChannel?.channelable_id
+        ? `?channelable_id=${defaultChannel.channelable_id}`
+        : "";
+      const res = await apiRequest("GET", `/api/broadcasts/templates${channelParam}`);
+      return res.json();
+    },
+    enabled: !!defaultChannel,
+  });
+
   const createBroadcastMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/broadcasts", data);
@@ -218,67 +248,105 @@ export default function CampaignManager() {
     }
   });
 
+  // Real WhatsApp templates. The backend returns each Meta `components` array;
+  // we flatten the HEADER/BODY/FOOTER/BUTTONS entries into the simpler shape
+  // PreviewV2 + the existing form code already understand. Variables are
+  // pulled out of the body text by counting `{{1}}` `{{2}}` placeholders.
+  // NOTE: declared BEFORE `campaigns` because that memo references this
+  // value — flipping the order causes a TDZ runtime crash.
+  const whatsappTemplates = useMemo(() => {
+    const list: any[] = templatesResponse?.templates ?? [];
+    return list.map((t: any) => {
+      const components: any[] = Array.isArray(t.components) ? t.components : [];
+      const header = components.find((c) => c?.type === "HEADER");
+      const body = components.find((c) => c?.type === "BODY");
+      const footer = components.find((c) => c?.type === "FOOTER");
+      const buttonsBlock = components.find((c) => c?.type === "BUTTONS");
+
+      const bodyText: string = body?.text ?? "";
+      const placeholderCount = (bodyText.match(/\{\{\d+\}\}/g) ?? []).length;
+      const variables = Array.from({ length: placeholderCount }, (_, i) => `param_${i + 1}`);
+      const variableSamples: Record<string, string> = {};
+      variables.forEach((v) => (variableSamples[v] = ""));
+
+      return {
+        id: Number(t.id),
+        backend_id: t.id, // preserve string form for write-back
+        name: t.name,
+        category: t.category,
+        language: t.language,
+        body: bodyText,
+        header: header?.text ?? "",
+        footer: footer?.text ?? "",
+        variables,
+        variableSamples,
+        buttons: Array.isArray(buttonsBlock?.buttons)
+          ? buttonsBlock.buttons.map((b: any, idx: number) => ({
+              id: idx + 1,
+              type: b?.type ?? "quick-reply",
+              buttonText: b?.text ?? "",
+              websiteUrl: b?.url ?? "",
+              phoneNumber: b?.phone_number ?? "",
+            }))
+          : [],
+      };
+    });
+  }, [templatesResponse]);
+
   const campaigns = useMemo(() => {
     if (!broadcastsData?.broadcasts) return [];
-    return (broadcastsData.broadcasts as any[]).map((b: any) => ({
-      id: Number(b.id),
-      name: b.name,
-      type: b.channel_type === "whatsapp" ? "Broadcast" : "API Triggered",
-      messageType: b.scheduled_at ? "Scheduled" : "Immediate",
-      sent: b.total_sent || 0,
-      delivered: b.total_sent || 0, // Placeholder
-      status: b.status?.toLowerCase() || "draft",
-      whatsAppTemplateName: b.wa_template_id ? `template_${b.wa_template_id}` : "Custom",
-      startDate: b.created_at ? new Date(b.created_at) : undefined,
-      scheduledAt: b.scheduled_at ? new Date(b.scheduled_at) : undefined,
-      repeatFrequency: b.repeat_frequency || "",
-      dailyRepeatInterval: b.daily_repeat_interval || "1",
-      weeklyRepeatDays: Array.isArray(b.weekly_repeat_days) ? b.weekly_repeat_days : [],
-      monthlyRepeatDates: Array.isArray(b.monthly_repeat_dates) ? b.monthly_repeat_dates : [],
-      deliverInTimezone: !!b.deliver_in_timezone,
-      csvFileName: b.csv_filename || "",
-      recurringStartDate: b.start_date ? new Date(b.start_date) : undefined,
-      recurringEndDate: b.end_date ? new Date(b.end_date) : undefined,
-      recurringTime: b.recurring_time ? b.recurring_time : { hour: "", minute: "", period: "" },
-      endDate: b.end_date ? new Date(b.end_date) : undefined,
-      neverEnds: !!b.never_ends,
-      // and other fields as needed
-    })) as Campaign[];
-  }, [broadcastsData]);
+    const templateById = new Map<number, any>();
+    whatsappTemplates.forEach((t: any) => templateById.set(t.id, t));
+
+    // Backend status (lowercase: draft / pending / in_progress / completed /
+    // failed) → the UI status vocab used by the badge colours and filters.
+    const statusToUi: Record<string, string> = {
+      draft: "draft",
+      pending: "scheduled",
+      in_progress: "sending",
+      completed: "sent",
+      failed: "failed",
+    };
+
+    return (broadcastsData.broadcasts as any[]).map((b: any) => {
+      const rawStatus = String(b.status ?? "draft").toLowerCase();
+      const uiStatus = statusToUi[rawStatus] ?? rawStatus;
+      const metaType = b.metadata?.type ?? (b.channel_type === "whatsapp" ? "Broadcast" : "API Triggered");
+      const metaMessageType =
+        b.metadata?.messageType ?? b.metadata?.message_type ?? (b.scheduled_at ? "Scheduled" : "Immediate");
+      const templateRow = b.wa_template_id ? templateById.get(Number(b.wa_template_id)) : null;
+
+      return {
+        id: Number(b.id),
+        name: b.name,
+        type: metaType,
+        messageType: metaMessageType,
+        sent: b.total_sent || 0,
+        delivered: b.total_sent || 0, // Per-recipient delivery tracking not wired yet; falls back to total_sent
+        status: uiStatus,
+        whatsAppTemplateName: templateRow?.name ?? (b.metadata?.whatsAppTemplateName ?? ""),
+        startDate: b.created_at ? new Date(b.created_at) : undefined,
+        scheduledAt: b.scheduled_at ? new Date(b.scheduled_at) : undefined,
+        repeatFrequency: b.repeat_frequency || "",
+        dailyRepeatInterval: b.daily_repeat_interval || "1",
+        weeklyRepeatDays: Array.isArray(b.weekly_repeat_days) ? b.weekly_repeat_days : [],
+        monthlyRepeatDates: Array.isArray(b.monthly_repeat_dates) ? b.monthly_repeat_dates : [],
+        deliverInTimezone: !!b.deliver_in_timezone,
+        csvFileName: b.csv_filename || "",
+        recurringStartDate: b.start_date ? new Date(b.start_date) : undefined,
+        recurringEndDate: b.end_date ? new Date(b.end_date) : undefined,
+        recurringTime: b.recurring_time ? b.recurring_time : { hour: "", minute: "", period: "" },
+        endDate: b.end_date ? new Date(b.end_date) : undefined,
+        neverEnds: !!b.never_ends,
+      };
+    }) as Campaign[];
+  }, [broadcastsData, whatsappTemplates]);
 
   const handleConfirmDelete = () => {
     if (campaignToDelete) {
       deleteMutation.mutate(campaignToDelete.id);
     }
   };
-
-  const whatsappTemplates = [
-    {
-      id: 1,
-      name: "welcome_message",
-      body: "Hi there! Welcome to our platform. We're excited to have you here! 🎉",
-      header: "Welcome to {{company}}",
-      footer: "Thank you for choosing us",
-      variables: ["company"],
-      buttons: [
-        { id: 1, type: "visit-website", buttonText: "Visit Website", urlType: "dynamic", websiteUrl: "https://example.com" },
-        { id: 2, type: "quick-reply", buttonText: "Learn More" }
-      ],
-      variableSamples: {
-        company: "Acme Corp"
-      }
-    },
-    {
-      id: 2,
-      name: "order_confirmation",
-      body: "Your order #12345 has been confirmed! We'll send you tracking details once it ships. Thank you for your purchase! 📦",
-    },
-    {
-      id: 3,
-      name: "promotional_offer",
-      body: "🔥 Special Offer! Get 25% off your next purchase with code SAVE25. Valid until midnight tonight! Shop now: link.com/shop",
-    },
-  ];
 
   // Modal states
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
@@ -701,67 +769,136 @@ export default function CampaignManager() {
     setCsvSort(null);
   };
 
-  const handleCreateCampaign = (status: "draft" | "scheduled") => {
-    const campaignData: Campaign = {
-      id: editingCampaignId || Date.now(), // Preserve ID if editing, otherwise generate new
-      name: campaignName,
-      type: "API Triggered",
-      messageType: "Recurring",
-      sent: 0,
-      delivered: 0,
-      status: status,
-      startDate: campaignStartDate,
-      endDate: neverEnds ? undefined : campaignEndDate,
-      neverEnds: neverEnds,
-      whatsAppTemplateName: selectedWhatsAppTemplate!,
-    };
+  // Helper: build the proper backend payload from the form state. The wire
+  // shape is what the new `BroadcastsService` expects — flat schema columns
+  // plus a `metadata` blob carrying all the UI-only / recurring extras.
+  const buildBroadcastPayload = (
+    type: "API Triggered" | "Broadcast",
+    uiStatus: "draft" | "scheduled",
+  ) => {
+    const templateRow = whatsappTemplates.find((t: any) => t.name === selectedWhatsAppTemplate);
+    const wa_template_id = templateRow?.backend_id ?? templateRow?.id ?? null;
 
-    if (editingCampaignId) {
-      updateBroadcastMutation.mutate({ id: editingCampaignId, data: campaignData });
+    // First scheduled slot drives `scheduled_at`. Backend treats "pending"
+    // broadcasts as ready-for-cron; the actual gate is `scheduled_at <= NOW()`.
+    let scheduled_at: string | null = null;
+    if (uiStatus === "scheduled") {
+      if (type === "API Triggered" && campaignStartDate) {
+        scheduled_at = campaignStartDate.toISOString();
+      } else if (type === "Broadcast") {
+        if (broadcastCampaignType === "Scheduled" && schedules[0]?.date) {
+          scheduled_at = new Date(schedules[0].date).toISOString();
+        } else if (broadcastCampaignType === "Recurring" && recurringStartDate) {
+          scheduled_at = new Date(recurringStartDate).toISOString();
+        }
+      }
+    }
+
+    const metadata: Record<string, any> = {
+      type,
+      messageType: type === "API Triggered" ? "Recurring" : broadcastCampaignType,
+      whatsAppTemplateName: selectedWhatsAppTemplate,
+    };
+    if (type === "API Triggered") {
+      Object.assign(metadata, {
+        startDate: campaignStartDate ?? null,
+        endDate: neverEnds ? null : campaignEndDate ?? null,
+        neverEnds,
+      });
     } else {
-      createBroadcastMutation.mutate(campaignData);
+      Object.assign(metadata, {
+        csvFileName: csvFile?.name ?? null,
+        deliverInTimezone,
+      });
+      if (broadcastCampaignType === "Scheduled") metadata.schedules = schedules;
+      if (broadcastCampaignType === "Recurring") {
+        Object.assign(metadata, {
+          recurringStartDate,
+          recurringEndDate,
+          recurringTime,
+          repeatFrequency,
+          dailyRepeatInterval,
+          weeklyRepeatDays,
+          monthlyRepeatDates,
+        });
+      }
+    }
+
+    return {
+      name: campaignName,
+      channel_type: "whatsapp" as const,
+      channelable_id: defaultChannel?.channelable_id ?? null,
+      channelable_type: defaultChannel?.channelable_type ?? null,
+      wa_template_id,
+      scheduled_at,
+      status: uiStatus, // backend normalises "scheduled" → "pending"
+      metadata,
+    };
+  };
+
+  const handleCreateCampaign = (status: "draft" | "scheduled") => {
+    if (!defaultChannel) {
+      toast({
+        title: "No WhatsApp account",
+        description: "Connect a WhatsApp account before creating campaigns.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const payload = buildBroadcastPayload("API Triggered", status);
+    if (editingCampaignId) {
+      updateBroadcastMutation.mutate({ id: editingCampaignId, data: payload });
+    } else {
+      createBroadcastMutation.mutate(payload);
     }
     setCreateOpen(false);
-    setEditingCampaignId(null); // Reset editingCampaignId
+    setEditingCampaignId(null);
     resetCreateCampaignForm();
   };
 
   const handleCreateBroadcastCampaign = (status: "draft" | "scheduled") => {
-    if (broadcastCampaignType === 'Immediate') {
-      setDeliverInTimezone(false);
+    if (!defaultChannel) {
+      toast({
+        title: "No WhatsApp account",
+        description: "Connect a WhatsApp account before creating campaigns.",
+        variant: "destructive",
+      });
+      return;
     }
-
-    const campaignData: Campaign = {
-      id: editingCampaignId || Date.now(), // Preserve ID if editing, otherwise generate new
-      name: campaignName,
-      type: "Broadcast",
-      messageType: broadcastCampaignType,
-      sent: 0,
-      delivered: 0,
-      status: status,
-      whatsAppTemplateName: selectedWhatsAppTemplate!,
-      csvFileName: csvFile?.name,
-      csvContent: csvData,
-      schedules: broadcastCampaignType === 'Scheduled' ? schedules : undefined,
-      recurringStartDate: broadcastCampaignType === 'Recurring' ? recurringStartDate : undefined,
-      recurringEndDate: broadcastCampaignType === 'Recurring' ? recurringEndDate : undefined,
-      recurringTime: broadcastCampaignType === 'Recurring' ? recurringTime : undefined,
-      repeatFrequency: broadcastCampaignType === 'Recurring' ? repeatFrequency : undefined,
-      dailyRepeatInterval: broadcastCampaignType === 'Recurring' ? dailyRepeatInterval : undefined,
-      weeklyRepeatDays: broadcastCampaignType === 'Recurring' ? weeklyRepeatDays : undefined,
-      monthlyRepeatDates: broadcastCampaignType === 'Recurring' ? monthlyRepeatDates : undefined,
-      deliverInTimezone: deliverInTimezone,
-    };
-
+    if (broadcastCampaignType === "Immediate") setDeliverInTimezone(false);
+    const payload = buildBroadcastPayload("Broadcast", status);
     if (editingCampaignId) {
-      updateBroadcastMutation.mutate({ id: editingCampaignId, data: campaignData });
+      updateBroadcastMutation.mutate({ id: editingCampaignId, data: payload });
     } else {
-      createBroadcastMutation.mutate(campaignData);
+      createBroadcastMutation.mutate(payload);
     }
     setCreateOpen(false);
-    setEditingCampaignId(null); // Reset editingCampaignId
+    setEditingCampaignId(null);
     resetCreateCampaignForm();
   };
+
+  // Send Now — transitions a draft broadcast into pending so the every-minute
+  // cron sweep picks it up. Available from the row action menu.
+  const sendBroadcastMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/broadcasts/${id}/send`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] });
+      toast({
+        title: "Broadcast queued",
+        description: "It will be executed within the next minute.",
+      });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Send failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleScheduleChange = (index: number, field: keyof Schedule, value: any) => {
     const newSchedules = [...schedules];
@@ -1119,13 +1256,22 @@ export default function CampaignManager() {
                                                     <Edit2 size={14} className="text-primary" />
                                                     Edit
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={() => handleOpenCloneDialog(campaign.id)}
                                                     className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/15 hover:text-primary"
                                                 >
                                                     <Copy size={14} className="text-primary" />
                                                     Clone
                                                 </DropdownMenuItem>
+                                                {(campaign.status === "draft" || campaign.status === "failed") && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => sendBroadcastMutation.mutate(campaign.id)}
+                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 rounded-lg cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                                    >
+                                                        <Send size={14} className="text-emerald-600" />
+                                                        Send Now
+                                                    </DropdownMenuItem>
+                                                )}
                                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1"></div>
                                                 {campaign.status !== "archived" ? (
                                                     <DropdownMenuItem 
