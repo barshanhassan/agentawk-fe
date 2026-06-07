@@ -104,6 +104,49 @@ export default function SmartFlowsPage() {
     const [changeFolderTargetId, setChangeFolderTargetId] = useState<string>("");
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
+    // Bulk-select (replyagent's multi-select footer). selectedIds holds the
+    // automation IDs currently checked; the master checkbox toggles the
+    // visible page's flows in/out of the set.
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [bulkRunning, setBulkRunning] = useState<null | "publish" | "unpublish" | "delete">(null);
+
+    const toggleSelect = (id: string) =>
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const runBulk = async (action: "publish" | "unpublish" | "delete") => {
+        if (selectedIds.size === 0) return;
+        const verb =
+            action === "publish" ? "publish" :
+            action === "unpublish" ? "unpublish" : "delete";
+        if (!window.confirm(`${verb.charAt(0).toUpperCase() + verb.slice(1)} ${selectedIds.size} automation${selectedIds.size === 1 ? "" : "s"}?`)) return;
+        setBulkRunning(action);
+        try {
+            const ids = Array.from(selectedIds);
+            await Promise.all(
+                ids.map((id) => {
+                    if (action === "delete") {
+                        return apiRequest("DELETE", `/api/automations/${id}`);
+                    }
+                    return apiRequest("POST", `/api/automations/${id}/${action}`, {});
+                }),
+            );
+            toast({ title: `${verb.charAt(0).toUpperCase() + verb.slice(1)}ed ${ids.length}` });
+            clearSelection();
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+        } catch (e: any) {
+            toast({ title: "Bulk action failed", description: e?.message, variant: "destructive" });
+        } finally {
+            setBulkRunning(null);
+        }
+    };
+
 
 
     const { toast } = useToast();
@@ -461,11 +504,78 @@ export default function SmartFlowsPage() {
                     </DropdownMenu>
                 </div>
 
+                {/* 3a. Bulk action toolbar — visible only when ≥1 row is checked */}
+                {selectedIds.size > 0 && (
+                    <div className="flex items-center justify-between bg-primary/[0.08] border-y border-primary/20 px-5 py-2">
+                        <span className="text-[12px] font-semibold text-primary">
+                            {selectedIds.size} selected
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-[11px]"
+                                disabled={!!bulkRunning}
+                                onClick={() => runBulk("publish")}
+                            >
+                                {bulkRunning === "publish" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                                Publish
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-[11px]"
+                                disabled={!!bulkRunning}
+                                onClick={() => runBulk("unpublish")}
+                            >
+                                {bulkRunning === "unpublish" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                                Unpublish
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-[11px] text-rose-600 border-rose-200"
+                                disabled={!!bulkRunning}
+                                onClick={() => runBulk("delete")}
+                            >
+                                {bulkRunning === "delete" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                                Delete
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-[11px]"
+                                onClick={clearSelection}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {/* 3. Table Section */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/40">
+                                <th className="px-3 py-3 w-8">
+                                    <input
+                                        type="checkbox"
+                                        aria-label="Select all visible flows"
+                                        checked={paginatedFlows.length > 0 && paginatedFlows.every((f: any) => selectedIds.has(String(f.id)))}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                const next = new Set(selectedIds);
+                                                paginatedFlows.forEach((f: any) => next.add(String(f.id)));
+                                                setSelectedIds(next);
+                                            } else {
+                                                const next = new Set(selectedIds);
+                                                paginatedFlows.forEach((f: any) => next.delete(String(f.id)));
+                                                setSelectedIds(next);
+                                            }
+                                        }}
+                                    />
+                                </th>
                                 <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Name & Status</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Runs</th>
                                 <th className="px-5 py-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-center">Created By</th>
@@ -476,7 +586,7 @@ export default function SmartFlowsPage() {
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
                             {paginatedFlows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="py-14 text-center bg-white dark:bg-transparent">
+                                    <td colSpan={6} className="py-14 text-center bg-white dark:bg-transparent">
                                         <div className="flex flex-col items-center gap-3">
                                             <div className="p-3.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary/40 dark:text-primary shadow-inner">
                                                 <FolderOpen size={32} strokeWidth={1} />
@@ -498,6 +608,15 @@ export default function SmartFlowsPage() {
                             ) : (
                                 paginatedFlows.map((flow: any) => (
                                     <tr key={flow.id} className="group hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200">
+                                        <td className="px-3 py-4 w-8">
+                                            <input
+                                                type="checkbox"
+                                                aria-label={`Select ${flow.name}`}
+                                                checked={selectedIds.has(String(flow.id))}
+                                                onChange={() => toggleSelect(String(flow.id))}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </td>
                                         <td className="px-5 py-4">
                                             <div className="flex flex-col gap-1.5">
                                                 <button

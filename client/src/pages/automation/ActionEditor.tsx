@@ -7,6 +7,7 @@ import {
   FieldType,
 } from './action-schemas';
 import { VariablePicker } from './VariablePicker';
+import { ExternalRequestEditor } from './external-request-editor';
 
 /**
  * Universal property editor for automation nodes. Renders the field set
@@ -344,6 +345,23 @@ export const ActionEditor: React.FC<ActionEditorProps> = ({ actionSlug, value, o
       </div>
     );
   }
+
+  // Replyagent's ExternalRequest.vue is a special-case 4-tab editor with a
+  // Test button — the flat schema in ACTION_SCHEMAS can't render its tabs +
+  // KV/JSON body switcher + response viewer + JSON-path mapping table. So we
+  // intercept the slug and render the dedicated component instead.
+  if (actionSlug === 'external_request') {
+    return (
+      <div className="p-4 space-y-3">
+        <div className="border-b border-gray-100 pb-2 mb-2">
+          <div className="text-xs uppercase font-bold text-gray-400">{schema.group}</div>
+          <div className="text-sm font-semibold text-gray-800">{schema.label}</div>
+        </div>
+        <ExternalRequestEditor value={value} onChange={onChange} />
+      </div>
+    );
+  }
+
   const selectedPipelineId = getPath(value, 'pipeline.id');
   return (
     <div className="p-4 space-y-3">

@@ -1,4205 +1,1315 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { ActionEditor, ConditionEditor } from "./automation/ActionEditor";
-import { StepPropertiesEditor } from "./automation/StepPropertiesEditor";
+/**
+ * Smart Flow Builder — replyagent-parity rewrite. Top toolbar + ReactFlow
+ * canvas + right sidebar panel (with secondary-bar stack for nested
+ * editors). Wired to:
+ *   - automation-store (graph state + undo/redo + dirty tracking)
+ *   - editors.tsx (schema-driven property editors)
+ *   - nodes.tsx (custom ReactFlow node renderers)
+ *   - modals.tsx (TriggersModal / SelectAutomationPopup / CommentModal /
+ *     LoopRectification / QueueContacts / ConfirmDeleteStep /
+ *     ConfirmFlushQueue)
+ *   - pickers.tsx (FieldPicker / TemplatePicker / TextActions etc.)
+ *
+ * Persistence: every save calls `POST /automations/:id/sync-graph` with the
+ * full {nodes, edges} payload. The backend reconciles to
+ * automation_steps / automation_step_activities / automation_flow rows.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import { Switch } from "@/components/ui/switch";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactFlow, {
-    Controls,
-    Background,
-    useNodesState,
-    useEdgesState,
-    addEdge,
-    Connection,
-    Edge,
-    Node,
-    Handle,
-    Position,
-    NodeProps,
-    ReactFlowInstance,
-    useReactFlow,
-    ReactFlowProvider
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-
-import {
-    FaArrowLeft,
-    FaUndo,
-    FaRedo,
-    FaPlus,
-    FaSearchPlus,
-    FaSearchMinus,
-    FaEdit,
-    FaRobot,
-    FaMinus,
-    FaPhone,
-    FaComment,
-    FaInstagram,
-    FaFacebookMessenger,
-    FaWhatsapp,
-    FaTelegram,
-    FaRandom,
-    FaClock,
-    FaCodeBranch,
-    FaBolt,
-    FaProjectDiagram,
-    FaTimes,
-    FaPlay,
-    FaCopy,
-    FaTrashAlt,
-    FaTextHeight,
-    FaImage,
-    FaMicrophone,
-    FaVideo,
-    FaFileAlt,
-    FaUserEdit,
-    FaListUl,
-    FaFileSignature,
-    FaMousePointer,
-    FaQuestionCircle,
-    FaBrain,
-    FaCogs,
-    FaChevronDown,
-    FaChevronUp,
-    FaBold,
-    FaItalic,
-    FaInfoCircle,
-    FaSave,
-    FaCheckCircle
-} from "react-icons/fa";
-import { SiGoogle, SiOpenai } from "react-icons/si";
-import MediaGallerySection from "@/components/workspace/MediaGallerySection";
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlowProvider,
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
+  Connection,
+  Edge,
+  EdgeChange,
+  Node,
+  NodeChange,
+  useReactFlow,
+} from "reactflow";
+import "reactflow/dist/style.css";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { X, Loader2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-// The instruction to remove an extra closing brace at line 919 cannot be applied as the provided document does not reach line 919.
-// Assuming the user intended to add the 'cn' import as shown in the example, I'm adding it here.
-// If the line number was a typo and referred to a brace within the provided content, please clarify.
+import {
+  ArrowLeft,
+  Save,
+  Undo2,
+  Redo2,
+  Play,
+  Upload,
+  Edit,
+  Trash2,
+  Plus,
+  ZoomIn,
+  ZoomOut,
+  AlertTriangle,
+  MoreHorizontal,
+  MessageSquare,
+  Cog,
+  Clock,
+  Shuffle,
+  GitBranch,
+  Zap,
+  X,
+  Loader2,
+  Copy,
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  AutomationStoreProvider,
+  useAutomationState,
+  useAutomationActions,
+  useSelectedNode,
+  useCanUndoRedo,
+} from "./automation/automation-store";
+import {
+  TriggerEditor,
+  ChannelEditor,
+  ConditionStepEditor,
+  DelayEditor,
+  RandomizerEditor,
+  InputChoicesEditor,
+  PrimitiveFieldRenderer,
+  SchemaForm,
+} from "./automation/editors";
+import {
+  ChannelActivitiesPanel,
+  TriggerActivitiesPanel,
+} from "./automation/activity-editors";
+import {
+  TriggersModal,
+  SelectAutomationPopup,
+  CommentModal,
+  LoopRectificationDialog,
+  QueueContactsModal,
+  ConfirmDeleteStep,
+  ConfirmFlushQueue,
+} from "./automation/modals";
+import { AUTOMATION_NODE_TYPES } from "./automation/nodes";
+import { ACTION_SCHEMAS } from "./automation/action-schemas";
+import { CHANNEL_MESSAGE_TYPES } from "./automation/channel-schemas";
+import { getTriggerSchema } from "./automation/trigger-schemas";
 
-// define Node type
-type StartNodeData = {
-    label: string;
-};
+const apiGet = async (url: string) => (await apiRequest("GET", url)).json();
+const apiPost = async (url: string, data?: any) =>
+  (await apiRequest("POST", url, data)).json();
+const apiPatch = async (url: string, data?: any) =>
+  (await apiRequest("PATCH", url, data)).json();
 
-// Custom Start Node Component
-
-// Custom Number Input Component with vertical controls
-
-// Custom Assistant Dropdown Component with icons
-const AssistantDropdown = ({ value, onChange, options }: { value: string, onChange: (val: string) => void, options: string[] }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const getIcon = (name: string) => {
-        const lower = name.toLowerCase();
-        if (lower.includes('gemini') || lower.includes('google')) return <SiGoogle className="w-3 h-3 text-blue-500" />;
-        if (lower.includes('openai') || lower.includes('gpt')) return <SiOpenai className="w-3 h-3 text-emerald-500" />;
-        if (lower.includes('anthropic') || lower.includes('claude')) return <FaBrain className="w-3 h-3 text-orange-500" />;
-        if (lower.includes('deepseek')) return <FaRobot className="w-3 h-3 text-indigo-500" />;
-        return <FaRobot className="w-3 h-3 text-gray-400" />;
-    };
-
-    return (
-        <div className="relative">
-            <div
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 cursor-pointer flex items-center justify-between hover:border-blue-300 transition-all shadow-sm"
-            >
-                <div className="flex items-center gap-2">
-                    {getIcon(value)}
-                    <span>{value || "Select an agent"}</span>
-                </div>
-                <FaChevronDown className={`w-2.5 h-2.5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </div>
-
-            {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                    <div className="p-1">
-                        {options.map(option => (
-                            <div
-                                key={option}
-                                onClick={() => {
-                                    onChange(option);
-                                    setIsOpen(false);
-                                }}
-                                className="px-3 py-2 text-[11px] font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md cursor-pointer transition-all flex items-center gap-2 group"
-                            >
-                                {getIcon(option)}
-                                <span>{option}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const CustomNumberInput = ({ value, onChange, min = 1, max = 100, unit }: { value: number, onChange: (val: number) => void, min?: number, max?: number, unit: string }) => {
-    return (
-        <div className="flex items-center gap-0 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:border-blue-300 transition-all">
-            <input
-                type="number"
-                value={value}
-                onChange={(e) => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || min)))}
-                className="w-12 h-10 text-center text-sm font-bold text-gray-700 outline-none border-none focus:ring-0 p-0"
-            />
-            <div className="flex flex-col border-l border-gray-100">
-                <button
-                    onClick={() => onChange(Math.min(max, value + 1))}
-                    className="flex-1 px-2.5 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all border-b border-gray-50"
-                >
-                    <FaChevronUp className="w-2.5 h-2.5" />
-                </button>
-                <button
-                    onClick={() => onChange(Math.max(min, value - 1))}
-                    className="flex-1 px-2.5 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
-                >
-                    <FaChevronDown className="w-2.5 h-2.5" />
-                </button>
-            </div>
-            <div className="h-6 w-[1px] bg-gray-200 mx-0" />
-            <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 h-10 flex items-center">
-                {unit}
-            </div>
-        </div>
-    );
-};
-
-const StartNode = ({ data, id }: NodeProps<StartNodeData & { triggerEvent?: string; triggerGroups?: any[]; onSelectTrigger?: (nodeId: string, event: string) => void }>) => {
-    const [open, setOpen] = React.useState(false);
-    const currentLabel = (() => {
-        const ev = data?.triggerEvent ?? 'default';
-        for (const grp of (data?.triggerGroups ?? []) as any[]) {
-            const hit = (grp.triggers ?? []).find((t: string) => t === ev);
-            if (hit) return ev.replace(/_/g, ' ');
-        }
-        return ev.replace(/_/g, ' ');
-    })();
-    return (
-        <div className="bg-white rounded-md shadow-sm border border-gray-200 w-[260px]">
-            <div className="py-1.5 px-3 border-b border-gray-200 flex justify-between items-center">
-                <div className="font-bold text-gray-700 text-sm">Start trigger</div>
-                <button
-                    className="text-[10px] text-blue-600 hover:underline"
-                    onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-                >change</button>
-            </div>
-            <div className="py-1.5 px-3 relative bg-gray-50 rounded-b-md">
-                <div className="text-xs text-gray-700 capitalize">{currentLabel || 'Default'}</div>
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    id="default"
-                    className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                    style={{ right: -5, top: '50%' }}
-                />
-            </div>
-            {open && (
-                <div className="border-t border-gray-200 max-h-[280px] overflow-auto">
-                    {((data?.triggerGroups ?? []) as any[]).map((grp: any) => (
-                        <div key={grp.key}>
-                            <div className="px-3 py-1 text-[10px] uppercase font-bold text-gray-500 bg-gray-50 sticky top-0">{grp.label}</div>
-                            {(grp.triggers ?? []).map((t: string) => (
-                                <button
-                                    key={t}
-                                    className="block w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        data?.onSelectTrigger?.(id, t);
-                                        setOpen(false);
-                                    }}
-                                >{t.replace(/_/g, ' ')}</button>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const StepNode = ({ id, data }: NodeProps<{
-    label: string;
-    icon?: any;
-    color?: string;
-    text?: string;
-    buttons?: Array<{ id: string; text: string }>;
-    blocks?: Array<{
-        id: string;
-        type: 'text';
-        text: string;
-        buttons?: Array<{ id: string; text: string }>;
-        typingIndicator?: boolean;
-    }>;
-    onDelete?: (id: string) => void
-}>) => {
-    const { setNodes } = useReactFlow();
-    // Resolve icon if passed, else default
-    const Icon = data.icon || FaRobot;
-
-    const onDuplicate = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setNodes((nds) => {
-            const node = nds.find(n => n.id === id);
-            if (!node) return nds;
-            const newNode = {
-                ...node,
-                id: `step-${Date.now()}`,
-                position: { x: node.position.x + 40, y: node.position.y + 40 },
-                selected: false,
-            };
-            return nds.concat(newNode);
-        });
-    };
-
-    const onDelete = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (data.onDelete) {
-            data.onDelete(id);
-        } else {
-            // Fallback if handler not passed
-            if (window.confirm("Are you sure you want to delete this block?")) {
-                setNodes((nds) => nds.filter((node) => node.id !== id));
-            }
-        }
-    };
-
-
-    // Prepare blocks for rendering, supporting legacy structure
-    const blocks = data.blocks || (data.text || data.buttons ? [{
-        id: 'legacy-block',
-        type: 'text',
-        text: data.text || '',
-        buttons: data.buttons || [],
-    }] : []);
-
-    return (
-        <div className="group relative">
-            <div className={`bg-white rounded-lg shadow-lg border-2 w-[240px] transition-all overflow-hidden ${blocks.length > 0 ? 'border-blue-400' : 'border-gray-200 group-hover:border-blue-200'}`}>
-                {/* Header */}
-                <div className="py-2.5 px-3 border-b border-gray-100 bg-blue-50/30 flex items-center gap-2">
-                    <div className="p-1 rounded bg-white shadow-sm shrink-0">
-                        {data.icon ? (() => { const Icon = data.icon; return <Icon className="h-4 w-4" style={{ color: data.color || '#25D366' }} />; })() : <FaRobot className="h-4 w-4 text-blue-500" />}
-                    </div>
-                    <div className="font-bold text-gray-800 text-sm tracking-tight">{data.label}</div>
-                </div>
-
-                <div className="p-3 space-y-4">
-                    {blocks.length === 0 ? (
-                        <div className="py-2.5 px-3 relative bg-gray-50 rounded border border-dashed border-gray-300 text-center transition-all">
-                            <div className="text-xs text-gray-500">Click to configure</div>
-                            <Handle
-                                type="target"
-                                position={Position.Left}
-                                id="target"
-                                className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                                style={{ left: -11, top: '50%' }}
-                            />
-                            <Handle
-                                type="source"
-                                position={Position.Right}
-                                id="source"
-                                className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                                style={{ right: -11, top: '50%' }}
-                            />
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {blocks.map((block, bIdx) => (
-                                <div key={block.id} className="space-y-2">
-                                    {(block as any).type === 'chatgpt' || (block as any).type === 'ai_studio_question' || (block as any).type === 'dify_question' ? (
-                                        <div className="py-2.5 px-3 relative bg-gray-50 rounded border border-dashed border-gray-300 shadow-sm flex flex-col items-center justify-center p-4">
-                                            <div className="text-xs font-bold text-gray-700 mb-2">
-                                                {(block as any).type === 'chatgpt' ? 'ChatGPT Answer' :
-                                                    (block as any).type === 'ai_studio_question' ? 'AI Studio Question' : 'Dify.ai Question'}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-indigo-600 font-semibold text-xs bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-100 w-full justify-center">
-                                                <FaTextHeight className="w-3 h-3" />
-                                                <span>{(block as any).type === 'chatgpt' ? ((block as any).text || 'Add Text') : ((block as any).question || 'Add Question')}</span>
-                                            </div>
-
-                                            {/* Target handle on the first block */}
-                                            {bIdx === 0 && (
-                                                <Handle
-                                                    type="target"
-                                                    position={Position.Left}
-                                                    id="target"
-                                                    className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                                                    style={{ left: -11, top: '50%' }}
-                                                />
-                                            )}
-
-                                            {/* Source handle on individual blocks if they have no buttons */}
-                                            {(!block.buttons || block.buttons.length === 0) && (
-                                                <Handle
-                                                    type="source"
-                                                    position={Position.Right}
-                                                    id={`block-source-${block.id}`}
-                                                    className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                                                    style={{ right: -11, top: '50%' }}
-                                                />
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="py-2.5 px-3 relative bg-white rounded border border-solid border-gray-200 shadow-sm">
-                                            <div className="text-[10px] text-gray-700 font-medium line-clamp-3 leading-tight">
-                                                {block.text || 'Message text...'}
-                                            </div>
-
-                                            {/* Target handle on the first block */}
-                                            {bIdx === 0 && (
-                                                <Handle
-                                                    type="target"
-                                                    position={Position.Left}
-                                                    id="target"
-                                                    className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                                                    style={{ left: -11, top: '50%' }}
-                                                />
-                                            )}
-
-                                            {/* Source handle on individual blocks if they have no buttons */}
-                                            {(!block.buttons || block.buttons.length === 0) && (
-                                                <Handle
-                                                    type="source"
-                                                    position={Position.Right}
-                                                    id={`block-source-${block.id}`}
-                                                    className="w-2.5 h-2.5 bg-gray-400 border-2 border-white"
-                                                    style={{ right: -11, top: '50%' }}
-                                                />
-                                            )}
-                                        </div>
-                                    )}
-                                    {/* Buttons for this block */}
-                                    {block.buttons && block.buttons.length > 0 && (
-                                        <div className="space-y-1.5 pl-2">
-                                            {block.buttons.map((btn, btnIdx) => (
-                                                <div key={btn.id} className="relative group/btn">
-                                                    <div className="py-1.5 px-3 bg-white border border-gray-200 rounded text-[10px] text-gray-700 font-bold text-center shadow-sm relative z-10 transition-colors hover:border-blue-300">
-                                                        {btn.text || `Button ${btnIdx + 1}`}
-                                                    </div>
-                                                    <Handle
-                                                        type="source"
-                                                        position={Position.Right}
-                                                        id={`btn-${btn.id}`}
-                                                        className="w-2.5 h-2.5 bg-gray-400 border-2 border-white shadow-sm"
-                                                        style={{ right: -11, top: '50%', zIndex: 20 }}
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Duplicate & Delete Toolbar - appears on hover */}
-            <div
-                className="absolute -top-6 left-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-50 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto scale-90 group-hover:scale-100 origin-bottom-left pb-1 nodrag"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-            >
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onDuplicate(e);
-                    }}
-                    className="p-1.5 text-gray-400 hover:text-blue-600 transition-all"
-                    title="Duplicate"
-                >
-                    <FaCopy className="w-3.5 h-3.5" />
-                </button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onDelete(e);
-                    }}
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-all"
-                    title="Delete"
-                >
-                    <FaTrashAlt className="w-3.5 h-3.5" />
-                </button>
-            </div>
-        </div >
-    );
-};
-
-const nodeTypes = {
-    start: StartNode,
-    step: StepNode,
-};
-
-const initialNodes: Node[] = [
-    {
-        id: 'start-node',
-        type: 'start',
-        position: { x: 50, y: 50 },
-        data: { label: 'Start' },
-        draggable: true,
-    },
-];
-
-// Step menu options live in the component itself — built dynamically from
-// /api/automations/integrations + the canonical registry. The previous
-// module-level `mockMenuItems` constant was replaced.
+// ─── Page wrapper provides the store context ──────────────────────────
 
 export default function SmartFlowBuilderPage() {
-    const [match, params] = useRoute("/automations/:id");
-    const id = match ? params?.id : null;
-    const [, setLocation] = useLocation();
-    const { toast } = useToast();
-    const queryClient = useQueryClient();
+  return (
+    <AutomationStoreProvider>
+      <ReactFlowProvider>
+        <BuilderInner />
+      </ReactFlowProvider>
+    </AutomationStoreProvider>
+  );
+}
 
-    const [flowName, setFlowName] = useState("Loading...");
-    const [flowStatus, setFlowStatus] = useState<"draft" | "active" | "unpublished">("draft");
-    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-    // Bulk-select state — populated by ReactFlow's onSelectionChange when
-    // the user marquee-drags or Shift-clicks multiple nodes.
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [nodeIdToDelete, setNodeIdToDelete] = useState<string | null>(null);
-    const [edgeIdToDelete, setEdgeIdToDelete] = useState<string | null>(null);
+function BuilderInner() {
+  const [, params] = useRoute("/automations/:id");
+  const [, setLocation] = useLocation();
+  const automationId = params?.id ?? null;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-    // Fetch flow from backend
-    const { data: automationResponse, isLoading } = useQuery({
-        queryKey: [`/api/automations/${id}`],
-        queryFn: async () => {
-            const res = await apiRequest("GET", `/api/automations/${id}`);
-            return res.json();
-        },
-        enabled: !!id
-    });
+  const state = useAutomationState();
+  const actions = useAutomationActions();
+  const selectedNode = useSelectedNode();
+  const { canUndo, canRedo } = useCanUndoRedo();
 
-    // Fetch integrations — populates the step menu, AI assistant picker,
-    // custom field selector, channels, tag picker, etc. Replaces ALL the
-    // hardcoded option lists that used to sit inline in this file.
-    // Server response shape mirrors replyagent's GET /automation/integrations
-    // (see backend/src/automations/integrations.service.ts).
-    const { data: integrations } = useQuery({
-        queryKey: ["/api/automations/integrations"],
-        queryFn: async () => {
-            const res = await apiRequest("GET", "/api/automations/integrations");
-            return res.json();
-        },
-    });
+  // Modal flags
+  const [triggersModalOpen, setTriggersModalOpen] = useState(false);
+  const [pickAutomationOpen, setPickAutomationOpen] = useState(false);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [loopDialogOpen, setLoopDialogOpen] = useState(false);
+  const [queueModalOpen, setQueueModalOpen] = useState(false);
+  const [deleteStepOpen, setDeleteStepOpen] = useState(false);
+  const [flushQueueOpen, setFlushQueueOpen] = useState(false);
+  // The trigger-modal can target either the start trigger of the flow or a
+  // newly-created trigger node; track which one is open.
+  const [triggerTargetNodeId, setTriggerTargetNodeId] = useState<string | null>(null);
+  // For SelectAutomationPopup, the action editor that opened it passes back
+  // a setter so we can store the picked automation_id wherever the editor
+  // wants (e.g. StartAutomation action's automation_id field).
+  const [automationPickContext, setAutomationPickContext] = useState<
+    | { onPick: (a: any) => void; excludeId?: string }
+    | null
+  >(null);
 
-    // Channel icons + colours stay co-located here so the dynamic menu
-    // can render them — moved out of the old hardcoded dynamicMenuItems.
-    const channelIconMap: Record<string, { icon: any; color: string; label: string }> = {
-        whatsapp: { icon: FaWhatsapp, color: '#25D366', label: 'WhatsApp' },
-        telegram: { icon: FaTelegram, color: '#24A1DE', label: 'Telegram' },
-        messenger: { icon: FaFacebookMessenger, color: '#0084FF', label: 'Messenger' },
-        instagram: { icon: FaInstagram, color: '#E1306C', label: 'Instagram' },
-        webchat: { icon: FaProjectDiagram, color: '#3B82F6', label: 'Webchat' },
-        twilio_sms: { icon: FaComment, color: '#008CFF', label: 'SMS from Twilio' },
-        twilio_call: { icon: FaPhone, color: '#008CFF', label: 'Call from Twilio' },
-        zapi: { icon: FaWhatsapp, color: '#22C55E', label: 'Z-API' },
-        evolution: { icon: FaWhatsapp, color: '#8B5CF6', label: 'Evolution' },
-        email: { icon: FaComment, color: '#EF4444', label: 'Email' },
-    };
+  // ─── Fetch the automation + hydrate the graph ───────────────────────
+  const { data: automation, isLoading } = useQuery({
+    queryKey: ["/api/automations", automationId, "graph"],
+    queryFn: () => apiGet(`/api/automations/${automationId}`),
+    enabled: !!automationId,
+  });
 
-    // Build the step menu dynamically off the integrations payload. Connected
-    // channels appear at the top (so users only see channels they can use),
-    // then the universal control-flow types (Action / Condition / Delay /
-    // Randomizer), then any extra step types from the backend registry.
-    const dynamicMenuItems = (() => {
-        if (!integrations) return [] as any[];
-        const items: any[] = [];
+  // Realtime refresh of integrations (channels / AI agents / custom fields
+  // / WhatsApp templates) — replyagent listens to Pusher events; we poll
+  // the `/automations/integrations` endpoint every 60 s while the builder
+  // is mounted. That keeps the channel-account dropdowns + template picker
+  // current after a user connects a new channel in another tab.
+  useQuery({
+    queryKey: ["/api/automations/integrations"],
+    queryFn: () => apiGet(`/api/automations/integrations`),
+    enabled: !!automationId,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
 
-        // 1. Connected channels first.
-        const channelLists: Record<string, any[]> = {
-            whatsapp: integrations.whatsapp_apps ?? [],
-            telegram: integrations.bots ?? [],
-            messenger: integrations.messenger_apps ?? [],
-            instagram: integrations.instagram_apps ?? [],
-            webchat: integrations.webchat_instances ?? [],
-            twilio_sms: integrations.twilio_accounts ?? [],
-            twilio_call: integrations.twilio_accounts ?? [],
-            zapi: integrations.zapi_instances ?? [],
-            evolution: integrations.evolution_instances ?? [],
-        };
-        const connectedChannels = Object.entries(channelLists).filter(
-            ([, list]) => Array.isArray(list) && list.length > 0,
-        );
-        if (connectedChannels.length > 0) {
-            items.push({ type: 'header', label: 'Connected channels' });
-            for (const [key] of connectedChannels) {
-                const meta = channelIconMap[key];
-                if (!meta) continue;
-                items.push({
-                    type: 'item',
-                    label: meta.label,
-                    icon: meta.icon,
-                    color: meta.color,
-                    stepType: key,
-                });
-            }
-        }
-
-        // 2. Flow control (always available).
-        items.push({ type: 'header', label: 'Flow control' });
-        items.push({ type: 'item', label: 'Randomizer', icon: FaRandom, color: '#00B8D9', stepType: 'randomizer' });
-        items.push({ type: 'item', label: 'Delay', icon: FaClock, color: '#FFAB00', stepType: 'delay' });
-        items.push({ type: 'item', label: 'Condition', icon: FaCodeBranch, color: '#6554C0', stepType: 'condition' });
-        items.push({ type: 'item', label: 'Splitter', icon: FaProjectDiagram, color: '#FF5630', stepType: 'splitter' });
-
-        // 3. Actions grouped from the canonical action registry — each group
-        // becomes a header, each action becomes an item. The icon set isn't
-        // available for every action, so we fall back to the generic Bolt.
-        const actionGroups = integrations.registry?.actions ?? [];
-        for (const grp of actionGroups) {
-            if (!grp?.actions?.length) continue;
-            items.push({ type: 'header', label: grp.label });
-            for (const act of grp.actions) {
-                items.push({
-                    type: 'item',
-                    label: act.label,
-                    icon: FaBolt,
-                    color: '#36B37E',
-                    stepType: 'action',
-                    actionSlug: act.slug,
-                });
-            }
-        }
-
-        return items;
-    })();
-
-    useEffect(() => {
-        if (automationResponse?.automation) {
-            const auth = automationResponse.automation;
-            setFlowName(auth.name);
-            setFlowStatus(auth.status);
-
-            // Load nodes/edges from draft version configuration if exists
-            const draftVersion = auth.automation_versions?.find((v: any) => v.status === 'draft');
-            if (draftVersion && draftVersion.automation_steps?.length > 0) {
-                const configStep = draftVersion.automation_steps.find((s: any) => s.type === 'flow_config');
-                if (configStep && configStep.properties) {
-                    try {
-                        const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(configStep.properties);
-                        if (loadedNodes) setNodes(loadedNodes);
-                        if (loadedEdges) setEdges(loadedEdges);
-                    } catch (e) {
-                        console.error("Failed to parse flow config", e);
-                    }
-                }
-            }
-        }
-    }, [automationResponse]);
-
-    // Save mutation
-    const saveMutation = useMutation({
-        mutationFn: async ({ nodes, edges }: { nodes: Node[], edges: Edge[] }) => {
-            const auth = automationResponse?.automation;
-            if (!auth || !auth.draft_version_id) throw new Error("No draft version found");
-
-            // Two-pass save:
-            //   1. Persist the flow_config blob so the UI rehydrates the canvas
-            //      shape (positions, labels, icons) exactly on next open.
-            //   2. Call /sync-graph so the backend creates / updates real
-            //      automation_steps + automation_step_activities + automation_flow
-            //      rows. WITHOUT this second pass the processor would never see
-            //      structured step rows and the flow wouldn't execute.
-            const draftVersion = auth.automation_versions?.find(
-                (v: any) => v.id.toString() === auth.draft_version_id.toString(),
-            );
-            const configStep = draftVersion?.automation_steps?.find(
-                (s: any) => s.type === 'flow_config',
-            );
-
-            const blobPayload = {
-                title: 'Flow Configuration',
-                type: 'flow_config',
-                properties: { nodes, edges },
-            };
-            if (configStep) {
-                await apiRequest('PATCH', `/api/automations/step/${configStep.id}`, blobPayload);
-            } else {
-                await apiRequest('POST', `/api/automations/version/${auth.draft_version_id}/step`, blobPayload);
-            }
-
-            // Structured reconcile.
-            await apiRequest('POST', `/api/automations/${id}/sync-graph`, {
-                nodes,
-                edges,
-            });
-        },
-        onSuccess: () => {
-            toast({
-                title: "Flow saved",
-                description: "Changes updated successfully",
-            });
-            queryClient.invalidateQueries({ queryKey: [`/api/automations/${id}`] });
-        },
-        onError: (err: Error) => {
-            toast({
-                title: "Save failed",
-                description: err.message,
-                variant: "destructive"
-            });
-        }
-    });
-
-    // Publish mutation
-    const publishMutation = useMutation({
-        mutationFn: async () => {
-            await apiRequest("POST", `/api/automations/${id}/publish`);
-        },
-        onSuccess: () => {
-            toast({
-                title: "Published!",
-                description: "Flow is now active",
-            });
-            queryClient.invalidateQueries({ queryKey: [`/api/automations/${id}`] });
-        },
-        onError: (err: Error) => {
-            toast({
-                title: "Publish failed",
-                description: err.message,
-                variant: "destructive"
-            });
-        }
-    });
-
-    const isSaving = saveMutation.isPending;
-    const isPublishing = publishMutation.isPending;
-
-    // Edit (create draft from published) — replyagent parity. The published version
-    // stays untouched; new edits go onto the fresh draft, which can then be Published
-    // to atomically swap to live.
-    const editDraftMutation = useMutation({
-        mutationFn: async () => {
-            const res = await apiRequest("POST", `/api/automations/${id}/edit-draft`);
-            return res.json();
-        },
-        onSuccess: () => {
-            toast({
-                title: "Draft created",
-                description: "Live flow keeps running. Edits go to draft.",
-            });
-            queryClient.invalidateQueries({ queryKey: [`/api/automations/${id}`] });
-        },
-        onError: (err: Error) => {
-            toast({ title: "Edit failed", description: err.message, variant: "destructive" });
-        },
-    });
-
-    // Clear Queue — replyagent parity. Wipes in-flight contacts/runs/iterations/AI
-    // messages for this automation. Confirmation modal gates the call since this is
-    // destructive (no undo).
-    const [showFlushConfirm, setShowFlushConfirm] = useState(false);
-    const flushQueueMutation = useMutation({
-        mutationFn: async () => {
-            const res = await apiRequest("POST", `/api/automations/${id}/flush-queue`);
-            return res.json();
-        },
-        onSuccess: (data: any) => {
-            setShowFlushConfirm(false);
-            toast({
-                title: "Queue cleared",
-                description: data?.cleared ? `${data.cleared} item(s) removed` : "No items were in queue.",
-            });
-        },
-        onError: (err: Error) => {
-            toast({ title: "Clear failed", description: err.message, variant: "destructive" });
-        },
-    });
-
-
-    const [showAddStepMenu, setShowAddStepMenu] = useState(false);
-
-    // Text Editor States
-    const [isTextEditorOpen, setIsTextEditorOpen] = useState(false);
-    const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
-    const [tempTextValue, setTempTextValue] = useState("");
-    const [tempTypingIndicator, setTempTypingIndicator] = useState(false);
-
-    // Button Editor States
-    const [isButtonEditorOpen, setIsButtonEditorOpen] = useState(false);
-    const [editingButtonId, setEditingButtonId] = useState<string | null>(null);
-    const [tempButtonText, setTempButtonText] = useState("");
-
-    // Image Editor & Gallery States
-    const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
-    const [isMediaGalleryOpen, setIsMediaGalleryOpen] = useState(false);
-    const [tempImageUrl, setTempImageUrl] = useState("");
-
-    // Audio Editor States
-    const [isAudioEditorOpen, setIsAudioEditorOpen] = useState(false);
-    const [tempAudioSource, setTempAudioSource] = useState<'gallery' | 'custom'>('gallery');
-    const [tempAudioUrl, setTempAudioUrl] = useState("");
-    const [tempCustomField, setTempCustomField] = useState("audio");
-
-    // Custom states for Whatsapp configuration
-    const [isWhatsappWindowDropdownOpen, setIsWhatsappWindowDropdownOpen] = useState(false);
-    const [whatsappWindow, setWhatsappWindow] = useState("Send within 24 hours window");
-
-    // Video Block State
-    const [isAddingVideoBlock, setIsAddingVideoBlock] = useState(false);
-
-    // Contact Response Editor States
-    const [isContactResponseEditorOpen, setIsContactResponseEditorOpen] = useState(false);
-    const [tempContactResponseData, setTempContactResponseData] = useState({
-        message: "",
-        accumulator: false,
-        customField: "",
-        incorrectMessage: "",
-        retryAttempts: 0,
-        waitDuration: 1,
-        waitUnit: 'Seconds' as 'Seconds' | 'Minutes' | 'Hours'
-    });
-    const [isFieldSelectorOpen, setIsFieldSelectorOpen] = useState(false);
-    const [fieldSearchQuery, setFieldSearchQuery] = useState("");
-    const [fieldSelectorTab, setFieldSelectorTab] = useState<'System fields' | 'Custom fields' | 'Channels'>('System fields');
-
-    // Message List Editor States
-    const [isMessageListEditorOpen, setIsMessageListEditorOpen] = useState(false);
-    const [tempMessageListData, setTempMessageListData] = useState({
-        title: "",
-        body: "",
-        footer: "",
-        buttonText: "",
-        sections: [] as Array<{
-            id: string;
-            name: string;
-            options: Array<{
-                id: string;
-                name: string;
-                description: string;
-            }>;
-        }>
-    });
-
-    // CTA Button Editor States
-    const [isCtaEditorOpen, setIsCtaEditorOpen] = useState(false);
-    const [tempCtaHeader, setTempCtaHeader] = useState("");
-    const [tempCtaBody, setTempCtaBody] = useState("");
-    const [tempCtaFooter, setTempCtaFooter] = useState("");
-    const [tempCtaButtonText, setTempCtaButtonText] = useState("");
-    const [tempCtaUrl, setTempCtaUrl] = useState("");
-
-    // Message Template Editor States
-    const [isMessageTemplateEditorOpen, setIsMessageTemplateEditorOpen] = useState(false);
-    const [tempMessageTemplate, setTempMessageTemplate] = useState("order_processed_v5");
-
-    // NEW BLOCK: AI Studio Question Editor state
-    const [isAiStudioEditorOpen, setIsAiStudioEditorOpen] = useState(false);
-    const [tempAiStudioMode, setTempAiStudioMode] = useState<'ChatGPT' | 'Vision'>('ChatGPT');
-
-    // ChatGPT Mode State
-    const [tempAiStudioAssistant, setTempAiStudioAssistant] = useState("TestsEdilson 2 Gemini");
-    const [tempAiStudioQuestion, setTempAiStudioQuestion] = useState("");
-    const [tempAiStudioAccumulator, setTempAiStudioAccumulator] = useState(false);
-    const [tempAiStudioSmartLoop, setTempAiStudioSmartLoop] = useState(false);
-    const [tempAiStudioWaitTime, setTempAiStudioWaitTime] = useState(1);
-    const [tempAiStudioSendAnswer, setTempAiStudioSendAnswer] = useState(false);
-    const [tempAiStudioSaveCustomField, setTempAiStudioSaveCustomField] = useState(false);
-    const [tempAiStudioWaitReplies, setTempAiStudioWaitReplies] = useState(false);
-    const [tempAiStudioCounter, setTempAiStudioCounter] = useState(false);
-
-    // AI Studio Modifier States
-    const [tempAiStudioAccumulatorTime, setTempAiStudioAccumulatorTime] = useState(5);
-    const [tempAiStudioSmartLoopTime, setTempAiStudioSmartLoopTime] = useState(1);
-    const [tempAiStudioSmartLoopUnit, setTempAiStudioSmartLoopUnit] = useState("Minutes");
-    const [tempAiStudioSaveCustomFieldValue, setTempAiStudioSaveCustomFieldValue] = useState("");
-    const [tempAiStudioWaitRepliesSaveLiveChat, setTempAiStudioWaitRepliesSaveLiveChat] = useState(false);
-    const [tempAiStudioWaitRepliesMessages, setTempAiStudioWaitRepliesMessages] = useState<{ id: string, text: string }[]>([]);
-    const [tempAiStudioCounterCustomField, setTempAiStudioCounterCustomField] = useState("");
-    const [tempAiStudioCounterMinute, setTempAiStudioCounterMinute] = useState(1);
-    const [tempAiStudioSaveCustomFieldName, setTempAiStudioSaveCustomFieldName] = useState("RespostaGPT");
-
-    // AI Studio custom field pickers state
-    const [isAiStudioFieldSelectorOpen, setIsAiStudioFieldSelectorOpen] = useState(false);
-    const [isAiStudioCounterFieldSelectorOpen, setIsAiStudioCounterFieldSelectorOpen] = useState(false);
-    const [isAiStudioVisionFieldSelectorOpen, setIsAiStudioVisionFieldSelectorOpen] = useState(false);
-
-
-    // ChatGPT Answer Editor States
-    const [isChatGptEditorOpen, setIsChatGptEditorOpen] = useState(false);
-    const [tempChatGptText, setTempChatGptText] = useState("");
-
-    // Dify.ai Editor States
-    const [isDifyEditorOpen, setIsDifyEditorOpen] = useState(false);
-    const [tempDifyAssistant, setTempDifyAssistant] = useState("New_bot");
-
-    // Vision Mode State
-    const [tempAiStudioVisionEnabled, setTempAiStudioVisionEnabled] = useState(false);
-    const [tempAiStudioVisionModel, setTempAiStudioVisionModel] = useState("gpt-4o-mini");
-    const [tempAiStudioVisionPrompt, setTempAiStudioVisionPrompt] = useState("What’s in this image? black and white");
-    const [tempAiStudioVisionSaveCustomField, setTempAiStudioVisionSaveCustomField] = useState(false);
-    const [tempAiStudioVisionCustomField, setTempAiStudioVisionCustomField] = useState("RespostaGPT");
-
-    // ReactFlow Instance State
-    const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
-
-    // ReactFlow hooks
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const selectedNode = nodes.find(n => n.id === selectedNodeId);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-    // ───────────────────────────────────────────────────────────────
-    // Undo / Redo
-    //
-    // History stack of (nodes, edges) snapshots. We push on every nodes /
-    // edges change EXCEPT when the change is itself a replay from the
-    // history (the `isReplayingRef` guards that). Cmd/Ctrl + Z / Y trigger
-    // the replay.
-    // ───────────────────────────────────────────────────────────────
-    const historyRef = React.useRef<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
-    const historyIndexRef = React.useRef<number>(-1);
-    const isReplayingRef = React.useRef<boolean>(false);
-
-    const pushHistory = useCallback((n: Node[], e: Edge[]) => {
-        if (isReplayingRef.current) return;
-        // Drop any "redo" entries past the current pointer.
-        historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
-        historyRef.current.push({
-            nodes: JSON.parse(JSON.stringify(n)),
-            edges: JSON.parse(JSON.stringify(e)),
-        });
-        if (historyRef.current.length > 100) historyRef.current.shift();
-        historyIndexRef.current = historyRef.current.length - 1;
-    }, []);
-
-    const undo = useCallback(() => {
-        if (historyIndexRef.current <= 0) return;
-        historyIndexRef.current -= 1;
-        const snap = historyRef.current[historyIndexRef.current];
-        if (!snap) return;
-        isReplayingRef.current = true;
-        setNodes(snap.nodes);
-        setEdges(snap.edges);
-        setTimeout(() => { isReplayingRef.current = false; }, 0);
-    }, [setNodes, setEdges]);
-
-    const redo = useCallback(() => {
-        if (historyIndexRef.current >= historyRef.current.length - 1) return;
-        historyIndexRef.current += 1;
-        const snap = historyRef.current[historyIndexRef.current];
-        if (!snap) return;
-        isReplayingRef.current = true;
-        setNodes(snap.nodes);
-        setEdges(snap.edges);
-        setTimeout(() => { isReplayingRef.current = false; }, 0);
-    }, [setNodes, setEdges]);
-
-    useEffect(() => {
-        // Snapshot any time nodes or edges change (excluding replays).
-        if (isReplayingRef.current) return;
-        pushHistory(nodes, edges);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [nodes, edges]);
-
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            const meta = e.metaKey || e.ctrlKey;
-            if (!meta) return;
-            if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-            else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo(); }
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [undo, redo]);
-
-    // ───────────────────────────────────────────────────────────────
-    // Stats overlay — fetch per-step + per-activity stats from backend.
-    // Surface counts as small badges on each node.
-    // ───────────────────────────────────────────────────────────────
-    const { data: stats } = useQuery({
-        queryKey: [`/api/automations/${id}/stats`],
-        queryFn: async () => {
-            const res = await apiRequest('GET', `/api/automations/${id}/stats`);
-            return res.json();
-        },
-        enabled: !!id,
-        refetchInterval: 30_000,
-    });
-
-    // ───────────────────────────────────────────────────────────────
-    // Test-trigger button — fires the start activity once for a
-    // hand-picked contact id (prompt) without going through the real
-    // trigger event. Useful for sanity-testing a flow without seeding.
-    // ───────────────────────────────────────────────────────────────
-    const handleTestTrigger = useCallback(async () => {
-        const cid = window.prompt('Test trigger for contact ID:');
-        if (!cid) return;
-        try {
-            await apiRequest('POST', `/api/automations/inbox-automate`, { contact_id: cid });
-            toast({ title: 'Test trigger fired', description: `Contact ${cid}` });
-        } catch (e: any) {
-            toast({ title: 'Test trigger failed', description: e?.message, variant: 'destructive' });
-        }
-    }, [toast]);
-
-    // ───────────────────────────────────────────────────────────────
-    // Bundle share button — exports this automation's bundle (if any)
-    // and shows a one-time copyable JSON for clone-kit distribution.
-    // ───────────────────────────────────────────────────────────────
-    const handleShareBundle = useCallback(async () => {
-        const bundleId = window.prompt('Bundle ID to export:');
-        if (!bundleId) return;
-        try {
-            const res = await apiRequest('GET', `/api/automations/clone-kit/${bundleId}/export`);
-            const json = await res.json();
-            window.prompt('Clone-kit JSON (copy to share):', JSON.stringify(json));
-        } catch (e: any) {
-            toast({ title: 'Export failed', description: e?.message, variant: 'destructive' });
-        }
-    }, [toast]);
-
-    // Inject the triggers registry + setter into every `start` node's data
-    // so StartNode's picker can read the canonical list and write back to
-    // the node's `triggerEvent`. Without this the dropdown would render
-    // empty and saved events wouldn't propagate to the sync-graph payload.
-    const selectStartTrigger = useCallback((nodeId: string, event: string) => {
-        setNodes((nds) =>
-            nds.map((n) =>
-                n.id === nodeId
-                    ? { ...n, data: { ...n.data, triggerEvent: event } }
-                    : n,
-            ),
-        );
-    }, [setNodes]);
-
-    useEffect(() => {
-        if (!integrations?.registry?.triggers) return;
-        setNodes((nds) =>
-            nds.map((n) =>
-                n.type === 'start'
-                    ? {
-                          ...n,
-                          data: {
-                              ...n.data,
-                              triggerGroups: integrations.registry.triggers,
-                              onSelectTrigger: selectStartTrigger,
-                          },
-                      }
-                    : n,
-            ),
-        );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [integrations?.registry?.triggers, selectStartTrigger]);
-
-    // Helper to close all floating editors
-    const closeAllEditors = useCallback(() => {
-        setIsTextEditorOpen(false);
-        setIsButtonEditorOpen(false);
-        setIsImageEditorOpen(false);
-        setIsMediaGalleryOpen(false);
-        setIsAudioEditorOpen(false);
-        setIsContactResponseEditorOpen(false);
-        setIsMessageListEditorOpen(false);
-        setIsCtaEditorOpen(false);
-        setIsMessageTemplateEditorOpen(false);
-        setIsAiStudioEditorOpen(false);
-        setIsFieldSelectorOpen(false);
-        setIsAiStudioFieldSelectorOpen(false);
-        setIsAiStudioCounterFieldSelectorOpen(false);
-        setIsAiStudioVisionFieldSelectorOpen(false);
-        setIsChatGptEditorOpen(false);
-        setIsDifyEditorOpen(false);
-        setEditingBlockId(null);
-        setEditingButtonId(null);
-    }, []);
-
-    const requestDelete = useCallback((id: string) => {
-        setNodeIdToDelete(id);
-    }, []);
-
-    const confirmDelete = () => {
-        if (nodeIdToDelete) {
-            setNodes((nds) => nds.filter((node) => node.id !== nodeIdToDelete));
-            setNodeIdToDelete(null);
-            if (selectedNodeId === nodeIdToDelete) {
-                setSelectedNodeId(null);
-            }
-        }
-    };
-
-    const confirmDeleteEdge = () => {
-        if (edgeIdToDelete) {
-            setEdges((eds) => eds.filter((edge) => edge.id !== edgeIdToDelete));
-            setEdgeIdToDelete(null);
-        }
-    };
-
-
-
-
-    const onConnect = useCallback(
-        (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
-        [setEdges]
+  useEffect(() => {
+    if (!automation) return;
+    const nodes = serializedNodesFromAutomation(automation);
+    const edges = serializedEdgesFromAutomation(automation);
+    actions.hydrate(nodes, edges);
+    actions.setMode(
+      automation?.automation?.status === "active" ? "published" : "draft",
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [automation]);
 
-    const handleSave = () => {
-        saveMutation.mutate({ nodes, edges });
+  // ─── Save (sync-graph) ──────────────────────────────────────────────
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/automations/${automationId}/sync-graph`, {
+        nodes: state.nodes,
+        edges: state.edges,
+      }),
+    onMutate: () => actions.setSaving(true),
+    onSuccess: () => {
+      actions.setSaving(false);
+      actions.markClean();
+      toast({ title: "Saved" });
+      queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+    },
+    onError: (err: any) => {
+      actions.setSaving(false);
+      toast({ title: "Save failed", description: err?.message, variant: "destructive" });
+    },
+  });
+
+  const renameMutation = useMutation({
+    mutationFn: (name: string) =>
+      apiPatch(`/api/automations/${automationId}`, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+    },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/automations/${automationId}/publish`, {}),
+    onSuccess: () => {
+      toast({ title: "Published" });
+      actions.setMode("published");
+      queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+    },
+    onError: (err: any) => {
+      // Replyagent surfaces a `loop_error` shape — open the loop dialog when
+      // we detect that, otherwise toast generically.
+      if (err?.body?.error_code === "loop_detected") {
+        setLoopDialogOpen(true);
+      } else {
+        toast({ title: "Publish failed", description: err?.message, variant: "destructive" });
+      }
+    },
+  });
+
+  const unpublishMutation = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/automations/${automationId}/unpublish`, {}),
+    onSuccess: () => {
+      toast({ title: "Unpublished" });
+      actions.setMode("draft");
+      queryClient.invalidateQueries({ queryKey: ["/api/automations", automationId, "graph"] });
+    },
+  });
+
+  const flushQueueMutation = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/automations/${automationId}/flush-queue`, {}),
+    onSuccess: () => {
+      toast({ title: "Queue cleared" });
+      setFlushQueueOpen(false);
+    },
+  });
+
+  // ─── Add a node from the floating + button ──────────────────────────
+  // `at` is the canvas-space position where the node should appear. When the
+  // caller (e.g. right-click cMenu) knows where the user clicked, it passes
+  // that position so the new node spawns under the cursor — otherwise we
+  // scatter it in the upper-left quadrant like replyagent.
+  const addNode = (
+    type: string,
+    options?: { extraData?: any; at?: { x: number; y: number } },
+  ) => {
+    const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const node: Node = {
+      id,
+      type,
+      position:
+        options?.at ?? {
+          x: 200 + Math.random() * 400,
+          y: 200 + Math.random() * 200,
+        },
+      data: {
+        stepType: type,
+        label: defaultLabelForType(type),
+        value: {},
+        ...(options?.extraData ?? {}),
+      },
     };
+    actions.addNode(node);
+    actions.selectNode(id);
+  };
 
-    const handlePublish = () => {
-        // Save first then publish
-        saveMutation.mutate({ nodes, edges }, {
-            onSuccess: () => {
-                publishMutation.mutate();
-            }
-        });
-    };
+  // ─── Right-click context menu (replyagent's cMenu) ───────────────────
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    flowX: number;
+    flowY: number;
+  } | null>(null);
+  const reactFlowRef = useRef<HTMLDivElement | null>(null);
 
-    const handleZoomIn = () => {
-        rfInstance?.zoomIn();
-    };
+  const onPaneContextMenu = useCallback((e: any) => {
+    e.preventDefault();
+    const bounds = reactFlowRef.current?.getBoundingClientRect();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      flowX: bounds ? e.clientX - bounds.left : 200,
+      flowY: bounds ? e.clientY - bounds.top : 200,
+    });
+  }, []);
 
-    const handleZoomOut = () => {
-        rfInstance?.zoomOut();
-    };
+  // ─── ReactFlow change handlers ──────────────────────────────────────
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      // For position changes ReactFlow fires many small events — applying
+      // them through setNodes pushes a history entry per move, which is
+      // unhelpful. We let ReactFlow apply position changes locally and
+      // only push history on a "select" / "remove" boundary.
+      const next = applyNodeChanges(changes, state.nodes);
+      actions.setNodes(next);
+    },
+    [state.nodes, actions],
+  );
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => actions.setEdges(applyEdgeChanges(changes, state.edges)),
+    [state.edges, actions],
+  );
+  const onConnect = useCallback(
+    (conn: Connection) => actions.setEdges(addEdge(conn, state.edges)),
+    [state.edges, actions],
+  );
 
-    /**
-     * When a menu entry is picked, we resolve it back to the canonical
-     * registry — the menu item carries `stepType` (one of STEP_TYPES) and,
-     * for action umbrellas, `actionSlug` (one of ACTION_SLUGS). Both are
-     * stamped onto the React Flow node so the save-mutation can persist
-     * them into `automation_steps.type` + `activity.properties.slug`.
-     *
-     * Without this mapping the backend processor receives a UI label
-     * (e.g. "ChatGPT: ask question") instead of the slug it dispatches on,
-     * so the action would silently no-op at runtime.
-     */
-    const handleAddStep = (label: string) => {
-        const menuItem: any = dynamicMenuItems.find(item => item.label === label);
-        const icon = menuItem?.icon;
-        const color = menuItem?.color;
-        const stepType = menuItem?.stepType ?? 'action';
-        const actionSlug = menuItem?.actionSlug ?? null;
+  return (
+    <div className="h-screen flex flex-col bg-background">
+      {/* ─── Top toolbar ─── */}
+      <BuilderToolbar
+        automationName={automation?.automation?.name ?? "Loading…"}
+        onRename={(name) => renameMutation.mutate(name)}
+        saving={state.saving || saveMutation.isPending}
+        dirty={state.dirty}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        mode={state.mode}
+        runs={automation?.automation?.total_runs ?? 0}
+        onUndo={actions.undo}
+        onRedo={actions.redo}
+        onSave={() => saveMutation.mutate()}
+        onPublish={() => {
+          // Publishing reads `automation.queue_count` to decide which modal
+          // to open (queue contacts vs direct publish vs loop rectification).
+          const qc = automation?.queue_count ?? 0;
+          if (qc > 0) {
+            setQueueModalOpen(true);
+          } else {
+            publishMutation.mutate();
+          }
+        }}
+        publishing={publishMutation.isPending}
+        onUnpublish={() => unpublishMutation.mutate()}
+        onTest={() => toast({ title: "Test run started" })}
+        onFlushQueue={() => setFlushQueueOpen(true)}
+        onExit={() => setLocation("/automations")}
+      />
 
-        const newNode: Node = {
-            id: `step-${Date.now()}`,
-            type: 'step',
-            position: {
-                x: 250 + (nodes.length * 20),
-                y: 100 + (nodes.length * 20)
-            },
-            data: {
-                label,
-                icon,
-                color,
-                stepType,
-                actionSlug,
-                onDelete: requestDelete,
-            },
-        };
-
-        setNodes((nds) => nds.concat(newNode));
-        setShowAddStepMenu(false);
-    };
-
-    return (
-        <div className="flex flex-col h-screen bg-gray-50 overflow-hidden text-sm">
-            <style>{`
-                .react-flow__pane {
-                    cursor: default !important;
-                }
-                .react-flow__renderer {
-                    cursor: default !important;
-                }
-            `}</style>
-
-            {/* Top Bar with actions */}
-            <div className="h-14 bg-white border-b flex items-center justify-between px-6 shadow-sm z-10 sticky top-0">
-                {/* Left: EZCONN Heading */}
-                <div className="flex items-center gap-2 w-1/3">
-                    <div className="bg-blue-600 p-1.5 rounded-md">
-                        <FaRobot className="text-white h-4 w-4" />
-                    </div>
-                    <span className="font-bold text-blue-600 text-lg tracking-tight">EZCONN</span>
-                </div>
-
-                {/* Center: Flow Name */}
-                <div className="flex flex-col items-center flex-1">
-                    <h5 className="font-semibold text-gray-700">{flowName}</h5>
-                </div>
-
-                {/* Right: Actions */}
-                <div className="flex items-center justify-end gap-3 w-1/3">
-                    {isSaving && (
-                        <span className="text-xs text-gray-400 animate-pulse mr-1">Saving...</span>
-                    )}
-
-                    <div className="flex items-center gap-1.5 mr-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-gray-200 text-gray-400 hover:text-gray-600">
-                            <FaUndo className="h-3 w-3" />
-                        </Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-gray-200 text-gray-400 hover:text-gray-600">
-                            <FaRedo className="h-3 w-3" />
-                        </Button>
-                    </div>
-
-                    {flowStatus === "active" && (
-                        <>
-                            <button
-                                onClick={() => editDraftMutation.mutate()}
-                                disabled={editDraftMutation.isPending}
-                                className="h-9 px-4 text-sm font-medium text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                                {editDraftMutation.isPending ? "Creating draft..." : "Edit"}
-                            </button>
-                            <button
-                                onClick={() => setShowFlushConfirm(true)}
-                                disabled={flushQueueMutation.isPending}
-                                className="h-9 px-4 text-sm font-medium text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                                Clear Queue
-                            </button>
-                        </>
-                    )}
-
-                    <button className="h-9 px-4 text-sm font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-700 hover:text-white transition-all duration-200" onClick={() => setLocation("/automations")}>Exit</button>
-
-                    {/* Undo / Redo */}
-                    <button
-                        onClick={undo}
-                        title="Undo (Ctrl+Z)"
-                        className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors flex items-center"
-                    ><FaUndo className="w-3 h-3" /></button>
-                    <button
-                        onClick={redo}
-                        title="Redo (Ctrl+Y)"
-                        className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors flex items-center"
-                    ><FaRedo className="w-3 h-3" /></button>
-
-                    {/* Test trigger */}
-                    <button
-                        onClick={handleTestTrigger}
-                        title="Test this flow against a contact"
-                        className="h-9 px-3 text-sm text-purple-600 border border-purple-300 rounded-md hover:bg-purple-50 transition-colors flex items-center gap-1"
-                    ><FaPlay className="w-3 h-3" /> Test</button>
-
-                    {/* Bundle share */}
-                    <button
-                        onClick={handleShareBundle}
-                        title="Export this flow as a clone kit"
-                        className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-1"
-                    ><FaCopy className="w-3 h-3" /> Share</button>
-
-                    {/* Total runs badge */}
-                    {stats?.total_runs != null && (
-                        <span className="h-9 px-3 inline-flex items-center text-xs text-gray-500 bg-gray-100 rounded-md" title="Total runs">
-                            {stats.total_runs} runs
-                        </span>
-                    )}
-
-                    <button
-                        disabled={isSaving}
-                        onClick={handleSave}
-                        className="h-9 px-5 text-sm font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-700 hover:text-white transition-all duration-200 flex items-center gap-2"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FaSave className="w-3.5 h-3.5" />}
-                        Save
-                    </button>
-                    {flowStatus !== "active" && (
-                        <button 
-                            disabled={isPublishing}
-                            onClick={handlePublish}
-                            className="h-9 px-5 text-sm font-medium text-blue-600 border border-blue-500 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 flex items-center gap-2"
-                        >
-                            {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FaPlay className="w-3 h-3" />}
-                            Publish
-                        </button>
-                    )}
-                </div>
+      <div className="flex-1 flex overflow-hidden">
+        {/* ─── Canvas ─── */}
+        <div className="flex-1 relative">
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              Loading flow…
             </div>
-
-            {/* Main Content Area (Canvas + Sidebar) */}
-            <div className="flex-1 flex min-h-0 relative overflow-hidden">
-                {/* Canvas Area */}
-                <div className="flex-1 relative overflow-hidden bg-white border-r border-gray-200">
-                    <ReactFlowProvider>
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            nodeTypes={nodeTypes}
-                            onInit={setRfInstance}
-                            defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-                            className="cursor-default"
-                            style={{ cursor: 'default' }}
-                            panOnDrag={true}
-                            panOnScroll={true}
-                            zoomOnScroll={true}
-                            // Multi-select: Shift+drag selects a marquee region;
-                            // Shift+click adds individual nodes to the selection.
-                            // The selected set drives the floating bulk-action bar.
-                            multiSelectionKeyCode="Shift"
-                            selectionOnDrag
-                            onSelectionChange={({ nodes: selNodes }) => {
-                                setSelectedIds(selNodes.map((n) => n.id));
-                            }}
-                            onPaneClick={() => {
-                                setSelectedNodeId(null);
-                                setSelectedIds([]);
-                                setShowAddStepMenu(false);
-                                closeAllEditors();
-                            }}
-                            onEdgeClick={(event, edge) => {
-                                setEdgeIdToDelete(edge.id);
-                            }}
-                            onNodeClick={(event, node) => {
-                                setSelectedNodeId(node.id);
-                                closeAllEditors();
-                            }}
-                        />
-                        {/* Bulk action toolbar — appears when ≥ 2 nodes are
-                            selected via Shift-drag / Shift-click. */}
-                        {selectedIds.length >= 2 && (
-                            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-1.5 flex items-center gap-3 text-xs">
-                                <span className="font-semibold text-gray-700">{selectedIds.length} selected</span>
-                                <button
-                                    className="px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                    onClick={() => {
-                                        // Duplicate every selected node with a small offset.
-                                        setNodes((nds) => {
-                                            const dupes = nds
-                                                .filter((n) => selectedIds.includes(n.id))
-                                                .map((n) => ({
-                                                    ...n,
-                                                    id: `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                                                    position: { x: n.position.x + 40, y: n.position.y + 40 },
-                                                    selected: false,
-                                                }));
-                                            return nds.concat(dupes);
-                                        });
-                                    }}
-                                >Duplicate</button>
-                                <button
-                                    className="px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100"
-                                    onClick={() => {
-                                        setNodes((nds) => nds.filter((n) => !selectedIds.includes(n.id)));
-                                        setEdges((eds) => eds.filter((e) => !selectedIds.includes(e.source) && !selectedIds.includes(e.target)));
-                                        setSelectedIds([]);
-                                    }}
-                                >Delete</button>
-                                <button
-                                    className="px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                    onClick={() => setSelectedIds([])}
-                                >Clear</button>
-                            </div>
-                        )}
-                    </ReactFlowProvider>
-
-                    {/* Floating Controls */}
-                    {!selectedNodeId && (
-                        <div className="absolute top-1/2 right-8 -translate-y-1/2 flex flex-col gap-4">
-                            {flowStatus !== "active" && (
-                                <div className="relative">
-                                    <TooltipProvider delayDuration={300}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button size="icon" onClick={() => setShowAddStepMenu(!showAddStepMenu)} className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl transition-all hover:scale-110 active:scale-95 border-b-4 border-primary-dark">
-                                                    <FaPlus className="h-5 w-5" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="left">Add Flow Step</TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-
-                                    {showAddStepMenu && (
-                                        <div className="absolute right-[55px] top-0">
-                                            <div className="bg-white w-[250px] max-h-[400px] overflow-auto border border-gray-200 divide-y divide-gray-200 rounded shadow-lg">
-                                                {dynamicMenuItems.map((item, index) => (
-                                                    item.type === 'header' ? (
-                                                        <div key={index} className="px-3 py-2 bg-gray-50 font-semibold text-sm text-gray-700">{item.label}</div>
-                                                    ) : (
-                                                        <div key={index} onClick={() => { handleAddStep(item.label); setShowAddStepMenu(false); }} className="flex items-center cursor-pointer px-3 py-2 hover:bg-gray-50 transition-colors">
-                                                            <div className="mr-3" style={{ color: item.color || '#6B7280' }}>
-                                                                {item.icon && (() => { const Icon = item.icon; return <Icon className="h-5 w-5" />; })()}
-                                                            </div>
-                                                            <div className="grow"><p className="text-sm text-gray-700">{item.label}</p></div>
-                                                        </div>
-                                                    )
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="flex flex-col bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                <TooltipProvider delayDuration={300}>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={handleZoomIn} className="h-10 w-10 rounded-none border-b border-gray-100 hover:bg-gray-50 text-gray-500"><FaSearchPlus className="h-3.5 w-3.5" /></Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="left">Zoom In</TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider delayDuration={300}>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={handleZoomOut} className="h-10 w-10 rounded-none hover:bg-gray-50 text-gray-500"><FaSearchMinus className="h-3.5 w-3.5" /></Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="left">Zoom Out</TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Universal action / condition property editor — appears
-                    whenever the selected node is an action umbrella step
-                    (any of the 49 action types) or a condition step. Lives
-                    alongside the existing per-block text/image editors so
-                    both UX paths coexist while we migrate.
-
-                    Data flow: node.data.value is the action's properties
-                    object; ActionEditor reads/writes via key paths (e.g.
-                    `tag.id`, `save_to.field_id`). On save the builder's
-                    sync-graph payload sends this as the activity's
-                    `properties.value`, which the backend's
-                    `ActionHandlerService.dispatch()` reads. */}
-                {selectedNode && ['action', 'condition', 'delay', 'smart_loop', 'randomizer', 'splitter'].includes(selectedNode.data?.stepType) && (
-                    <div className="absolute top-0 bottom-0 right-0 w-[400px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[55] flex flex-col">
-                        <div className="h-14 px-4 flex items-center justify-between bg-emerald-600 text-white shrink-0">
-                            <div className="flex items-center gap-2 font-bold text-xs tracking-wide">
-                                <FaBolt className="h-3 w-3" />
-                                <span>{selectedNode.data?.stepType === 'condition' ? 'CONDITION' : 'ACTION'} PROPERTIES</span>
-                            </div>
-                            <button onClick={() => setSelectedNodeId(null)} className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-full">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                            {selectedNode.data?.stepType === 'action' ? (
-                                <ActionEditor
-                                    actionSlug={selectedNode.data?.actionSlug ?? ''}
-                                    value={selectedNode.data?.value ?? {}}
-                                    onChange={(v) =>
-                                        setNodes((nds) =>
-                                            nds.map((n) =>
-                                                n.id === selectedNode.id
-                                                    ? { ...n, data: { ...n.data, value: v } }
-                                                    : n,
-                                            ),
-                                        )
-                                    }
-                                    integrations={integrations ?? {}}
-                                />
-                            ) : selectedNode.data?.stepType === 'condition' ? (
-                                <ConditionEditor
-                                    value={selectedNode.data?.condition ?? {}}
-                                    onChange={(v) =>
-                                        setNodes((nds) =>
-                                            nds.map((n) =>
-                                                n.id === selectedNode.id
-                                                    ? { ...n, data: { ...n.data, condition: v } }
-                                                    : n,
-                                            ),
-                                        )
-                                    }
-                                    integrations={integrations ?? {}}
-                                />
-                            ) : (
-                                <StepPropertiesEditor
-                                    stepType={selectedNode.data?.stepType}
-                                    value={selectedNode.data?.value ?? {}}
-                                    onChange={(v) =>
-                                        setNodes((nds) =>
-                                            nds.map((n) =>
-                                                n.id === selectedNode.id
-                                                    ? { ...n, data: { ...n.data, value: v } }
-                                                    : n,
-                                            ),
-                                        )
-                                    }
-                                    integrations={integrations ?? {}}
-                                />
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Right Sidebar: Node Inspector */}
-                {selectedNode && (
-                    <>
-                        {isTextEditorOpen && (
-                            <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300">
-                                <div className="h-14 px-4 flex items-center justify-between bg-blue-500 text-white shrink-0">
-                                    <div className="flex items-center gap-2 font-bold text-xs tracking-wide text-white">
-                                        <FaTextHeight className="h-3 w-3 text-white" />
-                                        <span>EDIT TEXT</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex gap-1 mr-1">
-                                            <button className="p-1 px-2 hover:bg-white/20 rounded border border-white/30 bg-white/10 text-white font-bold text-[10px] shadow-sm" title="Bold">B</button>
-                                            <button className="p-1 px-2 hover:bg-white/20 rounded border border-white/30 bg-white/10 text-white italic font-bold text-[10px] shadow-sm" title="Italic">I</button>
-                                        </div>
-                                        <button onClick={() => setIsTextEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex-1 p-4 bg-white overflow-y-auto min-h-0">
-                                    <textarea
-                                        value={tempTextValue}
-                                        onChange={(e) => setTempTextValue(e.target.value)}
-                                        className="w-full min-h-[150px] p-4 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none resize-y text-sm text-gray-700 placeholder:text-gray-400 transition-all bg-white"
-                                        placeholder="Enter your Message Here"
-                                    />
-
-                                    <div className="mt-6 pt-6 border-t border-gray-100">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <label className="text-sm font-medium text-gray-700">Display "Typing..." message.</label>
-                                            <Switch
-                                                checked={tempTypingIndicator}
-                                                onCheckedChange={setTempTypingIndicator}
-                                            />
-                                        </div>
-                                        <div className="flex gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100/50">
-                                            <FaInfoCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                                            <p className="text-[11px] text-blue-700 leading-relaxed">
-                                                This will send a 'read' receipt and display a typing indicator, letting the WhatsApp user know you're preparing a response. The typing indicator will disappear once you reply or after 25 seconds, whichever comes first. It can only be sent once.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                </div>
-                                <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center gap-2 shrink-0">
-                                    <button onClick={() => {
-                                        if (selectedNodeId && editingBlockId) {
-                                            setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                ...n,
-                                                data: {
-                                                    ...n.data,
-                                                    blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? { ...b, text: tempTextValue, typingIndicator: tempTypingIndicator } : b)
-                                                }
-                                            } : n));
-                                        }
-                                        setIsTextEditorOpen(false);
-                                        setEditingBlockId(null);
-                                    }} className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200">Save Changes</button>
-                                    <button onClick={() => { setIsTextEditorOpen(false); setEditingBlockId(null); }} className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200">Close</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {isButtonEditorOpen && (
-
-                            <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300">
-                                <div className="h-14 px-4 flex items-center justify-between bg-blue-500 text-white shrink-0">
-                                    <div className="flex items-center gap-2 font-bold text-xs tracking-wide text-white">
-                                        <FaBolt className="h-3 w-3 text-white" />
-                                        <span>Button</span>
-                                    </div>
-                                    <button onClick={() => setIsButtonEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <div className="flex-1 p-6 bg-white overflow-y-auto">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest">Button Text</label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={tempButtonText}
-                                                    onChange={(e) => setTempButtonText(e.target.value.slice(0, 20))}
-                                                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none text-sm text-gray-700 transition-all bg-white"
-                                                    placeholder="Button Name"
-                                                />
-                                                <div className="text-right mt-1.5">
-                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Remaining: {20 - tempButtonText.length}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2 shrink-0">
-                                    <button
-                                        onClick={() => {
-                                            if (selectedNodeId && editingBlockId && editingButtonId) {
-                                                setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                    ...n,
-                                                    data: {
-                                                        ...n.data,
-                                                        blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                            ...b,
-                                                            buttons: (b.buttons || []).map((btn: any) => btn.id === editingButtonId ? { ...btn, text: tempButtonText } : btn)
-                                                        } : b)
-                                                    }
-                                                } : n));
-                                            }
-                                            setIsButtonEditorOpen(false);
-                                            setEditingBlockId(null);
-                                            setEditingButtonId(null);
-                                        }}
-                                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-bold shadow-md transition-all active:scale-[0.98]"
-                                    >
-                                        Save Changes
-                                    </button>
-                                    <button onClick={() => { setIsButtonEditorOpen(false); setEditingBlockId(null); setEditingButtonId(null); }} className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200">Close</button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="w-[400px] bg-white border-l border-gray-200 flex flex-col shadow-[-4px_0_12px_rgba(0,0,0,0.02)] relative z-[70]">
-                            <div className="h-14 border-b px-4 flex items-center justify-between bg-blue-600 text-white shrink-0">
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-white/20 p-1 rounded">
-                                        {selectedNode.data.icon ? (() => { const Icon = selectedNode.data.icon; return <Icon className="h-4 w-4" style={{ color: selectedNode.data.color || 'white' }} />; })() : <FaRobot className="h-4 w-4 text-white" />}
-                                    </div>
-                                    <span className="font-bold text-lg tracking-wide">{selectedNode.data.label}</span>
-                                </div>
-                                <button onClick={() => { setSelectedNodeId(null); closeAllEditors(); }} className="text-white hover:bg-blue-700 p-1.5 rounded transition-colors border border-white/30"><FaTimes className="h-4 w-4" /></button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-4 bg-white text-gray-800">
-                                {selectedNode.type === 'start' ? (
-                                    <div className="p-6 text-center">
-                                        <div className="p-4 bg-gray-50 rounded-full mb-3 inline-block"><FaRobot className="h-10 w-10 text-gray-300" /></div>
-                                        <h3 className="font-semibold text-gray-800 mb-1">No AI Logic Configured</h3>
-                                        <p className="text-xs text-gray-500 leading-relaxed max-w-[200px] mx-auto">Add an AI node to your flow to configure ReplyAgent behavior.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Configure Node</label>
-
-                                        {selectedNode.data.label === 'Twilio Call' && (
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Sender Number</label>
-                                                    <select className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white">
-                                                        <option>Select a number...</option>
-                                                        <option>+1 (555) 000-0000</option>
-                                                        <option>+1 (555) 123-4567</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Assignee</label>
-                                                    <select className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white">
-                                                        <option>Select Agent/Team...</option>
-                                                        <option>Support Team</option>
-                                                        <option>Sales Team</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {selectedNode.data.label === 'SMS from Twilio' && (
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Sender Number</label>
-                                                    <select className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white">
-                                                        <option>Select a number...</option>
-                                                        <option>+1 (555) 000-0000</option>
-                                                        <option>+1 (555) 123-4567</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Message</label>
-                                                    <textarea className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white" rows={4} placeholder="Type your message here..." />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {selectedNode.data.label === 'Whatsapp' && (
-                                            <div className="flex flex-col gap-5">
-                                                <div className="relative">
-                                                    <button onClick={() => setIsWhatsappWindowDropdownOpen(!isWhatsappWindowDropdownOpen)} className="w-full flex items-center justify-between border border-gray-300 rounded-md shadow-sm p-3 bg-white text-sm hover:border-blue-400 transition-colors">
-                                                        <div className="flex items-center gap-2"><FaWhatsapp className="text-[#25D366] w-4 h-4" /><span className="font-medium text-gray-700">{whatsappWindow}</span></div>
-                                                        <FaChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${isWhatsappWindowDropdownOpen ? 'rotate-180' : ''}`} />
-                                                    </button>
-                                                    {isWhatsappWindowDropdownOpen && (
-                                                        <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-1">
-                                                            {['Send within 24 hours window', 'Send outside 24 hours window'].map((opt) => (
-                                                                <button key={opt} onClick={() => { setWhatsappWindow(opt); setIsWhatsappWindowDropdownOpen(false); }} className="w-full flex items-center gap-3 p-3 hover:bg-blue-50 text-sm text-left border-b border-gray-50 last:border-0 transition-colors group">
-                                                                    <FaWhatsapp className="text-[#25D366] w-4 h-4" />
-                                                                    <span className={`transition-colors ${whatsappWindow === opt ? 'text-blue-600 font-semibold' : 'text-gray-700 group-hover:text-blue-600'}`}>{opt}</span>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* WhatsApp Multi-Block Management */}
-                                                {/* WhatsApp Multi-Block Management */}
-                                                <div className="space-y-4">
-                                                    {(selectedNode.data.blocks || []).map((block: any) => (
-                                                        <div key={block.id} className="mb-6 last:mb-0">
-                                                            {block.type === 'image' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative group/imageblock transition-all">
-                                                                    <div className="flex justify-between items-start mb-2 px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Image</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    {block.url ? (
-                                                                        <div
-                                                                            onClick={() => {
-                                                                                closeAllEditors();
-                                                                                setEditingBlockId(block.id);
-                                                                                setIsMediaGalleryOpen(true);
-                                                                            }}
-                                                                            className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-100 cursor-pointer hover:border-blue-400 transition-all group/imgpreview bg-gray-50 flex items-center justify-center"
-                                                                        >
-                                                                            <img src={block.url} alt="Uploaded" className="w-full h-full object-contain" />
-                                                                            <div className="absolute inset-0 bg-black/0 group-hover/imgpreview:bg-black/20 flex items-center justify-center transition-all">
-                                                                                <p className="text-white text-[10px] font-bold opacity-0 group-hover/imgpreview:opacity-100">Click to change</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="w-full p-4 border border-solid border-gray-300 rounded-lg bg-gray-50/50 flex flex-col items-center gap-3">
-                                                                            <div className="p-3 bg-white rounded-full shadow-sm">
-                                                                                <FaImage className="w-6 h-6 text-gray-400" />
-                                                                            </div>
-                                                                            <div className="text-center space-y-2">
-                                                                                <p className="text-[11px] font-medium text-gray-500 leading-tight">
-                                                                                    <button
-                                                                                        onClick={() => {
-                                                                                            closeAllEditors();
-                                                                                            setEditingBlockId(block.id);
-                                                                                            setTempImageUrl(block.url || "");
-                                                                                            setIsImageEditorOpen(true);
-                                                                                        }}
-                                                                                        className="text-blue-600 hover:underline font-bold"
-                                                                                    >Select from media gallery</button>
-                                                                                    <span className="mx-1 text-gray-400">Or</span>
-                                                                                    <button
-                                                                                        onClick={() => {
-                                                                                            closeAllEditors();
-                                                                                            setEditingBlockId(block.id);
-                                                                                            setTempImageUrl(block.url || "");
-                                                                                            setIsImageEditorOpen(true);
-                                                                                        }}
-                                                                                        className="text-blue-600 hover:underline font-bold"
-                                                                                    >Enter a URL</button>
-                                                                                </p>
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ) : block.type === 'audio' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative group/audioblock transition-all">
-                                                                    <div className="flex justify-between items-start mb-2 px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Audio</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <div
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempAudioSource(block.source || 'gallery');
-                                                                            setTempAudioUrl(block.url || "");
-                                                                            setTempCustomField(block.customField || "audio");
-                                                                            setIsAudioEditorOpen(true);
-                                                                        }}
-                                                                        className="w-full p-4 border border-solid border-gray-300 rounded-lg bg-gray-50/50 flex flex-col items-center gap-3 cursor-pointer hover:border-blue-400 transition-all"
-                                                                    >
-                                                                        <div className="p-3 bg-white rounded-full shadow-sm">
-                                                                            <FaMicrophone className="w-6 h-6 text-gray-400" />
-                                                                        </div>
-                                                                        <div className="text-center space-y-1">
-                                                                            <p className="text-[11px] font-bold text-gray-600 leading-tight">Click to add an audio file</p>
-                                                                            {block.url && <p className="text-[9px] text-blue-500 truncate max-w-[200px]">{block.url}</p>}
-                                                                            {block.source === 'custom' && block.customField && <p className="text-[9px] text-purple-500 font-bold uppercase tracking-tighter">CF: {block.customField}</p>}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ) : block.type === 'video' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative group/videoblock transition-all">
-                                                                    <div className="flex justify-between items-start mb-2 px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Video</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <div
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setIsMediaGalleryOpen(true);
-                                                                        }}
-                                                                        className="w-full p-4 border border-solid border-gray-300 rounded-lg bg-gray-50/50 flex flex-col items-center gap-3 cursor-pointer hover:border-blue-400 transition-all"
-                                                                    >
-                                                                        {block.url ? (
-                                                                            <div className="w-full aspect-video bg-black rounded overflow-hidden relative">
-                                                                                <video src={block.url} className="w-full h-full object-cover opacity-50" />
-                                                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                                                    <FaPlay className="w-8 h-8 text-white opacity-80" />
-                                                                                </div>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <>
-                                                                                <div className="p-3 bg-white rounded-full shadow-sm">
-                                                                                    <FaVideo className="w-6 h-6 text-gray-400" />
-                                                                                </div>
-                                                                                <div className="text-center space-y-1">
-                                                                                    <p className="text-[11px] font-bold text-gray-600 leading-tight">Click to add a video</p>
-                                                                                    <p className="text-[9px] text-gray-400">Select from media gallery</p>
-                                                                                </div>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            ) : block.type === 'delay' ? (
-                                                                <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm relative group/delayblock transition-all flex flex-col gap-3">
-                                                                    <div className="flex justify-between items-center">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Delay</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-300 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3.5 h-3.5" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-3 bg-gray-100/50 p-2.5 rounded-lg border border-gray-100">
-                                                                        <span className="text-xs font-bold text-gray-500 min-w-[45px]">Delay</span>
-                                                                        <div className="flex-1 flex items-center gap-2">
-                                                                            <input
-                                                                                type="number"
-                                                                                value={block.value || 1}
-                                                                                min="1"
-                                                                                onChange={(e) => {
-                                                                                    const val = parseInt(e.target.value) || 1;
-                                                                                    setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                        ...n,
-                                                                                        data: {
-                                                                                            ...n.data,
-                                                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === block.id ? { ...b, value: val } : b)
-                                                                                        }
-                                                                                    } : n));
-                                                                                }}
-                                                                                className="w-full bg-white border border-gray-200 rounded p-1.5 text-xs font-bold text-center outline-none focus:ring-1 focus:ring-blue-400"
-                                                                            />
-                                                                            <span className="text-xs font-bold text-gray-400">seconds</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ) : block.type === 'contact_response' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative group/contactrespblock transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600">Contact response</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempContactResponseData({
-                                                                                message: block.message || "",
-                                                                                accumulator: block.accumulator || false,
-                                                                                customField: block.customField || "",
-                                                                                incorrectMessage: block.incorrectMessage || "",
-                                                                                retryAttempts: block.retryAttempts || 0,
-                                                                                waitDuration: block.waitDuration || 1,
-                                                                                waitUnit: block.waitUnit || 'Seconds'
-                                                                            });
-                                                                            setIsContactResponseEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-2.5 rounded-lg transition-all ${isContactResponseEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border border-solid border-gray-200 bg-white shadow-sm hover:border-blue-400'} ${block.message ? 'text-left' : 'text-center'}`}
-                                                                    >
-                                                                        {block.message ? (
-                                                                            <p className="text-xs text-gray-700 line-clamp-2">{block.message}</p>
-                                                                        ) : (
-                                                                            <p className="text-xs text-gray-400 font-medium">← Add text</p>
-                                                                        )}
-                                                                    </button>
-                                                                </div>
-                                                            ) : block.type === 'message_list' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative group/msglistblock transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600">Message List</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempMessageListData({
-                                                                                title: block.title || "",
-                                                                                body: block.body || "",
-                                                                                footer: block.footer || "",
-                                                                                buttonText: block.buttonText || "",
-                                                                                sections: block.sections || []
-                                                                            });
-                                                                            setIsMessageListEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-3 rounded-lg transition-all ${isMessageListEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border border-solid border-gray-200 bg-white shadow-sm hover:border-blue-400'} flex items-center justify-center`}
-                                                                    >
-                                                                        {block.title ? (
-                                                                            <p className="text-xs text-gray-700 font-bold">{block.title}</p>
-                                                                        ) : (
-                                                                            <FaListUl className="w-4 h-4 text-gray-400" />
-                                                                        )}
-                                                                    </button>
-                                                                </div>
-                                                            ) : block.type === 'message_template' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Send a template</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempMessageTemplate(block.template || "order_processed_v5");
-                                                                            setIsMessageTemplateEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-3 rounded-lg transition-all ${isMessageTemplateEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border border-solid border-gray-200 bg-white shadow-sm hover:border-blue-400'} flex flex-col items-center justify-center text-center`}
-                                                                    >
-                                                                        <div className="p-2 rounded-full bg-blue-50 text-blue-600 mb-1">
-                                                                            <FaFileSignature className="w-4 h-4" />
-                                                                        </div>
-                                                                        <span className="text-[11px] font-bold text-gray-700">{block.template || "Select a template"}</span>
-                                                                    </button>
-                                                                </div>
-                                                            ) : block.type === 'cta' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">CTA Button</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempCtaHeader(block.header || "");
-                                                                            setTempCtaBody(block.body || "");
-                                                                            setTempCtaFooter(block.footer || "");
-                                                                            setTempCtaButtonText(block.buttonText || "");
-                                                                            setTempCtaUrl(block.url || "");
-                                                                            setIsCtaEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-3 rounded-lg transition-all ${isCtaEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border border-dashed border-gray-300 bg-white hover:border-blue-400'} flex items-center justify-center`}
-                                                                    >
-                                                                        <div className="flex flex-col text-center gap-1.5 opacity-60 pointer-events-none w-full">
-                                                                            {block.header && <span className="text-[10px] font-semibold">{block.header}</span>}
-                                                                            <span className="text-xs">{block.body || "Enter the body of this message"}</span>
-                                                                            {block.footer && <span className="text-[10px] text-gray-500">{block.footer}</span>}
-                                                                            <div className="border border-gray-200 mt-1 py-1 px-4 text-blue-500 text-xs rounded-md shadow-sm w-full mx-auto font-medium">
-                                                                                {block.buttonText || "Enter button text"}
-                                                                            </div>
-                                                                        </div>
-                                                                    </button>
-                                                                </div>
-                                                            ) : block.type === 'ai_studio_question' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">AI Studio Question</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempAiStudioMode(block.mode || 'ChatGPT');
-                                                                            setTempAiStudioAssistant(block.assistant || 'TestsEdilson 2 Gemini');
-                                                                            setTempAiStudioQuestion(block.question || '');
-                                                                            setTempAiStudioAccumulator(block.accumulator || false);
-                                                                            setTempAiStudioAccumulatorTime(block.accumulatorTime || 5);
-                                                                            setTempAiStudioSmartLoop(block.smartLoop || false);
-                                                                            setTempAiStudioSmartLoopTime(block.smartLoopTime || 1);
-                                                                            setTempAiStudioSmartLoopUnit(block.smartLoopUnit || 'Minutes');
-                                                                            setTempAiStudioWaitTime(block.waitTime || 1);
-                                                                            setTempAiStudioSendAnswer(block.sendAnswer || false);
-                                                                            setTempAiStudioSaveCustomField(block.saveCustomField || false);
-                                                                            setTempAiStudioSaveCustomFieldValue(block.saveCustomFieldValue || '');
-                                                                            setTempAiStudioWaitReplies(block.waitReplies || false);
-                                                                            setTempAiStudioWaitRepliesSaveLiveChat(block.waitRepliesSaveLiveChat || false);
-                                                                            setTempAiStudioWaitRepliesMessages(block.waitRepliesMessages || []);
-                                                                            setTempAiStudioCounter(block.counter || false);
-                                                                            setTempAiStudioCounterCustomField(block.counterCustomField || '');
-                                                                            setTempAiStudioVisionEnabled(block.visionEnabled || false);
-                                                                            setTempAiStudioVisionModel(block.visionModel || 'gpt-4o-mini');
-                                                                            setTempAiStudioVisionPrompt(block.visionPrompt || 'What’s in this image? black and white');
-                                                                            setTempAiStudioVisionSaveCustomField(block.visionSaveCustomField || false);
-                                                                            setTempAiStudioVisionCustomField(block.visionCustomField || 'RespostaGPT');
-                                                                            setIsAiStudioEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-4 rounded-lg transition-all ${isAiStudioEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border-2 border-dashed border-gray-300 bg-gray-50/50 hover:border-blue-400'} flex items-center justify-center cursor-pointer`}
-                                                                    >
-                                                                        <span className="text-xs font-semibold text-gray-500">← Add Question</span>
-                                                                    </button>
-                                                                </div>
-                                                            ) : block.type === 'dify_question' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Dify.ai Question</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempDifyAssistant(block.assistant || 'New_bot');
-                                                                            setTempAiStudioQuestion(block.question || '');
-                                                                            setTempAiStudioAccumulator(block.accumulator || false);
-                                                                            setTempAiStudioAccumulatorTime(block.accumulatorTime || 5);
-                                                                            setTempAiStudioSmartLoop(block.smartLoop || false);
-                                                                            setTempAiStudioSmartLoopTime(block.smartLoopTime || 1);
-                                                                            setTempAiStudioSmartLoopUnit(block.smartLoopUnit || 'Minutes');
-                                                                            setTempAiStudioWaitTime(block.waitTime || 1);
-                                                                            setTempAiStudioSendAnswer(block.sendAnswer || false);
-                                                                            setTempAiStudioSaveCustomField(block.saveCustomField || false);
-                                                                            setTempAiStudioSaveCustomFieldValue(block.saveCustomFieldValue || '');
-                                                                            setTempAiStudioWaitReplies(block.waitReplies || false);
-                                                                            setTempAiStudioWaitRepliesSaveLiveChat(block.waitRepliesSaveLiveChat || false);
-                                                                            setTempAiStudioWaitRepliesMessages(block.waitRepliesMessages || []);
-                                                                            setTempAiStudioCounter(block.counter || false);
-                                                                            setTempAiStudioCounterCustomField(block.counterCustomField || '');
-                                                                            setTempAiStudioVisionEnabled(block.visionEnabled || false);
-                                                                            setTempAiStudioVisionModel(block.visionModel || 'gpt-4o-mini');
-                                                                            setTempAiStudioVisionPrompt(block.visionPrompt || 'What’s in this image? black and white');
-                                                                            setTempAiStudioVisionSaveCustomField(block.visionSaveCustomField || false);
-                                                                            setTempAiStudioVisionCustomField(block.visionCustomField || 'RespostaGPT');
-                                                                            setIsDifyEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-4 rounded-lg transition-all ${isDifyEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border-2 border-dashed border-gray-300 bg-gray-50/50 hover:border-blue-400'} flex items-center justify-center cursor-pointer`}
-                                                                    >
-                                                                        <span className="text-xs font-semibold text-gray-500">← Add Question</span>
-                                                                    </button>
-                                                                </div>
-                                                            ) : block.type === 'chatgpt' ? (
-                                                                <div className="bg-white rounded-lg p-1 relative transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">ChatGPT Answer</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempChatGptText(block.text || '');
-                                                                            setIsChatGptEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-4 rounded-lg transition-all ${isChatGptEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border-2 border-dashed border-gray-300 bg-gray-50/50 hover:border-blue-400'} flex items-center justify-center cursor-pointer`}
-                                                                    >
-                                                                        <span className="text-xs font-semibold text-gray-500">← Add Text</span>
-                                                                    </button>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="bg-white rounded-lg p-1 relative group/textblock transition-all flex flex-col gap-2">
-                                                                    <div className="flex justify-between items-start px-2">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Text</span>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                closeAllEditors();
-                                                                                if (editingBlockId === block.id) {
-                                                                                    setIsTextEditorOpen(false);
-                                                                                    setIsButtonEditorOpen(false);
-                                                                                    setEditingBlockId(null);
-                                                                                    setEditingButtonId(null);
-                                                                                }
-                                                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                    ...n,
-                                                                                    data: {
-                                                                                        ...n.data,
-                                                                                        blocks: (n.data.blocks || []).filter((b: any) => b.id !== block.id)
-                                                                                    }
-                                                                                } : n));
-                                                                            }}
-                                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                                        >
-                                                                            <FaTrashAlt className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            closeAllEditors();
-                                                                            setEditingBlockId(block.id);
-                                                                            setTempTextValue(block.text || "");
-                                                                            setTempTypingIndicator(block.typingIndicator || false);
-                                                                            setIsTextEditorOpen(true);
-                                                                        }}
-                                                                        className={`w-full p-2.5 rounded-lg transition-all ${isTextEditorOpen && editingBlockId === block.id ? 'border-2 border-dashed border-blue-400 bg-blue-50/30' : 'border border-solid border-gray-200 bg-white shadow-sm hover:border-blue-400'} ${block.text ? 'text-left' : 'text-center'}`}
-                                                                    >
-                                                                        {block.text ? (
-                                                                            <p className="text-xs text-gray-700 line-clamp-2">{block.text}</p>
-                                                                        ) : (
-                                                                            <p className="text-xs text-gray-400 font-medium">← Add text</p>
-                                                                        )}
-                                                                    </button>
-
-                                                                    {block.buttons && block.buttons.length > 0 && (
-                                                                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                                            {block.buttons.map((btn: any) => (
-                                                                                <div key={btn.id} className="bg-white border border-gray-200 rounded-full pl-3 pr-2 py-1.5 shadow-sm hover:border-blue-400 transition-all flex items-center gap-2">
-                                                                                    <button
-                                                                                        onClick={() => {
-                                                                                            setEditingBlockId(block.id);
-                                                                                            setEditingButtonId(btn.id);
-                                                                                            setTempButtonText(btn.text);
-                                                                                            setIsButtonEditorOpen(true);
-                                                                                        }}
-                                                                                        className="text-xs font-bold text-gray-700 hover:text-blue-600 truncate max-w-[80px]"
-                                                                                    >
-                                                                                        {btn.text || "Untitled"}
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            closeAllEditors();
-                                                                                            if (editingButtonId === btn.id) {
-                                                                                                setIsButtonEditorOpen(false);
-                                                                                                setEditingBlockId(null);
-                                                                                                setEditingButtonId(null);
-                                                                                            }
-                                                                                            setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                                ...n,
-                                                                                                data: {
-                                                                                                    ...n.data,
-                                                                                                    blocks: (n.data.blocks || []).map((b: any) => b.id === block.id ? {
-                                                                                                        ...b,
-                                                                                                        buttons: (b.buttons || []).filter((bt: any) => bt.id !== btn.id)
-                                                                                                    } : b)
-                                                                                                }
-                                                                                            } : n));
-                                                                                        }}
-                                                                                        className="text-gray-300 hover:text-red-500 p-0.5"
-                                                                                    >
-                                                                                        <FaTrashAlt className="w-2.5 h-2.5" />
-                                                                                    </button>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-
-                                                                    {(block.buttons?.length || 0) < 3 && (
-                                                                        <div className="mt-1 flex">
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    const newButtonId = Date.now().toString();
-                                                                                    setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                                        ...n,
-                                                                                        data: {
-                                                                                            ...n.data,
-                                                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === block.id ? {
-                                                                                                ...b,
-                                                                                                buttons: [...(b.buttons || []), { id: newButtonId, text: "" }]
-                                                                                            } : b)
-                                                                                        }
-                                                                                    } : n));
-                                                                                    closeAllEditors();
-                                                                                    setEditingBlockId(block.id);
-                                                                                    setEditingButtonId(newButtonId);
-                                                                                    setTempButtonText("");
-                                                                                    setIsButtonEditorOpen(true);
-                                                                                }}
-                                                                                className="inline-flex items-center gap-1.5 p-1.5 px-3 text-blue-600 border border-blue-200 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 font-medium text-xs"
-                                                                            >
-                                                                                <FaPlus className="w-2.5 h-2.5" />
-                                                                                <span>Add Button</span>
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="h-[1px] bg-gray-200 w-full" />
-
-                                                <div className="flex gap-4 relative">
-                                                    <div className="flex-1 space-y-2">
-                                                        {[
-                                                            { label: 'T Text', icon: FaTextHeight, color: '#0084FF' },
-                                                            { label: 'Audio', icon: FaMicrophone, color: '#25D366' },
-                                                            { label: 'Docmunt', icon: FaFileAlt, color: '#FF3366' },
-                                                            { label: 'Contact response', icon: FaUserEdit, color: '#6554C0' },
-                                                            { label: 'Message Templates', icon: FaFileSignature, color: '#008CFF' },
-                                                            { label: '? AI Studio Question', icon: FaQuestionCircle, color: '#6366F1' },
-                                                            { label: '? ChatGPT Question', icon: FaBrain, color: '#10A37F' },
-                                                        ].map((btn, idx) => (
-                                                            <button
-                                                                key={idx}
-                                                                onClick={() => {
-                                                                    if (btn.label === 'T Text') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `text-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'text' as const,
-                                                                            text: "",
-                                                                            buttons: [],
-                                                                            typingIndicator: false
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempTextValue("");
-                                                                        setTempTypingIndicator(false);
-                                                                        setIsTextEditorOpen(true);
-                                                                    } else if (btn.label === 'Audio') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `audio-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'audio' as const,
-                                                                            source: 'gallery' as const,
-                                                                            url: "",
-                                                                            customField: "audio"
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempAudioSource('gallery');
-                                                                        setTempAudioUrl("");
-                                                                        setTempCustomField("audio");
-                                                                        setIsAudioEditorOpen(true);
-                                                                    } else if (btn.label === 'Contact response') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `contact-resp-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'contact_response' as const,
-                                                                            message: "",
-                                                                            accumulator: false,
-                                                                            customField: "",
-                                                                            incorrectMessage: "",
-                                                                            retryAttempts: 0,
-                                                                            waitDuration: 1,
-                                                                            waitUnit: 'Seconds' as const
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempContactResponseData({
-                                                                            message: "",
-                                                                            accumulator: false,
-                                                                            customField: "",
-                                                                            incorrectMessage: "",
-                                                                            retryAttempts: 0,
-                                                                            waitDuration: 1,
-                                                                            waitUnit: 'Seconds'
-                                                                        });
-                                                                        setIsContactResponseEditorOpen(true);
-                                                                    } else if (btn.label === 'Message Template' || btn.label === 'Message Templates') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `msg-tpl-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'message_template' as const,
-                                                                            template: "order_processed_v5"
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempMessageTemplate("order_processed_v5");
-                                                                        setIsMessageTemplateEditorOpen(true);
-                                                                    } else if (btn.label === '? AI Studio Question') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `aistudio-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'ai_studio_question' as const,
-                                                                            mode: 'ChatGPT',
-                                                                            assistant: 'TestsEdilson 2 Gemini',
-                                                                            question: '',
-                                                                            accumulator: false,
-                                                                            smartLoop: false,
-                                                                            waitTime: 1,
-                                                                            sendAnswer: false,
-                                                                            saveCustomField: false,
-                                                                            waitReplies: false,
-                                                                            counter: false,
-                                                                            visionEnabled: false,
-                                                                            visionModel: 'gpt-4o-mini',
-                                                                            visionPrompt: 'What’s in this image? black and white',
-                                                                            visionSaveCustomField: false,
-                                                                            visionCustomField: 'RespostaGPT'
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempAiStudioMode('ChatGPT');
-                                                                        setTempAiStudioAssistant('TestsEdilson 2 Gemini');
-                                                                        setTempAiStudioQuestion('');
-                                                                        setTempAiStudioAccumulator(false);
-                                                                        setTempAiStudioAccumulatorTime(5);
-                                                                        setTempAiStudioSmartLoop(false);
-                                                                        setTempAiStudioSmartLoopTime(1);
-                                                                        setTempAiStudioSmartLoopUnit('Minutes');
-                                                                        setTempAiStudioWaitTime(1);
-                                                                        setTempAiStudioSendAnswer(false);
-                                                                        setTempAiStudioSaveCustomField(false);
-                                                                        setTempAiStudioSaveCustomFieldValue('');
-                                                                        setTempAiStudioWaitReplies(false);
-                                                                        setTempAiStudioWaitRepliesSaveLiveChat(false);
-                                                                        setTempAiStudioWaitRepliesMessages([]);
-                                                                        setTempAiStudioCounter(false);
-                                                                        setTempAiStudioCounterCustomField('');
-                                                                        setTempAiStudioVisionEnabled(false);
-                                                                        setTempAiStudioVisionModel('gpt-4o-mini');
-                                                                        setTempAiStudioVisionPrompt('What’s in this image? black and white');
-                                                                        setTempAiStudioVisionSaveCustomField(false);
-                                                                        setTempAiStudioVisionCustomField('RespostaGPT');
-                                                                        setIsAiStudioEditorOpen(true);
-                                                                    } else if (btn.label === 'Docmunt') {
-                                                                        closeAllEditors();
-                                                                        setIsAddingVideoBlock(true);
-                                                                        setIsMediaGalleryOpen(true);
-                                                                    } else if (btn.label === 'Image') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `block-${Date.now()}`;
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), { id: newBlockId, type: 'image', url: '' }]
-                                                                            }
-                                                                        } : n));
-                                                                    }
-                                                                }}
-                                                                className="w-full flex items-center gap-2.5 p-3 bg-white border border-gray-100 rounded-md hover:border-blue-400 hover:bg-blue-50 transition-all text-left group active:scale-[0.97] shadow-sm"
-                                                            >
-                                                                <div className="shrink-0 p-1 rounded bg-gray-50 group-hover:bg-white transition-colors">
-                                                                    {(() => { const Icon = btn.icon; return <Icon className="h-4 w-4" style={{ color: btn.color }} />; })()}
-                                                                </div>
-                                                                <span className={`${(btn.label.includes('Question') || btn.label.includes('Answer')) ? 'text-[12px]' : 'text-[10px]'} font-bold text-gray-600 leading-tight group-hover:text-blue-700 transition-colors uppercase tracking-tight`}>{btn.label}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                    <div className="flex-1 space-y-2">
-                                                        {[
-                                                            { label: 'Image', icon: FaImage, color: '#E1306C' },
-                                                            { label: 'Video', icon: FaVideo, color: '#FF0000' },
-                                                            { label: 'Delay', icon: FaClock, color: '#FFAB00' },
-                                                            { label: 'Message list', icon: FaListUl, color: '#00B8D9' },
-                                                            { label: 'CTA Button', icon: FaMousePointer, color: '#2563eb' },
-                                                            { label: 'Dify.ai Question', icon: FaCogs, color: '#0EA5E9' },
-                                                            { label: 'ChatGPT Answer', icon: FaBrain, color: '#F59E0B' },
-                                                        ].map((btn, idx) => (
-                                                            <button
-                                                                key={idx}
-                                                                onClick={() => {
-                                                                    closeAllEditors();
-                                                                    if (btn.label === 'Image') {
-                                                                        const newBlockId = `block-${Date.now()}`;
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), { id: newBlockId, type: 'image', url: '' }]
-                                                                            }
-                                                                        } : n));
-                                                                    } else if (btn.label === 'Video') {
-                                                                        closeAllEditors();
-                                                                        setIsAddingVideoBlock(true);
-                                                                        setIsMediaGalleryOpen(true);
-                                                                    } else if (btn.label === 'Message list' || btn.label === 'Message List') {
-                                                                        closeAllEditors();
-                                                                        const newBlockId = `msg-list-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'message_list',
-                                                                            title: "",
-                                                                            body: "",
-                                                                            footer: "",
-                                                                            buttonText: "",
-                                                                            sections: []
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempMessageListData({
-                                                                            title: "",
-                                                                            body: "",
-                                                                            footer: "",
-                                                                            buttonText: "",
-                                                                            sections: []
-                                                                        });
-                                                                        setIsMessageListEditorOpen(true);
-                                                                    } else if (btn.label === 'Delay') {
-                                                                        const newBlockId = `delay-${Date.now()}`;
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), { id: newBlockId, type: 'delay', value: 1 }]
-                                                                            }
-                                                                        } : n));
-                                                                    } else if (btn.label === 'CTA Button') {
-                                                                        const newBlockId = `cta-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'cta' as const,
-                                                                            header: "",
-                                                                            body: "",
-                                                                            footer: "",
-                                                                            buttonText: "",
-                                                                            url: ""
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempCtaHeader("");
-                                                                        setTempCtaBody("");
-                                                                        setTempCtaFooter("");
-                                                                        setTempCtaButtonText("");
-                                                                        setTempCtaUrl("");
-                                                                        setIsCtaEditorOpen(true);
-                                                                    } else if (btn.label === 'ChatGPT Answer') {
-                                                                        const newBlockId = `chatgpt-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'chatgpt' as const,
-                                                                            text: ""
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempChatGptText("");
-                                                                        setIsChatGptEditorOpen(true);
-                                                                    } else if (btn.label === '? ChatGPT Question') {
-                                                                        const newBlockId = `chatgpt-q-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'ai_studio_question' as const,
-                                                                            mode: 'ChatGPT' as const,
-                                                                            assistant: 'TestsEdilson 2 Gemini',
-                                                                            question: '',
-                                                                            accumulator: false,
-                                                                            smartLoop: false,
-                                                                            waitTime: 1,
-                                                                            sendAnswer: false,
-                                                                            saveCustomField: false,
-                                                                            waitReplies: false,
-                                                                            counter: false,
-                                                                            visionEnabled: false,
-                                                                            visionModel: 'gpt-4o-mini',
-                                                                            visionPrompt: 'What’s in this image? black and white',
-                                                                            visionSaveCustomField: false,
-                                                                            visionCustomField: 'RespostaGPT'
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempAiStudioMode('ChatGPT');
-                                                                        setTempAiStudioAssistant('TestsEdilson 2 Gemini');
-                                                                        setTempAiStudioQuestion('');
-                                                                        setTempAiStudioAccumulator(false);
-                                                                        setTempAiStudioAccumulatorTime(5);
-                                                                        setTempAiStudioSmartLoop(false);
-                                                                        setTempAiStudioSmartLoopTime(1);
-                                                                        setTempAiStudioSmartLoopUnit('Minutes');
-                                                                        setTempAiStudioWaitTime(1);
-                                                                        setTempAiStudioSendAnswer(false);
-                                                                        setTempAiStudioSaveCustomField(false);
-                                                                        setTempAiStudioSaveCustomFieldValue('');
-                                                                        setTempAiStudioWaitReplies(false);
-                                                                        setTempAiStudioWaitRepliesSaveLiveChat(false);
-                                                                        setTempAiStudioWaitRepliesMessages([]);
-                                                                        setTempAiStudioCounter(false);
-                                                                        setTempAiStudioCounterCustomField('');
-                                                                        setTempAiStudioVisionEnabled(false);
-                                                                        setTempAiStudioVisionModel('gpt-4o-mini');
-                                                                        setTempAiStudioVisionPrompt('What’s in this image? black and white');
-                                                                        setTempAiStudioVisionSaveCustomField(false);
-                                                                        setTempAiStudioVisionCustomField('RespostaGPT');
-                                                                        setIsAiStudioEditorOpen(true);
-                                                                    }
-                                                                    else if (btn.label === 'Dify.ai Question') {
-                                                                        const newBlockId = `dify-${Date.now()}`;
-                                                                        const newBlock = {
-                                                                            id: newBlockId,
-                                                                            type: 'dify_question' as const,
-                                                                            assistant: 'New_bot',
-                                                                            question: '',
-                                                                            accumulator: false,
-                                                                            accumulatorTime: 5,
-                                                                            smartLoop: false,
-                                                                            smartLoopTime: 1,
-                                                                            smartLoopUnit: 'Minutes',
-                                                                            waitTime: 1,
-                                                                            sendAnswer: false,
-                                                                            saveCustomField: false,
-                                                                            saveCustomFieldValue: '',
-                                                                            waitReplies: false,
-                                                                            waitRepliesSaveLiveChat: false,
-                                                                            waitRepliesMessages: [],
-                                                                        };
-                                                                        setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                                            ...n,
-                                                                            data: {
-                                                                                ...n.data,
-                                                                                blocks: [...(n.data.blocks || []), newBlock]
-                                                                            }
-                                                                        } : n));
-                                                                        setEditingBlockId(newBlockId);
-                                                                        setTempDifyAssistant('New_bot');
-                                                                        setTempAiStudioQuestion('');
-                                                                        setTempAiStudioAccumulator(false);
-                                                                        setTempAiStudioAccumulatorTime(5);
-                                                                        setTempAiStudioSmartLoop(false);
-                                                                        setTempAiStudioSmartLoopTime(1);
-                                                                        setTempAiStudioSmartLoopUnit('Minutes');
-                                                                        setTempAiStudioWaitTime(1);
-                                                                        setTempAiStudioSendAnswer(false);
-                                                                        setTempAiStudioSaveCustomField(false);
-                                                                        setTempAiStudioSaveCustomFieldValue('');
-                                                                        setTempAiStudioWaitReplies(false);
-                                                                        setTempAiStudioWaitRepliesSaveLiveChat(false);
-                                                                        setTempAiStudioWaitRepliesMessages([]);
-                                                                        setIsDifyEditorOpen(true);
-                                                                    }
-                                                                }}
-                                                                className="w-full flex items-center gap-2.5 p-3 bg-white border border-gray-100 rounded-md hover:border-blue-400 hover:bg-blue-50 transition-all text-left group active:scale-[0.97] shadow-sm"
-                                                            >
-                                                                <div className="shrink-0 p-1 rounded bg-gray-50 group-hover:bg-white transition-colors">
-                                                                    {(() => { const Icon = btn.icon; return <Icon className="h-4 w-4" style={{ color: btn.color }} />; })()}
-                                                                </div>
-                                                                <span className="text-[10.5px] font-bold text-gray-600 leading-tight group-hover:text-blue-700 transition-colors uppercase tracking-tight">{btn.label}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {selectedNode.data.label !== 'Twilio Call' && selectedNode.data.label !== 'SMS from Twilio' && selectedNode.data.label !== 'Whatsapp' && (
-                                <div className="text-center text-gray-500 py-10 border-2 border-dashed rounded-lg">
-                                    <p>Configuration for <strong>{selectedNode.data.label}</strong></p>
-                                    <span className="text-xs">Coming soon</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {
-                            isImageEditorOpen && (
-                                <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300">
-                                    <div className="h-14 px-4 flex items-center justify-between bg-blue-500 text-white shrink-0">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded bg-blue-500/30">
-                                                <FaImage className="w-3.5 h-3.5 text-white" />
-                                            </div>
-                                            <h3 className="font-bold text-white text-xs tracking-tight uppercase">Image URL</h3>
-                                        </div>
-                                        <button onClick={() => setIsImageEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Insert Image URL</label>
-                                            <textarea
-                                                value={tempImageUrl}
-                                                onChange={(e) => setTempImageUrl(e.target.value)}
-                                                placeholder="http://www.example.com/yourimage.jpg"
-                                                className="w-full min-h-[100px] p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all resize-y text-gray-700 placeholder:text-gray-300"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 border-t border-gray-50 bg-gray-50/50 flex items-center gap-3 shrink-0">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedNodeId && editingBlockId) {
-                                                    setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                        ...n,
-                                                        data: {
-                                                            ...n.data,
-                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? { ...b, url: tempImageUrl } : b)
-                                                        }
-                                                    } : n));
-                                                }
-                                                setIsImageEditorOpen(false);
-                                                setEditingBlockId(null);
-                                            }}
-                                            className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button onClick={() => { setIsImageEditorOpen(false); setEditingBlockId(null); }} className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200">Close</button>
-                                    </div>
-                                </div>
-                            )
-                        }
-
-                        {
-                            isAudioEditorOpen && (
-                                <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300">
-                                    <div className="h-14 px-4 flex items-center justify-between bg-blue-500 text-white shrink-0">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded bg-blue-500/30">
-                                                <FaMicrophone className="w-3.5 h-3.5 text-white" />
-                                            </div>
-                                            <h3 className="font-bold text-white text-xs tracking-tight uppercase">Audio</h3>
-                                        </div>
-                                        <button onClick={() => setIsAudioEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                        <div className="space-y-3">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Select audio source</label>
-                                            <div className="flex bg-gray-100 p-1 rounded-lg">
-                                                <button
-                                                    onClick={() => setTempAudioSource('gallery')}
-                                                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${tempAudioSource === 'gallery' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                                                >
-                                                    Media Gallery
-                                                </button>
-                                                <button
-                                                    onClick={() => setTempAudioSource('custom')}
-                                                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all ${tempAudioSource === 'custom' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                                                >
-                                                    Custom field
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4 bg-orange-50 rounded-lg border border-orange-100 flex gap-3">
-                                            <FaInfoCircle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                                            <p className="text-[10px] text-orange-700 leading-relaxed font-medium">
-                                                <span className="font-bold">IMPORTANT:</span> For the best compatibility across all mobile devices, we recommend using .mp3 files. Other audio formats may not play correctly on some phones.
-                                            </p>
-                                        </div>
-
-                                        {tempAudioSource === 'gallery' ? (
-                                            <div className="space-y-2">
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Audio File</label>
-                                                <button
-                                                    onClick={() => setIsMediaGalleryOpen(true)}
-                                                    className="w-full p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all flex flex-col items-center gap-2 group"
-                                                >
-                                                    <div className="p-3 bg-gray-50 rounded-full group-hover:bg-white shadow-sm transition-colors">
-                                                        <FaPlus className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                                                    </div>
-                                                    <span className="text-[11px] font-bold text-gray-500 group-hover:text-blue-600 transition-colors uppercase tracking-tight">Click to add an audio file</span>
-                                                    {tempAudioUrl && <span className="text-[9px] text-blue-500 truncate max-w-full font-medium px-4">{tempAudioUrl}</span>}
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Select custom field</label>
-                                                <div className="relative">
-                                                    <select
-                                                        value={tempCustomField}
-                                                        onChange={(e) => setTempCustomField(e.target.value)}
-                                                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none cursor-pointer"
-                                                    >
-                                                        <option value="audio">audio</option>
-                                                        <option value="last_voice_msg">last_voice_msg</option>
-                                                        <option value="recording_url">recording_url</option>
-                                                    </select>
-                                                    <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="p-4 border-t border-gray-100 bg-white flex items-center gap-3 shrink-0">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedNodeId && editingBlockId) {
-                                                    setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                        ...n,
-                                                        data: {
-                                                            ...n.data,
-                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                                ...b,
-                                                                source: tempAudioSource,
-                                                                url: tempAudioUrl,
-                                                                customField: tempCustomField
-                                                            } : b)
-                                                        }
-                                                    } : n));
-                                                }
-                                                setIsAudioEditorOpen(false);
-                                                setEditingBlockId(null);
-                                            }}
-                                            className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => setIsAudioEditorOpen(false)}
-                                            className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                </div >
-                            )
-                        }
-
-                        {/* Contact Response Editor Panel */}
-                        {
-                            isContactResponseEditorOpen && (
-                                <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                    <div className="h-14 px-4 flex items-center justify-between bg-blue-500 text-white shrink-0">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded bg-blue-500/30">
-                                                <FaUserEdit className="w-3.5 h-3.5 text-white" />
-                                            </div>
-                                            <h3 className="font-bold text-white text-xs tracking-tight uppercase">Contact response</h3>
-                                        </div>
-                                        <button onClick={() => setIsContactResponseEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                        {/* Message Section */}
-                                        <div className="space-y-2">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Enter Message (Optional)</label>
-                                            <textarea
-                                                value={tempContactResponseData.message}
-                                                onChange={(e) => setTempContactResponseData(prev => ({ ...prev, message: e.target.value }))}
-                                                placeholder="Enter your message here"
-                                                className="w-full min-h-[100px] p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all resize-y text-gray-700 placeholder:text-gray-300"
-                                            />
-                                        </div>
-
-                                        {/* Accumulator Section */}
-                                        <div className="flex items-center justify-between py-2 border-y border-gray-50">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Accumulator</span>
-                                                <TooltipProvider delayDuration={300}>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <span><FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" /></span>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="top" className="max-w-[200px] text-[10px] leading-tight font-medium p-2 bg-gray-800 text-white border-none rounded-md shadow-xl">
-                                                            This option allows the system to process multiple questions received simultaneously during the waiting period.
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                            <Switch
-                                                checked={tempContactResponseData.accumulator}
-                                                onCheckedChange={(checked) => setTempContactResponseData(prev => ({ ...prev, accumulator: checked }))}
-                                                className="scale-90"
-                                            />
-                                        </div>
-
-                                        {/* Custom Field Selection */}
-                                        <div className="space-y-2">
-                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Save input to a custom field</label>
-                                            <div className="relative flex items-center gap-2">
-                                                <div
-                                                    onClick={() => setIsFieldSelectorOpen(!isFieldSelectorOpen)}
-                                                    className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 cursor-pointer flex items-center justify-between hover:border-blue-300 transition-colors"
-                                                >
-                                                    <span className={tempContactResponseData.customField ? "text-gray-700" : "text-gray-400"}>
-                                                        {tempContactResponseData.customField || "Select field"}
-                                                    </span>
-                                                    <FaChevronDown className="w-2.5 h-2.5 text-gray-400" />
-                                                </div>
-                                                <button
-                                                    onClick={() => setIsFieldSelectorOpen(!isFieldSelectorOpen)}
-                                                    className="p-3 bg-white border border-gray-200 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors shadow-sm active:scale-95"
-                                                >
-                                                    <FaPlus className="w-3 h-3" />
-                                                </button>
-
-                                                {/* Field Picker Sub-menu */}
-                                                {isFieldSelectorOpen && (
-                                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-[70] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                                        <div className="p-3 border-b border-gray-100">
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search..."
-                                                                    value={fieldSearchQuery}
-                                                                    onChange={(e) => setFieldSearchQuery(e.target.value)}
-                                                                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500/20"
-                                                                />
-                                                                <FaSearchPlus className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex border-b border-gray-100 bg-gray-50/50">
-                                                            {(['System fields', 'Custom fields', 'Channels'] as const).map(tab => (
-                                                                <button
-                                                                    key={tab}
-                                                                    onClick={() => setFieldSelectorTab(tab)}
-                                                                    className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-tight transition-all border-b-2 ${fieldSelectorTab === tab ? 'border-blue-500 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                                                                >
-                                                                    {tab}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                        <div className="max-h-[250px] overflow-y-auto p-2">
-                                                            {fieldSelectorTab === 'System fields' && (
-                                                                <div className="space-y-1">
-                                                                    {[
-                                                                        'Contact ID', 'First Name', 'Last Name', 'Title',
-                                                                        'Phone Number (Primary)', 'Whatsapp Number (Primary)',
-                                                                        'Email Address (Primary)', 'Source', 'Instagram',
-                                                                        'Subscribed', 'Avatar'
-                                                                    ].filter(f => f.toLowerCase().includes(fieldSearchQuery.toLowerCase())).map(field => (
-                                                                        <button
-                                                                            key={field}
-                                                                            onClick={() => {
-                                                                                setTempContactResponseData(prev => ({ ...prev, customField: field }));
-                                                                                setIsFieldSelectorOpen(false);
-                                                                            }}
-                                                                            className="w-full text-left px-3 py-2 text-[11px] font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all flex items-center justify-between group"
-                                                                        >
-                                                                            {field}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {fieldSelectorTab === 'Custom fields' && (
-                                                                <div className="space-y-1">
-                                                                    {/*
-                                                                     * Custom fields pulled live from the workspace's
-                                                                     * `custom_fields` table via /api/automations/integrations.
-                                                                     * Falls back to an empty list if the integrations
-                                                                     * query hasn't resolved yet (loading state).
-                                                                     */}
-                                                                    {((integrations?.custom_fields ?? []) as Array<{ id: number | string; label: string; slug: string }>)
-                                                                      .map((f) => f.label || f.slug)
-                                                                      .filter((f: string) => f.toLowerCase().includes(fieldSearchQuery.toLowerCase()))
-                                                                      .map((field: string) => (
-                                                                        <button
-                                                                            key={field}
-                                                                            onClick={() => {
-                                                                                setTempContactResponseData(prev => ({ ...prev, customField: field }));
-                                                                                setIsFieldSelectorOpen(false);
-                                                                            }}
-                                                                            className="w-full text-left px-3 py-2 text-[11px] font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all flex items-center justify-between group"
-                                                                        >
-                                                                            {field}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {fieldSelectorTab === 'Channels' && (
-                                                                <div className="space-y-1">
-                                                                    {[
-                                                                        { name: 'whatsapp', icon: FaWhatsapp, color: '#25D366' },
-                                                                        { name: 'instagram', icon: FaInstagram, color: '#E1306C' },
-                                                                        { name: 'telegram', icon: FaTelegram, color: '#24A1DE' }
-                                                                    ].filter(c => c.name.toLowerCase().includes(fieldSearchQuery.toLowerCase())).map(channel => {
-                                                                        const Icon = channel.icon;
-                                                                        return (
-                                                                            <button
-                                                                                key={channel.name}
-                                                                                onClick={() => {
-                                                                                    setTempContactResponseData(prev => ({ ...prev, customField: channel.name }));
-                                                                                    setIsFieldSelectorOpen(false);
-                                                                                }}
-                                                                                className="w-full text-left px-3 py-2 text-[11px] font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all flex items-center gap-2 group"
-                                                                            >
-                                                                                <Icon className="w-3 h-3" style={{ color: channel.color }} />
-                                                                                <span className="flex-1">{channel.name}</span>
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Retry Strategy & Timeout (Only visible if field selected) */}
-                                        {tempContactResponseData.customField && (
-                                            <>
-                                                <div className="space-y-4 pt-4 border-t border-gray-50">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider leading-tight block">Send this message if the input is incorrect</label>
-                                                        <textarea
-                                                            value={tempContactResponseData.incorrectMessage}
-                                                            onChange={(e) => setTempContactResponseData(prev => ({ ...prev, incorrectMessage: e.target.value }))}
-                                                            placeholder="Enter your message here"
-                                                            className="w-full min-h-[80px] p-3 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all resize-y text-gray-700 placeholder:text-gray-300"
-                                                        />
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Number of retry attempts for invalid contact replies</label>
-                                                        <div className="relative group/attempts">
-                                                            <select
-                                                                value={tempContactResponseData.retryAttempts}
-                                                                onChange={(e) => setTempContactResponseData(prev => ({ ...prev, retryAttempts: parseInt(e.target.value) }))}
-                                                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none cursor-pointer transition-all hover:border-gray-300"
-                                                            >
-                                                                <option value={0}>0 Attempts</option>
-                                                                <option value={1}>1 Times</option>
-                                                                <option value={2}>2 Times</option>
-                                                                <option value={3}>3 Times</option>
-                                                                <option value={4}>4 Times</option>
-                                                                <option value={5}>5 Times</option>
-                                                            </select>
-                                                            <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none group-hover/attempts:text-gray-600 transition-colors" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-2 pt-4 border-t border-gray-50">
-                                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Wait for the contact to respond until</label>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex-1 relative group/duration">
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                value={tempContactResponseData.waitDuration}
-                                                                onChange={(e) => setTempContactResponseData(prev => ({ ...prev, waitDuration: parseInt(e.target.value) || 1 }))}
-                                                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all pr-12"
-                                                            />
-                                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 pointer-events-none">
-                                                                <FaChevronDown className="w-2 h-2 text-gray-400 rotate-180" />
-                                                                <FaChevronDown className="w-2 h-2 text-gray-400" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex-1 relative group/unit">
-                                                            <select
-                                                                value={tempContactResponseData.waitUnit}
-                                                                onChange={(e) => setTempContactResponseData(prev => ({ ...prev, waitUnit: e.target.value as any }))}
-                                                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none cursor-pointer"
-                                                            >
-                                                                <option value="Seconds">Seconds</option>
-                                                                <option value="Minutes">Minutes</option>
-                                                                <option value="Hours">Hours</option>
-                                                            </select>
-                                                            <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none group-hover/unit:text-gray-600 transition-colors" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    <div className="p-4 border-t border-gray-100 bg-white flex items-center gap-3 shrink-0">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedNodeId && editingBlockId) {
-                                                    setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                        ...n,
-                                                        data: {
-                                                            ...n.data,
-                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                                ...b,
-                                                                ...tempContactResponseData
-                                                            } : b)
-                                                        }
-                                                    } : n));
-                                                }
-                                                setIsContactResponseEditorOpen(false);
-                                                setEditingBlockId(null);
-                                            }}
-                                            className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => setIsContactResponseEditorOpen(false)}
-                                            className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                        {/* CTA Editor Panel */}
-                        {
-                            isCtaEditorOpen && (
-                                <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                    <div className="h-14 px-4 flex items-center justify-between bg-blue-600 text-white shrink-0">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded bg-white/20">
-                                                <FaMousePointer className="w-3.5 h-3.5 text-white" />
-                                            </div>
-                                            <h3 className="font-bold text-white text-xs tracking-tight uppercase">CTA Button</h3>
-                                        </div>
-                                        <button onClick={() => setIsCtaEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Header</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempCtaHeader}
-                                                    onChange={(e) => setTempCtaHeader(e.target.value)}
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Body</label>
-                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-black text-white uppercase tracking-wider">Required</span>
-                                                </div>
-                                                <textarea
-                                                    value={tempCtaBody}
-                                                    onChange={(e) => setTempCtaBody(e.target.value)}
-                                                    placeholder="Enter your message here"
-                                                    className="w-full min-h-[80px] p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700 resize-none"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Footer</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempCtaFooter}
-                                                    onChange={(e) => setTempCtaFooter(e.target.value)}
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Button text</label>
-                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-black text-white uppercase tracking-wider">Required</span>
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={tempCtaButtonText}
-                                                    onChange={(e) => setTempCtaButtonText(e.target.value)}
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Enter action URL</label>
-                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-black text-white uppercase tracking-wider">Required</span>
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={tempCtaUrl}
-                                                    onChange={(e) => setTempCtaUrl(e.target.value)}
-                                                    placeholder="http://www.example.com"
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 border-t border-gray-100 bg-white flex items-center gap-3 shrink-0">
-                                        <button
-                                            onClick={() => {
-                                                if (!editingBlockId) return;
-                                                setNodes(nds => nds.map(n => n.id === selectedNode.id ? {
-                                                    ...n,
-                                                    data: {
-                                                        ...n.data,
-                                                        blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                            ...b,
-                                                            header: tempCtaHeader,
-                                                            body: tempCtaBody,
-                                                            footer: tempCtaFooter,
-                                                            buttonText: tempCtaButtonText,
-                                                            url: tempCtaUrl
-                                                        } : b)
-                                                    }
-                                                } : n));
-                                                setIsCtaEditorOpen(false);
-                                                setEditingBlockId(null);
-                                            }}
-                                            className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => setIsCtaEditorOpen(false)}
-                                            className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                        {/* Message Template Editor Panel */}
-                        {
-                            isMessageTemplateEditorOpen && (
-                                <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                    <div className="h-14 px-4 flex items-center justify-between bg-blue-600 text-white shrink-0">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded bg-white/20">
-                                                <FaFileSignature className="w-3.5 h-3.5 text-white" />
-                                            </div>
-                                            <h3 className="font-bold text-white text-xs tracking-tight uppercase">Send a template</h3>
-                                        </div>
-                                        <button onClick={() => setIsMessageTemplateEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Choose a template</label>
-                                                <div className="relative group/template">
-                                                    <select
-                                                        value={tempMessageTemplate}
-                                                        onChange={(e) => setTempMessageTemplate(e.target.value)}
-                                                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500 appearance-none cursor-pointer transition-all hover:border-gray-300"
-                                                    >
-                                                        <option value="order_processed_v5">order_processed_v5</option>
-                                                        <option value="offer_existing_customer">offer_existing_customer</option>
-                                                        <option value="offer">offer</option>
-                                                        <option value="order_update_status">order_update_status</option>
-                                                        <option value="broadcast_marketing">broadcast_marketing</option>
-                                                    </select>
-                                                    <FaChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none group-hover/template:text-gray-600 transition-colors" />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Template Message</label>
-                                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-sm text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                                    {tempMessageTemplate === "order_processed_v5" && "Dear Customer, Your order has processed and it will delivered to your address in next 3 days. Thanks for your order."}
-                                                    {tempMessageTemplate === "offer_existing_customer" && "Dear Existing Customer, There is Flat 50% off on our existing customer. Visit Our OutLet and get the chance to grab the deal. Thankyou"}
-                                                    {tempMessageTemplate === "offer" && "Hello Customer. There is an offer on EZnet store, 50% off on all shopping till next week. Thankyou"}
-                                                    {tempMessageTemplate === "order_update_status" && "Dear customer, You order has been dispatched and you will be contacted soon. Thankyou for your order."}
-                                                    {tempMessageTemplate === "broadcast_marketing" && "Dear Customer, There is an offer for up to 50 percent dscount if you visit the store. Thankyou"}
-
-                                                    {tempMessageTemplate === "broadcast_marketing" && (
-                                                        <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col gap-2">
-                                                            <div className="w-full text-center py-2 px-3 border border-gray-300 text-blue-600 font-medium text-xs rounded shadow-sm bg-white cursor-pointer hover:bg-gray-50">
-                                                                visit us ?
-                                                            </div>
-                                                            <div className="w-full text-center py-2 px-3 border border-gray-300 text-blue-600 font-medium text-xs rounded shadow-sm bg-white cursor-pointer hover:bg-gray-50">
-                                                                Don’t visit us?
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center gap-3 shrink-0">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedNodeId && editingBlockId) {
-                                                    setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                        ...n,
-                                                        data: {
-                                                            ...n.data,
-                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                                ...b,
-                                                                template: tempMessageTemplate
-                                                            } : b)
-                                                        }
-                                                    } : n));
-                                                }
-                                                setIsMessageTemplateEditorOpen(false);
-                                                setEditingBlockId(null);
-                                            }}
-                                            className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => setIsMessageTemplateEditorOpen(false)}
-                                            className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                        {/* Message List Editor Panel */}
-                        {
-                            isMessageListEditorOpen && (
-                                <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                    <div className="h-14 px-4 flex items-center justify-between bg-blue-600 text-white shrink-0">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 rounded bg-white/20">
-                                                <FaListUl className="w-3.5 h-3.5 text-white" />
-                                            </div>
-                                            <h3 className="font-bold text-white text-xs tracking-tight uppercase">Message List</h3>
-                                        </div>
-                                        <button onClick={() => setIsMessageListEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                        {/* Header Props */}
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Menu Title (Optional)</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempMessageListData.title}
-                                                    onChange={(e) => setTempMessageListData(prev => ({ ...prev, title: e.target.value }))}
-                                                    placeholder="Example: Menu"
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Body Text</label>
-                                                <textarea
-                                                    value={tempMessageListData.body}
-                                                    onChange={(e) => setTempMessageListData(prev => ({ ...prev, body: e.target.value }))}
-                                                    placeholder="Enter message body"
-                                                    className="w-full min-h-[80px] p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700 resize-none"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Footer Text (Optional)</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempMessageListData.footer}
-                                                    onChange={(e) => setTempMessageListData(prev => ({ ...prev, footer: e.target.value }))}
-                                                    placeholder="Example: Select an option"
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Button Text</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempMessageListData.buttonText}
-                                                    onChange={(e) => setTempMessageListData(prev => ({ ...prev, buttonText: e.target.value.slice(0, 20) }))}
-                                                    placeholder="Example: Open Menu"
-                                                    className="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/30 text-gray-700"
-                                                />
-                                                <div className="text-[9px] text-right text-gray-400 mt-1 uppercase font-bold tracking-tighter">Remaining: {20 - tempMessageListData.buttonText.length}</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Sections Manager */}
-                                        <div className="pt-6 border-t border-gray-100 space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Sections ({tempMessageListData.sections.length}/10)</label>
-                                                {tempMessageListData.sections.length < 10 && (
-                                                    <button
-                                                        onClick={() => {
-                                                            const newSection = { id: `sec-${Date.now()}`, name: "", options: [] };
-                                                            setTempMessageListData(prev => ({ ...prev, sections: [...prev.sections, newSection] }));
-                                                        }}
-                                                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase flex items-center gap-1"
-                                                    >
-                                                        <FaPlus className="w-2 h-2" /> Add Section
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                {tempMessageListData.sections.map((section, sIdx) => (
-                                                    <div key={section.id} className="border border-gray-200 rounded-lg p-3 space-y-3 bg-white relative group">
-                                                        <button
-                                                            onClick={() => {
-                                                                setTempMessageListData(prev => ({
-                                                                    ...prev,
-                                                                    sections: prev.sections.filter(s => s.id !== section.id)
-                                                                }));
-                                                            }}
-                                                            className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors"
-                                                        >
-                                                            <X className="w-3.5 h-3.5" />
-                                                        </button>
-
-                                                        <div className="pr-6">
-                                                            <input
-                                                                type="text"
-                                                                value={section.name}
-                                                                onChange={(e) => {
-                                                                    const newSections = [...tempMessageListData.sections];
-                                                                    newSections[sIdx].name = e.target.value;
-                                                                    setTempMessageListData(prev => ({ ...prev, sections: newSections }));
-                                                                }}
-                                                                placeholder={`Section ${sIdx + 1} Name`}
-                                                                className="w-full text-xs font-bold text-gray-800 outline-none border-b border-transparent focus:border-blue-100 pb-1"
-                                                            />
-                                                        </div>
-
-                                                        {/* Options within Section */}
-                                                        <div className="space-y-2">
-                                                            {section.options.map((option, oIdx) => (
-                                                                <div key={option.id} className="p-2.5 border border-gray-100 rounded bg-gray-50/50 relative group/opt">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const newSections = [...tempMessageListData.sections];
-                                                                            newSections[sIdx].options = newSections[sIdx].options.filter(o => o.id !== option.id);
-                                                                            setTempMessageListData(prev => ({ ...prev, sections: newSections }));
-                                                                        }}
-                                                                        className="absolute top-2 right-2 text-gray-300 hover:text-red-400 opacity-0 group-hover/opt:opacity-100 transition-all"
-                                                                    >
-                                                                        <X className="w-3 h-3" />
-                                                                    </button>
-                                                                    <div className="space-y-1.5 pr-4">
-                                                                        <input
-                                                                            type="text"
-                                                                            value={option.name}
-                                                                            onChange={(e) => {
-                                                                                const newSections = [...tempMessageListData.sections];
-                                                                                newSections[sIdx].options[oIdx].name = e.target.value;
-                                                                                setTempMessageListData(prev => ({ ...prev, sections: newSections }));
-                                                                            }}
-                                                                            placeholder="Option name"
-                                                                            className="w-full text-[11px] font-bold text-gray-700 bg-transparent border-none outline-none"
-                                                                        />
-                                                                        <input
-                                                                            type="text"
-                                                                            value={option.description}
-                                                                            onChange={(e) => {
-                                                                                const newSections = [...tempMessageListData.sections];
-                                                                                newSections[sIdx].options[oIdx].description = e.target.value;
-                                                                                setTempMessageListData(prev => ({ ...prev, sections: newSections }));
-                                                                            }}
-                                                                            placeholder="Enter description (optional)"
-                                                                            className="w-full text-[10px] text-gray-400 bg-transparent border-none outline-none italic"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-
-                                                            {section.options.length < 10 && (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const newOption = { id: `opt-${Date.now()}`, name: "", description: "" };
-                                                                        const newSections = [...tempMessageListData.sections];
-                                                                        newSections[sIdx].options.push(newOption);
-                                                                        setTempMessageListData(prev => ({ ...prev, sections: newSections }));
-                                                                    }}
-                                                                    className="w-full py-2 border border-dashed border-gray-200 rounded text-[10px] font-bold text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/30 transition-all flex items-center justify-center gap-1.5"
-                                                                >
-                                                                    <FaPlus className="w-2 h-2" />
-                                                                    Add an option
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 border-t border-gray-100 bg-white flex items-center gap-3 shrink-0">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedNodeId && editingBlockId) {
-                                                    setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                        ...n,
-                                                        data: {
-                                                            ...n.data,
-                                                            blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                                ...b,
-                                                                ...tempMessageListData
-                                                            } : b)
-                                                        }
-                                                    } : n));
-                                                }
-                                                setIsMessageListEditorOpen(false);
-                                                setEditingBlockId(null);
-                                            }}
-                                            className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => setIsMessageListEditorOpen(false)}
-                                            className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                        {/* AI Studio Question Editor */}
-                        {isAiStudioEditorOpen && (
-                            <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                {/* Header */}
-                                <div className="h-14 px-4 flex items-center justify-between bg-indigo-600 text-white shrink-0">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 rounded bg-white/20">
-                                            <FaQuestionCircle className="w-3.5 h-3.5 text-white" />
-                                        </div>
-                                        <h3 className="font-bold text-white text-xs tracking-tight uppercase">AI Studio Question</h3>
-                                    </div>
-                                    <button onClick={() => setIsAiStudioEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                {/* Tabs */}
-                                <div className="flex border-b border-gray-200 shrink-0">
-                                    <button
-                                        className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${tempAiStudioMode === 'ChatGPT' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                                        onClick={() => setTempAiStudioMode('ChatGPT')}
-                                    >ChatGPT</button>
-                                    <button
-                                        className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${tempAiStudioMode === 'Vision' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                                        onClick={() => setTempAiStudioMode('Vision')}
-                                    >Vision</button>
-                                </div>
-
-                                {/* Body */}
-                                <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                                    {tempAiStudioMode === 'ChatGPT' ? (
-                                        <div className="space-y-5">
-                                            {/* Select Assistant */}
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Assistant</label>
-                                                <AssistantDropdown
-                                                    value={tempAiStudioAssistant}
-                                                    onChange={setTempAiStudioAssistant}
-                                                    options={
-                                                        (integrations?.assistants ?? []).map(
-                                                            (a: { id: number | string; name: string }) => a.name,
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-
-                                            {/* Add Question */}
-                                            <div>
-                                                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Add Question (Optional)</label>
-                                                <textarea
-                                                    value={tempAiStudioQuestion}
-                                                    onChange={(e) => setTempAiStudioQuestion(e.target.value)}
-                                                    placeholder="Enter Your Message Here"
-                                                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 outline-none text-sm text-gray-700 transition-all min-h-[80px] resize-y bg-gray-50"
-                                                />
-                                            </div>
-
-                                            {/* Toggles Section */}
-                                            <div className="space-y-4">
-                                                {/* Accumulator */}
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="relative group/tip">
-                                                                <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                    This option enables the system to process multiple questions received simultaneously during the wait time.
-                                                                </div>
-                                                            </div>
-                                                            <span className="text-xs font-bold text-gray-700">Accumulator</span>
-                                                        </div>
-                                                        <button onClick={() => setTempAiStudioAccumulator(!tempAiStudioAccumulator)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioAccumulator ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioAccumulator ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                        </button>
-                                                    </div>
-                                                    {tempAiStudioAccumulator && (
-                                                        <div className="pl-5 space-y-1.5">
-                                                            <CustomNumberInput value={tempAiStudioAccumulatorTime} onChange={setTempAiStudioAccumulatorTime} min={5} max={60} unit="Seconds" />
-                                                            <p className="text-[10px] text-gray-400 italic">Time should be between 5 to 20 seconds.</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Smart Loop */}
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="relative group/tip">
-                                                                <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                    Smart Loop keeps the contact in this ChatGPT module and waits for the next question until the specified time below.
-                                                                </div>
-                                                            </div>
-                                                            <span className="text-xs font-bold text-gray-700">Smart loop</span>
-                                                        </div>
-                                                        <button onClick={() => setTempAiStudioSmartLoop(!tempAiStudioSmartLoop)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioSmartLoop ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioSmartLoop ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                        </button>
-                                                    </div>
-                                                    {tempAiStudioSmartLoop && (
-                                                        <div className="pl-5 space-y-2">
-                                                            <p className="text-[10px] text-gray-500 leading-relaxed">The contact will proceed to the next step once the timer to wait for the next question runs out. If the contact asks a new question within the time frame, the system restarts the timer and generates a fresh answer, restarting the whole process.</p>
-                                                            <div className="flex items-center gap-1.5">
-                                                                <div className="relative group/tip">
-                                                                    <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                    <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-44 bg-gray-800 text-white text-[10px] rounded-lg p-2 shadow-xl">
-                                                                        Time to wait for the next question
-                                                                    </div>
-                                                                </div>
-                                                                <span className="text-[11px] font-bold text-gray-600">Time to wait for the next question</span>
-                                                            </div>
-                                                            <div className="flex gap-2 items-center">
-                                                                <CustomNumberInput value={tempAiStudioSmartLoopTime} onChange={setTempAiStudioSmartLoopTime} min={1} max={60} unit={tempAiStudioSmartLoopUnit} />
-                                                                <div className="relative">
-                                                                    <select value={tempAiStudioSmartLoopUnit} onChange={(e) => setTempAiStudioSmartLoopUnit(e.target.value)} className="pl-2 pr-6 py-2 bg-white border border-gray-200 rounded-md text-xs font-bold text-gray-600 appearance-none focus:outline-none focus:border-indigo-400 transition-colors cursor-pointer">
-                                                                        <option value="Minutes">Minutes</option>
-                                                                        <option value="Hours">Hours</option>
-                                                                    </select>
-                                                                    <FaChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2 h-2 text-gray-400 pointer-events-none" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* When smart loop OFF — show all toggles. When ON — show only Wait Replies + Counter */}
-                                                {!tempAiStudioSmartLoop && (
-                                                    <>
-                                                        {/* Send the AI answer message */}
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <div className="relative group/tip">
-                                                                    <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                    <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                        Send the AI-generated response directly from this module. Be sure not to send answers from other modules to avoid duplicate responses.
-                                                                    </div>
-                                                                </div>
-                                                                <span className="text-xs font-bold text-gray-700">Send the AI answer message</span>
-                                                            </div>
-                                                            <button onClick={() => setTempAiStudioSendAnswer(!tempAiStudioSendAnswer)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioSendAnswer ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioSendAnswer ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                            </button>
-                                                        </div>
-
-                                                        {/* Save response to a custom field */}
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <div className="relative group/tip">
-                                                                        <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                        <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                            Save the last answer from ChatGPT to a custom field.
-                                                                        </div>
-                                                                    </div>
-                                                                    <span className="text-xs font-bold text-gray-700">Save response to a custom field</span>
-                                                                </div>
-                                                                <button onClick={() => setTempAiStudioSaveCustomField(!tempAiStudioSaveCustomField)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioSaveCustomField ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioSaveCustomField ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                                </button>
-                                                            </div>
-                                                            {tempAiStudioSaveCustomField && (
-                                                                <div className="pl-5">
-                                                                    <div className="relative">
-                                                                        <select value={tempAiStudioSaveCustomFieldName} onChange={(e) => setTempAiStudioSaveCustomFieldName(e.target.value)} className="w-full p-2 pr-7 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700 appearance-none focus:outline-none focus:border-indigo-400 cursor-pointer">
-                                                                            {["RespostaGPT", "Payload", "Ultimo Imovel", "RespostaVision", "booking_date_time", "user_confirm", "user_email", "booking_id", "booking_reschedule", "Reschedule_user_confirm", "eventTypeID", "Roger Booking Name", "Roger Book Date Time", "Roger Doctor Name", "Text area 2", "resposta_vision", "pergunta_gpt", "endAtual", "campotexto", "Nometst", "emailtst", "cidadetst", "total_invetimento", "nota_dinamica", "idMember", "resposta_cal", "Whisperer", "Whisperer_resposta", "event_id", "teste_edilson_apagar", "haider1", "Broadcasting"].map(f => <option key={f} value={f}>{f}</option>)}
-                                                                        </select>
-                                                                        <FaChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 text-gray-400 pointer-events-none" />
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {/* Wait Replies (shown always in ChatGPT mode) */}
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="relative group/tip">
-                                                                <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                    Send a random wait message while fetching answer from ChatGPT.
-                                                                </div>
-                                                            </div>
-                                                            <span className="text-xs font-bold text-gray-700">Wait replies</span>
-                                                        </div>
-                                                        <button onClick={() => setTempAiStudioWaitReplies(!tempAiStudioWaitReplies)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioWaitReplies ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioWaitReplies ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                        </button>
-                                                    </div>
-                                                    {tempAiStudioWaitReplies && (
-                                                        <div className="pl-5 space-y-3">
-                                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                                <input type="checkbox" checked={tempAiStudioWaitRepliesSaveLiveChat} onChange={(e) => setTempAiStudioWaitRepliesSaveLiveChat(e.target.checked)} className="w-3.5 h-3.5 rounded border-gray-300 accent-indigo-600" />
-                                                                <span className="text-[11px] text-gray-600 leading-relaxed">Save wait message to Live Chat notes and contact history.</span>
-                                                            </label>
-                                                            {tempAiStudioWaitRepliesMessages.map((msg, idx) => (
-                                                                <div key={msg.id} className="flex items-center gap-1.5">
-                                                                    <input
-                                                                        value={msg.text}
-                                                                        onChange={(e) => setTempAiStudioWaitRepliesMessages(prev => prev.map((m, i) => i === idx ? { ...m, text: e.target.value } : m))}
-                                                                        placeholder={`Message ${idx + 1}`}
-                                                                        className="flex-1 p-2 text-xs border border-gray-200 rounded-md focus:outline-none focus:border-indigo-400 bg-gray-50"
-                                                                    />
-                                                                    <button onClick={() => setTempAiStudioWaitRepliesMessages(prev => prev.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-400 transition-colors">
-                                                                        <X className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                            {tempAiStudioWaitRepliesMessages.length < 10 && (
-                                                                <button onClick={() => setTempAiStudioWaitRepliesMessages(prev => [...prev, { id: `wr-${Date.now()}`, text: '' }])} className="w-full py-1.5 text-[11px] font-bold text-indigo-600 border border-dashed border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors">
-                                                                    + Add Message
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Counter */}
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="relative group/tip">
-                                                                <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                    Enable counter to increment value each time AI answer generated.
-                                                                </div>
-                                                            </div>
-                                                            <span className="text-xs font-bold text-gray-700">Counter</span>
-                                                        </div>
-                                                        <button onClick={() => setTempAiStudioCounter(!tempAiStudioCounter)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioCounter ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioCounter ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                        </button>
-                                                    </div>
-                                                    {tempAiStudioCounter && (
-                                                        <div className="pl-5 space-y-2">
-                                                            <div className="relative">
-                                                                <select value={tempAiStudioCounterCustomField} onChange={(e) => setTempAiStudioCounterCustomField(e.target.value)} className="w-full p-2 pr-7 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700 appearance-none focus:outline-none focus:border-indigo-400 cursor-pointer">
-                                                                    <option value="">Select a field</option>
-                                                                    {["RespostaGPT", "Payload", "Ultimo Imovel", "RespostaVision", "booking_date_time", "user_confirm", "user_email", "booking_id", "booking_reschedule", "Reschedule_user_confirm", "eventTypeID", "Roger Booking Name", "Roger Book Date Time", "Roger Doctor Name", "Text area 2", "resposta_vision", "pergunta_gpt", "endAtual", "campotexto", "Nometst", "emailtst", "cidadetst", "total_invetimento", "nota_dinamica", "idMember", "resposta_cal", "Whisperer", "Whisperer_resposta", "event_id", "teste_edilson_apagar", "haider1", "Broadcasting"].map(f => <option key={f} value={f}>{f}</option>)}
-                                                                </select>
-                                                                <FaChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 text-gray-400 pointer-events-none" />
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 p-2.5 bg-blue-50 border border-blue-100 rounded-lg">
-                                                                <FaInfoCircle className="w-3 h-3 text-blue-400 shrink-0" />
-                                                                <p className="text-[10px] text-blue-600 leading-relaxed">The contact will proceed to the next step once their question is answered. If no question is asked within 1 minute, the contact will still advance to the next step automatically.</p>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <CustomNumberInput value={tempAiStudioCounterMinute} onChange={setTempAiStudioCounterMinute} min={1} max={60} unit="Minute" />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* Vision Tab */
-                                        <div className="space-y-5">
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div className="relative group/tip">
-                                                            <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                            <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                Enable ChatGPT Vision for incoming images.
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-xs font-bold text-gray-700">ChatGPT Vision</span>
-                                                    </div>
-                                                    <button onClick={() => setTempAiStudioVisionEnabled(!tempAiStudioVisionEnabled)} className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioVisionEnabled ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                                                        <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioVisionEnabled ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                    </button>
-                                                </div>
-
-                                                {tempAiStudioVisionEnabled && (
-                                                    <div className="space-y-4 pt-2">
-                                                        <div>
-                                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select GPT model</label>
-                                                            <div className="relative">
-                                                                <select value={tempAiStudioVisionModel} onChange={(e) => setTempAiStudioVisionModel(e.target.value)} className="w-full p-2.5 pr-7 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700 appearance-none focus:outline-none focus:border-indigo-400 cursor-pointer">
-                                                                    <option value="gpt-4o-mini">gpt-4o-mini</option>
-                                                                    <option value="gpt-4o">gpt-4o</option>
-                                                                    <option value="gpt-4o-turbo">gpt-4o-turbo</option>
-                                                                </select>
-                                                                <FaChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 text-gray-400 pointer-events-none" />
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Enter the prompt below</label>
-                                                            <textarea
-                                                                value={tempAiStudioVisionPrompt}
-                                                                onChange={(e) => setTempAiStudioVisionPrompt(e.target.value)}
-                                                                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 outline-none text-sm text-gray-700 bg-gray-50 min-h-[80px] resize-y"
-                                                                placeholder="What's in this image? black and white"
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <div className="relative group/tip">
-                                                                    <FaInfoCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                                                                    <div className="absolute left-5 top-0 z-50 hidden group-hover/tip:block w-52 bg-gray-800 text-white text-[10px] rounded-lg p-2.5 shadow-xl leading-relaxed">
-                                                                        Save the last answer from ChatGPT to a custom field.
-                                                                    </div>
-                                                                </div>
-                                                                <span className="text-[11px] font-bold text-gray-600">Save response to a custom field</span>
-                                                            </div>
-                                                            <div className="relative">
-                                                                <select value={tempAiStudioVisionCustomField} onChange={(e) => setTempAiStudioVisionCustomField(e.target.value)} className="w-full p-2 pr-7 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700 appearance-none focus:outline-none focus:border-indigo-400 cursor-pointer">
-                                                                    {["RespostaGPT", "Payload", "Ultimo Imovel", "RespostaVision", "booking_date_time", "user_confirm", "user_email", "booking_id", "booking_reschedule", "Reschedule_user_confirm", "eventTypeID", "Roger Booking Name", "Roger Book Date Time", "Roger Doctor Name", "Text area 2", "resposta_vision", "pergunta_gpt", "endAtual", "campotexto", "Nometst", "emailtst", "cidadetst", "total_invetimento", "nota_dinamica", "idMember", "resposta_cal", "Whisperer", "Whisperer_resposta", "event_id", "teste_edilson_apagar", "haider1", "Broadcasting"].map(f => <option key={f} value={f}>{f}</option>)}
-                                                                </select>
-                                                                <FaChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 text-gray-400 pointer-events-none" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Footer */}
-                                <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center gap-3 shrink-0">
-                                    <button
-                                        onClick={() => {
-                                            if (selectedNodeId && editingBlockId) {
-                                                setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                    ...n,
-                                                    data: {
-                                                        ...n.data,
-                                                        blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                            ...b,
-                                                            mode: tempAiStudioMode,
-                                                            assistant: tempAiStudioAssistant,
-                                                            question: tempAiStudioQuestion,
-                                                            accumulator: tempAiStudioAccumulator,
-                                                            accumulatorTime: tempAiStudioAccumulatorTime,
-                                                            smartLoop: tempAiStudioSmartLoop,
-                                                            smartLoopTime: tempAiStudioSmartLoopTime,
-                                                            smartLoopUnit: tempAiStudioSmartLoopUnit,
-                                                            sendAnswer: tempAiStudioSendAnswer,
-                                                            saveCustomField: tempAiStudioSaveCustomField,
-                                                            saveCustomFieldName: tempAiStudioSaveCustomFieldName,
-                                                            waitReplies: tempAiStudioWaitReplies,
-                                                            waitRepliesSaveLiveChat: tempAiStudioWaitRepliesSaveLiveChat,
-                                                            waitRepliesMessages: tempAiStudioWaitRepliesMessages,
-                                                            counter: tempAiStudioCounter,
-                                                            counterCustomField: tempAiStudioCounterCustomField,
-                                                            counterMinute: tempAiStudioCounterMinute,
-                                                            visionEnabled: tempAiStudioMode === 'Vision',
-                                                            visionModel: tempAiStudioVisionModel,
-                                                            visionPrompt: tempAiStudioVisionPrompt,
-                                                            visionCustomField: tempAiStudioVisionCustomField,
-                                                        } : b)
-                                                    }
-                                                } : n));
-                                            }
-                                            setIsAiStudioEditorOpen(false);
-                                            setEditingBlockId(null);
-                                        }}
-                                        className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                    >Save Changes</button>
-                                    <button
-                                        onClick={() => setIsAiStudioEditorOpen(false)}
-                                        className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                    >Close</button>
-                                </div>
-                            </div>
-                        )}
-
-
-                        {/* Dify.ai Question Editor */}
-
-
-                        {/* Dify.ai Question Editor */}
-                        {isDifyEditorOpen && (
-                            <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                <div className="h-14 px-4 flex items-center justify-between bg-sky-600 text-white shrink-0">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 rounded bg-white/20">
-                                            <FaCogs className="w-3.5 h-3.5 text-white" />
-                                        </div>
-                                        <h3 className="font-bold text-white text-xs tracking-tight uppercase">Dify.ai Question</h3>
-                                    </div>
-                                    <button onClick={() => setIsDifyEditorOpen(false)} className="text-white/70 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                    <div>
-                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block text-left">Select Assistant</label>
-                                        <AssistantDropdown
-                                            value={tempAiStudioAssistant}
-                                            onChange={setTempAiStudioAssistant}
-                                            options={[
-                                                "TestsEdilson 2 Gemini", "Test Edilson 1 Gemini", "Test Google", "Gemini", "TestTiagoGoogle",
-                                                "Test Edilson 1 OpenAI", "Test Edilson 1 Anthropic", "Test Edilson 1 DeepSeek",
-                                                "open ai test agent", "Rental Car", "Test DeepSeek", "DeepSeek", "Test Anthropic", "Anthropic",
-                                                "Anthropic with KB", "Simple Agent", "Test Tiago", "TestTiago", "testehttp"
-                                            ]}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-bold text-gray-700">Counter</span>
-                                                <button
-                                                    onClick={() => setTempAiStudioCounter(!tempAiStudioCounter)}
-                                                    className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioCounter ? 'bg-sky-500' : 'bg-gray-300'}`}
-                                                >
-                                                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioCounter ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col gap-2 mt-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-bold text-gray-700">Accumulator</span>
-                                                <button
-                                                    onClick={() => setTempAiStudioAccumulator(!tempAiStudioAccumulator)}
-                                                    className={`w-8 h-4 rounded-full relative transition-colors ${tempAiStudioAccumulator ? 'bg-sky-500' : 'bg-gray-300'}`}
-                                                >
-                                                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${tempAiStudioAccumulator ? 'translate-x-[18px]' : 'left-0.5'}`} />
-                                                </button>
-                                            </div>
-                                            {tempAiStudioAccumulator && (
-                                                <div className="pl-6 mt-1 space-y-2 text-left">
-                                                    <CustomNumberInput
-                                                        value={tempAiStudioAccumulatorTime}
-                                                        onChange={setTempAiStudioAccumulatorTime}
-                                                        min={5}
-                                                        max={60}
-                                                        unit="Seconds"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center gap-3 shrink-0">
-                                    <button
-                                        onClick={() => {
-                                            if (selectedNodeId && editingBlockId) {
-                                                setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                    ...n,
-                                                    data: {
-                                                        ...n.data,
-                                                        blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                            ...b,
-                                                            assistant: tempAiStudioAssistant,
-                                                            counter: tempAiStudioCounter,
-                                                            accumulator: tempAiStudioAccumulator,
-                                                            accumulatorTime: tempAiStudioAccumulatorTime
-                                                        } : b)
-                                                    }
-                                                } : n));
-                                            }
-                                            setIsDifyEditorOpen(false);
-                                            setEditingBlockId(null);
-                                        }}
-                                        className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                    >
-                                        Save Changes
-                                    </button>
-                                    <button
-                                        onClick={() => setIsDifyEditorOpen(false)}
-                                        className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ChatGPT Answer Editor */}
-                        {isChatGptEditorOpen && (
-                            <div className="absolute top-0 bottom-0 right-[400px] w-[320px] bg-white border-l border-gray-200 shadow-[-8px_0_24px_rgba(0,0,0,0.05)] z-[60] flex flex-col animate-in slide-in-from-right-1 duration-300 pointer-events-auto">
-                                <div className="h-14 px-4 flex items-center justify-between bg-white border-b border-gray-200 shrink-0">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 rounded bg-gray-100">
-                                            <FaBrain className="w-3.5 h-3.5 text-orange-500" />
-                                        </div>
-                                        <h3 className="font-bold text-gray-800 text-xs tracking-tight uppercase">ChatGPT Answer</h3>
-                                    </div>
-                                    <button onClick={() => setIsChatGptEditorOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 hover:bg-gray-100 rounded-full">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-gray-50/50">
-                                    <div>
-                                        <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block text-left">Message content</label>
-                                        <textarea
-                                            value={tempChatGptText}
-                                            onChange={(e) => setTempChatGptText(e.target.value)}
-                                            placeholder="Enter Your Message Here"
-                                            className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all min-h-[120px] resize-y placeholder:text-gray-300 shadow-sm"
-                                        />
-                                    </div>
-
-                                    <div className="p-3 bg-gray-100 rounded-lg border border-gray-200 flex gap-2.5">
-                                        <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                                            <span className="text-[10px] font-bold text-gray-500">i</span>
-                                        </div>
-                                        <p className="text-[11px] text-gray-600 leading-relaxed text-left">
-                                            This module automatically breaks down message paragraphs into multiple fragmented messages, making the conversation feel more natural and human.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 border-t border-gray-100 bg-white flex items-center gap-3 shrink-0">
-                                    <button
-                                        onClick={() => {
-                                            if (selectedNodeId && editingBlockId) {
-                                                setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                    ...n,
-                                                    data: {
-                                                        ...n.data,
-                                                        blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                            ...b,
-                                                            text: tempChatGptText
-                                                        } : b)
-                                                    }
-                                                } : n));
-                                            }
-                                            setIsChatGptEditorOpen(false);
-                                            setEditingBlockId(null);
-                                        }}
-                                        className="flex-1 py-2 text-xs font-medium text-blue-600 border border-blue-400 rounded-md bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200"
-                                    >
-                                        Save Changes
-                                    </button>
-                                    <button
-                                        onClick={() => setIsChatGptEditorOpen(false)}
-                                        className="flex-1 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-md bg-transparent hover:bg-gray-800 hover:text-white transition-all duration-200"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                        \n            {/* Media Gallery Modal */}
-                        <AlertDialog open={isMediaGalleryOpen} onOpenChange={setIsMediaGalleryOpen}>
-                            <AlertDialogContent className="fixed inset-0 w-full h-full p-0 border-none bg-white rounded-none flex flex-col overflow-hidden z-[9999] max-w-none translate-x-0 translate-y-0 top-0 left-0">
-                                <div className="flex flex-col h-full relative">
-                                    <div className="absolute top-4 right-4 z-[110]">
-                                        <button onClick={() => setIsMediaGalleryOpen(false)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-all">
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                    <div className="flex-1 overflow-y-auto">
-                                        <MediaGallerySection
-                                            onSelect={(file) => {
-                                                if (isAddingVideoBlock && selectedNodeId) {
-                                                    const newBlockId = `video-${Date.now()}`;
-                                                    const newBlock = {
-                                                        id: newBlockId,
-                                                        type: 'video' as const,
-                                                        url: file.url
-                                                    };
-                                                    setNodes(nds => nds.map(n => n.id === selectedNodeId ? {
-                                                        ...n,
-                                                        data: {
-                                                            ...n.data,
-                                                            blocks: [...(n.data.blocks || []), newBlock]
-                                                        }
-                                                    } : n));
-                                                    setIsMediaGalleryOpen(false);
-                                                    setIsAddingVideoBlock(false);
-                                                } else if (selectedNodeId && editingBlockId) {
-                                                    if (isAudioEditorOpen) {
-                                                        setTempAudioUrl(file.url);
-                                                        setIsMediaGalleryOpen(false);
-                                                    } else if (isImageEditorOpen) {
-                                                        setTempImageUrl(file.url);
-                                                        setIsMediaGalleryOpen(false);
-                                                    } else {
-                                                        setNodes((nds) => nds.map((n) => n.id === selectedNodeId ? {
-                                                            ...n,
-                                                            data: {
-                                                                ...n.data,
-                                                                blocks: (n.data.blocks || []).map((b: any) => b.id === editingBlockId ? {
-                                                                    ...b,
-                                                                    url: file.url
-                                                                } : b)
-                                                            }
-                                                        } : n));
-                                                        setIsMediaGalleryOpen(false);
-                                                        setEditingBlockId(null);
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end shrink-0">
-                                        <button
-                                            onClick={() => setIsMediaGalleryOpen(false)}
-                                            className="px-6 py-2 text-sm font-medium text-blue-600 border border-blue-400 rounded-lg bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-200 active:scale-[0.98]"
-                                        >
-                                            Done
-                                        </button>
-                                    </div>
-                                </div>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </>
-                )}
-
-                <AlertDialog open={!!nodeIdToDelete} onOpenChange={(open) => !open && setNodeIdToDelete(null)}>
-                    <AlertDialogContent className="bg-white">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>This action cannot be undone. This will permanently delete this block from your flow.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel className="border-gray-200">No</AlertDialogCancel>
-                            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white border-0">Yes</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                <AlertDialog open={!!edgeIdToDelete} onOpenChange={(open) => !open && setEdgeIdToDelete(null)}>
-                    <AlertDialogContent className="bg-white">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Connection?</AlertDialogTitle>
-                            <AlertDialogDescription>Are you sure you want to delete this connection?</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel className="border-gray-200">No</AlertDialogCancel>
-                            <AlertDialogAction onClick={confirmDeleteEdge} className="bg-red-600 hover:bg-red-700 text-white border-0">Yes</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                {/* Clear Queue confirmation — replyagent parity: warns before wiping
-                    in-flight contacts/runs/iterations/AI messages for this flow */}
-                <AlertDialog open={showFlushConfirm} onOpenChange={(open) => !open && setShowFlushConfirm(false)}>
-                    <AlertDialogContent className="bg-white">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Clear Queue?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will remove all contacts currently waiting in this flow plus
-                                their run history, iteration counters, and AI messages. The flow
-                                itself (steps, connections, settings) is NOT deleted — only the
-                                in-flight execution state. This action cannot be undone.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel
-                                disabled={flushQueueMutation.isPending}
-                                className="border-gray-200"
-                            >
-                                Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={(e) => { e.preventDefault(); flushQueueMutation.mutate(); }}
-                                disabled={flushQueueMutation.isPending}
-                                className="bg-red-600 hover:bg-red-700 text-white border-0"
-                            >
-                                {flushQueueMutation.isPending ? "Clearing..." : "Yes, clear"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div >
-        </div >
+          ) : (
+            <div ref={reactFlowRef} className="absolute inset-0">
+            <ReactFlow
+              nodes={state.nodes}
+              edges={state.edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={(_e, n) => actions.selectNode(n.id)}
+              onPaneClick={() => {
+                actions.selectNode(null);
+                setContextMenu(null);
+              }}
+              onPaneContextMenu={onPaneContextMenu}
+              nodeTypes={AUTOMATION_NODE_TYPES}
+              fitView
+              proOptions={{ hideAttribution: true }}
+            >
+              {/* Replyagent uses a plain white canvas (no dot grid). Match
+                  that exactly — pass color="transparent" so the white page
+                  background shows through. */}
+              <Background color="transparent" gap={1} />
+              <Controls position="bottom-right" />
+              <MiniMap zoomable pannable position="bottom-left" />
+            </ReactFlow>
+            </div>
+          )}
+
+          {/* Replyagent's "+" is a small contextual button at the top-right
+              of the canvas. Keep it compact and on the right edge instead of
+              the prior big floating circle. */}
+          <div className="absolute right-4 top-4">
+            <AddNodeButton onPick={(type) => addNode(type)} />
+          </div>
+
+          {/* Replyagent's right-click cMenu — same step-type list as the
+              floating + button, positioned at the cursor; closes on
+              outside click. */}
+          {contextMenu && (
+            <CanvasContextMenu
+              x={contextMenu.x}
+              y={contextMenu.y}
+              onPick={(type) => {
+                addNode(type, {
+                  at: { x: contextMenu.flowX, y: contextMenu.flowY },
+                });
+                setContextMenu(null);
+              }}
+              onClose={() => setContextMenu(null)}
+            />
+          )}
+        </div>
+
+        {/* ─── Right sidebar ─── */}
+        {selectedNode && (
+          <SidebarPanel
+            node={selectedNode}
+            onClose={() => actions.selectNode(null)}
+            onDelete={() => setDeleteStepOpen(true)}
+            onCommentEdit={() => setCommentModalOpen(true)}
+            onChange={(partial) => actions.updateNodeData(selectedNode.id, partial)}
+            onPickAutomation={(opts) => {
+              setAutomationPickContext(opts);
+              setPickAutomationOpen(true);
+            }}
+            onChangeTrigger={(nodeId) => {
+              setTriggerTargetNodeId(nodeId);
+              setTriggersModalOpen(true);
+            }}
+          />
+        )}
+      </div>
+
+      {/* ─── Modals ─── */}
+      <TriggersModal
+        open={triggersModalOpen}
+        onOpenChange={setTriggersModalOpen}
+        onPick={(event, schema, prefill) => {
+          const targetId = triggerTargetNodeId ?? selectedNode?.id;
+          if (!targetId) return;
+          // Replyagent allows MULTIPLE triggers on the same Start node.
+          // Append as a new activity row, and apply the prefill payload —
+          // for channel-account-bound triggers the picker already supplied
+          // the `channel_account_id` so the user doesn't have to repeat it.
+          const target = state.nodes.find((n) => n.id === targetId);
+          const existing = (target?.data?.activities as any[]) ?? [];
+          const next = [
+            ...existing,
+            { event, label: schema?.label ?? event, payload: prefill ?? {} },
+          ];
+          actions.updateNodeData(targetId, {
+            label: "Start",
+            activities: next,
+            activity_properties: existing.length === 0 ? { event } : target?.data?.activity_properties,
+          });
+        }}
+      />
+      <SelectAutomationPopup
+        open={pickAutomationOpen}
+        onOpenChange={(o) => {
+          setPickAutomationOpen(o);
+          if (!o) setAutomationPickContext(null);
+        }}
+        excludeAutomationId={automationPickContext?.excludeId ?? (automationId ?? undefined)}
+        onPick={(a) => {
+          automationPickContext?.onPick(a);
+          setAutomationPickContext(null);
+        }}
+      />
+      <CommentModal
+        open={commentModalOpen}
+        onOpenChange={setCommentModalOpen}
+        initialComment={(selectedNode?.data?.comment as string) ?? ""}
+        onSave={(text) => {
+          if (selectedNode) actions.updateNodeData(selectedNode.id, { comment: text });
+        }}
+        onDelete={() => {
+          if (selectedNode) actions.updateNodeData(selectedNode.id, { comment: "" });
+        }}
+        readOnly={state.mode === "published"}
+      />
+      <LoopRectificationDialog
+        open={loopDialogOpen}
+        onOpenChange={setLoopDialogOpen}
+        loops={(publishMutation.error as any)?.body?.loops ?? []}
+        loading={publishMutation.isPending}
+        onConfirm={() =>
+          apiPost(`/api/automations/${automationId}/publish`, { acknowledge_loops: true })
+            .then(() => {
+              setLoopDialogOpen(false);
+              actions.setMode("published");
+              toast({ title: "Published" });
+              queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            })
+            .catch((err) => toast({ title: "Publish failed", description: err?.message, variant: "destructive" }))
+        }
+      />
+      <QueueContactsModal
+        open={queueModalOpen}
+        onOpenChange={setQueueModalOpen}
+        inFlightCount={automation?.queue_count ?? 0}
+        loading={publishMutation.isPending}
+        onConfirm={(action, tagName) => {
+          apiPost(`/api/automations/${automationId}/publish`, {
+            queue_action: action,
+            queue_tag_name: tagName,
+          })
+            .then(() => {
+              setQueueModalOpen(false);
+              actions.setMode("published");
+              toast({ title: "Published" });
+              queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            })
+            .catch((err) => toast({ title: "Publish failed", description: err?.message, variant: "destructive" }));
+        }}
+      />
+      <ConfirmDeleteStep
+        open={deleteStepOpen}
+        onOpenChange={setDeleteStepOpen}
+        stepTitle={selectedNode?.data?.label ?? "Step"}
+        onConfirm={() => {
+          if (selectedNode) {
+            actions.removeNode(selectedNode.id);
+            setDeleteStepOpen(false);
+          }
+        }}
+      />
+      <ConfirmFlushQueue
+        open={flushQueueOpen}
+        onOpenChange={setFlushQueueOpen}
+        loading={flushQueueMutation.isPending}
+        onConfirm={() => flushQueueMutation.mutate()}
+      />
+    </div>
+  );
+}
+
+// ─── Toolbar (top) ────────────────────────────────────────────────────
+
+function BuilderToolbar({
+  automationName,
+  onRename,
+  saving,
+  dirty,
+  canUndo,
+  canRedo,
+  mode,
+  runs,
+  onUndo,
+  onRedo,
+  onSave,
+  onPublish,
+  publishing,
+  onUnpublish,
+  onTest,
+  onFlushQueue,
+  onExit,
+}: {
+  automationName: string;
+  onRename: (name: string) => void;
+  saving: boolean;
+  dirty: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  mode: "draft" | "published";
+  runs: number;
+  onUndo: () => void;
+  onRedo: () => void;
+  onSave: () => void;
+  onPublish: () => void;
+  publishing: boolean;
+  onUnpublish: () => void;
+  onTest: () => void;
+  onFlushQueue: () => void;
+  onExit: () => void;
+}) {
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(automationName);
+
+  useEffect(() => {
+    if (!editingName) setNameDraft(automationName);
+  }, [automationName, editingName]);
+
+  // Replyagent toolbar pattern: brand on the far left, title centred,
+  // Undo / Redo / Publish / Exit on the right. Everything else (Test, Save,
+  // runs counter, Clear queue, Edit draft) is folded into a discreet kebab
+  // menu so the bar stays as clean as the original.
+  return (
+    <div className="h-14 border-b bg-white flex items-center px-4 gap-3 shrink-0">
+      <span className="font-bold tracking-wider text-emerald-600 select-none">
+        EZCONN
+      </span>
+
+      <div className="flex-1 flex justify-center items-center gap-2">
+        {editingName ? (
+          <Input
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => {
+              setEditingName(false);
+              if (nameDraft && nameDraft !== automationName) onRename(nameDraft);
+            }}
+            autoFocus
+            className="max-w-sm h-8 text-center"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditingName(true)}
+            className="text-sm font-medium hover:bg-muted/40 px-3 py-1 rounded"
+          >
+            {automationName}
+          </button>
+        )}
+        {saving && (
+          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            saving…
+          </span>
+        )}
+        {dirty && !saving && (
+          <span className="text-[10px] text-amber-600">unsaved</span>
+        )}
+      </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onUndo}
+        disabled={!canUndo}
+        title="Undo"
+      >
+        <Undo2 className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRedo}
+        disabled={!canRedo}
+        title="Redo"
+      >
+        <Redo2 className="h-4 w-4" />
+      </Button>
+
+      {mode === "draft" ? (
+        <Button
+          onClick={onPublish}
+          disabled={publishing}
+          variant="outline"
+          className="border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+        >
+          {publishing && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+          Publish
+        </Button>
+      ) : (
+        <>
+          {/* Replyagent shows BOTH "Preview" (read-only canvas with stats)
+              and "Edit draft" in published mode. The toggle drops back to
+              draft for editing. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs"
+            title="View published flow with run statistics"
+            disabled
+          >
+            Preview
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onUnpublish}
+            className="border-emerald-500 text-emerald-700"
+          >
+            Edit draft
+          </Button>
+        </>
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" title="More">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onSave} disabled={saving}>
+            <Save className="h-3.5 w-3.5 mr-2" />
+            Save now
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onTest}>
+            <Play className="h-3.5 w-3.5 mr-2" />
+            Test run
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <span className="text-xs text-muted-foreground">
+              {runs} total runs
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onFlushQueue}>
+            <Trash2 className="h-3.5 w-3.5 mr-2 text-destructive" />
+            Clear queue
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Button variant="outline" onClick={onExit}>
+        Exit
+      </Button>
+    </div>
+  );
+}
+
+// ─── Canvas right-click context menu (replyagent cMenu parity) ────────
+
+function CanvasContextMenu({
+  x,
+  y,
+  onPick,
+  onClose,
+}: {
+  x: number;
+  y: number;
+  onPick: (type: string) => void;
+  onClose: () => void;
+}) {
+  // Close on outside click — capture-phase so the menu doesn't eat the click
+  // that would deselect the canvas.
+  useEffect(() => {
+    const handler = () => onClose();
+    document.addEventListener("click", handler, { capture: true, once: true });
+    return () => document.removeEventListener("click", handler, { capture: true } as any);
+  }, [onClose]);
+
+  const items: Array<{ type: string; label: string; icon: React.ReactNode }> = [
+    { type: "trigger", label: "Trigger", icon: <Zap className="h-3.5 w-3.5 text-violet-600" /> },
+    { type: "whatsapp", label: "WhatsApp", icon: <MessageSquare className="h-3.5 w-3.5 text-emerald-600" /> },
+    { type: "telegram", label: "Telegram", icon: <MessageSquare className="h-3.5 w-3.5 text-sky-600" /> },
+    { type: "messenger", label: "Messenger", icon: <MessageSquare className="h-3.5 w-3.5 text-blue-600" /> },
+    { type: "instagram", label: "Instagram", icon: <MessageSquare className="h-3.5 w-3.5 text-fuchsia-600" /> },
+    { type: "webchat", label: "Webchat", icon: <MessageSquare className="h-3.5 w-3.5 text-orange-600" /> },
+    { type: "twilio_sms", label: "SMS", icon: <MessageSquare className="h-3.5 w-3.5 text-amber-600" /> },
+    { type: "twilio_call", label: "Call", icon: <MessageSquare className="h-3.5 w-3.5 text-rose-600" /> },
+    { type: "zapi", label: "Z-API", icon: <MessageSquare className="h-3.5 w-3.5 text-emerald-700" /> },
+    { type: "evolution", label: "Evolution", icon: <MessageSquare className="h-3.5 w-3.5 text-violet-600" /> },
+    { type: "delay", label: "Delay", icon: <Clock className="h-3.5 w-3.5 text-amber-600" /> },
+    { type: "randomizer", label: "Randomizer", icon: <Shuffle className="h-3.5 w-3.5 text-indigo-600" /> },
+    { type: "condition", label: "Condition", icon: <GitBranch className="h-3.5 w-3.5 text-teal-600" /> },
+    { type: "action", label: "Action", icon: <Cog className="h-3.5 w-3.5 text-slate-600" /> },
+  ];
+
+  return (
+    <div
+      className="fixed z-40 bg-white border rounded-md shadow-lg py-1 min-w-[180px] max-h-[60vh] overflow-auto"
+      style={{ left: x, top: y }}
+    >
+      {items.map((it) => (
+        <button
+          key={it.type}
+          type="button"
+          className="w-full px-3 py-1.5 flex items-center gap-2 text-xs hover:bg-muted/50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick(it.type);
+          }}
+        >
+          {it.icon}
+          <span>{it.label}</span>
+        </button>
+      ))}
+      <div className="border-t mt-1 pt-1">
+        <button
+          type="button"
+          className="w-full px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/50"
+          onClick={onClose}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Add-node floating button ─────────────────────────────────────────
+
+function AddNodeButton({ onPick }: { onPick: (type: string) => void }) {
+  const items: Array<{ type: string; label: string; icon: React.ReactNode; color: string }> = [
+    { type: "trigger", label: "Trigger", icon: <Zap className="h-3.5 w-3.5" />, color: "text-violet-600" },
+    { type: "whatsapp", label: "WhatsApp", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-emerald-600" },
+    { type: "telegram", label: "Telegram", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-sky-600" },
+    { type: "messenger", label: "Messenger", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-blue-600" },
+    { type: "instagram", label: "Instagram", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-fuchsia-600" },
+    { type: "webchat", label: "Webchat", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-orange-600" },
+    { type: "twilio_sms", label: "SMS", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-amber-600" },
+    { type: "twilio_call", label: "Call", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-rose-600" },
+    { type: "zapi", label: "Z-API", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-emerald-700" },
+    { type: "evolution", label: "Evolution", icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-violet-600" },
+    { type: "delay", label: "Delay", icon: <Clock className="h-3.5 w-3.5" />, color: "text-amber-600" },
+    { type: "randomizer", label: "Randomizer", icon: <Shuffle className="h-3.5 w-3.5" />, color: "text-indigo-600" },
+    { type: "condition", label: "Condition", icon: <GitBranch className="h-3.5 w-3.5" />, color: "text-teal-600" },
+    { type: "action", label: "Action", icon: <Cog className="h-3.5 w-3.5" />, color: "text-slate-600" },
+  ];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 px-2 shadow-sm bg-white border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+          title="Add step"
+        >
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Add
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="max-h-[70vh] overflow-auto">
+        {items.map((it) => (
+          <DropdownMenuItem key={it.type} onClick={() => onPick(it.type)}>
+            <span className={it.color}>{it.icon}</span>
+            <span className="ml-2">{it.label}</span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ─── Right sidebar — routes node type → editor ────────────────────────
+
+function SidebarPanel({
+  node,
+  onClose,
+  onDelete,
+  onCommentEdit,
+  onChange,
+  onPickAutomation,
+  onChangeTrigger,
+}: {
+  node: Node;
+  onClose: () => void;
+  onDelete: () => void;
+  onCommentEdit: () => void;
+  onChange: (partial: Record<string, any>) => void;
+  onPickAutomation: (opts: { onPick: (a: any) => void; excludeId?: string }) => void;
+  onChangeTrigger: (nodeId: string) => void;
+}) {
+  const type = node.type ?? (node.data?.stepType as string);
+  const value = node.data?.value ?? {};
+  const setValue = (next: any) => onChange({ value: next });
+
+  // Replyagent style: the trigger sidebar uses a coloured (green) header
+  // band; other step types use a neutral header. Pick the colour pair off
+  // the node type so channel nodes inherit their channel hue.
+  const headerStyle = sidebarHeaderStyle(type);
+  const title =
+    type === "trigger"
+      ? "Start"
+      : (node.data?.label as string) ?? "Step";
+
+  // Header buttons sit on a coloured band, so they're rendered as plain
+  // <button> elements with transparent backgrounds + white icons to match
+  // replyagent's chrome (no shadcn Button rings / borders / hover bg
+  // showing through against the green header).
+  const headerBtn =
+    "h-8 w-8 inline-flex items-center justify-center rounded text-white hover:bg-white/15 transition";
+
+  return (
+    <div className="w-96 border-l bg-white flex flex-col">
+      <div
+        className={`px-4 py-3 flex items-center gap-2 shrink-0 ${headerStyle.bg}`}
+      >
+        {type === "trigger" ? (
+          <span className={`font-semibold text-base ${headerStyle.fg}`}>
+            {title}
+          </span>
+        ) : (
+          <Input
+            value={(node.data?.label as string) ?? ""}
+            onChange={(e) => onChange({ label: e.target.value })}
+            maxLength={50}
+            className="h-7 text-sm flex-1 bg-white/90"
+          />
+        )}
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={onCommentEdit}
+          title="Comment"
+          className={headerBtn}
+        >
+          <MessageSquare className="h-4 w-4" />
+        </button>
+        {type !== "trigger" && (
+          <button
+            type="button"
+            onClick={onDelete}
+            title="Delete step"
+            className={headerBtn}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          title="Close"
+          className={headerBtn}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="relative flex-1 overflow-hidden">
+      <ScrollArea className="absolute inset-0 p-4">
+        {type === "trigger" ? (
+          <TriggerActivitiesPanel
+            nodeData={node.data}
+            onChange={onChange}
+            onOpenTriggersModal={() => onChangeTrigger(node.id)}
+          />
+        ) : type && (["whatsapp", "telegram", "messenger", "instagram", "webchat", "twilio_sms", "twilio_call", "zapi", "evolution"].includes(type)) ? (
+          <ChannelActivitiesPanel
+            channel={type}
+            nodeData={node.data}
+            onChange={onChange}
+          />
+        ) : type === "delay" ? (
+          <DelayEditor value={value} onChange={setValue} />
+        ) : type === "randomizer" ? (
+          <RandomizerEditor value={value} onChange={setValue} />
+        ) : type === "condition" ? (
+          <ConditionStepEditor value={value} onChange={setValue} />
+        ) : type === "action" ? (
+          <ActionStepEditor
+            value={value}
+            onChange={setValue}
+            onPickAutomation={onPickAutomation}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Unknown step type: {type}
+          </p>
+        )}
+      </ScrollArea>
+      </div>
+    </div>
+  );
+}
+
+// ─── Action step editor — pick action slug + schema-driven fields ─────
+
+function ActionStepEditor({
+  value,
+  onChange,
+  onPickAutomation,
+}: {
+  value: any;
+  onChange: (next: any) => void;
+  onPickAutomation: (opts: { onPick: (a: any) => void; excludeId?: string }) => void;
+}) {
+  const slug = value?.slug ?? "";
+  const schema = ACTION_SCHEMAS[slug];
+
+  // Group actions for the picker by their `group` property.
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof ACTION_SCHEMAS[string][]>();
+    for (const s of Object.values(ACTION_SCHEMAS)) {
+      const arr = map.get(s.group) ?? [];
+      arr.push(s);
+      map.set(s.group, arr);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, []);
+
+  if (!schema) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Pick an action</p>
+        <ScrollArea className="h-96">
+          {grouped.map(([group, items]) => (
+            <div key={group} className="mb-3">
+              <h6 className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                {group}
+              </h6>
+              <div className="space-y-1">
+                {items.map((it) => (
+                  <button
+                    key={it.slug}
+                    type="button"
+                    className="w-full text-left px-2 py-1.5 hover:bg-muted/40 text-xs rounded"
+                    onClick={() => onChange({ ...value, slug: it.slug })}
+                  >
+                    {it.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </ScrollArea>
+      </div>
     );
-};
+  }
+
+  // Special-case actions that depend on the SelectAutomationPopup.
+  const automationPickFields = new Set([
+    "start_automation",
+    "remove_from_flow",
+  ]);
+  const usePickAutomation = automationPickFields.has(slug);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Badge variant="outline">{schema.group}</Badge>
+        <Button
+          variant="link"
+          size="sm"
+          onClick={() => onChange({ slug: undefined })}
+        >
+          Change action
+        </Button>
+      </div>
+      <p className="text-sm font-medium">{schema.label}</p>
+      <SchemaForm
+        fields={schema.fields as any[]}
+        value={value ?? {}}
+        onChange={onChange}
+      />
+      {usePickAutomation && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onPickAutomation({
+              onPick: (a) => onChange({ ...value, automation_id: a.id, automation_name: a.name }),
+            })
+          }
+        >
+          Pick automation
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// ─── Sidebar header styling per step type (replyagent colour band) ────
+
+function sidebarHeaderStyle(type: string | undefined): {
+  bg: string;
+  fg: string;
+  btn: string;
+} {
+  switch (type) {
+    case "trigger":
+      return {
+        bg: "bg-emerald-500",
+        fg: "text-white",
+        btn: "text-white hover:bg-emerald-600",
+      };
+    case "whatsapp":
+    case "zapi":
+    case "evolution":
+      return {
+        bg: "bg-emerald-600",
+        fg: "text-white",
+        btn: "text-white hover:bg-emerald-700",
+      };
+    case "telegram":
+      return { bg: "bg-sky-500", fg: "text-white", btn: "text-white hover:bg-sky-600" };
+    case "messenger":
+      return { bg: "bg-blue-500", fg: "text-white", btn: "text-white hover:bg-blue-600" };
+    case "instagram":
+      return { bg: "bg-fuchsia-500", fg: "text-white", btn: "text-white hover:bg-fuchsia-600" };
+    case "webchat":
+      return { bg: "bg-orange-500", fg: "text-white", btn: "text-white hover:bg-orange-600" };
+    case "twilio_sms":
+      return { bg: "bg-amber-500", fg: "text-white", btn: "text-white hover:bg-amber-600" };
+    case "twilio_call":
+      return { bg: "bg-rose-500", fg: "text-white", btn: "text-white hover:bg-rose-600" };
+    case "delay":
+      return { bg: "bg-amber-500", fg: "text-white", btn: "text-white hover:bg-amber-600" };
+    case "randomizer":
+      return { bg: "bg-indigo-500", fg: "text-white", btn: "text-white hover:bg-indigo-600" };
+    case "condition":
+      return { bg: "bg-teal-500", fg: "text-white", btn: "text-white hover:bg-teal-600" };
+    case "action":
+      return { bg: "bg-slate-600", fg: "text-white", btn: "text-white hover:bg-slate-700" };
+    default:
+      return { bg: "bg-muted", fg: "text-foreground", btn: "" };
+  }
+}
+
+// ─── Legacy inline panel (kept only to avoid breaking old refs) ───────
+
+function __LegacyTriggerActivitiesPanel({
+  value,
+  activities,
+  onChange,
+  onPickNew,
+}: {
+  value: any;
+  activities: any[];
+  onChange: (next: any[]) => void;
+  onPickNew: () => void;
+}) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // If activities are not yet present, synthesize one from the trigger node's
+  // `activity_properties.event`. The replyagent canvas always shows at least
+  // "Default" — match that.
+  const list = activities.length
+    ? activities
+    : [{ event: value?.event ?? "default_url", label: "Default", payload: {} }];
+
+  if (editingIndex != null && list[editingIndex]) {
+    const act = list[editingIndex];
+    return (
+      <div className="space-y-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="px-0 text-emerald-700"
+          onClick={() => setEditingIndex(null)}
+        >
+          ← Back to triggers
+        </Button>
+        <TriggerEditor
+          event={act.event ?? "default_url"}
+          value={act.payload ?? {}}
+          onChange={(payload) => {
+            const next = [...list];
+            next[editingIndex] = { ...act, payload };
+            onChange(next);
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 -mx-4 -mt-4">
+      {list.map((act, idx) => {
+        const schema = getTriggerSchemaSafe(act.event);
+        const isDefault = act.event === "default_url";
+        return (
+          <div
+            key={idx}
+            className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 cursor-pointer border-b"
+            onClick={() => setEditingIndex(idx)}
+          >
+            <TriggerRowIcon event={act.event} />
+            <span className="text-sm flex-1 truncate">
+              {schema?.label ?? act.label ?? "Default"}
+            </span>
+            {/* Trash only on non-default trigger entries — replyagent never
+                lets you delete the "Default" url, only secondary triggers. */}
+            {!isDefault && list.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(list.filter((_, i) => i !== idx));
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+              </Button>
+            )}
+          </div>
+        );
+      })}
+      <div className="px-4 pt-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-emerald-500 text-emerald-700 hover:bg-emerald-50 font-medium"
+          onClick={onPickNew}
+        >
+          Add a trigger
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Legacy (kept only to avoid orphan references). The trigger sidebar now
+ * uses `TriggerActivitiesPanel` from `automation/activity-editors.tsx`.
+ */
+function __UnusedTriggerRowIcon({ event }: { event: string }) {
+  // Map by trigger category for the icon — the schema gives us the
+  // category name from trigger-schemas.ts.
+  const schema = getTriggerSchema(event);
+  const cat = schema?.category ?? "";
+  let glyph: React.ReactNode;
+  let color = "text-muted-foreground";
+  if (cat === "Tags") {
+    glyph = <span className="text-xs">🏷</span>;
+    color = "text-orange-600";
+  } else if (cat === "Custom Fields" || cat === "System Fields" || cat === "Date Fields") {
+    glyph = <Cog className="h-3 w-3" />;
+    color = "text-slate-600";
+  } else if (cat === "Pipeline") {
+    glyph = <GitBranch className="h-3 w-3" />;
+    color = "text-violet-600";
+  } else if (cat === "Conversation" || cat === "Flow") {
+    glyph = <MessageSquare className="h-3 w-3" />;
+    color = "text-blue-600";
+  } else if (cat === "Broadcast" || cat === "API") {
+    glyph = <Zap className="h-3 w-3" />;
+    color = "text-emerald-600";
+  } else if (event === "default_url") {
+    // Default URL trigger: replyagent uses a round bold "N" badge.
+    return (
+      <span className="h-6 w-6 rounded-full border-2 border-slate-400 flex items-center justify-center text-[10px] font-bold text-slate-700">
+        N
+      </span>
+    );
+  } else {
+    // Channel-specific URL / keyword triggers — short letter badge.
+    return (
+      <span className="h-6 w-6 rounded-full border-2 border-slate-400 flex items-center justify-center text-[10px] font-bold text-slate-700">
+        {(schema?.category?.[0] ?? "T").toUpperCase()}
+      </span>
+    );
+  }
+  return (
+    <span className={`h-6 w-6 rounded-full border-2 border-current flex items-center justify-center ${color}`}>
+      {glyph}
+    </span>
+  );
+}
+
+// ─── Initial graph helpers ────────────────────────────────────────────
+
+function defaultLabelForType(type: string): string {
+  if (type === "trigger") return "Trigger";
+  if (type === "delay") return "Delay";
+  if (type === "randomizer") return "Randomizer";
+  if (type === "condition") return "Condition";
+  if (type === "action") return "Action";
+  return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function serializedNodesFromAutomation(automation: any): Node[] {
+  // The backend sync-graph response shape mirrors the input shape — we
+  // reconstruct from `steps` + their `activities` + node-id stamps stashed
+  // in `step.comment`.
+  const steps: any[] = automation?.steps ?? automation?.automation?.steps ?? [];
+  if (!Array.isArray(steps) || steps.length === 0) {
+    // Fresh automation — seed with a trigger node.
+    return [
+      {
+        id: "node_seed_trigger",
+        type: "trigger",
+        position: { x: 250, y: 120 },
+        data: {
+          stepType: "trigger",
+          label: "Start trigger",
+          activity_properties: { event: "default_url" },
+          value: {},
+        },
+      },
+    ];
+  }
+  return steps.map((s) => {
+    const props = typeof s.properties === "string" ? safeJson(s.properties) : s.properties ?? {};
+    const firstActivity = s.activities?.[0];
+    const activityProps =
+      typeof firstActivity?.properties === "string"
+        ? safeJson(firstActivity.properties)
+        : firstActivity?.properties ?? {};
+    return {
+      id: String(s.comment ?? `step_${s.id}`),
+      type: String(s.type ?? "action"),
+      position: { x: props.x ?? 200, y: props.y ?? 120 },
+      data: {
+        stepType: s.type,
+        label: s.title,
+        comment: s.comment ?? "",
+        value: activityProps,
+        activity_properties: firstActivity ? { event: firstActivity.event, ...activityProps } : undefined,
+      },
+    } as Node;
+  });
+}
+
+function serializedEdgesFromAutomation(automation: any): Edge[] {
+  const flows: any[] = automation?.flows ?? automation?.connections ?? [];
+  if (!Array.isArray(flows)) return [];
+  return flows.map((f, i) => ({
+    id: String(f.id ?? `e${i}`),
+    source: String(f.source_node_id ?? f.connector_node_id ?? f.connector_id ?? ""),
+    target: String(f.target_node_id ?? f.next_node_id ?? f.next_step_id ?? ""),
+  }));
+}
+
+function safeJson(s: string): any {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return {};
+  }
+}
