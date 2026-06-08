@@ -1150,7 +1150,7 @@ function __LegacyTriggerActivitiesPanel({
   return (
     <div className="space-y-2 -mx-4 -mt-4">
       {list.map((act, idx) => {
-        const schema = getTriggerSchemaSafe(act.event);
+        const schema = getTriggerSchema(act.event);
         const isDefault = act.event === "default_url";
         return (
           <div
@@ -1198,7 +1198,7 @@ function __LegacyTriggerActivitiesPanel({
  * Legacy (kept only to avoid orphan references). The trigger sidebar now
  * uses `TriggerActivitiesPanel` from `automation/activity-editors.tsx`.
  */
-function __UnusedTriggerRowIcon({ event }: { event: string }) {
+function TriggerRowIcon({ event }: { event: string }) {
   // Map by trigger category for the icon — the schema gives us the
   // category name from trigger-schemas.ts.
   const schema = getTriggerSchema(event);

@@ -402,7 +402,7 @@ export default function ChatWidgetSection() {
                 : channel === "zapi"
                   ? channelOptions.zapi
                   : channelOptions.twilio;
-      const pick = opts.find((o) => o.id === id);
+      const pick = opts.find((o: { id: string; label: string; model_type: string }) => o.id === id);
       return {
         ...prev,
         actions: prev.actions.map((a) =>
@@ -772,7 +772,7 @@ export default function ChatWidgetSection() {
                                       ) : (
                                         <>
                                           <option value="">Select Twilio number…</option>
-                                          {opts.map((o) => (
+                                          {opts.map((o: { id: string; label: string; model_type: string }) => (
                                             <option key={o.id} value={o.id}>{o.label}</option>
                                           ))}
                                         </>
@@ -791,7 +791,7 @@ export default function ChatWidgetSection() {
                                   className={selectCls + " flex-1"}
                                 >
                                   <option value="">Select an action.</option>
-                                  {opts.map((o) => (
+                                  {opts.map((o: { id: string; label: string; model_type: string }) => (
                                     <option key={o.id} value={o.id}>{o.label}</option>
                                   ))}
                                 </select>

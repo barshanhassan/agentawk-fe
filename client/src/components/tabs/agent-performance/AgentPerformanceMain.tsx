@@ -36,12 +36,13 @@ export default function AgentPerformanceMain() {
   const agentAvailabilityData: Array<{ name: string; team: string; loginTime: string; status: string; dot: string }> = perfData?.availability?.agents ?? [];
   const agentMetricsData: Array<{ name: string; accepted: number; solved: number; date: string; avgResponse: string; avgResolution: string }> = perfData?.metrics ?? [];
   const totalAgents = perfData?.availability?.total ?? 0;
-  const statusBars = perfData?.availability?.statusBars ?? [
-    { label: "Online",  count: 0, pct: 0, color: "bg-emerald-500" },
-    { label: "Busy",    count: 0, pct: 0, color: "bg-orange-500"  },
-    { label: "Away",    count: 0, pct: 0, color: "bg-yellow-500"  },
-    { label: "Offline", count: 0, pct: 0, color: "bg-slate-400"   },
-  ];
+  const statusBars: { label: string; count: number; pct: number; color: string }[] =
+    perfData?.availability?.statusBars ?? [
+      { label: "Online",  count: 0, pct: 0, color: "bg-emerald-500" },
+      { label: "Busy",    count: 0, pct: 0, color: "bg-orange-500"  },
+      { label: "Away",    count: 0, pct: 0, color: "bg-yellow-500"  },
+      { label: "Offline", count: 0, pct: 0, color: "bg-slate-400"   },
+    ];
 
   const filteredAvail = agentAvailabilityData.filter(a =>
     a.name.toLowerCase().includes(availSearch.toLowerCase()) || a.team.toLowerCase().includes(availSearch.toLowerCase())

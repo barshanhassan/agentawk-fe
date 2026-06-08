@@ -28,6 +28,9 @@ export interface MessageFieldSchema {
   dependsOn?: { field: string; equals?: string };
   defaultValue?: any;
   options?: Array<{ value: string; label: string }>;
+  // For `type: 'channel-account'` fields — which channel's connected accounts
+  // to offer in the picker (e.g. 'twilio', 'whatsapp').
+  channel?: string;
 }
 
 export interface MessageTypeSchema {

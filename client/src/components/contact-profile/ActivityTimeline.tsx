@@ -77,7 +77,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
     new Set(Object.keys(CHANNEL_LABELS)),
   );
   const [enabledKinds, setEnabledKinds] = useState<Set<"note" | "message">>(
-    new Set(["note", "message"]),
+    new Set<"note" | "message">(["note", "message"]),
   );
   const [page, setPage] = useState(1);
 
@@ -269,7 +269,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
                   setDateFrom("");
                   setDateTo("");
                   setEnabledChannels(new Set(Object.keys(CHANNEL_LABELS)));
-                  setEnabledKinds(new Set(["note", "message"]));
+                  setEnabledKinds(new Set<"note" | "message">(["note", "message"]));
                 }}
               >
                 Reset filters

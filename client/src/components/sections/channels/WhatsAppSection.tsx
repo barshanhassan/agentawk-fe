@@ -21,6 +21,13 @@ import {
   Copy as CopyIcon,
   BadgeCheck,
   Info,
+  KeyRound,
+  ShieldAlert,
+  ShieldCheck,
+  Building2,
+  Gauge,
+  RefreshCcw,
+  Repeat,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -285,6 +292,7 @@ export default function WhatsAppSection() {
   const [numberToReconnect, setNumberToReconnect] = useState<any>(null);
   const [numberForDefaultReply, setNumberForDefaultReply] = useState<any>(null);
   const [accountForCapi, setAccountForCapi] = useState<any>(null);
+  const [numberToRegister, setNumberToRegister] = useState<any>(null);
 
   const [newNumberData, setNewNumberData] = useState({
     phoneNumber: "",
@@ -484,6 +492,39 @@ export default function WhatsAppSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
+    },
+  });
+
+  // ─── Account verify (re-check Meta review/verification state) ─────
+
+  const verifyAccountMutation = useMutation({
+    mutationFn: async (accountId: string) => {
+      const res = await apiRequest("POST", `/api/whatsapp/verify-account/${accountId}`);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: data?.success ? "Account refreshed" : "Verify failed",
+        description: data?.success ? "Latest status pulled from Meta." : data?.message ?? "",
+        variant: data?.success ? undefined : "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
+    },
+  });
+
+  // ─── Webhook re-subscribe (manual trigger; cron handles it every 6h) ──
+
+  const resubscribeMutation = useMutation({
+    mutationFn: async (accountId: string) => {
+      const res = await apiRequest("POST", `/api/whatsapp/resubscribe/${accountId}`);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: data?.success ? "Webhook re-subscribed" : "Re-subscribe failed",
+        description: data?.message ?? "",
+        variant: data?.success ? undefined : "destructive",
+      });
     },
   });
 
@@ -812,6 +853,10 @@ export default function WhatsAppSection() {
                       onDefaultReply={(n: any) => setNumberForDefaultReply(n)}
                       onToggleFeeder={(n: any) => feederMutation.mutate(n.id)}
                       onSetupCapi={() => setAccountForCapi(account)}
+                      onVerifyAccount={() => verifyAccountMutation.mutate(account.id)}
+                      isVerifying={verifyAccountMutation.isPending}
+                      onResubscribe={() => resubscribeMutation.mutate(account.id)}
+                      onRegisterNumber={(n: any) => setNumberToRegister(n)}
                       onOpenTemplates={() => setLocation(`/templates?wa_account_id=${account.id}`)}
                       onAddNumber={() => {
                         setSelectedAccount(account);
@@ -1116,6 +1161,13 @@ export default function WhatsAppSection() {
         existing={capiData}
         onClose={() => setAccountForCapi(null)}
       />
+
+      {/* ── Register / 2-step PIN dialog ── */}
+      <RegisterPinDialog
+        open={!!numberToRegister}
+        number={numberToRegister}
+        onClose={() => setNumberToRegister(null)}
+      />
     </>
   );
 }
@@ -1138,12 +1190,45 @@ function AccountCard(props: {
   onDefaultReply: (n: any) => void;
   onToggleFeeder: (n: any) => void;
   onSetupCapi: () => void;
+  onVerifyAccount: () => void;
+  isVerifying: boolean;
+  onResubscribe: () => void;
+  onRegisterNumber: (n: any) => void;
   onOpenTemplates: () => void;
   onAddNumber: () => void;
 }) {
   const { account, dark, text, sub, card, border, softBg, softBorder, outlineBtn } = props;
 
   const accountBadgeTone = account.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : account.status === "PENDING" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
+
+  // ── Gap 9: parse on-behalf-of business info (JSON string from Meta) ──
+  const onBehalfOf = (() => {
+    if (!account.on_behalf_of_business_info) return null;
+    try {
+      const parsed =
+        typeof account.on_behalf_of_business_info === "string"
+          ? JSON.parse(account.on_behalf_of_business_info)
+          : account.on_behalf_of_business_info;
+      return parsed?.name ?? parsed?.business_name ?? null;
+    } catch {
+      return null;
+    }
+  })();
+
+  // ── Gap 4: humanise account review + ownership status into badges ──
+  const reviewStatus: string | null = account.account_review_status ?? null;
+  const reviewTone =
+    reviewStatus === "APPROVED"
+      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+      : reviewStatus === "REJECTED"
+        ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+        : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+  const ownershipType: string | null = account.ownership_type ?? null;
+
+  // ── Gap 8: health — surface any account/number error_code ──
+  const numbers: any[] = account.phone_numbers ?? [];
+  const healthError: string | null =
+    account.error_code || numbers.find((n) => n.error_code)?.error_code || null;
 
   return (
     <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>
@@ -1171,10 +1256,35 @@ function AccountCard(props: {
                   </Tooltip>
                 </TooltipProvider>
               )}
+              {/* Gap 4 — Meta account review status */}
+              {reviewStatus && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className={cn("h-5 px-2 rounded-md text-[9px] font-black uppercase tracking-widest", reviewTone)}>
+                        Review: {reviewStatus}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>Meta account review status</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {/* Gap 4 — ownership type (CLIENT_OWNED / SHARED / SELF) */}
+              {ownershipType && (
+                <Badge variant="outline" className={cn("h-5 px-2 rounded-md text-[9px] font-black uppercase tracking-widest", dark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-600")}>
+                  {ownershipType.replace(/_/g, " ")}
+                </Badge>
+              )}
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold opacity-60">
+            <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold opacity-60 flex-wrap">
               <span className={sub}>WABA: {account.waba_id}</span>
               {account.currency && <span className={sub}>• {account.currency}</span>}
+              {/* Gap 9 — on-behalf-of business (partner-managed accounts) */}
+              {onBehalfOf && (
+                <span className={cn("inline-flex items-center gap-1", sub)}>
+                  • <Building2 size={10} /> On behalf of: {onBehalfOf}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -1220,6 +1330,30 @@ function AccountCard(props: {
             Pricing
           </a>
 
+          {/* Gap 7 — re-check Meta review/verification state */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={props.onVerifyAccount} disabled={props.isVerifying} className={cn(outlineBtn, "disabled:opacity-50 disabled:cursor-not-allowed")}>
+                  <RefreshCcw size={12} className={props.isVerifying ? "animate-spin" : ""} /> Verify
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Re-check account status from Meta</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Gap 6 — manual webhook re-subscribe (cron also runs every 6h) */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={props.onResubscribe} className={outlineBtn}>
+                  <Repeat size={12} /> Re-subscribe
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Re-establish the WhatsApp webhook subscription</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <button
             onClick={props.onDeleteAccount}
             className={cn("h-11 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2", "border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500")}
@@ -1228,6 +1362,31 @@ function AccountCard(props: {
           </button>
         </div>
       </div>
+
+      {/* Gap 8 — health alert banner when Meta flags an account/number error */}
+      {healthError && (
+        <div className="mx-5 mt-4 rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 flex items-start gap-3">
+          <ShieldAlert size={15} className="text-rose-500 mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">
+              Action needed
+            </p>
+            <p className={cn("text-[11px] font-medium opacity-80 mt-0.5", sub)}>
+              Meta reported an error on this account (code{" "}
+              <span className="font-mono font-bold">{String(healthError)}</span>). Use “Verify” to refresh, or open{" "}
+              <a
+                href="https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-rose-600 dark:text-rose-400"
+              >
+                Meta’s error reference
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Phone Numbers */}
       <div className="p-5 space-y-3">
@@ -1248,6 +1407,7 @@ function AccountCard(props: {
               onReconnect={() => props.onReconnect(number)}
               onDefaultReply={() => props.onDefaultReply(number)}
               onToggleFeeder={() => props.onToggleFeeder(number)}
+              onRegister={() => props.onRegisterNumber(number)}
             />
           ))
         )}
@@ -1267,6 +1427,7 @@ function PhoneNumberRow(props: {
   onReconnect: () => void;
   onDefaultReply: () => void;
   onToggleFeeder: () => void;
+  onRegister: () => void;
 }) {
   const { number, dark, text, sub, card, border } = props;
 
@@ -1274,6 +1435,20 @@ function PhoneNumberRow(props: {
   const isBlocked = ["LOCKED", "FAILED"].includes(number.status);
   const isDisconnected = number.status === "DISCONNECTED";
   const isPending = number.status === "PENDING";
+
+  // ── Gap 5: messaging-limit tier + throughput level (from Meta) ──
+  const limitTier: string | null = number.current_limit
+    ? String(number.current_limit).replace(/^TIER_/, "").replace(/_/g, " ")
+    : null;
+  const throughputLevel: string | null = (() => {
+    if (!number.throughput) return null;
+    try {
+      const t = typeof number.throughput === "string" ? JSON.parse(number.throughput) : number.throughput;
+      return t?.level ?? null;
+    } catch {
+      return null;
+    }
+  })();
 
   let statusBadge = (
     <span className="px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -1347,6 +1522,35 @@ function PhoneNumberRow(props: {
             )}
             <p className={cn("text-[10px] font-medium opacity-60 truncate", sub)}>{number.verified_name}</p>
           </div>
+          {/* Gap 5 — messaging limit tier + throughput level */}
+          {(limitTier || throughputLevel) && (
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {limitTier && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={cn("inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border", dark ? "border-slate-700 text-slate-400" : "border-slate-200 text-slate-500")}>
+                        <Gauge size={9} /> {limitTier}/24h
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Messaging limit tier — unique customers you can message per 24h</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {throughputLevel && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={cn("inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border", dark ? "border-slate-700 text-slate-400" : "border-slate-200 text-slate-500")}>
+                        <Activity size={9} /> {throughputLevel}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Throughput level — sending rate this number supports</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1362,6 +1566,19 @@ function PhoneNumberRow(props: {
                 </button>
               </TooltipTrigger>
               <TooltipContent>Refresh status</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        {!isActive && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={props.onRegister} className={cn("w-9 h-9 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-emerald-500" : "hover:bg-slate-100 text-slate-500 hover:text-emerald-500")}>
+                  <KeyRound size={14} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Register on Cloud API with a 2-step PIN</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
@@ -1413,6 +1630,9 @@ function PhoneNumberRow(props: {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={props.onReconnect} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
               <RotateCw size={12} /> Refresh status
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={props.onRegister} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+              <KeyRound size={12} /> Register / 2-step PIN
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -1597,6 +1817,127 @@ function CapiSetupDialog({
                 className="h-10 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saveMutation.isPending ? "Saving…" : "Save"}
+              </button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Register / 2-step PIN dialog (Gap 3) ─────────────────────────────
+
+function RegisterPinDialog({
+  open,
+  number,
+  onClose,
+}: {
+  open: boolean;
+  number: any;
+  onClose: () => void;
+}) {
+  const { mode } = useTheme();
+  const dark = mode === "dark";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [pin, setPin] = useState("");
+  const [autoGenerate, setAutoGenerate] = useState(true);
+  const [issuedPin, setIssuedPin] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setPin("");
+      setAutoGenerate(true);
+      setIssuedPin(null);
+    }
+  }, [open]);
+
+  const registerMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/whatsapp/register/${number?.id}`, {
+        ...(autoGenerate ? {} : { pin: pin.trim() }),
+      });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data?.success) {
+        setIssuedPin(data?.pin ?? null);
+        toast({ title: "Number registered", description: "Two-step PIN set and number activated." });
+        queryClient.invalidateQueries({ queryKey: ["/api/whatsapp/accounts", "phoneNumbers,capi"] });
+      } else {
+        toast({ title: "Registration failed", description: data?.message ?? "", variant: "destructive" });
+      }
+    },
+  });
+
+  if (!number) return null;
+
+  const pinValid = autoGenerate || /^\d{6}$/.test(pin.trim());
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className={cn("rounded-[2rem] border p-0 max-w-md overflow-hidden", dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200")}>
+        <div className="p-7 space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <ShieldCheck size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={cn("text-[13px] font-black uppercase tracking-widest", dark ? "text-white" : "text-slate-900")}>
+                Register / 2-step PIN
+              </div>
+              <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>
+                Registers <span className="font-bold">{number.display_phone_number}</span> on the WhatsApp Cloud API with a 6-digit
+                two-step verification PIN, then activates it. Keep the PIN safe — Meta may prompt for it later.
+              </p>
+            </div>
+          </div>
+
+          {issuedPin ? (
+            <div className={cn("p-4 rounded-xl border text-center", dark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50 border-slate-200")}>
+              <div className={cn("text-[10px] font-black uppercase tracking-widest opacity-60", dark ? "text-slate-400" : "text-slate-600")}>Your 2-step PIN</div>
+              <div className={cn("text-[28px] font-black tracking-[0.3em] font-mono mt-1", dark ? "text-white" : "text-slate-900")}>{issuedPin}</div>
+              <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-2">Save this PIN now — it won't be shown again.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <label className={cn("flex items-center gap-2 cursor-pointer text-[11px] font-bold", dark ? "text-slate-300" : "text-slate-700")}>
+                <input type="checkbox" checked={autoGenerate} onChange={(e) => setAutoGenerate(e.target.checked)} className="accent-emerald-500" />
+                Auto-generate a secure PIN
+              </label>
+              {!autoGenerate && (
+                <div className="space-y-2">
+                  <label className={cn("text-[10px] font-black uppercase tracking-widest", dark ? "text-slate-400" : "text-slate-600")}>
+                    6-digit PIN <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="••••••"
+                    inputMode="numeric"
+                    className={cn("h-11 rounded-xl text-[15px] font-black tracking-[0.3em] text-center font-mono", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-1">
+            <button
+              onClick={onClose}
+              className={cn("h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all", dark ? "border-slate-700 text-slate-300 hover:border-slate-500" : "border-slate-200 text-slate-700 hover:border-slate-400")}
+            >
+              {issuedPin ? "Done" : "Cancel"}
+            </button>
+            {!issuedPin && (
+              <button
+                onClick={() => registerMutation.mutate()}
+                disabled={!pinValid || registerMutation.isPending}
+                className="h-10 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {registerMutation.isPending ? "Registering…" : "Register"}
               </button>
             )}
           </div>
