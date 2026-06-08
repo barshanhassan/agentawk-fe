@@ -14,6 +14,7 @@ import {
   ChevronsUpDown,
   Sparkles,
   AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -194,6 +195,86 @@ export default function WhiteLabelSection() {
     }
   };
 
+  // ─── Custom domain (Domain tab) ──────────────────────────────────
+  const { data: domainData } = useQuery<any>({ queryKey: ["/api/domains/current"] });
+  const currentDomain = domainData?.domain ?? null;
+  const refetchDomain = () => queryClient.invalidateQueries({ queryKey: ["/api/domains/current"] });
+
+  const connectDomainMutation = useMutation({
+    mutationFn: async () => {
+      // Availability check first (replyagent validates before adding).
+      const v = await apiRequest(
+        "GET",
+        `/api/domains/validate-domain?sub_domain=${encodeURIComponent(slug.trim())}&root_domain=${encodeURIComponent(customDomain.trim())}`,
+      );
+      const vj = await v.json();
+      if (vj && vj.available === false) throw new Error("That domain is already taken.");
+      const res = await apiRequest("POST", "/api/domains/add-custom-domain", {
+        sub_domain: slug.trim(),
+        root_domain: customDomain.trim(),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Domain connected", description: "Point the DNS record at your provider to finish." });
+      setSlug("");
+      setCustomDomain("");
+      refetchDomain();
+    },
+    onError: (e: any) => toast({ title: "Could not connect", description: e?.message ?? "", variant: "destructive" }),
+  });
+
+  const deleteDomainMutation = useMutation({
+    mutationFn: async () => (await apiRequest("DELETE", "/api/domains/delete-custom-domain")).json(),
+    onSuccess: () => { toast({ title: "Domain removed" }); refetchDomain(); },
+    onError: (e: any) => toast({ title: "Could not remove", description: e?.message ?? "", variant: "destructive" }),
+  });
+
+  // ─── Custom email domain (Email tab) ─────────────────────────────
+  const { data: emailData } = useQuery<any>({ queryKey: ["/api/notification-email"] });
+  const notificationEmail = emailData?.notification_email ?? null;
+  const refetchEmail = () => queryClient.invalidateQueries({ queryKey: ["/api/notification-email"] });
+
+  const addEmailMutation = useMutation({
+    mutationFn: async () =>
+      (await apiRequest("POST", "/api/notification-email", { prefix: emailUser.trim(), domain: emailDomain.trim() })).json(),
+    onSuccess: (d: any) => {
+      if (d?.notification_email) {
+        toast({ title: "Domain added", description: "Add the DNS records below, then Verify." });
+        refetchEmail();
+      }
+    },
+    onError: (e: any) => toast({ title: "Could not add", description: e?.message ?? "", variant: "destructive" }),
+  });
+
+  const verifyEmailMutation = useMutation({
+    mutationFn: async (id: string) => (await apiRequest("GET", `/api/notification-email/verify/${id}`)).json(),
+    onSuccess: (d: any) => {
+      const verified = d?.notification_email?.status === "VERIFIED";
+      toast({
+        title: verified ? "Verified!" : "Not verified yet",
+        description: verified
+          ? "Your custom email domain is active."
+          : "DNS records aren't visible to SMTP2GO yet — they can take time to propagate.",
+        variant: verified ? undefined : "destructive",
+      });
+      refetchEmail();
+    },
+    onError: (e: any) => toast({ title: "Verification failed", description: e?.message ?? "", variant: "destructive" }),
+  });
+
+  const deleteEmailMutation = useMutation({
+    mutationFn: async (id: string) => (await apiRequest("DELETE", `/api/notification-email/${id}`)).json(),
+    onSuccess: () => { toast({ title: "Removed" }); setShowEmailForm(false); refetchEmail(); },
+    onError: (e: any) => toast({ title: "Could not remove", description: e?.message ?? "", variant: "destructive" }),
+  });
+
+  const copyToClipboard = (val: string) => {
+    if (!val) return;
+    navigator.clipboard.writeText(val);
+    toast({ title: "Copied" });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -206,8 +287,8 @@ export default function WhiteLabelSection() {
     { value: "logo", label: "Logo", icon: ImageIcon },
     { value: "favicon", label: "Favicon", icon: Zap },
     { value: "colors", label: "Colors", icon: Palette },
-    { value: "domain", label: "Domain", icon: Globe },
-    { value: "email", label: "Email", icon: Mail },
+    { value: "domain", label: "Custom Domain", icon: Globe },
+    { value: "email", label: "Notification E-mail", icon: Mail },
   ];
 
   return (
@@ -393,83 +474,179 @@ export default function WhiteLabelSection() {
 
             {/* ── DOMAIN TAB ── */}
             <TabsContent value="domain" className="p-8 outline-none space-y-6">
-              <SectionHeading
-                dark={dark}
-                title="Custom Domain"
-                description="Point your workspace to your own domain for a fully branded experience."
-              />
+              <SectionHeading dark={dark} title="Custom Domain" />
 
-              <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all max-w-2xl",
-                dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
-                <span className={cn("px-3 text-[10px] font-black uppercase tracking-widest border-r h-full flex items-center",
-                  dark ? "text-slate-500 border-slate-800 bg-slate-900/40" : "text-slate-400 border-slate-200 bg-slate-50")}>https://</span>
-                <input
-                  placeholder="app"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  className={cn("bg-transparent h-full text-[12px] font-black outline-none px-3 flex-1 min-w-0", text)}
-                />
-                <span className={cn("px-2 text-[12px] font-bold opacity-50 border-l h-full flex items-center", dark ? "border-slate-800" : "border-slate-200")}>.</span>
-                <input
-                  placeholder="yourdomain.com"
-                  value={customDomain}
-                  onChange={(e) => setCustomDomain(e.target.value)}
-                  className={cn("bg-transparent h-full text-[12px] font-black outline-none px-3 flex-1 min-w-0", text)}
-                />
-              </div>
-
-              <div className={cn("p-5 rounded-[1.25rem] border space-y-3 max-w-2xl", softBg, softBorder)}>
-                <div className="flex items-start gap-3">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
-                    <Info size={14} />
+              {currentDomain ? (
+                /* ── Connected domain ── */
+                <div className={cn("p-6 rounded-[1.5rem] border max-w-2xl", softBg, softBorder)}>
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0"><Globe size={16} /></div>
+                      <div className="min-w-0">
+                        <a href={currentDomain.domain} target="_blank" rel="noopener noreferrer" className={cn("text-[13px] font-black truncate hover:underline", text)}>
+                          {currentDomain.domain}
+                        </a>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Active</span>
+                          <span className={cn("text-[10px] font-bold opacity-60", sub)}>subdomain: {currentDomain.sub_domain}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteDomainMutation.mutate()}
+                      disabled={deleteDomainMutation.isPending}
+                      className="h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50"
+                    >
+                      <Trash2 size={12} /> {deleteDomainMutation.isPending ? "Removing..." : "Remove"}
+                    </button>
                   </div>
-                  <div className="space-y-2">
-                    <p className={cn("text-[11px] font-black uppercase tracking-widest", text)}>DNS Setup Required</p>
-                    <p className={cn("text-[11px] font-medium opacity-60 leading-relaxed", sub)}>
-                      Custom domain connection requires DNS configuration. Allow up to 24 hours for SSL provisioning.
+                  <p className={cn("text-[11px] font-medium opacity-60 mt-4 leading-relaxed", sub)}>
+                    Add a CNAME record for <span className="font-mono font-bold">{currentDomain.sub_domain}.{currentDomain.root_domain}</span> pointing to your workspace host at your DNS provider. Allow up to 24 hours for SSL provisioning.
+                  </p>
+                </div>
+              ) : (
+                /* ── Add domain form ── */
+                <>
+                  <div className="flex items-center gap-3 flex-wrap max-w-3xl">
+                    <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all flex-1 min-w-[280px]",
+                      dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
+                      <span className={cn("px-3 text-[10px] font-black uppercase tracking-widest border-r h-full flex items-center",
+                        dark ? "text-slate-500 border-slate-800 bg-slate-900/40" : "text-slate-400 border-slate-200 bg-slate-50")}>https://</span>
+                      <input
+                        placeholder="app"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value)}
+                        className={cn("bg-transparent h-full text-[12px] font-black outline-none px-3 flex-1 min-w-0", text)}
+                      />
+                      <span className={cn("px-2 text-[12px] font-bold opacity-50 border-l h-full flex items-center", dark ? "border-slate-800" : "border-slate-200")}>.</span>
+                      <input
+                        placeholder="example.com"
+                        value={customDomain}
+                        onChange={(e) => setCustomDomain(e.target.value)}
+                        className={cn("bg-transparent h-full text-[12px] font-black outline-none px-3 flex-1 min-w-0", text)}
+                      />
+                    </div>
+                    <button
+                      onClick={() => connectDomainMutation.mutate()}
+                      disabled={connectDomainMutation.isPending || !slug.trim() || !customDomain.trim()}
+                      className={primaryBtn}
+                    >
+                      {connectDomainMutation.isPending ? "Connecting..." : "Connect"}
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 max-w-3xl">
+                    <p className={cn("text-[13px] font-black", text)}>Make your Workspace shine with your own custom domain!</p>
+                    <p className={cn("text-[12px] font-medium opacity-70 leading-relaxed", sub)}>
+                      This section lets you ditch our branding and use your Workspace domain name. This adds a professional touch and builds trust with agents.
+                    </p>
+                    <p className={cn("text-[12px] font-medium opacity-70 leading-relaxed", sub)}>
+                      <span className={cn("font-black", text)}>Important Note:</span> This custom domain applies to this specific Workspace only.
                     </p>
                   </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={() => updateBrandingMutation.mutate({ slug, domain: customDomain })}
-                  disabled={updateBrandingMutation.isPending}
-                  className={primaryBtn}
-                >
-                  {updateBrandingMutation.isPending ? "Connecting..." : "Connect Domain"}
-                </button>
-              </div>
+                </>
+              )}
             </TabsContent>
 
             {/* ── EMAIL TAB ── */}
             <TabsContent value="email" className="p-8 outline-none">
-              {!showEmailForm ? (
+              {notificationEmail ? (
+                notificationEmail.status === "VERIFIED" ? (
+                  /* ── Verified ── */
+                  <div className="space-y-6 max-w-2xl">
+                    <div className={cn("p-4 rounded-[1.25rem] border flex items-start gap-3 bg-emerald-500/10 border-emerald-500/20")}>
+                      <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500 shrink-0"><BadgeCheck size={14} /></div>
+                      <p className="text-[11px] font-medium leading-relaxed text-emerald-700/90 dark:text-emerald-300/90">
+                        Your custom email domain is verified. Notifications will be sent from this address.
+                      </p>
+                    </div>
+                    <div className={cn("p-5 rounded-[1.5rem] border flex items-center justify-between gap-4", softBg, softBorder)}>
+                      <div className="min-w-0">
+                        <FieldLabel dark={dark}>Verified email</FieldLabel>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={cn("text-[13px] font-black truncate", text)}>{notificationEmail.email}</p>
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Verified</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteEmailMutation.mutate(String(notificationEmail.id))}
+                        disabled={deleteEmailMutation.isPending}
+                        className="h-10 px-5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50 shrink-0"
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Unverified: show DNS records to add, then Verify ── */
+                  <div className="space-y-6 max-w-3xl">
+                    <SectionHeading
+                      dark={dark}
+                      title="Verify your domain"
+                      description={`Add these DNS records for ${notificationEmail.domain} at your DNS provider, then click Verify. Propagation can take a few minutes to hours.`}
+                    />
+                    <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder)}>
+                      <div className={cn("grid grid-cols-12 px-5 py-3 text-[9px] font-black uppercase tracking-widest", dark ? "bg-slate-900/40 text-slate-400" : "bg-slate-50 text-slate-500")}>
+                        <div className="col-span-2">Type</div>
+                        <div className="col-span-5">Hostname</div>
+                        <div className="col-span-5">Value</div>
+                      </div>
+                      {notificationEmail.rpath_value && (
+                        <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.rpath_selector} value={notificationEmail.rpath_value} verified={notificationEmail.rpath_verified} onCopy={copyToClipboard} />
+                      )}
+                      {notificationEmail.dkim_value && (
+                        <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={`${notificationEmail.dkim_selector}._domainkey`} value={notificationEmail.dkim_value} verified={notificationEmail.dkim_verified} onCopy={copyToClipboard} />
+                      )}
+                      {notificationEmail.cname_selector && (
+                        <DnsRecordRow dark={dark} text={text} sub={sub} type="CNAME" hostname={notificationEmail.cname_selector} value={notificationEmail.cname_value || notificationEmail.cname_expected} verified={notificationEmail.cname_verified} onCopy={copyToClipboard} />
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => deleteEmailMutation.mutate(String(notificationEmail.id))}
+                        disabled={deleteEmailMutation.isPending}
+                        className={cn("h-11 px-6 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all border-rose-500/30 text-rose-500 hover:bg-rose-500/10 disabled:opacity-50")}
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => verifyEmailMutation.mutate(String(notificationEmail.id))}
+                        disabled={verifyEmailMutation.isPending}
+                        className={primaryBtn}
+                      >
+                        {verifyEmailMutation.isPending ? "Verifying..." : "Verify"}
+                      </button>
+                    </div>
+                  </div>
+                )
+              ) : !showEmailForm ? (
+                /* ── Empty state ── */
                 <div className="flex flex-col items-center justify-center text-center space-y-5 min-h-[260px]">
                   <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center shadow-inner group overflow-hidden">
                     <Mail className="w-8 h-8 text-primary transition-transform group-hover:scale-110" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <h3 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Custom Email Domain</h3>
+                    <h3 className={cn("text-[15px] font-black tracking-widest uppercase", text)}>Notification E-mail</h3>
                     <p className={cn("text-[12px] font-medium leading-relaxed opacity-60", sub)}>
-                      Send notifications from your own branded email address instead of the default Ezconn domain.
+                      Integrate your e-mail to send branded agent invitation and forgot password emails.
                     </p>
                   </div>
                   <button onClick={() => setShowEmailForm(true)} className={primaryBtn}>
-                    Configure SMTP
+                    Connect now
                   </button>
                 </div>
               ) : (
+                /* ── Entry form ── */
                 <div className="space-y-6 max-w-2xl">
                   <SectionHeading
                     dark={dark}
-                    title="Configure Email Domain"
-                    description="Enter the email address you want notifications to be sent from."
+                    title="Notification E-mail"
+                    description="Integrate your e-mail to send branded agent invitation and forgot password emails."
                   />
 
                   <div className="space-y-2">
-                    <FieldLabel dark={dark}>Email Address</FieldLabel>
+                    <FieldLabel dark={dark}>Enter your domain</FieldLabel>
                     <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all",
                       dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
                       <input
@@ -499,7 +676,13 @@ export default function WhiteLabelSection() {
                     >
                       Cancel
                     </button>
-                    <button className={primaryBtn}>Continue</button>
+                    <button
+                      onClick={() => addEmailMutation.mutate()}
+                      disabled={addEmailMutation.isPending || !emailUser.trim() || !emailDomain.trim()}
+                      className={primaryBtn}
+                    >
+                      {addEmailMutation.isPending ? "Adding..." : "Continue"}
+                    </button>
                   </div>
                 </div>
               )}
@@ -554,6 +737,48 @@ function SaveFooter({
       </p>
       <button onClick={onClick} disabled={loading} className={primaryBtn}>
         {loading ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
+  );
+}
+
+function DnsRecordRow({
+  dark,
+  text,
+  sub,
+  type,
+  hostname,
+  value,
+  verified,
+  onCopy,
+}: {
+  dark: boolean;
+  text: string;
+  sub: string;
+  type: string;
+  hostname: string;
+  value: string;
+  verified: boolean;
+  onCopy: (v: string) => void;
+}) {
+  const border = dark ? "border-slate-800" : "border-slate-100";
+  return (
+    <div className={cn("grid grid-cols-12 items-center px-5 py-3 border-t gap-2", border)}>
+      <div className="col-span-2 flex items-center gap-1.5">
+        <span className={cn("px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest", dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600")}>{type}</span>
+        {verified ? (
+          <CheckCircle2 size={12} className="text-emerald-500" />
+        ) : (
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="Pending verification" />
+        )}
+      </div>
+      <button onClick={() => onCopy(hostname)} className="col-span-5 flex items-center gap-1.5 text-left min-w-0 group">
+        <span className={cn("text-[11px] font-mono font-bold truncate", text)}>{hostname}</span>
+        <Copy size={11} className="opacity-40 group-hover:opacity-80 shrink-0" />
+      </button>
+      <button onClick={() => onCopy(value)} className="col-span-5 flex items-center gap-1.5 text-left min-w-0 group">
+        <span className={cn("text-[11px] font-mono font-bold truncate", sub)}>{value}</span>
+        <Copy size={11} className="opacity-40 group-hover:opacity-80 shrink-0" />
       </button>
     </div>
   );

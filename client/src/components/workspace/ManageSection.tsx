@@ -26,11 +26,20 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { TIMEZONES } from "@/lib/timezones";
+import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 
 export default function ManageSection() {
   const { mode } = useTheme();
   const { toast } = useToast();
   const dark = mode === "dark";
+
+  // Replyagent parity (AccountSettings.vue): editing workspace settings needs
+  // `workspace.settings.manage`. Owners always pass (they implicitly hold
+  // workspace.*); newly-created agents are gated by their role's permission —
+  // without it the fields are read-only and the Save button is hidden. The
+  // backend PATCH enforces the same slug, so this is UI affordance only.
+  const me = getUserInfo();
+  const canManage = me.is_owner === true || hasAnyPerm(me.permissions, ["workspace.settings.manage"]);
 
   const bg     = dark ? "bg-[#0b1120]"   : "bg-slate-50/80";
   const card   = dark ? "bg-[#0f1829]"   : "bg-white";
@@ -185,7 +194,8 @@ export default function ManageSection() {
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}
                 maxLength={100}
-                className={cn(inputCls, "pr-14")}
+                disabled={!canManage}
+                className={cn(inputCls, "pr-14", !canManage && "opacity-60 cursor-not-allowed")}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest opacity-40">
                 {workspaceName.length}/100
@@ -201,8 +211,8 @@ export default function ManageSection() {
             description="Used for automation triggers and scheduling"
             required
           >
-            <Select value={timezone} onValueChange={setTimezone}>
-              <SelectTrigger className={inputCls}>
+            <Select value={timezone} onValueChange={setTimezone} disabled={!canManage}>
+              <SelectTrigger className={cn(inputCls, !canManage && "opacity-60 cursor-not-allowed")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl border shadow-2xl max-h-72", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
@@ -236,8 +246,8 @@ export default function ManageSection() {
             description="Recommended for business: Monday"
             required
           >
-            <Select value={firstDayOfWeek} onValueChange={setFirstDayOfWeek}>
-              <SelectTrigger className={inputCls}>
+            <Select value={firstDayOfWeek} onValueChange={setFirstDayOfWeek} disabled={!canManage}>
+              <SelectTrigger className={cn(inputCls, !canManage && "opacity-60 cursor-not-allowed")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
@@ -315,20 +325,23 @@ export default function ManageSection() {
             )}
           </FieldRow>
 
-          {/* Save Footer */}
-          <div className={cn("px-8 py-5 border-t flex justify-end items-center gap-3", border)}>
-            <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
-              <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
-              Changes save instantly across all sessions
-            </p>
-            <button
-              onClick={handleSave}
-              disabled={updateMutation.isPending}
-              className="h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20"
-            >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
+          {/* Save Footer — owners + agents with workspace.settings.manage only
+              (replyagent hides the whole footer otherwise). */}
+          {canManage && (
+            <div className={cn("px-8 py-5 border-t flex justify-end items-center gap-3", border)}>
+              <p className={cn("text-[11px] font-bold opacity-50 mr-auto", sub)}>
+                <Info size={12} className="inline-block mr-1.5 -mt-0.5" />
+                Changes save instantly across all sessions
+              </p>
+              <button
+                onClick={handleSave}
+                disabled={updateMutation.isPending}
+                className="h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20"
+              >
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          )}
 
         </div>
       </CardContent>

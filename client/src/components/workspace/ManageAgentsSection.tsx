@@ -145,6 +145,11 @@ export default function ManageAgentSection() {
     queryKey: ["/api/custom-fields"],
     queryFn: async () => (await apiRequest("GET", "/api/custom-fields")).json(),
   });
+  // Real conversation channels for the workspace (replyagent GET /all-channels)
+  const { data: allChannelsApi } = useQuery<any>({
+    queryKey: ["/api/workspaces/all-channels"],
+    queryFn: async () => (await apiRequest("GET", "/api/workspaces/all-channels")).json(),
+  });
 
   const agents: Agent[] = (membersData?.members || membersData || []).map((m: any) => ({
     id: m.id.toString(),
@@ -231,25 +236,37 @@ export default function ManageAgentSection() {
   const [phoneNotifications, setPhoneNotifications] = useState(false);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
+  // Per-agent limits (replyagent user_limits) — each independently toggleable
+  const [limits, setLimits] = useState({
+    enable_conversation: false, conversation_limit: "",
+    enable_opportunities: false, opportunities_limit: "",
+    enable_tasks: false, tasks_limit: "",
+    enable_call_limit: false, calls_limit: "",
+  });
+  const setLimit = (k: string, v: any) => setLimits((p) => ({ ...p, [k]: v }));
 
   // Real {id,label} lists for the scope tabs (ids saved into user_accesses)
   const systemFieldsList = (systemFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.name || f.slug || "Field" }));
-  const customFieldsList = (customFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.name || f.system_name || "Field" }));
+  const customFieldsList = (customFieldsApi?.fields || []).map((f: any) => ({ id: String(f.id), label: f.label || f.name || f.system_name || "Field" }));
   const tagsList = (tagsApiData?.tags || []).map((t: any) => ({ id: String(t.id), label: t.name || "Tag" }));
   const agentsList = agents.map((a) => ({ id: a.id, label: a.name || a.email }));
 
-  const CHAT_CHANNELS = [
-    { name: "Reply Agen Stage One", type: "telegram" },
-    { name: "lag one", type: "telegram" },
-    { name: "Test Stage", type: "telegram" },
-    { name: "Bytedigital Bot", type: "telegram" },
-    { name: "Byte Digital & Marketing - +1 407-621-1216", type: "whatsapp" },
-    { name: "ReplyAgent.com Brasil - +55 11 91672-5044", type: "whatsapp" },
-    { name: "EZAUQ - +923099077900", type: "whatsapp" },
-    { name: "Byte Digital Internet & Marketing", type: "messenger" },
-    { name: "Rogerio Cardoso", type: "instagram" },
-    { name: "Twilio - +13203357944", type: "twilio" },
+  // Flatten the real /all-channels payload into one selectable list. Each entry id is
+  // encoded as `${type}:${realId}` so ids can't collide across channel types; we decode
+  // back into a per-type `channels` object on save (replyagent saveAccessParams).
+  const ch = allChannelsApi?.channels || {};
+  const channelList: { id: string; label: string; type: string }[] = [
+    ...(ch.whatsapp || []).map((c: any) => ({ id: `whatsapp:${c.id}`, type: "whatsapp", label: `${c.verified_name || "WhatsApp"}${c.display_phone_number ? ` - ${c.display_phone_number}` : ""}` })),
+    ...(ch.zapi || []).map((c: any) => ({ id: `zapi:${c.id}`, type: "zapi", label: `${c.name || "Z-API"}${c.phone_number ? ` - ${c.phone_number}` : ""}` })),
+    ...(ch.telegram || []).map((c: any) => ({ id: `telegram:${c.id}`, type: "telegram", label: c.name || "Telegram" })),
+    ...(ch.twilio || []).map((c: any) => ({ id: `twilio:${c.id}`, type: "twilio", label: `${c.account_name || "Twilio"}${c.twilio_phone_number ? ` - ${c.twilio_phone_number}` : ""}` })),
+    ...(ch.messenger || []).map((c: any) => ({ id: `messenger:${c.id}`, type: "messenger", label: c.name || "Messenger" })),
+    ...(ch.instagram || []).map((c: any) => ({ id: `instagram:${c.id}`, type: "instagram", label: c.name || "Instagram" })),
+    ...(ch.webchat || []).map((c: any) => ({ id: `webchat:${c.id}`, type: "webchat", label: c.name || "Webchat" })),
   ];
+  // Channel type → icon asset under /images/automations (zapi shares whatsapp, twilio = sms)
+  const channelIcon = (type: string) =>
+    `/images/automations/${type === "zapi" ? "whatsapp" : type === "twilio" ? "sms" : type}.svg`;
 
   const toggleAll = (
     checked: boolean,
@@ -276,6 +293,12 @@ export default function ManageAgentSection() {
     setLimitIp(false);
     setLoginPolicy({});
     setTwoFA(false);
+    setLimits({
+      enable_conversation: false, conversation_limit: "",
+      enable_opportunities: false, opportunities_limit: "",
+      enable_tasks: false, tasks_limit: "",
+      enable_call_limit: false, calls_limit: "",
+    });
     setSelectedSystemFields([]);
     setSelectedCustomFields([]);
     setSelectedTags([]);
@@ -312,11 +335,24 @@ export default function ManageAgentSection() {
     });
     setLoginPolicy(normalized);
     setLimitIp(!!lp.limit_by_ip);
+    // Limits prefill
+    const li = o.limits || {};
+    setLimits({
+      enable_conversation: !!li.enable_conversation, conversation_limit: li.conversation_limit ? String(li.conversation_limit) : "",
+      enable_opportunities: !!li.enable_opportunities, opportunities_limit: li.opportunities_limit ? String(li.opportunities_limit) : "",
+      enable_tasks: !!li.enable_tasks, tasks_limit: li.tasks_limit ? String(li.tasks_limit) : "",
+      enable_call_limit: !!li.enable_call_limit, calls_limit: li.calls_limit ? String(li.calls_limit) : "",
+    });
     // Access scopes prefill (ids as strings)
     setSelectedSystemFields(Array.isArray(o.systemFields) ? o.systemFields.map(String) : []);
     setSelectedCustomFields(Array.isArray(o.customFields) ? o.customFields.map(String) : []);
     setSelectedTags(Array.isArray(o.tags) ? o.tags.map(String) : []);
     setSelectedChatAgents(Array.isArray(o.agents) ? o.agents.map(String) : []);
+    // Channel access prefill — encode the per-type id lists back into `${type}:${id}`
+    const chSel: string[] = [];
+    const chObj = o.channels || {};
+    Object.keys(chObj).forEach((type) => (chObj[type] || []).forEach((id: any) => chSel.push(`${type}:${id}`)));
+    setSelectedChatChannels(chSel);
     setView("edit");
   };
 
@@ -351,11 +387,24 @@ export default function ManageAgentSection() {
       receive_sms_notification: phoneNotifications,
       receive_whatsapp_notification: whatsappNotifications,
       loginPolicy: { ...loginPolicy, limit_by_ip: limitIp },
-      // access scopes (channels deferred to the Channels module)
+      limits,
+      // access scopes
       systemFields: selectedSystemFields,
       customFields: selectedCustomFields,
       tags: selectedTags,
       agents: selectedChatAgents,
+      // per-type channel access (decode `${type}:${id}` back into a channels object;
+      // every type sent so deselected channels are revoked — replyagent saveAccessParams)
+      channels: (() => {
+        const out: Record<string, string[]> = { whatsapp: [], zapi: [], twilio: [], telegram: [], messenger: [], instagram: [], webchat: [] };
+        selectedChatChannels.forEach((v) => {
+          const idx = v.indexOf(":");
+          const type = v.slice(0, idx);
+          const id = v.slice(idx + 1);
+          if (out[type]) out[type].push(id);
+        });
+        return out;
+      })(),
     };
     if (view === "edit" && editingId) {
       updateMutation.mutate({ id: editingId, data: payload });
@@ -422,15 +471,14 @@ export default function ManageAgentSection() {
               <div className={cn("w-60 shrink-0 border-r p-4 space-y-1", border, softBg)}>
                 <TabsList className="flex flex-col h-auto w-full bg-transparent p-0 gap-1">
                   {[
-                    { value: "agent", label: "Identity", icon: User },
-                    { value: "2fa", label: "Security", icon: ShieldCheck },
-                    { value: "mobile", label: "Mobility", icon: Smartphone },
-                    { value: "login", label: "Policies", icon: Lock },
+                    { value: "agent", label: "Agent", icon: User },
+                    { value: "2fa", label: "2FA", icon: ShieldCheck },
+                    { value: "login", label: "Login Policy", icon: Lock },
                     { value: "system", label: "System Fields", icon: LayoutGrid },
                     { value: "custom", label: "Custom Fields", icon: Settings },
                     { value: "tags", label: "Tags", icon: MessageSquare },
-                    { value: "chat-agents", label: "Squad", icon: Users2 },
-                    { value: "chat-channels", label: "Channels", icon: Globe },
+                    { value: "chat-agents", label: "Chat Agents", icon: Users2 },
+                    { value: "chat-channels", label: "Chat Channels", icon: Globe },
                   ].map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -452,7 +500,7 @@ export default function ManageAgentSection() {
               <div className="flex-1 p-8 min-w-0">
                 {/* Identity */}
                 <TabsContent value="agent" className="m-0 outline-none space-y-8">
-                  <SectionHeading dark={dark} title="Identity" description="Basic information about this agent." />
+                  <SectionHeading dark={dark} title="Agent" description="Basic information about this agent." />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl">
                     <Field dark={dark} label="First Name" required>
@@ -499,8 +547,8 @@ export default function ManageAgentSection() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
-                        { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications },
-                        { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications },
+                        { label: "Phone Number", icon: Phone, value: phoneNumber, setter: setPhoneNumber, country: phoneCountry, countrySetter: setPhoneCountry, notify: phoneNotifications, notifySetter: setPhoneNotifications, notifyDisabled: false },
+                        { label: "WhatsApp Number", icon: MessageSquare, value: whatsappNumber, setter: setWhatsappNumber, country: whatsappCountry, countrySetter: setWhatsappCountry, notify: whatsappNotifications, notifySetter: setWhatsappNotifications, notifyDisabled: !whatsappNumber.trim() },
                       ].map((row) => (
                         <div key={row.label} className={cn("p-3 rounded-2xl border flex items-center gap-2.5", softBg, softBorder)}>
                           <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
@@ -521,94 +569,85 @@ export default function ManageAgentSection() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 pl-2.5 border-l shrink-0" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }}>
-                            <p className={cn("text-[10px] font-black uppercase tracking-widest", text)} title="Push & SMS notifications">Notify</p>
-                            <Switch checked={row.notify} onCheckedChange={row.notifySetter} className="data-[state=checked]:bg-primary" />
+                            <p className={cn("text-[9px] font-black uppercase tracking-wider leading-tight max-w-[64px]", text)} title="Enable notifications">Enable notifications</p>
+                            <Switch checked={row.notify} disabled={row.notifyDisabled} onCheckedChange={row.notifySetter} className="data-[state=checked]:bg-primary disabled:opacity-40" />
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Limits (replyagent user_limits) */}
+                  <div className="pt-6 border-t space-y-4 max-w-4xl" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(241 245 249)" }}>
+                    <h4 className={cn("text-[11px] font-black uppercase tracking-widest", text)}>Limits</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        { label: "Open conversations", enableKey: "enable_conversation", valueKey: "conversation_limit", tip: "Set a Maximum Limit of Open Conversations for this Agent." },
+                        { label: "Open opportunities", enableKey: "enable_opportunities", valueKey: "opportunities_limit", tip: "Set a Maximum Limit of Open Opportunities for this Agent." },
+                        { label: "Open tasks", enableKey: "enable_tasks", valueKey: "tasks_limit", tip: "Set a Maximum Limit of Open Tasks for this Agent." },
+                        { label: "Incoming calls (Per day)", enableKey: "enable_call_limit", valueKey: "calls_limit", tip: "Set a daily maximum limit for the number of incoming calls that can be assigned to this agent." },
+                      ].map((row) => {
+                        const enabled = (limits as any)[row.enableKey] as boolean;
+                        return (
+                          <div key={row.label} className={cn("p-3 rounded-2xl border flex items-center gap-2.5", softBg, softBorder)}>
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center gap-1.5">
+                                <FieldLabel dark={dark}>{row.label}</FieldLabel>
+                                <span title={row.tip} className="shrink-0 cursor-help"><Info size={11} className={sub} /></span>
+                              </div>
+                              <Input
+                                type="number"
+                                min={0}
+                                inputMode="numeric"
+                                value={(limits as any)[row.valueKey]}
+                                onChange={(e) => setLimit(row.valueKey, e.target.value)}
+                                placeholder="0"
+                                className={cn(inputCls, "h-9")}
+                              />
+                            </div>
+                            <div className="flex items-center pl-2.5 border-l shrink-0" style={{ borderColor: dark ? "rgb(30 41 59)" : "rgb(226 232 240)" }}>
+                              <Switch checked={enabled} onCheckedChange={(c) => setLimit(row.enableKey, c)} className="data-[state=checked]:bg-primary" />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </TabsContent>
 
                 {/* Security */}
                 <TabsContent value="2fa" className="m-0 outline-none space-y-6 max-w-3xl">
-                  <SectionHeading dark={dark} title="2-Factor Authentication" description="Strengthen this agent's account security." />
+                  <SectionHeading dark={dark} title="Two factor auth" />
 
                   <div className={cn("p-6 rounded-[1.5rem] border flex items-start gap-4", softBg, softBorder)}>
-                    <Switch checked={twoFA} onCheckedChange={setTwoFA} className="data-[state=checked]:bg-primary mt-0.5" />
+                    <div className={cn("w-14 h-14 rounded-xl border flex items-center justify-center shrink-0", dark ? "border-slate-700 bg-slate-950/50" : "border-slate-200 bg-white")}>
+                      <Fingerprint size={26} className="text-primary" />
+                    </div>
                     <div className="space-y-3 flex-1">
-                      <div>
-                        <p className={cn("text-[13px] font-black tracking-tight", text)}>Mandatory 2FA Enrollment</p>
-                        <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
-                          When enabled, the agent will be blocked from dashboard access until a 2FA method (Google Authenticator, Authy, or Duo) is linked to their profile.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                        <Info size={12} className="text-blue-500 shrink-0" />
-                        <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                          Recommended: <span className="underline cursor-pointer">Authy</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* Mobility */}
-                <TabsContent value="mobile" className="m-0 outline-none space-y-6 max-w-3xl">
-                  <SectionHeading dark={dark} title="Mobility" description="Control access from the native mobile application." />
-
-                  <div className="space-y-4">
-                    {[
-                      { title: "Real-time Mobility", desc: "Interact with customers on-the-go across WhatsApp, Messenger, and SMS.", icon: Zap },
-                      { title: "Push Notifications", desc: "High-priority device alerts for unassigned messages.", icon: Activity },
-                    ].map((f) => (
-                      <div key={f.title} className="flex items-start gap-3">
-                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary mt-0.5 shrink-0">
-                          <f.icon size={14} />
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <p className={cn("text-[13px] font-black tracking-tight", text)}>Require 2-Factor Authentication</p>
+                          <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>
+                            This will force the agent to enable 2-Factor Authentication on their next login.
+                          </p>
                         </div>
-                        <div>
-                          <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>{f.title}</p>
-                          <p className={cn("text-[11px] font-medium opacity-60 mt-1 leading-relaxed", sub)}>{f.desc}</p>
-                        </div>
+                        <Switch checked={twoFA} onCheckedChange={setTwoFA} className="data-[state=checked]:bg-primary mt-0.5" />
                       </div>
-                    ))}
-                  </div>
-
-                  <div className={cn("p-6 rounded-[1.5rem] border flex items-center justify-between", softBg, softBorder)}>
-                    <div className="flex items-center gap-4">
-                      <div className={cn("p-2.5 rounded-xl", mobileAccess ? "bg-emerald-500/15 text-emerald-500" : "bg-slate-500/10 text-slate-400")}>
-                        <Smartphone size={16} />
-                      </div>
-                      <div>
-                        <p className={cn("text-[13px] font-black tracking-tight", text)}>Mobile App Access</p>
-                        <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>Toggle access from the mobile client</p>
-                      </div>
-                    </div>
-                    <Switch checked={mobileAccess} onCheckedChange={setMobileAccess} className="data-[state=checked]:bg-emerald-500" />
-                  </div>
-
-                  <div className={cn(
-                    "flex items-center gap-3 p-4 rounded-[1.25rem] border",
-                    mobileAccess ? "bg-emerald-500/5 border-emerald-500/20" : "bg-rose-500/5 border-rose-500/20"
-                  )}>
-                    {mobileAccess ? <CheckCircle2 size={16} className="text-emerald-500" /> : <ShieldAlert size={16} className="text-rose-500" />}
-                    <div>
-                      <p className={cn("text-[12px] font-black uppercase tracking-widest", mobileAccess ? "text-emerald-600" : "text-rose-600")}>
-                        {mobileAccess ? "Access Authorized" : "Access Restricted"}
-                      </p>
-                      <p className={cn("text-[10px] font-bold opacity-70 mt-0.5", mobileAccess ? "text-emerald-500" : "text-rose-500")}>
-                        {mobileAccess ? "Agent can authenticate via mobile app." : "Agent cannot log in from mobile."}
+                      <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed", sub)}>
+                        We recommend using{" "}
+                        <a href="https://authy.com" target="_blank" rel="noreferrer" className="text-primary font-bold underline">Authy</a>{" "}
+                        as your two-factor authentication app.
                       </p>
                     </div>
                   </div>
                 </TabsContent>
 
-                {/* Policies */}
+                {/* Login Policy */}
                 <TabsContent value="login" className="m-0 outline-none space-y-6">
-                  <div className="flex items-center justify-between">
-                    <SectionHeading dark={dark} title="Login Policies" description="Specify allowed login hours for this agent." />
-                    <div className={cn("px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest", dark ? "bg-slate-950/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-600")}>
-                      <Globe className="inline w-3 h-3 mr-1" /> America/Fortaleza
+                  <div className="flex items-center justify-between gap-4">
+                    <SectionHeading dark={dark} title="Login Policy" description="Specify the allowed login hours for this agent in the Workspace." />
+                    <div className={cn("px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest shrink-0", dark ? "bg-slate-950/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-600")}>
+                      <Globe className="inline w-3 h-3 mr-1" /> Timezone: America/Fortaleza
                     </div>
                   </div>
 
@@ -617,20 +656,31 @@ export default function ManageAgentSection() {
                       <TableHeader>
                         <TableRow className={cn("border-b hover:bg-transparent", softBorder)}>
                           <TableHead className={cn("py-4 px-6 text-[10px] font-black uppercase tracking-widest", sub)}>Day</TableHead>
-                          <TableHead className={cn("py-4 px-6 text-[10px] font-black uppercase tracking-widest", sub)}>From</TableHead>
-                          <TableHead className={cn("py-4 px-6 text-[10px] font-black uppercase tracking-widest", sub)}>Until</TableHead>
+                          <TableHead className={cn("py-4 px-6 text-[10px] font-black uppercase tracking-widest", sub)}>Login allowed from</TableHead>
+                          <TableHead className={cn("py-4 px-6 text-[10px] font-black uppercase tracking-widest", sub)}>Logout at</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {DAYS.map((day) => {
                           const k = day.toLowerCase();
+                          const loginVal = loginPolicy[`${k}_login`] || "";
+                          // Logout only selectable once a login time is set, and only for later times (replyagent parity)
+                          const logoutOptions = loginVal ? TIME_OPTIONS.filter((t) => t > loginVal) : [];
                           return (
                           <TableRow key={day} className={cn("border-b last:border-0 hover:bg-transparent", softBorder)}>
                             <TableCell className={cn("py-3 px-6 text-[12px] font-black", text)}>{day}</TableCell>
                             <TableCell className="py-3 px-6">
-                              <Select value={loginPolicy[`${k}_login`] || ""} onValueChange={(v) => setPolicyField(`${k}_login`, v)}>
+                              <Select
+                                value={loginVal}
+                                onValueChange={(v) => {
+                                  setPolicyField(`${k}_login`, v);
+                                  // Clear logout if it is no longer after the new login time
+                                  const lo = loginPolicy[`${k}_logout`];
+                                  if (lo && lo <= v) setPolicyField(`${k}_logout`, "");
+                                }}
+                              >
                                 <SelectTrigger className={cn(inputCls, "h-9")}>
-                                  <SelectValue placeholder="00:00" />
+                                  <SelectValue placeholder="Select Time" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[300px] rounded-xl">
                                   {TIME_OPTIONS.map((t) => <SelectItem key={t} value={t} className="text-[12px] font-bold">{t}</SelectItem>)}
@@ -638,12 +688,12 @@ export default function ManageAgentSection() {
                               </Select>
                             </TableCell>
                             <TableCell className="py-3 px-6">
-                              <Select value={loginPolicy[`${k}_logout`] || ""} onValueChange={(v) => setPolicyField(`${k}_logout`, v)}>
-                                <SelectTrigger className={cn(inputCls, "h-9")}>
-                                  <SelectValue placeholder="23:59" />
+                              <Select value={loginPolicy[`${k}_logout`] || ""} onValueChange={(v) => setPolicyField(`${k}_logout`, v)} disabled={!loginVal}>
+                                <SelectTrigger className={cn(inputCls, "h-9", !loginVal && "opacity-50")}>
+                                  <SelectValue placeholder="Select Time" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[300px] rounded-xl">
-                                  {TIME_OPTIONS.map((t) => <SelectItem key={t} value={t} className="text-[12px] font-bold">{t}</SelectItem>)}
+                                  {logoutOptions.map((t) => <SelectItem key={t} value={t} className="text-[12px] font-bold">{t}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </TableCell>
@@ -660,8 +710,8 @@ export default function ManageAgentSection() {
                         <Globe size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>IP Restriction</p>
-                        {limitIp && <Input value={loginPolicy.ip || ""} onChange={(e) => setPolicyField("ip", e.target.value)} placeholder="Enter static IP address..." className={cn(inputCls, "h-9 mt-2 max-w-xs")} />}
+                        <p className={cn("text-[12px] font-black uppercase tracking-widest", text)}>Limit access by IP address</p>
+                        {limitIp && <Input value={loginPolicy.ip || ""} onChange={(e) => setPolicyField("ip", e.target.value)} placeholder="Type IP Address..." className={cn(inputCls, "h-9 mt-2 max-w-xs")} />}
                       </div>
                     </div>
                     <Switch checked={limitIp} onCheckedChange={setLimitIp} className="data-[state=checked]:bg-primary" />
@@ -670,11 +720,11 @@ export default function ManageAgentSection() {
 
                 {/* List selection tabs */}
                 {[
-                  { key: "system",        title: "System Fields",  desc: "Standard fields the agent can manage.",         list: systemFieldsList, selected: selectedSystemFields,  setter: setSelectedSystemFields },
-                  { key: "custom",        title: "Custom Fields",  desc: "Workspace-defined fields the agent can access.", list: customFieldsList, selected: selectedCustomFields,  setter: setSelectedCustomFields },
-                  { key: "tags",          title: "Tags",           desc: "Tags the agent can apply to contacts.",          list: tagsList,         selected: selectedTags,         setter: setSelectedTags },
-                  { key: "chat-agents",   title: "Squad",          desc: "Other agents this person can view in chat.",    list: agentsList,       selected: selectedChatAgents,    setter: setSelectedChatAgents },
-                  { key: "chat-channels", title: "Channels",       desc: "Conversation gateways the agent can access.",    list: CHAT_CHANNELS.map((c) => ({ id: c.name, label: c.name, type: c.type })), selected: selectedChatChannels, setter: setSelectedChatChannels },
+                  { key: "system",        title: "System Fields",  desc: "Select the system fields this agent is allowed to manage in Live Chat and Customers' Profiles", list: systemFieldsList, selected: selectedSystemFields,  setter: setSelectedSystemFields },
+                  { key: "custom",        title: "Custom Fields",  desc: "Select the custom fields this agent is allowed to manage in Live Chat and Customers' Profiles", list: customFieldsList, selected: selectedCustomFields,  setter: setSelectedCustomFields },
+                  { key: "tags",          title: "Tags",           desc: "Select the tags this agent is allowed to manage in Live Chat and Customers' Profiles",          list: tagsList,         selected: selectedTags,         setter: setSelectedTags },
+                  { key: "chat-agents",   title: "Chat Agents",    desc: "Select the Agents whose conversations this agent can view in Live Chat",                       list: agentsList,       selected: selectedChatAgents,    setter: setSelectedChatAgents },
+                  { key: "chat-channels", title: "Chat Channels",  desc: "Select the channels this agent can access in Live Chat",                                       list: channelList,      selected: selectedChatChannels, setter: setSelectedChatChannels },
                 ].map((cfg) => (
                   <TabsContent key={cfg.key} value={cfg.key} className="m-0 outline-none space-y-5">
                     <div className="flex items-start justify-between gap-4">
@@ -683,6 +733,15 @@ export default function ManageAgentSection() {
                         {cfg.selected.length} / {cfg.list.length}
                       </div>
                     </div>
+
+                    {cfg.key === "chat-channels" && (
+                      <div className="flex items-start gap-3 p-4 rounded-[1.25rem] border bg-blue-500/5 border-blue-500/20">
+                        <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                        <p className="text-[11px] font-medium leading-relaxed text-blue-600 dark:text-blue-400">
+                          After adding a new channel, make sure to grant access to it for each Agent if you want them to view and handle conversations from that channel. Otherwise, agents won't be able to see or interact with those conversations.
+                        </p>
+                      </div>
+                    )}
 
                     <div className={cn("rounded-[1.5rem] border overflow-hidden", softBg, softBorder)}>
                       <div className={cn("flex items-center gap-3 px-5 py-3 border-b", softBorder, dark ? "bg-slate-900/30" : "bg-white/60")}>
@@ -697,33 +756,28 @@ export default function ManageAgentSection() {
                           <div className="px-5 py-4 text-[11px] font-medium opacity-60">No items</div>
                         )}
                         {cfg.list.map((item: any) => {
-                          const checked = cfg.selected.includes(item.id);
+                          // An agent always keeps access to their own conversations — self row is locked on (replyagent parity)
+                          const isSelf = cfg.key === "chat-agents" && editingId != null && item.id === String(editingId);
+                          const checked = isSelf || cfg.selected.includes(item.id);
                           return (
                             <div
                               key={item.id}
-                              onClick={() => toggleItem(item.id, cfg.selected, cfg.setter)}
+                              onClick={() => { if (!isSelf) toggleItem(item.id, cfg.selected, cfg.setter); }}
                               className={cn(
-                                "flex items-center justify-between px-5 py-3 transition-colors cursor-pointer border-b last:border-0",
+                                "flex items-center justify-between px-5 py-3 transition-colors border-b last:border-0",
                                 softBorder,
+                                isSelf ? "cursor-not-allowed" : "cursor-pointer",
                                 checked ? "bg-primary/5" : dark ? "hover:bg-slate-900/40" : "hover:bg-white/60"
                               )}
                             >
                               <div className="flex items-center gap-3">
-                                <Checkbox checked={checked} className="pointer-events-none" />
+                                <Checkbox checked={checked} disabled={isSelf} className="pointer-events-none" />
                                 {cfg.key === "chat-agents" && <MemberAvatar name={item.label} />}
                                 {cfg.key === "chat-channels" && item.type && (
-                                  <div className={cn(
-                                    "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                                    item.type === "telegram" ? "bg-blue-500" :
-                                    item.type === "whatsapp" ? "bg-emerald-500" :
-                                    item.type === "messenger" ? "bg-blue-600" :
-                                    item.type === "instagram" ? "bg-pink-500" :
-                                    "bg-primary"
-                                  )}>
-                                    <Globe size={12} className="text-white" />
-                                  </div>
+                                  <img src={channelIcon(item.type)} alt={item.type} className="w-7 h-7 rounded-lg shrink-0 object-contain" />
                                 )}
                                 <span className={cn("text-[12px] font-bold", text)}>{item.label}</span>
+                                {isSelf && <span className={cn("text-[9px] font-black uppercase tracking-widest", sub)}>You</span>}
                               </div>
                               {checked && <Check size={14} className="text-primary" />}
                             </div>

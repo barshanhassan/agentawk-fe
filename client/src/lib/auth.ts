@@ -21,6 +21,8 @@ export function getUserInfo(): Record<string, any> {
       modelable_id: stored.modelable_id ?? jwt?.modelable_id,
       modelable_type: stored.modelable_type ?? jwt?.modelable_type,
       role: stored.role ?? jwt?.role,
+      // Owner flag — owners bypass per-slug permission gates in the UI.
+      is_owner: jwt?.is_owner ?? stored.is_owner ?? false,
       permissions: (jwt?.permissions ?? stored.permissions ?? []) as string[],
     };
   } catch {

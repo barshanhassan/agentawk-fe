@@ -36,11 +36,17 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 export default function LiveChatSection() {
   const { mode } = useTheme();
   const { toast } = useToast();
   const dark = mode === "dark";
+  const [, navigate] = useLocation();
+  // The custom-field "+" buttons jump to the Custom Fields settings section so
+  // an agent can create a field without leaving the flow (replyagent lets you
+  // create a field inline from the picker).
+  const goToCustomFields = () => navigate("/settings?tab=Custom fields");
 
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
   const border     = dark ? "border-slate-800" : "border-slate-200";
@@ -106,10 +112,11 @@ export default function LiveChatSection() {
 
   // Folders — real conversation folders (replyagent inbox folders), no longer fake local state
   const { data: foldersData } = useQuery<any>({ queryKey: ["/api/inbox/folders"] });
-  const folders: { id: string; name: string; assigned_to: string | null }[] = Array.isArray(foldersData)
+  const folders: { id: string; name: string; assign_to: string | null; assigned_to: string | null }[] = Array.isArray(foldersData)
     ? foldersData.map((f: any) => ({
         id: String(f.id),
         name: f.name || "",
+        assign_to: f.assign_to ?? null,
         assigned_to: f.assigned_to != null ? String(f.assigned_to) : null,
       }))
     : [];
@@ -124,10 +131,21 @@ export default function LiveChatSection() {
         .filter((a: any) => a.id !== "")
     : [];
 
+  // Teams — for the Folders tab "Assign to" (replyagent lets a folder be
+  // assigned to an Agent OR a Team). Backend GET /teams/get-all returns an array.
+  const { data: teamsData } = useQuery<any>({ queryKey: ["/api/teams/get-all"] });
+  const teams: { id: string; label: string }[] = Array.isArray(teamsData)
+    ? teamsData
+        .map((t: any) => ({ id: t.id != null ? String(t.id) : "", label: t.name || `Team #${t.id}` }))
+        .filter((t: any) => t.id !== "")
+    : [];
+
   const [folderFormOpen, setFolderFormOpen] = useState(false);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [folderName, setFolderName] = useState("");
   const [folderAssignedTo, setFolderAssignedTo] = useState("all");
+  // Whether the folder is assigned to an Agent or a Team (replyagent parity).
+  const [folderSource, setFolderSource] = useState<"AGENT" | "TEAM">("AGENT");
 
   const invalidateFolders = () => queryClient.invalidateQueries({ queryKey: ["/api/inbox/folders"] });
   const createFolderMut = useMutation({
@@ -146,21 +164,38 @@ export default function LiveChatSection() {
   const openAddFolder = () => {
     setEditingFolderId(null);
     setFolderName("");
+    setFolderSource("AGENT");
     setFolderAssignedTo("all");
     setFolderFormOpen(true);
   };
 
-  const openEditFolder = (f: { id: string; name: string; assigned_to: string | null }) => {
+  const openEditFolder = (f: { id: string; name: string; assign_to: string | null; assigned_to: string | null }) => {
     setEditingFolderId(f.id);
     setFolderName(f.name);
-    setFolderAssignedTo(f.assigned_to || "all");
+    const src = f.assign_to === "TEAM" ? "TEAM" : "AGENT";
+    setFolderSource(src);
+    // Team mode has no "all" option; Agent mode falls back to "all" (no specific agent).
+    setFolderAssignedTo(f.assigned_to || (src === "TEAM" ? "" : "all"));
     setFolderFormOpen(true);
+  };
+
+  // Switching Agent/Team resets the picked target so we never send a stale id
+  // that belongs to the other source.
+  const changeFolderSource = (src: "AGENT" | "TEAM") => {
+    setFolderSource(src);
+    setFolderAssignedTo(src === "TEAM" ? "" : "all");
   };
 
   const saveFolder = () => {
     if (!folderName.trim()) return;
     const assigned = folderAssignedTo && folderAssignedTo !== "all" ? folderAssignedTo : null;
-    const payload = { name: folderName.trim(), assign_to: assigned ? "AGENT" : null, assigned_to: assigned };
+    // Team must have a concrete team selected; Agent allows "all" (= unassigned).
+    if (folderSource === "TEAM" && !assigned) return;
+    const payload = {
+      name: folderName.trim(),
+      assign_to: assigned ? folderSource : null,
+      assigned_to: assigned,
+    };
     if (editingFolderId !== null) {
       updateFolderMut.mutate({ id: editingFolderId, ...payload });
     } else {
@@ -307,8 +342,21 @@ export default function LiveChatSection() {
                   <div className="space-y-2">
                     <FieldLabel dark={dark}>Custom Field</FieldLabel>
                     <div className="flex gap-2">
-                      <Input value={customField} onChange={(e) => setCustomField(e.target.value)} className={inputCls} placeholder="e.g. AuditLog" />
-                      <button className={outlineBtn}><Plus size={16} /></button>
+                      <Select value={customField} onValueChange={setCustomField}>
+                        <SelectTrigger className={inputCls}>
+                          <SelectValue placeholder="Select custom field" />
+                        </SelectTrigger>
+                        <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
+                          {customFields.length === 0 ? (
+                            <div className="px-3 py-2 text-[11px] font-medium opacity-60">No custom fields yet</div>
+                          ) : (
+                            customFields.map((f) => (
+                              <SelectItem key={f.id} value={f.name} className="text-[12px] font-bold">{f.name}</SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <button onClick={goToCustomFields} title="Create custom field" className={outlineBtn}><Plus size={16} /></button>
                     </div>
                   </div>
                 </div>
@@ -365,7 +413,7 @@ export default function LiveChatSection() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <button className={outlineBtn}><Plus size={16} /></button>
+                    <button onClick={goToCustomFields} title="Create custom field" className={outlineBtn}><Plus size={16} /></button>
                   </div>
                 )}
               </div>
@@ -609,16 +657,45 @@ export default function LiveChatSection() {
                       </div>
 
                       <div className="space-y-2">
-                        <FieldLabel dark={dark}>Assigned To</FieldLabel>
+                        <FieldLabel dark={dark}>Assign To</FieldLabel>
+                        {/* Agent / Team source toggle — replyagent lets a folder be
+                            assigned to an agent or a whole team. */}
+                        <div className={cn("inline-flex p-1 rounded-xl border", dark ? "border-slate-800 bg-slate-950/50" : "border-slate-200 bg-slate-50")}>
+                          {(["AGENT", "TEAM"] as const).map((src) => (
+                            <button
+                              key={src}
+                              type="button"
+                              onClick={() => changeFolderSource(src)}
+                              className={cn(
+                                "px-5 h-8 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                folderSource === src
+                                  ? "bg-primary text-white shadow-sm"
+                                  : dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700",
+                              )}
+                            >
+                              {src === "AGENT" ? "Agent" : "Team"}
+                            </button>
+                          ))}
+                        </div>
                         <Select value={folderAssignedTo} onValueChange={setFolderAssignedTo}>
                           <SelectTrigger className={inputCls}>
-                            <SelectValue placeholder="Select" />
+                            <SelectValue placeholder={folderSource === "TEAM" ? "Select team" : "Select"} />
                           </SelectTrigger>
                           <SelectContent className={cn("rounded-xl border shadow-2xl", dark ? "bg-[#0f1829] border-slate-800 text-white" : "bg-white border-slate-200")}>
-                            <SelectItem value="all" className="text-[12px] font-bold">All Agents</SelectItem>
-                            {agents.map((a) => (
-                              <SelectItem key={a.id} value={a.id} className="text-[12px] font-bold">{a.label}</SelectItem>
-                            ))}
+                            {folderSource === "AGENT" ? (
+                              <>
+                                <SelectItem value="all" className="text-[12px] font-bold">All Agents</SelectItem>
+                                {agents.map((a) => (
+                                  <SelectItem key={a.id} value={a.id} className="text-[12px] font-bold">{a.label}</SelectItem>
+                                ))}
+                              </>
+                            ) : teams.length === 0 ? (
+                              <div className="px-3 py-2 text-[11px] font-medium opacity-60">No teams yet</div>
+                            ) : (
+                              teams.map((t) => (
+                                <SelectItem key={t.id} value={t.id} className="text-[12px] font-bold">{t.label}</SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -645,7 +722,16 @@ export default function LiveChatSection() {
                         >
                           Cancel
                         </button>
-                        <button onClick={saveFolder} disabled={createFolderMut.isPending || updateFolderMut.isPending} className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}>
+                        <button
+                          onClick={saveFolder}
+                          disabled={
+                            createFolderMut.isPending ||
+                            updateFolderMut.isPending ||
+                            !folderName.trim() ||
+                            (folderSource === "TEAM" && (!folderAssignedTo || folderAssignedTo === "all"))
+                          }
+                          className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}
+                        >
                           {createFolderMut.isPending || updateFolderMut.isPending ? "Saving..." : "Save"}
                         </button>
                       </div>
