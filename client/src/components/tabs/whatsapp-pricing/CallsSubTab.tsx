@@ -1,9 +1,25 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Phone, Clock, DollarSign } from "lucide-react";
 
 export default function CallsSubTab() {
+  // WhatsApp Business Calling API isn't yet wired in EZCONN, so the backend
+  // returns honest zeros with zero-filled trends. Once Meta's Calling API is
+  // integrated, the same endpoint will start returning real numbers without
+  // any frontend changes.
+  const { data } = useQuery<any>({
+    queryKey: ["/api/statistics/whatsapp-calls"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/whatsapp-calls");
+      return res.json();
+    },
+    refetchInterval: 300_000,
+  });
+  const k = data?.kpi ?? {};
+
   const { mode } = useTheme();
   const dark = mode === "dark";
   const card = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
@@ -32,22 +48,32 @@ export default function CallsSubTab() {
   const kpiCards = [
     {
       title: "All Calls", icon: <Phone size={14} className="text-primary" />,
-      rows: [{ l: "Business-initiated", v: 0 }, { l: "User-initiated", v: 0 }]
+      rows: [
+        { l: "Business-initiated", v: k.allCalls?.businessInitiated ?? 0 },
+        { l: "User-initiated", v: k.allCalls?.userInitiated ?? 0 },
+      ]
     },
     {
       title: "Avg Billable Duration (sec)", icon: <Clock size={14} className="text-primary" />,
-      rows: [{ l: "Business-initiated", v: 0 }, { l: "User-initiated", v: 0 }]
+      rows: [
+        { l: "Business-initiated", v: k.avgDuration?.businessInitiated ?? 0 },
+        { l: "User-initiated", v: k.avgDuration?.userInitiated ?? 0 },
+      ]
     },
     {
       title: "Approx. Total Charges", icon: <DollarSign size={14} className="text-primary" />,
-      rows: [{ l: "Business-initiated", v: "$0" }, { l: "User-initiated", v: "$0" }]
+      rows: [
+        { l: "Business-initiated", v: k.approxCharges?.businessInitiated ?? "$0" },
+        { l: "User-initiated", v: k.approxCharges?.userInitiated ?? "$0" },
+      ]
     },
   ];
 
-  // Call analytics — empty until backend whatsapp-calls-analytics endpoint exists.
-  const allCallsData: Array<{ date: string; businessInitiated: number; userInitiated: number }> = [];
-  const durationData: Array<{ date: string; businessInitiated: number; userInitiated: number }> = [];
-  const chargesData: Array<{ date: string; calls: number; charges: number }> = [];
+  // Backend returns zero-filled trends (7 days of zero data points) so the
+  // chart axes/legend render even when the Calling API integration is dormant.
+  const allCallsData: Array<{ date: string; businessInitiated: number; userInitiated: number }> = data?.allCallsTrend ?? [];
+  const durationData: Array<{ date: string; businessInitiated: number; userInitiated: number }> = data?.durationTrend ?? [];
+  const chargesData: Array<{ date: string; calls: number; charges: number }> = data?.chargesTrend ?? [];
 
   const CALL_LINES = [
     { key: "businessInitiated", name: "Business-initiated", stroke: "#22c55e" },

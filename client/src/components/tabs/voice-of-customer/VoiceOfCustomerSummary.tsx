@@ -1,9 +1,23 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Smile, Meh, Frown, TrendingUp } from "lucide-react";
 
 export default function VoiceOfCustomerSummary() {
+  // Real sentiment summary — backend classifies recent incoming messages
+  // via keyword matching. No new tables, no NLP API, accuracy approximate
+  // but data-driven instead of mocked.
+  const { data } = useQuery<any>({
+    queryKey: ["/api/statistics/sentiment-summary"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/sentiment-summary");
+      return res.json();
+    },
+    refetchInterval: 300_000,
+  });
+
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -14,14 +28,15 @@ export default function VoiceOfCustomerSummary() {
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  // Zero-state defaults — wire to backend voice-of-customer endpoint when ready.
-  const sentimentScore = 0;
+  const sentimentScore = data?.sentimentScore ?? 0;
+  const totalConversations = data?.totalConversations ?? 0;
+  const dist = data?.sentimentDistribution ?? { positive: 0, neutral: 0, negative: 0 };
   const sentimentDistribution = [
-    { name: "Positive", percentage: 0, color: "bg-emerald-500", icon: <Smile size={14} className="text-emerald-500" /> },
-    { name: "Neutral",  percentage: 0, color: "bg-orange-500",  icon: <Meh size={14} className="text-orange-500" /> },
-    { name: "Negative", percentage: 0, color: "bg-rose-500",    icon: <Frown size={14} className="text-rose-500" /> },
+    { name: "Positive", percentage: dist.positive ?? 0, color: "bg-emerald-500", icon: <Smile size={14} className="text-emerald-500" /> },
+    { name: "Neutral",  percentage: dist.neutral ?? 0, color: "bg-orange-500",  icon: <Meh size={14} className="text-orange-500" /> },
+    { name: "Negative", percentage: dist.negative ?? 0, color: "bg-rose-500",    icon: <Frown size={14} className="text-rose-500" /> },
   ];
-  const sentimentTrendData: Array<{ date: string; positive: number; neutral: number; negative: number }> = [];
+  const sentimentTrendData: Array<{ date: string; positive: number; neutral: number; negative: number }> = data?.sentimentTrendData ?? [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
@@ -52,7 +67,7 @@ export default function VoiceOfCustomerSummary() {
           </div>
           <div className="space-y-1">
             <div className={cn("text-4xl font-black tabular-nums", text)}>{sentimentScore}%</div>
-            <p className={cn("text-[11px] font-medium opacity-60", sub)}>Total conversations: 1,250</p>
+            <p className={cn("text-[11px] font-medium opacity-60", sub)}>Total conversations: {totalConversations.toLocaleString()}</p>
           </div>
         </div>
 

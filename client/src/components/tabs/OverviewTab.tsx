@@ -15,6 +15,15 @@ const abbreviateNumber = (num: number): string => {
 // Utility function to format percentage
 const formatPercentage = (num: number): string => num.toFixed(1) + "%";
 
+// Format the period-over-period delta with a leading sign so the badge's
+// `startsWith('+')` color logic still distinguishes positive vs negative
+// growth. Zero is shown as "0%" (neutral, treated as not green by the badge).
+const formatDelta = (num: number): string => {
+  if (num > 0) return `+${num.toFixed(1)}%`;
+  if (num < 0) return `${num.toFixed(1)}%`;
+  return "0%";
+};
+
 // Custom tooltip for charts
 const CustomTooltip = ({ active, payload, label, isStickinessChart, dark }: any) => {
   if (active && payload && payload.length) {
@@ -44,12 +53,15 @@ export default function OverviewTab() {
   const gridColor = dark ? "#1e293b" : "#f1f5f9";
   const axisColor = dark ? "#64748b" : "#94a3b8";
 
+  // KPIs refresh every 60s, charts every 5 min — matches replyagent's "Real-time"
+  // label while keeping query load reasonable for fresh workspaces.
   const { data: statsData, isLoading } = useQuery({
     queryKey: ["/api/statistics/statistics-v1"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/statistics/statistics-v1");
       return res.json();
-    }
+    },
+    refetchInterval: 60_000,
   });
 
   // Workspace-scoped time-series (DAU/MAU/WAU/Stickiness). Backend filters
@@ -60,7 +72,19 @@ export default function OverviewTab() {
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/statistics/dashboard-charts");
       return res.json();
-    }
+    },
+    refetchInterval: 300_000,
+  });
+
+  // Real New Users counts + period-over-period delta (replaces the hardcoded
+  // +2.5% / -1.2% / +5.8% badges). Backend derives from contacts.created_at.
+  const { data: newUsersData } = useQuery<any>({
+    queryKey: ["/api/statistics/new-users"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/new-users");
+      return res.json();
+    },
+    refetchInterval: 60_000,
   });
 
   // Real workspace info for the Agent Capacity card (replaces hardcoded mock).
@@ -70,6 +94,7 @@ export default function OverviewTab() {
       const res = await apiRequest("GET", "/api/workspaces/current");
       return res.json();
     },
+    refetchInterval: 60_000,
   });
 
   const { data: membersData } = useQuery<any>({
@@ -78,6 +103,7 @@ export default function OverviewTab() {
       const res = await apiRequest("GET", "/api/workspaces/members");
       return res.json();
     },
+    refetchInterval: 60_000,
   });
 
   if (isLoading) {
@@ -104,18 +130,25 @@ export default function OverviewTab() {
   const contactsLimitRaw = Number(workspaceData?.maximum_contacts ?? 0);
   const contactsLimitActive = Boolean(workspaceData?.limited_contacts) && contactsLimitRaw > 0;
 
+  // Stickiness: take last bucket from the time-series the backend computed.
+  // Earlier this was hardcoded to 0; now it reflects DAU/MAU * 100.
+  const stickinessFromSeries = Array.isArray(chartsData?.stickinessData) && chartsData.stickinessData.length > 0
+    ? chartsData.stickinessData[chartsData.stickinessData.length - 1].ratio ?? 0
+    : 0;
+
   const kpiData = {
     activeToday: contacts.by_status.active || 0,
     activeWeek: contacts.total || 0,
     activeMonth: contacts.total || 0,
     totalUsers: contacts.total || 0,
-    stickiness: 0,
-    dailyNewUsers: contacts.by_source.manual || 0,
-    dailyNewUsersChange: 2.5,
-    weeklyNewUsers: contacts.by_source.import || 0,
-    weeklyNewUsersChange: -1.2,
-    monthlyNewUsers: contacts.by_source.api || 0,
-    monthlyNewUsersChange: 5.8,
+    stickiness: stickinessFromSeries,
+    // ─── New Users — real values from /api/statistics/new-users ──────────
+    dailyNewUsers: newUsersData?.daily ?? 0,
+    dailyNewUsersChange: newUsersData?.dailyChange ?? 0,
+    weeklyNewUsers: newUsersData?.weekly ?? 0,
+    weeklyNewUsersChange: newUsersData?.weeklyChange ?? 0,
+    monthlyNewUsers: newUsersData?.monthly ?? 0,
+    monthlyNewUsersChange: newUsersData?.monthlyChange ?? 0,
     currentMAU: contacts.total || 0,
     mauLimit: contactsLimitActive ? contactsLimitRaw : 0,
     activeAgents: activeAgentsCount,
@@ -152,9 +185,11 @@ export default function OverviewTab() {
       title: "New Users",
       icon: <UserPlus size={15} className="text-primary" />,
       rows: [
-        { label: "Daily",   badge: `+${kpiData.dailyNewUsersChange}%`,   value: abbreviateNumber(kpiData.dailyNewUsers) },
-        { label: "Weekly",  badge: `${kpiData.weeklyNewUsersChange}%`,   value: abbreviateNumber(kpiData.weeklyNewUsers) },
-        { label: "Monthly", badge: `+${kpiData.monthlyNewUsersChange}%`, value: abbreviateNumber(kpiData.monthlyNewUsers) },
+        // Sign + format the delta so the existing badge color logic still
+        // works (badge.startsWith('+') for green vs red).
+        { label: "Daily",   badge: formatDelta(kpiData.dailyNewUsersChange),   value: abbreviateNumber(kpiData.dailyNewUsers) },
+        { label: "Weekly",  badge: formatDelta(kpiData.weeklyNewUsersChange),  value: abbreviateNumber(kpiData.weeklyNewUsers) },
+        { label: "Monthly", badge: formatDelta(kpiData.monthlyNewUsersChange), value: abbreviateNumber(kpiData.monthlyNewUsers) },
       ],
     },
     {

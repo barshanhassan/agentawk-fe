@@ -1,4 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Mail, Truck, Gift, CreditCard, DollarSign } from "lucide-react";
@@ -18,6 +20,20 @@ const LINES_FREE = [
 const LINES_PAID = LINES.filter(l => l.key !== "service");
 
 export default function MessagesSubTab() {
+  // Real WhatsApp Messages analytics. Backend aggregates wa_messages joined
+  // with wa_templates.category, applies the Meta pricing matrix in
+  // statistics.service for approximate $ charges.
+  const { data } = useQuery<any>({
+    queryKey: ["/api/statistics/whatsapp-messages"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/whatsapp-messages");
+      return res.json();
+    },
+    refetchInterval: 300_000,
+  });
+
+  const k = data?.kpi ?? {};
+
   const { mode } = useTheme();
   const dark = mode === "dark";
   const card = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
@@ -44,11 +60,37 @@ export default function MessagesSubTab() {
   };
 
   const kpi = {
-    allMessages: [{ l: "Message Sent", v: 0 }, { l: "Message Delivered", v: 0 }, { l: "Message Received", v: 0 }],
-    allDeliv: [{ l: "Marketing", v: 0 }, { l: "Marketing Lite", v: 0 }, { l: "Utility", v: 0 }, { l: "Authentication", v: 0 }, { l: "Auth Intl", v: 0 }, { l: "Service", v: 0 }],
-    freeDeliv: [{ l: "Free Customer Service", v: 0 }, { l: "Free Entry Point", v: 0 }],
-    paidDeliv: [{ l: "Marketing", v: 0 }, { l: "Marketing Lite", v: 0 }, { l: "Utility", v: 0 }, { l: "Authentication", v: 0 }, { l: "Auth Intl", v: 0 }],
-    approxCharge: [{ l: "Marketing", v: "$0" }, { l: "Marketing Lite", v: "$0" }, { l: "Utility", v: "$0" }, { l: "Authentication", v: "$0" }, { l: "Auth Intl", v: "$0" }],
+    allMessages: [
+      { l: "Message Sent", v: k.allMessages?.messageSent ?? 0 },
+      { l: "Message Delivered", v: k.allMessages?.messageDelivered ?? 0 },
+      { l: "Message Received", v: k.allMessages?.messageReceived ?? 0 },
+    ],
+    allDeliv: [
+      { l: "Marketing", v: k.allDeliveries?.marketing ?? 0 },
+      { l: "Marketing Lite", v: k.allDeliveries?.marketingLite ?? 0 },
+      { l: "Utility", v: k.allDeliveries?.utility ?? 0 },
+      { l: "Authentication", v: k.allDeliveries?.authentication ?? 0 },
+      { l: "Auth Intl", v: k.allDeliveries?.authIntl ?? 0 },
+      { l: "Service", v: k.allDeliveries?.service ?? 0 },
+    ],
+    freeDeliv: [
+      { l: "Free Customer Service", v: k.freeDeliveries?.freeCustomerService ?? 0 },
+      { l: "Free Entry Point", v: k.freeDeliveries?.freeEntryPoint ?? 0 },
+    ],
+    paidDeliv: [
+      { l: "Marketing", v: k.paidDeliveries?.marketing ?? 0 },
+      { l: "Marketing Lite", v: k.paidDeliveries?.marketingLite ?? 0 },
+      { l: "Utility", v: k.paidDeliveries?.utility ?? 0 },
+      { l: "Authentication", v: k.paidDeliveries?.authentication ?? 0 },
+      { l: "Auth Intl", v: k.paidDeliveries?.authIntl ?? 0 },
+    ],
+    approxCharge: [
+      { l: "Marketing", v: k.approxCharges?.marketing ?? "$0" },
+      { l: "Marketing Lite", v: k.approxCharges?.marketingLite ?? "$0" },
+      { l: "Utility", v: k.approxCharges?.utility ?? "$0" },
+      { l: "Authentication", v: k.approxCharges?.authentication ?? "$0" },
+      { l: "Auth Intl", v: k.approxCharges?.authIntl ?? "$0" },
+    ],
   };
 
   const kpiCards = [
@@ -59,11 +101,12 @@ export default function MessagesSubTab() {
     { title: "Approximate Charges", icon: <DollarSign size={14} className="text-primary" />, rows: kpi.approxCharge },
   ];
 
-  // Message analytics series — empty until backend whatsapp-messages-analytics endpoint exists.
-  const allDelData: Array<any> = [];
-  const freeData: Array<any> = [];
-  const paidData: Array<any> = [];
-  const chargesData: Array<any> = [];
+  // Real chart series from backend (zero-filled for fresh workspaces so the
+  // Recharts renderer still draws the axes/legend with a stable baseline).
+  const allDelData: Array<any> = data?.allDeliveriesTrend ?? [];
+  const freeData: Array<any> = data?.freeDeliveriesTrend ?? [];
+  const paidData: Array<any> = data?.paidDeliveriesTrend ?? [];
+  const chargesData: Array<any> = data?.chargesTrend ?? [];
 
   const charts = [
     { title: "All Deliveries", data: allDelData, lines: LINES },

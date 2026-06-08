@@ -1,9 +1,24 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Star, Activity, BarChart3, Trophy } from "lucide-react";
 
 export default function CSATSummary() {
+  // CSAT collection mechanism (rate-this-conversation prompt + responses
+  // table) is not yet wired in EZCONN. Backend returns honest zeros with
+  // `feature_status: 'not_configured'`; once a csat_responses table and
+  // automation hook exist, the same endpoint will return real values.
+  const { data } = useQuery<any>({
+    queryKey: ["/api/statistics/csat-summary"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/csat-summary");
+      return res.json();
+    },
+    refetchInterval: 300_000,
+  });
+
   const { mode } = useTheme();
   const dark = mode === "dark";
 
@@ -14,22 +29,25 @@ export default function CSATSummary() {
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tipCls  = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  // Zero-state defaults — wire to backend csat-summary endpoint when available.
-  const satisfactionScore    = 0;
-  const totalResponses       = 0;
-  const basedOnConversations = 0;
-  const feedbackRate         = 0;
-  const responded            = 0;
-  const totalConversations   = 0;
+  // All values from backend. `totalConversations` mirrors completed inboxes
+  // (real signal of how many CSAT prompts could have been sent) even though
+  // satisfaction-score/feedbackRate stay at 0 until the collection layer ships.
+  const satisfactionScore    = data?.satisfactionScore ?? 0;
+  const totalResponses       = data?.totalResponses ?? 0;
+  const basedOnConversations = data?.basedOnConversations ?? 0;
+  const feedbackRate         = data?.feedbackRate ?? 0;
+  const responded            = data?.responded ?? 0;
+  const totalConversations   = data?.totalConversations ?? 0;
+  const distMap              = data?.distribution ?? { great: 0, average: 0, poor: 0 };
 
   const distributionData = [
-    { name: "Great",   percentage: 0, color: "bg-emerald-500", icon: "😊" },
-    { name: "Average", percentage: 0, color: "bg-orange-500",  icon: "😐" },
-    { name: "Poor",    percentage: 0, color: "bg-rose-500",    icon: "😞" },
+    { name: "Great",   percentage: distMap.great ?? 0, color: "bg-emerald-500", icon: "😊" },
+    { name: "Average", percentage: distMap.average ?? 0, color: "bg-orange-500",  icon: "😐" },
+    { name: "Poor",    percentage: distMap.poor ?? 0, color: "bg-rose-500",    icon: "😞" },
   ];
 
-  const agentRankings: Array<{ name: string; count: number; label: string; positive: boolean }> = [];
-  const csatDistributionData: Array<{ date: string; great: number; average: number; poor: number }> = [];
+  const agentRankings: Array<{ name: string; count: number; label: string; positive: boolean }> = data?.agentRankings ?? [];
+  const csatDistributionData: Array<{ date: string; great: number; average: number; poor: number }> = data?.csatDistributionData ?? [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;

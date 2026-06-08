@@ -1,16 +1,29 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { TrendingUp, Phone, Activity } from "lucide-react";
 
 const abbreviateNumber = (num: number) => num >= 1000 ? (num / 1000).toFixed(1) + "K" : num.toString();
 
-// Conversion analytics data — empty until backend conversion-analytics endpoint exists.
-const conversionVolumeTrendData: Array<{ date: string; queued: number; active: number; pending: number; resolved: number }> = [];
-const callEngagementTrendData: Array<{ date: string; inbound: number; outbound: number; messagesReceived: number; messagesSent: number }> = [];
-const tagsData: Array<{ name: string; count: number; cls: string }> = [];
-
 export default function AgentConversion() {
+  // Real conversion analytics — KPIs, volume trend, call engagement trend,
+  // and top tags. Backend reads inbox + twilio_call_logs + tag_links.
+  const { data } = useQuery<any>({
+    queryKey: ["/api/statistics/agent-conversion"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/agent-conversion");
+      return res.json();
+    },
+    refetchInterval: 60_000,
+  });
+
+  const conversionVolumeTrendData: Array<{ date: string; queued: number; active: number; pending: number; resolved: number }> = data?.conversionVolumeTrend ?? [];
+  const callEngagementTrendData: Array<{ date: string; inbound: number; outbound: number; messagesReceived: number; messagesSent: number }> = data?.callEngagementTrend ?? [];
+  const tagsData: Array<{ name: string; count: number; cls: string }> = data?.tagsData ?? [];
+  const k = data?.kpi ?? {};
+
   const { mode } = useTheme();
   const dark = mode === "dark";
   const card = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
@@ -53,26 +66,26 @@ export default function AgentConversion() {
     {
       title: "Conversion Status", icon: <Activity size={14} className="text-primary" />,
       rows: [
-        { l: "Queued", v: "0", c: "text-rose-400" },
-        { l: "Active", v: "0", c: "text-orange-400" },
-        { l: "Pending", v: "0", c: "text-yellow-400" },
-        { l: "Exited", v: "0", c: "text-slate-400" },
+        { l: "Queued", v: String(k.conversionStatus?.queued ?? 0), c: "text-rose-400" },
+        { l: "Active", v: String(k.conversionStatus?.active ?? 0), c: "text-orange-400" },
+        { l: "Pending", v: String(k.conversionStatus?.pending ?? 0), c: "text-yellow-400" },
+        { l: "Exited", v: String(k.conversionStatus?.exited ?? 0), c: "text-slate-400" },
       ],
     },
     {
       title: "Performance", icon: <TrendingUp size={14} className="text-primary" />,
       rows: [
-        { l: "Avg response time", v: "—" },
-        { l: "Resolution rate", v: "—" },
-        { l: "Customer satisfaction", v: "—" },
+        { l: "Avg response time", v: k.performance?.avgResponseTime ?? "—" },
+        { l: "Resolution rate", v: k.performance?.resolutionRate ?? "—" },
+        { l: "Customer satisfaction", v: k.performance?.customerSatisfaction ?? "—" },
       ],
     },
     {
       title: "Call Statistics", icon: <Phone size={14} className="text-primary" />,
       rows: [
-        { l: "Total calls", v: "0", c: "text-primary" },
-        { l: "Inbound calls", v: "0", c: "text-blue-400" },
-        { l: "Outbound calls", v: "0", c: "text-violet-400" },
+        { l: "Total calls", v: String(k.callStatistics?.totalCalls ?? 0), c: "text-primary" },
+        { l: "Inbound calls", v: String(k.callStatistics?.inboundCalls ?? 0), c: "text-blue-400" },
+        { l: "Outbound calls", v: String(k.callStatistics?.outboundCalls ?? 0), c: "text-violet-400" },
       ],
     },
   ];

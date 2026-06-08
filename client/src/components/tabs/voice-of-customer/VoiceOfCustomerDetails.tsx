@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +39,33 @@ export default function VoiceOfCustomerDetails() {
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const conversationDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Voice-of-Customer tables — empty until backend voice-of-customer-details endpoint exists.
-  const agentPerformanceData: Array<{ agentName: string; agentId: string; team: string; date: string; total: number }> = [];
-  const customerSentimentData: Array<{ conversationId: string; agent: string; team: string; sentiment: string; date: string; channel: string }> = [];
+  // Real sentiment details. Backend computes per-agent counts + per-conversation
+  // sentiment classification (keyword-based, no NLP API).
+  const { data: vocDetails } = useQuery<any>({
+    queryKey: ["/api/statistics/sentiment-details"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/sentiment-details");
+      return res.json();
+    },
+    refetchInterval: 300_000,
+  });
+  const agentPerformanceData: Array<{ agentName: string; agentId: string; team: string; date: string; total: number }> =
+    (vocDetails?.agentRows ?? []).map((r: any) => ({
+      agentName: r.name,
+      agentId: r.id,
+      team: r.team,
+      date: r.date,
+      total: r.total,
+    }));
+  const customerSentimentData: Array<{ conversationId: string; agent: string; team: string; sentiment: string; date: string; channel: string }> =
+    (vocDetails?.customerRows ?? []).map((r: any) => ({
+      conversationId: r.id,
+      agent: r.agentName,
+      team: r.team,
+      sentiment: r.sentiment,
+      date: r.date,
+      channel: r.channel,
+    }));
 
   const handleAgentSort = (column: string) => {
     setAgentSort((prev) => {

@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { ChevronDown, Check, Bot, MessageSquare, Send, BarChart3, Users, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import TimeHeatmap from "@/components/TimeHeatmap";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -88,9 +90,19 @@ export default function BotDashboardContent() {
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tooltip = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  // Zero-valued KPI defaults — a fresh workspace shouldn't display demo numbers.
-  // TODO: wire to `GET /api/statistics/bot-analytics` (or similar) once that endpoint exists.
-  const kpiData = {
+  // Real Bot analytics — backend reads chatbot_chats/messages + automation_runs
+  // + computes day-of-week × hour heatmap. The `topFilter` flows to the
+  // backend so the popularity chart respects Top 5 / Top 10 / All.
+  const { data } = useQuery<any>({
+    queryKey: ["/api/statistics/bot-analytics", topFilter],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/statistics/bot-analytics?top=${encodeURIComponent(topFilter)}`);
+      return res.json();
+    },
+    refetchInterval: 60_000,
+  });
+
+  const kpiData = data?.kpi ?? {
     botTriggered: 0,
     respondedByBot: 0,
     receivedByBot: 0,
@@ -108,10 +120,10 @@ export default function BotDashboardContent() {
     { title: "Avg Session Duration", value: kpiData.avgSessionDuration, unit: "Per session", icon: <Clock size={14} />, color: "text-orange-500" },
   ];
 
-  // Chart series — empty until backend bot-analytics endpoint exists.
-  const botVsHumanData: Array<{ date: string; triggered: number; escalated: number }> = [];
-  const popularityData: Array<{ name: string; sentiment: number }> = [];
-  const busiestPeriodData: Array<{ time: string; [k: string]: number | string }> = [];
+  // Chart series sourced from the backend bot-analytics endpoint.
+  const botVsHumanData: Array<{ date: string; triggered: number; escalated: number }> = data?.botVsHumanData ?? [];
+  const popularityData: Array<{ name: string; sentiment: number }> = data?.popularityData ?? [];
+  const busiestPeriodData: Array<{ time: string; [k: string]: number | string }> = data?.busiestPeriodData ?? [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;

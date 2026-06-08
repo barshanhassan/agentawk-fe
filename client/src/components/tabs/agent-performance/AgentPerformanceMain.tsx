@@ -1,20 +1,11 @@
 import { useState } from "react";
 import { Search, MessageSquare, Zap, List, ThumbsUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 
 const abbreviateNumber = (num: number) => num >= 1000000 ? (num/1000000).toFixed(1)+"M" : num >= 1000 ? (num/1000).toFixed(1)+"K" : num.toString();
-
-// Demo agent data removed — fresh workspace must show empty state.
-// TODO: wire to `GET /api/statistics/agent-availability` + `/agent-metrics`.
-const agentAvailabilityData: Array<{ name: string; team: string; loginTime: string; status: string; dot: string }> = [];
-const agentMetricsData: Array<{ name: string; accepted: number; solved: number; date: string; avgResponse: string; avgResolution: string }> = [];
-const statusBars = [
-  { label: "Online",  count: 0, pct: 0, color: "bg-emerald-500" },
-  { label: "Busy",    count: 0, pct: 0, color: "bg-orange-500"  },
-  { label: "Away",    count: 0, pct: 0, color: "bg-yellow-500"  },
-  { label: "Offline", count: 0, pct: 0, color: "bg-slate-400"   },
-];
 
 export default function AgentPerformanceMain() {
   const { mode } = useTheme();
@@ -30,20 +21,61 @@ export default function AgentPerformanceMain() {
   const [availSearch, setAvailSearch] = useState("");
   const [perfSearch,  setPerfSearch]  = useState("");
 
+  // Real agent performance metrics — backend computes KPIs + availability +
+  // per-agent metrics from inbox/users tables. Polls every 60 s so a fresh
+  // workspace populates as soon as the first conversation lands.
+  const { data: perfData } = useQuery<any>({
+    queryKey: ["/api/statistics/agent-performance-main"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/agent-performance-main");
+      return res.json();
+    },
+    refetchInterval: 60_000,
+  });
+
+  const agentAvailabilityData: Array<{ name: string; team: string; loginTime: string; status: string; dot: string }> = perfData?.availability?.agents ?? [];
+  const agentMetricsData: Array<{ name: string; accepted: number; solved: number; date: string; avgResponse: string; avgResolution: string }> = perfData?.metrics ?? [];
+  const totalAgents = perfData?.availability?.total ?? 0;
+  const statusBars = perfData?.availability?.statusBars ?? [
+    { label: "Online",  count: 0, pct: 0, color: "bg-emerald-500" },
+    { label: "Busy",    count: 0, pct: 0, color: "bg-orange-500"  },
+    { label: "Away",    count: 0, pct: 0, color: "bg-yellow-500"  },
+    { label: "Offline", count: 0, pct: 0, color: "bg-slate-400"   },
+  ];
+
   const filteredAvail = agentAvailabilityData.filter(a =>
     a.name.toLowerCase().includes(availSearch.toLowerCase()) || a.team.toLowerCase().includes(availSearch.toLowerCase())
   );
   const filteredPerf = agentMetricsData.filter(a => a.name.toLowerCase().includes(perfSearch.toLowerCase()));
 
+  // KPI values now flow from the backend's `kpi` block. Each fallback keeps
+  // the original empty-state display ("0" / "—") if data is still loading.
+  const k = perfData?.kpi ?? {};
   const kpiCards = [
     { title: "Conversations", icon: <MessageSquare size={14} className="text-primary" />,
-      rows: [{ l: "Total handled", v: "0" }, { l: "Completed", v: "0" }, { l: "In progress", v: "0" }] },
+      rows: [
+        { l: "Total handled", v: String(k.conversations?.total ?? 0) },
+        { l: "Completed", v: String(k.conversations?.completed ?? 0) },
+        { l: "In progress", v: String(k.conversations?.inProgress ?? 0) },
+      ] },
     { title: "Performance", icon: <Zap size={14} className="text-primary" />,
-      rows: [{ l: "Avg response time", v: "—" }, { l: "Avg resolution time", v: "—" }, { l: "Resolution rate", v: "—" }] },
+      rows: [
+        { l: "Avg response time", v: k.performance?.avgResponse ?? "—" },
+        { l: "Avg resolution time", v: k.performance?.avgResolution ?? "—" },
+        { l: "Resolution rate", v: k.performance?.resolutionRate ?? "—" },
+      ] },
     { title: "Queue", icon: <List size={14} className="text-primary" />,
-      rows: [{ l: "Active now", v: "0" }, { l: "Pending", v: "0" }, { l: "Forwarded", v: "0" }] },
+      rows: [
+        { l: "Active now", v: String(k.queue?.active ?? 0) },
+        { l: "Pending", v: String(k.queue?.pending ?? 0) },
+        { l: "Forwarded", v: String(k.queue?.forwarded ?? 0) },
+      ] },
     { title: "Feedback", icon: <ThumbsUp size={14} className="text-primary" />,
-      rows: [{ l: "Great", v: "0", c: "text-emerald-500" }, { l: "Average", v: "0", c: "text-yellow-500" }, { l: "Poor", v: "0", c: "text-rose-500" }] },
+      rows: [
+        { l: "Great", v: String(k.feedback?.great ?? 0), c: "text-emerald-500" },
+        { l: "Average", v: String(k.feedback?.average ?? 0), c: "text-yellow-500" },
+        { l: "Poor", v: String(k.feedback?.poor ?? 0), c: "text-rose-500" },
+      ] },
   ];
 
   const tableHeaders = (cols: string[]) => (
@@ -89,7 +121,7 @@ export default function AgentPerformanceMain() {
           <div className="space-y-3">
             <div className="flex justify-between mb-2">
               <span className={cn("text-[11px] font-bold uppercase tracking-widest", sub)}>Agent Status</span>
-              <span className={cn("text-[11px] font-bold", sub)}>Total: 15</span>
+              <span className={cn("text-[11px] font-bold", sub)}>Total: {totalAgents}</span>
             </div>
             {statusBars.map((s, i) => (
               <div key={i}>

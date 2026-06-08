@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 
@@ -35,9 +37,19 @@ export default function CSATDetails() {
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const feedbackDropdownRef = useRef<HTMLDivElement>(null);
 
-  // CSAT data — empty until backend csat-details endpoint is implemented.
-  const agentCSATData: Array<{ agentName: string; agentId: string; team: string; great: number; average: number; poor: number; total: number }> = [];
-  const feedbackData: Array<{ conversationId: string; customer: string; agent: string; rating: string; date: string }> = [];
+  // Backend returns honest empty arrays today (no csat_responses table yet)
+  // but the wiring is in place so the moment CSAT collection ships, this
+  // table populates without any frontend change.
+  const { data: csatDet } = useQuery<any>({
+    queryKey: ["/api/statistics/csat-details"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/statistics/csat-details");
+      return res.json();
+    },
+    refetchInterval: 300_000,
+  });
+  const agentCSATData: Array<{ agentName: string; agentId: string; team: string; great: number; average: number; poor: number; total: number }> = csatDet?.agentCSAT ?? [];
+  const feedbackData: Array<{ conversationId: string; customer: string; agent: string; rating: string; date: string }> = csatDet?.feedback ?? [];
 
   const handleAgentSort = (column: string) => {
     setAgentSort((prev) => {
