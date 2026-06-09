@@ -37,6 +37,8 @@ const AgencyRoles = () => {
     },
   });
 
+  const rolesKey = [`/api/agencies/${agencyId}/roles`];
+
   const toggleArchiveMutation = useMutation({
     mutationFn: async (role: any) => {
       const res = await apiRequest("PATCH", `/api/agencies/${agencyId}/roles/${role.id}`, {
@@ -44,12 +46,14 @@ const AgencyRoles = () => {
       });
       return res.json();
     },
-    onSuccess: (_, role) => {
+    // Optimistic: flip the role's status in the cache the instant it's clicked so
+    // it jumps between the Active/Archived tabs immediately — the user never waits
+    // on the (remote-DB) round-trip. Roll back if the server rejects it.
+    onMutate: async (role: any) => {
       const newStatus = role.status === 'ACTIVE' ? 'ARCHIVE' : 'ACTIVE';
-      // Update the cached list directly so the role moves between the Active and
-      // Archived tabs instantly — no manual refresh. (queries use staleTime:Infinity,
-      // so invalidate alone wasn't reliably re-rendering the list.)
-      queryClient.setQueryData([`/api/agencies/${agencyId}/roles`], (old: any) => {
+      await queryClient.cancelQueries({ queryKey: rolesKey });
+      const previous = queryClient.getQueryData(rolesKey);
+      queryClient.setQueryData(rolesKey, (old: any) => {
         if (!old?.roles) return old;
         return {
           ...old,
@@ -58,9 +62,14 @@ const AgencyRoles = () => {
           ),
         };
       });
-      // role.status is the pre-toggle status: ACTIVE → we just archived it,
-      // ARCHIVE → we just restored it.
+      // Toast right away too — the action is effectively done from the user's view.
       toast({ title: role.status === 'ACTIVE' ? 'Role Archived' : 'Role Restored' });
+      return { previous };
+    },
+    onError: (_err, _role, context: any) => {
+      // Revert the optimistic change if the server call failed.
+      if (context?.previous) queryClient.setQueryData(rolesKey, context.previous);
+      toast({ title: 'Could not update role', description: 'Please try again.', variant: 'destructive' });
     },
   });
 
@@ -310,16 +319,17 @@ const AgencyRoles = () => {
                     {!role.isSystem && (
                       <button
                         onClick={() => toggleArchiveMutation.mutate(role)}
+                        title={activeTab === 'active' ? t('common.archive', { defaultValue: 'Archive' }) : t('common.restore', { defaultValue: 'Restore' })}
                         className={cn(
                           'p-1.5 rounded-lg border transition-all shadow-sm',
                           activeTab === 'active'
-                            ? dark 
-                              ? 'border-slate-700 hover:bg-red-500/10 text-slate-500 hover:text-red-400' 
-                              : 'border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600'
+                            ? dark
+                              ? 'border-slate-700 hover:bg-amber-500/10 text-slate-500 hover:text-amber-400'
+                              : 'border-slate-200 hover:bg-amber-50 text-slate-400 hover:text-amber-600'
                             : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
                         )}
                       >
-                        {activeTab === 'active' ? <Trash2 size={13} /> : <RotateCcw size={13} />}
+                        {activeTab === 'active' ? <Archive size={13} /> : <RotateCcw size={13} />}
                       </button>
                     )}
                   </div>

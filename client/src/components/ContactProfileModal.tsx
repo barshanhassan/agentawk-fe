@@ -386,6 +386,12 @@ export default function ContactProfileModal({
     queryKey: ["/api/contacts", contactId, "profile"],
     queryFn: () => apiGet(`/api/contacts/${contactId}`),
     enabled: !!contactId && open,
+    // Seed from the list row that was clicked so the name/title/tags show
+    // INSTANTLY instead of a "Unnamed" + spinner flash while the (remote-DB)
+    // detail fetch runs. Collection fields default to [] until the real detail
+    // arrives, then everything fills in. Keyed by contactId so switching
+    // contacts always seeds with the newly-clicked row.
+    placeholderData: contact ? { contact } : undefined,
   });
 
   const enriched = detail?.contact ?? null;
@@ -1179,7 +1185,7 @@ export default function ContactProfileModal({
                 <ActivityTimeline contactId={contactId} />
               ) : (
               <ScrollArea className="flex-1 px-8 py-6">
-                {isLoading || !enriched ? (
+                {!enriched ? (
                   <div className="flex items-center justify-center h-64">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
