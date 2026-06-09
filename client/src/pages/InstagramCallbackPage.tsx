@@ -1,0 +1,87 @@
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { Instagram, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+
+export default function InstagramCallbackPage() {
+  const [, setLocation] = useLocation();
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const errorParam = params.get("error");
+
+    if (errorParam) {
+      const desc = params.get("error_description") ?? errorParam;
+      setStatus("error");
+      setMessage(desc);
+      setTimeout(() => setLocation("/"), 3000);
+      return;
+    }
+
+    if (!code) {
+      setStatus("error");
+      setMessage("No authorization code received from Instagram.");
+      setTimeout(() => setLocation("/"), 3000);
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}/instagram-callback`;
+
+    apiRequest("POST", "/api/instagram/connect-business", { code, redirect_uri: redirectUri })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message ?? "Connection failed");
+        }
+        setStatus("success");
+        setMessage("Instagram account connected successfully!");
+        setTimeout(() => setLocation("/"), 2500);
+      })
+      .catch((err) => {
+        setStatus("error");
+        setMessage(err?.message ?? "Failed to connect Instagram account.");
+        setTimeout(() => setLocation("/"), 3500);
+      });
+  }, [setLocation]);
+
+  return (
+    <div className="min-h-screen bg-[#0f1829] flex items-center justify-center p-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-10 max-w-sm w-full flex flex-col items-center text-center gap-6 shadow-xl">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center">
+          <Instagram className="w-8 h-8 text-white" />
+        </div>
+
+        <div>
+          <h2 className="text-[15px] font-black text-white uppercase tracking-widest">Instagram</h2>
+          <p className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-widest">OAuth Callback</p>
+        </div>
+
+        {status === "loading" && (
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <p className="text-[12px] font-bold text-slate-400">Connecting your account…</p>
+          </div>
+        )}
+
+        {status === "success" && (
+          <div className="flex flex-col items-center gap-3">
+            <CheckCircle className="w-8 h-8 text-emerald-500" />
+            <p className="text-[12px] font-bold text-emerald-400">{message}</p>
+            <p className="text-[10px] text-slate-500">Redirecting to settings…</p>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className="flex flex-col items-center gap-3">
+            <XCircle className="w-8 h-8 text-rose-500" />
+            <p className="text-[12px] font-bold text-rose-400">{message}</p>
+            <p className="text-[10px] text-slate-500">Redirecting back…</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

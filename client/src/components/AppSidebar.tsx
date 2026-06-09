@@ -604,19 +604,6 @@ export default function AppSidebar() {
                       />
                     </div>
 
-                    {/* Workspace Dropdown */}
-                    <div>
-                      <CustomDropdown
-                        options={workspaceOptions}
-                        selected={workspaceSelected}
-                        onChange={switchWorkspace}
-                        placeholder="Workspace"
-                        width="100%"
-                        showSelectedOption={true}
-                        showSearch={false}
-                      />
-                    </div>
-
                     {/* Theme Dropdown */}
                     <div>
                       <CustomDropdown
