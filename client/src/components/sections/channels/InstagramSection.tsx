@@ -38,11 +38,11 @@ import InstagramPageSettings from "./InstagramPageSettings";
 type View = "list" | "preferred" | "old" | "page";
 
 const IG_SCOPES = [
-  "instagram_basic",
-  "instagram_manage_messages",
-  "instagram_manage_comments",
-  "pages_show_list",
-  "pages_read_engagement",
+  "instagram_business_basic",
+  "instagram_business_manage_messages",
+  "instagram_business_manage_comments",
+  "instagram_business_content_publish",
+  "instagram_business_manage_insights",
 ].join(",");
 
 const FB_SCOPES = [
@@ -54,7 +54,7 @@ const FB_SCOPES = [
 
 function buildIgAuthUrl(appId: string): string {
   const redirectUri = encodeURIComponent(`${window.location.origin}/instagram-callback`);
-  return `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(IG_SCOPES)}&response_type=code`;
+  return `https://www.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(IG_SCOPES)}&response_type=code`;
 }
 
 function buildFbAuthUrl(appId: string, version: string): string {
@@ -163,12 +163,13 @@ export default function InstagramSection() {
   });
 
   function handleAddNew() {
-    const appId = "979553311024998";
+    const igAppId = "996773679700787";
+    const fbAppId = "979553311024998";
     const version = "v22.0";
     if (view === "preferred") {
-      window.location.href = buildIgAuthUrl(appId);
+      window.location.href = buildIgAuthUrl(igAppId);
     } else {
-      window.location.href = buildFbAuthUrl(appId, version);
+      window.location.href = buildFbAuthUrl(fbAppId, version);
     }
   }
 
