@@ -621,10 +621,8 @@ export default function WhatsAppSection() {
           {view === "list" && (
             <div className="p-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {/* ─── Coex card ─── */}
-              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-emerald-500/40 flex flex-col relative overflow-hidden", softBg, softBorder)}>
-                {/* Top accent bar — replyagent parity */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
-                <div className="flex items-center justify-between mb-5 pt-1">
+              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-primary/40 flex flex-col relative overflow-hidden", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-5">
                   <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                     <Smartphone size={20} />
                   </div>
@@ -691,9 +689,8 @@ export default function WhatsAppSection() {
               </div>
 
               {/* ─── API card ─── */}
-              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-emerald-500/40 flex flex-col relative overflow-hidden", softBg, softBorder)}>
-                <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
-                <div className="flex items-center justify-between mb-5 pt-1">
+              <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-primary/40 flex flex-col relative overflow-hidden", softBg, softBorder)}>
+                <div className="flex items-center justify-between mb-5">
                   <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
                     <Zap size={20} />
                   </div>
@@ -763,8 +760,7 @@ export default function WhatsAppSection() {
 
               {/* ─── QR Code card ─── */}
               <div className={cn("group p-6 rounded-[1.5rem] border transition-all hover:shadow-md hover:border-primary/40 flex flex-col relative overflow-hidden", softBg, softBorder)}>
-                <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
-                <div className="flex items-center justify-between mb-5 pt-1">
+                <div className="flex items-center justify-between mb-5">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                     <QrCode size={20} />
                   </div>
