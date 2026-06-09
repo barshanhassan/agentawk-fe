@@ -144,13 +144,16 @@ export default function TeamsSection() {
     setView("edit");
   };
 
+  const totalPriority = selectedAgents.reduce((sum, a) => sum + (parseInt(a.priority) || 0), 0);
+  const isPriorityValid = distribution !== "PRIORITY" || totalPriority === 100;
+
   const handleSave = () => {
     if (!teamName.trim()) return;
-    // replyagent parity: a team must have at least one member
     if (selectedAgents.length === 0) {
       toast({ title: "Validation", description: "Add at least one member to the team.", variant: "destructive" });
       return;
     }
+    if (!isPriorityValid) return;
     saveMutation.mutate({
       id: editingId,
       name: teamName,
@@ -196,7 +199,7 @@ export default function TeamsSection() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={!teamName.trim() || saveMutation.isPending}
+                disabled={!teamName.trim() || !isPriorityValid || saveMutation.isPending}
                 className={primaryBtn}
               >
                 {saveMutation.isPending ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />}
@@ -322,6 +325,17 @@ export default function TeamsSection() {
                         ))}
                     </SelectContent>
                   </Select>
+
+                  {distribution === "PRIORITY" && selectedAgents.length > 0 && (
+                    <div className="flex items-center justify-between mt-1 px-1">
+                      <span className="text-[10px] font-bold text-rose-500">
+                        {totalPriority !== 100 ? "Priority value should be equal to 100" : ""}
+                      </span>
+                      <span className={cn("text-[10px] font-black uppercase tracking-widest", totalPriority === 100 ? "text-emerald-500" : sub)}>
+                        Total: {totalPriority}%
+                      </span>
+                    </div>
+                  )}
 
                   {selectedAgents.length > 0 ? (
                     <div className="space-y-2 pt-1">
