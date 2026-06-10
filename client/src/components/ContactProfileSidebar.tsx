@@ -1,6 +1,8 @@
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -89,6 +91,8 @@ interface ContactProfileSidebarProps {
         smart_flow?: { name?: string; paused?: boolean } | null;
         channel?: { type?: string; name?: string; number?: string } | null;
     } | null;
+
+    onRefreshProfile?: () => void;
 }
 
 // Helper function to get display name - defaults to phone number if displayName not set
@@ -117,6 +121,7 @@ export default function ContactProfileSidebar({
     messages = [],
     onScrollToMessage,
     profileData,
+    onRefreshProfile,
 }: ContactProfileSidebarProps) {
 
     // Edit basic details modal state
@@ -273,6 +278,73 @@ export default function ContactProfileSidebar({
         onUpdateNotes(updatedNotes);
         setNewNote("");
         setIsAddNoteModalOpen(false);
+    };
+
+    // Real pipelines from API
+    const { data: pipelinesData } = useQuery({
+        queryKey: ["/api/pipelines"],
+        queryFn: async () => (await apiRequest("GET", "/api/pipelines")).json(),
+    });
+    const pipelines: any[] = pipelinesData?.pipelines || [];
+
+    // Stages for the selected pipeline
+    const selectedPipelineSteps: any[] = useMemo(() => {
+        const pl = pipelines.find((p: any) => String(p.id) === newOpportunity.pipeline);
+        return pl?.pipeline_steps || [];
+    }, [pipelines, newOpportunity.pipeline]);
+
+    // contact_id from profileData (full backend response shape)
+    const contactId: string | null = (profileData as any)?.contact?.id
+        ? String((profileData as any).contact.id)
+        : null;
+
+    // Mutation: create opportunity
+    const createOpportunityMutation = useMutation({
+        mutationFn: async (data: any) => {
+            const res = await apiRequest("POST", "/api/pipelines/opportunities", data);
+            if (!res.ok) throw new Error("Failed to create opportunity");
+            return res.json();
+        },
+        onSuccess: () => {
+            setIsAddOpportunityModalOpen(false);
+            setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
+        },
+    });
+
+    const handleSaveOpportunity = () => {
+        if (!newOpportunity.title || !newOpportunity.pipeline || !newOpportunity.stage) return;
+        createOpportunityMutation.mutate({
+            title: newOpportunity.title,
+            pl_id: newOpportunity.pipeline,
+            pl_step_id: newOpportunity.stage,
+            contact_id: contactId,
+            value: newOpportunity.value || 0,
+            closing_date: newOpportunity.closingDate || undefined,
+        });
+    };
+
+    // Mutation: create task
+    const createTaskMutation = useMutation({
+        mutationFn: async (data: any) => {
+            const res = await apiRequest("POST", "/api/tasks", data);
+            if (!res.ok) throw new Error("Failed to create task");
+            return res.json();
+        },
+        onSuccess: () => {
+            setIsAddTaskModalOpen(false);
+            setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
+        },
+    });
+
+    const handleSaveTask = () => {
+        if (!newTask.note || !newTask.date || !newTask.time || !contactId) return;
+        createTaskMutation.mutate({
+            description: newTask.note,
+            date: newTask.date,
+            time: newTask.time,
+            user_id: newTask.agent || undefined,
+            contact_id: contactId,
+        });
     };
 
     if (!conversation) return null;
@@ -435,7 +507,7 @@ export default function ContactProfileSidebar({
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <h4 className="font-semibold text-sm">In Smart Flow</h4>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={() => onRefreshProfile?.()}>
                                             <RefreshCw size={14} />
                                         </Button>
                                     </div>
@@ -1174,15 +1246,16 @@ export default function ContactProfileSidebar({
                     </DialogHeader>
                     <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                         <div>
-                            <label className="text-sm font-medium">Pipeline and stage</label>
+                            <label className="text-sm font-medium">Pipeline</label>
                             <Select value={newOpportunity.pipeline} onValueChange={(value) => setNewOpportunity({ ...newOpportunity, pipeline: value, stage: "" })}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select pipeline and stage" />
+                                    <SelectValue placeholder="Select pipeline" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="sales">Sales Pipeline</SelectItem>
-                                    <SelectItem value="marketing">Marketing Pipeline</SelectItem>
-                                    <SelectItem value="support">Support Pipeline</SelectItem>
+                                    {pipelines.map((p: any) => (
+                                        <SelectItem key={String(p.id)} value={String(p.id)}>{p.name}</SelectItem>
+                                    ))}
+                                    {pipelines.length === 0 && <SelectItem value="" disabled>No pipelines found</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -1194,12 +1267,9 @@ export default function ContactProfileSidebar({
                                         <SelectValue placeholder="Select stage" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="lead">Lead</SelectItem>
-                                        <SelectItem value="qualified">Qualified</SelectItem>
-                                        <SelectItem value="proposal">Proposal</SelectItem>
-                                        <SelectItem value="negotiation">Negotiation</SelectItem>
-                                        <SelectItem value="won">Won</SelectItem>
-                                        <SelectItem value="lost">Lost</SelectItem>
+                                        {selectedPipelineSteps.map((s: any) => (
+                                            <SelectItem key={String(s.id)} value={String(s.id)}>{s.name}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -1345,16 +1415,14 @@ export default function ContactProfileSidebar({
                         <Button variant="outline" onClick={() => {
                             setIsAddOpportunityModalOpen(false);
                             setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
-                        }}>
+                        }} disabled={createOpportunityMutation.isPending}>
                             Cancel
                         </Button>
-                        <Button onClick={() => {
-                            // Handle save opportunity logic here
-                            console.log("New Opportunity:", newOpportunity);
-                            setIsAddOpportunityModalOpen(false);
-                            setNewOpportunity({ pipeline: "", stage: "", title: "", value: "", currency: "USD", closingDate: "", confidence: "5", agent: "", contact: "", tags: [], note: "" });
-                        }}>
-                            Save Opportunity
+                        <Button
+                            onClick={handleSaveOpportunity}
+                            disabled={!newOpportunity.title || !newOpportunity.pipeline || !newOpportunity.stage || createOpportunityMutation.isPending}
+                        >
+                            {createOpportunityMutation.isPending ? "Saving..." : "Save Opportunity"}
                         </Button>
                     </div>
                 </DialogContent>
@@ -1460,13 +1528,11 @@ export default function ContactProfileSidebar({
                         }}>
                             Cancel
                         </Button>
-                        <Button onClick={() => {
-                            // Handle save task logic here
-                            console.log("New Task:", newTask);
-                            setIsAddTaskModalOpen(false);
-                            setNewTask({ note: "", date: "", time: "", agent: "", contact: "" });
-                        }}>
-                            Save Task
+                        <Button
+                            onClick={handleSaveTask}
+                            disabled={!newTask.note || !newTask.date || !newTask.time || !contactId || createTaskMutation.isPending}
+                        >
+                            {createTaskMutation.isPending ? "Saving..." : "Save Task"}
                         </Button>
                     </div>
                 </DialogContent>

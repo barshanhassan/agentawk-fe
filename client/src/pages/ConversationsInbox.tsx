@@ -254,12 +254,14 @@ export default function ConversationsInbox() {
     // Patches the cached messages list in-place so the tick mark updates without
     // a full refetch (4 round-trips per send otherwise: pending → sent → delivered → read).
     const handleMessageStatus = (data: {
-      wa_message_id: string;
+      wa_message_id?: string;
+      insta_message_id?: string;
       wamid?: string;
       status: MessageStatus;
     }) => {
       if (!selectedConversation) return;
-      const targetId = Number(data.wa_message_id);
+      const rawId = data.wa_message_id ?? data.insta_message_id;
+      const targetId = Number(rawId);
       if (!Number.isFinite(targetId)) return;
 
       const key = ["/api/inbox/messages", selectedConversation];
@@ -456,13 +458,25 @@ export default function ConversationsInbox() {
     return undefined;
   };
 
-  const messages: Message[] = (messagesResponse?.messages || []).map((m: BackendMessage) => ({
-    id: m.id,
-    from: m.direction === 'OUTGOING' ? 'agent' : 'user',
-    text: m.text ?? m.message_text ?? '',
-    time: m.created_at || new Date().toISOString(),
-    status: normalizeStatus(m.status),
-  }));
+  const messages: Message[] = (messagesResponse?.messages || []).map((m: BackendMessage) => {
+    const raw = m as any;
+    // Separate image vs non-image uploads from parsed_files
+    const parsedFiles: Array<{ url: string; name: string; size: number; mime: string }> = raw.parsed_files || [];
+    const imageFiles = parsedFiles.filter((f) => f.mime?.startsWith('image/'));
+    const audioFiles = parsedFiles.filter((f) => f.mime?.startsWith('audio/'));
+    const otherFiles = parsedFiles.filter((f) => !f.mime?.startsWith('image/') && !f.mime?.startsWith('audio/'));
+
+    return {
+      id: m.id,
+      from: m.direction === 'OUTGOING' ? 'agent' : 'user',
+      text: m.text ?? m.message_text ?? '',
+      time: m.created_at || new Date().toISOString(),
+      status: normalizeStatus(m.status),
+      images: imageFiles.length > 0 ? imageFiles : undefined,
+      attachments: otherFiles.length > 0 ? otherFiles : undefined,
+      audio: audioFiles.length > 0 ? { url: audioFiles[0].url, name: audioFiles[0].name, size: audioFiles[0].size } : undefined,
+    };
+  });
 
   // Send message mutation
   // Mark a conversation read on the backend (mirrors replyagent's
@@ -676,7 +690,7 @@ export default function ConversationsInbox() {
 
   // ─── Real profile data (replaces hardcoded "Support Number 0123-123") ──
 
-  const { data: profileData } = useQuery<any>({
+  const { data: profileData, refetch: refetchProfileData } = useQuery<any>({
     queryKey: ["/api/inbox/get-profile-data", selectedConversation],
     queryFn: async () => {
       if (!selectedConversation) return null;
@@ -685,6 +699,50 @@ export default function ConversationsInbox() {
     },
     enabled: !!selectedConversation,
   });
+
+  // Contact ID derived from profileData for notes / custom-field API calls
+  const selectedContactId: number | null = profileData?.contact?.id ? Number(profileData.contact.id) : null;
+
+  // Fetch notes for the selected contact
+  const { data: notesResponse, refetch: refetchNotes } = useQuery<any>({
+    queryKey: ["/api/notes", selectedContactId],
+    queryFn: async () => {
+      if (!selectedContactId) return null;
+      const res = await apiRequest("GET", `/api/notes/${selectedContactId}`);
+      return res.json();
+    },
+    enabled: !!selectedContactId,
+  });
+
+  // Sync real notes into per-conversation state
+  useEffect(() => {
+    if (!selectedConversation || !notesResponse) return;
+    const texts = (notesResponse.notes || notesResponse || []).map((n: any) => n.text || n.content || "").filter(Boolean);
+    setNotesByConv((prev) => ({ ...prev, [selectedConversation]: texts }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notesResponse, selectedConversation]);
+
+  // Sync real profileData (tags + custom_fields) into per-conversation state
+  // whenever the profile query resolves for the selected conversation.
+  useEffect(() => {
+    if (!selectedConversation || !profileData) return;
+
+    // Custom fields → { label: value } map
+    if (Array.isArray(profileData.custom_fields) && profileData.custom_fields.length > 0) {
+      const attrs: Record<string, string> = {};
+      for (const f of profileData.custom_fields) {
+        if (f.label && f.value != null) attrs[f.label] = String(f.value);
+      }
+      setCustomAttributesByConv((prev) => ({ ...prev, [selectedConversation]: attrs }));
+    }
+
+    // Tags → array of tag names
+    if (Array.isArray(profileData.tags)) {
+      const tagNames = profileData.tags.map((t: any) => t.name).filter(Boolean);
+      setTagsByConv((prev) => ({ ...prev, [selectedConversation]: tagNames }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileData, selectedConversation]);
 
   useEffect(() => {
     if (!selectedConversation) return;
@@ -714,11 +772,30 @@ export default function ConversationsInbox() {
   }, [inboxResponse, isLoadingInbox, selectedConversation]);
 
   const sendMessageMutation = useMutation({
-    // Accept either a bare string (legacy) or a structured payload (the new
-    // shape with compose_mode / reply_to_message_id). Keeps backward
-    // compatibility for anywhere this mutation is fired from a quick-reply
-    // chip or the like that still passes a raw string.
-    mutationFn: async (input: string | { text: string; compose_mode?: string; reply_to_message_id?: number | null }) => {
+    mutationFn: async (input: string | { text: string; compose_mode?: string; reply_to_message_id?: number | null; files?: File[]; audio?: Blob | null }) => {
+      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
+
+      if (hasFiles && typeof input !== "string") {
+        // Use FormData for multipart uploads
+        const form = new FormData();
+        form.append("message_text", input.text || "");
+        form.append("compose_mode", input.compose_mode ?? "reply");
+        if (input.reply_to_message_id != null) form.append("reply_to_message_id", String(input.reply_to_message_id));
+        if (input.files) {
+          for (const f of input.files) form.append("files", f);
+        }
+        if (input.audio) {
+          form.append("files", new File([input.audio], "voice-message.webm", { type: "audio/webm" }));
+        }
+        const res = await fetch(`/api/inbox/send-message/${selectedConversation}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+          body: form,
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      }
+
       const payload =
         typeof input === "string"
           ? { message_text: input }
@@ -734,6 +811,8 @@ export default function ConversationsInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
       setMessageText("");
+      setAttachedFiles([]);
+      setRecordedAudio(null);
     }
   });
 
@@ -979,7 +1058,7 @@ export default function ConversationsInbox() {
     const conv = conversations.find((c: Conversation) => c.id === convId);
     setAssignedAgent(conv?.assignedAgent || null);
 
-    // TODO: hit API to mark as read
+    apiRequest("POST", `/api/inbox/seen/${convId}`).catch(() => {});
   };
 
   // Handle assignment - changes status to active and assigns agent
@@ -1052,19 +1131,7 @@ export default function ConversationsInbox() {
       };
     }
   }, [isDragging]);
-  const [customAttributesByConv, setCustomAttributesByConv] = useState<Record<number, Record<string, string>>>({
-    1: { "Customer Type": "Premium", "Last Purchase": "2024-01-15" },
-    2: { "Order Status": "Pending" },
-    3: {},
-    4: { "VIP": "Yes" },
-    5: {},
-    6: { "Refund Status": "Processing" },
-    7: {},
-    8: {},
-    9: {},
-    10: {},
-    11: {},
-  });
+  const [customAttributesByConv, setCustomAttributesByConv] = useState<Record<number, Record<string, string>>>({});
 
   // Basic details EDIT BUFFER per conversation (starts empty — real values come from the conversation's contact)
   const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, BasicDetails>>({});
@@ -1082,19 +1149,7 @@ export default function ConversationsInbox() {
     };
 
   // Involved teams state per conversation
-  const [involvedTeamsByConv, setInvolvedTeamsByConv] = useState<Record<number, string[]>>({
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-    5: [],
-    6: [],
-    7: [],
-    8: [],
-    9: [],
-    10: [],
-    11: [],
-  });
+  const [involvedTeamsByConv, setInvolvedTeamsByConv] = useState<Record<number, string[]>>({});
 
   // Team options
   // Real teams (replaces hardcoded options)
@@ -1104,10 +1159,8 @@ export default function ConversationsInbox() {
   });
   const teamOptions = (Array.isArray(teamsData) ? teamsData : []).map((t: any) => ({ id: String(t.id), name: t.name }));
 
-  // Tags state per conversation
-  const [tagsByConv, setTagsByConv] = useState<Record<number, string[]>>({
-    1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
-  });
+  // Tags state per conversation (keyed by conv id, values are tag names)
+  const [tagsByConv, setTagsByConv] = useState<Record<number, string[]>>({});
 
   // Tag options
   // Real tags (replaces hardcoded options)
@@ -1117,19 +1170,55 @@ export default function ConversationsInbox() {
   });
   const tagOptions = (tagsData?.tags || []).map((t: any) => ({ id: String(t.id), name: t.name }));
 
-  // Notes state per conversation
-  const [notesByConv, setNotesByConv] = useState<Record<number, string[]>>({
-    1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [],
+  // WhatsApp templates from broadcasts endpoint
+  const { data: templatesData } = useQuery({
+    queryKey: ["/api/broadcasts/templates"],
+    queryFn: async () => (await apiRequest("GET", "/api/broadcasts/templates")).json(),
   });
+  const broadcastTemplates: Template[] = useMemo(() => {
+    const raw: any[] = templatesData?.templates || [];
+    return raw.map((t: any, idx: number) => {
+      const components: any[] = Array.isArray(t.components) ? t.components : [];
+      const headerComp = components.find((c: any) => c.type === "HEADER");
+      const bodyComp = components.find((c: any) => c.type === "BODY");
+      const footerComp = components.find((c: any) => c.type === "FOOTER");
+      const buttonsComp = components.find((c: any) => c.type === "BUTTONS");
+      const bodyText: string = bodyComp?.text || "";
+      const varMatches = [...bodyText.matchAll(/\{\{(\d+)\}\}/g)];
+      const variables = varMatches.map((m) => m[1]);
+      const buttons = (buttonsComp?.buttons || []).map((b: any, bi: number) => {
+        if (b.type === "QUICK_REPLY") return { id: bi + 1, type: "quick-reply", buttonText: b.text };
+        if (b.type === "URL") return { id: bi + 1, type: "visit-website", buttonText: b.text, websiteUrl: b.url };
+        if (b.type === "PHONE_NUMBER") return { id: bi + 1, type: "call-phone", buttonText: b.text, phoneNumber: b.phone_number };
+        return { id: bi + 1, type: b.type?.toLowerCase() || "quick-reply", buttonText: b.text };
+      });
+      return {
+        id: idx + 1,
+        name: t.name,
+        header: headerComp?.text || "",
+        body: bodyText,
+        footer: footerComp?.text || "",
+        variables,
+        buttons,
+      } as Template;
+    });
+  }, [templatesData]);
+
+  // Notes state per conversation
+  const [notesByConv, setNotesByConv] = useState<Record<number, string[]>>({});
 
   // Update handlers for ContactProfileSidebar
   const handleUpdateBasicDetails = (details: BasicDetails) => {
     if (selectedConversation) {
       setBasicDetailsByConv({ ...basicDetailsByConv, [selectedConversation]: details });
-
-      // Update the conversation's displayName if it was changed
-      if (details.displayName !== undefined) {
-        // TODO: Update via API
+      const contactId = (profileData as any)?.contact?.id;
+      if (contactId) {
+        apiRequest("PATCH", `/api/contacts/${contactId}`, {
+          full_name: details.displayName,
+          email: details.email,
+          address: details.address,
+          gender: details.gender,
+        }).catch(() => {});
       }
     }
   };
@@ -1140,9 +1229,29 @@ export default function ConversationsInbox() {
     }
   };
 
-  const handleUpdateTags = (tags: string[]) => {
-    if (selectedConversation) {
-      setTagsByConv({ ...tagsByConv, [selectedConversation]: tags });
+  const handleUpdateTags = async (newTags: string[]) => {
+    if (!selectedConversation) return;
+    const current = tagsByConv[selectedConversation] || [];
+    const added = newTags.filter((t) => !current.includes(t));
+    const removed = current.filter((t) => !newTags.includes(t));
+
+    // Optimistic update
+    setTagsByConv({ ...tagsByConv, [selectedConversation]: newTags });
+
+    // Persist each add/remove via profile-action
+    for (const tag of added) {
+      try {
+        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "apply_tag", tag });
+      } catch (e) {
+        console.error("Failed to apply tag:", tag, e);
+      }
+    }
+    for (const tag of removed) {
+      try {
+        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "remove_tag", tag });
+      } catch (e) {
+        console.error("Failed to remove tag:", tag, e);
+      }
     }
   };
 
@@ -1152,9 +1261,29 @@ export default function ConversationsInbox() {
     }
   };
 
-  const handleUpdateNotes = (notes: string[]) => {
-    if (selectedConversation) {
-      setNotesByConv({ ...notesByConv, [selectedConversation]: notes });
+  const handleUpdateNotes = async (notes: string[]) => {
+    if (!selectedConversation) return;
+    const current = notesByConv[selectedConversation] || [];
+    const added = notes.filter((n) => !current.includes(n));
+
+    // Optimistic update
+    setNotesByConv({ ...notesByConv, [selectedConversation]: notes });
+
+    // Persist new notes via POST /api/notes/chat
+    const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
+    for (const text of added) {
+      if (!text.trim()) continue;
+      try {
+        await apiRequest("POST", "/api/notes/chat", {
+          text,
+          contact_id: selectedContactId,
+          modelable_type: (profileData?.inbox?.modelable_type) ?? null,
+          modelable_id: (profileData?.inbox?.modelable_id) ? Number(profileData.inbox.modelable_id) : null,
+        });
+        refetchNotes();
+      } catch (e) {
+        console.error("Failed to save note:", e);
+      }
     }
   };
 
@@ -1180,6 +1309,17 @@ export default function ConversationsInbox() {
 
   const [searchContactsQuery, setSearchContactsQuery] = useState("");
   const [limitReached, setLimitReached] = useState(false);
+
+  // Contacts search for "Make a Call" modal — declared after searchContactsQuery state
+  const { data: callContactsData } = useQuery({
+    queryKey: ["/api/contacts", searchContactsQuery],
+    queryFn: async () => {
+      const params = searchContactsQuery.trim() ? `?search=${encodeURIComponent(searchContactsQuery)}` : "";
+      return (await apiRequest("GET", `/api/contacts${params}`)).json();
+    },
+    enabled: isMakeCallModalOpen,
+  });
+  const callContacts: any[] = callContactsData?.contacts || callContactsData || [];
 
   // Template message state
   const [templatePhoneNumbers, setTemplatePhoneNumbers] = useState<string[]>([""]); // Start with just one empty input
@@ -1285,11 +1425,14 @@ export default function ConversationsInbox() {
   // context so the backend can persist this as a real reply, an internal note
   // (Note tab), or a reply-quoted message.
   const handleSendMessage = () => {
-    if (!messageText.trim()) return;
+    const hasContent = messageText.trim() || attachedFiles.length > 0 || recordedAudio;
+    if (!hasContent) return;
     sendMessageMutation.mutate({
       text: messageText,
-      compose_mode: composeMode,                  // 'reply' | 'note'
-      reply_to_message_id: replyingTo?.id ?? null, // specific-message quote
+      compose_mode: composeMode,
+      reply_to_message_id: replyingTo?.id ?? null,
+      files: attachedFiles.length > 0 ? attachedFiles : undefined,
+      audio: recordedAudio ?? undefined,
     } as any);
     setReplyingTo(null);
   };
@@ -1330,48 +1473,6 @@ export default function ConversationsInbox() {
     return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  // Dummy templates for testing
-  const dummyTemplates = [
-    {
-      id: 1,
-      name: "Welcome Message",
-      category: "Marketing",
-      header: "Welcome to {{company}}",
-      body: "Hello {{name}}, welcome to our service! We're excited to have you on board.",
-      footer: "Thank you for choosing us",
-      variables: ["name", "company"],
-      buttons: [
-        { id: 1, type: "visit-website", buttonText: "Visit Website", websiteUrl: "https://example.com" },
-        { id: 2, type: "quick-reply", buttonText: "Learn More" }
-      ]
-    },
-    {
-      id: 2,
-      name: "Order Confirmation",
-      category: "Transactional",
-      header: "Order #{{order_id}}",
-      body: "Your order has been confirmed. Total: {{amount}}. Delivery in {{days}} days.",
-      footer: "Track your order anytime",
-      variables: ["order_id", "amount", "days"],
-      buttons: [
-        { id: 1, type: "visit-website", buttonText: "Track Order", websiteUrl: "https://example.com/track" },
-        { id: 2, type: "call-phone", buttonText: "Call Support", country: "US", phoneNumber: "1234567890" }
-      ]
-    },
-    {
-      id: 3,
-      name: "Appointment Reminder",
-      category: "Reminder",
-      header: "Appointment Reminder",
-      body: "Hi {{name}}, reminder: your appointment is on {{date}} at {{time}}.",
-      footer: "Reply CONFIRM to confirm",
-      variables: ["name", "date", "time"],
-      buttons: [
-        { id: 1, type: "quick-reply", buttonText: "Confirm" },
-        { id: 2, type: "quick-reply", buttonText: "Reschedule" }
-      ]
-    }
-  ];
 
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
@@ -1511,106 +1612,33 @@ export default function ConversationsInbox() {
     }
   };
 
-  // Mock contacts with WhatsApp call consent data
-  const mockContacts = [
-    {
-      id: 1,
-      name: "John Doe",
-      number: "+1 (555) 000-0000",
-      pfp: "JD",
-      callConsent: "Active",
-      callsUsed: 2,
-      callsMax: 5,
-      renewsIn: "24h",
-      expiryDays: 3,
-      expiryHours: 12
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      number: "+1 (555) 000-0001",
-      pfp: "JS",
-      callConsent: "Expired",
-      callsUsed: 5,
-      callsMax: 5,
-      renewsIn: "0h",
-      expiryDays: 0,
-      expiryHours: 0
-    },
-    {
-      id: 3,
-      name: "Michael Chen",
-      number: "+1 (555) 000-0002",
-      pfp: "MC",
-      callConsent: "Active",
-      callsUsed: 0,
-      callsMax: 5,
-      renewsIn: "18h",
-      expiryDays: 2,
-      expiryHours: 8
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      number: "+1 (555) 000-0003",
-      pfp: "SW",
-      callConsent: "Active",
-      callsUsed: 4,
-      callsMax: 5,
-      renewsIn: "6h",
-      expiryDays: 1,
-      expiryHours: 18
-    },
-    {
-      id: 5,
-      name: "Bob Johnson",
-      number: "+1 (555) 000-0004",
-      pfp: "BJ",
-      callConsent: "Expired",
-      callsUsed: 5,
-      callsMax: 5,
-      renewsIn: "12h",
-      expiryDays: 0,
-      expiryHours: 0
-    },
-  ];
 
-  const handleCheckPermission = () => {
-    setCallPermissionChecked(true);
-
-    // Check if number is in contacts
-    const contact = mockContacts.find(c => c.number === phoneNumber);
-
-    if (contact) {
-      // Use data from contact
-      setHasCallPermission(contact.callConsent === "Active");
-      setSelectedContact({
-        id: contact.id,
-        name: contact.name,
-        number: phoneNumber,
-        pfp: contact.pfp,
-        callConsent: contact.callConsent,
-        callsUsed: contact.callsUsed,
-        callsMax: contact.callsMax,
-        renewsIn: contact.renewsIn,
-        expiryDays: contact.expiryDays
+  const handleCheckPermission = async () => {
+    if (!phoneNumber.trim()) return;
+    setCallPermissionChecked(false);
+    try {
+      const res = await apiRequest("GET", `/api/contacts?search=${encodeURIComponent(phoneNumber.trim())}`);
+      const data = await res.json();
+      const contacts: any[] = data?.contacts || data || [];
+      const match = contacts.find((c: any) => {
+        const num = (c.full_mobile_number || c.mobile_number || "").replace(/\s+/g, "");
+        return num === phoneNumber.replace(/\s+/g, "") || num.endsWith(phoneNumber.replace(/\D/g, "").slice(-8));
       });
-    } else {
-      // Number not in contacts - random chance
-      const hasPermission = Math.random() > 0.5;
-      setHasCallPermission(hasPermission);
-      setSelectedContact({
-        id: 0,
-        name: "Unknown Contact",
+      const name = match
+        ? (match.full_name || `${match.first_name || ""} ${match.last_name || ""}`.trim() || phoneNumber)
+        : phoneNumber;
+      setHasCallPermission(!!match);
+      setSelectedContact(match ? {
+        id: Number(match.id),
+        name,
         number: phoneNumber,
-        callConsent: hasPermission ? "Active" : "Denied",
-        callsUsed: hasPermission ? 0 : undefined,
-        callsMax: hasPermission ? 5 : undefined,
-        renewsIn: hasPermission ? "24h" : undefined,
-        expiryDays: hasPermission ? 3 : undefined,
-        expiryHours: hasPermission ? 12 : undefined
-      });
+        callConsent: "Active",
+      } : null);
+    } catch {
+      setHasCallPermission(false);
+      setSelectedContact(null);
     }
+    setCallPermissionChecked(true);
   };
 
   // Helper to handle file downloads
@@ -2825,7 +2853,7 @@ export default function ConversationsInbox() {
                       size="icon"
                       data-testid="button-send"
                       onClick={handleSendMessage}
-                      disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
+                      disabled={(!messageText.trim() && attachedFiles.length === 0 && !recordedAudio) || sendMessageMutation.isPending}
                     >
                       <Send size={18} color="white" />
                     </Button>
@@ -2895,6 +2923,7 @@ export default function ConversationsInbox() {
               messages={messages || []}
               onScrollToMessage={handleScrollToMessage}
               profileData={profileData}
+              onRefreshProfile={() => refetchProfileData()}
             />
           )
         }
@@ -3036,24 +3065,7 @@ export default function ConversationsInbox() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs font-medium text-green-600">Call Consent: Active</p>
-                            <p className="text-xs text-muted-foreground">Expires in {selectedContact.expiryDays}d {selectedContact.expiryHours}h</p>
-                          </div>
-                        </div>
-
-                        <div className="border-t pt-4 space-y-2">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-medium">Tries {selectedContact.callsUsed}/{selectedContact.callsMax}</span>
-                            <span className="text-xs text-muted-foreground">Renews in {selectedContact.renewsIn}</span>
-                          </div>
-                          <div className="flex gap-1">
-                            {Array.from({ length: selectedContact.callsMax ?? 0 }).map((_, index) => (
-                              <div
-                                key={index}
-                                className={`flex-1 h-2 rounded-full transition-colors ${index < (selectedContact.callsUsed ?? 0) ? "bg-primary" : "bg-muted"
-                                  }`}
-                              />
-                            ))}
+                            <p className="text-xs font-medium text-green-600">Contact Found</p>
                           </div>
                         </div>
                       </div>
@@ -3061,7 +3073,7 @@ export default function ConversationsInbox() {
 
                       <div className="p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/30 dark:border-red-800">
                         <p className="text-sm text-red-800 dark:text-red-300">
-                          <strong>Permission Denied</strong> - Call consent not enabled for this contact.
+                          <strong>Contact Not Found</strong> - No contact with this number exists in your workspace.
                         </p>
                       </div>
                     )}
@@ -3112,21 +3124,25 @@ export default function ConversationsInbox() {
 
                 <ScrollArea className="h-64 border border-input rounded-lg">
                   <div className="space-y-2 p-3">
-                    {mockContacts
-                      .filter(contact =>
-                        contact.name.toLowerCase().includes(searchContactsQuery.toLowerCase()) ||
-                        contact.number.includes(searchContactsQuery)
-                      )
-                      .map(contact => (
+                    {callContacts.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        {searchContactsQuery.trim() ? "No contacts found" : "Type to search contacts"}
+                      </p>
+                    )}
+                    {callContacts.map((contact: any) => {
+                        const name = contact.full_name || `${contact.first_name || ""} ${contact.last_name || ""}`.trim() || "Unknown";
+                        const number = contact.full_mobile_number || contact.mobile_number || "";
+                        const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+                        return (
                         <div
                           key={contact.id}
                           onClick={() => {
-                            setSelectedContact(contact);
-                            setPhoneNumber(contact.number);
+                            setSelectedContact({ id: Number(contact.id), name, number, callConsent: "Active" });
+                            setPhoneNumber(number);
                             setCallPermissionChecked(true);
-                            setHasCallPermission(contact.callConsent === "Active");
+                            setHasCallPermission(true);
                           }}
-                          className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${selectedContact?.id === contact.id
+                          className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${selectedContact?.id === Number(contact.id)
                             ? "border-primary bg-primary/10"
                             : "border-input"
                             }`}
@@ -3134,8 +3150,8 @@ export default function ConversationsInbox() {
                           <div className="flex gap-2">
                             {/* Left: Avatar */}
                             <Avatar className="h-11 w-11 flex-shrink-0">
-                              <AvatarFallback className={getAvatarColor(contact.name)}>
-                                {contact.pfp}
+                              <AvatarFallback className={getAvatarColor(name)}>
+                                {initials}
                               </AvatarFallback>
                             </Avatar>
 
@@ -3143,29 +3159,17 @@ export default function ConversationsInbox() {
                             <div className="flex-1 space-y-1">
                               {/* Row 1: Name and Badge */}
                               <div className="flex items-center justify-between">
-                                <p className="font-medium text-sm">{contact.name}</p>
-                                <div className={`px-2 py-1 rounded text-xs font-medium ${contact.callConsent === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                                  {contact.callConsent === "Active" ? "Active" : "Expired"}
+                                <p className="font-medium text-sm">{name}</p>
+                                <div className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                                  Found
                                 </div>
                               </div>
-
-                              {/* Row 2: Tries/Renews and Expires */}
-                              {contact.callConsent === "Active" ? (
-                                <div className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-1">
-                                    <span className="font-medium">{contact.callsUsed}/{contact.callsMax} tries</span>
-                                    <span className="text-muted-foreground">•</span>
-                                    <span className="text-muted-foreground">Renews in {contact.renewsIn}</span>
-                                  </div>
-                                  <span className="text-muted-foreground">Expires {contact.expiryDays}d {contact.expiryHours}h</span>
-                                </div>
-                              ) : (
-                                <p className="text-xs text-muted-foreground italic">Request consent again to enable calling</p>
-                              )}
+                              <p className="text-xs text-muted-foreground">{number || "No number on file"}</p>
                             </div>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 </ScrollArea>
 
@@ -3265,11 +3269,11 @@ export default function ConversationsInbox() {
                     <label className="text-sm font-medium mb-2 block">WhatsApp Template<span className="text-red-500 pl-0.5">*</span></label>
                     <div className="space-y-3">
                       <CustomDropdown
-                        options={dummyTemplates.map(t => ({ id: String(t.id), name: t.name }))}
+                        options={broadcastTemplates.map(t => ({ id: String(t.id), name: t.name }))}
                         selected={selectedTemplate ? [String(selectedTemplate.id)] : []}
                         onChange={(selected) => {
                           if (selected.length > 0) {
-                            const template = dummyTemplates.find(t => String(t.id) === selected[0]);
+                            const template = broadcastTemplates.find(t => String(t.id) === selected[0]);
                             if (template) {
                               setSelectedTemplate(template);
                               setTemplateVariables({});
@@ -3280,7 +3284,7 @@ export default function ConversationsInbox() {
                         width="100%"
                         showSelectedOption={true}
                       />
-                      {dummyTemplates.length === 0 && (
+                      {broadcastTemplates.length === 0 && (
                         <p className="text-sm text-muted-foreground">
                           You don't have any templates yet. Create one to send messages.{" "}
                           <a
