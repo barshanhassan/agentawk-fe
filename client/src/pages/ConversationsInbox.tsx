@@ -233,20 +233,21 @@ export default function ConversationsInbox() {
     const handleNewMessage = (data: SocketData) => {
       console.log("Real-time message received:", data);
 
-      // Invalidate the EXACT keys this page uses (matches useQuery above).
-      // The old keys (/api/inbox/get-inbox-list, /api/inbox/get-chat-messages)
-      // never matched, so the UI silently never refreshed.
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
 
-      // If current chat is open, refresh messages too.
       if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
-        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+        // Outgoing messages are already in cache from the optimistic update — skip refetch.
+        // Inbound messages need a refetch to get the enriched row (parsed_files, reactions).
+        if ((data.message as any)?.direction !== 'OUTGOING') {
+          queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+        }
       }
 
-      toast({
-        title: "New Message",
-        description: data.message?.text || "New message received",
-      });
+      if ((data.message as any)?.direction !== 'OUTGOING') {
+        toast({
+          description: (data.message as any)?.text || "New message received",
+        });
+      }
     };
 
     // Delivery state delta for outgoing WhatsApp messages.
@@ -287,13 +288,21 @@ export default function ConversationsInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
     };
 
+    const handleMessageReaction = (data: any) => {
+      if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      }
+    };
+
     socket.on("new_message", handleNewMessage);
     socket.on("message_status", handleMessageStatus);
     socket.on("inbox_read", handleInboxRead);
+    socket.on("message_reaction", handleMessageReaction);
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("message_status", handleMessageStatus);
       socket.off("inbox_read", handleInboxRead);
+      socket.off("message_reaction", handleMessageReaction);
     };
   }, [socket, selectedConversation, queryClient, toast]);
 
@@ -397,18 +406,23 @@ export default function ConversationsInbox() {
   };
 
   // Map backend conversations to frontend format
-  const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => ({
-    id: Number(item.id),
-    name: item.contacts?.full_name || item.contacts?.first_name || 'Unknown',
-    displayName: item.contacts?.full_name || item.contacts?.first_name || '',
-    phoneNumber: item.contacts?.mobile_number || '',
-    lastMessage: item.last_message_text || '',
-    time: item.updated_at || new Date().toISOString(),
-    unread: item.unread_count || 0,
-    status: mapStatus(item.status),
-    assignedAgent: item.users?.name || null,
-    channel: detectChannel(item.modelable_type),
-  }));
+  const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => {
+    const rawName = item.contacts?.full_name || item.contacts?.first_name || '';
+    // If the stored name is a numeric Instagram user ID (profile fetch failed), show a friendlier label
+    const resolvedName = rawName && /^\d+$/.test(rawName) ? 'Instagram User' : rawName;
+    return {
+      id: Number(item.id),
+      name: resolvedName || 'Unknown',
+      displayName: resolvedName,
+      phoneNumber: item.contacts?.mobile_number || '',
+      lastMessage: item.last_message_text || '',
+      time: item.updated_at || new Date().toISOString(),
+      unread: item.unread_count || 0,
+      status: mapStatus(item.status),
+      assignedAgent: item.users?.name || null,
+      channel: detectChannel(item.modelable_type),
+    };
+  });
 
 
   const [showContactPanel, setShowContactPanel] = useState(false);
@@ -463,8 +477,14 @@ export default function ConversationsInbox() {
     // Separate image vs non-image uploads from parsed_files
     const parsedFiles: Array<{ url: string; name: string; size: number; mime: string }> = raw.parsed_files || [];
     const imageFiles = parsedFiles.filter((f) => f.mime?.startsWith('image/'));
-    const audioFiles = parsedFiles.filter((f) => f.mime?.startsWith('audio/'));
-    const otherFiles = parsedFiles.filter((f) => !f.mime?.startsWith('image/') && !f.mime?.startsWith('audio/'));
+    const audioFiles = parsedFiles.filter((f) =>
+      f.mime?.startsWith('audio/') || f.name?.toLowerCase().startsWith('voice-message')
+    );
+    const otherFiles = parsedFiles.filter((f) =>
+      !f.mime?.startsWith('image/') &&
+      !f.mime?.startsWith('audio/') &&
+      !f.name?.toLowerCase().startsWith('voice-message')
+    );
 
     return {
       id: m.id,
@@ -475,6 +495,7 @@ export default function ConversationsInbox() {
       images: imageFiles.length > 0 ? imageFiles : undefined,
       attachments: otherFiles.length > 0 ? otherFiles : undefined,
       audio: audioFiles.length > 0 ? { url: audioFiles[0].url, name: audioFiles[0].name, size: audioFiles[0].size } : undefined,
+      reactions: Array.isArray(raw.reactions) ? raw.reactions : [],
     };
   });
 
@@ -666,9 +687,32 @@ export default function ConversationsInbox() {
       );
       return res.json();
     },
-    onSuccess: () => {
-      if (selectedConversation) {
-        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+    onMutate: async (vars) => {
+      // Optimistic reaction — update cache immediately without waiting for server
+      if (!selectedConversation) return;
+      await queryClient.cancelQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      const prev = queryClient.getQueryData(["/api/inbox/messages", selectedConversation]);
+      queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => {
+        if (!old?.messages) return old;
+        return {
+          ...old,
+          messages: old.messages.map((m: any) => {
+            if (Number(m.id) !== Number(vars.messageId)) return m;
+            const existing: any[] = Array.isArray(m.reactions) ? m.reactions : [];
+            const outgoing = existing.find((r: any) => r.direction === 'OUTGOING');
+            // Toggle off if same emoji, otherwise replace
+            const newReactions = outgoing?.reaction === vars.reaction
+              ? existing.filter((r: any) => r.direction !== 'OUTGOING')
+              : [...existing.filter((r: any) => r.direction !== 'OUTGOING'), { reaction: vars.reaction, direction: 'OUTGOING' }];
+            return { ...m, reactions: newReactions };
+          }),
+        };
+      });
+      return { prev };
+    },
+    onError: (_err, _vars, context: any) => {
+      if (context?.prev !== undefined && selectedConversation) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], context.prev);
       }
     },
   });
@@ -789,7 +833,7 @@ export default function ConversationsInbox() {
         }
         const res = await fetch(`/api/inbox/send-message/${selectedConversation}`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}` },
           body: form,
         });
         if (!res.ok) throw new Error(await res.text());
@@ -807,13 +851,64 @@ export default function ConversationsInbox() {
       const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, payload);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+    onMutate: async (input) => {
+      // Cancel any in-flight refetch so it doesn't overwrite the optimistic message
+      await queryClient.cancelQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      const previousData = queryClient.getQueryData(["/api/inbox/messages", selectedConversation]);
+      const text = typeof input === "string" ? input : (input.text || "");
+      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
+      const tempId = `opt_${Date.now()}`;
+      const optimisticMsg = {
+        id: tempId,
+        direction: "OUTGOING",
+        text,
+        message_text: text,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: "pending",
+        type: hasFiles ? (input as any).audio ? "audio" : "image" : "text",
+        reactions: [],
+        parsed_files: [],
+      };
+      if (selectedConversation && previousData) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => ({
+          ...old,
+          messages: [...(old?.messages || []), optimisticMsg],
+        }));
+      }
       setMessageText("");
       setAttachedFiles([]);
       setRecordedAudio(null);
-    }
+      return { previousData, tempId };
+    },
+    onSuccess: (data: any, input, context: any) => {
+      const realMsg = data?.data;
+      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
+      queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (prev: any) => {
+        if (!prev?.messages) return prev;
+        const withoutOptimistic = prev.messages.filter((m: any) => m.id !== context?.tempId);
+        if (!hasFiles && realMsg) {
+          const alreadyThere = withoutOptimistic.some((m: any) => Number(m.id) === Number(realMsg.id));
+          if (!alreadyThere) {
+            return { ...prev, messages: [...withoutOptimistic, { ...realMsg, reactions: realMsg.reactions ?? [] }] };
+          }
+          return { ...prev, messages: withoutOptimistic };
+        }
+        // File messages: remove optimistic placeholder and let the socket/refetch fill in the real one
+        return { ...prev, messages: withoutOptimistic };
+      });
+      if (hasFiles) {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+    },
+    onError: (err: Error, _input, context: any) => {
+      if (context?.previousData !== undefined) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], context.previousData);
+      }
+      setMessageText(typeof _input === "string" ? _input : (_input as any).text || "");
+      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+    },
   });
 
   // Update status mutation
@@ -1373,7 +1468,19 @@ export default function ConversationsInbox() {
   // Handle file attachment
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
-    if (files) {
+    if (files && files.length > 0) {
+      const isInstagram = selectedConvObj?.channel === 'instagram';
+      if (isInstagram) {
+        const unsupported = Array.from(files).filter((f) => {
+          const m = f.type;
+          return !m.startsWith('image/') && !m.startsWith('video/') && !m.startsWith('audio/');
+        });
+        if (unsupported.length > 0) {
+          toast({ title: 'Instagram does not support document files. Only images, videos, and audio can be sent.', variant: 'destructive' });
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        }
+      }
       setAttachedFiles([...attachedFiles, ...Array.from(files)]);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -2390,19 +2497,6 @@ export default function ConversationsInbox() {
                           )}
 
                           <div id={`message-${msg.id}`} className={`relative max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
-                            {/* Existing reactions — chip row at top of bubble. */}
-                            {Array.isArray((msg as any).reactions) && (msg as any).reactions.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-1">
-                                {(msg as any).reactions.map((r: any, ri: number) => (
-                                  <span
-                                    key={ri}
-                                    className="text-[11px] bg-white/70 dark:bg-slate-900/70 px-1.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700"
-                                  >
-                                    {r.reaction ?? r.emoji ?? ''}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
                             {msg.text && <p className="text-sm">{msg.text}</p>}
 
                             {/* Images */}
@@ -2490,7 +2584,7 @@ export default function ConversationsInbox() {
                                     }}
                                     controlsList="nodownload"
                                   >
-                                    <source src={msg.audio!.url} type="audio/webm" />
+                                    <source src={msg.audio!.url} type={msg.audio!.url?.includes('.m4a') ? 'audio/mp4' : msg.audio!.url?.includes('.mp4') ? 'video/mp4' : 'audio/webm'} />
                                     Your browser does not support the audio element.
                                   </audio>
                                   <div className="flex items-center justify-between mt-2">
@@ -2498,7 +2592,7 @@ export default function ConversationsInbox() {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDownload(msg.audio!.url, `voice-message-${msg.id}.webm`);
+                                        handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`);
                                       }}
                                       className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                                       title="Download voice message"
@@ -2510,11 +2604,14 @@ export default function ConversationsInbox() {
                               </div>
                             )}
 
-                            <p className={`text-xs mt-1 flex items-center gap-1 ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
+                            <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
                               <span>{formatMessageTime(msg.time)}</span>
                               {msg.from === "agent" && msg.status && (
                                 <MessageStatusTick status={msg.status} />
                               )}
+                              {Array.isArray((msg as any).reactions) && (msg as any).reactions.map((r: any, ri: number) => (
+                                <span key={ri} className="text-base leading-none">{r.reaction ?? r.emoji ?? ''}</span>
+                              ))}
                             </p>
                           </div>
 
@@ -2736,7 +2833,7 @@ export default function ConversationsInbox() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
-                          handleSendMessage();
+                          if (!sendMessageMutation.isPending) handleSendMessage();
                         }
                       }}
                     />
