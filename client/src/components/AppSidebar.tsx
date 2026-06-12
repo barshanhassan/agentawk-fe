@@ -115,14 +115,12 @@ export default function AppSidebar() {
     }
   }, [brandingData]);
 
-  // Notifications — top-bell dropdown. Preview-mode shows 5, expand-mode shows up to 100.
-  const [notifShowAll, setNotifShowAll] = useState(false);
+  // Notifications — top-bell dropdown. Shows 2 previews; "View all" navigates to /notifications page.
   const [notifOpen, setNotifOpen] = useState(false);
-  const notifLimit = notifShowAll ? 100 : 5;
   const { data: notifResp, refetch: refetchNotifs } = useQuery<any>({
-    queryKey: ["/api/notifications", { limit: notifLimit }],
+    queryKey: ["/api/notifications", { limit: 2 }],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/notifications?limit=${notifLimit}`);
+      const res = await apiRequest("GET", `/api/notifications?limit=2`);
       return res.json();
     },
     refetchInterval: 15 * 1000,
@@ -131,7 +129,6 @@ export default function AppSidebar() {
   });
   const notifications: any[] = notifResp?.notifications || [];
   const unreadCount: number = notifResp?.unread || 0;
-  const totalCount: number = notifResp?.total || 0;
 
   /** Human-readable relative time without pulling in a date library. */
   const formatRelativeTime = (iso: string | Date | null | undefined): string => {
@@ -152,8 +149,8 @@ export default function AppSidebar() {
         queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       } catch {}
     }
-    const url = n.data?.action_url || '/conversations/inbox';
-    setLocation(url);
+    setNotifOpen(false);
+    setLocation("/notifications");
   };
 
   /** Map a notification slug to the right icon/colour. */
@@ -549,7 +546,9 @@ export default function AppSidebar() {
               )}>
                 <Bell size={20} className="group-hover:rotate-12 transition-transform" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white dark:border-[#0f172a] leading-none">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
                 )}
               </button>
             </DropdownMenuTrigger>
@@ -560,7 +559,7 @@ export default function AppSidebar() {
               <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                 <h3 className="font-bold text-sm">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{unreadCount} NEW</span>
+                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{unreadCount} unread</span>
                 )}
               </div>
               <div className="max-h-96 overflow-y-auto p-1">
@@ -614,21 +613,17 @@ export default function AppSidebar() {
                   })
                 )}
               </div>
-              {totalCount > 5 && (
-                <div className="p-2 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    onClick={(e) => {
-                      // Keep dropdown open while toggling list size.
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setNotifShowAll((v) => !v);
-                    }}
-                    className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
-                  >
-                    {notifShowAll ? "Show Less" : `View All Notifications (${totalCount})`}
-                  </button>
-                </div>
-              )}
+              <div className="p-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => {
+                    setNotifOpen(false);
+                    setLocation("/notifications");
+                  }}
+                  className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
+                >
+                  View all notifications
+                </button>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 

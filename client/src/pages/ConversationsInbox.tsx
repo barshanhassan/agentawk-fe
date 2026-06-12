@@ -62,6 +62,7 @@ interface Conversation {
   unread: number;
   status: string;
   assignedAgent: string | null;
+  assignedAgentName: string | null;
   channel: string;
 }
 
@@ -110,7 +111,7 @@ interface BackendConversation {
   updated_at?: string;
   unread_count?: number;
   status?: string;
-  users?: { name?: string };
+  users?: { id?: number | string; name?: string; full_name?: string; first_name?: string; last_name?: string };
   modelable_type?: string;
 }
 
@@ -211,7 +212,23 @@ export default function ConversationsInbox() {
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(() => {
+    try {
+      const saved = sessionStorage.getItem("inbox_selected_conv");
+      return saved ? parseInt(saved, 10) : null;
+    } catch { return null; }
+  });
+
+  // Persist selected conversation so page refresh restores it
+  useEffect(() => {
+    try {
+      if (selectedConversation != null) {
+        sessionStorage.setItem("inbox_selected_conv", String(selectedConversation));
+      } else {
+        sessionStorage.removeItem("inbox_selected_conv");
+      }
+    } catch {}
+  }, [selectedConversation]);
 
   // WebSocket Integration. Pull workspace_id from the JWT-backed user_info blob
   // (set at login) instead of hardcoding 1 — otherwise multi-workspace agents see
@@ -467,6 +484,9 @@ export default function ConversationsInbox() {
       unread: item.unread_count || 0,
       status: mapStatus(item.status),
       assignedAgent: item.users?.id?.toString() || null,
+      assignedAgentName: item.users
+        ? (item.users.full_name || `${item.users.first_name || ''} ${item.users.last_name || ''}`.trim() || item.users.name || null)
+        : null,
       channel: detectChannel(item.modelable_type),
     };
   });
@@ -507,7 +527,10 @@ export default function ConversationsInbox() {
       const res = await apiRequest("POST", `/api/inbox/messages/${selectedConversation}`, {});
       return res.json();
     },
-    enabled: !!selectedConversation
+    enabled: !!selectedConversation,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchInterval: 5000,
   });
 
   const normalizeStatus = (s?: string): MessageStatus | undefined => {
@@ -831,8 +854,10 @@ export default function ConversationsInbox() {
   useEffect(() => {
     if (!selectedConversation || !profileData) return;
 
-    // Custom fields → { label: value } map
-    if (Array.isArray(profileData.custom_fields) && profileData.custom_fields.length > 0) {
+    // Workspace-defined custom fields — store full objects (including null values)
+    if (Array.isArray(profileData.custom_fields)) {
+      setProfileFieldsByConv((prev) => ({ ...prev, [selectedConversation]: profileData.custom_fields }));
+      // Also keep manual customAttributes for non-null values (chips)
       const attrs: Record<string, string> = {};
       for (const f of profileData.custom_fields) {
         if (f.label && f.value != null) attrs[f.label] = String(f.value);
@@ -840,10 +865,10 @@ export default function ConversationsInbox() {
       setCustomAttributesByConv((prev) => ({ ...prev, [selectedConversation]: attrs }));
     }
 
-    // Tags → array of tag names
+    // Tags → array of tag IDs (CustomDropdown uses IDs for selection state)
     if (Array.isArray(profileData.tags)) {
-      const tagNames = profileData.tags.map((t: any) => t.name).filter(Boolean);
-      setTagsByConv((prev) => ({ ...prev, [selectedConversation]: tagNames }));
+      const tagIds = profileData.tags.map((t: any) => String(t.id)).filter(Boolean);
+      setTagsByConv((prev) => ({ ...prev, [selectedConversation]: tagIds }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileData, selectedConversation]);
@@ -856,6 +881,18 @@ export default function ConversationsInbox() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
+
+  // On page refresh, selectedConversation is restored from sessionStorage but
+  // handleSelectConversation is never called, so assignedAgent stays null.
+  // This effect re-syncs assignedAgent whenever conversations list loads/changes.
+  useEffect(() => {
+    if (!selectedConversation || assignedAgent !== null) return;
+    const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
+    if (!conv) return;
+    const agentId = conv.assignedAgent || null;
+    setAssignedAgent(agentId && currentUser.id && agentId === currentUser.id ? "self" : agentId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, selectedConversation]);
 
   // Auto-clear the right-pane selection when the currently selected
   // conversation is no longer in the visible list (e.g. tab/filter switch
@@ -1307,6 +1344,7 @@ export default function ConversationsInbox() {
     }
   }, [isDragging]);
   const [customAttributesByConv, setCustomAttributesByConv] = useState<Record<number, Record<string, string>>>({});
+  const [profileFieldsByConv, setProfileFieldsByConv] = useState<Record<number, any[]>>({});
 
   // Basic details EDIT BUFFER per conversation (starts empty — real values come from the conversation's contact)
   const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, BasicDetails>>({});
@@ -1410,22 +1448,26 @@ export default function ConversationsInbox() {
     const added = newTags.filter((t) => !current.includes(t));
     const removed = current.filter((t) => !newTags.includes(t));
 
-    // Optimistic update
+    // Optimistic update (IDs)
     setTagsByConv({ ...tagsByConv, [selectedConversation]: newTags });
 
-    // Persist each add/remove via profile-action
-    for (const tag of added) {
+    // Backend profile-action expects tag NAME — resolve from tagOptions
+    for (const tagId of added) {
+      const tagName = tagOptions.find((t) => t.id === tagId)?.name;
+      if (!tagName) continue;
       try {
-        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "apply_tag", tag });
+        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "apply_tag", tag: tagName });
       } catch (e) {
-        console.error("Failed to apply tag:", tag, e);
+        console.error("Failed to apply tag:", tagName, e);
       }
     }
-    for (const tag of removed) {
+    for (const tagId of removed) {
+      const tagName = tagOptions.find((t) => t.id === tagId)?.name;
+      if (!tagName) continue;
       try {
-        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "remove_tag", tag });
+        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "remove_tag", tag: tagName });
       } catch (e) {
-        console.error("Failed to remove tag:", tag, e);
+        console.error("Failed to remove tag:", tagName, e);
       }
     }
   };
@@ -1434,6 +1476,15 @@ export default function ConversationsInbox() {
     if (selectedConversation) {
       setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation]: attributes });
     }
+  };
+
+  const handleSaveCustomFieldValue = async (fieldId: string, value: string) => {
+    const contactId = (profileData as any)?.contact?.id;
+    if (!contactId) return;
+    try {
+      await apiRequest('POST', `/api/custom-fields/contact/${contactId}/value`, { field_id: fieldId, value });
+      refetchProfileData();
+    } catch (_e) {}
   };
 
   const handleUpdateNotes = async (notes: string[]) => {
@@ -2322,8 +2373,8 @@ export default function ConversationsInbox() {
                             <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time)}</span>
                           </div>
                           <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{conv.lastMessage}</p>
-                          {conv.assignedAgent && conv.assignedAgent !== "self" && (
-                            <p className="text-xs text-muted-foreground">Assigned to: <span className="font-medium">{getAgentName(conv.assignedAgent)}</span></p>
+                          {conv.assignedAgent && (
+                            <p className="text-xs text-muted-foreground">Assigned to: <span className="font-medium">{conv.assignedAgentName || getAgentName(conv.assignedAgent)}</span></p>
                           )}
                         </div>
                       </div>
@@ -2351,6 +2402,12 @@ export default function ConversationsInbox() {
         {/* Main Content Area */}
         {
           selectedConversation ? (
+            isLoadingInbox && !selectedConvObj ? (
+              // Conversations still loading after refresh — show skeleton to avoid "Unknown" flash
+              <Card className="flex-1 flex flex-col border-l-0 rounded-none items-center justify-center">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </Card>
+            ) : (
             <Card className="flex-1 flex flex-col border-l-0 rounded-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-3">
@@ -3059,6 +3116,7 @@ export default function ConversationsInbox() {
                 </div>
               )}
             </Card>
+            )
           ) : (
             <Card className="flex-1 flex flex-col items-center justify-center border-l-0 rounded-none">
               <div className="text-center">
@@ -3106,6 +3164,8 @@ export default function ConversationsInbox() {
               tags={tagsByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || []}
               onUpdateTags={handleUpdateTags}
               tagOptions={tagOptions}
+              profileCustomFields={profileFieldsByConv[selectedConversation || 0] || []}
+              onSaveCustomFieldValue={handleSaveCustomFieldValue}
               customAttributes={customAttributesByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || {}}
               onUpdateCustomAttributes={handleUpdateCustomAttributes}
               notes={notesByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || []}

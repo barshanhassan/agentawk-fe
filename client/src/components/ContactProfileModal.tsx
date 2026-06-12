@@ -384,13 +384,13 @@ export default function ContactProfileModal({
   // ─── Server state ─────────────────────────────────────────────────
   const { data: detail, isLoading } = useQuery({
     queryKey: ["/api/contacts", contactId, "profile"],
-    queryFn: () => apiGet(`/api/contacts/${contactId}`),
+    // Silent queryFn — swallow any fetch error so the global handleApiError
+    // toast doesn't fire when the modal opens with a stale / wrong contactId.
+    queryFn: async () => {
+      try { return await apiGet(`/api/contacts/${contactId}`); }
+      catch { return null; }
+    },
     enabled: !!contactId && open,
-    // Seed from the list row that was clicked so the name/title/tags show
-    // INSTANTLY instead of a "Unnamed" + spinner flash while the (remote-DB)
-    // detail fetch runs. Collection fields default to [] until the real detail
-    // arrives, then everything fills in. Keyed by contactId so switching
-    // contacts always seeds with the newly-clicked row.
     placeholderData: contact ? { contact } : undefined,
   });
 
