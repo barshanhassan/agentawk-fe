@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useSearch, useLocation } from "wouter";
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar, X, Download } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical, Users } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -77,6 +78,8 @@ function getAvatarColor(name: string): string {
 export default function ContactsSection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const searchParams = useSearch();
+  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -119,6 +122,19 @@ export default function ContactsSection() {
     lastActive: c.updated_at ? new Date(c.updated_at).toISOString().split('T')[0] : '-',
     updatedBy: 'System'
   }));
+
+  // Auto-open contact from URL ?open=ID
+  useEffect(() => {
+    if (!contacts.length) return;
+    const params = new URLSearchParams(searchParams);
+    const openId = params.get("open");
+    if (!openId) return;
+    const found = contacts.find((c) => c.id === openId);
+    if (found) {
+      setSelectedContactForDetails(found);
+      setLocation("/contacts", { replace: true });
+    }
+  }, [contacts, searchParams]);
 
   // Add Mutation
   const addMutation = useMutation({

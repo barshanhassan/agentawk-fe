@@ -47,11 +47,12 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function AppSidebar() {
   const [location, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   // State for Theme and Online Status
   const { mode: theme, setMode: setTheme } = useTheme();
@@ -115,17 +116,18 @@ export default function AppSidebar() {
   }, [brandingData]);
 
   // Notifications — top-bell dropdown. Preview-mode shows 5, expand-mode shows up to 100.
-  // Background-refetch every 60s so new events surface without a manual reload.
   const [notifShowAll, setNotifShowAll] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const notifLimit = notifShowAll ? 100 : 5;
-  const { data: notifResp } = useQuery<any>({
+  const { data: notifResp, refetch: refetchNotifs } = useQuery<any>({
     queryKey: ["/api/notifications", { limit: notifLimit }],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/notifications?limit=${notifLimit}`);
       return res.json();
     },
-    refetchInterval: 60 * 1000,
-    staleTime: 30 * 1000,
+    refetchInterval: 15 * 1000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
   const notifications: any[] = notifResp?.notifications || [];
   const unreadCount: number = notifResp?.unread || 0;
@@ -141,6 +143,17 @@ export default function AppSidebar() {
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
     return date.toLocaleDateString();
+  };
+
+  const handleNotifClick = async (n: any) => {
+    if (!n.read) {
+      try {
+        await apiRequest("POST", `/api/notifications/${n.id}/read`, {});
+        queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      } catch {}
+    }
+    const url = n.data?.action_url || '/conversations/inbox';
+    setLocation(url);
   };
 
   /** Map a notification slug to the right icon/colour. */
@@ -243,6 +256,35 @@ export default function AppSidebar() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Map frontend label → backend type key
+  const searchTypeMap: Record<string, string> = {
+    "WhatsApp Number": "whatsapp",
+    "Email": "email",
+    "Phone Number": "phone",
+    "First Name": "first_name",
+    "Last Name": "last_name",
+    "Full Name": "full_name",
+    "Instagram Handle": "instagram",
+    "Messenger Username": "messenger",
+    "Contact ID": "id",
+    "Support Ticket": "full_name",
+  };
+
+  const { data: searchResp } = useQuery<any>({
+    queryKey: ["/api/contacts/search/simple", searchValue, searchType],
+    queryFn: async () => {
+      const res = await apiRequest("POST", "/api/contacts/search/simple", {
+        search: searchValue,
+        type: searchTypeMap[searchType] ?? "full_name",
+      });
+      return res.json();
+    },
+    enabled: searchValue.trim().length >= 2,
+    staleTime: 5000,
+  });
+  const searchResults: any[] = searchResp?.contacts || [];
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -436,7 +478,8 @@ export default function AppSidebar() {
                 ref={searchInputRef}
                 type="text"
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
+                onChange={(e) => { setSearchValue(e.target.value); setShowSearchResults(true); }}
+                onFocus={() => setShowSearchResults(true)}
                 placeholder="Search anything..."
                 className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400"
               />
@@ -445,11 +488,50 @@ export default function AppSidebar() {
                 onClick={() => {
                   setIsSearchOpen(false);
                   setSearchValue("");
+                  setShowSearchResults(false);
                 }}
                 className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-gray-400 hover:text-red-500 transition-all shrink-0 ml-2"
               >
                 ✕
               </button>
+
+              {/* Search results dropdown */}
+              {showSearchResults && searchValue.trim().length >= 2 && (
+                <div className={cn(
+                  "absolute left-0 top-full mt-1 w-full border rounded-xl shadow-2xl z-50 max-h-72 overflow-y-auto",
+                  theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200"
+                )}>
+                  {searchResults.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-gray-400">No contacts found</div>
+                  ) : (
+                    searchResults.map((c: any) => (
+                      <button
+                        key={c.id}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                          theme === "dark" ? "hover:bg-slate-800" : "hover:bg-slate-50"
+                        )}
+                        onClick={() => {
+                          setLocation(`/contacts?open=${c.id}`);
+                          setSearchValue("");
+                          setShowSearchResults(false);
+                          setIsSearchOpen(false);
+                        }}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0",
+                          "bg-primary"
+                        )}>
+                          {(c.full_name?.[0] || "?").toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{c.full_name}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -457,7 +539,7 @@ export default function AppSidebar() {
         {/* Right Section */}
         <div className="flex items-center gap-5">
           {/* Notifications Premium Button */}
-          <DropdownMenu>
+          <DropdownMenu open={notifOpen} onOpenChange={(open) => { setNotifOpen(open); if (open) refetchNotifs(); }}>
             <DropdownMenuTrigger asChild>
               <button className={cn(
                 "relative p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group",
@@ -491,7 +573,18 @@ export default function AppSidebar() {
                 ) : (
                   notifications.map((n: any) => {
                     const { Icon, color } = getNotifIcon(n.slug);
-                    const title = n.data?.title || n.data?.message || n.slug || "Notification";
+                    const slugLabels: Record<string, string> = {
+                      'inbox.message_received': 'New Message',
+                      'conversation_assigned': 'Conversation Assigned',
+                      'task_assigned': 'Task Assigned',
+                      'chat_note_mention': 'Mentioned in Note',
+                    };
+                    const notifTitle =
+                      n.data?.title ||
+                      (n.data?.contact_name ? `New message from ${n.data.contact_name}` : null) ||
+                      n.data?.message ||
+                      slugLabels[n.slug] ||
+                      'New Notification';
                     return (
                       <DropdownMenuItem
                         key={n.id}
@@ -499,14 +592,19 @@ export default function AppSidebar() {
                           "p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none",
                           !n.read && "bg-primary/5 dark:bg-primary/10"
                         )}
-                        onClick={() => n.data?.action_url && setLocation(n.data.action_url)}
+                        onClick={() => handleNotifClick(n)}
                       >
                         <div className="flex gap-3 w-full">
                           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-700 shrink-0", color)}>
                             <Icon size={16} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold truncate">{title}</p>
+                            <p className="text-sm font-semibold truncate">
+                              {notifTitle}
+                            </p>
+                            {n.data?.message && (
+                              <p className="text-[11px] text-gray-400 truncate mt-0.5">{n.data.message}</p>
+                            )}
                             <p className="text-[11px] text-gray-500 mt-0.5">{formatRelativeTime(n.created_at)}</p>
                           </div>
                           {!n.read && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}

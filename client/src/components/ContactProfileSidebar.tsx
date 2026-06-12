@@ -432,6 +432,17 @@ export default function ContactProfileSidebar({
                                         <h4 className="font-semibold text-sm">Chat Assignment</h4>
                                     </div>
                                     <div className="flex flex-col gap-2">
+                                        {/* Currently assigned agent label */}
+                                        {assignedAgent && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Assigned to:{" "}
+                                                <span className="font-semibold text-foreground">
+                                                    {assignedAgent === "self"
+                                                        ? "You"
+                                                        : (agentOptions.find((a: any) => a.id === assignedAgent)?.name || assignedAgent)}
+                                                </span>
+                                            </p>
+                                        )}
                                         <div className="flex items-center gap-1">
                                             {(!assignedAgent || assignedAgent !== "self") ? (
                                                 <Button
@@ -449,7 +460,7 @@ export default function ContactProfileSidebar({
                                             )}
 
                                             <CustomDropdown
-                                                options={agentOptions.filter(a => a.id !== "self")}
+                                                options={agentOptions}
                                                 selected={assignedAgent && assignedAgent !== "self" ? [assignedAgent] : []}
                                                 onChange={(selected) => {
                                                     if (selected.length > 0) {

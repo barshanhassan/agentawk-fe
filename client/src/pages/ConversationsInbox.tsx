@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { getUserInfo } from "@/lib/auth";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
 import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft } from "lucide-react";
 import data from '@emoji-mart/data';
@@ -55,6 +54,9 @@ interface Conversation {
   name: string;
   displayName: string;
   phoneNumber: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
   lastMessage: string;
   time: string;
   unread: number;
@@ -103,7 +105,7 @@ interface Filter {
 
 interface BackendConversation {
   id: number | string;
-  contacts?: { full_name?: string; first_name?: string; mobile_number?: string };
+  contacts?: { full_name?: string; first_name?: string; last_name?: string; mobile_number?: string; email?: string };
   last_message_text?: string;
   updated_at?: string;
   unread_count?: number;
@@ -231,22 +233,29 @@ export default function ConversationsInbox() {
     if (!socket) return;
 
     const handleNewMessage = (data: SocketData) => {
-      console.log("Real-time message received:", data);
+      const msg = data.message as any;
 
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
 
       if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
-        // Outgoing messages are already in cache from the optimistic update — skip refetch.
-        // Inbound messages need a refetch to get the enriched row (parsed_files, reactions).
-        if ((data.message as any)?.direction !== 'OUTGOING') {
+        if (msg?.direction === 'OUTGOING') {
+          // Outgoing: already in cache from optimistic update — skip
+        } else if (msg?.id && msg?.direction === 'INCOMING' && Array.isArray(msg.parsed_files) && (msg.text || msg.parsed_files.length > 0)) {
+          // Complete text message from socket — add directly without HTTP refetch
+          queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => {
+            if (!old?.messages) return old;
+            const alreadyThere = old.messages.some((m: any) => String(m.id) === String(msg.id));
+            if (alreadyThere) return old;
+            return { ...old, messages: [...old.messages, { ...msg, reactions: msg.reactions ?? [] }] };
+          });
+        } else {
+          // Media inbound or legacy payload — fallback to full refetch
           queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
         }
       }
 
-      if ((data.message as any)?.direction !== 'OUTGOING') {
-        toast({
-          description: (data.message as any)?.text || "New message received",
-        });
+      if (msg?.direction !== 'OUTGOING') {
+        toast({ description: msg?.text || "New message received" });
       }
     };
 
@@ -289,20 +298,55 @@ export default function ConversationsInbox() {
     };
 
     const handleMessageReaction = (data: any) => {
-      if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
+      if (!selectedConversation || data.inbox_id !== selectedConversation.toString()) return;
+      if (data.message_id) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => {
+          if (!old?.messages) return old;
+          return {
+            ...old,
+            messages: old.messages.map((m: any) => {
+              if (String(m.id) !== String(data.message_id)) return m;
+              const existing: any[] = Array.isArray(m.reactions) ? m.reactions : [];
+              if (data.action === 'unreact' || !data.reaction) {
+                return { ...m, reactions: existing.filter((r: any) => r.direction !== 'INCOMING') };
+              }
+              const withoutIncoming = existing.filter((r: any) => r.direction !== 'INCOMING');
+              return { ...m, reactions: [...withoutIncoming, { reaction: data.reaction, direction: 'INCOMING' }] };
+            }),
+          };
+        });
+      } else {
         queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
       }
+    };
+
+    // WhatsApp media ready — patch parsed_files onto the message without full refetch
+    const handleMediaReady = (data: { inbox_id: string; wa_message_id: string; parsed_files: any[] }) => {
+      if (!selectedConversation || data.inbox_id !== selectedConversation.toString()) return;
+      const targetId = Number(data.wa_message_id);
+      if (!Number.isFinite(targetId)) return;
+      queryClient.setQueryData<any>(["/api/inbox/messages", selectedConversation], (prev: any) => {
+        if (!prev?.messages) return prev;
+        return {
+          ...prev,
+          messages: prev.messages.map((m: any) =>
+            Number(m.id) === targetId ? { ...m, parsed_files: data.parsed_files } : m
+          ),
+        };
+      });
     };
 
     socket.on("new_message", handleNewMessage);
     socket.on("message_status", handleMessageStatus);
     socket.on("inbox_read", handleInboxRead);
     socket.on("message_reaction", handleMessageReaction);
+    socket.on("message_media_ready", handleMediaReady);
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("message_status", handleMessageStatus);
       socket.off("inbox_read", handleInboxRead);
       socket.off("message_reaction", handleMessageReaction);
+      socket.off("message_media_ready", handleMediaReady);
     };
   }, [socket, selectedConversation, queryClient, toast]);
 
@@ -415,11 +459,14 @@ export default function ConversationsInbox() {
       name: resolvedName || 'Unknown',
       displayName: resolvedName,
       phoneNumber: item.contacts?.mobile_number || '',
+      email: item.contacts?.email || '',
+      firstName: item.contacts?.first_name || '',
+      lastName: item.contacts?.last_name || '',
       lastMessage: item.last_message_text || '',
       time: item.updated_at || new Date().toISOString(),
       unread: item.unread_count || 0,
       status: mapStatus(item.status),
-      assignedAgent: item.users?.name || null,
+      assignedAgent: item.users?.id?.toString() || null,
       channel: detectChannel(item.modelable_type),
     };
   });
@@ -486,10 +533,23 @@ export default function ConversationsInbox() {
       !f.name?.toLowerCase().startsWith('voice-message')
     );
 
+    const rawText = (m.text ?? m.message_text ?? '').toString().trim();
+    const msgType = ((m as any).type ?? '').toLowerCase();
+    const hasMediaContent = imageFiles.length > 0 || audioFiles.length > 0 || otherFiles.length > 0;
+    const displayText = rawText ? rawText : (!hasMediaContent ? (
+      msgType === 'audio' || msgType === 'voice' ? '🎤 Voice message' :
+      msgType === 'image' ? '🖼 Image' :
+      msgType === 'video' ? '🎥 Video' :
+      msgType === 'document' ? '📄 Document' :
+      msgType === 'sticker' ? '🌟 Sticker' :
+      msgType === 'call' ? '📞 Missed call' :
+      ''
+    ) : '');
+
     return {
       id: m.id,
       from: m.direction === 'OUTGOING' ? 'agent' : 'user',
-      text: m.text ?? m.message_text ?? '',
+      text: displayText,
       time: m.created_at || new Date().toISOString(),
       status: normalizeStatus(m.status),
       images: imageFiles.length > 0 ? imageFiles : undefined,
@@ -931,7 +991,7 @@ export default function ConversationsInbox() {
   const assignAgentMutation = useMutation({
     mutationFn: async ({ agentId }: { agentId: string | null }) => {
       const res = await apiRequest("PATCH", `/api/inbox/assign/${selectedConversation}`, {
-        assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? currentUser.id : agentId)
+        assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? "me" : agentId)
       });
       return res.json();
     },
@@ -978,8 +1038,16 @@ export default function ConversationsInbox() {
     setDraggedFilterId(null);
   };
 
-  // Current user
-  const currentUser = { id: "self", name: "Demo User" };
+  // Current user — real identity from localStorage (set at login by auth.service).
+  const currentUser = useMemo(() => {
+    try {
+      const info = JSON.parse(localStorage.getItem('user_info') || '{}');
+      return {
+        id: info.id?.toString() || null,
+        name: `${info.first_name || ''} ${info.last_name || ''}`.trim() || info.name || info.email || 'Me',
+      };
+    } catch { return { id: null, name: 'Me' }; }
+  }, []);
 
   // Fetch workspace members — inbox is workspace-scoped. Workspace users lack
   // agency.users.* permission, so calling /agencies/:id/members would 403.
@@ -1066,10 +1134,15 @@ export default function ConversationsInbox() {
       }
     }
 
-    // Filter by search query
+    // Filter by search query — name, phone, email, first/last name
     if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
       filtered = filtered.filter((conv: Conversation) =>
-        getDisplayName(conv).toLowerCase().includes(searchQuery.toLowerCase())
+        getDisplayName(conv).toLowerCase().includes(q) ||
+        (conv.phoneNumber || '').toLowerCase().includes(q) ||
+        (conv.email || '').toLowerCase().includes(q) ||
+        (conv.firstName || '').toLowerCase().includes(q) ||
+        (conv.lastName || '').toLowerCase().includes(q)
       );
     }
 
@@ -1090,8 +1163,14 @@ export default function ConversationsInbox() {
           let itemValue = "";
           if (filter.column === "name") {
             itemValue = getDisplayName(conv);
+          } else if (filter.column === "firstName") {
+            itemValue = conv.firstName || "";
+          } else if (filter.column === "lastName") {
+            itemValue = conv.lastName || "";
           } else if (filter.column === "phoneNumber") {
             itemValue = conv.phoneNumber || "";
+          } else if (filter.column === "email") {
+            itemValue = conv.email || "";
           } else if (filter.column === "tags") {
             const tags = tagsByConv[conv.id] || [];
             itemValue = tags.join(" ");
@@ -1151,7 +1230,8 @@ export default function ConversationsInbox() {
   const handleSelectConversation = (convId: number) => {
     setSelectedConversation(convId);
     const conv = conversations.find((c: Conversation) => c.id === convId);
-    setAssignedAgent(conv?.assignedAgent || null);
+    const agentId = conv?.assignedAgent || null;
+    setAssignedAgent(agentId && currentUser.id && agentId === currentUser.id ? "self" : agentId);
 
     apiRequest("POST", `/api/inbox/seen/${convId}`).catch(() => {});
   };
@@ -1160,7 +1240,7 @@ export default function ConversationsInbox() {
   const handleAssignAgent = (agentId: string) => {
     if (selectedConversation) {
       assignAgentMutation.mutate({ agentId });
-      setAssignedAgent(agentId);
+      setAssignedAgent(agentId === "self" || agentId === currentUser.id ? "self" : agentId);
     }
   };
 
@@ -2027,26 +2107,40 @@ export default function ConversationsInbox() {
                                       onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
                                       className="w-[140px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
                                     >
-                                      <span className="truncate text-sm font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone" : "Tags"}</span>
+                                      <span className="truncate text-sm font-normal">{
+                                        filter.column === "name" ? "Full Name" :
+                                        filter.column === "firstName" ? "First Name" :
+                                        filter.column === "lastName" ? "Last Name" :
+                                        filter.column === "phoneNumber" ? "Phone Number" :
+                                        filter.column === "email" ? "Email" :
+                                        "Tags"
+                                      }</span>
                                       <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                                     </button>
                                     {openFilterColumnDropdown === filter.id && (
                                       <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                                         <ul className="py-1">
-                                          {["name", "phoneNumber", "tags"].map(option => {
-                                            const isCurrentOption = option === filter.column;
+                                          {[
+                                            { key: "name", label: "Full Name" },
+                                            { key: "firstName", label: "First Name" },
+                                            { key: "lastName", label: "Last Name" },
+                                            { key: "phoneNumber", label: "Phone Number" },
+                                            { key: "email", label: "Email" },
+                                            { key: "tags", label: "Tags" },
+                                          ].map(({ key, label }) => {
+                                            const isCurrentOption = key === filter.column;
                                             return (
                                               <li
-                                                key={option}
+                                                key={key}
                                                 className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
                                                 onClick={() => {
                                                   if (!isCurrentOption) {
-                                                    updateFilter(filter.id, option, filter.operator, filter.value);
+                                                    updateFilter(filter.id, key, filter.operator, filter.value);
                                                     setOpenFilterColumnDropdown(null);
                                                   }
                                                 }}
                                               >
-                                                {option === "name" ? "Name" : option === "phoneNumber" ? "Phone" : "Tags"}
+                                                {label}
                                               </li>
                                             );
                                           })}
@@ -2361,9 +2455,8 @@ export default function ConversationsInbox() {
                             is assigned to me. */}
                         {(() => {
                           const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
-                          const me = getUserInfo() as any;
-                          const myName = me?.name || me?.email || null;
-                          const isMine = !!myName && conv?.assignedAgent === myName;
+                          // Compare by user ID (assignedAgent now stores the user's numeric ID string)
+                          const isMine = !!currentUser.id && conv?.assignedAgent === currentUser.id;
                           return (
                             <DropdownMenuItem
                               onClick={() => {
@@ -2685,7 +2778,7 @@ export default function ConversationsInbox() {
               <Separator />
 
               {/* Message Input or Assignment Prompt */}
-              {assignedAgent === "self" ? (
+              {assignedAgent !== null ? (
                 <div className="p-4 flex-shrink-0 relative">
                   {/* Attached files preview */}
                   {(attachedFiles.length > 0 || recordedAudio) && (
@@ -2950,7 +3043,7 @@ export default function ConversationsInbox() {
                       size="icon"
                       data-testid="button-send"
                       onClick={handleSendMessage}
-                      disabled={(!messageText.trim() && attachedFiles.length === 0 && !recordedAudio) || sendMessageMutation.isPending}
+                      disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
                     >
                       <Send size={18} color="white" />
                     </Button>
