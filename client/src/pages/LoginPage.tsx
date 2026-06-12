@@ -25,7 +25,7 @@ const LoginPage: React.FC = () => {
     setSuccessMessage('');
     setIsLoading(true);
     try {
-      const response = await apiRequest('POST', '/auth/login', { email, password });
+      const response = await apiRequest('POST', '/api/auth/login', { email, password });
 
       const data = await response.json();
       // Save token and user info
