@@ -39,7 +39,7 @@ const SignupPage: React.FC = () => {
     setIsLoading(true);
     try {
       // Mirrors auth.service.ts register() — agency-level account creation.
-      await apiRequest('POST', '/api/auth/register', {
+      await apiRequest('POST', '/auth/register', {
         firstName,
         lastName,
         agencyName: agencyName || `${firstName}'s Agency`,

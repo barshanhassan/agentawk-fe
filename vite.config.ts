@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
@@ -8,59 +8,80 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 // outside `npm run dev`.
 import basicSsl from "@vitejs/plugin-basic-ssl";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    basicSsl(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-      process.env.REPL_ID !== undefined
-      ? [
-        await import("@replit/vite-plugin-cartographer").then((m) =>
-          m.cartographer(),
-        ),
-        await import("@replit/vite-plugin-dev-banner").then((m) =>
-          m.devBanner(),
-        ),
-      ]
-      : []),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-    },
-  },
-  root: path.resolve(import.meta.dirname, "client"),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-  },
-  server: {
-    host: true,
-    allowedHosts: ['localhost', 'agency.localhost', '.laglobal.local'],
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
-    },
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:3001",
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+export default defineConfig(async ({ mode }) => {
+  // loadEnv reads from import.meta.dirname (= d:\Ezconn\frontend\) regardless of
+  // the `root` option so frontend\.env is always found.
+  const env = loadEnv(mode, import.meta.dirname, "");
+  const apiBaseUrl = env.VITE_API_BASE_URL || "";
+
+  return {
+    plugins: [
+      react(),
+      basicSsl(),
+      runtimeErrorOverlay(),
+      // Replace __API_BASE_URL__ placeholder in index.html with the actual value.
+      // index.html is served with Cache-Control: no-cache on Firebase, so this is
+      // always fresh — even when the JS bundle is served from browser cache.
+      {
+        name: "inject-api-base-url",
+        transformIndexHtml(html: string) {
+          return html.replace(/__BACKEND_URL__/g, apiBaseUrl);
+        },
       },
-      "/uploads": {
-        target: "http://127.0.0.1:3001",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/socket.io": {
-        target: "http://127.0.0.1:3001",
-        ws: true,
-        changeOrigin: true,
+      ...(process.env.NODE_ENV !== "production" &&
+        process.env.REPL_ID !== undefined
+        ? [
+          await import("@replit/vite-plugin-cartographer").then((m) =>
+            m.cartographer(),
+          ),
+          await import("@replit/vite-plugin-dev-banner").then((m) =>
+            m.devBanner(),
+          ),
+        ]
+        : []),
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "shared"),
+        "@assets": path.resolve(import.meta.dirname, "attached_assets"),
       },
     },
-  },
+    root: path.resolve(import.meta.dirname, "client"),
+    build: {
+      outDir: path.resolve(import.meta.dirname, "dist/public"),
+      emptyOutDir: true,
+    },
+    server: {
+      host: true,
+      allowedHosts: ["localhost", "agency.localhost", ".laglobal.local"],
+      fs: {
+        strict: true,
+        deny: ["**/.*"],
+      },
+      proxy: {
+        "/api": {
+          target: "http://127.0.0.1:3001",
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+        },
+        "/auth": {
+          target: "http://127.0.0.1:3001",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/uploads": {
+          target: "http://127.0.0.1:3001",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/socket.io": {
+          target: "http://127.0.0.1:3001",
+          ws: true,
+          changeOrigin: true,
+        },
+      },
+    },
+  };
 });
