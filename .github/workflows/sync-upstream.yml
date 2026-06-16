@@ -1,0 +1,35 @@
+name: Sync with Upstream (barshanhassan/ezconn-fe)
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Agency1
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+      - name: Check and sync upstream
+        run: |
+          git remote add upstream https://github.com/barshanhassan/ezconn-fe.git
+          git fetch upstream Agency1
+          BEHIND=$(git rev-list HEAD..upstream/Agency1 --count)
+          if [ "$BEHIND" -eq "0" ]; then
+            echo "Already up to date. No push needed."
+            exit 0
+          fi
+          echo "$BEHIND new commit(s) from upstream. Merging..."
+          git merge upstream/Agency1 --no-edit
+          git push origin Agency1
+          echo "Synced and pushed. Vercel will auto-deploy."
