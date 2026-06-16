@@ -15,6 +15,10 @@
   <!-- Apply the last-known white-label colour + theme mode BEFORE first paint, so
        the page never flashes the default blue while branding loads from the API.
        Mirrors the CSS variables set in ThemeContext. -->
+  <!-- API base URL injected by vite.config.ts plugin — index.html is no-cache
+       so this always reflects the latest deploy even when the JS bundle is cached. -->
+  <script>window.__API_BASE_URL__ = "__BACKEND_URL__";</script>
+
   <script>
     (function () {
       try {

@@ -66,11 +66,14 @@ function handleApiError(error: unknown) {
   });
 }
 
-// When VITE_API_BASE_URL is set (e.g. production), calls go directly to that
-// absolute backend URL. When it's empty (local dev), API_BASE_URL stays "" so
-// requests use relative /api/... paths and the Vite dev proxy forwards them to
-// the backend — same-origin, so no CORS/preflight ("Failed to fetch") issues.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+// API base URL: prefer window.__API_BASE_URL__ (injected into index.html at build
+// time, never cached) so the correct backend URL is always used even if the JS
+// bundle is served from browser cache. Falls back to the Vite env var for local dev.
+const API_BASE_URL = (
+  (typeof window !== "undefined" && (window as any).__API_BASE_URL__) ||
+  import.meta.env.VITE_API_BASE_URL ||
+  ""
+).replace(/\/$/, "");
 
 export async function apiRequest(
   method: string,

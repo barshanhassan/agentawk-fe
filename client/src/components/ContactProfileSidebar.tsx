@@ -72,6 +72,10 @@ interface ContactProfileSidebarProps {
     onUpdateTags: (tags: string[]) => void;
     tagOptions: { id: string; name: string }[];
 
+    // Workspace-defined custom fields (from Settings → Custom Fields)
+    profileCustomFields?: Array<{ id: string; label: string; slug: string; content_type: string; input_type: string; has_properties: number; properties: Array<{ name: string; value: string }>; value: string | null }>;
+    onSaveCustomFieldValue?: (fieldId: string, value: string) => void;
+
     // Custom Attributes
     customAttributes: Record<string, string>;
     onUpdateCustomAttributes: (attributes: Record<string, string>) => void;
@@ -114,6 +118,8 @@ export default function ContactProfileSidebar({
     tags,
     onUpdateTags,
     tagOptions,
+    profileCustomFields = [],
+    onSaveCustomFieldValue,
     customAttributes,
     onUpdateCustomAttributes,
     notes,
@@ -365,7 +371,9 @@ export default function ContactProfileSidebar({
                     <div className="flex flex-col items-center gap-3">
                         <button
                             className="flex flex-col items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none"
-                            onClick={() => setIsDetailsModalOpen(true)}
+                            onClick={() => {
+                                if ((profileData as any)?.contact?.id) setIsDetailsModalOpen(true);
+                            }}
                         >
                             <Avatar className="h-20 w-20">
                                 <AvatarFallback className={`text-2xl ${getAvatarColor(displayName)}`}>{initials}</AvatarFallback>
@@ -394,17 +402,6 @@ export default function ContactProfileSidebar({
                                             <TooltipTrigger asChild>
                                                 <button
                                                     onClick={() => {
-                                                        // Media icon redirects to the workspace Media Gallery page.
-                                                        // Optional contact_id query param lets the gallery prefilter
-                                                        // uploads tied to this contact. The other tabs stay in-sidebar.
-                                                        if (tab.id === "media") {
-                                                            // SettingsPage routes by `?tab=`, not by URL path. Pass
-                                                            // the section name there or it defaults to "Manage".
-                                                            const cid = conversation?.contact?.id ?? conversation?.id ?? "";
-                                                            const url = `/settings/workspace/ManageSection?tab=${encodeURIComponent("Media Gallery")}${cid ? `&contact_id=${cid}` : ""}`;
-                                                            window.location.href = url;
-                                                            return;
-                                                        }
                                                         setActiveTab(tab.id);
                                                     }}
                                                     className={`p-2 rounded-md transition-all flex items-center justify-center flex-1 ${activeTab === tab.id
@@ -432,6 +429,17 @@ export default function ContactProfileSidebar({
                                         <h4 className="font-semibold text-sm">Chat Assignment</h4>
                                     </div>
                                     <div className="flex flex-col gap-2">
+                                        {/* Currently assigned agent label */}
+                                        {assignedAgent && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Assigned to:{" "}
+                                                <span className="font-semibold text-foreground">
+                                                    {assignedAgent === "self"
+                                                        ? "You"
+                                                        : (agentOptions.find((a: any) => a.id === assignedAgent)?.name || assignedAgent)}
+                                                </span>
+                                            </p>
+                                        )}
                                         <div className="flex items-center gap-1">
                                             {(!assignedAgent || assignedAgent !== "self") ? (
                                                 <Button
@@ -449,7 +457,7 @@ export default function ContactProfileSidebar({
                                             )}
 
                                             <CustomDropdown
-                                                options={agentOptions.filter(a => a.id !== "self")}
+                                                options={agentOptions}
                                                 selected={assignedAgent && assignedAgent !== "self" ? [assignedAgent] : []}
                                                 onChange={(selected) => {
                                                     if (selected.length > 0) {
@@ -613,9 +621,6 @@ export default function ContactProfileSidebar({
                                         if (msg.video) {
                                             mediaItems.push({ ...msg.video, type: 'video', time: msg.time, from: msg.from, messageId: msg.id });
                                         }
-                                        if (msg.audio) {
-                                            mediaItems.push({ ...msg.audio, type: 'audio', time: msg.time, from: msg.from, messageId: msg.id });
-                                        }
                                         if (msg.attachments && msg.attachments.length > 0) {
                                             msg.attachments.forEach((att: any) => {
                                                 mediaItems.push({ ...att, type: 'document', time: msg.time, from: msg.from, messageId: msg.id });
@@ -704,36 +709,74 @@ export default function ContactProfileSidebar({
                         {/* Custom Fields Tab */}
                         {activeTab === "custom-fields" && (
                             <div className="space-y-4">
-                                <Button variant="outline" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="w-full btn-outline-primary">
-                                    <Plus size={14} className="mr-2" /> Add Custom Attribute
-                                </Button>
-                                {customAttributes && Object.keys(customAttributes).length > 0 ? (
-                                    <div className="flex flex-wrap gap-2">
-                                        {Object.entries(customAttributes).map(([key, value]) => (
-                                            <div
-                                                key={key}
-                                                className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
-                                            >
-                                                <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
-                                                <button
-                                                    onClick={() => {
-                                                        const newAttrs = { ...customAttributes };
-                                                        delete newAttrs[key];
-                                                        onUpdateCustomAttributes(newAttrs);
-                                                    }}
-                                                    className="hover:text-blue-900 flex-shrink-0 border rounded"
-                                                >
-                                                    <X size={14} />
-                                                </button>
+                                {/* Workspace-defined custom fields */}
+                                {profileCustomFields && profileCustomFields.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {profileCustomFields.map((field) => (
+                                            <div key={field.slug} className="space-y-1">
+                                                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                    {field.label}
+                                                </label>
+                                                {field.has_properties && field.properties?.length > 0 ? (
+                                                    <select
+                                                        defaultValue={field.value ?? ''}
+                                                        onBlur={(e) => onSaveCustomFieldValue?.(field.id, e.target.value)}
+                                                        className="w-full text-sm border rounded-md px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                                                    >
+                                                        <option value="">— Select —</option>
+                                                        {field.properties.map((p) => (
+                                                            <option key={p.value} value={p.value}>{p.name}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        type={field.content_type === 'NUMBER' ? 'number' : field.content_type === 'EMAIL' ? 'email' : 'text'}
+                                                        defaultValue={field.value ?? ''}
+                                                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                                                        onBlur={(e) => onSaveCustomFieldValue?.(field.id, e.target.value)}
+                                                        className="w-full text-sm border rounded-md px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                                                    />
+                                                )}
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                                        <NotebookPen size={32} className="mb-2 opacity-50" />
-                                        <p className="text-sm">No custom fields found.</p>
+                                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
+                                        <NotebookPen size={28} className="mb-2 opacity-40" />
+                                        <p className="text-sm">No custom fields defined.</p>
+                                        <p className="text-xs mt-1 opacity-70">Go to Settings → Custom Fields to create fields.</p>
                                     </div>
                                 )}
+
+                                {/* Manual attributes (key-value chips) */}
+                                {customAttributes && Object.keys(customAttributes).length > 0 && (
+                                    <div className="pt-2 border-t">
+                                        <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Manual Attributes</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(customAttributes).map(([key, value]) => (
+                                                <div
+                                                    key={key}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs max-w-full"
+                                                >
+                                                    <span className="truncate max-w-[calc(100%-20px)]">{key}: {value}</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newAttrs = { ...customAttributes };
+                                                            delete newAttrs[key];
+                                                            onUpdateCustomAttributes(newAttrs);
+                                                        }}
+                                                        className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                <Button variant="outline" size="sm" onClick={() => setIsAddAttributeModalOpen(true)} className="w-full btn-outline-primary">
+                                    <Plus size={14} className="mr-2" /> Add Custom Attribute
+                                </Button>
                             </div>
                         )}
 
@@ -753,16 +796,33 @@ export default function ContactProfileSidebar({
 
                         {/* Assigned Tags Tab */}
                         {activeTab === "tags" && (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 <CustomDropdown
                                     options={tagOptions}
                                     selected={tags || []}
                                     onChange={onUpdateTags}
                                     placeholder="Select tags"
                                     width="100%"
+                                    triggerContent={
+                                        <span className="flex items-center justify-between w-full">
+                                            <span className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
+                                                {(tags || []).length === 0 ? (
+                                                    <span className="text-slate-500 text-[12px]">Select tags</span>
+                                                ) : (
+                                                    (tags || []).map((id) => {
+                                                        const t = tagOptions.find((o) => o.id === id);
+                                                        return t ? (
+                                                            <span key={id} className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs truncate max-w-[120px]">{t.name}</span>
+                                                        ) : null;
+                                                    })
+                                                )}
+                                            </span>
+                                            <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0 ml-2" />
+                                        </span>
+                                    }
                                 />
                                 {tags && tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 pb-1">
+                                    <div className="flex flex-wrap gap-2">
                                         {tags.map((tagId) => {
                                             const tag = tagOptions.find(t => t.id === tagId);
                                             return (
@@ -772,13 +832,10 @@ export default function ContactProfileSidebar({
                                                 >
                                                     <span className="truncate max-w-[calc(100%-20px)]">{tag?.name}</span>
                                                     <button
-                                                        onClick={() => {
-                                                            const newTags = tags.filter(t => t !== tagId);
-                                                            onUpdateTags(newTags);
-                                                        }}
-                                                        className="hover:text-blue-900 flex-shrink-0 border rounded"
+                                                        onClick={() => onUpdateTags(tags.filter(t => t !== tagId))}
+                                                        className="hover:text-blue-900 flex-shrink-0"
                                                     >
-                                                        <X size={14} />
+                                                        <X size={12} />
                                                     </button>
                                                 </div>
                                             );
@@ -1541,7 +1598,7 @@ export default function ContactProfileSidebar({
             <ContactProfileModal
                 open={isDetailsModalOpen}
                 onOpenChange={setIsDetailsModalOpen}
-                contact={conversation as any}
+                contact={((profileData as any)?.contact ?? conversation) as any}
             />
         </>
     );

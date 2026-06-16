@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { getUserInfo } from "@/lib/auth";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
 import { GripVertical, MoreVertical, ChevronDown, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft } from "lucide-react";
 import data from '@emoji-mart/data';
@@ -55,11 +54,15 @@ interface Conversation {
   name: string;
   displayName: string;
   phoneNumber: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
   lastMessage: string;
   time: string;
   unread: number;
   status: string;
   assignedAgent: string | null;
+  assignedAgentName: string | null;
   channel: string;
 }
 
@@ -103,12 +106,12 @@ interface Filter {
 
 interface BackendConversation {
   id: number | string;
-  contacts?: { full_name?: string; first_name?: string; mobile_number?: string };
+  contacts?: { full_name?: string; first_name?: string; last_name?: string; mobile_number?: string; email?: string };
   last_message_text?: string;
   updated_at?: string;
   unread_count?: number;
   status?: string;
-  users?: { name?: string };
+  users?: { id?: number | string; name?: string; full_name?: string; first_name?: string; last_name?: string };
   modelable_type?: string;
 }
 
@@ -209,7 +212,23 @@ export default function ConversationsInbox() {
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(() => {
+    try {
+      const saved = sessionStorage.getItem("inbox_selected_conv");
+      return saved ? parseInt(saved, 10) : null;
+    } catch { return null; }
+  });
+
+  // Persist selected conversation so page refresh restores it
+  useEffect(() => {
+    try {
+      if (selectedConversation != null) {
+        sessionStorage.setItem("inbox_selected_conv", String(selectedConversation));
+      } else {
+        sessionStorage.removeItem("inbox_selected_conv");
+      }
+    } catch {}
+  }, [selectedConversation]);
 
   // WebSocket Integration. Pull workspace_id from the JWT-backed user_info blob
   // (set at login) instead of hardcoding 1 — otherwise multi-workspace agents see
@@ -231,22 +250,30 @@ export default function ConversationsInbox() {
     if (!socket) return;
 
     const handleNewMessage = (data: SocketData) => {
-      console.log("Real-time message received:", data);
+      const msg = data.message as any;
 
-      // Invalidate the EXACT keys this page uses (matches useQuery above).
-      // The old keys (/api/inbox/get-inbox-list, /api/inbox/get-chat-messages)
-      // never matched, so the UI silently never refreshed.
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
 
-      // If current chat is open, refresh messages too.
       if (selectedConversation && data.inbox_id === selectedConversation.toString()) {
-        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+        if (msg?.direction === 'OUTGOING') {
+          // Outgoing: already in cache from optimistic update — skip
+        } else if (msg?.id && msg?.direction === 'INCOMING' && Array.isArray(msg.parsed_files) && (msg.text || msg.parsed_files.length > 0)) {
+          // Complete text message from socket — add directly without HTTP refetch
+          queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => {
+            if (!old?.messages) return old;
+            const alreadyThere = old.messages.some((m: any) => String(m.id) === String(msg.id));
+            if (alreadyThere) return old;
+            return { ...old, messages: [...old.messages, { ...msg, reactions: msg.reactions ?? [] }] };
+          });
+        } else {
+          // Media inbound or legacy payload — fallback to full refetch
+          queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+        }
       }
 
-      toast({
-        title: "New Message",
-        description: data.message?.text || "New message received",
-      });
+      if (msg?.direction !== 'OUTGOING') {
+        toast({ description: msg?.text || "New message received" });
+      }
     };
 
     // Delivery state delta for outgoing WhatsApp messages.
@@ -287,13 +314,56 @@ export default function ConversationsInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/inbox/count"] });
     };
 
+    const handleMessageReaction = (data: any) => {
+      if (!selectedConversation || data.inbox_id !== selectedConversation.toString()) return;
+      if (data.message_id) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => {
+          if (!old?.messages) return old;
+          return {
+            ...old,
+            messages: old.messages.map((m: any) => {
+              if (String(m.id) !== String(data.message_id)) return m;
+              const existing: any[] = Array.isArray(m.reactions) ? m.reactions : [];
+              if (data.action === 'unreact' || !data.reaction) {
+                return { ...m, reactions: existing.filter((r: any) => r.direction !== 'INCOMING') };
+              }
+              const withoutIncoming = existing.filter((r: any) => r.direction !== 'INCOMING');
+              return { ...m, reactions: [...withoutIncoming, { reaction: data.reaction, direction: 'INCOMING' }] };
+            }),
+          };
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      }
+    };
+
+    // WhatsApp media ready — patch parsed_files onto the message without full refetch
+    const handleMediaReady = (data: { inbox_id: string; wa_message_id: string; parsed_files: any[] }) => {
+      if (!selectedConversation || data.inbox_id !== selectedConversation.toString()) return;
+      const targetId = Number(data.wa_message_id);
+      if (!Number.isFinite(targetId)) return;
+      queryClient.setQueryData<any>(["/api/inbox/messages", selectedConversation], (prev: any) => {
+        if (!prev?.messages) return prev;
+        return {
+          ...prev,
+          messages: prev.messages.map((m: any) =>
+            Number(m.id) === targetId ? { ...m, parsed_files: data.parsed_files } : m
+          ),
+        };
+      });
+    };
+
     socket.on("new_message", handleNewMessage);
     socket.on("message_status", handleMessageStatus);
     socket.on("inbox_read", handleInboxRead);
+    socket.on("message_reaction", handleMessageReaction);
+    socket.on("message_media_ready", handleMediaReady);
     return () => {
       socket.off("new_message", handleNewMessage);
       socket.off("message_status", handleMessageStatus);
       socket.off("inbox_read", handleInboxRead);
+      socket.off("message_reaction", handleMessageReaction);
+      socket.off("message_media_ready", handleMediaReady);
     };
   }, [socket, selectedConversation, queryClient, toast]);
 
@@ -397,18 +467,29 @@ export default function ConversationsInbox() {
   };
 
   // Map backend conversations to frontend format
-  const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => ({
-    id: Number(item.id),
-    name: item.contacts?.full_name || item.contacts?.first_name || 'Unknown',
-    displayName: item.contacts?.full_name || item.contacts?.first_name || '',
-    phoneNumber: item.contacts?.mobile_number || '',
-    lastMessage: item.last_message_text || '',
-    time: item.updated_at || new Date().toISOString(),
-    unread: item.unread_count || 0,
-    status: mapStatus(item.status),
-    assignedAgent: item.users?.name || null,
-    channel: detectChannel(item.modelable_type),
-  }));
+  const conversations: Conversation[] = backendConversations.map((item: BackendConversation) => {
+    const rawName = item.contacts?.full_name || item.contacts?.first_name || '';
+    // If the stored name is a numeric Instagram user ID (profile fetch failed), show a friendlier label
+    const resolvedName = rawName && /^\d+$/.test(rawName) ? 'Instagram User' : rawName;
+    return {
+      id: Number(item.id),
+      name: resolvedName || 'Unknown',
+      displayName: resolvedName,
+      phoneNumber: item.contacts?.mobile_number || '',
+      email: item.contacts?.email || '',
+      firstName: item.contacts?.first_name || '',
+      lastName: item.contacts?.last_name || '',
+      lastMessage: item.last_message_text || '',
+      time: item.updated_at || new Date().toISOString(),
+      unread: item.unread_count || 0,
+      status: mapStatus(item.status),
+      assignedAgent: item.users?.id?.toString() || null,
+      assignedAgentName: item.users
+        ? (item.users.full_name || `${item.users.first_name || ''} ${item.users.last_name || ''}`.trim() || item.users.name || null)
+        : null,
+      channel: detectChannel(item.modelable_type),
+    };
+  });
 
 
   const [showContactPanel, setShowContactPanel] = useState(false);
@@ -446,7 +527,10 @@ export default function ConversationsInbox() {
       const res = await apiRequest("POST", `/api/inbox/messages/${selectedConversation}`, {});
       return res.json();
     },
-    enabled: !!selectedConversation
+    enabled: !!selectedConversation,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchInterval: 5000,
   });
 
   const normalizeStatus = (s?: string): MessageStatus | undefined => {
@@ -463,18 +547,38 @@ export default function ConversationsInbox() {
     // Separate image vs non-image uploads from parsed_files
     const parsedFiles: Array<{ url: string; name: string; size: number; mime: string }> = raw.parsed_files || [];
     const imageFiles = parsedFiles.filter((f) => f.mime?.startsWith('image/'));
-    const audioFiles = parsedFiles.filter((f) => f.mime?.startsWith('audio/'));
-    const otherFiles = parsedFiles.filter((f) => !f.mime?.startsWith('image/') && !f.mime?.startsWith('audio/'));
+    const audioFiles = parsedFiles.filter((f) =>
+      f.mime?.startsWith('audio/') || f.name?.toLowerCase().startsWith('voice-message')
+    );
+    const otherFiles = parsedFiles.filter((f) =>
+      !f.mime?.startsWith('image/') &&
+      !f.mime?.startsWith('audio/') &&
+      !f.name?.toLowerCase().startsWith('voice-message')
+    );
+
+    const rawText = (m.text ?? m.message_text ?? '').toString().trim();
+    const msgType = ((m as any).type ?? '').toLowerCase();
+    const hasMediaContent = imageFiles.length > 0 || audioFiles.length > 0 || otherFiles.length > 0;
+    const displayText = rawText ? rawText : (!hasMediaContent ? (
+      msgType === 'audio' || msgType === 'voice' ? '🎤 Voice message' :
+      msgType === 'image' ? '🖼 Image' :
+      msgType === 'video' ? '🎥 Video' :
+      msgType === 'document' ? '📄 Document' :
+      msgType === 'sticker' ? '🌟 Sticker' :
+      msgType === 'call' ? '📞 Missed call' :
+      ''
+    ) : '');
 
     return {
       id: m.id,
       from: m.direction === 'OUTGOING' ? 'agent' : 'user',
-      text: m.text ?? m.message_text ?? '',
+      text: displayText,
       time: m.created_at || new Date().toISOString(),
       status: normalizeStatus(m.status),
       images: imageFiles.length > 0 ? imageFiles : undefined,
       attachments: otherFiles.length > 0 ? otherFiles : undefined,
       audio: audioFiles.length > 0 ? { url: audioFiles[0].url, name: audioFiles[0].name, size: audioFiles[0].size } : undefined,
+      reactions: Array.isArray(raw.reactions) ? raw.reactions : [],
     };
   });
 
@@ -666,9 +770,32 @@ export default function ConversationsInbox() {
       );
       return res.json();
     },
-    onSuccess: () => {
-      if (selectedConversation) {
-        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+    onMutate: async (vars) => {
+      // Optimistic reaction — update cache immediately without waiting for server
+      if (!selectedConversation) return;
+      await queryClient.cancelQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      const prev = queryClient.getQueryData(["/api/inbox/messages", selectedConversation]);
+      queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => {
+        if (!old?.messages) return old;
+        return {
+          ...old,
+          messages: old.messages.map((m: any) => {
+            if (Number(m.id) !== Number(vars.messageId)) return m;
+            const existing: any[] = Array.isArray(m.reactions) ? m.reactions : [];
+            const outgoing = existing.find((r: any) => r.direction === 'OUTGOING');
+            // Toggle off if same emoji, otherwise replace
+            const newReactions = outgoing?.reaction === vars.reaction
+              ? existing.filter((r: any) => r.direction !== 'OUTGOING')
+              : [...existing.filter((r: any) => r.direction !== 'OUTGOING'), { reaction: vars.reaction, direction: 'OUTGOING' }];
+            return { ...m, reactions: newReactions };
+          }),
+        };
+      });
+      return { prev };
+    },
+    onError: (_err, _vars, context: any) => {
+      if (context?.prev !== undefined && selectedConversation) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], context.prev);
       }
     },
   });
@@ -727,8 +854,10 @@ export default function ConversationsInbox() {
   useEffect(() => {
     if (!selectedConversation || !profileData) return;
 
-    // Custom fields → { label: value } map
-    if (Array.isArray(profileData.custom_fields) && profileData.custom_fields.length > 0) {
+    // Workspace-defined custom fields — store full objects (including null values)
+    if (Array.isArray(profileData.custom_fields)) {
+      setProfileFieldsByConv((prev) => ({ ...prev, [selectedConversation]: profileData.custom_fields }));
+      // Also keep manual customAttributes for non-null values (chips)
       const attrs: Record<string, string> = {};
       for (const f of profileData.custom_fields) {
         if (f.label && f.value != null) attrs[f.label] = String(f.value);
@@ -736,10 +865,10 @@ export default function ConversationsInbox() {
       setCustomAttributesByConv((prev) => ({ ...prev, [selectedConversation]: attrs }));
     }
 
-    // Tags → array of tag names
+    // Tags → array of tag IDs (CustomDropdown uses IDs for selection state)
     if (Array.isArray(profileData.tags)) {
-      const tagNames = profileData.tags.map((t: any) => t.name).filter(Boolean);
-      setTagsByConv((prev) => ({ ...prev, [selectedConversation]: tagNames }));
+      const tagIds = profileData.tags.map((t: any) => String(t.id)).filter(Boolean);
+      setTagsByConv((prev) => ({ ...prev, [selectedConversation]: tagIds }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileData, selectedConversation]);
@@ -752,6 +881,18 @@ export default function ConversationsInbox() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation]);
+
+  // On page refresh, selectedConversation is restored from sessionStorage but
+  // handleSelectConversation is never called, so assignedAgent stays null.
+  // This effect re-syncs assignedAgent whenever conversations list loads/changes.
+  useEffect(() => {
+    if (!selectedConversation || assignedAgent !== null) return;
+    const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
+    if (!conv) return;
+    const agentId = conv.assignedAgent || null;
+    setAssignedAgent(agentId && currentUser.id && agentId === currentUser.id ? "self" : agentId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, selectedConversation]);
 
   // Auto-clear the right-pane selection when the currently selected
   // conversation is no longer in the visible list (e.g. tab/filter switch
@@ -789,7 +930,7 @@ export default function ConversationsInbox() {
         }
         const res = await fetch(`/api/inbox/send-message/${selectedConversation}`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+          headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}` },
           body: form,
         });
         if (!res.ok) throw new Error(await res.text());
@@ -807,13 +948,64 @@ export default function ConversationsInbox() {
       const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, payload);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+    onMutate: async (input) => {
+      // Cancel any in-flight refetch so it doesn't overwrite the optimistic message
+      await queryClient.cancelQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      const previousData = queryClient.getQueryData(["/api/inbox/messages", selectedConversation]);
+      const text = typeof input === "string" ? input : (input.text || "");
+      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
+      const tempId = `opt_${Date.now()}`;
+      const optimisticMsg = {
+        id: tempId,
+        direction: "OUTGOING",
+        text,
+        message_text: text,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: "pending",
+        type: hasFiles ? (input as any).audio ? "audio" : "image" : "text",
+        reactions: [],
+        parsed_files: [],
+      };
+      if (selectedConversation && previousData) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (old: any) => ({
+          ...old,
+          messages: [...(old?.messages || []), optimisticMsg],
+        }));
+      }
       setMessageText("");
       setAttachedFiles([]);
       setRecordedAudio(null);
-    }
+      return { previousData, tempId };
+    },
+    onSuccess: (data: any, input, context: any) => {
+      const realMsg = data?.data;
+      const hasFiles = typeof input !== "string" && ((input.files && input.files.length > 0) || input.audio);
+      queryClient.setQueryData(["/api/inbox/messages", selectedConversation], (prev: any) => {
+        if (!prev?.messages) return prev;
+        const withoutOptimistic = prev.messages.filter((m: any) => m.id !== context?.tempId);
+        if (!hasFiles && realMsg) {
+          const alreadyThere = withoutOptimistic.some((m: any) => Number(m.id) === Number(realMsg.id));
+          if (!alreadyThere) {
+            return { ...prev, messages: [...withoutOptimistic, { ...realMsg, reactions: realMsg.reactions ?? [] }] };
+          }
+          return { ...prev, messages: withoutOptimistic };
+        }
+        // File messages: remove optimistic placeholder and let the socket/refetch fill in the real one
+        return { ...prev, messages: withoutOptimistic };
+      });
+      if (hasFiles) {
+        queryClient.invalidateQueries({ queryKey: ["/api/inbox/messages", selectedConversation] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/inbox/list"] });
+    },
+    onError: (err: Error, _input, context: any) => {
+      if (context?.previousData !== undefined) {
+        queryClient.setQueryData(["/api/inbox/messages", selectedConversation], context.previousData);
+      }
+      setMessageText(typeof _input === "string" ? _input : (_input as any).text || "");
+      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+    },
   });
 
   // Update status mutation
@@ -836,7 +1028,7 @@ export default function ConversationsInbox() {
   const assignAgentMutation = useMutation({
     mutationFn: async ({ agentId }: { agentId: string | null }) => {
       const res = await apiRequest("PATCH", `/api/inbox/assign/${selectedConversation}`, {
-        assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? currentUser.id : agentId)
+        assigned_to: agentId === "null" || agentId === null ? null : (agentId === "self" ? "me" : agentId)
       });
       return res.json();
     },
@@ -883,8 +1075,16 @@ export default function ConversationsInbox() {
     setDraggedFilterId(null);
   };
 
-  // Current user
-  const currentUser = { id: "self", name: "Demo User" };
+  // Current user — real identity from localStorage (set at login by auth.service).
+  const currentUser = useMemo(() => {
+    try {
+      const info = JSON.parse(localStorage.getItem('user_info') || '{}');
+      return {
+        id: info.id?.toString() || null,
+        name: `${info.first_name || ''} ${info.last_name || ''}`.trim() || info.name || info.email || 'Me',
+      };
+    } catch { return { id: null, name: 'Me' }; }
+  }, []);
 
   // Fetch workspace members — inbox is workspace-scoped. Workspace users lack
   // agency.users.* permission, so calling /agencies/:id/members would 403.
@@ -971,10 +1171,15 @@ export default function ConversationsInbox() {
       }
     }
 
-    // Filter by search query
+    // Filter by search query — name, phone, email, first/last name
     if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
       filtered = filtered.filter((conv: Conversation) =>
-        getDisplayName(conv).toLowerCase().includes(searchQuery.toLowerCase())
+        getDisplayName(conv).toLowerCase().includes(q) ||
+        (conv.phoneNumber || '').toLowerCase().includes(q) ||
+        (conv.email || '').toLowerCase().includes(q) ||
+        (conv.firstName || '').toLowerCase().includes(q) ||
+        (conv.lastName || '').toLowerCase().includes(q)
       );
     }
 
@@ -995,8 +1200,14 @@ export default function ConversationsInbox() {
           let itemValue = "";
           if (filter.column === "name") {
             itemValue = getDisplayName(conv);
+          } else if (filter.column === "firstName") {
+            itemValue = conv.firstName || "";
+          } else if (filter.column === "lastName") {
+            itemValue = conv.lastName || "";
           } else if (filter.column === "phoneNumber") {
             itemValue = conv.phoneNumber || "";
+          } else if (filter.column === "email") {
+            itemValue = conv.email || "";
           } else if (filter.column === "tags") {
             const tags = tagsByConv[conv.id] || [];
             itemValue = tags.join(" ");
@@ -1056,7 +1267,8 @@ export default function ConversationsInbox() {
   const handleSelectConversation = (convId: number) => {
     setSelectedConversation(convId);
     const conv = conversations.find((c: Conversation) => c.id === convId);
-    setAssignedAgent(conv?.assignedAgent || null);
+    const agentId = conv?.assignedAgent || null;
+    setAssignedAgent(agentId && currentUser.id && agentId === currentUser.id ? "self" : agentId);
 
     apiRequest("POST", `/api/inbox/seen/${convId}`).catch(() => {});
   };
@@ -1065,7 +1277,7 @@ export default function ConversationsInbox() {
   const handleAssignAgent = (agentId: string) => {
     if (selectedConversation) {
       assignAgentMutation.mutate({ agentId });
-      setAssignedAgent(agentId);
+      setAssignedAgent(agentId === "self" || agentId === currentUser.id ? "self" : agentId);
     }
   };
 
@@ -1132,6 +1344,7 @@ export default function ConversationsInbox() {
     }
   }, [isDragging]);
   const [customAttributesByConv, setCustomAttributesByConv] = useState<Record<number, Record<string, string>>>({});
+  const [profileFieldsByConv, setProfileFieldsByConv] = useState<Record<number, any[]>>({});
 
   // Basic details EDIT BUFFER per conversation (starts empty — real values come from the conversation's contact)
   const [basicDetailsByConv, setBasicDetailsByConv] = useState<Record<number, BasicDetails>>({});
@@ -1235,22 +1448,26 @@ export default function ConversationsInbox() {
     const added = newTags.filter((t) => !current.includes(t));
     const removed = current.filter((t) => !newTags.includes(t));
 
-    // Optimistic update
+    // Optimistic update (IDs)
     setTagsByConv({ ...tagsByConv, [selectedConversation]: newTags });
 
-    // Persist each add/remove via profile-action
-    for (const tag of added) {
+    // Backend profile-action expects tag NAME — resolve from tagOptions
+    for (const tagId of added) {
+      const tagName = tagOptions.find((t) => t.id === tagId)?.name;
+      if (!tagName) continue;
       try {
-        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "apply_tag", tag });
+        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "apply_tag", tag: tagName });
       } catch (e) {
-        console.error("Failed to apply tag:", tag, e);
+        console.error("Failed to apply tag:", tagName, e);
       }
     }
-    for (const tag of removed) {
+    for (const tagId of removed) {
+      const tagName = tagOptions.find((t) => t.id === tagId)?.name;
+      if (!tagName) continue;
       try {
-        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "remove_tag", tag });
+        await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "remove_tag", tag: tagName });
       } catch (e) {
-        console.error("Failed to remove tag:", tag, e);
+        console.error("Failed to remove tag:", tagName, e);
       }
     }
   };
@@ -1259,6 +1476,15 @@ export default function ConversationsInbox() {
     if (selectedConversation) {
       setCustomAttributesByConv({ ...customAttributesByConv, [selectedConversation]: attributes });
     }
+  };
+
+  const handleSaveCustomFieldValue = async (fieldId: string, value: string) => {
+    const contactId = (profileData as any)?.contact?.id;
+    if (!contactId) return;
+    try {
+      await apiRequest('POST', `/api/custom-fields/contact/${contactId}/value`, { field_id: fieldId, value });
+      refetchProfileData();
+    } catch (_e) {}
   };
 
   const handleUpdateNotes = async (notes: string[]) => {
@@ -1373,7 +1599,19 @@ export default function ConversationsInbox() {
   // Handle file attachment
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
-    if (files) {
+    if (files && files.length > 0) {
+      const isInstagram = selectedConvObj?.channel === 'instagram';
+      if (isInstagram) {
+        const unsupported = Array.from(files).filter((f) => {
+          const m = f.type;
+          return !m.startsWith('image/') && !m.startsWith('video/') && !m.startsWith('audio/');
+        });
+        if (unsupported.length > 0) {
+          toast({ title: 'Instagram does not support document files. Only images, videos, and audio can be sent.', variant: 'destructive' });
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        }
+      }
       setAttachedFiles([...attachedFiles, ...Array.from(files)]);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1920,26 +2158,40 @@ export default function ConversationsInbox() {
                                       onClick={() => setOpenFilterColumnDropdown(openFilterColumnDropdown === filter.id ? null : filter.id)}
                                       className="w-[140px] flex items-center justify-between px-3 py-2 text-left bg-white dark:bg-background border border-input dark:border-slate-700 rounded-md shadow-sm hover:bg-accent dark:hover:bg-slate-700 focus:outline-none text-foreground dark:text-white transition-colors w-full"
                                     >
-                                      <span className="truncate text-sm font-normal">{filter.column === "name" ? "Name" : filter.column === "phoneNumber" ? "Phone" : "Tags"}</span>
+                                      <span className="truncate text-sm font-normal">{
+                                        filter.column === "name" ? "Full Name" :
+                                        filter.column === "firstName" ? "First Name" :
+                                        filter.column === "lastName" ? "Last Name" :
+                                        filter.column === "phoneNumber" ? "Phone Number" :
+                                        filter.column === "email" ? "Email" :
+                                        "Tags"
+                                      }</span>
                                       <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
                                     </button>
                                     {openFilterColumnDropdown === filter.id && (
                                       <div className="absolute z-10 w-full mt-2 bg-white dark:bg-background rounded-md shadow-md border border-border dark:border-slate-700">
                                         <ul className="py-1">
-                                          {["name", "phoneNumber", "tags"].map(option => {
-                                            const isCurrentOption = option === filter.column;
+                                          {[
+                                            { key: "name", label: "Full Name" },
+                                            { key: "firstName", label: "First Name" },
+                                            { key: "lastName", label: "Last Name" },
+                                            { key: "phoneNumber", label: "Phone Number" },
+                                            { key: "email", label: "Email" },
+                                            { key: "tags", label: "Tags" },
+                                          ].map(({ key, label }) => {
+                                            const isCurrentOption = key === filter.column;
                                             return (
                                               <li
-                                                key={option}
+                                                key={key}
                                                 className={`px-3 py-2 text-sm ${isCurrentOption ? "opacity-40 text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-muted"}`}
                                                 onClick={() => {
                                                   if (!isCurrentOption) {
-                                                    updateFilter(filter.id, option, filter.operator, filter.value);
+                                                    updateFilter(filter.id, key, filter.operator, filter.value);
                                                     setOpenFilterColumnDropdown(null);
                                                   }
                                                 }}
                                               >
-                                                {option === "name" ? "Name" : option === "phoneNumber" ? "Phone" : "Tags"}
+                                                {label}
                                               </li>
                                             );
                                           })}
@@ -2121,8 +2373,8 @@ export default function ConversationsInbox() {
                             <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time)}</span>
                           </div>
                           <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{conv.lastMessage}</p>
-                          {conv.assignedAgent && conv.assignedAgent !== "self" && (
-                            <p className="text-xs text-muted-foreground">Assigned to: <span className="font-medium">{getAgentName(conv.assignedAgent)}</span></p>
+                          {conv.assignedAgent && (
+                            <p className="text-xs text-muted-foreground">Assigned to: <span className="font-medium">{conv.assignedAgentName || getAgentName(conv.assignedAgent)}</span></p>
                           )}
                         </div>
                       </div>
@@ -2150,6 +2402,12 @@ export default function ConversationsInbox() {
         {/* Main Content Area */}
         {
           selectedConversation ? (
+            isLoadingInbox && !selectedConvObj ? (
+              // Conversations still loading after refresh — show skeleton to avoid "Unknown" flash
+              <Card className="flex-1 flex flex-col border-l-0 rounded-none items-center justify-center">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </Card>
+            ) : (
             <Card className="flex-1 flex flex-col border-l-0 rounded-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-3">
@@ -2254,9 +2512,8 @@ export default function ConversationsInbox() {
                             is assigned to me. */}
                         {(() => {
                           const conv = conversations.find((c: Conversation) => c.id === selectedConversation);
-                          const me = getUserInfo() as any;
-                          const myName = me?.name || me?.email || null;
-                          const isMine = !!myName && conv?.assignedAgent === myName;
+                          // Compare by user ID (assignedAgent now stores the user's numeric ID string)
+                          const isMine = !!currentUser.id && conv?.assignedAgent === currentUser.id;
                           return (
                             <DropdownMenuItem
                               onClick={() => {
@@ -2390,19 +2647,6 @@ export default function ConversationsInbox() {
                           )}
 
                           <div id={`message-${msg.id}`} className={`relative max-w-[70%] rounded-lg p-3 ${msg.from === "user" ? "bg-blue-100 dark:bg-blue-900/30 dark:text-blue-100" : "bg-gray-200 text-gray-900 dark:bg-slate-700 dark:text-slate-100"}`} data-testid={`message-${msg.id}`}>
-                            {/* Existing reactions — chip row at top of bubble. */}
-                            {Array.isArray((msg as any).reactions) && (msg as any).reactions.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-1">
-                                {(msg as any).reactions.map((r: any, ri: number) => (
-                                  <span
-                                    key={ri}
-                                    className="text-[11px] bg-white/70 dark:bg-slate-900/70 px-1.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700"
-                                  >
-                                    {r.reaction ?? r.emoji ?? ''}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
                             {msg.text && <p className="text-sm">{msg.text}</p>}
 
                             {/* Images */}
@@ -2490,7 +2734,7 @@ export default function ConversationsInbox() {
                                     }}
                                     controlsList="nodownload"
                                   >
-                                    <source src={msg.audio!.url} type="audio/webm" />
+                                    <source src={msg.audio!.url} type={msg.audio!.url?.includes('.m4a') ? 'audio/mp4' : msg.audio!.url?.includes('.mp4') ? 'video/mp4' : 'audio/webm'} />
                                     Your browser does not support the audio element.
                                   </audio>
                                   <div className="flex items-center justify-between mt-2">
@@ -2498,7 +2742,7 @@ export default function ConversationsInbox() {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDownload(msg.audio!.url, `voice-message-${msg.id}.webm`);
+                                        handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`);
                                       }}
                                       className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                                       title="Download voice message"
@@ -2510,11 +2754,14 @@ export default function ConversationsInbox() {
                               </div>
                             )}
 
-                            <p className={`text-xs mt-1 flex items-center gap-1 ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
+                            <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${msg.from === "agent" ? "justify-end text-gray-700 dark:text-slate-400" : "justify-end text-gray-600 dark:text-slate-500"}`}>
                               <span>{formatMessageTime(msg.time)}</span>
                               {msg.from === "agent" && msg.status && (
                                 <MessageStatusTick status={msg.status} />
                               )}
+                              {Array.isArray((msg as any).reactions) && (msg as any).reactions.map((r: any, ri: number) => (
+                                <span key={ri} className="text-base leading-none">{r.reaction ?? r.emoji ?? ''}</span>
+                              ))}
                             </p>
                           </div>
 
@@ -2588,7 +2835,7 @@ export default function ConversationsInbox() {
               <Separator />
 
               {/* Message Input or Assignment Prompt */}
-              {assignedAgent === "self" ? (
+              {assignedAgent !== null ? (
                 <div className="p-4 flex-shrink-0 relative">
                   {/* Attached files preview */}
                   {(attachedFiles.length > 0 || recordedAudio) && (
@@ -2736,7 +2983,7 @@ export default function ConversationsInbox() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
-                          handleSendMessage();
+                          if (!sendMessageMutation.isPending) handleSendMessage();
                         }
                       }}
                     />
@@ -2853,7 +3100,7 @@ export default function ConversationsInbox() {
                       size="icon"
                       data-testid="button-send"
                       onClick={handleSendMessage}
-                      disabled={(!messageText.trim() && attachedFiles.length === 0 && !recordedAudio) || sendMessageMutation.isPending}
+                      disabled={!messageText.trim() && attachedFiles.length === 0 && !recordedAudio}
                     >
                       <Send size={18} color="white" />
                     </Button>
@@ -2869,6 +3116,7 @@ export default function ConversationsInbox() {
                 </div>
               )}
             </Card>
+            )
           ) : (
             <Card className="flex-1 flex flex-col items-center justify-center border-l-0 rounded-none">
               <div className="text-center">
@@ -2916,6 +3164,8 @@ export default function ConversationsInbox() {
               tags={tagsByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || []}
               onUpdateTags={handleUpdateTags}
               tagOptions={tagOptions}
+              profileCustomFields={profileFieldsByConv[selectedConversation || 0] || []}
+              onSaveCustomFieldValue={handleSaveCustomFieldValue}
               customAttributes={customAttributesByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || {}}
               onUpdateCustomAttributes={handleUpdateCustomAttributes}
               notes={notesByConv[conversations.find((c: Conversation) => c.id === selectedConversation)?.id || 0] || []}

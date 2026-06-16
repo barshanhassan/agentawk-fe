@@ -47,11 +47,12 @@ import {
 import CustomDropdown from "@/components/CustomDropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function AppSidebar() {
   const [location, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   // State for Theme and Online Status
   const { mode: theme, setMode: setTheme } = useTheme();
@@ -114,22 +115,20 @@ export default function AppSidebar() {
     }
   }, [brandingData]);
 
-  // Notifications — top-bell dropdown. Preview-mode shows 5, expand-mode shows up to 100.
-  // Background-refetch every 60s so new events surface without a manual reload.
-  const [notifShowAll, setNotifShowAll] = useState(false);
-  const notifLimit = notifShowAll ? 100 : 5;
-  const { data: notifResp } = useQuery<any>({
-    queryKey: ["/api/notifications", { limit: notifLimit }],
+  // Notifications — top-bell dropdown. Shows 2 previews; "View all" navigates to /notifications page.
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { data: notifResp, refetch: refetchNotifs } = useQuery<any>({
+    queryKey: ["/api/notifications", { limit: 2 }],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/notifications?limit=${notifLimit}`);
+      const res = await apiRequest("GET", `/api/notifications?limit=2`);
       return res.json();
     },
-    refetchInterval: 60 * 1000,
-    staleTime: 30 * 1000,
+    refetchInterval: 15 * 1000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
   const notifications: any[] = notifResp?.notifications || [];
   const unreadCount: number = notifResp?.unread || 0;
-  const totalCount: number = notifResp?.total || 0;
 
   /** Human-readable relative time without pulling in a date library. */
   const formatRelativeTime = (iso: string | Date | null | undefined): string => {
@@ -141,6 +140,17 @@ export default function AppSidebar() {
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
     return date.toLocaleDateString();
+  };
+
+  const handleNotifClick = async (n: any) => {
+    if (!n.read) {
+      try {
+        await apiRequest("POST", `/api/notifications/${n.id}/read`, {});
+        queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      } catch {}
+    }
+    setNotifOpen(false);
+    setLocation("/notifications");
   };
 
   /** Map a notification slug to the right icon/colour. */
@@ -243,6 +253,35 @@ export default function AppSidebar() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Map frontend label → backend type key
+  const searchTypeMap: Record<string, string> = {
+    "WhatsApp Number": "whatsapp",
+    "Email": "email",
+    "Phone Number": "phone",
+    "First Name": "first_name",
+    "Last Name": "last_name",
+    "Full Name": "full_name",
+    "Instagram Handle": "instagram",
+    "Messenger Username": "messenger",
+    "Contact ID": "id",
+    "Support Ticket": "full_name",
+  };
+
+  const { data: searchResp } = useQuery<any>({
+    queryKey: ["/api/contacts/search/simple", searchValue, searchType],
+    queryFn: async () => {
+      const res = await apiRequest("POST", "/api/contacts/search/simple", {
+        search: searchValue,
+        type: searchTypeMap[searchType] ?? "full_name",
+      });
+      return res.json();
+    },
+    enabled: searchValue.trim().length >= 2,
+    staleTime: 5000,
+  });
+  const searchResults: any[] = searchResp?.contacts || [];
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -436,7 +475,8 @@ export default function AppSidebar() {
                 ref={searchInputRef}
                 type="text"
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
+                onChange={(e) => { setSearchValue(e.target.value); setShowSearchResults(true); }}
+                onFocus={() => setShowSearchResults(true)}
                 placeholder="Search anything..."
                 className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400"
               />
@@ -445,11 +485,50 @@ export default function AppSidebar() {
                 onClick={() => {
                   setIsSearchOpen(false);
                   setSearchValue("");
+                  setShowSearchResults(false);
                 }}
                 className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-gray-400 hover:text-red-500 transition-all shrink-0 ml-2"
               >
                 ✕
               </button>
+
+              {/* Search results dropdown */}
+              {showSearchResults && searchValue.trim().length >= 2 && (
+                <div className={cn(
+                  "absolute left-0 top-full mt-1 w-full border rounded-xl shadow-2xl z-50 max-h-72 overflow-y-auto",
+                  theme === "dark" ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200"
+                )}>
+                  {searchResults.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-gray-400">No contacts found</div>
+                  ) : (
+                    searchResults.map((c: any) => (
+                      <button
+                        key={c.id}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                          theme === "dark" ? "hover:bg-slate-800" : "hover:bg-slate-50"
+                        )}
+                        onClick={() => {
+                          setLocation(`/contacts?open=${c.id}`);
+                          setSearchValue("");
+                          setShowSearchResults(false);
+                          setIsSearchOpen(false);
+                        }}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0",
+                          "bg-primary"
+                        )}>
+                          {(c.full_name?.[0] || "?").toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{c.full_name}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -457,7 +536,7 @@ export default function AppSidebar() {
         {/* Right Section */}
         <div className="flex items-center gap-5">
           {/* Notifications Premium Button */}
-          <DropdownMenu>
+          <DropdownMenu open={notifOpen} onOpenChange={(open) => { setNotifOpen(open); if (open) refetchNotifs(); }}>
             <DropdownMenuTrigger asChild>
               <button className={cn(
                 "relative p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center group",
@@ -467,7 +546,9 @@ export default function AppSidebar() {
               )}>
                 <Bell size={20} className="group-hover:rotate-12 transition-transform" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0f172a]" />
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white dark:border-[#0f172a] leading-none">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
                 )}
               </button>
             </DropdownMenuTrigger>
@@ -478,7 +559,7 @@ export default function AppSidebar() {
               <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                 <h3 className="font-bold text-sm">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{unreadCount} NEW</span>
+                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">{unreadCount} unread</span>
                 )}
               </div>
               <div className="max-h-96 overflow-y-auto p-1">
@@ -491,7 +572,18 @@ export default function AppSidebar() {
                 ) : (
                   notifications.map((n: any) => {
                     const { Icon, color } = getNotifIcon(n.slug);
-                    const title = n.data?.title || n.data?.message || n.slug || "Notification";
+                    const slugLabels: Record<string, string> = {
+                      'inbox.message_received': 'New Message',
+                      'conversation_assigned': 'Conversation Assigned',
+                      'task_assigned': 'Task Assigned',
+                      'chat_note_mention': 'Mentioned in Note',
+                    };
+                    const notifTitle =
+                      n.data?.title ||
+                      (n.data?.contact_name ? `New message from ${n.data.contact_name}` : null) ||
+                      n.data?.message ||
+                      slugLabels[n.slug] ||
+                      'New Notification';
                     return (
                       <DropdownMenuItem
                         key={n.id}
@@ -499,14 +591,19 @@ export default function AppSidebar() {
                           "p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none",
                           !n.read && "bg-primary/5 dark:bg-primary/10"
                         )}
-                        onClick={() => n.data?.action_url && setLocation(n.data.action_url)}
+                        onClick={() => handleNotifClick(n)}
                       >
                         <div className="flex gap-3 w-full">
                           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-700 shrink-0", color)}>
                             <Icon size={16} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold truncate">{title}</p>
+                            <p className="text-sm font-semibold truncate">
+                              {notifTitle}
+                            </p>
+                            {n.data?.message && (
+                              <p className="text-[11px] text-gray-400 truncate mt-0.5">{n.data.message}</p>
+                            )}
                             <p className="text-[11px] text-gray-500 mt-0.5">{formatRelativeTime(n.created_at)}</p>
                           </div>
                           {!n.read && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
@@ -516,21 +613,17 @@ export default function AppSidebar() {
                   })
                 )}
               </div>
-              {totalCount > 5 && (
-                <div className="p-2 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    onClick={(e) => {
-                      // Keep dropdown open while toggling list size.
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setNotifShowAll((v) => !v);
-                    }}
-                    className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
-                  >
-                    {notifShowAll ? "Show Less" : `View All Notifications (${totalCount})`}
-                  </button>
-                </div>
-              )}
+              <div className="p-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => {
+                    setNotifOpen(false);
+                    setLocation("/notifications");
+                  }}
+                  className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
+                >
+                  View all notifications
+                </button>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
