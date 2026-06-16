@@ -1,0 +1,19 @@
+name: Trigger Fork Sync on Push
+
+on:
+  push:
+    branches:
+      - Agency1
+
+jobs:
+  trigger-sync:
+    if: github.repository == 'barshanhassan/ezconn-fe'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch sync workflow on fork
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.FORK_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/MuhammadAbdullah79/ezconn-fe/actions/workflows/sync-upstream.yml/dispatches \
+            -d '{"ref":"Agency1"}'
