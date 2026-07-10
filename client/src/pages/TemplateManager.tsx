@@ -612,6 +612,28 @@ export default function TemplateManager() {
     },
   });
 
+  // Pull the authoritative template list from Meta (includes templates created
+  // directly in Meta's dashboard, with their live status) and upsert locally.
+  const syncTemplatesMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/waba/templates/sync");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/waba/templates/stats"] });
+    },
+    // Silent on error (e.g. no WABA connected yet) — the local list still shows.
+    onError: () => {},
+  });
+
+  // Auto-sync from Meta once when the page opens, so Meta-created templates and
+  // up-to-date statuses appear without the user having to hit Refresh.
+  useEffect(() => {
+    syncTemplatesMutation.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/waba/templates/${id}`);
@@ -1027,12 +1049,13 @@ export default function TemplateManager() {
                                     size="sm"
                                     className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-800 text-slate-600 hover:bg-slate-50 transition-all"
                                     data-testid="button-refresh"
-                                    onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/waba/templates"] })}
+                                    disabled={syncTemplatesMutation.isPending}
+                                    onClick={() => syncTemplatesMutation.mutate()}
                                 >
-                                    <RefreshCw size={14} />
+                                    <RefreshCw size={14} className={syncTemplatesMutation.isPending ? "animate-spin" : ""} />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Refresh Data</TooltipContent>
+                            <TooltipContent>Sync from WhatsApp</TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
