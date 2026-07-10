@@ -587,7 +587,14 @@ export default function TemplateManager() {
       const res = await apiRequest("POST", "/api/waba/templates", payload);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (created: any) => {
+      // Show the new template instantly by prepending it to the cached list —
+      // no waiting for the invalidate refetch to round-trip.
+      if (created && created.id != null) {
+        queryClient.setQueryData(["/api/waba/templates"], (old: any) =>
+          Array.isArray(old) ? [created, ...old] : [created],
+        );
+      }
       toast({
         title: "Template Created",
         description: "Your template has been submitted to WhatsApp for review.",
@@ -2876,7 +2883,7 @@ export default function TemplateManager() {
                     variant="outline"
                     disabled={
                       editingTemplateId === null
-                        ? !isTemplateFormValid()
+                        ? !isTemplateFormValid() || createTemplateMutation.isPending
                         : !isTemplateFormValid() || !hasTemplateChanged()
                     }
                     onClick={
@@ -2885,7 +2892,11 @@ export default function TemplateManager() {
                         : handleSaveEditedTemplate
                     }
                   >
-                    {editingTemplateId === null ? "Create Template" : "Save Template"}
+                    {editingTemplateId === null
+                      ? createTemplateMutation.isPending
+                        ? "Creating…"
+                        : "Create Template"
+                      : "Save Template"}
                   </Button>
                 </div>
               </div>
