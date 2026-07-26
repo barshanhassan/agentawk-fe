@@ -152,9 +152,20 @@ const AgencyWorkspaces = () => {
       return res.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("auth_token", data.token);
-      localStorage.setItem("user_info", JSON.stringify(data.user));
-      window.location.href = data.redirect_to || '/workspace';
+      const next = data.redirect_to || '/workspace';
+      if (data.workspace_url) {
+        // The workspace has its own subdomain — open it in a NEW TAB and hand
+        // the workspace-scoped token off via the URL fragment (SsoHandoffPage
+        // reads it there). We intentionally do NOT overwrite this agency tab's
+        // token, so the agency session stays intact here.
+        const url = `${data.workspace_url}/sso#token=${encodeURIComponent(data.token)}&next=${encodeURIComponent(next)}`;
+        window.open(url, '_blank', 'noopener');
+      } else {
+        // Legacy fallback (workspace has no subdomain yet): same-tab login.
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user_info", JSON.stringify(data.user));
+        window.location.href = next;
+      }
     },
     onError: (error: any) => {
       toast({

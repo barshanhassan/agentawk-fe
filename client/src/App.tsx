@@ -31,6 +31,7 @@ import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import FindAccountPage from "@/pages/FindAccountPage";
+import SsoHandoffPage from "@/pages/SsoHandoffPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import AcceptInvitationPage from "@/pages/AcceptInvitationPage";
 import AgencyDashboard from "@/pages/Agency/AgencyDashboard";
@@ -74,6 +75,7 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/find-account" component={FindAccountPage} />
+      <Route path="/sso" component={SsoHandoffPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/accept-invitation" component={AcceptInvitationPage} />
 
@@ -240,7 +242,7 @@ function AppContent() {
   const { siteData, loading } = useSite();
 
   const isBuilderRoute = location.startsWith("/automations/") && location.split("/").length === 3;
-  const isAuthRoute = location === "/login" || location === "/forgot-password" || location === "/signup" || location === "/find-account";
+  const isAuthRoute = location === "/login" || location === "/forgot-password" || location === "/signup" || location === "/find-account" || location === "/sso";
   const siteType = siteData?.app?.site_type || "WORKSPACE";
 
   if (loading) {

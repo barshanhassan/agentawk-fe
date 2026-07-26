@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { Input } from '../components/ui/input';
-import { ArrowLeft, ArrowRight, User, Link2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, Link2, MailCheck, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { apiRequest } from '../lib/queryClient';
 import { isAppHost, isDevHost, appHostUrl } from '../lib/host';
@@ -123,8 +123,11 @@ const SignupPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, navigate] = useLocation();
 
-  // Step 2 — email OTP verification
-  const [step, setStep] = useState<'form' | 'otp'>('form');
+  // Terms of Service / Privacy — must be accepted before signup is allowed.
+  const [agreed, setAgreed] = useState(false);
+
+  // Step 2 — email OTP verification. 'done' = verified, credentials emailed.
+  const [step, setStep] = useState<'form' | 'otp' | 'done'>('form');
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [otpError, setOtpError] = useState('');
   const [otpSuccess, setOtpSuccess] = useState('');
@@ -181,11 +184,11 @@ const SignupPage: React.FC = () => {
     setIsVerifying(true);
     try {
       await apiRequest('POST', '/auth/verify-signup-otp', { email, code });
-      setOtpSuccess('Email verified! Check your inbox — we sent your login URL, username & password.');
-      setTimeout(() => {
-        setIsOpening(true);
-        setTimeout(() => navigate('/login'), 800);
-      }, 2500);
+      // Verified — do NOT bounce to /login (which, on the app host, redirects to
+      // find-account). Show a clear "we've emailed your details" confirmation
+      // and let the user go check their inbox.
+      setOtpSuccess('');
+      setStep('done');
     } catch (error: any) {
       console.error('OTP verify error:', error);
       setOtpError(error?.message || 'Invalid or expired code');
@@ -382,7 +385,32 @@ const SignupPage: React.FC = () => {
           )}
         >
           <div className="w-full max-w-lg">
-            {step === 'otp' ? (
+            {step === 'done' ? (
+              <div className="text-center">
+                <div className="mx-auto mb-5 w-16 h-16 rounded-full flex items-center justify-center" style={{ background: '#eafaf0' }}>
+                  <MailCheck className="w-8 h-8 text-[#1eb955]" />
+                </div>
+                <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
+                  Account created
+                </div>
+                <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: '#0B1020' }}>
+                  Check your email
+                </h1>
+                <p className="mt-3" style={{ fontSize: 15, lineHeight: 1.55, color: '#6b7482' }}>
+                  We've sent all your details — your login URL, username &amp; password — to{' '}
+                  <span className="font-semibold" style={{ color: '#0B1020' }}>{email}</span>.
+                  Please check your inbox to log in to your organization.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/find-account')}
+                  className="mt-6 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
+                  style={{ color: '#1eb955' }}
+                >
+                  Didn't get the email? Find my account
+                </button>
+              </div>
+            ) : step === 'otp' ? (
               <>
                 <div className="mb-8">
                   <div className="uppercase mb-2.5" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: '0.2em', color: '#25d366' }}>
@@ -546,7 +574,12 @@ const SignupPage: React.FC = () => {
                   </label>
 
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                    <input type="checkbox" className="mt-0.5 w-[15px] h-[15px] rounded-[4px] border-[#cfd6e0] text-[#25d366] focus:ring-[#25d366]" />
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      className="mt-0.5 w-[15px] h-[15px] rounded-[4px] border-[#cfd6e0] text-[#25d366] focus:ring-[#25d366]"
+                    />
                     <span style={{ fontSize: 12.5, color: '#6b7482' }}>
                       I agree to agentawk's <a href="#" style={{ color: '#1eb955', fontWeight: 600 }}>Terms of Service</a> and{' '}
                       <a href="#" style={{ color: '#1eb955', fontWeight: 600 }}>Privacy Policy</a>.
@@ -555,8 +588,9 @@ const SignupPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    disabled={isLoading}
-                    className="w-full h-10 rounded-[11px] border-none flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-70"
+                    disabled={isLoading || !agreed}
+                    title={!agreed ? 'Please accept the Terms of Service and Privacy Policy first' : undefined}
+                    className="w-full h-10 rounded-[11px] border-none flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                     style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, background: '#22B257', boxShadow: '0 16px 34px -16px rgba(37,211,102,.7)' }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = '#1ea34e')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = '#22B257')}
@@ -567,17 +601,22 @@ const SignupPage: React.FC = () => {
                       </>
                     )}
                   </button>
+                  {!agreed && (
+                    <p className="text-center" style={{ fontSize: 12, color: '#9aa4b5' }}>
+                      Please accept the Terms &amp; Privacy Policy to continue.
+                    </p>
+                  )}
                 </form>
 
                 <div className="mt-4">
                   <button
                     type="button"
-                    onClick={() => navigate('/login')}
+                    onClick={() => navigate('/find-account')}
                     className="inline-flex items-center gap-1 text-sm font-semibold hover:underline"
                     style={{ color: '#1eb955' }}
                   >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to login
+                    <Search className="h-4 w-4" />
+                    Find my account
                   </button>
                 </div>
               </>
