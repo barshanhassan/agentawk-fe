@@ -46,7 +46,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Hostname-based fallback
         setSiteData({
           app: {
-            name: isAgency ? "EZCONN Agency" : "EZCONN",
+            name: isAgency ? "agentawk Organization" : "agentawk",
             site_type: isAgency ? "AGENCY" : "WORKSPACE",
           },
         });

@@ -92,9 +92,9 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const agencyId = userInfo.modelable_id;
 
   const { data: membersData } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryKey: [`/api/organizations/${agencyId}/members`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/members`);
       return res.json();
     },
   });
@@ -128,8 +128,8 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const endpoint = isEdit
-        ? `/api/agencies/${agencyId}/workspaces/${initialData.id}`
-        : `/api/agencies/${agencyId}/workspaces`;
+        ? `/api/organizations/${agencyId}/workspaces/${initialData.id}`
+        : `/api/organizations/${agencyId}/workspaces`;
       const res = await apiRequest(isEdit ? "PATCH" : "POST", endpoint, {
         name: form.name,
         slug: form.subdomain,
@@ -153,7 +153,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
       toast({ title: isEdit ? "Workspace updated" : "Workspace created successfully" });
       onCancel();
     },
@@ -395,7 +395,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Allow Support</p>
-                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Agency can log in to workspace</p>
+                <p className={cn("text-xs", dark ? "text-slate-500" : "text-slate-400")}>Organization can log in to workspace</p>
               </div>
               <Switch checked={form.allowSupport} onCheckedChange={(v) => set('allowSupport', v)} className={switchCls} />
             </div>

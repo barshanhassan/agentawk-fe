@@ -83,7 +83,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
       } catch {}
     }
     setNotifOpen(false);
-    setLocation("/agency/notifications");
+    setLocation("/org/notifications");
   };
   const mainRef = React.useRef<HTMLElement>(null);
 
@@ -194,7 +194,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
                 <div className="p-2 border-t border-slate-100 dark:border-slate-800">
                   <button
-                    onClick={() => { setNotifOpen(false); setLocation("/agency/notifications"); }}
+                    onClick={() => { setNotifOpen(false); setLocation("/org/notifications"); }}
                     className="w-full py-2 text-[12px] font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded-xl transition-colors"
                   >
                     View all notifications
@@ -249,7 +249,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
 
                 {/* Change Password */}
                 <DropdownMenuItem
-                  onClick={() => setLocation("/agency/settings/change-password")}
+                  onClick={() => setLocation("/org/settings/change-password")}
                   className={cn("flex items-center gap-3 p-3 rounded-md cursor-pointer group outline-none",
                     mode === "dark" ? "hover:bg-[#334155] focus:bg-[#334155] focus:text-white" : "hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-900")}
                 >

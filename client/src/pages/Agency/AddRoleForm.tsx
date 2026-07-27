@@ -64,9 +64,9 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const [expandedGroup, setExpandedGroup] = React.useState<string | null>(null);
 
   const { data: permGroups = [], isLoading: loadingPerms } = useQuery<any[]>({
-    queryKey: [`/api/agencies/${agencyId}/permissions`],
+    queryKey: [`/api/organizations/${agencyId}/permissions`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/agencies/${agencyId}/permissions`);
+      const res = await apiRequest('GET', `/api/organizations/${agencyId}/permissions`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -103,13 +103,13 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const url = initialData
-        ? `/api/agencies/${agencyId}/roles/${initialData.id}`
-        : `/api/agencies/${agencyId}/roles`;
+        ? `/api/organizations/${agencyId}/roles/${initialData.id}`
+        : `/api/organizations/${agencyId}/roles`;
       const res = await apiRequest(initialData ? 'PATCH' : 'POST', url, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/roles`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/roles`] });
       // Explicit confirmation copy, then return to the roles list (onCancel = back to LIST).
       toast({ title: initialData ? 'Update Successfully' : 'Role Created' });
       onCancel();

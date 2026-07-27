@@ -59,6 +59,16 @@ import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./lib/i18n";
 
+// Old "/agency/..." URLs (bookmarks, emailed links) → same path under "/org".
+// Reads the real pathname so every nested segment is preserved.
+function LegacyAgencyRedirect() {
+  useEffect(() => {
+    const { pathname, search, hash } = window.location;
+    window.location.replace(pathname.replace(/^\/agency/, "/org") + search + hash);
+  }, []);
+  return null;
+}
+
 function DashboardDispatcher({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?: boolean }) {
   const userInfo = JSON.parse(localStorage.getItem("user_info") || "{}");
   const userRole = userInfo.role;
@@ -155,70 +165,76 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
         <ProtectedRoute><SmartFlowsPage /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/notifications">
+      <Route path="/org/notifications">
         <ProtectedRoute permissions={["agency.*"]}><AgencyNotificationsPage /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/settings/white-label">
+      <Route path="/org/settings/white-label">
         <ProtectedRoute permissions={["agency.*"]}><AgencyWhiteLabelSettings /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/settings/notifications">
+      <Route path="/org/settings/notifications">
         <ProtectedRoute permissions={["agency.*"]}><AgencyNotificationsSettings /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/settings/general">
+      <Route path="/org/settings/general">
         <ProtectedRoute permissions={["agency.settings.*"]}><AgencyGeneralSettings /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/settings/change-password">
+      <Route path="/org/settings/change-password">
         <ProtectedRoute permissions={["agency.*"]}><AgencyChangePassword /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/help">
+      <Route path="/org/help">
         <ProtectedRoute permissions={["agency.*"]}><AgencyHelp /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/legal">
+      <Route path="/org/legal">
         <ProtectedRoute permissions={["agency.legal.*"]}><AgencyLegal /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/billing/plans">
+      <Route path="/org/billing/plans">
         <ProtectedRoute permissions={["agency.*"]}><AgencyBillingPlans /></ProtectedRoute>
       </Route>
-      <Route path="/agency/billing/manage">
+      <Route path="/org/billing/manage">
         <ProtectedRoute permissions={["agency.*"]}><AgencyBillingManage /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/saas/api">
+      <Route path="/org/saas/api">
         <ProtectedRoute permissions={["agency.*"]}><AgencyAPI /></ProtectedRoute>
       </Route>
-      <Route path="/agency/saas/plans">
+      <Route path="/org/saas/plans">
         <ProtectedRoute permissions={["agency.*"]}><AgencyPlans /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/audit-logs/workspace">
+      <Route path="/org/audit-logs/workspace">
         <ProtectedRoute permissions={["agency.*"]}><WorkspaceLogs /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/audit-logs/agency">
+      <Route path="/org/audit-logs/org">
         <ProtectedRoute permissions={["agency.*"]}><AgencyLogs /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/roles">
+      <Route path="/org/roles">
         <ProtectedRoute permissions={["agency.acl.*"]}><AgencyRoles /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/team">
+      <Route path="/org/team">
         <ProtectedRoute permissions={["agency.users.*"]}><AgencyTeam /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency/workspaces">
+      <Route path="/org/workspaces">
         <ProtectedRoute permissions={["agency.workspace.*"]}><AgencyWorkspaces /></ProtectedRoute>
       </Route>
 
-      <Route path="/agency">
+      <Route path="/org">
         <ProtectedRoute><AgencyDashboard /></ProtectedRoute>
+      </Route>
+
+      {/* Legacy: "agency" routes were renamed to "org". Redirect old
+          bookmarks / emailed links / cached redirects to the new paths. */}
+      <Route path="/agency" nest>
+        <LegacyAgencyRedirect />
       </Route>
 
       <Route component={NotFound} />
@@ -256,7 +272,7 @@ function AppContent() {
     return <Redirect to="/signup" />;
   }
 
-  const isAgencyRoute = location.startsWith("/agency");
+  const isAgencyRoute = location.startsWith("/org");
 
   return (
     <QueryClientProvider client={queryClient}>

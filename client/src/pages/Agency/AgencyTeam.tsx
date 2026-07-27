@@ -43,9 +43,9 @@ const AgencyTeam = () => {
   const agencyId = userInfo.modelable_id;
 
   const { data: membersResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryKey: [`/api/organizations/${agencyId}/members`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/members`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -53,13 +53,13 @@ const AgencyTeam = () => {
 
   const removeMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      const res = await apiRequest("DELETE", `/api/agencies/${agencyId}/members/${memberId}`);
+      const res = await apiRequest("DELETE", `/api/organizations/${agencyId}/members/${memberId}`);
       return res.json();
     },
     onSuccess: (_, memberId) => {
       // Drop the user from the cached list instantly so the row disappears
       // without a manual refresh (queries use staleTime:Infinity).
-      queryClient.setQueryData([`/api/agencies/${agencyId}/members`], (old: any) => {
+      queryClient.setQueryData([`/api/organizations/${agencyId}/members`], (old: any) => {
         if (!old?.members) return old;
         return { ...old, members: old.members.filter((m: any) => String(m.id) !== String(memberId)) };
       });
@@ -73,11 +73,11 @@ const AgencyTeam = () => {
 
   const suspendMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      const res = await apiRequest("POST", `/api/agencies/${agencyId}/members/${memberId}/suspend`);
+      const res = await apiRequest("POST", `/api/organizations/${agencyId}/members/${memberId}/suspend`);
       return res.json();
     },
     onSuccess: (_, memberId) => {
-      queryClient.setQueryData([`/api/agencies/${agencyId}/members`], (old: any) => {
+      queryClient.setQueryData([`/api/organizations/${agencyId}/members`], (old: any) => {
         if (!old?.members) return old;
         return { ...old, members: old.members.map((m: any) =>
           String(m.id) === String(memberId) ? { ...m, status: 'SUSPENDED' } : m
@@ -92,11 +92,11 @@ const AgencyTeam = () => {
 
   const activateMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      const res = await apiRequest("POST", `/api/agencies/${agencyId}/members/${memberId}/activate`);
+      const res = await apiRequest("POST", `/api/organizations/${agencyId}/members/${memberId}/activate`);
       return res.json();
     },
     onSuccess: (_, memberId) => {
-      queryClient.setQueryData([`/api/agencies/${agencyId}/members`], (old: any) => {
+      queryClient.setQueryData([`/api/organizations/${agencyId}/members`], (old: any) => {
         if (!old?.members) return old;
         return { ...old, members: old.members.map((m: any) =>
           String(m.id) === String(memberId) ? { ...m, status: 'ACTIVE' } : m

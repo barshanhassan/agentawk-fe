@@ -71,9 +71,9 @@ const AgencyWhiteLabelSettings = () => {
   }, []);
 
   const { data: agencyResponse } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     }
   });
@@ -119,11 +119,11 @@ const AgencyWhiteLabelSettings = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}/branding`, data);
+      const res = await apiRequest("PATCH", `/api/organizations/${agencyId}/branding`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}`] });
       toast({ title: t("agency.settings.general.updated") });
     }
   });

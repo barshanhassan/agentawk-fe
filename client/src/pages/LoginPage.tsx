@@ -91,7 +91,7 @@ const LoginPage: React.FC = () => {
         if (data.redirect_to) {
           navigate(data.redirect_to);
         } else if (data.user?.role === 'AGENCY' || data.user?.role === 'agency') {
-          navigate('/agency');
+          navigate('/org');
         } else {
           // Redirect workspace users to root for better layout stability
           navigate('/');

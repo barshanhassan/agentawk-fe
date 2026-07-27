@@ -229,7 +229,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
           >
             <div className="px-2 py-3 mb-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
               <p className="text-[13px] font-bold text-slate-900 dark:text-white">Talha Agency</p>
-              <p className="text-[11px] font-medium text-slate-400 mt-0.5 uppercase tracking-tight">Agency Owner</p>
+              <p className="text-[11px] font-medium text-slate-400 mt-0.5 uppercase tracking-tight">Organization Owner</p>
             </div>
             
             <DropdownMenuLabel className="px-2 text-[10px] font-bold text-slate-400 mb-1">Account</DropdownMenuLabel>

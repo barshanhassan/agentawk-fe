@@ -35,9 +35,9 @@ const AgencyNotificationsSettings = () => {
   const [notifLanguage, setNotifLanguage] = useState("en-US");
 
   const { data: agencyResponse } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     }
   });
@@ -75,11 +75,11 @@ const AgencyNotificationsSettings = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}`, data);
+      const res = await apiRequest("PATCH", `/api/organizations/${agencyId}`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}`] });
       toast({ title: t("common.saved"), description: t("agency.settings.notifications.updated") });
     },
     onError: () => {

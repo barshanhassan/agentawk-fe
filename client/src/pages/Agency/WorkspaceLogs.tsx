@@ -91,9 +91,9 @@ const WorkspaceLogs = () => {
   ];
 
   const { data: workspacesResponse } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/workspaces`],
+    queryKey: [`/api/organizations/${agencyId}/workspaces`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/workspaces`);
       return res.json();
     }
   });
@@ -129,7 +129,7 @@ const WorkspaceLogs = () => {
   };
 
   const { data: logsResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/audit-logs`, selectedDate, selectedWorkspace, page],
+    queryKey: [`/api/organizations/${agencyId}/audit-logs`, selectedDate, selectedWorkspace, page],
     queryFn: async () => {
       const params = new URLSearchParams();
       const { from, to } = buildDateRange(selectedDate);
@@ -138,7 +138,7 @@ const WorkspaceLogs = () => {
       const wsId = resolveWorkspaceId(selectedWorkspace);
       if (wsId) params.set('workspace_id', wsId);
       params.set('page', String(page));
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/audit-logs?${params.toString()}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/audit-logs?${params.toString()}`);
       return res.json();
     },
     // Audit logs must reflect the latest activity every time the page is opened.

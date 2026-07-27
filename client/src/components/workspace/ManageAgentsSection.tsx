@@ -195,7 +195,7 @@ export default function ManageAgentSection() {
       toast({
         title: isLimit ? "Agent limit reached" : "Error",
         description: isLimit
-          ? "This workspace has hit its maximum number of agents. Increase the limit in the agency edit screen or remove an existing agent first."
+          ? "This workspace has hit its maximum number of agents. Increase the limit in the organization edit screen or remove an existing agent first."
           : msg,
         variant: "destructive",
       });

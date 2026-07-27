@@ -53,9 +53,9 @@ export default function AgencyBrandingFetcher() {
   }, []);
 
   const { data } = useQuery<any>({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     },
     enabled: !!agencyId,

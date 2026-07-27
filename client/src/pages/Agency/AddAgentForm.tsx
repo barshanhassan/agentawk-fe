@@ -130,9 +130,9 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
   const agencyId = userInfo.modelable_id;
 
   const { data: rolesResponse, isLoading: loadingRoles } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/roles`],
+    queryKey: [`/api/organizations/${agencyId}/roles`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/agencies/${agencyId}/roles`);
+      const res = await apiRequest('GET', `/api/organizations/${agencyId}/roles`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -163,11 +163,11 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest('POST', `/api/agencies/${agencyId}/members`, data);
+      const res = await apiRequest('POST', `/api/organizations/${agencyId}/members`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/members`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/members`] });
       toast({ title: 'User Created' });
       onCancel();
     },
@@ -178,11 +178,11 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest('PATCH', `/api/agencies/${agencyId}/members/${initialData.id}`, data);
+      const res = await apiRequest('PATCH', `/api/organizations/${agencyId}/members/${initialData.id}`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/members`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/members`] });
       toast({ title: 'Update Successfully' });
       onCancel();
     },

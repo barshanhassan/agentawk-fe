@@ -78,7 +78,7 @@ const resources = {
         "team": "Team",
         "roles": "Roles & Permissions",
         "auditLogs": "Audit Logs",
-        "auditLogs_agency": "Agency",
+        "auditLogs_agency": "Organization",
         "saas": "SaaS",
         "saas_plans": "Plans",
         "saas_api": "API",
@@ -87,7 +87,7 @@ const resources = {
         "billing_manage": "Manage",
         "legal": "Legal",
         "help": "Help",
-        "settings": "Agency Settings",
+        "settings": "Organization Settings",
         "settings_general": "General settings",
         "settings_notifications": "Notifications",
         "settings_whiteLabel": "White Label",
@@ -101,18 +101,18 @@ const resources = {
             "afternoon": "Good afternoon",
             "evening": "Good evening"
           },
-          "summary": "Here's what's happening across your agency today.",
+          "summary": "Here's what's happening across your organization today.",
           "stats": {
             "workspaces": "Total of Workspaces",
-            "agents": "Agents in the Agency",
+            "agents": "Agents in the Organization",
             "support": "Premium Support Seats"
           },
           "features": {
-            "title": "Agency features",
+            "title": "Organization features",
             "manageAll": "Manage all",
             "whiteLabel": {
-              "title": "Agency White Label",
-              "desc": "Your brand, your domain, your agency."
+              "title": "Organization White Label",
+              "desc": "Your brand, your domain, your organization."
             },
             "saas": {
               "title": "SaaS Mode",
@@ -124,7 +124,7 @@ const resources = {
             },
             "community": {
               "title": "Community Access",
-              "desc": "Network with 10,000+ agency operators."
+              "desc": "Network with 10,000+ organization operators."
             },
             "plan": {
               "title": "Your Plan",
@@ -139,7 +139,7 @@ const resources = {
             },
             "inviteTeam": {
               "title": "Invite team member",
-              "sub": "Add agents to your agency."
+              "sub": "Add agents to your organization."
             },
             "settings": {
               "sub": "Branding, domains, billing."
@@ -151,7 +151,7 @@ const resources = {
           },
           "activity": {
             "title": "Recent Activity",
-            "viewAll": "View all agency logs",
+            "viewAll": "View all organization logs",
             "actions": {
               "createdWorkspace": "created a workspace",
               "subscriptionUpgraded": "Subscription upgraded from ignite-plan to enterprise-plan."
@@ -186,22 +186,22 @@ const resources = {
         },
         "help": {
           "chat": {
-            "title": "Agency Live Chat Support",
+            "title": "Organization Live Chat Support",
             "desc": "Access direct help from our team via live chat for immediate assistance.",
             "btn": "Open Chat"
           },
           "kb": {
-            "title": "Agency Knowledge Base",
-            "desc": "Comprehensive guides and documentation to master all agency features."
+            "title": "Organization Knowledge Base",
+            "desc": "Comprehensive guides and documentation to master all organization features."
           },
           "tutorials": {
             "title": "Video Tutorials",
-            "desc": "Step-by-step video guides to help you set up and scale your agency.",
+            "desc": "Step-by-step video guides to help you set up and scale your organization.",
             "btn": "Watch Tutorials"
           },
           "api": {
             "title": "API Reference",
-            "desc": "Full technical documentation for our Agency API and integrations.",
+            "desc": "Full technical documentation for our Organization API and integrations.",
             "btn": "View Docs"
           }
         },
@@ -218,27 +218,27 @@ const resources = {
             "updatedDesc": "General settings have been updated successfully.",
             "whiteLabel": {
               "title": "White Label",
-              "replaceBrand": "Replace our brand with your own agency brand!",
+              "replaceBrand": "Replace our brand with your own organization brand!",
               "features": "Features",
               "logo": "Logo",
               "favicon": "Favicon",
               "colors": "Colors",
               "domain": "Domain",
-              "logo_info_light": "The logos displayed in this Agency account and as the default logo in Workspaces when the agent selects light mode. Please note that you can assign specific logos directly to specific Workspaces. This change will not affect custom logos in active Workspaces.",
-              "logo_info_dark": "The logos displayed in this Agency account and as the default logo in Workspaces when the agent selects dark mode. Please note that you can assign specific logos directly to specific Workspaces. This change will not affect custom logos in active Workspaces.",
+              "logo_info_light": "The logos displayed in this Organization account and as the default logo in Workspaces when the agent selects light mode. Please note that you can assign specific logos directly to specific Workspaces. This change will not affect custom logos in active Workspaces.",
+              "logo_info_dark": "The logos displayed in this Organization account and as the default logo in Workspaces when the agent selects dark mode. Please note that you can assign specific logos directly to specific Workspaces. This change will not affect custom logos in active Workspaces.",
               "email": "Notification E-mail",
               "personalize": "Personalize your Workspaces with your logo, colors and chatbotsystem.ai domain.",
               "fullLogo": "Full wide logo",
               "smallLogo": "Small logo",
               "emailDesc": "Integrate your e-mail to send branded agent invitation and forgot password emails.",
-              "customize": "Customize your Agency Logo, Colors and Domain.",
-              "logoDisplay": "Your agency logo will be displayed in all of your workspaces.",
-              "colorDisplay": "Your agency colors will be displayed in all of your workspaces.",
-              "emailUsage": "Your agency e-mail can be used from your Workspaces.",
-              "whiteLabelAll": "Display your agency logo, colors, emails and the generic *.chatbotsystem.ai domain to White Label all your Workspaces.",
-              "customDomainNote": "This custom domain applies to the agency level, not individual workspaces. To change the domain for specific workspaces, head over to their settings directly.",
-              "makeShine": "Make your Agency shine with your own custom domain!",
-              "ditchBrand": "This section lets you ditch our brand and use your agency's domain name. This adds a professional touch and builds trust with your Agency employees.",
+              "customize": "Customize your Organization Logo, Colors and Domain.",
+              "logoDisplay": "Your organization logo will be displayed in all of your workspaces.",
+              "colorDisplay": "Your organization colors will be displayed in all of your workspaces.",
+              "emailUsage": "Your organization e-mail can be used from your Workspaces.",
+              "whiteLabelAll": "Display your organization logo, colors, emails and the generic *.chatbotsystem.ai domain to White Label all your Workspaces.",
+              "customDomainNote": "This custom domain applies to the organization level, not individual workspaces. To change the domain for specific workspaces, head over to their settings directly.",
+              "makeShine": "Make your Organization shine with your own custom domain!",
+              "ditchBrand": "This section lets you ditch our brand and use your organization's domain name. This adds a professional touch and builds trust with your Organization employees.",
               "enterDomain": "Enter the domain to send from",
               "emailIntegrate": "Integrate your e-mail to send branded agent invitation and forgot password emails.",
               "selectColor": "Select the color that will be set to your account and Workspaces.",
@@ -373,7 +373,7 @@ const resources = {
           }
         },
         "logs": {
-          "title": "Agency Logs",
+          "title": "Organization Logs",
           "categories": {
             "workspace_created": "Workspace created",
             "workspace_deleted": "Workspace deleted",
@@ -532,7 +532,7 @@ const resources = {
             "name_label": "Workspace name",
             "domain_label": "Domain",
             "domain_placeholder": "domain",
-            "assign_agent": "Assign an agency Agent to this workspace",
+            "assign_agent": "Assign an organization Agent to this workspace",
             "select_agent": "Select agent",
             "enable_white_label": "Enable White Label for this workspace",
             "allow_support": "Allow support to login to workspace",
@@ -566,10 +566,10 @@ const resources = {
         },
         "team": {
           "title": "Team agents",
-          "desc": "Manage the people who have access to your agency dashboard.",
+          "desc": "Manage the people who have access to your organization dashboard.",
           "add": "Add Agent",
           "empty": "No agents found",
-          "emptyDesc": "You haven't added any team agents yet. Add agents to help you manage your agency."
+          "emptyDesc": "You haven't added any team agents yet. Add agents to help you manage your organization."
         },
         "agents": {
           "form": {
@@ -610,7 +610,7 @@ const resources = {
           },
           "roles": {
             "super_user": "Super User",
-            "co_owner": "Agency co-owner"
+            "co_owner": "Organization co-owner"
           }
         },
         "roles": {
@@ -675,8 +675,8 @@ const resources = {
               "audit_desc": "Allow to access Audit logs",
               "help": "Help",
               "help_desc": "Allow to access the help section",
-              "agency": "Agency settings",
-              "agency_desc": "Allow access to the Agency Settings"
+              "agency": "Organization settings",
+              "agency_desc": "Allow access to the Organization Settings"
             },
             "legal": {
               "view": "View legal",
@@ -692,10 +692,10 @@ const resources = {
         },
         "billing": {
           "title": "Billing Management",
-          "desc": "Manage your agency's billing, subscriptions, and usage.",
+          "desc": "Manage your organization's billing, subscriptions, and usage.",
           "plans": {
             "title": "Billing Plans",
-            "desc": "Choose the best plan for your agency.",
+            "desc": "Choose the best plan for your organization.",
             "current_plan": "Current Plan",
             "next_payment": "Next Payment: {{date}}",
             "cancel_subscription": "Cancel Subscription",
@@ -768,7 +768,7 @@ const resources = {
         },
         "legal": {
           "title": "Legal Documents",
-          "desc": "Manage your agency's terms of service, privacy policies, and other legal agreements.",
+          "desc": "Manage your organization's terms of service, privacy policies, and other legal agreements.",
           "tabs": {
             "active": "Active",
             "history": "History",

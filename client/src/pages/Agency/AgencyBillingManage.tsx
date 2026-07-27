@@ -33,9 +33,9 @@ const AgencyBillingManage = () => {
   // White-label aware modal header: agency logo + name replace hardcoded "E" + "EZCONN".
   const agencyId = userInfo?.modelable_id;
   const { data: agencyResp } = useQuery<any>({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -245,7 +245,7 @@ const AgencyBillingManage = () => {
                 {agencyLogoUrl ? (
                   <img
                     src={agencyLogoUrl}
-                    alt="Agency logo"
+                    alt="Organization logo"
                     className="w-9 h-9 object-contain"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />

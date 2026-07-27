@@ -60,10 +60,10 @@ const menuGroups: MenuGroup[] = [
   {
     section: "MAIN MENU",
     items: [
-      { label: "Dashboard", icon: <LayoutDashboard size={18} />, href: "/agency" },
-      { label: "Workspaces", icon: <Network size={18} />, href: "/agency/workspaces", permissions: ["agency.workspace.*"] },
-      { label: "Users", icon: <Users size={18} />, href: "/agency/team", permissions: ["agency.users.*"] },
-      { label: "Roles", icon: <ShieldCheck size={18} />, href: "/agency/roles", permissions: ["agency.acl.*"] },
+      { label: "Dashboard", icon: <LayoutDashboard size={18} />, href: "/org" },
+      { label: "Workspaces", icon: <Network size={18} />, href: "/org/workspaces", permissions: ["agency.workspace.*"] },
+      { label: "Users", icon: <Users size={18} />, href: "/org/team", permissions: ["agency.users.*"] },
+      { label: "Roles", icon: <ShieldCheck size={18} />, href: "/org/roles", permissions: ["agency.acl.*"] },
     ],
   },
   {
@@ -76,8 +76,8 @@ const menuGroups: MenuGroup[] = [
         hasSubmenu: true,
         permissions: ["agency.*"],
         subItems: [
-          { label: "Agency Logs", icon: <Briefcase size={15} />, href: "/agency/audit-logs/agency" },
-          { label: "Workspace Logs", icon: <Network size={15} />, href: "/agency/audit-logs/workspace" },
+          { label: "Organization Logs", icon: <Briefcase size={15} />, href: "/org/audit-logs/org" },
+          { label: "Workspace Logs", icon: <Network size={15} />, href: "/org/audit-logs/workspace" },
         ],
       },
       {
@@ -87,8 +87,8 @@ const menuGroups: MenuGroup[] = [
         hasSubmenu: true,
         permissions: ["agency.*"],
         subItems: [
-          { label: "Plans", icon: <Briefcase size={15} />, href: "/agency/saas/plans", status: "Soon" },
-          { label: "API", icon: <Plug size={15} />, href: "/agency/saas/api" },
+          { label: "Plans", icon: <Briefcase size={15} />, href: "/org/saas/plans", status: "Soon" },
+          { label: "API", icon: <Plug size={15} />, href: "/org/saas/api" },
         ],
       },
       {
@@ -98,20 +98,20 @@ const menuGroups: MenuGroup[] = [
         hasSubmenu: true,
         permissions: ["agency.*"],
         subItems: [
-          { label: "Plans", icon: <ShoppingCart size={15} />, href: "/agency/billing/plans" },
-          { label: "Manage", icon: <CircleDollarSign size={15} />, href: "/agency/billing/manage" },
+          { label: "Plans", icon: <ShoppingCart size={15} />, href: "/org/billing/plans" },
+          { label: "Manage", icon: <CircleDollarSign size={15} />, href: "/org/billing/manage" },
         ],
       },
-      { label: "Legal", icon: <Gavel size={18} />, href: "/agency/legal", permissions: ["agency.legal.*"] },
+      { label: "Legal", icon: <Gavel size={18} />, href: "/org/legal", permissions: ["agency.legal.*"] },
     ],
   },
 ];
 
 const bottomItems: BottomItem[] = [
-  { label: "Settings", icon: <Settings size={18} />, href: "/agency/settings/general", permissions: ["agency.settings.*"] },
-  { label: "Notifications", icon: <Bell size={18} />, href: "/agency/settings/notifications", permissions: ["agency.*"] },
-  { label: "White Label", icon: <Monitor size={18} />, href: "/agency/settings/white-label", permissions: ["agency.*"] },
-  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/agency/help", permissions: ["agency.*"] },
+  { label: "Settings", icon: <Settings size={18} />, href: "/org/settings/general", permissions: ["agency.settings.*"] },
+  { label: "Notifications", icon: <Bell size={18} />, href: "/org/settings/notifications", permissions: ["agency.*"] },
+  { label: "White Label", icon: <Monitor size={18} />, href: "/org/settings/white-label", permissions: ["agency.*"] },
+  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/org/help", permissions: ["agency.*"] },
 ];
 
 const AgencySidebar = () => {
@@ -161,9 +161,9 @@ const AgencySidebar = () => {
     }
   })();
   const { data: agencyResp, isLoading: isAgencyLoading } = useQuery<any>({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -217,7 +217,7 @@ const AgencySidebar = () => {
           // separately so each version renders correctly against its background.
           <img
             src={agencyLogoUrl}
-            alt="Agency logo"
+            alt="Organization logo"
             className="w-8 h-8 object-contain shrink-0"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
           />
@@ -231,7 +231,7 @@ const AgencySidebar = () => {
             <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>
               EZCONN
             </p>
-            <p className="text-[11px] text-slate-400 truncate">Agency Manager</p>
+            <p className="text-[11px] text-slate-400 truncate">Organization Manager</p>
           </div>
         )}
       </div>

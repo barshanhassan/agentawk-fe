@@ -141,9 +141,9 @@ const AgencyLogs = () => {
   // Members query is declared FIRST so resolveAgentUserId() inside the logs
   // queryFn can read it without temporal-dead-zone issues.
   const { data: membersResponse } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/members`],
+    queryKey: [`/api/organizations/${agencyId}/members`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/members`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/members`);
       return res.json();
     }
   });
@@ -156,7 +156,7 @@ const AgencyLogs = () => {
   };
 
   const { data: logsResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/agency-logs`, selectedDate, selectedAgent, page],
+    queryKey: [`/api/organizations/${agencyId}/agency-logs`, selectedDate, selectedAgent, page],
     queryFn: async () => {
       const params = new URLSearchParams();
       const { from, to } = buildDateRange(selectedDate);
@@ -165,7 +165,7 @@ const AgencyLogs = () => {
       const userId = resolveAgentUserId(selectedAgent);
       if (userId) params.set('user_id', userId);
       params.set('page', String(page));
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/agency-logs?${params.toString()}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/agency-logs?${params.toString()}`);
       return res.json();
     },
     // Audit logs must reflect the latest activity every time the page is opened.

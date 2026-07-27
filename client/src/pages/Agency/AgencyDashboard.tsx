@@ -32,9 +32,9 @@ const AgencyDashboard = () => {
   const agencyId = userInfo?.modelable_id;
 
   const { data: dashboardResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/dashboard-stats`],
+    queryKey: [`/api/organizations/${agencyId}/dashboard-stats`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/dashboard-stats`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/dashboard-stats`);
       return res.json();
     },
     retry: false,
@@ -168,9 +168,9 @@ const AgencyDashboard = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* Left: Agency Metrics */}
+        {/* Left: Organization Metrics */}
         <div className="xl:col-span-2 space-y-6">
-          <h2 className="text-base font-semibold">Agency Metrics</h2>
+          <h2 className="text-base font-semibold">Organization Metrics</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {metricCards.map((m, i) => (
@@ -200,7 +200,7 @@ const AgencyDashboard = () => {
           <div className="rounded-xl p-6 bg-gradient-to-br from-blue-600 to-violet-600 text-white">
             <div className="flex items-center gap-1.5 mb-1">
               <Star size={13} className="fill-white/60 text-white/60" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">Agency Plan</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">Organization Plan</span>
             </div>
             <h3 className="text-xl font-bold mb-1">Professional</h3>
             <p className="text-[12px] text-white/60 mb-5">Next billing: June 15, 2026</p>
@@ -229,7 +229,7 @@ const AgencyDashboard = () => {
             </div>
 
             <button
-              onClick={() => setLocation('/agency/billing/plans')}
+              onClick={() => setLocation('/org/billing/plans')}
               className="w-full py-2 rounded-lg bg-white text-blue-600 text-[13px] font-bold hover:bg-blue-50 transition-colors"
             >
               Upgrade to Enterprise

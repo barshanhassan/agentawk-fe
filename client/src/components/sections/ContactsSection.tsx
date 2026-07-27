@@ -391,7 +391,7 @@ export default function ContactsSection() {
       toast({
         title: isLimit ? "Contact limit reached" : isDup ? "Duplicate contact" : "Error",
         description: isLimit
-          ? "This workspace has hit its maximum number of contacts. Increase the cap in the agency edit screen or delete unused contacts first."
+          ? "This workspace has hit its maximum number of contacts. Increase the cap in the organization edit screen or delete unused contacts first."
           : msg,
         variant: "destructive",
       });

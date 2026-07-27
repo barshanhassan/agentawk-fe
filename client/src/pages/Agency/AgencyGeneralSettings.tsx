@@ -188,9 +188,9 @@ const AgencyGeneralSettings = () => {
   );
 
   const { data: agencyResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     }
   });
@@ -346,22 +346,22 @@ const AgencyGeneralSettings = () => {
 
   const updateGeneralMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}`, data);
+      const res = await apiRequest("PATCH", `/api/organizations/${agencyId}`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}`] });
       toast({ title: t("agency.settings.general.updated"), description: t("agency.settings.general.updatedDesc") });
     }
   });
 
   const updateBillingMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}/billing`, data);
+      const res = await apiRequest("PATCH", `/api/organizations/${agencyId}/billing`, data);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}`] });
       toast({ title: t("agency.settings.billing.updated"), description: t("agency.settings.billing.updatedDesc") });
     }
   });

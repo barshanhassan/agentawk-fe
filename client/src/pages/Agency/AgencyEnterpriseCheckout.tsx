@@ -34,9 +34,9 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   // White-label aware header: agency logo replaces "E" + "Ezconn" when uploaded.
   const agencyId = (() => { try { return getUserInfo()?.modelable_id; } catch { return null; } })();
   const { data: agencyResp } = useQuery<any>({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -61,7 +61,7 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     { type: 'ADDON', name: 'Enterprise Addon', sub: 'Enterprise level support & features', price: '$499.00', icon: <Sparkles className="w-4 h-4 text-violet-500" /> },
     { type: 'ADDON', name: 'Channels', sub: '$10.00 x 4 channel', price: '$40.00', icon: <MessageSquare className="w-4 h-4 text-emerald-500" /> },
     { type: 'ADDON', name: 'Whatsapp QR', sub: '$15.00 x 4 instance', price: '$60.00', icon: <QrCode className="w-4 h-4 text-green-500" /> },
-    { type: 'ADDON', name: 'Agency Branding Addon', sub: 'White label branding included', price: '$0.00', icon: <ShieldCheck className="w-4 h-4 text-primary" /> },
+    { type: 'ADDON', name: 'Organization Branding Addon', sub: 'White label branding included', price: '$0.00', icon: <ShieldCheck className="w-4 h-4 text-primary" /> },
     { type: 'ADDON', name: 'Branding', sub: 'Custom brand kits included', price: '$0.00', icon: <Paintbrush className="w-4 h-4 text-rose-500" /> },
     { type: 'ADDON', name: 'AI Agent Addon', sub: '$4.00 x 30 units', price: '$120.00', icon: <Bot className="w-4 h-4 text-indigo-500" /> },
   ];
@@ -93,7 +93,7 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           {agencyLogoUrl ? (
             <img
               src={agencyLogoUrl}
-              alt="Agency logo"
+              alt="Organization logo"
               className="w-9 h-9 object-contain"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
@@ -153,7 +153,7 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 {[
                   { label: 'Channels', value: '$40.00', sub: '$10.00 x 4 / month' },
                   { label: 'Whatsapp QR', value: '$60.00', sub: '$15.00 x 4 / month' },
-                  { label: 'Agency Branding Addon', value: '$0.00', sub: '$0.00 / month' },
+                  { label: 'Organization Branding Addon', value: '$0.00', sub: '$0.00 / month' },
                   { label: 'Branding', value: '$0.00', sub: '$0.00 / month' },
                   { label: 'AI Agent Addon', value: '$120.00', sub: '$4.00 x 30 / month' },
                   { label: 'Enterprise Addon', value: '$499.00', sub: '$499.00 / month' },
@@ -287,7 +287,7 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
             { label: 'Enterprise Plan', value: '$0.00' },
             { label: 'Channels', value: '$40.00', sub: '$10.00 x 4' },
             { label: 'Whatsapp QR', value: '$60.00', sub: '$15.00 x 4' },
-            { label: 'Agency Branding Addon', value: '$0.00', sub: '$0.00' },
+            { label: 'Organization Branding Addon', value: '$0.00', sub: '$0.00' },
             { label: 'Branding', value: '$0.00', sub: '$0.00 x 5' },
             { label: 'AI Agent Addon', value: '$120.00', sub: '$4.00 x 30' },
             { label: 'Enterprise Addon', value: '$499.00' },

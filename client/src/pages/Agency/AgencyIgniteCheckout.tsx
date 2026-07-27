@@ -33,9 +33,9 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   // White-label aware header: agency logo replaces "E" + "Ezconn" when uploaded.
   const agencyId = (() => { try { return getUserInfo()?.modelable_id; } catch { return null; } })();
   const { data: agencyResp } = useQuery<any>({
-    queryKey: [`/api/agencies/${agencyId}`],
+    queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}`);
       return res.json();
     },
     enabled: !!agencyId,
@@ -61,7 +61,7 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     { type: 'ADDON', name: 'Workspaces', sub: '$15.00 x 3 workspace', price: '$45.00', icon: <Building2 className="w-4 h-4 text-sky-500" /> },
     { type: 'ADDON', name: 'Channels', sub: '$10.00 x 4 channel', price: '$40.00', icon: <MessageSquare className="w-4 h-4 text-emerald-500" /> },
     { type: 'ADDON', name: 'Whatsapp QR', sub: '$15.00 x 4 instance', price: '$60.00', icon: <QrCode className="w-4 h-4 text-green-500" /> },
-    { type: 'ADDON', name: 'Agency Branding Addon', sub: 'White label branding', price: '$49.00', icon: <ShieldCheck className="w-4 h-4 text-primary" /> },
+    { type: 'ADDON', name: 'Organization Branding Addon', sub: 'White label branding', price: '$49.00', icon: <ShieldCheck className="w-4 h-4 text-primary" /> },
     { type: 'ADDON', name: 'Branding', sub: '$10.00 x 5 brand', price: '$50.00', icon: <Paintbrush className="w-4 h-4 text-rose-500" /> },
     { type: 'ADDON', name: 'AI Agent Addon', sub: '$4.00 x 41 units', price: '$164.00', icon: <Bot className="w-4 h-4 text-indigo-500" /> },
   ];
@@ -93,7 +93,7 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           {agencyLogoUrl ? (
             <img
               src={agencyLogoUrl}
-              alt="Agency logo"
+              alt="Organization logo"
               className="w-9 h-9 object-contain"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
@@ -154,7 +154,7 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                   { label: 'Workspaces', value: '$45.00', sub: '$15.00 x 3 / month' },
                   { label: 'Channels', value: '$40.00', sub: '$10.00 x 4 / month' },
                   { label: 'Whatsapp QR', value: '$60.00', sub: '$15.00 x 4 / month' },
-                  { label: 'Agency Branding Addon', value: '$49.00', sub: '$49.00 / month' },
+                  { label: 'Organization Branding Addon', value: '$49.00', sub: '$49.00 / month' },
                   { label: 'Branding', value: '$50.00', sub: '$10.00 x 5 / month' },
                   { label: 'AI Agent Addon', value: '$164.00', sub: '$4.00 x 41 / month' },
                   { label: 'Ignite Addon', value: '$299.00', sub: '$299.00 / month' },
@@ -289,7 +289,7 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
             { label: 'Workspaces', value: '$45.00', sub: '$15.00 x 3' },
             { label: 'Channels', value: '$40.00', sub: '$10.00 x 4' },
             { label: 'Whatsapp QR', value: '$60.00', sub: '$15.00 x 4' },
-            { label: 'Agency Branding Addon', value: '$49.00' },
+            { label: 'Organization Branding Addon', value: '$49.00' },
             { label: 'Branding', value: '$50.00', sub: '$10.00 x 5' },
             { label: 'AI Agent Addon', value: '$164.00', sub: '$4.00 x 41' },
             { label: 'Ignite Addon', value: '$299.00' },

@@ -87,9 +87,9 @@ const AgencyWorkspaces = () => {
   const agencyId = userInfo.modelable_id;
 
   const { data: workspacesResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/workspaces`],
+    queryKey: [`/api/organizations/${agencyId}/workspaces`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/workspaces`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/workspaces`);
       return res.json();
     },
     enabled: !!agencyId
@@ -135,14 +135,14 @@ const AgencyWorkspaces = () => {
   const toggleStatusMutation = useMutation({
     mutationFn: async (workspace: any) => {
       const isActive = workspace.status === 'Active';
-      const res = await apiRequest("POST", `/api/agencies/${agencyId}/workspaces/${workspace.id}/${isActive ? 'suspend' : 'activate'}`);
+      const res = await apiRequest("POST", `/api/organizations/${agencyId}/workspaces/${workspace.id}/${isActive ? 'suspend' : 'activate'}`);
       return res.json();
     },
     onSuccess: (_, workspace) => {
       const newStatus = workspace.status === 'Active' ? 'Suspended' : 'Active';
       setLocalWorkspaces(prev => prev.map(ws => ws.id === workspace.id ? { ...ws, status: newStatus } : ws));
       toast({ title: `Workspace ${newStatus}` });
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
     },
   });
 
@@ -178,13 +178,13 @@ const AgencyWorkspaces = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (workspace: any) => {
-      const res = await apiRequest("DELETE", `/api/agencies/${agencyId}/workspaces/${workspace.id}`);
+      const res = await apiRequest("DELETE", `/api/organizations/${agencyId}/workspaces/${workspace.id}`);
       return res.json();
     },
     onSuccess: (_, workspace) => {
       setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
       toast({ title: "Deleted Successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/agencies/${agencyId}/workspaces`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
     },
   });
 

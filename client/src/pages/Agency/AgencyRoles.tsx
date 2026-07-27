@@ -30,28 +30,28 @@ const AgencyRoles = () => {
   const agencyId = userInfo.modelable_id;
 
   const { data: rolesResponse, isLoading } = useQuery({
-    queryKey: [`/api/agencies/${agencyId}/roles`],
+    queryKey: [`/api/organizations/${agencyId}/roles`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/agencies/${agencyId}/roles`);
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/roles`);
       return res.json();
     },
   });
 
   const { data: permGroups = [] } = useQuery<any[]>({
-    queryKey: [`/api/agencies/${agencyId}/permissions`],
+    queryKey: [`/api/organizations/${agencyId}/permissions`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/agencies/${agencyId}/permissions`);
+      const res = await apiRequest('GET', `/api/organizations/${agencyId}/permissions`);
       return res.json();
     },
     enabled: !!agencyId,
   });
   const totalAgencyPerms = permGroups.reduce((sum: number, g: any) => sum + (g.children?.length || 0), 0);
 
-  const rolesKey = [`/api/agencies/${agencyId}/roles`];
+  const rolesKey = [`/api/organizations/${agencyId}/roles`];
 
   const toggleArchiveMutation = useMutation({
     mutationFn: async (role: any) => {
-      const res = await apiRequest("PATCH", `/api/agencies/${agencyId}/roles/${role.id}`, {
+      const res = await apiRequest("PATCH", `/api/organizations/${agencyId}/roles/${role.id}`, {
         status: role.status === 'ACTIVE' ? 'ARCHIVE' : 'ACTIVE',
       });
       return res.json();

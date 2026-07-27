@@ -28,7 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, permissions, 
   if (permissions && permissions.length > 0) {
     const userPerms = (getUserInfo().permissions as string[] | undefined) ?? [];
     if (!hasAnyPerm(userPerms, permissions)) {
-      const target = fallbackTo ?? (location.startsWith('/agency') ? '/agency' : '/');
+      const target = fallbackTo ?? (location.startsWith('/org') ? '/org' : '/');
       return <Redirect to={target} />;
     }
   }
