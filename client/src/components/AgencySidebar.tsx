@@ -223,13 +223,13 @@ const AgencySidebar = () => {
           />
         ) : (
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
-            EC
+            AW
           </div>
         )}
         {!isCollapsed && (
           <div className="overflow-hidden">
             <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>
-              EZCONN
+              AGENTAWK
             </p>
             <p className="text-[11px] text-slate-400 truncate">Organization Manager</p>
           </div>

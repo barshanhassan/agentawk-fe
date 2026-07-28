@@ -351,14 +351,14 @@ export default function AppSidebar() {
                   "w-9 h-9 rounded-xl flex items-center justify-center font-black text-primary-foreground shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
                   theme === "dark" ? "bg-primary shadow-primary/20" : "bg-primary shadow-primary/20"
                 )}>
-                  EC
+                  AW
                 </div>
               )}
               <span className={cn(
                 "font-black text-xl tracking-tighter uppercase hidden md:block transition-colors duration-300",
                 theme === "dark" ? "text-white" : "text-slate-900"
               )}>
-                EZCONN
+                agentawk
               </span>
             </div>
           </Link>
