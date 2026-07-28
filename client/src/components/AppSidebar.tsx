@@ -355,7 +355,7 @@ export default function AppSidebar() {
                 </div>
               )}
               <span className={cn(
-                "font-black text-xl tracking-tighter uppercase hidden md:block transition-colors duration-300",
+                "font-black text-xl tracking-tighter hidden md:block transition-colors duration-300",
                 theme === "dark" ? "text-white" : "text-slate-900"
               )}>
                 agentawk
