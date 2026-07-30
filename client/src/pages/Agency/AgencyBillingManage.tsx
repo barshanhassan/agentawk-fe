@@ -1,12 +1,11 @@
 import React from 'react';
 import { getUserInfo } from "@/lib/auth";
 import { 
-  CreditCard, 
+  CreditCard,
   Ticket,
   BarChart3,
   X,
   Receipt,
-  ArrowRight
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import PaymentsSection from "@/components/sections/connect/PaymentsSection";
 
 const AgencyBillingManage = () => {
   const { t } = useTranslation();
@@ -51,7 +51,6 @@ const AgencyBillingManage = () => {
   const [couponCode, setCouponCode] = React.useState("");
   const [appliedCoupons, setAppliedCoupons] = React.useState(["10PERCENT", "15PERCENT"]);
   const [couponError, setCouponError] = React.useState(false);
-  const [email, setEmail] = React.useState("");
 
   const dark = mode === "dark";
   const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
@@ -230,7 +229,7 @@ const AgencyBillingManage = () => {
 
       {/* ── Manage Subscriptions Modal ── */}
       <Dialog open={showManageModal} onOpenChange={setShowManageModal}>
-        <DialogContent hideClose className={cn("max-w-[420px] p-0 overflow-visible border shadow-2xl rounded-2xl", card, border)}>
+        <DialogContent hideClose className={cn("max-w-4xl p-0 overflow-visible border shadow-2xl rounded-2xl", card, border)}>
           <div className="relative">
             <DialogClose className="absolute -right-3 -top-3 z-50">
               <div className={cn("w-7 h-7 rounded-full flex items-center justify-center border-2 shadow-md transition-colors",
@@ -257,21 +256,9 @@ const AgencyBillingManage = () => {
               <h2 className={cn("text-[16px] font-black text-primary")}>{t("agency.billing.manage.modalTitle")}</h2>
             </div>
 
-            {/* Form */}
-            <div className="px-8 py-7 space-y-5">
-              <div className="space-y-2">
-                <p className={cn("text-[12px] font-bold uppercase tracking-widest text-primary")}>{t("agency.billing.manage.emailPrompt")}</p>
-                <Input
-                  placeholder={t("common.email")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={cn("h-10 text-center text-[13px] rounded-xl border shadow-none focus-visible:ring-primary/30",
-                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 text-slate-900 border-slate-200")}
-                />
-              </div>
-              <button className="w-full h-10 bg-primary hover:bg-primary/90 text-white font-bold text-[13px] rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-95">
-                {t("common.continue")} <ArrowRight size={15} />
-              </button>
+            {/* Payment method — Swich PayIn credentials, powers the Billing/Plans checkout above */}
+            <div className="px-8 py-7 max-h-[75vh] overflow-y-auto">
+              <PaymentsSection basePath="/api/swich/agency" />
             </div>
           </div>
         </DialogContent>

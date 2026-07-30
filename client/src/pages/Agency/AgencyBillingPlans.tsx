@@ -1,31 +1,77 @@
 import React, { useState } from 'react';
-import { 
-  CreditCard, 
+import {
+  CreditCard,
   AlertTriangle,
   Check,
   Zap,
   Building2,
   Sparkles,
-  Gift
+  Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from 'react-i18next';
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 import AgencyIgniteCheckout from './AgencyIgniteCheckout';
 import AgencyEnterpriseCheckout from './AgencyEnterpriseCheckout';
+import AgencySwichCheckout from './AgencySwichCheckout';
 
 const AgencyBillingPlans = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
+  const { toast } = useToast();
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [checkoutType, setCheckoutType] = useState<null | 'ignite' | 'enterprise'>(null);
+  const [checkoutType, setCheckoutType] = useState<null | 'ignite' | 'enterprise' | 'swich_test'>(null);
   const [cancelCodeInput, setCancelCodeInput] = useState("");
   const [checks, setChecks] = useState({ c1: false, c2: false, c3: false });
 
   const generatedCode = "44399";
+
+  // Section 13 — asks Swich directly for this transaction's real status.
+  // Not proof by itself either, but it's Swich's own server answering (not
+  // the redirect), so it's the trustworthy check — same data the callback
+  // would have delivered, just pulled instead of pushed.
+  const autoInquireMutation = useMutation({
+    mutationFn: async (customerTransactionId: string) => {
+      const res = await apiRequest("GET", `/api/swich/agency/inquire/${customerTransactionId}`);
+      return res.json();
+    },
+    onSuccess: (result) => {
+      const status = result?.data?.transaction?.transactionStatus || result?.data?.status;
+      if (status === 'success') {
+        toast({ title: "Payment confirmed", description: "Swich confirmed your Rs. 1 test payment succeeded." });
+      } else if (status === 'failed') {
+        toast({ title: "Payment failed", description: "Swich reports this payment did not succeed.", variant: "destructive" });
+      } else {
+        toast({ title: "Still processing", description: `Swich status: ${status || 'pending'}. Try again shortly.` });
+      }
+    },
+    onError: () => {
+      toast({ title: "Could not confirm yet", description: "We'll pick this up once Swich's callback arrives.", variant: "destructive" });
+    },
+  });
+
+  // Landed back here via Swich's successRedirectUrl (Section 17) — the
+  // redirect itself proves nothing (anyone could hit this URL manually), so
+  // as soon as we see it we immediately ask Swich directly (Inquire) rather
+  // than just displaying a "submitted" message and waiting.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const customerTransactionId = params.get('customerTransactionId');
+    if (params.get('swich_status') === 'success' && customerTransactionId) {
+      autoInquireMutation.mutate(customerTransactionId);
+      params.delete('swich_status');
+      params.delete('customerTransactionId');
+      const rest = params.toString();
+      window.history.replaceState({}, '', window.location.pathname + (rest ? `?${rest}` : ''));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
   const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
@@ -63,14 +109,23 @@ const AgencyBillingPlans = () => {
       accent: dark ? 'bg-sky-900/10 border-sky-800/30' : 'bg-sky-50/50 border-sky-100',
       textColor: 'text-sky-900 dark:text-sky-100',
     },
-    { 
+    {
       id: 'enterprise',
-      name: t("agency.billing.plans.types.enterprise.name"), 
-      price: "$599", 
-      limit: t("agency.billing.plans.types.enterprise.limit"), 
+      name: t("agency.billing.plans.types.enterprise.name"),
+      price: "$599",
+      limit: t("agency.billing.plans.types.enterprise.limit"),
       feature: t("agency.billing.plans.types.enterprise.feature"),
       accent: dark ? 'bg-indigo-900/10 border-indigo-800/30' : 'bg-indigo-50/50 border-indigo-100',
       textColor: 'text-indigo-900 dark:text-indigo-100',
+    },
+    {
+      id: 'swich_test',
+      name: 'Swich Test',
+      price: 'Rs. 1',
+      limit: 'PKR · settled via Swich',
+      feature: 'Verify the Swich production checkout end-to-end',
+      accent: dark ? 'bg-teal-900/10 border-teal-800/30' : 'bg-teal-50/50 border-teal-100',
+      textColor: 'text-teal-900 dark:text-teal-100',
     },
   ];
 
@@ -80,6 +135,10 @@ const AgencyBillingPlans = () => {
 
   if (checkoutType === 'enterprise') {
     return <AgencyEnterpriseCheckout onBack={() => setCheckoutType(null)} />;
+  }
+
+  if (checkoutType === 'swich_test') {
+    return <AgencySwichCheckout onBack={() => setCheckoutType(null)} />;
   }
 
   return (
@@ -146,14 +205,15 @@ const AgencyBillingPlans = () => {
                           </div>
                         </div>
                       ) : plan.price !== "$0" ? (
-                        <button 
+                        <button
                           onClick={() => {
                             if (plan.id === 'ignite') setCheckoutType('ignite');
                             if (plan.id === 'enterprise') setCheckoutType('enterprise');
+                            if (plan.id === 'swich_test') setCheckoutType('swich_test');
                           }}
                           className={cn(
                           "w-full py-2 rounded-lg font-bold text-[12px] border transition-all text-center",
-                          dark ? "border-slate-700 text-slate-300 hover:bg-primary hover:text-white hover:border-primary" 
+                          dark ? "border-slate-700 text-slate-300 hover:bg-primary hover:text-white hover:border-primary"
                                : "border-slate-300/60 text-slate-600 hover:bg-primary hover:text-white hover:border-primary"
                         )}>
                           {t("common.upgrade")}
