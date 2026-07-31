@@ -339,7 +339,7 @@ const SignupPage: React.FC = () => {
           </div>
 
           {/* mascot */}
-          <svg viewBox="0 0 220 360" style={{ position: 'absolute', left: 303, top: 296, width: 213, height: 376, overflow: 'visible' }}>
+          <svg viewBox="0 0 220 360" style={{ position: 'absolute', left: 380, top: 296, width: 213, height: 376, overflow: 'visible' }}>
             <ellipse cx="120" cy="348" rx="82" ry="12" fill="#0B1020" opacity="0.08" />
             <g style={{ animation: 'auth-flt 4.4s ease-in-out infinite', transformBox: 'fill-box', transformOrigin: 'center' }}>
               <line x1="108" y1="52" x2="108" y2="74" stroke="#25d366" strokeWidth={7} strokeLinecap="round" />

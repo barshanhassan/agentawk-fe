@@ -28,6 +28,10 @@ interface PaymentsSectionProps {
 }
 
 export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSectionProps) {
+  // Agency scope charges agencies on behalf of Agentawk itself, so
+  // credentials are a single server-side (.env) account, not something an
+  // agency edits — hide the editable form and just show connection status.
+  const isAgencyScope = basePath.includes("/agency");
   const { mode } = useTheme();
   const dark = mode === "dark";
   const queryClient = useQueryClient();
@@ -195,139 +199,151 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => disconnectMutation.mutate()}
-                  disabled={disconnectMutation.isPending}
-                  className="text-[11px] font-semibold text-red-500 hover:text-red-600"
-                >
-                  {disconnectMutation.isPending ? "Removing…" : "Disconnect"}
-                </button>
-              </div>
-            )}
-
-            {/* Swich issues two separate credential pairs — one to call their
-                APIs directly (Bearer token), one to identify the merchant on
-                their hosted Landing Page / PWA checkout. Keep them visually
-                separate so they don't get mixed up. */}
-            <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>For API</p>
-              <p className={cn("text-[11px] opacity-70 mb-2", sub)}>
-                Used when we call Swich directly (E-Wallet, Bank, QR, RTP, Refund). Find this in your Swich dashboard under "API Access".
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Client ID</label>
-                  <input
-                    className={inputCls}
-                    placeholder="Provided by Swich"
-                    value={credForm.client_id}
-                    onChange={(e) => setCredForm({ ...credForm, client_id: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Client Secret</label>
-                  <input
-                    type="password"
-                    className={inputCls}
-                    placeholder={isConnected ? "•••••••• (leave blank to keep current)" : "Provided by Swich"}
-                    value={credForm.client_secret}
-                    onChange={(e) => setCredForm({ ...credForm, client_secret: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>For PWA (Landing Page)</p>
-              <p className={cn("text-[11px] opacity-70 mb-2", sub)}>
-                Used for the hosted payment page customers see (Section 5 of Swich's guide). Find this under "PWA / Checkout" in your Swich dashboard — it's different from the API credentials above.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>PWA Client ID</label>
-                  <input
-                    className={inputCls}
-                    placeholder="Provided by Swich"
-                    value={credForm.pwa_client_id}
-                    onChange={(e) => setCredForm({ ...credForm, pwa_client_id: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>PWA Client Secret</label>
-                  <input
-                    type="password"
-                    className={inputCls}
-                    placeholder={account?.has_pwa_credentials ? "•••••••• (leave blank to keep current)" : "Provided by Swich"}
-                    value={credForm.pwa_client_secret}
-                    onChange={(e) => setCredForm({ ...credForm, pwa_client_secret: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Environment</label>
-              <div className="flex gap-2">
-                {(["sandbox", "production"] as const).map((env) => (
+                {!isAgencyScope && (
                   <button
-                    key={env}
-                    onClick={() => setCredForm({ ...credForm, environment: env })}
-                    className={cn(
-                      "h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all capitalize",
-                      credForm.environment === env
-                        ? "border-primary bg-primary text-white"
-                        : cn(border, sub)
-                    )}
+                    onClick={() => disconnectMutation.mutate()}
+                    disabled={disconnectMutation.isPending}
+                    className="text-[11px] font-semibold text-red-500 hover:text-red-600"
                   >
-                    {env}
+                    {disconnectMutation.isPending ? "Removing…" : "Disconnect"}
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowAdvanced((v) => !v)}
-              className={cn("flex items-center gap-1.5 text-[11px] font-semibold", sub)}
-            >
-              {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              Advanced (checksum secret, AES key for POST landing page)
-            </button>
-
-            {showAdvanced && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Checksum Secret (optional)</label>
-                  <input
-                    type="password"
-                    className={inputCls}
-                    placeholder="Falls back to Client Secret if empty"
-                    value={credForm.checksum_secret}
-                    onChange={(e) => setCredForm({ ...credForm, checksum_secret: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>AES Encryption Key (optional)</label>
-                  <input
-                    type="password"
-                    className={inputCls}
-                    placeholder="Only needed for the POST landing page"
-                    value={credForm.aes_encryption_key}
-                    onChange={(e) => setCredForm({ ...credForm, aes_encryption_key: e.target.value })}
-                  />
-                </div>
+                )}
               </div>
             )}
 
-            <div className="flex justify-end">
-              <button
-                className={primaryBtn}
-                disabled={saveMutation.isPending || (!isConnected && (!credForm.client_id || !credForm.client_secret))}
-                onClick={() => saveMutation.mutate(credForm)}
-              >
-                {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
-                {isConnected ? "Update Credentials" : "Connect Swich"}
-              </button>
-            </div>
+            {isAgencyScope && !isConnected && (
+              <p className={cn("text-[12px]", sub)}>
+                Swich isn't configured on the server yet. This is set once for the whole platform (server config), not per agency.
+              </p>
+            )}
+
+            {!isAgencyScope && (
+              <>
+                {/* Swich issues two separate credential pairs — one to call their
+                    APIs directly (Bearer token), one to identify the merchant on
+                    their hosted Landing Page / PWA checkout. Keep them visually
+                    separate so they don't get mixed up. */}
+                <div>
+                  <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>For API</p>
+                  <p className={cn("text-[11px] opacity-70 mb-2", sub)}>
+                    Used when we call Swich directly (E-Wallet, Bank, QR, RTP, Refund). Find this in your Swich dashboard under "API Access".
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Client ID</label>
+                      <input
+                        className={inputCls}
+                        placeholder="Provided by Swich"
+                        value={credForm.client_id}
+                        onChange={(e) => setCredForm({ ...credForm, client_id: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Client Secret</label>
+                      <input
+                        type="password"
+                        className={inputCls}
+                        placeholder={isConnected ? "•••••••• (leave blank to keep current)" : "Provided by Swich"}
+                        value={credForm.client_secret}
+                        onChange={(e) => setCredForm({ ...credForm, client_secret: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p className={cn("text-[11px] font-bold uppercase tracking-wide", sub)}>For PWA (Landing Page)</p>
+                  <p className={cn("text-[11px] opacity-70 mb-2", sub)}>
+                    Used for the hosted payment page customers see (Section 5 of Swich's guide). Find this under "PWA / Checkout" in your Swich dashboard — it's different from the API credentials above.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>PWA Client ID</label>
+                      <input
+                        className={inputCls}
+                        placeholder="Provided by Swich"
+                        value={credForm.pwa_client_id}
+                        onChange={(e) => setCredForm({ ...credForm, pwa_client_id: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>PWA Client Secret</label>
+                      <input
+                        type="password"
+                        className={inputCls}
+                        placeholder={account?.has_pwa_credentials ? "•••••••• (leave blank to keep current)" : "Provided by Swich"}
+                        value={credForm.pwa_client_secret}
+                        onChange={(e) => setCredForm({ ...credForm, pwa_client_secret: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Environment</label>
+                  <div className="flex gap-2">
+                    {(["sandbox", "production"] as const).map((env) => (
+                      <button
+                        key={env}
+                        onClick={() => setCredForm({ ...credForm, environment: env })}
+                        className={cn(
+                          "h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all capitalize",
+                          credForm.environment === env
+                            ? "border-primary bg-primary text-white"
+                            : cn(border, sub)
+                        )}
+                      >
+                        {env}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowAdvanced((v) => !v)}
+                  className={cn("flex items-center gap-1.5 text-[11px] font-semibold", sub)}
+                >
+                  {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  Advanced (checksum secret, AES key for POST landing page)
+                </button>
+
+                {showAdvanced && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Checksum Secret (optional)</label>
+                      <input
+                        type="password"
+                        className={inputCls}
+                        placeholder="Falls back to Client Secret if empty"
+                        value={credForm.checksum_secret}
+                        onChange={(e) => setCredForm({ ...credForm, checksum_secret: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>AES Encryption Key (optional)</label>
+                      <input
+                        type="password"
+                        className={inputCls}
+                        placeholder="Only needed for the POST landing page"
+                        value={credForm.aes_encryption_key}
+                        onChange={(e) => setCredForm({ ...credForm, aes_encryption_key: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    className={primaryBtn}
+                    disabled={saveMutation.isPending || (!isConnected && (!credForm.client_id || !credForm.client_secret))}
+                    onClick={() => saveMutation.mutate(credForm)}
+                  >
+                    {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+                    {isConnected ? "Update Credentials" : "Connect Swich"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

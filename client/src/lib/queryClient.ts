@@ -48,7 +48,7 @@ function handleApiError(error: unknown) {
     // Public/unauthenticated pages routinely get a 401 from background fetches
     // (branding, theme) since there's no session yet — that's expected there,
     // not a reason to bounce the user away from the page they're looking at.
-    const publicPaths = ['/login', '/signup', '/forgot-password', '/accept-invitation'];
+    const publicPaths = ['/login', '/signup', '/forgot-password', '/accept-invitation', '/find-account', '/sso'];
     if (typeof window !== 'undefined' && !publicPaths.some((p) => window.location.pathname.endsWith(p))) {
       window.location.href = '/login';
     }

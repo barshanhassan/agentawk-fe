@@ -280,13 +280,13 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* depth stack */}
-            <div className="absolute rounded-2xl bg-white" style={{ left: 44, top: 78, width: 460, height: 330, opacity: 0.35, boxShadow: '0 20px 44px -28px rgba(11,16,32,.4)' }} />
-            <div className="absolute rounded-2xl bg-white" style={{ left: 32, top: 86, width: 470, height: 335, opacity: 0.6, boxShadow: '0 24px 50px -28px rgba(11,16,32,.45)' }} />
+            <div className="absolute rounded-2xl bg-white" style={{ left: 114, top: 78, width: 460, height: 330, opacity: 0.35, boxShadow: '0 20px 44px -28px rgba(11,16,32,.4)' }} />
+            <div className="absolute rounded-2xl bg-white" style={{ left: 102, top: 86, width: 470, height: 335, opacity: 0.6, boxShadow: '0 24px 50px -28px rgba(11,16,32,.45)' }} />
 
             {/* browser mockup */}
             <div
               className="absolute rounded-2xl overflow-hidden bg-white"
-              style={{ left: 20, top: 96, width: 480, boxShadow: '0 34px 70px -30px rgba(11,16,32,.55)', animation: 'auth-drift 6s ease-in-out infinite' }}
+              style={{ left: 90, top: 96, width: 480, boxShadow: '0 34px 70px -30px rgba(11,16,32,.55)', animation: 'auth-drift 6s ease-in-out infinite' }}
             >
               <div className="flex items-center gap-1.5 px-4 py-2.5" style={{ background: '#eef1f5', borderBottom: '1px solid #e4e8ee' }}>
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f57' }} />

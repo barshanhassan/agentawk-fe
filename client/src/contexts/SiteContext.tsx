@@ -28,19 +28,26 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const host = window.location.host; // e.g. "agency.localhost:5173"
         const isAgency = host.startsWith("agency.");
 
-        // Try backend first, fall back to hostname detection
+        // Try backend first, fall back to hostname detection. Bounded by a
+        // timeout — an unresponsive backend must never leave `loading` stuck
+        // true forever (the app would hang on "Loading application...").
         try {
           // Fallback only fires if VITE_API_BASE_URL is missing at build time.
           // Points at the live API (Nginx server) — the old GCP Cloud Run URL is retired.
           const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.agentawk.com";
-          const response = await fetch(`${API_BASE_URL}/ignite?hostname=${host}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const response = await fetch(`${API_BASE_URL}/ignite?hostname=${host}`, {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
           if (response.ok) {
             const data = await response.json();
             setSiteData(data);
             return;
           }
         } catch {
-          // Backend ignite failed, use hostname detection below
+          // Backend ignite failed or timed out — use hostname detection below
         }
 
         // Hostname-based fallback
