@@ -43,13 +43,19 @@ function handleApiError(error: unknown) {
   const description = isApi ? error.message : (error instanceof Error ? error.message : 'An error occurred');
 
   if (status === 401) {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_info');
     // Public/unauthenticated pages routinely get a 401 from background fetches
     // (branding, theme) since there's no session yet — that's expected there,
-    // not a reason to bounce the user away from the page they're looking at.
+    // not a reason to clear storage or bounce the user away. /sso in
+    // particular is actively WRITING a fresh token when these background
+    // fetches race in — clearing it here would erase a token that isn't
+    // even stale, just not yet attached to every in-flight request.
     const publicPaths = ['/login', '/signup', '/forgot-password', '/accept-invitation', '/find-account', '/sso'];
-    if (typeof window !== 'undefined' && !publicPaths.some((p) => window.location.pathname.endsWith(p))) {
+    if (typeof window !== 'undefined' && publicPaths.some((p) => window.location.pathname.endsWith(p))) {
+      return;
+    }
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_info');
+    if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }
     return;
