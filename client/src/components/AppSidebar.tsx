@@ -52,6 +52,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import ContactProfileModal from "@/components/ContactProfileModal";
 
+// Default (no white-label logo uploaded) mark — same icon used on the auth pages.
+const BotMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 40 52" className={className}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M6 3 H34 A4 4 0 0 1 38 7 V17 A4 4 0 0 1 34 21 H6 A4 4 0 0 1 2 17 V7 A4 4 0 0 1 6 3 Z M11 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z M22.6 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z" fill="#25d366" />
+    <rect x="4" y="25" width="32" height="5.5" rx="2" fill="#25d366" />
+    <rect x="16.5" y="30" width="7" height="20" rx="2" fill="#25d366" />
+  </svg>
+);
+
 export default function AppSidebar() {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -347,18 +356,13 @@ export default function AppSidebar() {
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
               ) : (
-                <div className={cn(
-                  "w-9 h-9 rounded-xl flex items-center justify-center font-black text-primary-foreground shrink-0 shadow-md transition-all duration-300 group-hover:scale-110",
-                  theme === "dark" ? "bg-primary shadow-primary/20" : "bg-primary shadow-primary/20"
-                )}>
-                  AW
-                </div>
+                <BotMark className="w-9 h-9 shrink-0 transition-transform duration-300 group-hover:scale-110" />
               )}
               <span className={cn(
                 "font-black text-xl tracking-tighter uppercase hidden md:block transition-colors duration-300",
                 theme === "dark" ? "text-white" : "text-slate-900"
               )}>
-                agentawk
+                agen<span className="text-[#25d366]">tawk</span>
               </span>
             </div>
           </Link>

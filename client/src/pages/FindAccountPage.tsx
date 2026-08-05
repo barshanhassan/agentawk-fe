@@ -40,12 +40,12 @@ const FindAccountPage: React.FC = () => {
     <div className="h-screen w-full overflow-hidden bg-white flex flex-col" style={{ fontFamily: "'Manrope', sans-serif" }}>
       {/* top nav */}
       <div className="flex items-center justify-between px-6 lg:px-10 py-5 border-b border-[#f0f2f5] shrink-0">
-        <div className="flex items-center gap-2">
+        <button type="button" onClick={() => navigate('/login')} className="flex items-center gap-2 cursor-default">
           <BotMark className="h-6 w-auto" />
           <span className="text-xl" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, letterSpacing: '0.01em', color: '#0B1020' }}>
             agen<span className="text-[#25d366]">t</span><span className="text-[#25d366]">awk</span>
           </span>
-        </div>
+        </button>
       </div>
 
       <div className="flex flex-1 min-h-0 items-center justify-center px-6">

@@ -114,6 +114,15 @@ const bottomItems: BottomItem[] = [
   { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/org/help", permissions: ["agency.*"] },
 ];
 
+// Default (no white-label logo uploaded) mark — same icon used on the auth pages.
+const BotMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 40 52" className={className}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M6 3 H34 A4 4 0 0 1 38 7 V17 A4 4 0 0 1 34 21 H6 A4 4 0 0 1 2 17 V7 A4 4 0 0 1 6 3 Z M11 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z M22.6 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z" fill="#25d366" />
+    <rect x="4" y="25" width="32" height="5.5" rx="2" fill="#25d366" />
+    <rect x="16.5" y="30" width="7" height="20" rx="2" fill="#25d366" />
+  </svg>
+);
+
 const AgencySidebar = () => {
   const [location] = useLocation();
   const [expanded, setExpanded] = React.useState<string | null>(null);
@@ -203,38 +212,39 @@ const AgencySidebar = () => {
         {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
 
-      {/* Logo — white-label aware. Uploaded agency logo wins; otherwise default mark. */}
-      <div className={cn(
-        "flex items-center gap-3 px-4 py-5 border-b shrink-0",
-        dark ? "border-slate-800" : "border-slate-100"
-      )}>
-        {isAgencyLoading ? (
-          // Invisible placeholder during initial fetch — prevents the EC-badge flash
-          // before the actual branded logo arrives.
-          <div className="w-8 h-8 shrink-0" aria-hidden="true" />
-        ) : agencyLogoUrl ? (
-          // Plain image — replyagent parity. The agency uploads light/dark variants
-          // separately so each version renders correctly against its background.
-          <img
-            src={agencyLogoUrl}
-            alt="Organization logo"
-            className="w-8 h-8 object-contain shrink-0"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
-            AW
-          </div>
-        )}
-        {!isCollapsed && (
-          <div className="overflow-hidden">
-            <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>
-              AGENTAWK
-            </p>
-            <p className="text-[11px] text-slate-400 truncate">Organization Manager</p>
-          </div>
-        )}
-      </div>
+      {/* Logo — white-label aware. Uploaded agency logo wins; otherwise default mark.
+          Clicking it returns to the Agency Dashboard, like any standard site logo. */}
+      <Link href="/org">
+        <div className={cn(
+          "flex items-center gap-3 px-4 py-5 border-b shrink-0",
+          dark ? "border-slate-800" : "border-slate-100"
+        )}>
+          {isAgencyLoading ? (
+            // Invisible placeholder during initial fetch — prevents the EC-badge flash
+            // before the actual branded logo arrives.
+            <div className="w-8 h-8 shrink-0" aria-hidden="true" />
+          ) : agencyLogoUrl ? (
+            // Plain image — replyagent parity. The agency uploads light/dark variants
+            // separately so each version renders correctly against its background.
+            <img
+              src={agencyLogoUrl}
+              alt="Organization logo"
+              className="w-8 h-8 object-contain shrink-0"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <BotMark className="w-8 h-8 shrink-0" />
+          )}
+          {!isCollapsed && (
+            <div className="overflow-hidden">
+              <p className={cn("font-bold text-sm leading-tight truncate", dark ? "text-white" : "text-slate-900")}>
+                AGEN<span className="text-[#25d366]">TAWK</span>
+              </p>
+              <p className="text-[11px] text-slate-400 truncate">Organization Manager</p>
+            </div>
+          )}
+        </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-2 px-2">
