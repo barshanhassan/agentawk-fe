@@ -11,6 +11,15 @@ interface CheckoutProps {
   onBack: () => void;
 }
 
+// Default (no white-label logo uploaded) mark — same icon used on the auth pages/sidebars.
+const BotMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 40 52" className={className}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M6 3 H34 A4 4 0 0 1 38 7 V17 A4 4 0 0 1 34 21 H6 A4 4 0 0 1 2 17 V7 A4 4 0 0 1 6 3 Z M11 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z M22.6 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z" fill="#25d366" />
+    <rect x="4" y="25" width="32" height="5.5" rx="2" fill="#25d366" />
+    <rect x="16.5" y="30" width="7" height="20" rx="2" fill="#25d366" />
+  </svg>
+);
+
 /**
  * Same layout/shell as AgencyIgniteCheckout, but for the Swich-settled test
  * plan: a single real line item, no fake credits/coupons, and "Proceed To
@@ -100,9 +109,11 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">E</div>
+            <BotMark className="w-9 h-9 shrink-0" />
           )}
-          <span className={cn("font-bold text-[18px] tracking-tight", text)}>Ezconn</span>
+          <span className={cn("font-bold text-[18px] tracking-tight", text)}>
+            AGEN<span className="text-[#25d366]">TAWK</span>
+          </span>
         </div>
         <button
           onClick={onBack}
@@ -179,6 +190,9 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                   value={msisdn}
                   onChange={(e) => setMsisdn(e.target.value)}
                 />
+                <p className={cn("text-[10px] font-medium mt-1.5 leading-relaxed", sub)}>
+                  Required — Swich sends a confirmation SMS to this number to complete the payment. Without it, the transaction will fail.
+                </p>
               </div>
 
               <div className={cn("mt-4 p-4 rounded-xl border flex items-start gap-3", dark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100")}>

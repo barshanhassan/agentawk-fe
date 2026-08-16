@@ -372,7 +372,8 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                       <th className="py-2 pr-4 font-semibold">Transaction ID</th>
                       <th className="py-2 pr-4 font-semibold">Channel</th>
                       <th className="py-2 pr-4 font-semibold">Amount</th>
-                      <th className="py-2 pr-4 font-semibold">Mobile</th>
+                      <th className="py-2 pr-4 font-semibold">Method</th>
+                      <th className="py-2 pr-4 font-semibold">Account / Number</th>
                       <th className="py-2 pr-4 font-semibold">Status</th>
                       <th className="py-2 pr-4 font-semibold">Created</th>
                       <th className="py-2 pr-4 font-semibold"></th>
@@ -384,7 +385,12 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                         <td className={cn("py-2 pr-4 font-mono", text)}>{t.customer_transaction_id}</td>
                         <td className={cn("py-2 pr-4 capitalize", text)}>{t.channel.replace(/_/g, " ")}</td>
                         <td className={cn("py-2 pr-4", text)}>{t.amount ? `${t.amount} ${t.currency}` : "—"}</td>
-                        <td className={cn("py-2 pr-4 font-mono", text)}>{t.msisdn || "—"}</td>
+                        <td className={cn("py-2 pr-4", text)}>
+                          {t.swich_channel_name || <span className="opacity-50">Not confirmed yet</span>}
+                        </td>
+                        <td className={cn("py-2 pr-4 font-mono", text)}>
+                          {t.swich_consumer_number || t.msisdn || "—"}
+                        </td>
                         <td className="py-2 pr-4">
                           <Badge
                             variant="outline"

@@ -60,7 +60,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (err: any) {
         console.error("Ignition error:", err);
         setError(err.message);
-        setSiteData({ app: { name: "Ezconn", site_type: "WORKSPACE" } });
+        setSiteData({ app: { name: "agentawk", site_type: "WORKSPACE" } });
       } finally {
         setLoading(false);
       }

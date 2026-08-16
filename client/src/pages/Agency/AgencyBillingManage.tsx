@@ -24,6 +24,15 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import PaymentsSection from "@/components/sections/connect/PaymentsSection";
 
+// Default (no white-label logo uploaded) mark — same icon used on the auth pages/sidebars.
+const BotMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 40 52" className={className}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M6 3 H34 A4 4 0 0 1 38 7 V17 A4 4 0 0 1 34 21 H6 A4 4 0 0 1 2 17 V7 A4 4 0 0 1 6 3 Z M11 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z M22.6 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z" fill="#25d366" />
+    <rect x="4" y="25" width="32" height="5.5" rx="2" fill="#25d366" />
+    <rect x="16.5" y="30" width="7" height="20" rx="2" fill="#25d366" />
+  </svg>
+);
+
 const AgencyBillingManage = () => {
   const { t } = useTranslation();
   const { mode } = useTheme();
@@ -249,9 +258,11 @@ const AgencyBillingManage = () => {
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />
                 ) : (
-                  <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center font-black text-white text-[15px] shadow-lg shadow-primary/20">E</div>
+                  <BotMark className="w-9 h-9 shrink-0" />
                 )}
-                <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", sub)}>EZCONN</span>
+                <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", sub)}>
+                  AGEN<span className="text-[#25d366]">TAWK</span>
+                </span>
               </div>
               <h2 className={cn("text-[16px] font-black text-primary")}>{t("agency.billing.manage.modalTitle")}</h2>
             </div>

@@ -1196,8 +1196,8 @@ function BuilderToolbar({
   // menu so the bar stays as clean as the original.
   return (
     <div className="h-14 border-b bg-white flex items-center px-4 gap-3 shrink-0">
-      <span className="font-bold tracking-wider text-emerald-600 select-none">
-        EZCONN
+      <span className="font-bold tracking-wider select-none">
+        AGEN<span className="text-emerald-600">TAWK</span>
       </span>
 
       <div className="flex-1 flex justify-center items-center gap-2">

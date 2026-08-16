@@ -25,12 +25,21 @@ interface CheckoutProps {
   onBack: () => void;
 }
 
+// Default (no white-label logo uploaded) mark — same icon used on the auth pages/sidebars.
+const BotMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 40 52" className={className}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M6 3 H34 A4 4 0 0 1 38 7 V17 A4 4 0 0 1 34 21 H6 A4 4 0 0 1 2 17 V7 A4 4 0 0 1 6 3 Z M11 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z M22.6 12 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z" fill="#25d366" />
+    <rect x="4" y="25" width="32" height="5.5" rx="2" fill="#25d366" />
+    <rect x="16.5" y="30" width="7" height="20" rx="2" fill="#25d366" />
+  </svg>
+);
+
 const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
 
-  // White-label aware header: agency logo replaces "E" + "Ezconn" when uploaded.
+  // White-label aware header: agency logo replaces the default BotMark + "AGENTAWK" when uploaded.
   const agencyId = (() => { try { return getUserInfo()?.modelable_id; } catch { return null; } })();
   const { data: agencyResp } = useQuery<any>({
     queryKey: [`/api/organizations/${agencyId}`],
@@ -98,9 +107,11 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">E</div>
+            <BotMark className="w-9 h-9 shrink-0" />
           )}
-          <span className={cn("font-bold text-[18px] tracking-tight", text)}>Ezconn</span>
+          <span className={cn("font-bold text-[18px] tracking-tight", text)}>
+            AGEN<span className="text-[#25d366]">TAWK</span>
+          </span>
         </div>
         <button
           onClick={onBack}
