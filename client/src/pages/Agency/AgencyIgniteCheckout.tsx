@@ -12,14 +12,16 @@ import {
   MessageSquare,
   QrCode,
   Paintbrush,
-  Bot
+  Bot,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from 'react-i18next';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { getUserInfo } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
 interface CheckoutProps {
   onBack: () => void;
@@ -38,9 +40,11 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
+  const { toast } = useToast();
 
   // White-label aware header: agency logo replaces the default BotMark + "AGENTAWK" when uploaded.
   const agencyId = (() => { try { return getUserInfo()?.modelable_id; } catch { return null; } })();
+  const agencyEmail = (() => { try { return getUserInfo()?.email || ""; } catch { return ""; } })();
   const { data: agencyResp } = useQuery<any>({
     queryKey: [`/api/organizations/${agencyId}`],
     queryFn: async () => {
@@ -48,6 +52,37 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
       return res.json();
     },
     enabled: !!agencyId,
+  });
+  const agencyName: string = agencyResp?.agency?.name || "Agency Owner";
+  // Swich requires the payer's mobile number — not on file, so collected here
+  // the same way the Test Plan checkout does.
+  const [msisdn, setMsisdn] = React.useState("");
+
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      const customerTransactionId = `AGW${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`.slice(0, 50);
+      const res = await apiRequest("POST", "/api/swich/agency/landing-page", {
+        customerTransactionId,
+        item: "Ignite Plan",
+        amount: 1,
+        description: "Agentawk agency Ignite plan (test pricing)",
+        payeeName: agencyName,
+        email: agencyEmail,
+        msisdn,
+        successRedirectUrl: `${window.location.origin}/org/billing/plans?swich_status=success&customerTransactionId=${customerTransactionId}`,
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not start checkout. Connect Swich under Billing → Manage first.",
+        variant: "destructive",
+      });
+    },
   });
   // Theme-aware logo selection (replyagent parity). Small/square variant preferred for 36x36 badge.
   const b = agencyResp?.agency?.branding;
@@ -227,7 +262,7 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 <p className={cn("text-[10px] font-bold", sub)}>
                   Next charge on June 14, 2026: <span className={text}>$540.05</span>
                 </p>
-                <button 
+                <button
                   onClick={() => setIsFutureModalOpen(true)}
                   className="text-primary font-bold text-[10px] hover:underline"
                 >
@@ -235,14 +270,43 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 </button>
               </div>
 
-              <button className="w-full bg-primary hover:opacity-90 text-white py-3.5 rounded-xl font-black text-[14px] mt-8 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
-                Proceed To Checkout
+              <div className={cn("mt-6 p-4 rounded-xl border", dark ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-50 border-amber-200")}>
+                <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Test Mode</p>
+                <p className={cn("text-[10px] font-medium leading-relaxed", sub)}>
+                  All the pricing above is placeholder UI. This button charges a real <span className={text}>Rs. 1.00</span> via Swich — used to confirm the plan and payment details record correctly.
+                </p>
+              </div>
+
+              <div className="mt-4">
+                <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Your Mobile Number</label>
+                <input
+                  className={cn(
+                    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
+                    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+                  )}
+                  placeholder="03xxxxxxxxx"
+                  value={msisdn}
+                  onChange={(e) => setMsisdn(e.target.value)}
+                />
+                <p className={cn("text-[10px] font-medium mt-1.5 leading-relaxed", sub)}>
+                  Required — Swich sends a confirmation SMS to this number to complete the payment.
+                </p>
+              </div>
+
+              <button
+                onClick={() => checkoutMutation.mutate()}
+                disabled={checkoutMutation.isPending || !msisdn.trim()}
+                className="w-full bg-primary hover:opacity-90 disabled:opacity-60 text-white py-3.5 rounded-xl font-black text-[14px] mt-6 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                {checkoutMutation.isPending && <Loader2 size={16} className="animate-spin" />}
+                Proceed To Checkout (Rs. 1.00 test charge)
               </button>
 
               <div className="mt-6 flex items-center justify-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Secure Checkout by Chargebee
+                  Secure Checkout by Swich
                 </span>
               </div>
             </div>

@@ -295,7 +295,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                   "flex items-center px-3 border-l text-xs font-medium whitespace-nowrap shrink-0",
                   dark ? "bg-slate-800 border-slate-700 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"
                 )}>
-                  .ezconn.com
+                  .agentawk.com
                 </span>
               </div>
             </div>

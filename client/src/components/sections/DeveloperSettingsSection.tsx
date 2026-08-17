@@ -95,7 +95,7 @@ const EVENT_OPTIONS: WebhookEventOption[] = [
 
 // Docs URL — placeholder for the future public API documentation site.
 // Replace with the real URL once the docs portal is live.
-const API_DOCS_URL = "https://ezconn.com/docs/api";
+const API_DOCS_URL = "https://agentawk.com/docs/api";
 
 interface Webhook {
   id: string;

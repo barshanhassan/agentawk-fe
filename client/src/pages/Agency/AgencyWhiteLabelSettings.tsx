@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getUserInfo } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -6,17 +6,13 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Upload,
-  ChevronDown,
   Trash2,
-  ChevronUp,
   Mail,
   Zap,
   Info,
   ExternalLink
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { HexColorPicker } from "react-colorful";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import {
@@ -27,7 +23,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useTheme } from "@/contexts/ThemeContext";
-import { hexToHsl } from "@/components/AgencyBrandingFetcher";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -35,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 
 const AgencyWhiteLabelSettings = () => {
-  const { mode, setAgencyPrimaryColor } = useTheme();
+  const { mode } = useTheme();
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -79,7 +74,7 @@ const AgencyWhiteLabelSettings = () => {
   });
 
   const [brandingData, setBrandingData] = useState({
-    color: "#149f8f",
+    color: "#25d366",
     logo: "",            // legacy alias = logo_light
     logo_light: "",
     logo_light_small: "",
@@ -91,7 +86,6 @@ const AgencyWhiteLabelSettings = () => {
     domain: ""
   });
 
-  const colorDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailFormData, setEmailFormData] = useState({
@@ -103,7 +97,7 @@ const AgencyWhiteLabelSettings = () => {
     if (agencyResponse?.agency?.branding) {
       const b = agencyResponse.agency.branding;
       setBrandingData({
-        color: b.color || "#149f8f",
+        color: b.color || "#25d366",
         logo: b.logo_light || b.logo || "",
         logo_light: b.logo_light || b.logo || "",
         logo_light_small: b.logo_light_small || b.logo_small || "",
@@ -127,15 +121,6 @@ const AgencyWhiteLabelSettings = () => {
       toast({ title: t("agency.settings.general.updated") });
     }
   });
-
-  const handleColorChange = (color: string) => {
-    setBrandingData({ ...brandingData, color });
-    setAgencyPrimaryColor(hexToHsl(color));
-    if (colorDebounceRef.current) clearTimeout(colorDebounceRef.current);
-    colorDebounceRef.current = setTimeout(() => {
-      updateMutation.mutate({ color });
-    }, 500);
-  };
 
   type BrandingAsset =
     | 'logo_light'
@@ -213,7 +198,7 @@ const AgencyWhiteLabelSettings = () => {
             <Tabs defaultValue="features" className="w-full">
               <div className={cn("px-8 border-b flex justify-start", dark ? "border-slate-800" : "border-slate-100")}>
                 <TabsList className="h-auto p-0 gap-8 bg-transparent border-none flex w-full justify-start rounded-none">
-                  {["features", "logo", "favicon", "colors", "domain", "notification"].map((tab) => (
+                  {["features", "logo", "favicon", "domain", "notification"].map((tab) => (
                     <TabsTrigger 
                       key={tab}
                       value={tab} 
@@ -460,56 +445,6 @@ const AgencyWhiteLabelSettings = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <p className={cn("text-[11px] font-bold opacity-40", sub)}>Square ICO or PNG (64x64px recommended)</p>
-                </div>
-              </TabsContent>
-
-              {/* ── Colors Tab ── */}
-              <TabsContent value="colors" className="p-10 space-y-8 outline-none">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary/10 text-primary"><Zap size={18} /></div>
-                  <h4 className={cn("text-[13px] font-black uppercase tracking-widest", text)}>Brand Colors</h4>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <div className={cn("flex items-center gap-4 px-5 py-3 border rounded-2xl cursor-pointer transition-all w-[240px] shadow-sm", 
-                        dark ? "bg-slate-950/50 border-slate-800 hover:border-primary/50" : "bg-white border-slate-200 hover:border-primary/30")}>
-                        <div className="w-6 h-6 rounded-lg shrink-0 shadow-lg" style={{ backgroundColor: brandingData.color }} />
-                        <span className={cn("text-[14px] font-black tracking-tight flex-1", text)}>
-                          {brandingData.color.toUpperCase()}
-                        </span>
-                        <div className="flex flex-col gap-0.5 opacity-30 group-hover:opacity-100 transition-all">
-                          <ChevronUp size={12} />
-                          <ChevronDown size={12} />
-                        </div>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className={cn("w-80 p-4 rounded-[1.5rem] border shadow-2xl transition-all", dark ? "bg-[#0f1829] border-slate-800" : "bg-white")}>
-                      <HexColorPicker color={brandingData.color} onChange={handleColorChange} className="!w-full !h-40" />
-                      <div className="flex items-center justify-between gap-3 mt-5">
-                          {["R", "G", "B"].map((label, idx) => {
-                            const r = parseInt(brandingData.color.slice(1, 3), 16) || 0;
-                            const g = parseInt(brandingData.color.slice(3, 5), 16) || 0;
-                            const b = parseInt(brandingData.color.slice(5, 7), 16) || 0;
-                            const val = idx === 0 ? r : idx === 1 ? g : b;
-                            return (
-                              <div key={label} className="flex-1 space-y-1.5">
-                                <div className={cn("rounded-xl py-2 text-center text-[11px] font-black border",
-                                  dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-100 text-slate-800")}>
-                                  {val}
-                                </div>
-                                <p className="text-[9px] text-center font-black uppercase tracking-widest opacity-40">{label}</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                    </PopoverContent>
-                  </Popover>
-                  
-                  <p className={cn("text-[13px] font-medium leading-relaxed opacity-60 max-w-sm", sub)}>
-                    This primary color will be used for buttons, links, and accents across all your workspaces.
-                  </p>
                 </div>
               </TabsContent>
 

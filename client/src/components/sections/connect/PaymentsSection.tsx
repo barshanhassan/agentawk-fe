@@ -370,6 +370,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                   <thead>
                     <tr className={cn("text-left border-b", border, sub)}>
                       <th className="py-2 pr-4 font-semibold">Transaction ID</th>
+                      <th className="py-2 pr-4 font-semibold">Plan</th>
                       <th className="py-2 pr-4 font-semibold">Channel</th>
                       <th className="py-2 pr-4 font-semibold">Amount</th>
                       <th className="py-2 pr-4 font-semibold">Method</th>
@@ -383,6 +384,9 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     {transactions.map((t: any) => (
                       <tr key={t.id} className={cn("border-b last:border-0", border)}>
                         <td className={cn("py-2 pr-4 font-mono", text)}>{t.customer_transaction_id}</td>
+                        <td className={cn("py-2 pr-4 font-semibold", text)}>
+                          {t.plan_name || <span className="opacity-50 font-normal">—</span>}
+                        </td>
                         <td className={cn("py-2 pr-4 capitalize", text)}>{t.channel.replace(/_/g, " ")}</td>
                         <td className={cn("py-2 pr-4", text)}>{t.amount ? `${t.amount} ${t.currency}` : "—"}</td>
                         <td className={cn("py-2 pr-4", text)}>

@@ -9,10 +9,10 @@ import {
   Cloud,
   Gavel,
   HelpCircle,
+  Monitor,
   ChevronDown,
   Settings,
   Bell,
-  Monitor,
   ChevronLeft,
   ChevronRight,
   ScrollText,
@@ -42,13 +42,18 @@ type MenuItem = {
   subItems?: SubItem[];
   // Visible if user has ANY of these slugs. Empty/undefined = always visible.
   permissions?: string[];
+  // Kept in the list (not deleted) but never rendered — flip to false/remove to bring back.
+  hidden?: boolean;
 };
 
 type BottomItem = {
   label: string;
   icon: React.ReactElement;
   href: string;
+  hasSubmenu?: boolean;
+  subItems?: SubItem[];
   permissions?: string[];
+  hidden?: boolean;
 };
 
 type MenuGroup = {
@@ -70,7 +75,7 @@ const menuGroups: MenuGroup[] = [
     section: "MANAGEMENT",
     items: [
       {
-        label: "Audit Logs",
+        label: "Audit Trail",
         icon: <ScrollText size={18} />,
         href: "#",
         hasSubmenu: true,
@@ -78,17 +83,6 @@ const menuGroups: MenuGroup[] = [
         subItems: [
           { label: "Organization Logs", icon: <Briefcase size={15} />, href: "/org/audit-logs/org" },
           { label: "Workspace Logs", icon: <Network size={15} />, href: "/org/audit-logs/workspace" },
-        ],
-      },
-      {
-        label: "SaaS",
-        icon: <Cloud size={18} />,
-        href: "#",
-        hasSubmenu: true,
-        permissions: ["agency.*"],
-        subItems: [
-          { label: "Plans", icon: <Briefcase size={15} />, href: "/org/saas/plans", status: "Soon" },
-          { label: "API", icon: <Plug size={15} />, href: "/org/saas/api" },
         ],
       },
       {
@@ -102,16 +96,38 @@ const menuGroups: MenuGroup[] = [
           { label: "Manage", icon: <CircleDollarSign size={15} />, href: "/org/billing/manage" },
         ],
       },
-      { label: "Legal", icon: <Gavel size={18} />, href: "/org/legal", permissions: ["agency.legal.*"] },
+      {
+        label: "SaaS",
+        icon: <Cloud size={18} />,
+        href: "#",
+        hasSubmenu: true,
+        permissions: ["agency.*"],
+        hidden: true,
+        subItems: [
+          { label: "Plans", icon: <Briefcase size={15} />, href: "/org/saas/plans", status: "Soon" },
+          { label: "API", icon: <Plug size={15} />, href: "/org/saas/api" },
+        ],
+      },
+      { label: "Legal", icon: <Gavel size={18} />, href: "/org/legal", permissions: ["agency.legal.*"], hidden: true },
     ],
   },
 ];
 
 const bottomItems: BottomItem[] = [
-  { label: "Settings", icon: <Settings size={18} />, href: "/org/settings/general", permissions: ["agency.settings.*"] },
   { label: "Notifications", icon: <Bell size={18} />, href: "/org/settings/notifications", permissions: ["agency.*"] },
-  { label: "White Label", icon: <Monitor size={18} />, href: "/org/settings/white-label", permissions: ["agency.*"] },
-  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/org/help", permissions: ["agency.*"] },
+  {
+    label: "Settings",
+    icon: <Settings size={18} />,
+    href: "#",
+    hasSubmenu: true,
+    permissions: ["agency.settings.*"],
+    subItems: [
+      { label: "General", icon: <Settings size={15} />, href: "/org/settings/general" },
+      { label: "API", icon: <Plug size={15} />, href: "/org/saas/api" },
+    ],
+  },
+  { label: "White Label", icon: <Monitor size={18} />, href: "/org/settings/white-label", permissions: ["agency.*"], hidden: true },
+  { label: "Help & Support", icon: <HelpCircle size={18} />, href: "/org/help", permissions: ["agency.*"], hidden: true },
 ];
 
 // Default (no white-label logo uploaded) mark — same icon used on the auth pages.
@@ -135,11 +151,11 @@ const AgencySidebar = () => {
   const userPerms = (user.permissions as string[]) ?? [];
 
   const visibleMenuItems = React.useMemo(
-    () => menuGroups.flatMap((g) => g.items).filter((item) => hasAnyPerm(userPerms, item.permissions ?? [])),
+    () => menuGroups.flatMap((g) => g.items).filter((item) => !item.hidden && hasAnyPerm(userPerms, item.permissions ?? [])),
     [userPerms]
   );
   const visibleBottomItems = React.useMemo(
-    () => bottomItems.filter((item) => hasAnyPerm(userPerms, item.permissions ?? [])),
+    () => bottomItems.filter((item) => !item.hidden && hasAnyPerm(userPerms, item.permissions ?? [])),
     [userPerms]
   );
 
@@ -328,31 +344,73 @@ const AgencySidebar = () => {
 
         {/* Bottom items */}
         {visibleBottomItems.map((item) => {
-          const active = isActive(item.href);
+          const active = isActive(item.href) || (item.subItems?.some(s => isActive(s.href)) ?? false);
+          const open = expanded === item.label;
           return (
             <div key={item.label}>
-              <Link href={item.href}>
-                <div className={cn(
+              <div
+                onClick={() => {
+                  if (item.hasSubmenu) {
+                    if (isCollapsed) setIsCollapsed(false);
+                    setExpanded(open ? null : item.label);
+                  }
+                }}
+                className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all group relative",
                   active
                     ? (dark ? "bg-primary/10 text-white" : "bg-primary/10 text-primary")
                     : (dark ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"),
                   isCollapsed && "justify-center"
-                )}>
-                  <span className={cn("shrink-0", active ? (dark ? "text-white" : "text-primary") : "")}>
-                    {item.icon}
-                  </span>
-                  {!isCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
-                  {isCollapsed && (
-                    <div className={cn(
-                      "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
-                      dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
-                    )}>
-                      {item.label}
-                    </div>
-                  )}
+                )}
+              >
+                <span className={cn("shrink-0", active ? (dark ? "text-white" : "text-primary") : "")}>
+                  {item.icon}
+                </span>
+
+                {!isCollapsed && (
+                  <>
+                    {item.hasSubmenu ? (
+                      <span className="flex-1 text-[13px] font-medium">{item.label}</span>
+                    ) : (
+                      <Link href={item.href} className="flex-1 text-[13px] font-medium">
+                        {item.label}
+                      </Link>
+                    )}
+                    {item.hasSubmenu && (
+                      <ChevronDown size={13} className={cn("transition-transform shrink-0", open ? "rotate-180" : "", dark ? "text-slate-500" : "text-slate-400")} />
+                    )}
+                  </>
+                )}
+
+                {isCollapsed && (
+                  <div className={cn(
+                    "absolute left-full ml-3 px-2.5 py-1.5 text-[11px] font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[200] shadow-lg",
+                    dark ? "bg-slate-800 text-white border border-slate-700" : "bg-slate-900 text-white"
+                  )}>
+                    {item.label}
+                  </div>
+                )}
+              </div>
+
+              {!isCollapsed && item.hasSubmenu && open && item.subItems && (
+                <div className="mt-0.5 ml-4 pl-4 border-l space-y-0.5 border-slate-200 dark:border-slate-700">
+                  {item.subItems.map((sub) => (
+                    <Link key={sub.label} href={sub.href}>
+                      <div className={cn(
+                        "flex items-center justify-between px-2 py-1.5 rounded-md text-[12px] font-medium cursor-pointer transition-all",
+                        isActive(sub.href)
+                          ? (dark ? "text-white bg-primary/10" : "text-primary bg-primary/5")
+                          : (dark ? "text-slate-500 hover:text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50")
+                      )}>
+                        <div className="flex items-center gap-2">
+                          {sub.icon}
+                          <span>{sub.label}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-              </Link>
+              )}
             </div>
           );
         })}

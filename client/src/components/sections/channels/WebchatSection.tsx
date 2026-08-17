@@ -76,7 +76,7 @@ export default function WebchatSection() {
   };
 
   const copyEmbed = (id: string) => {
-    const snippet = `<script src="https://ezconn.com/widget.js" data-id="${id}"></script>`;
+    const snippet = `<script src="https://agentawk.com/widget.js" data-id="${id}"></script>`;
     navigator.clipboard.writeText(snippet);
     toast({ title: "Copied", description: "Embed code copied to clipboard." });
   };
@@ -135,7 +135,7 @@ export default function WebchatSection() {
                     <h3 className={cn("text-[14px] font-black tracking-tight", text)}>Webchat</h3>
                   </div>
                   <a
-                    href="https://ezconn.com/docs/webchat"
+                    href="https://agentawk.com/docs/webchat"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", dark ? "hover:bg-slate-800 text-slate-400 hover:text-primary" : "hover:bg-slate-100 text-slate-500 hover:text-primary")}
