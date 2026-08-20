@@ -152,6 +152,20 @@ const AgencyWorkspaces = () => {
       return res.json();
     },
     onSuccess: (data) => {
+      // This workspace has its OWN assigned agent (not the caller) — don't
+      // silently enter under the agency owner's identity, send them to that
+      // workspace's real login page so the right person signs in.
+      if (data.requires_login) {
+        if (data.workspace_url) {
+          window.open(`${data.workspace_url}/login`, '_blank', 'noopener');
+        } else {
+          toast({
+            title: "This workspace has its own login",
+            description: "It's assigned to a specific agent — ask them to log in, or use its login page directly.",
+          });
+        }
+        return;
+      }
       const next = data.redirect_to || '/workspace';
       if (data.workspace_url) {
         // The workspace has its own subdomain — open it in a NEW TAB and hand

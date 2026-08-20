@@ -18,8 +18,6 @@ import {
   ScrollText,
   Briefcase,
   Plug,
-  ShoppingCart,
-  CircleDollarSign,
   CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -88,13 +86,8 @@ const menuGroups: MenuGroup[] = [
       {
         label: "Billing",
         icon: <CreditCard size={18} />,
-        href: "#",
-        hasSubmenu: true,
+        href: "/org/billing/plans",
         permissions: ["agency.*"],
-        subItems: [
-          { label: "Plans", icon: <ShoppingCart size={15} />, href: "/org/billing/plans" },
-          { label: "Manage", icon: <CircleDollarSign size={15} />, href: "/org/billing/manage" },
-        ],
       },
       {
         label: "SaaS",

@@ -1,19 +1,13 @@
 import React from 'react';
-import { 
-  ArrowLeft, 
-  ShoppingCart, 
-  ShieldCheck, 
-  CheckCircle2,
-  Tag,
-  Info,
-  Zap,
+import {
+  ArrowLeft,
+  ShieldCheck,
+  Crown,
   Sparkles,
   Building2,
+  Users,
   MessageSquare,
-  QrCode,
-  Paintbrush,
   Bot,
-  Crown,
   Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,6 +31,9 @@ const BotMark = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
+const formatUsd = (cents: number | null | undefined) =>
+  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
 const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
@@ -55,9 +52,47 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     enabled: !!agencyId,
   });
   const agencyName: string = agencyResp?.agency?.name || "Agency Owner";
+
+  // Real plan data — same billing_plans row the backend enforces limits
+  // against, so this page can never drift from what actually happens after
+  // checkout (see agentawk-core/src/agency/agency.service.ts).
+  const { data: plans } = useQuery<any[]>({
+    queryKey: ["/api/organizations/billing-plans"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/organizations/billing-plans");
+      return res.json();
+    },
+  });
+  const plan = plans?.find((p) => p.item_id === "enterprise-plan");
+
   // Swich requires the payer's mobile number — not on file, so collected here
   // the same way the Test Plan checkout does.
   const [msisdn, setMsisdn] = React.useState("");
+
+  // Coupon — read-only sync from Billing → Manage (billing_subscriptions.coupons).
+  // No apply/remove here; that's Manage's job. Doesn't touch what Swich
+  // actually charges (still the Rs. 1 test amount below) — just the displayed rate.
+  const [appliedCoupon, setAppliedCoupon] = React.useState<{ code: string; name: string; discount_percentage: number | null } | null>(null);
+  const { data: accountCoupons } = useQuery<any[]>({
+    queryKey: [`/api/organizations/${agencyId}/coupons`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/coupons`);
+      return res.json();
+    },
+    enabled: !!agencyId,
+  });
+  React.useEffect(() => {
+    if (accountCoupons && accountCoupons.length > 0) {
+      const c = accountCoupons[0];
+      setAppliedCoupon({ code: c.coupon_id, name: c.invoice_name || c.coupon_id, discount_percentage: c.discount_percentage != null ? Number(c.discount_percentage) : null });
+    } else {
+      setAppliedCoupon(null);
+    }
+  }, [accountCoupons]);
+
+  const discountedPriceCents = plan?.price_cents != null && appliedCoupon?.discount_percentage
+    ? Math.round(plan.price_cents * (1 - appliedCoupon.discount_percentage / 100))
+    : plan?.price_cents ?? null;
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
@@ -65,6 +100,7 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
       const res = await apiRequest("POST", "/api/swich/agency/landing-page", {
         customerTransactionId,
         item: "Enterprise Plan",
+        planItemId: "enterprise-plan",
         amount: 1,
         description: "Agentawk agency Enterprise plan (test pricing)",
         payeeName: agencyName,
@@ -91,43 +127,22 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
     ? b?.logo_dark_small || b?.logo_light_small || b?.logo_dark || b?.logo_light || null
     : b?.logo_light_small || b?.logo_dark_small || b?.logo_light || b?.logo_dark || null;
 
-  const [isCreditsModalOpen, setIsCreditsModalOpen] = React.useState(false);
-  const [isFutureModalOpen, setIsFutureModalOpen] = React.useState(false);
-
   const bg     = dark ? 'bg-[#0b1120]'  : 'bg-slate-50/80';
   const card   = dark ? 'bg-[#0f1829]'  : 'bg-white';
   const border = dark ? 'border-slate-800' : 'border-slate-200';
   const text   = dark ? 'text-white'    : 'text-slate-900';
   const sub    = dark ? 'text-slate-500' : 'text-slate-400';
 
-  const cartItems = [
-    { type: 'PLAN', name: 'Enterprise Plan', sub: 'Charged based on usage', price: '$0.00', icon: <Crown className="w-4 h-4 text-indigo-500" /> },
-    { type: 'ADDON', name: 'Enterprise Addon', sub: 'Enterprise level support & features', price: '$499.00', icon: <Sparkles className="w-4 h-4 text-violet-500" /> },
-    { type: 'ADDON', name: 'Channels', sub: '$10.00 x 4 channel', price: '$40.00', icon: <MessageSquare className="w-4 h-4 text-emerald-500" /> },
-    { type: 'ADDON', name: 'Whatsapp QR', sub: '$15.00 x 4 instance', price: '$60.00', icon: <QrCode className="w-4 h-4 text-green-500" /> },
-    { type: 'ADDON', name: 'Organization Branding Addon', sub: 'White label branding included', price: '$0.00', icon: <ShieldCheck className="w-4 h-4 text-primary" /> },
-    { type: 'ADDON', name: 'Branding', sub: 'Custom brand kits included', price: '$0.00', icon: <Paintbrush className="w-4 h-4 text-rose-500" /> },
-    { type: 'ADDON', name: 'AI Agent Addon', sub: '$4.00 x 30 units', price: '$120.00', icon: <Bot className="w-4 h-4 text-indigo-500" /> },
-  ];
-
-  const Modal = ({ title, isOpen, onClose, children }: { title: string, isOpen: boolean, onClose: () => void, children: React.ReactNode }) => {
-    if (!isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
-        <div className={cn("w-full max-w-[500px] rounded-[20px] shadow-2xl border overflow-hidden animate-in fade-in zoom-in duration-200", card, border)}>
-          <div className={cn("px-6 py-5 border-b flex items-center justify-between", border)}>
-            <h3 className={cn("text-[16px] font-bold", text)}>{title}</h3>
-            <button onClick={onClose} className={cn("p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors", sub)}>
-              <ArrowLeft className="w-4 h-4 rotate-90" />
-            </button>
-          </div>
-          <div className="p-6">
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Every row here reads straight off `plan` — the same billing_plans
+  // columns the backend caps workspaces against, so this list can't say
+  // "50 workspaces" while the server actually allows a different number.
+  const features = plan ? [
+    { name: 'Workspaces', sub: `${plan.maximum_workspaces} included`, icon: <Building2 className="w-4 h-4 text-sky-500" /> },
+    { name: 'Contacts', sub: `${plan.maximum_contacts.toLocaleString()} per workspace`, icon: <MessageSquare className="w-4 h-4 text-emerald-500" /> },
+    { name: 'Human Agents', sub: `${plan.free_agents} per workspace`, icon: <Users className="w-4 h-4 text-violet-500" /> },
+    { name: 'AI Assistants', sub: `${plan.free_ai_agents} per workspace`, icon: <Bot className="w-4 h-4 text-indigo-500" /> },
+    { name: 'Communication Channels', sub: `${plan.free_channels} of each included`, icon: <Sparkles className="w-4 h-4 text-amber-500" /> },
+  ] : [];
 
   return (
     <div className={cn("min-h-screen transition-colors flex flex-col font-sans", bg)}>
@@ -158,34 +173,37 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
       <div className="w-full max-w-[1400px] px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* Left Column: Cart Items Consolidated Card */}
+          {/* Left Column: real plan features */}
           <div className="lg:col-span-7">
             <div className={cn("rounded-[20px] border shadow-sm overflow-hidden", card, border)}>
+              <div className={cn("px-5 py-4 border-b flex items-center gap-3", border)}>
+                <div className="p-2 rounded-lg bg-primary/10"><Crown className="w-4 h-4 text-primary" /></div>
+                <div>
+                  <p className={cn("text-[14px] font-bold", text)}>{plan?.external_name || "Enterprise plan"}</p>
+                  <p className={cn("text-[11px] font-medium", sub)}>What's included, straight from your account's plan data</p>
+                </div>
+              </div>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {cartItems.map((item, idx) => (
-                  <div 
-                    key={idx} 
-                    className="p-5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                {features.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-5 flex items-center gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", 
-                        dark ? "bg-slate-800/50" : "bg-slate-100/50")}>
-                        {item.icon}
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className={cn("text-[13px] font-bold", text)}>{item.name}</span>
-                          <span className={cn("text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded uppercase", 
-                            dark ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400")}>
-                            {item.type}
-                          </span>
-                        </div>
-                        {item.sub && <p className={cn("text-[11px] font-medium mt-0.5", sub)}>{item.sub}</p>}
-                      </div>
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                      dark ? "bg-slate-800/50" : "bg-slate-100/50")}>
+                      {item.icon}
                     </div>
-                    <span className={cn("text-[14px] font-bold", text)}>{item.price}</span>
+                    <div className="flex flex-col">
+                      <span className={cn("text-[13px] font-bold", text)}>{item.name}</span>
+                      <p className={cn("text-[11px] font-medium mt-0.5", sub)}>{item.sub}</p>
+                    </div>
                   </div>
                 ))}
+                {!plan && (
+                  <div className="p-5">
+                    <p className={cn("text-[12px]", sub)}>Loading plan details…</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -193,86 +211,45 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-5">
             <div className={cn("rounded-[20px] border p-8 sticky top-8 shadow-xl", card, border)}>
-              <h3 className={cn("text-[16px] font-bold mb-8", text)}>Order summary</h3>
-              
-              <div className="space-y-4 mb-8">
-                {[
-                  { label: 'Channels', value: '$40.00', sub: '$10.00 x 4 / month' },
-                  { label: 'Whatsapp QR', value: '$60.00', sub: '$15.00 x 4 / month' },
-                  { label: 'Organization Branding Addon', value: '$0.00', sub: '$0.00 / month' },
-                  { label: 'Branding', value: '$0.00', sub: '$0.00 / month' },
-                  { label: 'AI Agent Addon', value: '$120.00', sub: '$4.00 x 30 / month' },
-                  { label: 'Enterprise Addon', value: '$499.00', sub: '$499.00 / month' },
-                ].map((item, i) => (
-                  <div key={i} className="flex justify-between items-start">
-                    <div>
-                      <p className={cn("text-[12px] font-bold", text)}>{item.label}</p>
-                      <p className={cn("text-[10px] font-medium", sub)}>{item.sub}</p>
-                    </div>
-                    <span className={cn("text-[12px] font-bold", text)}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
+              <h3 className={cn("text-[16px] font-bold mb-6", text)}>Order summary</h3>
 
-              <div className={cn("pt-6 border-t space-y-3", border)}>
+              <div className="pb-6 border-b border-dashed border-slate-200 dark:border-slate-700">
                 <div className="flex justify-between items-center">
-                  <span className={cn("text-[12px] font-medium", sub)}>Subtotal (6 items)</span>
-                  <span className={cn("text-[12px] font-bold", text)}>$719.00</span>
+                  <span className={cn("text-[13px] font-bold", text)}>{plan?.external_name || "Enterprise plan"} — monthly</span>
+                  <span className={cn("text-[18px] font-black", text)}>{formatUsd(plan?.price_cents)}</span>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <button 
-                      onClick={() => setIsCreditsModalOpen(true)}
-                      className="text-[11px] font-bold flex items-center gap-1.5 text-primary hover:underline"
-                    >
-                       <Tag className="w-3 h-3" /> Credits applied
-                    </button>
-                    <span className="text-[12px] font-bold text-primary">-$104.27</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                    <span className={cn("text-[11px] font-bold")}>15 Percent - 15% coupon applied</span>
-                    <span className={cn("text-[12px] font-bold")}>-$107.85</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                    <span className={cn("text-[11px] font-bold")}>10 Percent - 10% coupon applied</span>
-                    <span className={cn("text-[12px] font-bold")}>-$61.12</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-4">
-                  <span className={cn("text-[18px] font-black", text)}>Total</span>
-                  <span className={cn("text-[20px] font-black", text)}>$445.76</span>
-                </div>
+                {plan && (
+                  <p className={cn("text-[10px] font-medium mt-1.5 leading-relaxed", sub)}>
+                    Includes: {plan.maximum_workspaces} workspaces · {plan.maximum_contacts.toLocaleString()} contacts/workspace · {plan.free_agents} agents/workspace · {plan.free_ai_agents} AI assistants/workspace · {plan.free_channels} channel/workspace
+                  </p>
+                )}
               </div>
 
-              {/* Notice Box */}
-              <div className={cn("mt-8 p-4 rounded-xl border flex items-start gap-3", 
-                dark ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-100")}>
-                <div className="w-4 h-4 rounded-full bg-slate-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+              {appliedCoupon && (
+                <div className="mt-4">
+                  <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Coupon (from Billing → Manage)</label>
+                  <div className={cn("flex items-center px-3 py-2 rounded-lg border text-[12px] font-bold", dark ? "bg-primary/10 border-primary/20 text-primary" : "bg-primary/5 border-primary/10 text-primary")}>
+                    {appliedCoupon.code} — {appliedCoupon.discount_percentage}% off
+                  </div>
                 </div>
-                <p className={cn("text-[10px] font-medium leading-relaxed", sub)}>
-                  Future charges will be based on usage
-                </p>
-              </div>
+              )}
 
-              <div className="mt-4">
-                <p className={cn("text-[10px] font-bold", sub)}>
-                  Next charge on June 14, 2026: <span className={text}>$550.03</span>
-                </p>
-                <button
-                  onClick={() => setIsFutureModalOpen(true)}
-                  className="text-primary font-bold text-[10px] hover:underline"
-                >
-                  Future charges
-                </button>
+              {appliedCoupon && (
+                <div className="flex justify-between items-center pt-4 text-primary">
+                  <span className="text-[12px] font-bold">{appliedCoupon.code} coupon applied</span>
+                  <span className="text-[13px] font-bold">-{formatUsd((plan?.price_cents ?? 0) - (discountedPriceCents ?? 0))}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-6">
+                <span className={cn("text-[16px] font-black", text)}>Total</span>
+                <span className={cn("text-[20px] font-black", text)}>{formatUsd(discountedPriceCents)} <span className="text-[11px] font-medium opacity-60">/month</span></span>
               </div>
 
               <div className={cn("mt-6 p-4 rounded-xl border", dark ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-50 border-amber-200")}>
                 <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Test Mode</p>
                 <p className={cn("text-[10px] font-medium leading-relaxed", sub)}>
-                  All the pricing above is placeholder UI. This button charges a real <span className={text}>Rs. 1.00</span> via Swich — used to confirm the plan and payment details record correctly.
+                  The price above is the real monthly rate. This button only charges a real <span className={text}>Rs. 1.00</span> via Swich for now — used to confirm the plan and payment details record correctly.
                 </p>
               </div>
 
@@ -312,92 +289,6 @@ const AgencyEnterpriseCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           </div>
         </div>
       </div>
-
-      {/* Credits Applicable Modal */}
-      <Modal title="Credits Applicable" isOpen={isCreditsModalOpen} onClose={() => setIsCreditsModalOpen(false)}>
-        <div className="space-y-4">
-          {[
-            { label: 'Channels - Prorated Credits for 14-May-2026 - 11-Jun-2026', value: '$36.84' },
-            { label: 'Whatsapp QR - Prorated Credits for 14-May-2026 - 11-Jun-2026', value: '$55.28' },
-            { label: 'AI Agent Addon - Prorated Credits for 14-May-2026 - 11-Jun-2026', value: '$25.76' },
-            { label: 'VIP Pass - Prorated Credits for 14-May-2026 - 11-Jun-2026', value: '$18.42' },
-          ].map((item, i) => (
-            <div key={i} className="flex justify-between items-start gap-4">
-              <p className={cn("text-[11px] font-medium leading-relaxed", text)}>{item.label}</p>
-              <span className={cn("text-[11px] font-bold", text)}>{item.value}</span>
-            </div>
-          ))}
-          <div className="pt-4 border-t border-dashed space-y-3">
-            <p className={cn("text-[12px] font-bold mb-2", text)}>Coupons applied</p>
-            <div className="flex justify-between items-center text-slate-500">
-              <span className="text-[11px] font-medium">15 Percent -15%</span>
-              <span className="text-[11px] font-bold">-$20.44</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-500">
-              <span className="text-[11px] font-medium">10 Percent -10%</span>
-              <span className="text-[11px] font-bold">-$11.59</span>
-            </div>
-          </div>
-          <div className={cn("pt-4 border-t", border)}>
-            <div className="flex justify-between items-center mb-2">
-              <span className={cn("text-[12px] font-bold", text)}>Subtotal (4 items)</span>
-              <span className={cn("text-[12px] font-bold", text)}>$104.27</span>
-            </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className={cn("text-[14px] font-black", text)}>Total</span>
-              <span className={cn("text-[14px] font-black", text)}>$104.27</span>
-            </div>
-            <div className="flex justify-between items-center pt-2 text-primary">
-              <span className="text-[13px] font-black uppercase tracking-tight">Credits applied</span>
-              <span className="text-[13px] font-black">$104.27</span>
-            </div>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Future Charges Modal */}
-      <Modal title="Future charges" isOpen={isFutureModalOpen} onClose={() => setIsFutureModalOpen(false)}>
-        <div className="space-y-4">
-          {[
-            { label: 'Enterprise Plan', value: '$0.00' },
-            { label: 'Channels', value: '$40.00', sub: '$10.00 x 4' },
-            { label: 'Whatsapp QR', value: '$60.00', sub: '$15.00 x 4' },
-            { label: 'Organization Branding Addon', value: '$0.00', sub: '$0.00' },
-            { label: 'Branding', value: '$0.00', sub: '$0.00 x 5' },
-            { label: 'AI Agent Addon', value: '$120.00', sub: '$4.00 x 30' },
-            { label: 'Enterprise Addon', value: '$499.00' },
-          ].map((item, i) => (
-            <div key={i} className="flex justify-between items-start">
-              <div>
-                <p className={cn("text-[11px] font-bold", text)}>{item.label}</p>
-                {item.sub && <p className={cn("text-[10px] font-medium", sub)}>{item.sub}</p>}
-              </div>
-              <span className={cn("text-[11px] font-bold", text)}>{item.value}</span>
-            </div>
-          ))}
-          <div className={cn("pt-4 border-t space-y-3", border)}>
-            <div className="flex justify-between items-center">
-              <span className={cn("text-[11px] font-bold", text)}>Subtotal (7 items)</span>
-              <span className={cn("text-[11px] font-bold", text)}>$719.00</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-500">
-              <span className="text-[11px] font-medium">15 Percent -15% coupon applied</span>
-              <span className="text-[11px] font-bold">-$107.85</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-500">
-              <span className="text-[11px] font-medium">10 Percent -10% coupon applied</span>
-              <span className="text-[11px] font-bold">-$61.12</span>
-            </div>
-            <div className={cn("pt-4 border-t flex justify-between items-center", border)}>
-              <div className="flex items-center gap-2 text-slate-500">
-                <CheckCircle2 className="w-4 h-4" />
-                <span className="text-[11px] font-bold">On June 14, 2026</span>
-              </div>
-              <span className={cn("text-[14px] font-black", text)}>$550.03</span>
-            </div>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };

@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ChevronLeft, 
-  Wallet, 
-  PhoneCall, 
+import React from 'react';
+import {
+  ChevronLeft,
+  Wallet,
+  PhoneCall,
   Info,
-  CreditCard,
-  Zap
+  Lock,
+  History,
+  AlertCircle,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from "@/lib/queryClient";
+import { getUserInfo } from "@/lib/auth";
+import { format } from "date-fns";
 
 interface AgencyVoiceWalletProps {
   workspace: any;
@@ -23,42 +26,27 @@ interface AgencyVoiceWalletProps {
 const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
-  const { toast } = useToast();
   const isDark = mode === 'dark';
 
-  const [balance, setBalance] = useState(0); 
-  const [ppm, setPpm] = useState(0); 
-  const [purchaseCredits, setPurchaseCredits] = useState(500); 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPurchasing, setIsPurchasing] = useState(false);
-
-  useEffect(() => {
-    // Simulate initial data fetch
-    const timer = setTimeout(() => {
-      setBalance(125);
-      setPpm(0.05);
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+  const userInfo = React.useMemo(() => {
+    try { return getUserInfo(); } catch { return {} as any; }
   }, []);
-  
-  const minutes = Math.floor(balance / 60).toString().padStart(2, '0');
-  const seconds = (balance % 60).toString().padStart(2, '0');
-  
-  const totalAmount = (purchaseCredits * ppm).toFixed(2);
+  const agencyId = userInfo.modelable_id;
 
-  const handleBuy = () => {
-    setIsPurchasing(true);
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: t("agency.voiceWallet.purchase.success_title"),
-        description: t("agency.voiceWallet.purchase.success_desc", { amount: purchaseCredits, name: workspace?.name }),
-      });
-      setBalance(prev => prev + (purchaseCredits * 60));
-      setIsPurchasing(false);
-    }, 1500);
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: [`/api/organizations/${agencyId}/workspaces/${workspace?.id}/voice-wallet`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/workspaces/${workspace.id}/voice-wallet`);
+      return res.json();
+    },
+    enabled: !!agencyId && !!workspace?.id,
+  });
+
+  const balanceSeconds = data?.balance_seconds ?? 0;
+  const transactions = data?.transactions ?? [];
+
+  const minutes = Math.floor(balanceSeconds / 60).toString().padStart(2, '0');
+  const seconds = Math.floor(balanceSeconds % 60).toString().padStart(2, '0');
 
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", isDark ? "text-white" : "text-slate-900")}>
@@ -66,7 +54,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
       <div className={cn("flex items-center justify-between mb-8 p-4 rounded-md border shadow-sm transition-colors",
         isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={onBack}
             className={cn("p-2 rounded-full transition-colors", isDark ? "hover:bg-slate-700" : "hover:bg-slate-100")}
           >
@@ -110,7 +98,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
                       <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">{t("agency.voiceWallet.balance.seconds")}</p>
                     </div>
                   </div>
-                  
+
                   <div className={cn("px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border",
                     isDark ? "bg-primary/10 text-primary border-primary/20" : "bg-primary/5 text-primary border-primary/10")}>
                     {t("agency.voiceWallet.balance.available")}
@@ -126,70 +114,52 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
           </Card>
         </div>
 
-        {/* Purchase Card */}
-        <div className="lg:col-span-8">
-          <Card className={cn("border transition-colors h-full", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+        {/* Right column: locked top-up + real transaction history */}
+        <div className="lg:col-span-8 space-y-6">
+          <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+            <CardContent className="p-8 flex items-center gap-4">
+              <div className={cn("p-3 rounded-full", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                <Lock className="w-5 h-5 text-slate-400" />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Top-up unavailable</p>
+                <p className="text-xs text-gray-500 mt-0.5">Buying voice credits isn't set up yet — no per-minute pricing or payment flow has been configured for this yet.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
             <CardHeader className="border-b border-slate-700/50 pb-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-emerald-500" /> {t("agency.voiceWallet.purchase.title")}
+                <History className="w-5 h-5 text-gray-400" /> Transaction History
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 space-y-12">
-              <div className="space-y-6">
-                <div className="flex justify-between items-end">
-                  <div>
-                    <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">{t("agency.voiceWallet.purchase.select_amount")}</label>
-                    <p className="text-xs text-gray-500 mt-1">{t("agency.voiceWallet.purchase.amount_desc")}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-3xl font-bold text-primary">{purchaseCredits}</span>
-                    <span className="text-sm text-gray-500 ml-2 font-medium">{t("agency.voiceWallet.balance.minutes")}</span>
-                  </div>
+            <CardContent className="p-0">
+              {isLoading ? (
+                <div className="p-8 text-center text-sm text-gray-500">Loading…</div>
+              ) : transactions.length === 0 ? (
+                <div className="p-8 text-center space-y-2">
+                  <AlertCircle className="w-8 h-8 text-gray-600 mx-auto" />
+                  <p className="text-sm text-gray-500 font-medium">No voice wallet activity yet</p>
                 </div>
-
-                <div className="pt-4">
-                  <Slider 
-                    value={[purchaseCredits]} 
-                    min={100} 
-                    max={10000} 
-                    step={100}
-                    onValueChange={(vals) => setPurchaseCredits(vals[0])}
-                    className="cursor-pointer"
-                  />
+              ) : (
+                <div className="divide-y divide-slate-700/50">
+                  {transactions.map((tx: any) => (
+                    <div key={tx.id} className="px-6 py-3 flex items-center justify-between hover:bg-slate-800/10 transition-colors">
+                      <div>
+                        <p className="text-sm font-semibold">{tx.description === 'PURCHASE' ? 'Purchase' : 'Spent'}</p>
+                        <p className="text-xs text-gray-500">{tx.created_at ? format(new Date(tx.created_at), 'MMM d, yyyy p') : ''}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={cn("text-sm font-bold", tx.type === 'credit' ? "text-emerald-500" : "text-rose-500")}>
+                          {tx.type === 'credit' ? '+' : '-'}{Math.abs(tx.seconds)}s
+                        </p>
+                        <p className="text-xs text-gray-500">Balance: {tx.balance_after}s</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-t border-slate-700/50 pt-8">
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-400 font-medium">{t("agency.voiceWallet.purchase.total_pay")}</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-emerald-500">${totalAmount}</span>
-                    <span className="text-sm text-gray-500 font-medium">USD</span>
-                  </div>
-                  <p className="text-[10px] text-gray-500">{t("agency.voiceWallet.purchase.price_per_min", { price: ppm.toFixed(2) })}</p>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                   <Button 
-                    size="lg" 
-                    className="bg-primary hover:bg-primary/90 text-white font-bold h-14"
-                    onClick={handleBuy}
-                    disabled={isPurchasing || isLoading}
-                   >
-                     {isPurchasing ? (
-                       <div className="flex items-center gap-2">
-                         <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                         {t("agency.voiceWallet.purchase.processing")}
-                       </div>
-                     ) : (
-                       <><Zap className="w-5 h-5 mr-2 fill-white" /> {t("agency.voiceWallet.purchase.complete_btn")}</>
-                     )}
-                   </Button>
-                   <p className="text-[10px] text-center text-gray-500 px-4">
-                     {t("agency.voiceWallet.purchase.terms")}
-                   </p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>

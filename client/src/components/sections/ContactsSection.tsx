@@ -243,6 +243,19 @@ export default function ContactsSection() {
   const canImportContacts = hasAnyPerm(userPerms, ["workspace.company.import"]);
   const canExportPSID = hasAnyPerm(userPerms, ["workspace.company.export_psid"]);
 
+  // Plan-level gate (separate from the role permission above) — the backend
+  // rejects import/export outright when the agency's plan doesn't include
+  // it, so check this up front and tell the user before they pick a file,
+  // rather than letting them go through the whole dialog just to hit a 403.
+  const { data: planFeatures } = useQuery({
+    queryKey: ["/api/workspaces/plan-features"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workspaces/plan-features");
+      return res.json();
+    },
+  });
+  const planAllowsImportExport = planFeatures?.allow_import_contacts ?? true;
+
   // Fetch tags
   const { data: tagsResponse } = useQuery({
     queryKey: ["/api/tags/list"],
@@ -1047,6 +1060,14 @@ export default function ContactsSection() {
   };
 
   const handleExportSelectedAsCSV = () => {
+    if (!planAllowsImportExport) {
+      toast({
+        title: "Not available on your plan",
+        description: "Contact import/export isn't included in your current plan. Upgrade to unlock it.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (selectedRows.size === 0) {
       toast({
         title: "No Contacts Selected",
@@ -1110,6 +1131,14 @@ export default function ContactsSection() {
   // pulls the page-scoped sender_id from insta_chats / fb_chats.
   const [exportingPSID, setExportingPSID] = useState(false);
   const handleExportPSID = async () => {
+    if (!planAllowsImportExport) {
+      toast({
+        title: "Not available on your plan",
+        description: "Contact import/export isn't included in your current plan. Upgrade to unlock it.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (selectedRows.size === 0) {
       toast({
         title: "No Contacts Selected",
@@ -1225,7 +1254,18 @@ export default function ContactsSection() {
               {canImportContacts && (
                 <Button
                   variant="outline"
-                  onClick={() => { setImportResult(null); setShowImportModal(true); }}
+                  onClick={() => {
+                    if (!planAllowsImportExport) {
+                      toast({
+                        title: "Not available on your plan",
+                        description: "Contact import/export isn't included in your current plan. Upgrade to unlock it.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setImportResult(null);
+                    setShowImportModal(true);
+                  }}
                   className="h-8 px-4 rounded-lg font-semibold text-[11px] transition-all duration-300 active:scale-95 flex items-center gap-2"
                 >
                   <Upload size={14} strokeWidth={2.5} />

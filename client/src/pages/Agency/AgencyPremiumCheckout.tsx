@@ -2,12 +2,12 @@ import React from 'react';
 import {
   ArrowLeft,
   ShieldCheck,
-  Zap,
   Sparkles,
   Building2,
-  Users,
   MessageSquare,
+  Users,
   Bot,
+  Upload,
   Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ const BotMark = ({ className = "" }: { className?: string }) => (
 const formatUsd = (cents: number | null | undefined) =>
   cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
-const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
+const AgencyPremiumCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
@@ -63,7 +63,7 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
       return res.json();
     },
   });
-  const plan = plans?.find((p) => p.item_id === "ignite-plan");
+  const plan = plans?.find((p) => p.item_id === "premium-plan");
 
   // Swich requires the payer's mobile number — not on file, so collected here
   // the same way the Test Plan checkout does.
@@ -99,10 +99,10 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
       const customerTransactionId = `AGW${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`.slice(0, 50);
       const res = await apiRequest("POST", "/api/swich/agency/landing-page", {
         customerTransactionId,
-        item: "Ignite Plan",
-        planItemId: "ignite-plan",
+        item: "Premium Plan",
+        planItemId: "premium-plan",
         amount: 1,
-        description: "Agentawk agency Ignite plan (test pricing)",
+        description: "Agentawk agency Premium plan (test pricing)",
         payeeName: agencyName,
         email: agencyEmail,
         msisdn,
@@ -135,13 +135,14 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
   // Every row here reads straight off `plan` — the same billing_plans
   // columns the backend caps workspaces against, so this list can't say
-  // "15 workspaces" while the server actually allows a different number.
+  // "1,000 contacts" while the server actually allows a different number.
   const features = plan ? [
     { name: 'Workspaces', sub: `${plan.maximum_workspaces} included`, icon: <Building2 className="w-4 h-4 text-sky-500" /> },
     { name: 'Contacts', sub: `${plan.maximum_contacts.toLocaleString()} per workspace`, icon: <MessageSquare className="w-4 h-4 text-emerald-500" /> },
     { name: 'Human Agents', sub: `${plan.free_agents} per workspace`, icon: <Users className="w-4 h-4 text-violet-500" /> },
     { name: 'AI Assistants', sub: `${plan.free_ai_agents} per workspace`, icon: <Bot className="w-4 h-4 text-indigo-500" /> },
-    { name: 'Communication Channels', sub: `${plan.free_channels} of each included`, icon: <Sparkles className="w-4 h-4 text-amber-500" /> },
+    { name: 'Communication Channels', sub: `${plan.free_channels} of each included (WhatsApp QR excluded)`, icon: <Sparkles className="w-4 h-4 text-amber-500" /> },
+    { name: 'Import / Export Contacts', sub: plan.allow_import_contacts ? 'Included' : 'Not included on this plan', icon: <Upload className="w-4 h-4 text-primary" /> },
   ] : [];
 
   return (
@@ -177,9 +178,9 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
           <div className="lg:col-span-7">
             <div className={cn("rounded-[20px] border shadow-sm overflow-hidden", card, border)}>
               <div className={cn("px-5 py-4 border-b flex items-center gap-3", border)}>
-                <div className="p-2 rounded-lg bg-primary/10"><Zap className="w-4 h-4 text-primary" /></div>
+                <div className="p-2 rounded-lg bg-primary/10"><Sparkles className="w-4 h-4 text-primary" /></div>
                 <div>
-                  <p className={cn("text-[14px] font-bold", text)}>{plan?.external_name || "Ignite plan"}</p>
+                  <p className={cn("text-[14px] font-bold", text)}>{plan?.external_name || "Premium plan"}</p>
                   <p className={cn("text-[11px] font-medium", sub)}>What's included, straight from your account's plan data</p>
                 </div>
               </div>
@@ -215,12 +216,12 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
               <div className="pb-6 border-b border-dashed border-slate-200 dark:border-slate-700">
                 <div className="flex justify-between items-center">
-                  <span className={cn("text-[13px] font-bold", text)}>{plan?.external_name || "Ignite plan"} — monthly</span>
+                  <span className={cn("text-[13px] font-bold", text)}>{plan?.external_name || "Premium plan"} — monthly</span>
                   <span className={cn("text-[18px] font-black", text)}>{formatUsd(plan?.price_cents)}</span>
                 </div>
                 {plan && (
                   <p className={cn("text-[10px] font-medium mt-1.5 leading-relaxed", sub)}>
-                    Includes: {plan.maximum_workspaces} workspaces · {plan.maximum_contacts.toLocaleString()} contacts/workspace · {plan.free_agents} agents/workspace · {plan.free_ai_agents} AI assistants/workspace · {plan.free_channels} channel/workspace
+                    Includes: {plan.maximum_workspaces} workspace{plan.maximum_workspaces === 1 ? '' : 's'} · {plan.maximum_contacts.toLocaleString()} contacts/workspace · {plan.free_agents} agents/workspace · {plan.free_ai_agents} AI assistants/workspace · {plan.free_channels} channel/workspace
                   </p>
                 )}
               </div>
@@ -293,4 +294,4 @@ const AgencyIgniteCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
   );
 };
 
-export default AgencyIgniteCheckout;
+export default AgencyPremiumCheckout;

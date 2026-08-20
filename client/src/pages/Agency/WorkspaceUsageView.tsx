@@ -1,24 +1,19 @@
 import React from 'react';
-import { 
-  ChevronLeft, 
-  BarChart3, 
-  Users, 
-  MessageSquare, 
-  Globe, 
-  Clock, 
-  History,
-  FileText,
-  Smartphone,
-  Send,
-  MessageCircle,
-  Zap,
-  CheckCircle2,
-  AlertCircle
+import {
+  ChevronLeft,
+  BarChart3,
+  Users,
+  MessageSquare,
+  Bot,
+  Loader2,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from "@/lib/queryClient";
+import { getUserInfo } from "@/lib/auth";
 
 interface WorkspaceUsageViewProps {
   workspace: any;
@@ -30,30 +25,30 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
   const { mode } = useTheme();
   const isDark = mode === 'dark';
 
-  // Mock usage data based on Byte_front structure
-  const usage = {
-    subscription: {
-      next_billing_at: "2025-05-11"
-    },
-    current_usage: {
-      agents: { total_agents: 4, free_agents: 1, amount: 30.00 },
-      channels: { total_channels: 2, free_channels: 1, amount: 10.00 },
-      contacts: { current_total: 1250, total_contacts: 5000, amount: 25.00 },
-      domain: { amount: 0.00 },
-      voice_credits: { credits_used: 125 }, // seconds
-      total: 65.00
-    },
-    history: [
-      { id: 1, end_date: "2025-04-11", currency: "$", agents: { amount: 30 }, contacts: { amount: 25 }, channels: { amount: 10 }, domain: { amount: 0 }, total: 65, media: true },
-      { id: 2, end_date: "2025-03-11", currency: "$", agents: { amount: 30 }, contacts: { amount: 20 }, channels: { amount: 10 }, domain: { amount: 0 }, total: 60, media: true },
-    ]
-  };
+  const userInfo = React.useMemo(() => {
+    try { return getUserInfo(); } catch { return {} as any; }
+  }, []);
+  const agencyId = userInfo.modelable_id;
 
-  const channelStats = [
-    { name: "Support WhatsApp", type: "WhatsApp", incoming: 124, outgoing: 89, icon: <MessageCircle className="w-5 h-5 text-green-500" /> },
-    { name: "Marketing SMS", type: "SMS", incoming: 0, outgoing: 450, icon: <MessageSquare className="w-5 h-5 text-blue-500" /> },
-    { name: "Info Bot", type: "Telegram", incoming: 56, outgoing: 56, icon: <Send className="w-5 h-5 text-sky-500" /> },
-  ];
+  const { data, isLoading } = useQuery({
+    queryKey: [`/api/organizations/${agencyId}/workspaces/${workspace?.id}/usage`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/workspaces/${workspace.id}/usage`);
+      return res.json();
+    },
+    enabled: !!agencyId && !!workspace?.id,
+  });
+
+  const usage = data?.usage;
+
+  const rows = usage ? [
+    { key: 'contacts', icon: <Users className="w-5 h-5 text-gray-400" />, label: t("agency.workspaces.usage.contacts"), used: usage.contacts.used, limit: usage.contacts.limit },
+    { key: 'agents', icon: <Users className="w-5 h-5 text-gray-400" />, label: t("agency.workspaces.usage.agents"), used: usage.agents.used, limit: usage.agents.limit },
+    { key: 'ai_assistants', icon: <Bot className="w-5 h-5 text-gray-400" />, label: "AI Assistants", used: usage.ai_assistants.used, limit: usage.ai_assistants.limit },
+    { key: 'whatsapp', icon: <MessageSquare className="w-5 h-5 text-green-500" />, label: "WhatsApp Channels", used: usage.channels.whatsapp.used, limit: usage.channels.whatsapp.limit },
+    { key: 'instagram', icon: <MessageSquare className="w-5 h-5 text-pink-500" />, label: "Instagram Channels", used: usage.channels.instagram.used, limit: usage.channels.instagram.limit },
+    { key: 'facebook', icon: <MessageSquare className="w-5 h-5 text-blue-500" />, label: "Facebook Channels", used: usage.channels.facebook.used, limit: usage.channels.facebook.limit },
+  ] : [];
 
   return (
     <div className={cn("p-6 font-sans transition-colors duration-300", isDark ? "text-white" : "text-slate-900")}>
@@ -61,7 +56,7 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
       <div className={cn("flex items-center justify-between mb-8 p-4 rounded-md border shadow-sm transition-colors",
         isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={onBack}
             className={cn("p-2 rounded-full transition-colors", isDark ? "hover:bg-slate-700" : "hover:bg-slate-100")}
           >
@@ -77,158 +72,41 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Main Usage Stats */}
-        <div className="lg:col-span-8 space-y-6">
-          <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
-            <CardHeader className="border-b border-slate-700/50 pb-4">
-               <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-yellow-500" /> {t("agency.workspaces.usage.period")}
-                  </CardTitle>
-                  <div className="text-xs text-gray-400">
-                    {t("agency.workspaces.usage.next_billing", { date: usage.subscription.next_billing_at })}
-                  </div>
-               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <table className="w-full">
-                <tbody className={cn("divide-y", isDark ? "divide-slate-700" : "divide-slate-100")}>
-                  {/* Agents */}
-                  <tr className="hover:bg-slate-800/10 transition-colors">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : (
+        <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+          <CardHeader className="border-b border-slate-700/50 pb-4">
+            <CardTitle className="text-lg font-semibold">{t("agency.workspaces.usage.period")}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full">
+              <tbody className={cn("divide-y", isDark ? "divide-slate-700" : "divide-slate-100")}>
+                {rows.map((row) => (
+                  <tr key={row.key} className="hover:bg-slate-800/10 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <Users className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="font-semibold text-sm">{t("agency.workspaces.usage.agents")}</p>
-                          <p className="text-xs text-gray-400">{t("agency.workspaces.usage.agents_desc")}</p>
-                        </div>
+                        {row.icon}
+                        <p className="font-semibold text-sm">{row.label}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.total")}</p>
-                      <p className="text-lg font-bold">{usage.current_usage.agents.total_agents}</p>
+                      <p className="text-lg font-bold">{row.used}</p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-right">
                       <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.included")}</p>
-                      <p className="text-sm font-medium">{usage.current_usage.agents.free_agents}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">Amount</p>
-                      <p className="text-lg font-bold text-primary">${usage.current_usage.agents.amount.toFixed(2)}</p>
+                      <p className="text-sm font-medium">{row.limit ?? '—'}</p>
                     </td>
                   </tr>
-                  {/* Contacts */}
-                  <tr className="hover:bg-slate-800/10 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Users className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="font-semibold text-sm">{t("agency.workspaces.usage.contacts")}</p>
-                          <p className="text-xs text-gray-400">{t("agency.workspaces.usage.contacts_desc")}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.current")}</p>
-                      <p className="text-lg font-bold">{usage.current_usage.contacts.current_total}</p>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">{t("common.peak")}</p>
-                      <p className="text-sm font-medium">{usage.current_usage.contacts.total_contacts}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-tighter">Amount</p>
-                      <p className="text-lg font-bold text-primary">${usage.current_usage.contacts.amount.toFixed(2)}</p>
-                    </td>
-                  </tr>
-                  {/* Total Row */}
-                  <tr className={isDark ? "bg-[#0f172a]" : "bg-slate-50"}>
-                    <td colSpan={3} className="px-6 py-4">
-                      <p className="font-bold">{t("agency.workspaces.usage.total_period")}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="text-2xl font-bold text-primary">${usage.current_usage.total.toFixed(2)}</p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-
-          {/* Channel Stats */}
-          <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
-            <CardHeader className="border-b border-slate-700/50 pb-4">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary" /> {t("agency.workspaces.usage.channel_stats")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-700/50">
-                {channelStats.map((stat, i) => (
-                  <div key={i} className="p-6 space-y-4 hover:bg-slate-800/10 transition-colors">
-                    <div className="flex items-center gap-3">
-                      {stat.icon}
-                      <div>
-                        <p className="font-bold text-sm">{stat.name}</p>
-                        <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">{stat.type}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-2xl font-bold">{stat.incoming}</p>
-                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">{t("common.incoming")}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">{stat.outgoing}</p>
-                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">{t("common.outgoing")}</p>
-                      </div>
-                    </div>
-                  </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column: History */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className={cn("border transition-colors h-full", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
-            <CardHeader className="border-b border-slate-700/50 pb-4">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <History className="w-5 h-5 text-gray-400" /> {t("agency.workspaces.usage.history")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-700/50">
-                {usage.history.map((item) => (
-                  <div key={item.id} className="p-4 hover:bg-slate-800/10 transition-colors space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{item.end_date}</span>
-                      <span className="text-sm font-bold text-primary">{item.currency}{item.total.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>{t("agency.workspaces.usage.agents")}: {item.currency}{item.agents.amount}</span>
-                      <span>{t("agency.workspaces.usage.contacts")}: {item.currency}{item.contacts.amount}</span>
-                    </div>
-                    {item.media && (
-                      <button className="text-[10px] flex items-center gap-1 text-blue-500 hover:underline font-bold uppercase tracking-wider mt-1">
-                        <FileText size={12} /> {t("agency.workspaces.usage.download_invoice")}
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {usage.history.length === 0 && (
-                <div className="p-8 text-center space-y-2">
-                  <AlertCircle className="w-8 h-8 text-gray-600 mx-auto" />
-                  <p className="text-sm text-gray-500 font-medium">{t("agency.workspaces.usage.empty_history")}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
