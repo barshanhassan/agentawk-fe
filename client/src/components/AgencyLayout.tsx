@@ -30,6 +30,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { getUserInfo } from "@/lib/auth";
 
 const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   const { t, i18n } = useTranslation();
@@ -51,6 +52,33 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
   });
   const notifications: any[] = notifResp?.notifications || [];
   const unreadCount: number = notifResp?.unread || 0;
+
+  // Warm the Billing page's data as soon as the agency panel mounts (once per
+  // session — this component stays mounted across every agency route, it
+  // never remounts on navigation) so Billing shows instantly instead of a
+  // loading skeleton whenever the user actually clicks into it. Same
+  // queryKey/queryFn shape as AgencyBillingPlans.tsx so the cache hit lines
+  // up exactly — combined with the app's global staleTime: Infinity, this
+  // fires once and is never refetched until a full page reload.
+  React.useEffect(() => {
+    const agencyId = getUserInfo()?.modelable_id;
+    if (!agencyId) return;
+    queryClient.prefetchQuery({
+      queryKey: ["/api/organizations/billing-plans"],
+      queryFn: async () => {
+        const res = await apiRequest("GET", "/api/organizations/billing-plans");
+        return res.json();
+      },
+    });
+    queryClient.prefetchQuery({
+      queryKey: [`/api/organizations/${agencyId}/current-plan`],
+      queryFn: async () => {
+        const res = await apiRequest("GET", `/api/organizations/${agencyId}/current-plan`);
+        return res.json();
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatRelativeTime = (iso: string | Date | null | undefined): string => {
     if (!iso) return "";
