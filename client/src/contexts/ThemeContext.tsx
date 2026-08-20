@@ -14,7 +14,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const DEFAULT_PRIMARY = "217 91% 60%";
+const DEFAULT_PRIMARY = "142 70% 49%";
 
 // Read a cookie synchronously so the first render already has the last-known
 // theme — avoids the blue→brand colour flash while branding loads from the API.

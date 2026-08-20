@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/contexts/ThemeContext";
 
 function hexToHslString(hex: string): string {
-  if (!hex) return "217 91% 60%";
+  if (!hex) return "142 70% 49%";
   hex = hex.replace(/^#/, '');
   if (hex.length === 3) {
     hex = hex.split('').map(c => c + c).join('');

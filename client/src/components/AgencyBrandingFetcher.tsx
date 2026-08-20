@@ -26,7 +26,7 @@ export function hexToHsl(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-const DEFAULT_BLUE = "217 91% 60%";
+const DEFAULT_BRAND_COLOR = "142 70% 49%";
 const AGENCY_COLOR_CACHE = "agencyPrimaryColor";
 
 // Reads the last effective colour persisted by ThemeContext — used as a fallback
@@ -66,7 +66,7 @@ export default function AgencyBrandingFetcher() {
     // never force blue. Apply (and cache) the real colour once it arrives.
     if (!data) return;
     const color = data?.agency?.branding?.color;
-    const hsl = color ? hexToHsl(color) : DEFAULT_BLUE;
+    const hsl = color ? hexToHsl(color) : DEFAULT_BRAND_COLOR;
     setAgencyPrimaryColor(hsl);
     try { localStorage.setItem(AGENCY_COLOR_CACHE, hsl); } catch { /* ignore */ }
   }, [data]);
