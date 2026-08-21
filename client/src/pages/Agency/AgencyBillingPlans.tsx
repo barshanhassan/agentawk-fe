@@ -310,6 +310,18 @@ const AgencyBillingPlans = () => {
         {/* Plans Grid */}
         <div className={cn("rounded-2xl border overflow-hidden shadow-sm", card, border)}>
           <div className="p-6">
+            {!realPlans ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className={cn("rounded-xl p-6 border-2 animate-pulse", border)}>
+                    <div className={cn("w-10 h-10 rounded-lg mb-4", dark ? "bg-slate-800" : "bg-slate-100")} />
+                    <div className={cn("h-3 w-2/3 rounded mb-3", dark ? "bg-slate-800" : "bg-slate-100")} />
+                    <div className={cn("h-6 w-1/2 rounded mb-4", dark ? "bg-slate-800" : "bg-slate-100")} />
+                    <div className={cn("h-3 w-full rounded", dark ? "bg-slate-800" : "bg-slate-100")} />
+                  </div>
+                ))}
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {plans.map((plan, i) => {
                 return (
@@ -396,6 +408,7 @@ const AgencyBillingPlans = () => {
                 );
               })}
             </div>
+            )}
           </div>
         </div>
 

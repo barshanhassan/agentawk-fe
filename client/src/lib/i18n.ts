@@ -209,7 +209,6 @@ const resources = {
           "general": {
             "title": "Settings",
             "desc": "Control the preferences and settings",
-            "cancelWhiteLabel": "Cancel White Label",
             "name": "Name",
             "timezone": "Timezone",
             "selectTimezone": "Select timezone",

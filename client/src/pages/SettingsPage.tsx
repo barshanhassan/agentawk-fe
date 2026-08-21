@@ -142,9 +142,9 @@ export default function SettingsPage() {
     ...(canManageLiveChat
       ? [{ name: "Live Chat", path: "/settings/workspace/live-chat" }]
       : []),
-    // Hide the White Label sub-item when the agency has turned branding off for this workspace.
+    // Hide the Theme (branding) sub-item when the agency has turned branding off for this workspace.
     ...(allowBranding
-      ? [{ name: "White Label", path: "/settings/workspace/white-label" }]
+      ? [{ name: "Theme", path: "/settings/workspace/white-label" }]
       : []),
     { name: "Manage User", path: "/settings/workspace/manage-agents" },
     { name: "Roles & Permissions", path: "/settings/workspace/roles" },
@@ -214,7 +214,7 @@ export default function SettingsPage() {
   const chatGptNames = ["AI Chat Assistants","AI Voice Assistants","AI Knowledge base","AI Report Builder"];
   const connectNames = ["Integrations","API","Visual API"];
   const customizationNames = ["Custom fields","Chat Widget","Iframe","Tags","Quick Replies"];
-  const workspaceNames = ["Manage","Live Chat","White Label","Manage User","Roles & Permissions","Teams"];
+  const workspaceNames = ["Manage","Live Chat","Theme","Manage User","Roles & Permissions","Teams"];
 
   const [activeSection, setActiveSection] = useState(initialActiveSection);
   const [workspaceOpen, setWorkspaceOpen] = useState(workspaceNames.includes(initialActiveSection) || initialActiveSection === "Manage");
@@ -614,7 +614,7 @@ export default function SettingsPage() {
                 <LiveChatSection />
               )}
 
-              {activeSection === "White Label" && allowBranding && (
+              {activeSection === "Theme" && allowBranding && (
                 <WhiteLabelSection />)}
               {activeSection === "Manage User" && (
                 <ManageAgentsSection />)}

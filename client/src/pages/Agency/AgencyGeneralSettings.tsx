@@ -382,9 +382,6 @@ const AgencyGeneralSettings = () => {
               <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.general.desc")}</p>
             </div>
           </div>
-          <button className={outlineBtn}>
-            {t("agency.settings.general.cancelWhiteLabel")}
-          </button>
         </div>
         
         <CardContent className="p-0">

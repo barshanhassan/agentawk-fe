@@ -74,6 +74,7 @@ const AgencyWorkspaces = () => {
   const [showInactive, setShowInactive] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   // Reset the "Show more" reveal whenever the filtered set changes, so the list
   // doesn't stay expanded after a new search/filter narrows the results.
@@ -197,8 +198,11 @@ const AgencyWorkspaces = () => {
     },
     onSuccess: (_, workspace) => {
       setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
-      toast({ title: "Deleted Successfully" });
+      toast({ title: "Workspace permanently deleted" });
       queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Delete failed", description: error.message || "Please try again.", variant: "destructive" });
     },
   });
 
@@ -313,20 +317,34 @@ const AgencyWorkspaces = () => {
                       dark ? "bg-[#0f1829]/95" : "bg-white/95"
                     )}>
                       <p className={cn("text-[12.5px] font-bold text-center leading-snug", text)}>
-                        Delete "{ws.name}"?
+                        Permanently delete "{ws.name}"?
                       </p>
+                      <p className={cn("text-[10.5px] text-center leading-snug px-2", sub)}>
+                        This deletes all of this workspace's data — contacts, conversations, connected channels, AI agents — forever. This cannot be undone.
+                      </p>
+                      <input
+                        autoFocus
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder={`Type "${ws.name}" to confirm`}
+                        className={cn(
+                          "w-full max-w-[220px] px-3 py-1.5 rounded-lg border text-[11px] text-center outline-none",
+                          dark ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600" : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+                        )}
+                      />
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => { deleteMutation.mutate(ws); setConfirmDeleteId(null); }}
-                          className="px-5 py-1.5 rounded-lg text-[12px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all"
+                          disabled={deleteConfirmText !== ws.name || deleteMutation.isPending}
+                          className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold bg-rose-500 text-white hover:bg-rose-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          Yes
+                          {deleteMutation.isPending ? "..." : "Delete"}
                         </button>
                         <button
                           onClick={() => setConfirmDeleteId(null)}
-                          className="px-5 py-1.5 rounded-lg text-[12px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
+                          className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
                         >
-                          No
+                          Cancel
                         </button>
                       </div>
                     </div>
@@ -416,7 +434,7 @@ const AgencyWorkspaces = () => {
                           <Ban size={14} /> {ws.status === 'Active' ? 'Suspend Access' : 'Activate Access'}
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => setConfirmDeleteId(ws.id)}
+                          onClick={() => { setConfirmDeleteId(ws.id); setDeleteConfirmText(''); }}
                           className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
                         >
                           <Trash2 size={14} /> Delete

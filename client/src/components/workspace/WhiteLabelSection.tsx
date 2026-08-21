@@ -75,7 +75,7 @@ export default function WhiteLabelSection() {
   });
 
   const [colors, setColors] = useState({
-    mainTheme: "#4D62D5",
+    mainTheme: "#25D366",
     links: "#5742F5",
     incomingBubble: "#705800",
     incomingText: "#FFFFFF",
@@ -86,7 +86,7 @@ export default function WhiteLabelSection() {
   useEffect(() => {
     if (brandingData) {
       setColors({
-        mainTheme: brandingData.color || "#4D62D5",
+        mainTheme: brandingData.color || "#25D366",
         links: brandingData.link_color || "#5742F5",
         incomingBubble: brandingData.incoming_chat_color || "#705800",
         incomingText: brandingData.incoming_chat_text_color || "#FFFFFF",
@@ -287,7 +287,6 @@ export default function WhiteLabelSection() {
     { value: "logo", label: "Logo", icon: ImageIcon },
     { value: "favicon", label: "Favicon", icon: Zap },
     { value: "colors", label: "Colors", icon: Palette },
-    { value: "domain", label: "Custom Domain", icon: Globe },
     { value: "email", label: "Notification E-mail", icon: Mail },
   ];
 
@@ -308,7 +307,7 @@ export default function WhiteLabelSection() {
               <BadgeCheck className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>White label</h1>
+              <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>Theme</h1>
               <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
                 Change color, logo and favicon of your workspace
               </p>
@@ -470,82 +469,6 @@ export default function WhiteLabelSection() {
                 loading={updateBrandingMutation.isPending}
                 primaryBtn={primaryBtn}
               />
-            </TabsContent>
-
-            {/* ── DOMAIN TAB ── */}
-            <TabsContent value="domain" className="p-8 outline-none space-y-6">
-              <SectionHeading dark={dark} title="Custom Domain" />
-
-              {currentDomain ? (
-                /* ── Connected domain ── */
-                <div className={cn("p-6 rounded-[1.5rem] border max-w-2xl", softBg, softBorder)}>
-                  <div className="flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0"><Globe size={16} /></div>
-                      <div className="min-w-0">
-                        <a href={currentDomain.domain} target="_blank" rel="noopener noreferrer" className={cn("text-[13px] font-black truncate hover:underline", text)}>
-                          {currentDomain.domain}
-                        </a>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Active</span>
-                          <span className={cn("text-[10px] font-bold opacity-60", sub)}>subdomain: {currentDomain.sub_domain}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => deleteDomainMutation.mutate()}
-                      disabled={deleteDomainMutation.isPending}
-                      className="h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50"
-                    >
-                      <Trash2 size={12} /> {deleteDomainMutation.isPending ? "Removing..." : "Remove"}
-                    </button>
-                  </div>
-                  <p className={cn("text-[11px] font-medium opacity-60 mt-4 leading-relaxed", sub)}>
-                    Add a CNAME record for <span className="font-mono font-bold">{currentDomain.sub_domain}.{currentDomain.root_domain}</span> pointing to your workspace host at your DNS provider. Allow up to 24 hours for SSL provisioning.
-                  </p>
-                </div>
-              ) : (
-                /* ── Add domain form ── */
-                <>
-                  <div className="flex items-center gap-3 flex-wrap max-w-3xl">
-                    <div className={cn("flex border rounded-xl overflow-hidden h-11 items-center transition-all flex-1 min-w-[280px]",
-                      dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/40" : "bg-white border-slate-200 focus-within:border-primary/40")}>
-                      <span className={cn("px-3 text-[11px] font-semibold border-r h-full flex items-center",
-                        dark ? "text-slate-500 border-slate-800 bg-slate-900/40" : "text-slate-400 border-slate-200 bg-slate-50")}>https://</span>
-                      <input
-                        placeholder="app"
-                        value={slug}
-                        onChange={(e) => setSlug(e.target.value)}
-                        className={cn("bg-transparent h-full text-[12px] font-black outline-none px-3 flex-1 min-w-0", text)}
-                      />
-                      <span className={cn("px-2 text-[12px] font-bold opacity-50 border-l h-full flex items-center", dark ? "border-slate-800" : "border-slate-200")}>.</span>
-                      <input
-                        placeholder="example.com"
-                        value={customDomain}
-                        onChange={(e) => setCustomDomain(e.target.value)}
-                        className={cn("bg-transparent h-full text-[12px] font-black outline-none px-3 flex-1 min-w-0", text)}
-                      />
-                    </div>
-                    <button
-                      onClick={() => connectDomainMutation.mutate()}
-                      disabled={connectDomainMutation.isPending || !slug.trim() || !customDomain.trim()}
-                      className={primaryBtn}
-                    >
-                      {connectDomainMutation.isPending ? "Connecting..." : "Connect"}
-                    </button>
-                  </div>
-
-                  <div className="space-y-3 max-w-3xl">
-                    <p className={cn("text-[13px] font-black", text)}>Make your Workspace shine with your own custom domain!</p>
-                    <p className={cn("text-[12px] font-medium opacity-70 leading-relaxed", sub)}>
-                      This section lets you ditch our branding and use your Workspace domain name. This adds a professional touch and builds trust with agents.
-                    </p>
-                    <p className={cn("text-[12px] font-medium opacity-70 leading-relaxed", sub)}>
-                      <span className={cn("font-black", text)}>Important Note:</span> This custom domain applies to this specific Workspace only.
-                    </p>
-                  </div>
-                </>
-              )}
             </TabsContent>
 
             {/* ── EMAIL TAB ── */}
