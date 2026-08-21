@@ -200,9 +200,11 @@ const AgencyWorkspaces = () => {
       setLocalWorkspaces(prev => prev.filter(ws => ws.id !== workspace.id));
       toast({ title: "Workspace permanently deleted" });
       queryClient.invalidateQueries({ queryKey: [`/api/organizations/${agencyId}/workspaces`] });
+      setConfirmDeleteId(null);
     },
     onError: (error: any) => {
       toast({ title: "Delete failed", description: error.message || "Please try again.", variant: "destructive" });
+      setConfirmDeleteId(null);
     },
   });
 
@@ -316,37 +318,51 @@ const AgencyWorkspaces = () => {
                       "absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-2xl p-5 backdrop-blur-sm",
                       dark ? "bg-[#0f1829]/95" : "bg-white/95"
                     )}>
-                      <p className={cn("text-[12.5px] font-bold text-center leading-snug", text)}>
-                        Permanently delete "{ws.name}"?
-                      </p>
-                      <p className={cn("text-[10.5px] text-center leading-snug px-2", sub)}>
-                        This deletes all of this workspace's data — contacts, conversations, connected channels, AI agents — forever. This cannot be undone.
-                      </p>
-                      <input
-                        autoFocus
-                        value={deleteConfirmText}
-                        onChange={(e) => setDeleteConfirmText(e.target.value)}
-                        placeholder={`Type "${ws.name}" to confirm`}
-                        className={cn(
-                          "w-full max-w-[220px] px-3 py-1.5 rounded-lg border text-[11px] text-center outline-none",
-                          dark ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600" : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
-                        )}
-                      />
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => { deleteMutation.mutate(ws); setConfirmDeleteId(null); }}
-                          disabled={deleteConfirmText !== ws.name || deleteMutation.isPending}
-                          className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold bg-rose-500 text-white hover:bg-rose-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {deleteMutation.isPending ? "..." : "Delete"}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(null)}
-                          className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                      {deleteMutation.isPending && deleteMutation.variables?.id === ws.id ? (
+                        <>
+                          <div className="w-6 h-6 border-2 border-rose-300 border-t-rose-500 rounded-full animate-spin" />
+                          <p className={cn("text-[12px] font-bold text-center leading-snug", text)}>
+                            Deleting "{ws.name}"…
+                          </p>
+                          <p className={cn("text-[10.5px] text-center leading-snug px-2", sub)}>
+                            This can take up to a minute for larger workspaces. Please don't close or refresh this page.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className={cn("text-[12.5px] font-bold text-center leading-snug", text)}>
+                            Permanently delete "{ws.name}"?
+                          </p>
+                          <p className={cn("text-[10.5px] text-center leading-snug px-2", sub)}>
+                            This deletes all of this workspace's data — contacts, conversations, connected channels, AI agents — forever. This cannot be undone.
+                          </p>
+                          <input
+                            autoFocus
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            placeholder={`Type "${ws.name}" to confirm`}
+                            className={cn(
+                              "w-full max-w-[220px] px-3 py-1.5 rounded-lg border text-[11px] text-center outline-none",
+                              dark ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600" : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+                            )}
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => deleteMutation.mutate(ws)}
+                              disabled={deleteConfirmText !== ws.name}
+                              className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold bg-rose-500 text-white hover:bg-rose-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="w-24 px-5 py-1.5 rounded-lg text-[12px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
