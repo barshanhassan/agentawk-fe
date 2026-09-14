@@ -121,7 +121,7 @@ export default function BotDashboardContent() {
     { title: t("bot_dashboard_content.kpi_received_by_bot"), value: kpiData.receivedByBot, unit: t("bot_dashboard_content.unit_messages"), icon: <Send size={14} />, color: "text-blue-500" },
     { title: t("bot_dashboard_content.kpi_total_messages"), value: kpiData.totalMessages, unit: t("bot_dashboard_content.unit_all_messages"), icon: <BarChart3 size={14} />, color: "text-violet-500" },
     { title: t("bot_dashboard_content.kpi_escalated_to_human"), value: kpiData.escalatedToHuman, unit: t("bot_dashboard_content.unit_escalations"), icon: <Users size={14} />, color: "text-rose-500" },
-    { title: t("bot_dashboard_content.kpi_avg_session_duration"), value: kpiData.avgSessionDuration, unit: t("bot_dashboard_content.unit_per_session"), icon: <Clock size={14} />, color: "text-orange-500" },
+    { title: t("bot_dashboard_content.kpi_avg_session_duration"), value: kpiData.avgSessionDuration, unit: t("bot_dashboard_content.unit_per_session"), icon: <Clock size={14} />, color: "text-orange-500", comingSoon: kpiData.avgSessionDuration === "Not tracked yet" },
   ];
 
   // Chart series sourced from the backend bot-analytics endpoint.
@@ -157,8 +157,16 @@ export default function BotDashboardContent() {
               </div>
               <p className={cn("text-[11px] font-semibold truncate", sub)}>{kpi.title}</p>
             </div>
-            <p className={cn("text-xl font-black tabular-nums", text)}>{kpi.value}</p>
-            <p className={cn("text-[10px] font-medium opacity-60", sub)}>{kpi.unit}</p>
+            {kpi.comingSoon ? (
+              <span className={cn("inline-block text-[10px] font-semibold px-2 py-1 rounded-full", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")}>
+                {t("bot_dashboard_content.coming_soon")}
+              </span>
+            ) : (
+              <>
+                <p className={cn("text-xl font-black tabular-nums", text)}>{kpi.value}</p>
+                <p className={cn("text-[10px] font-medium opacity-60", sub)}>{kpi.unit}</p>
+              </>
+            )}
           </div>
         ))}
       </div>
@@ -172,15 +180,21 @@ export default function BotDashboardContent() {
           </div>
           <TopFilterDropdown topFilter={topFilter} setTopFilter={setTopFilter} />
         </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={popularityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} angle={-45} textAnchor="end" height={60} />
-            <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
-            <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("bot_dashboard_content.legend_interactions")} />
-          </BarChart>
-        </ResponsiveContainer>
+        {popularityData.length === 0 ? (
+          <div className={cn("flex items-center justify-center h-[300px] text-[12px]", sub)}>
+            {t("bot_dashboard_content.popularity_empty_state")}
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={popularityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} angle={-45} textAnchor="end" height={60} />
+              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
+              <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("bot_dashboard_content.legend_interactions")} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
