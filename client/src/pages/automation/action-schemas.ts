@@ -59,6 +59,30 @@ const SAVE_TO_FIELD: ActionFieldSchema = {
   type: 'custom-field',
 };
 
+/**
+ * Slug spellings we still READ but no longer write.
+ *
+ * Seven actions were originally given EZCONN-invented names; the schemas below
+ * now use replyagent's, so a flow imported from replyagent opens correctly. Any
+ * flow already saved under the old name would otherwise land on the editor's
+ * "no editor defined for this action" placeholder, making a working step look
+ * broken. The backend keeps the matching runtime aliases.
+ */
+const LEGACY_ACTION_SLUGS: Record<string, string> = {
+  json_to_custom_fields: 'json_to_cf',
+  make_hook: 'trigger_make_hook',
+  chatgpt_image_recognition: 'chatgpt_vision',
+  ms_text_to_speech: 'microsoft_text_to_speech',
+  cal_calendar: 'cal_dot_com',
+  remove_from_flow: 'remove_smart_flow',
+  share_clonekit: 'share_clone_kit',
+};
+
+/** Canonical slug for any spelling, current or historical. */
+export function resolveActionSlug(slug: string): string {
+  return LEGACY_ACTION_SLUGS[slug] ?? slug;
+}
+
 export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
   // ─── Tags & Fields ────────────────────────────────────────────────
   add_tag: {
@@ -88,8 +112,8 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
     group: 'Tags & Fields',
     fields: [{ key: 'field.id', label: 'Custom field', type: 'custom-field', required: true }],
   },
-  json_to_custom_fields: {
-    slug: 'json_to_custom_fields',
+  json_to_cf: {
+    slug: 'json_to_cf',
     label: 'JSON → custom fields',
     group: 'Tags & Fields',
     fields: [
@@ -149,8 +173,8 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
       SAVE_TO_FIELD,
     ],
   },
-  make_hook: {
-    slug: 'make_hook',
+  trigger_make_hook: {
+    slug: 'trigger_make_hook',
     label: 'Make.com webhook',
     group: 'External',
     fields: [
@@ -180,8 +204,8 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
       SAVE_TO_FIELD,
     ],
   },
-  chatgpt_image_recognition: {
-    slug: 'chatgpt_image_recognition',
+  chatgpt_vision: {
+    slug: 'chatgpt_vision',
     label: 'ChatGPT: image recognition',
     group: 'AI',
     fields: [
@@ -244,8 +268,8 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
       { key: 'similarity_boost', label: 'Similarity boost (0-1)', type: 'number' },
     ],
   },
-  ms_text_to_speech: {
-    slug: 'ms_text_to_speech',
+  microsoft_text_to_speech: {
+    slug: 'microsoft_text_to_speech',
     label: 'Microsoft: text to speech',
     group: 'AI',
     fields: [
@@ -354,8 +378,8 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
     group: 'Flow control',
     fields: [{ key: 'automation.id', label: 'Automation', type: 'automation', required: true }],
   },
-  remove_from_flow: {
-    slug: 'remove_from_flow',
+  remove_smart_flow: {
+    slug: 'remove_smart_flow',
     label: 'Remove from automation',
     group: 'Flow control',
     fields: [
@@ -459,8 +483,8 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
   delete_contact: { slug: 'delete_contact', label: 'Delete contact', group: 'Contact', fields: [] },
 
   // ─── Misc integrations ───────────────────────────────────────────
-  cal_calendar: {
-    slug: 'cal_calendar',
+  cal_dot_com: {
+    slug: 'cal_dot_com',
     label: 'Cal.com booking',
     group: 'Other integrations',
     fields: [
@@ -483,7 +507,7 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
   },
   get_report: { slug: 'get_report', label: 'Get report', group: 'Other integrations', fields: [{ key: 'report.id', label: 'Report ID', type: 'text', required: true }, SAVE_TO_FIELD] },
   trigger_report: { slug: 'trigger_report', label: 'Trigger report', group: 'Other integrations', fields: [{ key: 'report.id', label: 'Report ID', type: 'text', required: true }] },
-  share_clonekit: { slug: 'share_clonekit', label: 'Share clone kit', group: 'Other integrations', fields: [{ key: 'bundle_id', label: 'Bundle ID', type: 'text', required: true }, { key: 'recipient_workspace_id', label: 'Recipient workspace ID', type: 'text' }] },
+  share_clone_kit: { slug: 'share_clone_kit', label: 'Share clone kit', group: 'Other integrations', fields: [{ key: 'bundle_id', label: 'Bundle ID', type: 'text', required: true }, { key: 'recipient_workspace_id', label: 'Recipient workspace ID', type: 'text' }] },
   unstract: { slug: 'unstract', label: 'Unstract document', group: 'Other integrations', fields: [{ key: 'document_url', label: 'Document URL', type: 'text', required: true }, { key: 'workflow', label: 'Workflow name', type: 'text' }, SAVE_TO_FIELD] },
   woovi: { slug: 'woovi', label: 'Woovi payment', group: 'Other integrations', fields: [{ key: 'amount', label: 'Amount', type: 'number', required: true }, { key: 'comment', label: 'Comment', type: 'text' }, SAVE_TO_FIELD] },
 };

@@ -110,7 +110,7 @@ import {
   useConnectedAccounts,
 } from "./automation/modals";
 import { AUTOMATION_NODE_TYPES } from "./automation/nodes";
-import { ACTION_SCHEMAS } from "./automation/action-schemas";
+import { ACTION_SCHEMAS, resolveActionSlug } from "./automation/action-schemas";
 import { CHANNEL_MESSAGE_TYPES } from "./automation/channel-schemas";
 import { getTriggerSchema } from "./automation/trigger-schemas";
 
@@ -408,6 +408,17 @@ function BuilderInner() {
       }
     };
   }, [automationId, queryClient]);
+
+  // A loop is detected while the flow RUNS, not while it is published — the
+  // engine stops the automation with status=error / error_code=LOOP the moment
+  // an activity fires in a tight cycle. So the rectification dialog opens on
+  // that state when the builder loads, rather than on a publish error that the
+  // backend never actually returned. Publishing the fixed flow clears it.
+  useEffect(() => {
+    if (automation?.automation?.error_code === "LOOP") {
+      setLoopDialogOpen(true);
+    }
+  }, [automation?.automation?.error_code]);
 
   // ─── Auto-save (debounced) ───────────────────────────────────────────
   // Persist changes ~1.5 s after the user's last edit so quitting the
@@ -1622,7 +1633,7 @@ function ActionStepEditor({
 }) {
   const { t } = useTranslation();
   const slug = value?.slug ?? "";
-  const schema = ACTION_SCHEMAS[slug];
+  const schema = ACTION_SCHEMAS[resolveActionSlug(slug)];
 
   // Group actions for the picker by their `group` property.
   const grouped = useMemo(() => {
@@ -1940,11 +1951,35 @@ function serializedNodesFromAutomation(automation: any): Node[] {
     // Activities live under `activities` for the sync-graph response and
     // under `automation_step_activities` for the getAutomation response.
     const acts: any[] = s.activities ?? s.automation_step_activities ?? [];
+    const readProps = (a: any) =>
+      typeof a?.properties === "string" ? safeJson(a.properties) : a?.properties ?? {};
+
+    // Rebuild the FULL activity list, not just the first row. A channel step
+    // holds one entry per message it sends and a Start step one per trigger;
+    // hydrating only acts[0] meant every step after a reload showed a single
+    // (often empty) row, and the rest of the user's work looked lost even
+    // once the backend had persisted it. Shape must match what the pickers
+    // write in onPick / updateNodeData: { slug, event, label, properties }.
+    const activities = acts
+      .slice()
+      .sort((a: any, b: any) => (a?.order ?? 0) - (b?.order ?? 0))
+      .map((a: any, i: number) => {
+        // `label` is stored alongside the fields; everything else IS the
+        // activity's properties (including `type`, which tells the channel
+        // panel which editor to open).
+        const { label, ...properties } = readProps(a);
+        return {
+          slug: a?.slug ?? undefined,
+          event: a?.event ?? undefined,
+          label,
+          properties,
+          order: a?.order ?? i + 1,
+          children: [],
+        };
+      });
+
     const firstActivity = acts[0];
-    const activityProps =
-      typeof firstActivity?.properties === "string"
-        ? safeJson(firstActivity.properties)
-        : firstActivity?.properties ?? {};
+    const activityProps = activities[0]?.properties ?? {};
     return {
       id: String(s.comment ?? `step_${s.id}`),
       type: String(s.type ?? "action"),
@@ -1953,6 +1988,7 @@ function serializedNodesFromAutomation(automation: any): Node[] {
         stepType: s.type,
         label: s.title,
         comment: s.comment ?? "",
+        activities,
         value: activityProps,
         activity_properties: firstActivity ? { event: firstActivity.event, ...activityProps } : undefined,
       },

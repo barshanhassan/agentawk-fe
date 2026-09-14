@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CHANNEL_LABELS } from "./channel-schemas";
 import { getTriggerSchema } from "./trigger-schemas";
-import { ACTION_SCHEMAS } from "./action-schemas";
+import { ACTION_SCHEMAS, resolveActionSlug } from "./action-schemas";
 import { useSmartFlowMenu } from "../SmartFlowBuilderPage";
 import {
   Zap,
@@ -524,6 +524,30 @@ function makeChannelNode(channel: string) {
                 className="border-t border-slate-100 first:border-t-0"
               >
                 {renderActivityRow(act, t)}
+                {/* Branch outputs. An activity that waits for the contact
+                    (Contact response, ChatGPT question…) owns child branches —
+                    "replied" and "no reply" — and each needs its own handle, or
+                    the flow simply dead-ends after the question. The handle id
+                    is `branch-<event>`; the backend resolves it to the child
+                    activity whose properties.event matches, and stores the edge
+                    against THAT activity (replyagent's polymorphic connector). */}
+                {branchesOf(act).map((br) => (
+                  <div
+                    key={br.event}
+                    className="relative px-3 py-1.5 pl-6 text-[11px] font-medium border-t border-slate-100"
+                    style={{ minHeight: 30 }}
+                  >
+                    <span className={br.tone}>
+                      {br.label ?? t(br.labelKey!)}
+                    </span>
+                    <AddStepDropdown
+                      nodeId={id}
+                      handleId={`branch-${br.event}`}
+                      dotColor={br.dot}
+                      style={{ right: -5, top: "50%", transform: "translateY(-50%)" }}
+                    />
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -547,6 +571,91 @@ function makeChannelNode(channel: string) {
   });
   Component.displayName = `${meta.label}Node`;
   return Component;
+}
+
+/**
+ * The branch outputs an activity owns, derived from its type. Must stay in
+ * step with AutomationsService.branchSeedsFor() on the backend, which creates
+ * the matching child activity rows — these handles are only wired up if that
+ * child exists.
+ */
+function branchesOf(act: any): Array<{
+  event: string;
+  labelKey?: string;
+  label?: string;
+  tone: string;
+  dot: string;
+}> {
+  const type = act?.properties?.type;
+
+  // Buttons / list rows branch PER CHOICE. Without a handle for each one the
+  // node had no outputs at all, so a flow could ask the contact to pick an
+  // option and then had nowhere to go with the answer. Event names are
+  // positional (`choice_1`, …) and match what the backend seeds in
+  // branchSeedsFor(); the label shown is the author's own button text.
+  if (type === "button") {
+    return (act?.properties?.choices ?? [])
+      .filter((c: any) => String(c?.label ?? "").trim())
+      .map((c: any, i: number) => ({
+        event: `choice_${i + 1}`,
+        label: String(c.label),
+        tone: "text-indigo-600",
+        dot: "border-indigo-500",
+      }));
+  }
+
+  if (type === "message_list") {
+    const out: Array<{ event: string; label: string; tone: string; dot: string }> = [];
+    let n = 0;
+    for (const section of act?.properties?.sections ?? []) {
+      for (const opt of section?.options ?? []) {
+        if (!String(opt?.title ?? "").trim()) continue;
+        n += 1;
+        out.push({
+          event: `choice_${n}`,
+          label: String(opt.title),
+          tone: "text-indigo-600",
+          dot: "border-indigo-500",
+        });
+      }
+    }
+    return out;
+  }
+
+  const replied = {
+    event: "responded",
+    labelKey: "automation_nodes.branch_replied",
+    tone: "text-emerald-600",
+    dot: "border-emerald-500",
+  };
+  const noReply = {
+    event: "no_response",
+    labelKey: "automation_nodes.branch_no_reply",
+    tone: "text-rose-600",
+    dot: "border-rose-500",
+  };
+  switch (type) {
+    case "input":
+      return [replied, noReply];
+    case "chatgpt_question":
+    case "dify_question":
+      return [
+        {
+          event: "answer_failed",
+          labelKey: "automation_nodes.branch_answer_failed",
+          tone: "text-rose-600",
+          dot: "border-rose-500",
+        },
+        {
+          event: "no_further_question",
+          labelKey: "automation_nodes.branch_no_further_question",
+          tone: "text-slate-500",
+          dot: "border-slate-400",
+        },
+      ];
+    default:
+      return [];
+  }
 }
 
 // Solid brand backdrop for the header icon circle — matches the channel's
@@ -1009,7 +1118,7 @@ ConditionNode.displayName = "ConditionNode";
 export const ActionNode = memo(({ id, data }: NodeProps<any>) => {
   const { t } = useTranslation();
   const slug = data?.value?.slug ?? data?.actionSlug ?? "";
-  const schema = ACTION_SCHEMAS[slug];
+  const schema = ACTION_SCHEMAS[resolveActionSlug(slug)];
   return (
     <div
       className="group relative rounded-xl border border-slate-200 bg-white shadow-md"

@@ -5769,7 +5769,11 @@
     "condition_count": "{{count}} condition(s) ({{mode}})",
     "action": "Action",
     "pick_an_action": "Pick an action",
-    "template_prefix": "Template: {{value}}"
+    "template_prefix": "Template: {{value}}",
+    "branch_replied": "Replied",
+    "branch_no_reply": "No reply",
+    "branch_answer_failed": "Answer failed",
+    "branch_no_further_question": "No further question"
   },
   "conversation_logs_page": {
     "title": "Conversation Logs",

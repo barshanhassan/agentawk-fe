@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ACTION_SCHEMAS,
+  resolveActionSlug,
   ActionFieldSchema,
   ActionSchema,
   CONDITION_TYPES,
@@ -340,7 +341,7 @@ export interface ActionEditorProps {
 
 export const ActionEditor: React.FC<ActionEditorProps> = ({ actionSlug, value, onChange, integrations }) => {
   const { t } = useTranslation();
-  const schema: ActionSchema | undefined = ACTION_SCHEMAS[actionSlug];
+  const schema: ActionSchema | undefined = ACTION_SCHEMAS[resolveActionSlug(actionSlug)];
   if (!schema) {
     return (
       <div className="p-4 text-sm text-gray-500">
