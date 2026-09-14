@@ -51,6 +51,7 @@ const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -103,6 +104,22 @@ const LoginPage: React.FC = () => {
     localStorage.setItem("auth_token", data.token);
     localStorage.setItem("user_info", JSON.stringify(data.user));
 
+    // This is a single-page app — the redirect below is client-side routing,
+    // not a real browser navigation, so Chrome's native "Save password?"
+    // prompt (which mostly relies on detecting a page navigation after a
+    // form submit) won't reliably fire on its own. Explicitly asking the
+    // browser to store the credential is the standard fix for SPA logins.
+    // Missing in browsers without the Credential Management API (Firefox,
+    // Safari) — harmless no-op there, the form just won't offer to save.
+    if ('credentials' in navigator && 'PasswordCredential' in window) {
+      try {
+        const cred = new (window as any).PasswordCredential({ id: email, password, name: email });
+        navigator.credentials.store(cred);
+      } catch {
+        /* best-effort — never block login on this */
+      }
+    }
+
     setSuccessMessage(t('login_page.login_successful'));
 
     // Trigger the "curtain opening" animation: the two panels slide apart,
@@ -127,7 +144,7 @@ const LoginPage: React.FC = () => {
     setSuccessMessage('');
     setIsLoading(true);
     try {
-      const response = await apiRequest('POST', '/auth/login', { email, password });
+      const response = await apiRequest('POST', '/auth/login', { email, password, remember: rememberMe });
 
       const data = await response.json();
 
@@ -318,6 +335,7 @@ const LoginPage: React.FC = () => {
                   <Input
                     id="email"
                     type="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -334,6 +352,7 @@ const LoginPage: React.FC = () => {
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -358,7 +377,13 @@ const LoginPage: React.FC = () => {
 
                 <div className="flex items-center justify-between -mt-4">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" className="w-[15px] h-[15px] rounded-[4px] border-[#cfd6e0] text-[#25d366] focus:ring-[#25d366]" />
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{ accentColor: '#25d366' }}
+                      className="w-[15px] h-[15px] rounded-[4px] border-[#cfd6e0] focus:ring-[#25d366]"
+                    />
                     <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 500, fontSize: 13, color: '#6b7482' }}>{t('login_page.remember_me')}</span>
                   </label>
                   <a href="/forgot-password" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, fontSize: 13, color: '#1eb955' }}>
