@@ -423,7 +423,7 @@ export default function AIThemesSection() {
                     <h3 className="text-[12px] font-semibold text-primary">{t("ai_themes_section.trigger_section")}</h3>
 
                     <div className="space-y-2">
-                      <label className={cn("block text-[11px] font-semibold", sub)}>Smart Flow</label>
+                      <label className={cn("block text-[11px] font-semibold", sub)}>Bot</label>
                       <select
                         value={formData.smartFlow}
                         onChange={(e) => setFormData({ ...formData, smartFlow: e.target.value })}

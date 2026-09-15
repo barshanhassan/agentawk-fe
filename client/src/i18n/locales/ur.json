@@ -349,11 +349,11 @@
         "delete_team_member": "ٹیم ممبر حذف کیا گیا",
         "add_channel": "چینل شامل کیا گیا",
         "delete_channel": "چینل حذف کیا گیا",
-        "flow_created": "اسمارٹ فلو بنایا گیا",
-        "flow_updated": "اسمارٹ فلو اپ ڈیٹ کیا گیا",
-        "flow_deleted": "اسمارٹ فلو حذف کیا گیا",
-        "flow_archived": "اسمارٹ فلو آرکائیو کیا گیا",
-        "flow_activated": "اسمارٹ فلو فعال کیا گیا",
+        "flow_created": "بوٹ بنایا گیا",
+        "flow_updated": "بوٹ اپ ڈیٹ کیا گیا",
+        "flow_deleted": "بوٹ حذف کیا گیا",
+        "flow_archived": "بوٹ آرکائیو کیا گیا",
+        "flow_activated": "بوٹ فعال کیا گیا",
         "call_forwarding": "کال فارورڈنگ تبدیل کی گئی",
         "add_domain": "ڈومین شامل کیا گیا",
         "pipeline_created": "پائپ لائن بنائی گئی",
@@ -764,7 +764,7 @@
     "menu": "مینو",
     "navigation": "نیویگیشن",
     "insights": "بصیرت",
-    "smart_flows": "اسمارٹ فلوز",
+    "smart_flows": "بوٹس",
     "bot_conversations": "بوٹ گفتگو",
     "whatsapp_templates": "WhatsApp ٹیمپلیٹس",
     "campaign_manager": "کیمپین منیجر",
@@ -1031,7 +1031,7 @@
       "pause": "توقف"
     },
     "agents_tab": {
-      "done_heading": "جب گفتگو کو لائیو چیٹ یا اسمارٹ فلو میں DONE کے طور پر نشان زد کیا جائے:",
+      "done_heading": "جب گفتگو کو لائیو چیٹ یا بوٹ میں DONE کے طور پر نشان زد کیا جائے:",
       "keep_label": "برقرار رکھیں",
       "keep_desc": "تفویض کردہ ایجنٹ کو گفتگو کے ساتھ برقرار رکھیں۔",
       "remove_label": "ہٹائیں",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "کسٹم فیلڈ کا نام درج کریں"
     },
     "completion_tab": {
-      "done_heading": "جب گفتگو کو لائیو چیٹ یا اسمارٹ فلو میں DONE کے طور پر نشان زد کیا جائے:",
+      "done_heading": "جب گفتگو کو لائیو چیٹ یا بوٹ میں DONE کے طور پر نشان زد کیا جائے:",
       "save_json_label": "آخری گفتگو کو JSON کے طور پر کسٹم فیلڈ میں محفوظ کریں۔",
       "select_field": "کسٹم فیلڈ منتخب کریں",
       "select_field_placeholder": "کسٹم فیلڈ منتخب کریں"
@@ -1086,11 +1086,11 @@
       "cancel": "منسوخ کریں"
     },
     "pause_tab": {
-      "heading": "گفتگو شروع کرتے وقت اسمارٹ فلو کو خودکار طور پر روک دیں؟",
+      "heading": "گفتگو شروع کرتے وقت بوٹ کو خودکار طور پر روک دیں؟",
       "manually": "دستی طور پر",
-      "manually_desc": "جب ایجنٹ پیغام بھیجے تو اسمارٹ فلو کو نہ روکیں",
+      "manually_desc": "جب ایجنٹ پیغام بھیجے تو بوٹ کو نہ روکیں",
       "automatically": "خودکار طور پر",
-      "automatically_desc": "جب ایجنٹ پیغام بھیجے تو اسمارٹ فلو کو روک دیں"
+      "automatically_desc": "جب ایجنٹ پیغام بھیجے تو بوٹ کو روک دیں"
     },
     "common": {
       "save": "محفوظ کریں",
@@ -1900,8 +1900,8 @@
             "desc": "اس ورک اسپیس کے اندر پائپ لائنز کے انتظام کے لیے ایجنٹس کو رسائی دیں۔"
           },
           "flows": {
-            "title": "اسمارٹ فلوز",
-            "desc": "ایجنٹس کو اسمارٹ فلوز دیکھنے اور منظم کرنے کی رسائی دیں۔"
+            "title": "بوٹس",
+            "desc": "ایجنٹس کو بوٹس دیکھنے اور منظم کرنے کی رسائی دیں۔"
           },
           "channels": {
             "title": "کمیونیکیشن چینلز",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "گفتگو کی دستیابی",
-            "desc": "دیگر ایجنٹس یا اسمارٹ فلو سے گفتگو کی تفویض وصول کرنے کے لیے کھلا۔"
+            "desc": "دیگر ایجنٹس یا بوٹ سے گفتگو کی تفویض وصول کرنے کے لیے کھلا۔"
           },
           "task_avail": {
             "title": "کام کی دستیابی",
-            "desc": "دیگر ایجنٹس اور اسمارٹ فلوز سے کام وصول کرنے کے لیے کھلا۔"
+            "desc": "دیگر ایجنٹس اور بوٹس سے کام وصول کرنے کے لیے کھلا۔"
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "اپنا Cal.com اکاؤنٹ ضم کریں اور اسمارٹ فلوز سے اپنا کیلنڈر منظم کریں۔"
+            "desc": "اپنا Cal.com اکاؤنٹ ضم کریں اور بوٹس سے اپنا کیلنڈر منظم کریں۔"
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "نمبر حذف کر دیا گیا",
     "could_not_delete": "حذف نہیں کیا جا سکا",
     "title": "کیا یہ واٹس ایپ نمبر حذف کرنا ہے؟",
-    "checkbox1_label": "میں سمجھتا/سمجھتی ہوں کہ یہ نمبر پلیٹ فارم سے ہٹا دیا جائے گا اور اسے استعمال کرنے والے کسی بھی سمارٹ فلو، براڈکاسٹ یا ٹیمپلیٹ دوبارہ کنیکٹ ہونے تک ناکام رہیں گے۔",
+    "checkbox1_label": "میں سمجھتا/سمجھتی ہوں کہ یہ نمبر پلیٹ فارم سے ہٹا دیا جائے گا اور اسے استعمال کرنے والے کسی بھی بوٹ، براڈکاسٹ یا ٹیمپلیٹ دوبارہ کنیکٹ ہونے تک ناکام رہیں گے۔",
     "checkbox2_label": "میں سمجھتا/سمجھتی ہوں کہ پچھلی بات چیت آرکائیو ہو جائے گی لیکن حذف کرنے کے بعد اس نمبر سے کوئی نیا پیغام روٹ نہیں ہوگا۔",
     "checkbox3_label": "میں سمجھتا/سمجھتی ہوں کہ یہ عمل واپس نہیں کیا جا سکتا اور دوبارہ کنیکٹ کرنے کے لیے واٹس ایپ آن بورڈنگ دوبارہ مکمل کرنی ہوگی۔",
     "reconnect_warning": "حذف کرنے کے بعد Meta کی جانب سے اسی نمبر کو دوبارہ کنیکٹ کرنے میں 24 گھنٹے تک لگ سکتے ہیں۔",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "محفوظ کرنے میں ناکامی۔",
     "cleared": "آٹو ری پلائی صاف کر دیا گیا",
     "title": "فوری جوابات",
-    "description_prefix": "ایک Smart Flow منتخب کریں جو خودکار طور پر چلے جب کوئی رابطہ میسج کرے",
+    "description_prefix": "ایک بوٹ منتخب کریں جو خودکار طور پر چلے جب کوئی رابطہ میسج کرے",
     "select_automation": "آٹومیشن منتخب کریں",
     "choose_automation": "— ایک آٹومیشن منتخب کریں —",
     "automation_number": "آٹومیشن #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "ڈیفالٹ ری پلائی اب اس نمبر کے لیے فعال ہے۔",
     "cleared": "آٹو ری پلائی صاف کر دیا گیا",
     "title": "فوری جوابات",
-    "description_prefix": "ایک Smart Flow منتخب کریں جو خودکار طور پر چلے جب کوئی رابطہ میسج کرے",
+    "description_prefix": "ایک بوٹ منتخب کریں جو خودکار طور پر چلے جب کوئی رابطہ میسج کرے",
     "select_automation": "آٹومیشن منتخب کریں",
     "choose_automation": "— ایک آٹومیشن منتخب کریں —",
     "automation_number": "آٹومیشن #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "ٹرگر",
     "done_warning_prefix": "براہ کرم نوٹ کریں کہ اگر کسی رابطے کی گفتگو کو",
     "done": "مکمل",
-    "done_warning_suffix": "کے طور پر نشان زد کیا جاتا ہے (لائیو چیٹ میں یا Smart Flows کے ذریعے)، تو اگلے آنے والے پیغام پر ڈیفالٹ ری پلائی دوبارہ ٹرگر ہو جائے گا۔",
+    "done_warning_suffix": "کے طور پر نشان زد کیا جاتا ہے (لائیو چیٹ میں یا بوٹس کے ذریعے)، تو اگلے آنے والے پیغام پر ڈیفالٹ ری پلائی دوبارہ ٹرگر ہو جائے گا۔",
     "deleting": "حذف ہو رہا ہے…",
     "delete": "حذف کریں",
     "close": "بند کریں",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "ذیلی عنوان",
     "placeholder_subtitle": "ذیلی عنوان درج کریں",
     "trigger_section": "ٹرگر سیکشن",
-    "select_smart_flow": "Smart Flow منتخب کریں",
+    "select_smart_flow": "بوٹ منتخب کریں",
     "flow_1": "فلو 1",
     "flow_2": "فلو 2",
     "field_channel": "چینل",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "اسسٹنٹ منتخب کریں",
     "option_assistant_1": "اسسٹنٹ 1",
     "option_assistant_2": "اسسٹنٹ 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "ایک Smart Flow منتخب کریں",
+    "label_smart_flow": "بوٹ",
+    "option_select_smart_flow": "ایک بوٹ منتخب کریں",
     "option_flow_1": "فلو 1",
     "option_flow_2": "فلو 2",
     "label_channel": "چینل",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "جب گفتگو کو مکمل کے طور پر نشان زد کیا جائے",
-      "heading_badge": "لائیو چیٹ اور Smart Flow پر لاگو ہوتا ہے",
+      "heading_badge": "لائیو چیٹ اور بوٹ پر لاگو ہوتا ہے",
       "heading_description": "منتخب کریں کہ گفتگو بند ہونے پر تفویض شدہ ایجنٹ کو کیسے سنبھالا جائے۔",
       "keep_agent_title": "ایجنٹ برقرار رکھیں",
       "keep_agent_description": "تفویض شدہ ایجنٹ کو گفتگو کے ساتھ منسلک رکھیں۔",
@@ -4252,7 +4252,7 @@
       "heading_title": "گفتگو کا آرکائیو",
       "heading_description": "مکمل کے طور پر نشان زد ہوتے ہی گفتگو کی ٹرانسکرپٹ کو JSON کے طور پر کسٹم فیلڈ میں محفوظ کریں۔",
       "save_as_json_title": "JSON کے طور پر محفوظ کریں",
-      "save_as_json_description": "جب لائیو چیٹ یا Smart Flow میں کسی گفتگو کو مکمل کے طور پر نشان زد کیا جائے، تو مکمل ٹرانسکرپٹ آپ کے منتخب کردہ کسٹم فیلڈ میں محفوظ ہو جائے گی۔",
+      "save_as_json_description": "جب لائیو چیٹ یا بوٹ میں کسی گفتگو کو مکمل کے طور پر نشان زد کیا جائے، تو مکمل ٹرانسکرپٹ آپ کے منتخب کردہ کسٹم فیلڈ میں محفوظ ہو جائے گی۔",
       "target_custom_field_label": "ہدف کسٹم فیلڈ"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "فولڈر شامل کریں"
     },
     "pause": {
-      "question": "گفتگو شروع کرتے وقت Smart Flow کو خودکار طور پر روک دیا جائے؟",
+      "question": "گفتگو شروع کرتے وقت بوٹ کو خودکار طور پر روک دیا جائے؟",
       "manually_label": "دستی طور پر",
-      "manually_description": "جب ایجنٹ پیغام بھیجے تو Smart Flow کو نہ روکیں",
+      "manually_description": "جب ایجنٹ پیغام بھیجے تو بوٹ کو نہ روکیں",
       "automatically_label": "خودکار طور پر",
-      "automatically_description": "جب ایجنٹ پیغام بھیجے تو Smart Flow کو روک دیں"
+      "automatically_description": "جب ایجنٹ پیغام بھیجے تو بوٹ کو روک دیں"
     },
     "footer": {
       "scope_note": "سیٹنگز پورے Workspace پر لاگو ہوتی ہیں",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "تھیم کا نام",
     "field_subtitle": "ذیلی عنوان",
     "short_description_placeholder": "مختصر تفصیل",
-    "field_smart_flow": "سمارٹ فلو",
+    "field_smart_flow": "بوٹ",
     "select_automation_option": "— ایک آٹومیشن منتخب کریں —",
     "automation_fallback_label": "آٹومیشن #{{id}}",
     "field_channel": "چینل",
@@ -6138,7 +6138,7 @@
     "csv_recording": "ریکارڈنگ"
   },
   "smart_flows_page": {
-    "title": "سمارٹ فلوز",
+    "title": "بوٹس",
     "subtitle": "اپنے ملٹی چینل کمیونیکیشن ورک فلو بنائیں، منظم کریں اور خودکار بنائیں",
     "create_flow": "فلو بنائیں",
     "all_folders": "تمام فولڈرز",
@@ -6162,7 +6162,7 @@
     "col_created_by": "تخلیق کار",
     "col_updated_at": "اپ ڈیٹ کیا گیا",
     "col_actions": "اقدامات",
-    "empty_title": "کوئی سمارٹ فلو نہیں ملا",
+    "empty_title": "کوئی بوٹ نہیں ملا",
     "empty_subtitle": "اپنا پہلا آٹومیشن ورک فلو بنائیں",
     "empty_cta": "ابھی ایک بنائیں",
     "status_badge_active": "فعال",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} نتائج",
     "rows_label": "قطاریں:",
     "page_label": "صفحہ",
-    "create_flow_modal_title": "سمارٹ فلو بنائیں",
+    "create_flow_modal_title": "بوٹ بنائیں",
     "flow_name_label": "فلو کا نام",
     "flow_name_placeholder": "فلو کا نام درج کریں...",
     "select_folder_label": "فولڈر منتخب کریں",
@@ -6626,11 +6626,11 @@
       "support_number": "سپورٹ نمبر",
       "chatting_with_channel": "چینل کے ذریعے چیٹ کر رہے ہیں",
       "channel_fallback": "چینل",
-      "in_smart_flow": "سمارٹ فلو میں",
-      "not_in_smart_flow": "فی الحال کسی سمارٹ فلو کا حصہ نہیں۔",
+      "in_smart_flow": "بوٹ میں",
+      "not_in_smart_flow": "فی الحال کسی بوٹ کا حصہ نہیں۔",
       "remove": "ہٹائیں",
       "pause_automated_messages": "خودکار پیغامات روکیں",
-      "pause_smart_flow": "سمارٹ فلو روکیں",
+      "pause_smart_flow": "بوٹ روکیں",
       "stop": "روکیں",
       "add_15_minutes": "15 منٹ"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "سائیڈبار کا سائز بدلنے کے لیے گھسیٹیں"
     },
     "chat_modes": {
-      "all": "Smart Flow اور Inbox",
-      "automation": "Smart Flow پیغامات",
+      "all": "بوٹ اور Inbox",
+      "automation": "بوٹ پیغامات",
       "inbox": "Inbox پیغامات",
       "note": "نوٹ پیغامات",
       "old_data": "3 ماہ سے پرانا"
@@ -8069,7 +8069,7 @@
     "menu": "مینو",
     "navigation": "نیویگیشن",
     "nav_insights": "انسائٹس",
-    "nav_smart_flows": "سمارٹ فلوز",
+    "nav_smart_flows": "بوٹس",
     "nav_campaign": "کیمپین",
     "nav_contacts": "رابطے",
     "nav_inbox": "ان باکس",

@@ -349,11 +349,11 @@
         "delete_team_member": "Menghapus anggota tim",
         "add_channel": "Menambahkan saluran",
         "delete_channel": "Menghapus saluran",
-        "flow_created": "Smart Flow dibuat",
-        "flow_updated": "Smart Flow diperbarui",
-        "flow_deleted": "Smart Flow dihapus",
-        "flow_archived": "Smart Flow diarsipkan",
-        "flow_activated": "Smart Flow diaktifkan",
+        "flow_created": "Bot dibuat",
+        "flow_updated": "Bot diperbarui",
+        "flow_deleted": "Bot dihapus",
+        "flow_archived": "Bot diarsipkan",
+        "flow_activated": "Bot diaktifkan",
         "call_forwarding": "Mengubah penerusan panggilan",
         "add_domain": "Menambahkan domain",
         "pipeline_created": "pipeline dibuat",
@@ -764,7 +764,7 @@
     "menu": "Menu",
     "navigation": "Navigasi",
     "insights": "Wawasan",
-    "smart_flows": "Smart Flow",
+    "smart_flows": "Bot",
     "bot_conversations": "Percakapan Bot",
     "whatsapp_templates": "Template WhatsApp",
     "campaign_manager": "Manajer Kampanye",
@@ -1031,7 +1031,7 @@
       "pause": "Jeda"
     },
     "agents_tab": {
-      "done_heading": "Ketika percakapan ditandai SELESAI di Live Chat atau SmartFlow:",
+      "done_heading": "Ketika percakapan ditandai SELESAI di Live Chat atau Bot:",
       "keep_label": "Pertahankan",
       "keep_desc": "Pertahankan Agen yang ditugaskan ke percakapan.",
       "remove_label": "Hapus",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "Masukkan nama bidang khusus"
     },
     "completion_tab": {
-      "done_heading": "Ketika percakapan ditandai sebagai SELESAI di Live Chat atau Smart Flow:",
+      "done_heading": "Ketika percakapan ditandai sebagai SELESAI di Live Chat atau Bot:",
       "save_json_label": "Simpan percakapan terakhir sebagai JSON ke dalam bidang khusus.",
       "select_field": "Pilih bidang khusus",
       "select_field_placeholder": "Pilih bidang khusus"
@@ -1086,11 +1086,11 @@
       "cancel": "Batal"
     },
     "pause_tab": {
-      "heading": "Jeda Smart Flow secara otomatis saat memulai percakapan?",
+      "heading": "Jeda Bot secara otomatis saat memulai percakapan?",
       "manually": "Manual",
-      "manually_desc": "Jangan jeda Smart Flow saat agen mengirim pesan",
+      "manually_desc": "Jangan jeda Bot saat agen mengirim pesan",
       "automatically": "Otomatis",
-      "automatically_desc": "Jeda Smart Flow saat agen mengirim pesan"
+      "automatically_desc": "Jeda Bot saat agen mengirim pesan"
     },
     "common": {
       "save": "Simpan",
@@ -1900,8 +1900,8 @@
             "desc": "Berikan akses agen untuk mengelola pipeline dalam workspace ini."
           },
           "flows": {
-            "title": "Smart Flow",
-            "desc": "Berikan akses agen untuk melihat dan mengelola smart flow."
+            "title": "Bot",
+            "desc": "Berikan akses agen untuk melihat dan mengelola bot."
           },
           "channels": {
             "title": "Saluran Komunikasi",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "Ketersediaan percakapan",
-            "desc": "Terbuka untuk menerima penugasan percakapan dari agen lain atau Smart Flow."
+            "desc": "Terbuka untuk menerima penugasan percakapan dari agen lain atau Bot."
           },
           "task_avail": {
             "title": "Ketersediaan tugas",
-            "desc": "Terbuka untuk menerima tugas dari Agen dan Smart Flow lain."
+            "desc": "Terbuka untuk menerima tugas dari Agen dan Bot lain."
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "Integrasikan akun Cal.com Anda dan kelola kalender Anda dari Smart Flow."
+            "desc": "Integrasikan akun Cal.com Anda dan kelola kalender Anda dari Bot."
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "Nomor dihapus",
     "could_not_delete": "Tidak dapat menghapus",
     "title": "Hapus nomor WhatsApp ini?",
-    "checkbox1_label": "Saya memahami bahwa nomor ini akan dihapus dari platform dan Smart Flow, broadcast, atau template apa pun yang menggunakannya akan gagal hingga terhubung kembali.",
+    "checkbox1_label": "Saya memahami bahwa nomor ini akan dihapus dari platform dan Bot, broadcast, atau template apa pun yang menggunakannya akan gagal hingga terhubung kembali.",
     "checkbox2_label": "Saya memahami bahwa percakapan sebelumnya akan diarsipkan tetapi tidak ada pesan baru yang akan dirutekan melalui nomor ini setelah dihapus.",
     "checkbox3_label": "Saya memahami bahwa tindakan ini tidak dapat dibatalkan dan menghubungkan kembali akan memerlukan penyelesaian onboarding WhatsApp lagi.",
     "reconnect_warning": "Menghubungkan kembali nomor yang sama dari sisi Meta dapat memakan waktu hingga 24 jam setelah penghapusan.",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "Gagal menyimpan.",
     "cleared": "Balasan otomatis dihapus",
     "title": "Balasan instan",
-    "description_prefix": "Pilih Smart Flow untuk dijalankan otomatis setiap kali kontak mengirim pesan ke",
+    "description_prefix": "Pilih Bot untuk dijalankan otomatis setiap kali kontak mengirim pesan ke",
     "select_automation": "Pilih otomatisasi",
     "choose_automation": "— Pilih otomatisasi —",
     "automation_number": "Otomatisasi #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "Balasan default sekarang aktif untuk nomor ini.",
     "cleared": "Balasan otomatis dihapus",
     "title": "Balasan instan",
-    "description_prefix": "Pilih Smart Flow untuk dijalankan otomatis setiap kali kontak mengirim pesan ke",
+    "description_prefix": "Pilih Bot untuk dijalankan otomatis setiap kali kontak mengirim pesan ke",
     "select_automation": "Pilih otomatisasi",
     "choose_automation": "— Pilih otomatisasi —",
     "automation_number": "Otomatisasi #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "Pemicu",
     "done_warning_prefix": "Perlu diketahui bahwa jika percakapan kontak ditandai sebagai",
     "done": "Selesai",
-    "done_warning_suffix": "(di Live Chat atau melalui Smart Flows), balasan default akan dipicu lagi pada pesan masuk berikutnya.",
+    "done_warning_suffix": "(di Live Chat atau melalui Bot), balasan default akan dipicu lagi pada pesan masuk berikutnya.",
     "deleting": "Menghapus…",
     "delete": "Hapus",
     "close": "Tutup",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "Subjudul",
     "placeholder_subtitle": "Masukkan subjudul",
     "trigger_section": "Bagian Pemicu",
-    "select_smart_flow": "Pilih Smart Flow",
+    "select_smart_flow": "Pilih Bot",
     "flow_1": "Flow 1",
     "flow_2": "Flow 2",
     "field_channel": "Saluran",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "Pilih Asisten",
     "option_assistant_1": "Asisten 1",
     "option_assistant_2": "Asisten 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "Pilih Smart Flow",
+    "label_smart_flow": "Bot",
+    "option_select_smart_flow": "Pilih Bot",
     "option_flow_1": "Flow 1",
     "option_flow_2": "Flow 2",
     "label_channel": "Saluran",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "Ketika percakapan ditandai SELESAI",
-      "heading_badge": "Berlaku untuk Live Chat & Smart Flow",
+      "heading_badge": "Berlaku untuk Live Chat & Bot",
       "heading_description": "Pilih cara menangani agen yang ditugaskan saat percakapan ditutup.",
       "keep_agent_title": "Pertahankan Agen",
       "keep_agent_description": "Tetap sertakan agen yang ditugaskan pada percakapan.",
@@ -4252,7 +4252,7 @@
       "heading_title": "Arsip Percakapan",
       "heading_description": "Simpan transkrip percakapan sebagai JSON ke kolom kustom setelah ditandai SELESAI.",
       "save_as_json_title": "Simpan sebagai JSON",
-      "save_as_json_description": "Ketika percakapan ditandai SELESAI di Live Chat atau Smart Flow, seluruh transkrip akan disimpan di kolom kustom pilihan Anda.",
+      "save_as_json_description": "Ketika percakapan ditandai SELESAI di Live Chat atau Bot, seluruh transkrip akan disimpan di kolom kustom pilihan Anda.",
       "target_custom_field_label": "Kolom Kustom Tujuan"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "Tambah Folder"
     },
     "pause": {
-      "question": "Jeda Smart Flow secara otomatis saat memulai percakapan?",
+      "question": "Jeda Bot secara otomatis saat memulai percakapan?",
       "manually_label": "Manual",
-      "manually_description": "Jangan jeda Smart Flow ketika agen mengirim pesan",
+      "manually_description": "Jangan jeda Bot ketika agen mengirim pesan",
       "automatically_label": "Otomatis",
-      "automatically_description": "Jeda Smart Flow ketika agen mengirim pesan"
+      "automatically_description": "Jeda Bot ketika agen mengirim pesan"
     },
     "footer": {
       "scope_note": "Pengaturan berlaku untuk seluruh Workspace",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "Nama tema",
     "field_subtitle": "Subjudul",
     "short_description_placeholder": "Deskripsi singkat",
-    "field_smart_flow": "Smart Flow",
+    "field_smart_flow": "Bot",
     "select_automation_option": "— Pilih automasi —",
     "automation_fallback_label": "Automasi #{{id}}",
     "field_channel": "Saluran",
@@ -5432,8 +5432,8 @@
     "unit_escalations": "Eskalasi",
     "unit_per_session": "Per sesi",
     "popularity_title": "Popularitas Interaksi",
-    "popularity_subtitle": "Smart Flow paling sering dipicu",
-    "popularity_empty_state": "Belum ada aktivitas Smart Flow",
+    "popularity_subtitle": "Bot paling sering dipicu",
+    "popularity_empty_state": "Belum ada aktivitas Bot",
     "bot_vs_human_title": "Kinerja Bot vs Manusia",
     "bot_vs_human_subtitle": "Perbandingan tingkat eskalasi",
     "busiest_period_title": "Periode Tersibuk",
@@ -6138,7 +6138,7 @@
     "csv_recording": "Rekaman"
   },
   "smart_flows_page": {
-    "title": "Smart Flow",
+    "title": "Bot",
     "subtitle": "Buat, kelola, dan otomatiskan alur kerja komunikasi multi-saluran Anda",
     "create_flow": "Buat Flow",
     "all_folders": "Semua Folder",
@@ -6162,7 +6162,7 @@
     "col_created_by": "Dibuat Oleh",
     "col_updated_at": "Diperbarui Pada",
     "col_actions": "Tindakan",
-    "empty_title": "Tidak ada Smart Flow ditemukan",
+    "empty_title": "Tidak ada Bot ditemukan",
     "empty_subtitle": "Buat alur kerja otomatisasi pertama Anda",
     "empty_cta": "BUAT SEKARANG",
     "status_badge_active": "Aktif",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} Hasil",
     "rows_label": "Baris:",
     "page_label": "Halaman",
-    "create_flow_modal_title": "Buat Smart Flow",
+    "create_flow_modal_title": "Buat Bot",
     "flow_name_label": "Nama Flow",
     "flow_name_placeholder": "Masukkan nama flow...",
     "select_folder_label": "Pilih Folder",
@@ -6626,11 +6626,11 @@
       "support_number": "Nomor Dukungan",
       "chatting_with_channel": "Mengobrol melalui saluran",
       "channel_fallback": "saluran",
-      "in_smart_flow": "Dalam Smart Flow",
-      "not_in_smart_flow": "Saat ini tidak termasuk dalam Smart Flow.",
+      "in_smart_flow": "Dalam Bot",
+      "not_in_smart_flow": "Saat ini tidak termasuk dalam Bot.",
       "remove": "Hapus",
       "pause_automated_messages": "Jeda Pesan Otomatis",
-      "pause_smart_flow": "Jeda Smart Flow",
+      "pause_smart_flow": "Jeda Bot",
       "stop": "Berhenti",
       "add_15_minutes": "15 Menit"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "Seret untuk mengubah ukuran sidebar"
     },
     "chat_modes": {
-      "all": "Smart Flow & Kotak Masuk",
-      "automation": "Pesan Smart Flow",
+      "all": "Bot & Kotak Masuk",
+      "automation": "Pesan Bot",
       "inbox": "Pesan kotak masuk",
       "note": "Pesan catatan",
       "old_data": "Lebih dari 3 bulan"
@@ -8069,7 +8069,7 @@
     "menu": "Menu",
     "navigation": "Navigasi",
     "nav_insights": "Insights",
-    "nav_smart_flows": "Smart Flows",
+    "nav_smart_flows": "Bot",
     "nav_campaign": "Kampanye",
     "nav_contacts": "Kontak",
     "nav_inbox": "Kotak Masuk",

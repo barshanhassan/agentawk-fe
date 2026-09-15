@@ -349,11 +349,11 @@
         "delete_team_member": "تم حذف عضو فريق",
         "add_channel": "تمت إضافة قناة",
         "delete_channel": "تم حذف قناة",
-        "flow_created": "تم إنشاء تدفق ذكي",
-        "flow_updated": "تم تحديث تدفق ذكي",
-        "flow_deleted": "تم حذف تدفق ذكي",
-        "flow_archived": "تم أرشفة تدفق ذكي",
-        "flow_activated": "تم تفعيل تدفق ذكي",
+        "flow_created": "تم إنشاء بوت",
+        "flow_updated": "تم تحديث بوت",
+        "flow_deleted": "تم حذف بوت",
+        "flow_archived": "تم أرشفة بوت",
+        "flow_activated": "تم تفعيل بوت",
         "call_forwarding": "تم تغيير تحويل المكالمات",
         "add_domain": "تمت إضافة نطاق",
         "pipeline_created": "تم إنشاء مسار مبيعات",
@@ -764,7 +764,7 @@
     "menu": "القائمة",
     "navigation": "التنقل",
     "insights": "التحليلات",
-    "smart_flows": "التدفقات الذكية",
+    "smart_flows": "البوتات",
     "bot_conversations": "محادثات البوت",
     "whatsapp_templates": "قوالب واتساب",
     "campaign_manager": "مدير الحملات",
@@ -1031,7 +1031,7 @@
       "pause": "الإيقاف المؤقت"
     },
     "agents_tab": {
-      "done_heading": "عند تمييز المحادثة كمكتملة (DONE) في الدردشة المباشرة أو التدفق الذكي:",
+      "done_heading": "عند تمييز المحادثة كمكتملة (DONE) في الدردشة المباشرة أو البوت:",
       "keep_label": "الإبقاء",
       "keep_desc": "الإبقاء على الوكيل المعيّن للمحادثة.",
       "remove_label": "الإزالة",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "أدخل اسم الحقل المخصص"
     },
     "completion_tab": {
-      "done_heading": "عند تمييز المحادثة كمكتملة (DONE) في الدردشة المباشرة أو التدفق الذكي:",
+      "done_heading": "عند تمييز المحادثة كمكتملة (DONE) في الدردشة المباشرة أو البوت:",
       "save_json_label": "حفظ آخر محادثة بصيغة JSON في حقل مخصص.",
       "select_field": "اختر حقلاً مخصصًا",
       "select_field_placeholder": "اختر حقلاً مخصصًا"
@@ -1086,11 +1086,11 @@
       "cancel": "إلغاء"
     },
     "pause_tab": {
-      "heading": "هل تريد إيقاف التدفق الذكي تلقائيًا عند بدء محادثة؟",
+      "heading": "هل تريد إيقاف البوت تلقائيًا عند بدء محادثة؟",
       "manually": "يدويًا",
-      "manually_desc": "عدم إيقاف التدفق الذكي عند إرسال الوكيل لرسالة",
+      "manually_desc": "عدم إيقاف البوت عند إرسال الوكيل لرسالة",
       "automatically": "تلقائيًا",
-      "automatically_desc": "إيقاف التدفق الذكي عند إرسال الوكيل لرسالة"
+      "automatically_desc": "إيقاف البوت عند إرسال الوكيل لرسالة"
     },
     "common": {
       "save": "حفظ",
@@ -1900,8 +1900,8 @@
             "desc": "منح الوكلاء صلاحية الوصول لإدارة مسارات المبيعات ضمن مساحة العمل هذه."
           },
           "flows": {
-            "title": "التدفقات الذكية",
-            "desc": "منح الوكلاء صلاحية الوصول لعرض وإدارة التدفقات الذكية."
+            "title": "البوتات",
+            "desc": "منح الوكلاء صلاحية الوصول لعرض وإدارة البوتات."
           },
           "channels": {
             "title": "قنوات التواصل",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "توفر المحادثات",
-            "desc": "مستعد لاستقبال تعيين المحادثات من وكلاء آخرين أو التدفق الذكي."
+            "desc": "مستعد لاستقبال تعيين المحادثات من وكلاء آخرين أو البوت."
           },
           "task_avail": {
             "title": "توفر المهام",
-            "desc": "مستعد لاستقبال المهام من وكلاء آخرين والتدفقات الذكية."
+            "desc": "مستعد لاستقبال المهام من وكلاء آخرين والبوتات."
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "ادمج حساب Cal.com الخاص بك وأدر تقويمك من التدفقات الذكية."
+            "desc": "ادمج حساب Cal.com الخاص بك وأدر تقويمك من البوتات."
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "تم حذف الرقم",
     "could_not_delete": "تعذر الحذف",
     "title": "هل تريد حذف رقم واتساب هذا؟",
-    "checkbox1_label": "أدرك أن هذا الرقم سيُزال من المنصة وأن أي تدفقات ذكية أو رسائل جماعية أو قوالب تستخدمه ستفشل حتى إعادة الاتصال.",
+    "checkbox1_label": "أدرك أن هذا الرقم سيُزال من المنصة وأن أي بوتات أو رسائل جماعية أو قوالب تستخدمه ستفشل حتى إعادة الاتصال.",
     "checkbox2_label": "أدرك أن المحادثات السابقة ستُؤرشف ولن تُوجَّه أي رسائل جديدة عبر هذا الرقم بعد الحذف.",
     "checkbox3_label": "أدرك أن هذا الإجراء لا يمكن التراجع عنه وأن إعادة الاتصال ستتطلب إكمال عملية إعداد واتساب من جديد.",
     "reconnect_warning": "قد تستغرق إعادة توصيل نفس الرقم من جانب Meta ما يصل إلى 24 ساعة بعد الحذف.",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "فشل الحفظ.",
     "cleared": "تم مسح الرد التلقائي",
     "title": "الردود الفورية",
-    "description_prefix": "اختر Smart Flow ليتم تشغيله تلقائيًا كلما راسلت جهة اتصال",
+    "description_prefix": "اختر بوت ليتم تشغيله تلقائيًا كلما راسلت جهة اتصال",
     "select_automation": "اختر الأتمتة",
     "choose_automation": "— اختر أتمتة —",
     "automation_number": "أتمتة رقم {{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "الرد الافتراضي نشط الآن لهذا الرقم.",
     "cleared": "تم مسح الرد التلقائي",
     "title": "الردود الفورية",
-    "description_prefix": "اختر Smart Flow ليتم تشغيله تلقائيًا كلما راسلت جهة اتصال",
+    "description_prefix": "اختر بوت ليتم تشغيله تلقائيًا كلما راسلت جهة اتصال",
     "select_automation": "اختر الأتمتة",
     "choose_automation": "— اختر أتمتة —",
     "automation_number": "أتمتة رقم {{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "المشغّل",
     "done_warning_prefix": "انتبه أنه إذا تم وضع علامة على محادثة جهة الاتصال كـ",
     "done": "مكتملة",
-    "done_warning_suffix": "(في المحادثة المباشرة أو عبر Smart Flows)، سيتم تشغيل الرد الافتراضي مرة أخرى عند رسالتهم الواردة التالية.",
+    "done_warning_suffix": "(في المحادثة المباشرة أو عبر بوتات)، سيتم تشغيل الرد الافتراضي مرة أخرى عند رسالتهم الواردة التالية.",
     "deleting": "جارٍ الحذف…",
     "delete": "حذف",
     "close": "إغلاق",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "العنوان الفرعي",
     "placeholder_subtitle": "أدخل العنوان الفرعي",
     "trigger_section": "قسم المُشغّل",
-    "select_smart_flow": "اختر Smart Flow",
+    "select_smart_flow": "اختر بوت",
     "flow_1": "المسار 1",
     "flow_2": "المسار 2",
     "field_channel": "القناة",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "اختر مساعدًا",
     "option_assistant_1": "المساعد 1",
     "option_assistant_2": "المساعد 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "اختر Smart Flow",
+    "label_smart_flow": "بوت",
+    "option_select_smart_flow": "اختر بوت",
     "option_flow_1": "التدفق 1",
     "option_flow_2": "التدفق 2",
     "label_channel": "القناة",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "عند تحديد المحادثة كـ مكتملة",
-      "heading_badge": "ينطبق على الدردشة المباشرة وSmart Flow",
+      "heading_badge": "ينطبق على الدردشة المباشرة وبوت",
       "heading_description": "اختر كيفية التعامل مع الوكيل المعيَّن عند إغلاق المحادثات.",
       "keep_agent_title": "إبقاء الوكيل",
       "keep_agent_description": "إبقاء الوكيل المعيَّن مرتبطًا بالمحادثة.",
@@ -4252,7 +4252,7 @@
       "heading_title": "أرشيف المحادثة",
       "heading_description": "احفظ نص المحادثة كـ JSON في حقل مخصص بمجرد تحديدها كـ مكتملة.",
       "save_as_json_title": "الحفظ كـ JSON",
-      "save_as_json_description": "عند تحديد محادثة كـ مكتملة في الدردشة المباشرة أو Smart Flow، سيتم تخزين النص الكامل في الحقل المخصص الذي اخترته.",
+      "save_as_json_description": "عند تحديد محادثة كـ مكتملة في الدردشة المباشرة أو بوت، سيتم تخزين النص الكامل في الحقل المخصص الذي اخترته.",
       "target_custom_field_label": "الحقل المخصص المستهدف"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "إضافة مجلد"
     },
     "pause": {
-      "question": "هل تريد إيقاف Smart Flow تلقائيًا عند بدء محادثة؟",
+      "question": "هل تريد إيقاف بوت تلقائيًا عند بدء محادثة؟",
       "manually_label": "يدويًا",
-      "manually_description": "لا توقف Smart Flow عند إرسال الوكيل رسالة",
+      "manually_description": "لا توقف بوت عند إرسال الوكيل رسالة",
       "automatically_label": "تلقائيًا",
-      "automatically_description": "أوقف Smart Flow عند إرسال الوكيل رسالة"
+      "automatically_description": "أوقف بوت عند إرسال الوكيل رسالة"
     },
     "footer": {
       "scope_note": "تنطبق الإعدادات على مساحة العمل بأكملها",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "اسم السمة",
     "field_subtitle": "العنوان الفرعي",
     "short_description_placeholder": "وصف مختصر",
-    "field_smart_flow": "التدفق الذكي",
+    "field_smart_flow": "البوت",
     "select_automation_option": "— اختر أتمتة —",
     "automation_fallback_label": "أتمتة رقم {{id}}",
     "field_channel": "القناة",
@@ -5432,8 +5432,8 @@
     "unit_escalations": "تصعيدات",
     "unit_per_session": "لكل جلسة",
     "popularity_title": "شعبية التفاعلات",
-    "popularity_subtitle": "أكثر Smart Flow تم تشغيلها",
-    "popularity_empty_state": "لا يوجد نشاط Smart Flow بعد",
+    "popularity_subtitle": "أكثر بوت تم تشغيلها",
+    "popularity_empty_state": "لا يوجد نشاط بوت بعد",
     "bot_vs_human_title": "أداء البوت مقابل الموظف",
     "bot_vs_human_subtitle": "مقارنة معدل التصعيد",
     "busiest_period_title": "أكثر الفترات ازدحامًا",
@@ -6138,7 +6138,7 @@
     "csv_recording": "التسجيل"
   },
   "smart_flows_page": {
-    "title": "التدفقات الذكية",
+    "title": "البوتات",
     "subtitle": "أنشئ وأدر وأتمتة سير عمل الاتصالات متعددة القنوات",
     "create_flow": "إنشاء تدفق",
     "all_folders": "جميع المجلدات",
@@ -6162,7 +6162,7 @@
     "col_created_by": "أنشأه",
     "col_updated_at": "آخر تحديث",
     "col_actions": "الإجراءات",
-    "empty_title": "لم يتم العثور على تدفقات ذكية",
+    "empty_title": "لم يتم العثور على بوتات",
     "empty_subtitle": "أنشئ أول سير عمل أتمتة",
     "empty_cta": "أنشئ واحدًا الآن",
     "status_badge_active": "نشط",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} نتيجة",
     "rows_label": "الصفوف:",
     "page_label": "صفحة",
-    "create_flow_modal_title": "إنشاء تدفق ذكي",
+    "create_flow_modal_title": "إنشاء بوت",
     "flow_name_label": "اسم التدفق",
     "flow_name_placeholder": "أدخل اسم التدفق...",
     "select_folder_label": "اختر مجلدًا",
@@ -6626,11 +6626,11 @@
       "support_number": "رقم الدعم",
       "chatting_with_channel": "يتحدث عبر القناة",
       "channel_fallback": "قناة",
-      "in_smart_flow": "في تدفق ذكي",
-      "not_in_smart_flow": "ليس ضمن أي مسار عمل حاليًا.",
+      "in_smart_flow": "في بوت",
+      "not_in_smart_flow": "ليس ضمن أي بوت حاليًا.",
       "remove": "إزالة",
       "pause_automated_messages": "إيقاف الرسائل الآلية مؤقتًا",
-      "pause_smart_flow": "إيقاف التدفق الذكي مؤقتًا",
+      "pause_smart_flow": "إيقاف البوت مؤقتًا",
       "stop": "إيقاف",
       "add_15_minutes": "15 دقيقة"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "اسحب لتغيير حجم الشريط الجانبي"
     },
     "chat_modes": {
-      "all": "Smart Flow والوارد",
-      "automation": "رسائل Smart Flow",
+      "all": "بوت والوارد",
+      "automation": "رسائل بوت",
       "inbox": "رسائل الوارد",
       "note": "رسائل الملاحظات",
       "old_data": "أقدم من 3 أشهر"
@@ -8069,7 +8069,7 @@
     "menu": "القائمة",
     "navigation": "التنقل",
     "nav_insights": "رؤى",
-    "nav_smart_flows": "التدفقات الذكية",
+    "nav_smart_flows": "البوتات",
     "nav_campaign": "الحملة",
     "nav_contacts": "جهات الاتصال",
     "nav_inbox": "صندوق الوارد",

@@ -349,11 +349,11 @@
         "delete_team_member": "Teammitglied gelöscht",
         "add_channel": "Kanal hinzugefügt",
         "delete_channel": "Kanal gelöscht",
-        "flow_created": "Smart Flow erstellt",
-        "flow_updated": "Smart Flow aktualisiert",
-        "flow_deleted": "Smart Flow gelöscht",
-        "flow_archived": "Smart Flow archiviert",
-        "flow_activated": "Smart Flow aktiviert",
+        "flow_created": "Bot erstellt",
+        "flow_updated": "Bot aktualisiert",
+        "flow_deleted": "Bot gelöscht",
+        "flow_archived": "Bot archiviert",
+        "flow_activated": "Bot aktiviert",
         "call_forwarding": "Anrufweiterleitung geändert",
         "add_domain": "Domain hinzugefügt",
         "pipeline_created": "Pipeline erstellt",
@@ -764,7 +764,7 @@
     "menu": "Menü",
     "navigation": "Navigation",
     "insights": "Einblicke",
-    "smart_flows": "Smart Flows",
+    "smart_flows": "Bots",
     "bot_conversations": "Bot-Unterhaltungen",
     "whatsapp_templates": "WhatsApp-Vorlagen",
     "campaign_manager": "Kampagnen-Manager",
@@ -1031,7 +1031,7 @@
       "pause": "Pause"
     },
     "agents_tab": {
-      "done_heading": "Wenn die Unterhaltung im Live-Chat oder SmartFlow als ERLEDIGT markiert wird:",
+      "done_heading": "Wenn die Unterhaltung im Live-Chat oder Bot als ERLEDIGT markiert wird:",
       "keep_label": "Beibehalten",
       "keep_desc": "Den zugewiesenen Agenten für die Unterhaltung beibehalten.",
       "remove_label": "Entfernen",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "Namen des benutzerdefinierten Felds eingeben"
     },
     "completion_tab": {
-      "done_heading": "Wenn die Unterhaltung im Live-Chat oder Smart Flow als ERLEDIGT markiert wird:",
+      "done_heading": "Wenn die Unterhaltung im Live-Chat oder Bot als ERLEDIGT markiert wird:",
       "save_json_label": "Die letzte Unterhaltung als JSON in einem benutzerdefinierten Feld speichern.",
       "select_field": "Benutzerdefiniertes Feld auswählen",
       "select_field_placeholder": "Benutzerdefiniertes Feld auswählen"
@@ -1086,11 +1086,11 @@
       "cancel": "Abbrechen"
     },
     "pause_tab": {
-      "heading": "Smart Flow beim Starten einer Unterhaltung automatisch pausieren?",
+      "heading": "Bot beim Starten einer Unterhaltung automatisch pausieren?",
       "manually": "Manuell",
-      "manually_desc": "Smart Flow nicht pausieren, wenn ein Agent eine Nachricht sendet",
+      "manually_desc": "Bot nicht pausieren, wenn ein Agent eine Nachricht sendet",
       "automatically": "Automatisch",
-      "automatically_desc": "Smart Flow pausieren, wenn ein Agent eine Nachricht sendet"
+      "automatically_desc": "Bot pausieren, wenn ein Agent eine Nachricht sendet"
     },
     "common": {
       "save": "Speichern",
@@ -1900,8 +1900,8 @@
             "desc": "Agenten Zugriff zur Verwaltung von Pipelines innerhalb dieses Workspace gewähren."
           },
           "flows": {
-            "title": "Smart Flows",
-            "desc": "Agenten Zugriff zum Ansehen und Verwalten von Smart Flows gewähren."
+            "title": "Bots",
+            "desc": "Agenten Zugriff zum Ansehen und Verwalten von Bots gewähren."
           },
           "channels": {
             "title": "Kommunikationskanäle",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "Verfügbarkeit für Unterhaltungen",
-            "desc": "Offen für den Erhalt von Unterhaltungszuweisungen von anderen Agenten oder Smart Flow."
+            "desc": "Offen für den Erhalt von Unterhaltungszuweisungen von anderen Agenten oder Bot."
           },
           "task_avail": {
             "title": "Verfügbarkeit für Aufgaben",
-            "desc": "Offen für den Erhalt von Aufgaben von anderen Agenten und Smart Flows."
+            "desc": "Offen für den Erhalt von Aufgaben von anderen Agenten und Bots."
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "Integrieren Sie Ihr Cal.com-Konto und verwalten Sie Ihren Kalender über die Smart Flows."
+            "desc": "Integrieren Sie Ihr Cal.com-Konto und verwalten Sie Ihren Kalender über die Bots."
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "Nummer gelöscht",
     "could_not_delete": "Löschen fehlgeschlagen",
     "title": "Diese WhatsApp-Nummer löschen?",
-    "checkbox1_label": "Ich verstehe, dass diese Nummer von der Plattform entfernt wird und alle Smart Flows, Broadcasts oder Vorlagen, die sie verwenden, fehlschlagen, bis sie erneut verbunden ist.",
+    "checkbox1_label": "Ich verstehe, dass diese Nummer von der Plattform entfernt wird und alle Bots, Broadcasts oder Vorlagen, die sie verwenden, fehlschlagen, bis sie erneut verbunden ist.",
     "checkbox2_label": "Ich verstehe, dass vorherige Unterhaltungen archiviert werden, aber nach der Löschung keine neuen Nachrichten mehr über diese Nummer geleitet werden.",
     "checkbox3_label": "Ich verstehe, dass diese Aktion nicht rückgängig gemacht werden kann und eine erneute Verbindung das erneute Durchlaufen des WhatsApp-Onboardings erfordert.",
     "reconnect_warning": "Das erneute Verbinden derselben Nummer von Meta-Seite kann nach der Löschung bis zu 24 Stunden dauern.",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "Speichern fehlgeschlagen.",
     "cleared": "Auto-Antwort entfernt",
     "title": "Sofortantworten",
-    "description_prefix": "Wählen Sie einen Smart Flow, der automatisch ausgeführt wird, wenn ein Kontakt schreibt an",
+    "description_prefix": "Wählen Sie einen Bot, der automatisch ausgeführt wird, wenn ein Kontakt schreibt an",
     "select_automation": "Automatisierung auswählen",
     "choose_automation": "— Automatisierung wählen —",
     "automation_number": "Automatisierung #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "Die Standardantwort ist jetzt für diese Nummer aktiv.",
     "cleared": "Auto-Antwort entfernt",
     "title": "Sofortantworten",
-    "description_prefix": "Wählen Sie einen Smart Flow, der automatisch ausgeführt wird, wenn ein Kontakt schreibt an",
+    "description_prefix": "Wählen Sie einen Bot, der automatisch ausgeführt wird, wenn ein Kontakt schreibt an",
     "select_automation": "Automatisierung auswählen",
     "choose_automation": "— Automatisierung wählen —",
     "automation_number": "Automatisierung #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "Auslöser",
     "done_warning_prefix": "Beachten Sie: Wird ein Kontaktgespräch als",
     "done": "Erledigt",
-    "done_warning_suffix": "markiert (im Live-Chat oder über Smart Flows), wird die Standardantwort bei der nächsten eingehenden Nachricht erneut ausgelöst.",
+    "done_warning_suffix": "markiert (im Live-Chat oder über Bots), wird die Standardantwort bei der nächsten eingehenden Nachricht erneut ausgelöst.",
     "deleting": "Wird gelöscht…",
     "delete": "Löschen",
     "close": "Schließen",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "Untertitel",
     "placeholder_subtitle": "Untertitel eingeben",
     "trigger_section": "Auslöser-Abschnitt",
-    "select_smart_flow": "Smart Flow auswählen",
+    "select_smart_flow": "Bot auswählen",
     "flow_1": "Flow 1",
     "flow_2": "Flow 2",
     "field_channel": "Kanal",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "Assistent auswählen",
     "option_assistant_1": "Assistent 1",
     "option_assistant_2": "Assistent 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "Smart Flow auswählen",
+    "label_smart_flow": "Bot",
+    "option_select_smart_flow": "Bot auswählen",
     "option_flow_1": "Flow 1",
     "option_flow_2": "Flow 2",
     "label_channel": "Kanal",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "Wenn eine Unterhaltung als ERLEDIGT markiert wird",
-      "heading_badge": "Gilt für Live-Chat & Smart Flow",
+      "heading_badge": "Gilt für Live-Chat & Bot",
       "heading_description": "Wählen Sie, wie mit dem zugewiesenen Mitarbeiter verfahren wird, wenn Unterhaltungen geschlossen werden.",
       "keep_agent_title": "Mitarbeiter behalten",
       "keep_agent_description": "Den zugewiesenen Mitarbeiter weiterhin der Unterhaltung zuordnen.",
@@ -4252,7 +4252,7 @@
       "heading_title": "Unterhaltungsarchiv",
       "heading_description": "Speichern Sie das Gesprächsprotokoll als JSON in einem benutzerdefinierten Feld, sobald es als ERLEDIGT markiert ist.",
       "save_as_json_title": "Als JSON speichern",
-      "save_as_json_description": "Wenn eine Unterhaltung im Live-Chat oder Smart Flow als ERLEDIGT markiert wird, wird das gesamte Protokoll in dem von Ihnen gewählten benutzerdefinierten Feld gespeichert.",
+      "save_as_json_description": "Wenn eine Unterhaltung im Live-Chat oder Bot als ERLEDIGT markiert wird, wird das gesamte Protokoll in dem von Ihnen gewählten benutzerdefinierten Feld gespeichert.",
       "target_custom_field_label": "Ziel-Benutzerfeld"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "Ordner hinzufügen"
     },
     "pause": {
-      "question": "Smart Flow automatisch pausieren, wenn eine Unterhaltung begonnen wird?",
+      "question": "Bot automatisch pausieren, wenn eine Unterhaltung begonnen wird?",
       "manually_label": "Manuell",
-      "manually_description": "Smart Flow nicht pausieren, wenn ein Mitarbeiter eine Nachricht sendet",
+      "manually_description": "Bot nicht pausieren, wenn ein Mitarbeiter eine Nachricht sendet",
       "automatically_label": "Automatisch",
-      "automatically_description": "Smart Flow pausieren, wenn ein Mitarbeiter eine Nachricht sendet"
+      "automatically_description": "Bot pausieren, wenn ein Mitarbeiter eine Nachricht sendet"
     },
     "footer": {
       "scope_note": "Einstellungen gelten für den gesamten Workspace",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "Themenname",
     "field_subtitle": "Untertitel",
     "short_description_placeholder": "Kurzbeschreibung",
-    "field_smart_flow": "Smart Flow",
+    "field_smart_flow": "Bot",
     "select_automation_option": "— Automatisierung auswählen —",
     "automation_fallback_label": "Automatisierung #{{id}}",
     "field_channel": "Kanal",
@@ -5432,7 +5432,7 @@
     "unit_escalations": "Eskalationen",
     "unit_per_session": "Pro Sitzung",
     "popularity_title": "Beliebtheit der Interaktionen",
-    "popularity_subtitle": "Am häufigsten ausgelöste Smart Flows",
+    "popularity_subtitle": "Am häufigsten ausgelöste Bots",
     "popularity_empty_state": "Noch keine Smart-Flow-Aktivität",
     "bot_vs_human_title": "Bot- vs. Mitarbeiterleistung",
     "bot_vs_human_subtitle": "Vergleich der Eskalationsrate",
@@ -6138,7 +6138,7 @@
     "csv_recording": "Aufzeichnung"
   },
   "smart_flows_page": {
-    "title": "Smart Flows",
+    "title": "Bots",
     "subtitle": "Erstellen, verwalten und automatisieren Sie Ihre Multi-Channel-Kommunikationsabläufe",
     "create_flow": "Flow erstellen",
     "all_folders": "Alle Ordner",
@@ -6162,7 +6162,7 @@
     "col_created_by": "Erstellt von",
     "col_updated_at": "Aktualisiert am",
     "col_actions": "Aktionen",
-    "empty_title": "Keine Smart Flows gefunden",
+    "empty_title": "Keine Bots gefunden",
     "empty_subtitle": "Erstellen Sie Ihren ersten Automatisierungs-Workflow",
     "empty_cta": "JETZT ERSTELLEN",
     "status_badge_active": "Aktiv",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} Ergebnisse",
     "rows_label": "Zeilen:",
     "page_label": "Seite",
-    "create_flow_modal_title": "Smart Flow erstellen",
+    "create_flow_modal_title": "Bot erstellen",
     "flow_name_label": "Flow-Name",
     "flow_name_placeholder": "Flow-Namen eingeben...",
     "select_folder_label": "Ordner auswählen",
@@ -6626,11 +6626,11 @@
       "support_number": "Support-Nummer",
       "chatting_with_channel": "Chattet über Kanal",
       "channel_fallback": "Kanal",
-      "in_smart_flow": "Im Smart Flow",
-      "not_in_smart_flow": "Aktuell in keinem Smart Flow.",
+      "in_smart_flow": "Im Bot",
+      "not_in_smart_flow": "Aktuell in keinem Bot.",
       "remove": "Entfernen",
       "pause_automated_messages": "Automatische Nachrichten pausieren",
-      "pause_smart_flow": "Smart Flow pausieren",
+      "pause_smart_flow": "Bot pausieren",
       "stop": "Stopp",
       "add_15_minutes": "15 Minuten"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "Ziehen, um die Seitenleiste anzupassen"
     },
     "chat_modes": {
-      "all": "Smart Flow & Posteingang",
-      "automation": "Smart Flow-Nachrichten",
+      "all": "Bot & Posteingang",
+      "automation": "Bot-Nachrichten",
       "inbox": "Posteingangsnachrichten",
       "note": "Notiznachrichten",
       "old_data": "Älter als 3 Monate"
@@ -8069,7 +8069,7 @@
     "menu": "Menü",
     "navigation": "Navigation",
     "nav_insights": "Insights",
-    "nav_smart_flows": "Smart Flows",
+    "nav_smart_flows": "Bots",
     "nav_campaign": "Kampagne",
     "nav_contacts": "Kontakte",
     "nav_inbox": "Posteingang",

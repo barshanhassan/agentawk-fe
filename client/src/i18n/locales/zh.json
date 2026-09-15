@@ -349,11 +349,11 @@
         "delete_team_member": "已删除团队成员",
         "add_channel": "已添加渠道",
         "delete_channel": "已删除渠道",
-        "flow_created": "智能流程已创建",
-        "flow_updated": "智能流程已更新",
-        "flow_deleted": "智能流程已删除",
-        "flow_archived": "智能流程已归档",
-        "flow_activated": "智能流程已启用",
+        "flow_created": "机器人已创建",
+        "flow_updated": "机器人已更新",
+        "flow_deleted": "机器人已删除",
+        "flow_archived": "机器人已归档",
+        "flow_activated": "机器人已启用",
         "call_forwarding": "已更改呼叫转接设置",
         "add_domain": "已添加域名",
         "pipeline_created": "已创建销售管道",
@@ -764,7 +764,7 @@
     "menu": "菜单",
     "navigation": "导航",
     "insights": "数据洞察",
-    "smart_flows": "智能流程",
+    "smart_flows": "机器人",
     "bot_conversations": "机器人对话",
     "whatsapp_templates": "WhatsApp 模板",
     "campaign_manager": "营销活动管理",
@@ -1031,7 +1031,7 @@
       "pause": "暂停"
     },
     "agents_tab": {
-      "done_heading": "当对话在在线客服或智能流程中被标记为“已完成”时：",
+      "done_heading": "当对话在在线客服或机器人中被标记为“已完成”时：",
       "keep_label": "保留",
       "keep_desc": "保留该对话已分配的坐席。",
       "remove_label": "移除",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "输入自定义字段名称"
     },
     "completion_tab": {
-      "done_heading": "当对话在在线客服或智能流程中被标记为“已完成”时：",
+      "done_heading": "当对话在在线客服或机器人中被标记为“已完成”时：",
       "save_json_label": "将最近一次对话以 JSON 格式保存至自定义字段。",
       "select_field": "选择自定义字段",
       "select_field_placeholder": "选择自定义字段"
@@ -1086,11 +1086,11 @@
       "cancel": "取消"
     },
     "pause_tab": {
-      "heading": "发起对话时是否自动暂停智能流程？",
+      "heading": "发起对话时是否自动暂停机器人？",
       "manually": "手动",
-      "manually_desc": "坐席发送消息时不暂停智能流程",
+      "manually_desc": "坐席发送消息时不暂停机器人",
       "automatically": "自动",
-      "automatically_desc": "坐席发送消息时暂停智能流程"
+      "automatically_desc": "坐席发送消息时暂停机器人"
     },
     "common": {
       "save": "保存",
@@ -1900,8 +1900,8 @@
             "desc": "授予坐席在此工作区内管理销售管道的访问权限。"
           },
           "flows": {
-            "title": "智能流程",
-            "desc": "授予坐席查看和管理智能流程的访问权限。"
+            "title": "机器人",
+            "desc": "授予坐席查看和管理机器人的访问权限。"
           },
           "channels": {
             "title": "通信渠道",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "对话可接收状态",
-            "desc": "开放接收来自其他坐席或智能流程分配的对话。"
+            "desc": "开放接收来自其他坐席或机器人分配的对话。"
           },
           "task_avail": {
             "title": "任务可接收状态",
-            "desc": "开放接收来自其他坐席和智能流程的任务。"
+            "desc": "开放接收来自其他坐席和机器人的任务。"
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "接入您的 Cal.com 账户，并通过智能流程管理您的日历。"
+            "desc": "接入您的 Cal.com 账户，并通过机器人管理您的日历。"
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "号码已删除",
     "could_not_delete": "无法删除",
     "title": "删除此 WhatsApp 号码？",
-    "checkbox1_label": "我了解此号码将从平台中移除，任何使用它的智能流程、群发消息或模板在重新连接之前都会失败。",
+    "checkbox1_label": "我了解此号码将从平台中移除，任何使用它的机器人、群发消息或模板在重新连接之前都会失败。",
     "checkbox2_label": "我了解之前的对话将被归档，但删除后不会有新消息通过此号码路由。",
     "checkbox3_label": "我了解此操作无法撤销，重新连接需要再次完成 WhatsApp 入驻流程。",
     "reconnect_warning": "从 Meta 方面重新连接同一号码在删除后可能需要长达 24 小时。",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "保存失败。",
     "cleared": "自动回复已清除",
     "title": "即时回复",
-    "description_prefix": "选择一个 Smart Flow，在联系人向以下账户发消息时自动运行",
+    "description_prefix": "选择一个 机器人，在联系人向以下账户发消息时自动运行",
     "select_automation": "选择自动化",
     "choose_automation": "— 选择一个自动化 —",
     "automation_number": "自动化 #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "默认回复现已在此号码上启用。",
     "cleared": "自动回复已清除",
     "title": "即时回复",
-    "description_prefix": "选择一个 Smart Flow，在联系人向以下号码发消息时自动运行",
+    "description_prefix": "选择一个 机器人，在联系人向以下号码发消息时自动运行",
     "select_automation": "选择自动化",
     "choose_automation": "— 选择一个自动化 —",
     "automation_number": "自动化 #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "触发",
     "done_warning_prefix": "请注意，如果联系人的对话被标记为",
     "done": "已完成",
-    "done_warning_suffix": "（在实时聊天中或通过 Smart Flows），默认回复将在他们下一条入站消息时再次触发。",
+    "done_warning_suffix": "（在实时聊天中或通过 机器人），默认回复将在他们下一条入站消息时再次触发。",
     "deleting": "删除中…",
     "delete": "删除",
     "close": "关闭",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "副标题",
     "placeholder_subtitle": "输入副标题",
     "trigger_section": "触发器部分",
-    "select_smart_flow": "选择 Smart Flow",
+    "select_smart_flow": "选择 机器人",
     "flow_1": "流程 1",
     "flow_2": "流程 2",
     "field_channel": "渠道",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "选择助手",
     "option_assistant_1": "助手 1",
     "option_assistant_2": "助手 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "选择一个 Smart Flow",
+    "label_smart_flow": "机器人",
+    "option_select_smart_flow": "选择一个 机器人",
     "option_flow_1": "流程 1",
     "option_flow_2": "流程 2",
     "label_channel": "渠道",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "当对话被标记为已完成时",
-      "heading_badge": "适用于实时聊天和 Smart Flow",
+      "heading_badge": "适用于实时聊天和 机器人",
       "heading_description": "选择在对话关闭时如何处理已分配的客服。",
       "keep_agent_title": "保留客服",
       "keep_agent_description": "使已分配的客服继续关联到该对话。",
@@ -4252,7 +4252,7 @@
       "heading_title": "对话存档",
       "heading_description": "对话一旦被标记为已完成，即将其记录以 JSON 格式保存到自定义字段中。",
       "save_as_json_title": "保存为 JSON",
-      "save_as_json_description": "当实时聊天或 Smart Flow 中的对话被标记为已完成时，完整记录将存储到您选择的自定义字段中。",
+      "save_as_json_description": "当实时聊天或 机器人 中的对话被标记为已完成时，完整记录将存储到您选择的自定义字段中。",
       "target_custom_field_label": "目标自定义字段"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "添加文件夹"
     },
     "pause": {
-      "question": "在发起对话时自动暂停 Smart Flow？",
+      "question": "在发起对话时自动暂停 机器人？",
       "manually_label": "手动",
-      "manually_description": "客服发送消息时不暂停 Smart Flow",
+      "manually_description": "客服发送消息时不暂停 机器人",
       "automatically_label": "自动",
-      "automatically_description": "客服发送消息时暂停 Smart Flow"
+      "automatically_description": "客服发送消息时暂停 机器人"
     },
     "footer": {
       "scope_note": "设置适用于整个 Workspace",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "主题名称",
     "field_subtitle": "副标题",
     "short_description_placeholder": "简短说明",
-    "field_smart_flow": "智能流程",
+    "field_smart_flow": "机器人",
     "select_automation_option": "— 选择一个自动化流程 —",
     "automation_fallback_label": "自动化流程 #{{id}}",
     "field_channel": "渠道",
@@ -6138,7 +6138,7 @@
     "csv_recording": "录音"
   },
   "smart_flows_page": {
-    "title": "智能流程",
+    "title": "机器人",
     "subtitle": "构建、管理和自动化您的多渠道通信工作流程",
     "create_flow": "创建流程",
     "all_folders": "所有文件夹",
@@ -6162,7 +6162,7 @@
     "col_created_by": "创建者",
     "col_updated_at": "更新时间",
     "col_actions": "操作",
-    "empty_title": "未找到智能流程",
+    "empty_title": "未找到机器人",
     "empty_subtitle": "创建您的第一个自动化工作流程",
     "empty_cta": "立即创建",
     "status_badge_active": "启用",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}}条结果",
     "rows_label": "行数：",
     "page_label": "页",
-    "create_flow_modal_title": "创建智能流程",
+    "create_flow_modal_title": "创建机器人",
     "flow_name_label": "流程名称",
     "flow_name_placeholder": "输入流程名称...",
     "select_folder_label": "选择文件夹",
@@ -6626,11 +6626,11 @@
       "support_number": "支持号码",
       "chatting_with_channel": "正在通过该渠道聊天",
       "channel_fallback": "渠道",
-      "in_smart_flow": "在智能流程中",
-      "not_in_smart_flow": "当前不属于任何智能流程。",
+      "in_smart_flow": "在机器人中",
+      "not_in_smart_flow": "当前不属于任何机器人。",
       "remove": "移除",
       "pause_automated_messages": "暂停自动消息",
-      "pause_smart_flow": "暂停智能流程",
+      "pause_smart_flow": "暂停机器人",
       "stop": "停止",
       "add_15_minutes": "15分钟"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "拖动以调整侧边栏大小"
     },
     "chat_modes": {
-      "all": "Smart Flow 与收件箱",
-      "automation": "Smart Flow 消息",
+      "all": "机器人 与收件箱",
+      "automation": "机器人 消息",
       "inbox": "收件箱消息",
       "note": "备注消息",
       "old_data": "3 个月以前"
@@ -8069,7 +8069,7 @@
     "menu": "菜单",
     "navigation": "导航",
     "nav_insights": "洞察",
-    "nav_smart_flows": "智能流程",
+    "nav_smart_flows": "机器人",
     "nav_campaign": "活动",
     "nav_contacts": "联系人",
     "nav_inbox": "收件箱",

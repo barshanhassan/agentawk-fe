@@ -349,11 +349,11 @@
         "delete_team_member": "Участник команды удалён",
         "add_channel": "Канал добавлен",
         "delete_channel": "Канал удалён",
-        "flow_created": "Smart Flow создан",
-        "flow_updated": "Smart Flow обновлён",
-        "flow_deleted": "Smart Flow удалён",
-        "flow_archived": "Smart Flow архивирован",
-        "flow_activated": "Smart Flow активирован",
+        "flow_created": "Бот создан",
+        "flow_updated": "Бот обновлён",
+        "flow_deleted": "Бот удалён",
+        "flow_archived": "Бот архивирован",
+        "flow_activated": "Бот активирован",
         "call_forwarding": "Переадресация вызовов изменена",
         "add_domain": "Домен добавлен",
         "pipeline_created": "Воронка создана",
@@ -764,7 +764,7 @@
     "menu": "Меню",
     "navigation": "Навигация",
     "insights": "Аналитика",
-    "smart_flows": "Smart Flows",
+    "smart_flows": "Боты",
     "bot_conversations": "Диалоги с ботом",
     "whatsapp_templates": "Шаблоны WhatsApp",
     "campaign_manager": "Менеджер кампаний",
@@ -1031,7 +1031,7 @@
       "pause": "Пауза"
     },
     "agents_tab": {
-      "done_heading": "Когда диалог отмечен как ЗАВЕРШЁН в чате в реальном времени или SmartFlow:",
+      "done_heading": "Когда диалог отмечен как ЗАВЕРШЁН в чате в реальном времени или Бот:",
       "keep_label": "Сохранить",
       "keep_desc": "Сохранить назначенного агента за диалогом.",
       "remove_label": "Удалить",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "Введите название пользовательского поля"
     },
     "completion_tab": {
-      "done_heading": "Когда диалог отмечен как ЗАВЕРШЁН в чате в реальном времени или Smart Flow:",
+      "done_heading": "Когда диалог отмечен как ЗАВЕРШЁН в чате в реальном времени или Бот:",
       "save_json_label": "Сохранить последний диалог в формате JSON в пользовательское поле.",
       "select_field": "Выберите пользовательское поле",
       "select_field_placeholder": "Выберите пользовательское поле"
@@ -1086,11 +1086,11 @@
       "cancel": "Отмена"
     },
     "pause_tab": {
-      "heading": "Автоматически приостанавливать Smart Flow при начале диалога?",
+      "heading": "Автоматически приостанавливать Бот при начале диалога?",
       "manually": "Вручную",
-      "manually_desc": "Не приостанавливать Smart Flow, когда агент отправляет сообщение",
+      "manually_desc": "Не приостанавливать Бот, когда агент отправляет сообщение",
       "automatically": "Автоматически",
-      "automatically_desc": "Приостанавливать Smart Flow, когда агент отправляет сообщение"
+      "automatically_desc": "Приостанавливать Бот, когда агент отправляет сообщение"
     },
     "common": {
       "save": "Сохранить",
@@ -1900,8 +1900,8 @@
             "desc": "Предоставить агентам доступ к управлению воронками в этом рабочем пространстве."
           },
           "flows": {
-            "title": "Smart Flows",
-            "desc": "Предоставить агентам доступ к просмотру и управлению Smart Flows."
+            "title": "Боты",
+            "desc": "Предоставить агентам доступ к просмотру и управлению ботов."
           },
           "channels": {
             "title": "Каналы коммуникации",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "Доступность для диалогов",
-            "desc": "Открыт для получения назначенных диалогов от других агентов или Smart Flow."
+            "desc": "Открыт для получения назначенных диалогов от других агентов или Бот."
           },
           "task_avail": {
             "title": "Доступность для задач",
-            "desc": "Открыт для получения задач от других агентов и Smart Flows."
+            "desc": "Открыт для получения задач от других агентов и ботов."
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "Интегрируйте свой аккаунт Cal.com и управляйте календарём из Smart Flows."
+            "desc": "Интегрируйте свой аккаунт Cal.com и управляйте календарём из ботов."
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "Номер удалён",
     "could_not_delete": "Не удалось удалить",
     "title": "Удалить этот номер WhatsApp?",
-    "checkbox1_label": "Я понимаю, что этот номер будет удалён с платформы, и все Smart Flow, рассылки или шаблоны, использующие его, перестанут работать до повторного подключения.",
+    "checkbox1_label": "Я понимаю, что этот номер будет удалён с платформы, и все Бот, рассылки или шаблоны, использующие его, перестанут работать до повторного подключения.",
     "checkbox2_label": "Я понимаю, что предыдущие переписки будут заархивированы, но новые сообщения не будут направляться через этот номер после удаления.",
     "checkbox3_label": "Я понимаю, что это действие необратимо, и для повторного подключения потребуется заново пройти регистрацию WhatsApp.",
     "reconnect_warning": "Повторное подключение того же номера со стороны Meta может занять до 24 часов после удаления.",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "Не удалось сохранить.",
     "cleared": "Автоответ удалён",
     "title": "Мгновенные ответы",
-    "description_prefix": "Выберите Smart Flow для автоматического запуска при каждом сообщении контакта",
+    "description_prefix": "Выберите Бот для автоматического запуска при каждом сообщении контакта",
     "select_automation": "Выберите автоматизацию",
     "choose_automation": "— Выберите автоматизацию —",
     "automation_number": "Автоматизация №{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "Ответ по умолчанию теперь активен для этого номера.",
     "cleared": "Автоответ удалён",
     "title": "Мгновенные ответы",
-    "description_prefix": "Выберите Smart Flow для автоматического запуска при каждом сообщении контакта",
+    "description_prefix": "Выберите Бот для автоматического запуска при каждом сообщении контакта",
     "select_automation": "Выберите автоматизацию",
     "choose_automation": "— Выберите автоматизацию —",
     "automation_number": "Автоматизация №{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "Триггер",
     "done_warning_prefix": "Учтите, что если переписка с контактом помечена как",
     "done": "Готово",
-    "done_warning_suffix": "(в Live Chat или через Smart Flows), ответ по умолчанию снова сработает на следующее входящее сообщение.",
+    "done_warning_suffix": "(в Live Chat или через боты), ответ по умолчанию снова сработает на следующее входящее сообщение.",
     "deleting": "Удаление…",
     "delete": "Удалить",
     "close": "Закрыть",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "Подзаголовок",
     "placeholder_subtitle": "Введите подзаголовок",
     "trigger_section": "Раздел триггера",
-    "select_smart_flow": "Выберите Smart Flow",
+    "select_smart_flow": "Выберите Бот",
     "flow_1": "Поток 1",
     "flow_2": "Поток 2",
     "field_channel": "Канал",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "Выберите ассистента",
     "option_assistant_1": "Ассистент 1",
     "option_assistant_2": "Ассистент 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "Выберите Smart Flow",
+    "label_smart_flow": "Бот",
+    "option_select_smart_flow": "Выберите Бот",
     "option_flow_1": "Поток 1",
     "option_flow_2": "Поток 2",
     "label_channel": "Канал",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "Когда беседа отмечена как ЗАВЕРШЕНА",
-      "heading_badge": "Применяется к онлайн-чату и Smart Flow",
+      "heading_badge": "Применяется к онлайн-чату и Бот",
       "heading_description": "Выберите, как поступать с назначенным агентом при закрытии бесед.",
       "keep_agent_title": "Оставить агента",
       "keep_agent_description": "Оставить назначенного агента прикреплённым к беседе.",
@@ -4252,7 +4252,7 @@
       "heading_title": "Архив бесед",
       "heading_description": "Сохраняйте расшифровку беседы в формате JSON в пользовательском поле сразу после отметки ЗАВЕРШЕНА.",
       "save_as_json_title": "Сохранить как JSON",
-      "save_as_json_description": "Когда беседа в онлайн-чате или Smart Flow помечается как ЗАВЕРШЕНА, вся расшифровка будет сохранена в выбранном вами пользовательском поле.",
+      "save_as_json_description": "Когда беседа в онлайн-чате или Бот помечается как ЗАВЕРШЕНА, вся расшифровка будет сохранена в выбранном вами пользовательском поле.",
       "target_custom_field_label": "Целевое пользовательское поле"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "Добавить папку"
     },
     "pause": {
-      "question": "Автоматически приостанавливать Smart Flow при начале беседы?",
+      "question": "Автоматически приостанавливать Бот при начале беседы?",
       "manually_label": "Вручную",
-      "manually_description": "Не приостанавливать Smart Flow, когда агент отправляет сообщение",
+      "manually_description": "Не приостанавливать Бот, когда агент отправляет сообщение",
       "automatically_label": "Автоматически",
-      "automatically_description": "Приостанавливать Smart Flow, когда агент отправляет сообщение"
+      "automatically_description": "Приостанавливать Бот, когда агент отправляет сообщение"
     },
     "footer": {
       "scope_note": "Настройки применяются ко всему Workspace",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "Название темы",
     "field_subtitle": "Подзаголовок",
     "short_description_placeholder": "Краткое описание",
-    "field_smart_flow": "Умный сценарий",
+    "field_smart_flow": "Бот",
     "select_automation_option": "— Выберите автоматизацию —",
     "automation_fallback_label": "Автоматизация №{{id}}",
     "field_channel": "Канал",
@@ -5432,8 +5432,8 @@
     "unit_escalations": "Передачи",
     "unit_per_session": "На сессию",
     "popularity_title": "Популярность взаимодействий",
-    "popularity_subtitle": "Наиболее часто запускаемые Smart Flow",
-    "popularity_empty_state": "Пока нет активности Smart Flow",
+    "popularity_subtitle": "Наиболее часто запускаемые Бот",
+    "popularity_empty_state": "Пока нет активности Бот",
     "bot_vs_human_title": "Бот против сотрудника",
     "bot_vs_human_subtitle": "Сравнение доли передачи",
     "busiest_period_title": "Самый загруженный период",
@@ -6138,7 +6138,7 @@
     "csv_recording": "Запись"
   },
   "smart_flows_page": {
-    "title": "Умные потоки",
+    "title": "Боты",
     "subtitle": "Создавайте, управляйте и автоматизируйте многоканальные рабочие процессы общения",
     "create_flow": "Создать поток",
     "all_folders": "Все папки",
@@ -6162,7 +6162,7 @@
     "col_created_by": "Создано",
     "col_updated_at": "Обновлено",
     "col_actions": "Действия",
-    "empty_title": "Умные потоки не найдены",
+    "empty_title": "Боты не найдены",
     "empty_subtitle": "Создайте свой первый рабочий процесс автоматизации",
     "empty_cta": "СОЗДАТЬ СЕЙЧАС",
     "status_badge_active": "Активен",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} результатов",
     "rows_label": "Строки:",
     "page_label": "Страница",
-    "create_flow_modal_title": "Создать умный поток",
+    "create_flow_modal_title": "Создать бот",
     "flow_name_label": "Название потока",
     "flow_name_placeholder": "Введите название потока...",
     "select_folder_label": "Выберите папку",
@@ -6626,11 +6626,11 @@
       "support_number": "Номер поддержки",
       "chatting_with_channel": "Общается через канал",
       "channel_fallback": "канал",
-      "in_smart_flow": "В умном потоке",
-      "not_in_smart_flow": "Сейчас не входит ни в один Smart Flow.",
+      "in_smart_flow": "В боте",
+      "not_in_smart_flow": "Сейчас не входит ни в один Бот.",
       "remove": "Удалить",
       "pause_automated_messages": "Приостановить автоматические сообщения",
-      "pause_smart_flow": "Приостановить умный поток",
+      "pause_smart_flow": "Приостановить бот",
       "stop": "Стоп",
       "add_15_minutes": "15 минут"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "Перетащите, чтобы изменить размер боковой панели"
     },
     "chat_modes": {
-      "all": "Smart Flow и Входящие",
-      "automation": "Сообщения Smart Flow",
+      "all": "Бот и Входящие",
+      "automation": "Сообщения Бот",
       "inbox": "Входящие сообщения",
       "note": "Заметки",
       "old_data": "Старше 3 месяцев"
@@ -8069,7 +8069,7 @@
     "menu": "Меню",
     "navigation": "Навигация",
     "nav_insights": "Insights",
-    "nav_smart_flows": "Smart Flows",
+    "nav_smart_flows": "Боты",
     "nav_campaign": "Кампания",
     "nav_contacts": "Контакты",
     "nav_inbox": "Входящие",

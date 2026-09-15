@@ -340,7 +340,7 @@ export default function AppSidebar() {
   // without `permissions` are always shown (gated in their own chunks later).
   const allMenuItems: Array<{ label: string; labelKey: string; href: string; icon: any; permissions?: string[]; hidden?: boolean }> = [
     { label: "Insights", labelKey: "app_sidebar.nav_insights", href: "/insights", icon: BarChart2 },
-    { label: "Smart Flows", labelKey: "app_sidebar.nav_smart_flows", href: "/automations", icon: GitMerge },
+    { label: "Bots", labelKey: "app_sidebar.nav_smart_flows", href: "/automations", icon: GitMerge },
     { label: "Campaign", labelKey: "app_sidebar.nav_campaign", href: "/campaigns", icon: Send, permissions: ["workspace.broadcast.view"] },
     { label: "Contacts", labelKey: "app_sidebar.nav_contacts", href: "/contacts", icon: Users, permissions: ["workspace.company.view"] },
     { label: "Inbox", labelKey: "app_sidebar.nav_inbox", href: "/conversations/inbox", icon: Mail, permissions: ["workspace.inbox.access"] },

@@ -1960,23 +1960,70 @@ function serializedNodesFromAutomation(automation: any): Node[] {
     // (often empty) row, and the rest of the user's work looked lost even
     // once the backend had persisted it. Shape must match what the pickers
     // write in onPick / updateNodeData: { slug, event, label, properties }.
-    const activities = acts
-      .slice()
-      .sort((a: any, b: any) => (a?.order ?? 0) - (b?.order ?? 0))
-      .map((a: any, i: number) => {
-        // `label` is stored alongside the fields; everything else IS the
-        // activity's properties (including `type`, which tells the channel
-        // panel which editor to open).
-        const { label, ...properties } = readProps(a);
-        return {
-          slug: a?.slug ?? undefined,
-          event: a?.event ?? undefined,
-          label,
-          properties,
-          order: a?.order ?? i + 1,
-          children: [],
-        };
-      });
+    //
+    // Activities NEST (a "Contact response" / Buttons / list activity owns
+    // branch children). This used to map the flat `acts` array straight to
+    // `data.activities` with `children: []` hardcoded, ignoring `parent_id`
+    // entirely — every child (each button's choice_1/choice_2 row) got
+    // reconstructed as its own TOP-LEVEL activity alongside its parent. The
+    // next save (sync-graph) faithfully persisted that: the child's slug
+    // only ever matched against ROOT-level siblings server-side, never
+    // matched (it's a child in the DB), so a brand new orphaned duplicate
+    // got created every time — while the original, still-correct child
+    // silently survived untouched. One unrelated edit anywhere in the flow
+    // (any save at all) was enough to corrupt a Buttons/list node's branch
+    // wiring on every OTHER node in the canvas.
+    const byParent = new Map<string, any[]>();
+    for (const a of acts) {
+      const key = a?.parent_id == null ? '' : String(a.parent_id);
+      if (!byParent.has(key)) byParent.set(key, []);
+      byParent.get(key)!.push(a);
+    }
+    const buildLevel = (parentKey: string): any[] =>
+      (byParent.get(parentKey) ?? [])
+        .slice()
+        .sort((a: any, b: any) => (a?.order ?? 0) - (b?.order ?? 0))
+        .map((a: any, i: number) => {
+          // `label` is stored alongside the fields; everything else IS the
+          // activity's properties (including `type`, which tells the channel
+          // panel which editor to open).
+          const { label, ...properties } = readProps(a);
+          return {
+            slug: a?.slug ?? undefined,
+            event: a?.event ?? undefined,
+            label,
+            properties,
+            order: a?.order ?? i + 1,
+            children: a?.id != null ? buildLevel(String(a.id)) : [],
+          };
+        });
+    // Legacy/unshaped rows (no `id` on ANY activity, so parent_id can never
+    // resolve to a key we built) — treat the whole flat list as roots rather
+    // than silently dropping every activity.
+    const hasIds = acts.some((a: any) => a?.id != null);
+    const activities = hasIds ? buildLevel('') : buildLevel('__flat__');
+    if (!hasIds) {
+      // buildLevel('__flat__') would be empty (nothing keyed that way) —
+      // fall back to the old flatten-with-no-children behaviour so this
+      // shape (if it ever occurs) still renders something instead of a
+      // blank step.
+      activities.push(
+        ...acts
+          .slice()
+          .sort((a: any, b: any) => (a?.order ?? 0) - (b?.order ?? 0))
+          .map((a: any, i: number) => {
+            const { label, ...properties } = readProps(a);
+            return {
+              slug: a?.slug ?? undefined,
+              event: a?.event ?? undefined,
+              label,
+              properties,
+              order: a?.order ?? i + 1,
+              children: [],
+            };
+          }),
+      );
+    }
 
     const firstActivity = acts[0];
     const activityProps = activities[0]?.properties ?? {};

@@ -349,11 +349,11 @@
         "delete_team_member": "チームメンバーを削除しました",
         "add_channel": "チャネルを追加しました",
         "delete_channel": "チャネルを削除しました",
-        "flow_created": "スマートフローを作成しました",
-        "flow_updated": "スマートフローを更新しました",
-        "flow_deleted": "スマートフローを削除しました",
-        "flow_archived": "スマートフローをアーカイブしました",
-        "flow_activated": "スマートフローを有効化しました",
+        "flow_created": "ボットを作成しました",
+        "flow_updated": "ボットを更新しました",
+        "flow_deleted": "ボットを削除しました",
+        "flow_archived": "ボットをアーカイブしました",
+        "flow_activated": "ボットを有効化しました",
         "call_forwarding": "転送設定を変更しました",
         "add_domain": "ドメインを追加しました",
         "pipeline_created": "パイプラインを作成しました",
@@ -764,7 +764,7 @@
     "menu": "メニュー",
     "navigation": "ナビゲーション",
     "insights": "インサイト",
-    "smart_flows": "スマートフロー",
+    "smart_flows": "ボット",
     "bot_conversations": "ボット会話",
     "whatsapp_templates": "WhatsAppテンプレート",
     "campaign_manager": "キャンペーンマネージャー",
@@ -1031,7 +1031,7 @@
       "pause": "一時停止"
     },
     "agents_tab": {
-      "done_heading": "ライブチャットまたはスマートフローで会話が「完了」としてマークされたとき：",
+      "done_heading": "ライブチャットまたはボットで会話が「完了」としてマークされたとき：",
       "keep_label": "保持",
       "keep_desc": "会話に割り当てられたエージェントをそのまま保持します。",
       "remove_label": "解除",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "カスタムフィールド名を入力"
     },
     "completion_tab": {
-      "done_heading": "ライブチャットまたはスマートフローで会話が「完了」としてマークされたとき：",
+      "done_heading": "ライブチャットまたはボットで会話が「完了」としてマークされたとき：",
       "save_json_label": "最後の会話をJSON形式でカスタムフィールドに保存する。",
       "select_field": "カスタムフィールドを選択",
       "select_field_placeholder": "カスタムフィールドを選択"
@@ -1086,11 +1086,11 @@
       "cancel": "キャンセル"
     },
     "pause_tab": {
-      "heading": "会話開始時にスマートフローを自動で一時停止しますか？",
+      "heading": "会話開始時にボットを自動で一時停止しますか？",
       "manually": "手動",
-      "manually_desc": "エージェントがメッセージを送信してもスマートフローを一時停止しない",
+      "manually_desc": "エージェントがメッセージを送信してもボットを一時停止しない",
       "automatically": "自動",
-      "automatically_desc": "エージェントがメッセージを送信するとスマートフローを一時停止する"
+      "automatically_desc": "エージェントがメッセージを送信するとボットを一時停止する"
     },
     "common": {
       "save": "保存",
@@ -1900,8 +1900,8 @@
             "desc": "このワークスペース内でパイプラインを管理する権限をエージェントに付与します。"
           },
           "flows": {
-            "title": "スマートフロー",
-            "desc": "エージェントがスマートフローを表示・管理する権限を付与します。"
+            "title": "ボット",
+            "desc": "エージェントがボットを表示・管理する権限を付与します。"
           },
           "channels": {
             "title": "通信チャネル",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "会話の受付可否",
-            "desc": "他のエージェントまたはスマートフローからの会話割り当てを受け付けます。"
+            "desc": "他のエージェントまたはボットからの会話割り当てを受け付けます。"
           },
           "task_avail": {
             "title": "タスクの受付可否",
-            "desc": "他のエージェントおよびスマートフローからのタスクを受け付けます。"
+            "desc": "他のエージェントおよびボットからのタスクを受け付けます。"
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "Cal.comアカウントを連携し、スマートフローからカレンダーを管理します。"
+            "desc": "Cal.comアカウントを連携し、ボットからカレンダーを管理します。"
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "番号を削除しました",
     "could_not_delete": "削除できませんでした",
     "title": "このWhatsApp番号を削除しますか？",
-    "checkbox1_label": "この番号はプラットフォームから削除され、これを使用しているSmart Flow、一斉配信、テンプレートは再接続するまで失敗することを理解しています。",
+    "checkbox1_label": "この番号はプラットフォームから削除され、これを使用しているボット、一斉配信、テンプレートは再接続するまで失敗することを理解しています。",
     "checkbox2_label": "以前の会話はアーカイブされますが、削除後はこの番号経由で新しいメッセージがルーティングされないことを理解しています。",
     "checkbox3_label": "この操作は元に戻せず、再接続にはWhatsAppのオンボーディングを再度完了する必要があることを理解しています。",
     "reconnect_warning": "削除後、Meta側で同じ番号を再接続するまで最大24時間かかる場合があります。",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "保存に失敗しました。",
     "cleared": "自動返信をクリアしました",
     "title": "インスタント返信",
-    "description_prefix": "コンタクトがメッセージを送るたびに自動実行するSmart Flowを選択してください",
+    "description_prefix": "コンタクトがメッセージを送るたびに自動実行するボットを選択してください",
     "select_automation": "自動化を選択",
     "choose_automation": "— 自動化を選択 —",
     "automation_number": "自動化 #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "デフォルト返信がこの番号で有効になりました。",
     "cleared": "自動返信をクリアしました",
     "title": "インスタント返信",
-    "description_prefix": "コンタクトがメッセージを送るたびに自動実行するSmart Flowを選択してください",
+    "description_prefix": "コンタクトがメッセージを送るたびに自動実行するボットを選択してください",
     "select_automation": "自動化を選択",
     "choose_automation": "— 自動化を選択 —",
     "automation_number": "自動化 #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "トリガー",
     "done_warning_prefix": "コンタクトの会話が",
     "done": "完了",
-    "done_warning_suffix": "としてマークされると（ライブチャットまたはSmart Flows経由）、次の受信メッセージでデフォルトの返信が再びトリガーされることにご注意ください。",
+    "done_warning_suffix": "としてマークされると（ライブチャットまたはボット経由）、次の受信メッセージでデフォルトの返信が再びトリガーされることにご注意ください。",
     "deleting": "削除中…",
     "delete": "削除",
     "close": "閉じる",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "サブタイトル",
     "placeholder_subtitle": "サブタイトルを入力",
     "trigger_section": "トリガーセクション",
-    "select_smart_flow": "Smart Flowを選択",
+    "select_smart_flow": "ボットを選択",
     "flow_1": "フロー1",
     "flow_2": "フロー2",
     "field_channel": "チャンネル",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "アシスタントを選択",
     "option_assistant_1": "アシスタント1",
     "option_assistant_2": "アシスタント2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "Smart Flowを選択",
+    "label_smart_flow": "ボット",
+    "option_select_smart_flow": "ボットを選択",
     "option_flow_1": "フロー1",
     "option_flow_2": "フロー2",
     "label_channel": "チャネル",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "会話が完了とマークされたとき",
-      "heading_badge": "ライブチャットとSmart Flowに適用",
+      "heading_badge": "ライブチャットとボットに適用",
       "heading_description": "会話が終了したときに割り当てられたエージェントをどう扱うか選択してください。",
       "keep_agent_title": "エージェントを保持",
       "keep_agent_description": "割り当てられたエージェントを会話に紐付けたまま保持します。",
@@ -4252,7 +4252,7 @@
       "heading_title": "会話アーカイブ",
       "heading_description": "会話が完了とマークされたら、会話の記録をJSONとしてカスタムフィールドに保存します。",
       "save_as_json_title": "JSONとして保存",
-      "save_as_json_description": "ライブチャットまたはSmart Flowで会話が完了とマークされると、記録全体が選択したカスタムフィールドに保存されます。",
+      "save_as_json_description": "ライブチャットまたはボットで会話が完了とマークされると、記録全体が選択したカスタムフィールドに保存されます。",
       "target_custom_field_label": "保存先カスタムフィールド"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "フォルダを追加"
     },
     "pause": {
-      "question": "会話開始時にSmart Flowを自動的に一時停止しますか？",
+      "question": "会話開始時にボットを自動的に一時停止しますか？",
       "manually_label": "手動",
-      "manually_description": "エージェントがメッセージを送信してもSmart Flowを一時停止しない",
+      "manually_description": "エージェントがメッセージを送信してもボットを一時停止しない",
       "automatically_label": "自動",
-      "automatically_description": "エージェントがメッセージを送信するとSmart Flowを一時停止する"
+      "automatically_description": "エージェントがメッセージを送信するとボットを一時停止する"
     },
     "footer": {
       "scope_note": "設定はWorkspace全体に適用されます",
@@ -4564,7 +4564,7 @@
     "theme_name_placeholder": "テーマ名",
     "field_subtitle": "サブタイトル",
     "short_description_placeholder": "簡単な説明",
-    "field_smart_flow": "スマートフロー",
+    "field_smart_flow": "ボット",
     "select_automation_option": "— オートメーションを選択 —",
     "automation_fallback_label": "オートメーション #{{id}}",
     "field_channel": "チャネル",
@@ -6138,7 +6138,7 @@
     "csv_recording": "録音"
   },
   "smart_flows_page": {
-    "title": "スマートフロー",
+    "title": "ボット",
     "subtitle": "マルチチャネルのコミュニケーションワークフローを構築、管理、自動化",
     "create_flow": "フローを作成",
     "all_folders": "すべてのフォルダ",
@@ -6162,7 +6162,7 @@
     "col_created_by": "作成者",
     "col_updated_at": "更新日時",
     "col_actions": "操作",
-    "empty_title": "スマートフローが見つかりません",
+    "empty_title": "ボットが見つかりません",
     "empty_subtitle": "最初の自動化ワークフローを作成しましょう",
     "empty_cta": "今すぐ作成",
     "status_badge_active": "有効",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}}件の結果",
     "rows_label": "行数：",
     "page_label": "ページ",
-    "create_flow_modal_title": "スマートフローを作成",
+    "create_flow_modal_title": "ボットを作成",
     "flow_name_label": "フロー名",
     "flow_name_placeholder": "フロー名を入力...",
     "select_folder_label": "フォルダを選択",
@@ -6626,11 +6626,11 @@
       "support_number": "サポート番号",
       "chatting_with_channel": "チャネル経由でチャット中",
       "channel_fallback": "チャネル",
-      "in_smart_flow": "スマートフローに含まれています",
-      "not_in_smart_flow": "現在どのスマートフローにも含まれていません。",
+      "in_smart_flow": "ボットに含まれています",
+      "not_in_smart_flow": "現在どのボットにも含まれていません。",
       "remove": "削除",
       "pause_automated_messages": "自動メッセージを一時停止",
-      "pause_smart_flow": "スマートフローを一時停止",
+      "pause_smart_flow": "ボットを一時停止",
       "stop": "停止",
       "add_15_minutes": "15分"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "ドラッグしてサイドバーのサイズを変更"
     },
     "chat_modes": {
-      "all": "Smart flow & 受信箱",
-      "automation": "Smart flowメッセージ",
+      "all": "ボット & 受信箱",
+      "automation": "ボットメッセージ",
       "inbox": "受信箱メッセージ",
       "note": "メモメッセージ",
       "old_data": "3か月以上前"
@@ -8069,7 +8069,7 @@
     "menu": "メニュー",
     "navigation": "ナビゲーション",
     "nav_insights": "インサイト",
-    "nav_smart_flows": "スマートフロー",
+    "nav_smart_flows": "ボット",
     "nav_campaign": "キャンペーン",
     "nav_contacts": "連絡先",
     "nav_inbox": "受信箱",

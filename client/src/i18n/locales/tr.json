@@ -349,11 +349,11 @@
         "delete_team_member": "Ekip üyesi silindi",
         "add_channel": "Kanal eklendi",
         "delete_channel": "Kanal silindi",
-        "flow_created": "Akıllı Akış oluşturuldu",
-        "flow_updated": "Akıllı Akış güncellendi",
-        "flow_deleted": "Akıllı Akış silindi",
-        "flow_archived": "Akıllı Akış arşivlendi",
-        "flow_activated": "Akıllı Akış etkinleştirildi",
+        "flow_created": "Bot oluşturuldu",
+        "flow_updated": "Bot güncellendi",
+        "flow_deleted": "Bot silindi",
+        "flow_archived": "Bot arşivlendi",
+        "flow_activated": "Bot etkinleştirildi",
         "call_forwarding": "Çağrı yönlendirme değiştirildi",
         "add_domain": "Alan adı eklendi",
         "pipeline_created": "pipeline oluşturuldu",
@@ -764,7 +764,7 @@
     "menu": "Menü",
     "navigation": "Gezinme",
     "insights": "Analizler",
-    "smart_flows": "Akıllı Akışlar",
+    "smart_flows": "Botlar",
     "bot_conversations": "Bot Konuşmaları",
     "whatsapp_templates": "WhatsApp Şablonları",
     "campaign_manager": "Kampanya Yöneticisi",
@@ -1031,7 +1031,7 @@
       "pause": "Duraklat"
     },
     "agents_tab": {
-      "done_heading": "Konuşma Canlı Sohbette veya Akıllı Akışta TAMAMLANDI olarak işaretlendiğinde:",
+      "done_heading": "Konuşma Canlı Sohbette veya Botta TAMAMLANDI olarak işaretlendiğinde:",
       "keep_label": "Tut",
       "keep_desc": "Atanan Temsilciyi konuşmada tutun.",
       "remove_label": "Kaldır",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "Özel alan adını girin"
     },
     "completion_tab": {
-      "done_heading": "Konuşma Canlı Sohbette veya Akıllı Akışta TAMAMLANDI olarak işaretlendiğinde:",
+      "done_heading": "Konuşma Canlı Sohbette veya Botta TAMAMLANDI olarak işaretlendiğinde:",
       "save_json_label": "Son konuşmayı JSON olarak bir özel alana kaydedin.",
       "select_field": "Özel alan seçin",
       "select_field_placeholder": "Özel alan seçin"
@@ -1086,11 +1086,11 @@
       "cancel": "İptal"
     },
     "pause_tab": {
-      "heading": "Bir konuşma başlatıldığında Akıllı Akış otomatik olarak duraklatılsın mı?",
+      "heading": "Bir konuşma başlatıldığında Bot otomatik olarak duraklatılsın mı?",
       "manually": "Manuel",
-      "manually_desc": "Bir temsilci mesaj gönderdiğinde Akıllı Akışı duraklatma",
+      "manually_desc": "Bir temsilci mesaj gönderdiğinde Botu duraklatma",
       "automatically": "Otomatik",
-      "automatically_desc": "Bir temsilci mesaj gönderdiğinde Akıllı Akışı duraklat"
+      "automatically_desc": "Bir temsilci mesaj gönderdiğinde Botu duraklat"
     },
     "common": {
       "save": "Kaydet",
@@ -1900,8 +1900,8 @@
             "desc": "Temsilcilere bu çalışma alanı içinde pipeline'ları yönetme erişimi verir."
           },
           "flows": {
-            "title": "Akıllı Akışlar",
-            "desc": "Temsilcilere akıllı akışları görüntüleme ve yönetme erişimi verir."
+            "title": "Botlar",
+            "desc": "Temsilcilere botları görüntüleme ve yönetme erişimi verir."
           },
           "channels": {
             "title": "İletişim Kanalları",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "Konuşma müsaitliği",
-            "desc": "Diğer temsilcilerden veya Akıllı Akıştan konuşma ataması almaya açık."
+            "desc": "Diğer temsilcilerden veya Bottan konuşma ataması almaya açık."
           },
           "task_avail": {
             "title": "Görev müsaitliği",
-            "desc": "Diğer Temsilcilerden ve Akıllı Akışlardan görev almaya açık."
+            "desc": "Diğer Temsilcilerden ve Botlardan görev almaya açık."
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "Cal.com hesabınızı entegre edin ve takviminizi Akıllı Akışlardan yönetin."
+            "desc": "Cal.com hesabınızı entegre edin ve takviminizi Botlardan yönetin."
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "Numara silindi",
     "could_not_delete": "Silinemedi",
     "title": "Bu WhatsApp numarası silinsin mi?",
-    "checkbox1_label": "Bu numaranın platformdan kaldırılacağını ve bunu kullanan Akıllı Akışların, toplu mesajların veya şablonların yeniden bağlanana kadar başarısız olacağını anlıyorum.",
+    "checkbox1_label": "Bu numaranın platformdan kaldırılacağını ve bunu kullanan Botların, toplu mesajların veya şablonların yeniden bağlanana kadar başarısız olacağını anlıyorum.",
     "checkbox2_label": "Önceki konuşmaların arşivleneceğini ancak silindikten sonra bu numara üzerinden yeni mesaj yönlendirilmeyeceğini anlıyorum.",
     "checkbox3_label": "Bu işlemin geri alınamayacağını ve yeniden bağlanmanın WhatsApp katılım sürecinin tekrar tamamlanmasını gerektireceğini anlıyorum.",
     "reconnect_warning": "Aynı numarayı Meta tarafından yeniden bağlamak, silindikten sonra 24 saate kadar sürebilir.",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "Kaydetme başarısız oldu.",
     "cleared": "Otomatik yanıt temizlendi",
     "title": "Anında yanıtlar",
-    "description_prefix": "Bir kişi mesaj gönderdiğinde otomatik olarak çalışacak bir Smart Flow seçin",
+    "description_prefix": "Bir kişi mesaj gönderdiğinde otomatik olarak çalışacak bir Bot seçin",
     "select_automation": "Otomasyon seç",
     "choose_automation": "— Bir otomasyon seçin —",
     "automation_number": "Otomasyon #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "Varsayılan yanıt artık bu numara için aktif.",
     "cleared": "Otomatik yanıt temizlendi",
     "title": "Anında yanıtlar",
-    "description_prefix": "Bir kişi mesaj gönderdiğinde otomatik olarak çalışacak bir Smart Flow seçin",
+    "description_prefix": "Bir kişi mesaj gönderdiğinde otomatik olarak çalışacak bir Bot seçin",
     "select_automation": "Otomasyon seç",
     "choose_automation": "— Bir otomasyon seçin —",
     "automation_number": "Otomasyon #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "Tetikleyici",
     "done_warning_prefix": "Bir kişinin görüşmesi",
     "done": "Tamamlandı",
-    "done_warning_suffix": "olarak işaretlenirse (Canlı Sohbet'te veya Smart Flows aracılığıyla), varsayılan yanıtın bir sonraki gelen mesajda tekrar tetikleneceğini unutmayın.",
+    "done_warning_suffix": "olarak işaretlenirse (Canlı Sohbet'te veya Botlar aracılığıyla), varsayılan yanıtın bir sonraki gelen mesajda tekrar tetikleneceğini unutmayın.",
     "deleting": "Siliniyor…",
     "delete": "Sil",
     "close": "Kapat",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "Alt Başlık",
     "placeholder_subtitle": "Alt başlığı girin",
     "trigger_section": "Tetikleyici Bölümü",
-    "select_smart_flow": "Smart Flow Seç",
+    "select_smart_flow": "Bot Seç",
     "flow_1": "Akış 1",
     "flow_2": "Akış 2",
     "field_channel": "Kanal",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "Asistan Seç",
     "option_assistant_1": "Asistan 1",
     "option_assistant_2": "Asistan 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "Bir Smart Flow Seç",
+    "label_smart_flow": "Bot",
+    "option_select_smart_flow": "Bir Bot Seç",
     "option_flow_1": "Akış 1",
     "option_flow_2": "Akış 2",
     "label_channel": "Kanal",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "Konuşma TAMAMLANDI olarak işaretlendiğinde",
-      "heading_badge": "Canlı Sohbet ve Smart Flow için geçerlidir",
+      "heading_badge": "Canlı Sohbet ve Bot için geçerlidir",
       "heading_description": "Konuşmalar kapatıldığında atanan temsilciye nasıl davranılacağını seçin.",
       "keep_agent_title": "Temsilciyi Koru",
       "keep_agent_description": "Atanan temsilciyi konuşmaya bağlı olarak tutun.",
@@ -4252,7 +4252,7 @@
       "heading_title": "Konuşma Arşivi",
       "heading_description": "TAMAMLANDI olarak işaretlenir işaretlenmez konuşma dökümünü bir özel alana JSON olarak kaydedin.",
       "save_as_json_title": "JSON Olarak Kaydet",
-      "save_as_json_description": "Canlı Sohbet veya Smart Flow'da bir konuşma TAMAMLANDI olarak işaretlendiğinde, tüm döküm seçtiğiniz özel alanda saklanacaktır.",
+      "save_as_json_description": "Canlı Sohbet veya Bot'ta bir konuşma TAMAMLANDI olarak işaretlendiğinde, tüm döküm seçtiğiniz özel alanda saklanacaktır.",
       "target_custom_field_label": "Hedef Özel Alan"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "Klasör Ekle"
     },
     "pause": {
-      "question": "Bir konuşma başlatıldığında Smart Flow otomatik olarak duraklatılsın mı?",
+      "question": "Bir konuşma başlatıldığında Bot otomatik olarak duraklatılsın mı?",
       "manually_label": "Manuel",
-      "manually_description": "Bir temsilci mesaj gönderdiğinde Smart Flow'u duraklatma",
+      "manually_description": "Bir temsilci mesaj gönderdiğinde Bot'u duraklatma",
       "automatically_label": "Otomatik",
-      "automatically_description": "Bir temsilci mesaj gönderdiğinde Smart Flow'u duraklat"
+      "automatically_description": "Bir temsilci mesaj gönderdiğinde Bot'u duraklat"
     },
     "footer": {
       "scope_note": "Ayarlar tüm Workspace için geçerlidir",
@@ -5432,8 +5432,8 @@
     "unit_escalations": "Yönlendirmeler",
     "unit_per_session": "Oturum başına",
     "popularity_title": "Etkileşim Popülerliği",
-    "popularity_subtitle": "En çok tetiklenen Smart Flow'lar",
-    "popularity_empty_state": "Henüz Smart Flow etkinliği yok",
+    "popularity_subtitle": "En çok tetiklenen Botlar",
+    "popularity_empty_state": "Henüz Bot etkinliği yok",
     "bot_vs_human_title": "Bot ve İnsan Performansı",
     "bot_vs_human_subtitle": "Yönlendirme oranı karşılaştırması",
     "busiest_period_title": "En Yoğun Dönem",
@@ -6138,7 +6138,7 @@
     "csv_recording": "Kayıt"
   },
   "smart_flows_page": {
-    "title": "Akıllı Akışlar",
+    "title": "Botlar",
     "subtitle": "Çok kanallı iletişim iş akışlarınızı oluşturun, yönetin ve otomatikleştirin",
     "create_flow": "Akış Oluştur",
     "all_folders": "Tüm Klasörler",
@@ -6162,7 +6162,7 @@
     "col_created_by": "Oluşturan",
     "col_updated_at": "Güncellenme Tarihi",
     "col_actions": "İşlemler",
-    "empty_title": "Akıllı Akış bulunamadı",
+    "empty_title": "Bot bulunamadı",
     "empty_subtitle": "İlk otomasyon iş akışınızı oluşturun",
     "empty_cta": "ŞİMDİ BİR TANE OLUŞTUR",
     "status_badge_active": "Aktif",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} Sonuç",
     "rows_label": "Satırlar:",
     "page_label": "Sayfa",
-    "create_flow_modal_title": "Akıllı Akış Oluştur",
+    "create_flow_modal_title": "Bot Oluştur",
     "flow_name_label": "Akış Adı",
     "flow_name_placeholder": "Akış adını girin...",
     "select_folder_label": "Klasör Seç",
@@ -6626,11 +6626,11 @@
       "support_number": "Destek Numarası",
       "chatting_with_channel": "Kanal üzerinden sohbet ediyor",
       "channel_fallback": "kanal",
-      "in_smart_flow": "Akıllı Akışta",
-      "not_in_smart_flow": "Şu anda herhangi bir Smart Flow'da değil.",
+      "in_smart_flow": "Botta",
+      "not_in_smart_flow": "Şu anda herhangi bir Bot'ta değil.",
       "remove": "Kaldır",
       "pause_automated_messages": "Otomatik Mesajları Duraklat",
-      "pause_smart_flow": "Akıllı Akışı Duraklat",
+      "pause_smart_flow": "Botu Duraklat",
       "stop": "Durdur",
       "add_15_minutes": "15 Dakika"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "Kenar çubuğunu yeniden boyutlandırmak için sürükleyin"
     },
     "chat_modes": {
-      "all": "Smart Flow ve Gelen Kutusu",
-      "automation": "Smart Flow mesajları",
+      "all": "Bot ve Gelen Kutusu",
+      "automation": "Bot mesajları",
       "inbox": "Gelen kutusu mesajları",
       "note": "Not mesajları",
       "old_data": "3 aydan eski"
@@ -8069,7 +8069,7 @@
     "menu": "Menü",
     "navigation": "Gezinme",
     "nav_insights": "Insights",
-    "nav_smart_flows": "Smart Flows",
+    "nav_smart_flows": "Botlar",
     "nav_campaign": "Kampanya",
     "nav_contacts": "Kişiler",
     "nav_inbox": "Gelen Kutusu",

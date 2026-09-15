@@ -349,11 +349,11 @@
         "delete_team_member": "Đã xóa thành viên nhóm",
         "add_channel": "Đã thêm kênh",
         "delete_channel": "Đã xóa kênh",
-        "flow_created": "Đã tạo Smart Flow",
-        "flow_updated": "Đã cập nhật Smart Flow",
-        "flow_deleted": "Đã xóa Smart Flow",
-        "flow_archived": "Đã lưu trữ Smart Flow",
-        "flow_activated": "Đã kích hoạt Smart Flow",
+        "flow_created": "Đã tạo Bot",
+        "flow_updated": "Đã cập nhật Bot",
+        "flow_deleted": "Đã xóa Bot",
+        "flow_archived": "Đã lưu trữ Bot",
+        "flow_activated": "Đã kích hoạt Bot",
         "call_forwarding": "Đã thay đổi chuyển tiếp cuộc gọi",
         "add_domain": "Đã thêm tên miền",
         "pipeline_created": "đã tạo pipeline",
@@ -764,7 +764,7 @@
     "menu": "Menu",
     "navigation": "Điều hướng",
     "insights": "Thông tin chi tiết",
-    "smart_flows": "Smart Flows",
+    "smart_flows": "Bot",
     "bot_conversations": "Cuộc trò chuyện Bot",
     "whatsapp_templates": "Mẫu WhatsApp",
     "campaign_manager": "Quản lý Chiến dịch",
@@ -1031,7 +1031,7 @@
       "pause": "Tạm dừng"
     },
     "agents_tab": {
-      "done_heading": "Khi cuộc trò chuyện được đánh dấu HOÀN TẤT trong Live Chat hoặc SmartFlow:",
+      "done_heading": "Khi cuộc trò chuyện được đánh dấu HOÀN TẤT trong Live Chat hoặc Bot:",
       "keep_label": "Giữ lại",
       "keep_desc": "Giữ nguyên Nhân viên được gán cho cuộc trò chuyện.",
       "remove_label": "Xóa bỏ",
@@ -1045,7 +1045,7 @@
       "custom_field_placeholder": "Nhập tên trường tùy chỉnh"
     },
     "completion_tab": {
-      "done_heading": "Khi cuộc trò chuyện được đánh dấu là HOÀN TẤT trong Live Chat hoặc Smart Flow:",
+      "done_heading": "Khi cuộc trò chuyện được đánh dấu là HOÀN TẤT trong Live Chat hoặc Bot:",
       "save_json_label": "Lưu cuộc trò chuyện gần nhất dưới dạng JSON vào một trường tùy chỉnh.",
       "select_field": "Chọn trường tùy chỉnh",
       "select_field_placeholder": "Chọn trường tùy chỉnh"
@@ -1086,11 +1086,11 @@
       "cancel": "Hủy"
     },
     "pause_tab": {
-      "heading": "Tự động tạm dừng Smart Flow khi bắt đầu một cuộc trò chuyện?",
+      "heading": "Tự động tạm dừng Bot khi bắt đầu một cuộc trò chuyện?",
       "manually": "Thủ công",
-      "manually_desc": "Không tạm dừng Smart Flow khi nhân viên gửi tin nhắn",
+      "manually_desc": "Không tạm dừng Bot khi nhân viên gửi tin nhắn",
       "automatically": "Tự động",
-      "automatically_desc": "Tạm dừng Smart Flow khi nhân viên gửi tin nhắn"
+      "automatically_desc": "Tạm dừng Bot khi nhân viên gửi tin nhắn"
     },
     "common": {
       "save": "Lưu",
@@ -1900,8 +1900,8 @@
             "desc": "Cấp quyền truy cập cho nhân viên quản lý pipeline trong không gian làm việc này."
           },
           "flows": {
-            "title": "Smart Flows",
-            "desc": "Cấp quyền truy cập cho nhân viên xem và quản lý smart flow."
+            "title": "Bot",
+            "desc": "Cấp quyền truy cập cho nhân viên xem và quản lý bot."
           },
           "channels": {
             "title": "Kênh Giao tiếp",
@@ -1987,11 +1987,11 @@
           },
           "conv_avail": {
             "title": "Khả năng nhận cuộc trò chuyện",
-            "desc": "Sẵn sàng nhận cuộc trò chuyện được gán từ nhân viên khác hoặc Smart Flow."
+            "desc": "Sẵn sàng nhận cuộc trò chuyện được gán từ nhân viên khác hoặc Bot."
           },
           "task_avail": {
             "title": "Khả năng nhận công việc",
-            "desc": "Sẵn sàng nhận công việc từ Nhân viên khác và Smart Flow."
+            "desc": "Sẵn sàng nhận công việc từ Nhân viên khác và Bot."
           }
         },
         "company_contacts": {
@@ -2075,7 +2075,7 @@
           },
           "cal": {
             "title": "Cal.com",
-            "desc": "Tích hợp tài khoản Cal.com của bạn và quản lý lịch từ Smart flows."
+            "desc": "Tích hợp tài khoản Cal.com của bạn và quản lý lịch từ Bot."
           },
           "dify": {
             "title": "Dify.ai",
@@ -2452,7 +2452,7 @@
     "number_deleted": "Đã xóa số",
     "could_not_delete": "Không thể xóa",
     "title": "Xóa số WhatsApp này?",
-    "checkbox1_label": "Tôi hiểu rằng số này sẽ bị xóa khỏi nền tảng và mọi Smart Flow, tin nhắn hàng loạt hoặc mẫu tin sử dụng số này sẽ thất bại cho đến khi kết nối lại.",
+    "checkbox1_label": "Tôi hiểu rằng số này sẽ bị xóa khỏi nền tảng và mọi Bot, tin nhắn hàng loạt hoặc mẫu tin sử dụng số này sẽ thất bại cho đến khi kết nối lại.",
     "checkbox2_label": "Tôi hiểu rằng các cuộc trò chuyện trước đó sẽ được lưu trữ nhưng sẽ không có tin nhắn mới nào được định tuyến qua số này sau khi xóa.",
     "checkbox3_label": "Tôi hiểu rằng hành động này không thể hoàn tác và việc kết nối lại sẽ yêu cầu hoàn tất lại quá trình onboarding WhatsApp.",
     "reconnect_warning": "Việc kết nối lại cùng một số từ phía Meta có thể mất tới 24 giờ sau khi xóa.",
@@ -2544,7 +2544,7 @@
     "failed_to_save": "Lưu không thành công.",
     "cleared": "Đã xóa trả lời tự động",
     "title": "Trả lời tức thì",
-    "description_prefix": "Chọn một Smart Flow để tự động chạy bất cứ khi nào một liên hệ nhắn tin cho",
+    "description_prefix": "Chọn một Bot để tự động chạy bất cứ khi nào một liên hệ nhắn tin cho",
     "select_automation": "Chọn tự động hóa",
     "choose_automation": "— Chọn một tự động hóa —",
     "automation_number": "Tự động hóa #{{id}}",
@@ -2632,7 +2632,7 @@
     "saved_description": "Câu trả lời mặc định hiện đã hoạt động cho số này.",
     "cleared": "Đã xóa trả lời tự động",
     "title": "Trả lời tức thì",
-    "description_prefix": "Chọn một Smart Flow để tự động chạy bất cứ khi nào một liên hệ nhắn tin cho",
+    "description_prefix": "Chọn một Bot để tự động chạy bất cứ khi nào một liên hệ nhắn tin cho",
     "select_automation": "Chọn tự động hóa",
     "choose_automation": "— Chọn một tự động hóa —",
     "automation_number": "Tự động hóa #{{id}}",
@@ -2640,7 +2640,7 @@
     "trigger": "Kích hoạt",
     "done_warning_prefix": "Lưu ý rằng nếu cuộc trò chuyện của liên hệ được đánh dấu là",
     "done": "Hoàn tất",
-    "done_warning_suffix": "(trong Live Chat hoặc qua Smart Flows), câu trả lời mặc định sẽ kích hoạt lại vào tin nhắn đến tiếp theo của họ.",
+    "done_warning_suffix": "(trong Live Chat hoặc qua Bot), câu trả lời mặc định sẽ kích hoạt lại vào tin nhắn đến tiếp theo của họ.",
     "deleting": "Đang xóa…",
     "delete": "Xóa",
     "close": "Đóng",
@@ -3100,7 +3100,7 @@
     "field_subtitle": "Phụ đề",
     "placeholder_subtitle": "Nhập phụ đề",
     "trigger_section": "Phần kích hoạt",
-    "select_smart_flow": "Chọn Smart Flow",
+    "select_smart_flow": "Chọn Bot",
     "flow_1": "Luồng 1",
     "flow_2": "Luồng 2",
     "field_channel": "Kênh",
@@ -3153,8 +3153,8 @@
     "option_select_assistant": "Chọn trợ lý",
     "option_assistant_1": "Trợ lý 1",
     "option_assistant_2": "Trợ lý 2",
-    "label_smart_flow": "Smart Flow",
-    "option_select_smart_flow": "Chọn một Smart Flow",
+    "label_smart_flow": "Bot",
+    "option_select_smart_flow": "Chọn một Bot",
     "option_flow_1": "Luồng 1",
     "option_flow_2": "Luồng 2",
     "label_channel": "Kênh",
@@ -4231,7 +4231,7 @@
     },
     "agents": {
       "heading_title": "Khi cuộc trò chuyện được đánh dấu là HOÀN TẤT",
-      "heading_badge": "Áp dụng cho Trò chuyện trực tiếp & Smart Flow",
+      "heading_badge": "Áp dụng cho Trò chuyện trực tiếp & Bot",
       "heading_description": "Chọn cách xử lý nhân viên được chỉ định khi các cuộc trò chuyện bị đóng.",
       "keep_agent_title": "Giữ Nhân viên",
       "keep_agent_description": "Giữ nhân viên được chỉ định gắn với cuộc trò chuyện.",
@@ -4252,7 +4252,7 @@
       "heading_title": "Lưu trữ Cuộc trò chuyện",
       "heading_description": "Lưu bản ghi cuộc trò chuyện dưới dạng JSON vào một trường tùy chỉnh ngay khi được đánh dấu là HOÀN TẤT.",
       "save_as_json_title": "Lưu dưới dạng JSON",
-      "save_as_json_description": "Khi một cuộc trò chuyện được đánh dấu là HOÀN TẤT trong Trò chuyện trực tiếp hoặc Smart Flow, toàn bộ bản ghi sẽ được lưu vào trường tùy chỉnh bạn đã chọn.",
+      "save_as_json_description": "Khi một cuộc trò chuyện được đánh dấu là HOÀN TẤT trong Trò chuyện trực tiếp hoặc Bot, toàn bộ bản ghi sẽ được lưu vào trường tùy chỉnh bạn đã chọn.",
       "target_custom_field_label": "Trường Tùy chỉnh Đích"
     },
     "signature": {
@@ -4307,11 +4307,11 @@
       "add_folder_button": "Thêm Thư mục"
     },
     "pause": {
-      "question": "Tự động tạm dừng Smart Flow khi bắt đầu một cuộc trò chuyện?",
+      "question": "Tự động tạm dừng Bot khi bắt đầu một cuộc trò chuyện?",
       "manually_label": "Thủ công",
-      "manually_description": "Không tạm dừng Smart Flow khi nhân viên gửi tin nhắn",
+      "manually_description": "Không tạm dừng Bot khi nhân viên gửi tin nhắn",
       "automatically_label": "Tự động",
-      "automatically_description": "Tạm dừng Smart Flow khi nhân viên gửi tin nhắn"
+      "automatically_description": "Tạm dừng Bot khi nhân viên gửi tin nhắn"
     },
     "footer": {
       "scope_note": "Cài đặt áp dụng cho toàn bộ Workspace",
@@ -5432,8 +5432,8 @@
     "unit_escalations": "Lượt chuyển",
     "unit_per_session": "Mỗi phiên",
     "popularity_title": "Mức Độ Phổ Biến Của Tương Tác",
-    "popularity_subtitle": "Smart Flow được kích hoạt nhiều nhất",
-    "popularity_empty_state": "Chưa có hoạt động Smart Flow nào",
+    "popularity_subtitle": "Bot được kích hoạt nhiều nhất",
+    "popularity_empty_state": "Chưa có hoạt động Bot nào",
     "bot_vs_human_title": "Hiệu Suất Bot So Với Nhân Viên",
     "bot_vs_human_subtitle": "So sánh tỷ lệ chuyển tiếp",
     "busiest_period_title": "Khoảng Thời Gian Bận Rộn Nhất",
@@ -6138,7 +6138,7 @@
     "csv_recording": "Bản ghi"
   },
   "smart_flows_page": {
-    "title": "Luồng Thông minh",
+    "title": "Bot",
     "subtitle": "Xây dựng, quản lý và tự động hóa quy trình giao tiếp đa kênh của bạn",
     "create_flow": "Tạo Luồng",
     "all_folders": "Tất cả thư mục",
@@ -6162,7 +6162,7 @@
     "col_created_by": "Người tạo",
     "col_updated_at": "Cập nhật lúc",
     "col_actions": "Hành động",
-    "empty_title": "Không tìm thấy Luồng Thông minh nào",
+    "empty_title": "Không tìm thấy Bot nào",
     "empty_subtitle": "Tạo quy trình tự động hóa đầu tiên của bạn",
     "empty_cta": "TẠO NGAY",
     "status_badge_active": "Đang hoạt động",
@@ -6175,7 +6175,7 @@
     "results_label_other": "{{count}} Kết quả",
     "rows_label": "Hàng:",
     "page_label": "Trang",
-    "create_flow_modal_title": "Tạo Luồng Thông minh",
+    "create_flow_modal_title": "Tạo Bot",
     "flow_name_label": "Tên luồng",
     "flow_name_placeholder": "Nhập tên luồng...",
     "select_folder_label": "Chọn thư mục",
@@ -6626,11 +6626,11 @@
       "support_number": "Số hỗ trợ",
       "chatting_with_channel": "Đang trò chuyện qua kênh",
       "channel_fallback": "kênh",
-      "in_smart_flow": "Trong Smart Flow",
-      "not_in_smart_flow": "Hiện không thuộc Smart Flow nào.",
+      "in_smart_flow": "Trong Bot",
+      "not_in_smart_flow": "Hiện không thuộc Bot nào.",
       "remove": "Xóa",
       "pause_automated_messages": "Tạm dừng tin nhắn tự động",
-      "pause_smart_flow": "Tạm dừng Smart Flow",
+      "pause_smart_flow": "Tạm dừng Bot",
       "stop": "Dừng",
       "add_15_minutes": "15 phút"
     },
@@ -6828,8 +6828,8 @@
       "drag_to_resize": "Kéo để thay đổi kích thước thanh bên"
     },
     "chat_modes": {
-      "all": "Smart Flow & Hộp thư",
-      "automation": "Tin nhắn Smart Flow",
+      "all": "Bot & Hộp thư",
+      "automation": "Tin nhắn Bot",
       "inbox": "Tin nhắn hộp thư",
       "note": "Tin nhắn ghi chú",
       "old_data": "Cũ hơn 3 tháng"
@@ -8069,7 +8069,7 @@
     "menu": "Menu",
     "navigation": "Điều hướng",
     "nav_insights": "Insights",
-    "nav_smart_flows": "Smart Flows",
+    "nav_smart_flows": "Bot",
     "nav_campaign": "Chiến dịch",
     "nav_contacts": "Liên hệ",
     "nav_inbox": "Hộp thư đến",
