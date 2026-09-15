@@ -15,7 +15,12 @@ interface SortState {
   direction: SortDirection;
 }
 
-export default function VoiceOfCustomerDetails() {
+interface VoiceOfCustomerDetailsProps {
+  teamIds?: string[];
+  agentIds?: string[];
+}
+
+export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: VoiceOfCustomerDetailsProps) {
   const { t } = useTranslation();
   const { mode } = useTheme();
   const dark = mode === "dark";
@@ -45,21 +50,31 @@ export default function VoiceOfCustomerDetails() {
   // Real sentiment details. Backend computes per-agent counts + per-conversation
   // sentiment classification (keyword-based, no NLP API).
   const { from, to } = useDateRange().rangeFor("voice");
+  const params = new URLSearchParams();
+  if (teamIds.length) params.set("teamIds", teamIds.join(","));
+  if (agentIds.length) params.set("agentIds", agentIds.join(","));
+  params.set("from", from);
+  params.set("to", to);
+  const qs = params.toString();
+
   const { data: vocDetails } = useQuery<any>({
-    queryKey: ["/api/statistics/sentiment-details", from, to],
+    queryKey: ["/api/statistics/sentiment-details", qs],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/statistics/sentiment-details?from=${from}&to=${to}`);
+      const res = await apiRequest("GET", `/api/statistics/sentiment-details?${qs}`);
       return res.json();
     },
     refetchInterval: 300_000,
   });
-  const agentPerformanceData: Array<{ agentName: string; agentId: string; team: string; date: string; total: number }> =
+  const agentPerformanceData: Array<{ agentName: string; agentId: string; team: string; date: string; total: number; positive: number; neutral: number; negative: number }> =
     (vocDetails?.agentRows ?? []).map((r: any) => ({
       agentName: r.name,
       agentId: r.id,
       team: r.team,
       date: r.date,
       total: r.total,
+      positive: r.positive ?? 0,
+      neutral: r.neutral ?? 0,
+      negative: r.negative ?? 0,
     }));
   const customerSentimentData: Array<{ conversationId: string; agent: string; team: string; sentiment: string; date: string; channel: string }> =
     (vocDetails?.customerRows ?? []).map((r: any) => ({
@@ -211,7 +226,8 @@ export default function VoiceOfCustomerDetails() {
                   { l: t("voice_of_customer_details.header_agent_name_id"), k: "agentName" },
                   { l: t("voice_of_customer_details.header_team"), k: "team" },
                   { l: t("voice_of_customer_details.header_date"), k: "date" },
-                  { l: t("voice_of_customer_details.header_total"), k: "total" }
+                  { l: t("voice_of_customer_details.header_total"), k: "total" },
+                  { l: t("voice_of_customer_details.header_sentiment"), k: "sentiment" }
                 ].map((h) => (
                   <th 
                     key={h.k} 
@@ -232,8 +248,17 @@ export default function VoiceOfCustomerDetails() {
                   <td className={cn("py-3 px-3 text-[11px] font-medium", sub)}>{item.team}</td>
                   <td className={cn("py-3 px-3 text-[11px] tabular-nums", sub)}>{item.date}</td>
                   <td className={cn("py-3 px-3 text-[12px] font-black text-primary")}>{item.total}</td>
+                  <td className="py-3 px-3">
+                    <div className="flex items-center gap-2 text-[11px] font-bold tabular-nums whitespace-nowrap">
+                      <span className="text-emerald-500">{item.positive}</span>
+                      <span className={cn("opacity-40", sub)}>·</span>
+                      <span className="text-orange-500">{item.neutral}</span>
+                      <span className={cn("opacity-40", sub)}>·</span>
+                      <span className="text-rose-500">{item.negative}</span>
+                    </div>
+                  </td>
                 </tr>
-              )) : <tr><td colSpan={4} className={cn("py-8 text-center text-[11px]", sub)}>{t("voice_of_customer_details.no_results_found")}</td></tr>}
+              )) : <tr><td colSpan={5} className={cn("py-8 text-center text-[11px]", sub)}>{t("voice_of_customer_details.no_results_found")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -288,8 +313,8 @@ export default function VoiceOfCustomerDetails() {
                   <td className="py-3 px-3">
                     <span className={cn(
                       "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider",
-                      item.sentiment === "Positive" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
-                      item.sentiment === "Neutral"  ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
+                      item.sentiment === "positive" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
+                      item.sentiment === "neutral"  ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
                       "bg-rose-500/10 text-rose-500 border border-rose-500/20"
                     )}>
                       {item.sentiment}

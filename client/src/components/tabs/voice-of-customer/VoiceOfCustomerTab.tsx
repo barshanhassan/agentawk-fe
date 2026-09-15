@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTab } from "@/contexts/TabContext";
 import CustomDropdown from "@/components/CustomDropdown";
 import InsightsDateRangePicker from "@/components/InsightsDateRangePicker";
@@ -8,9 +10,6 @@ import VoiceOfCustomerDetails from "./VoiceOfCustomerDetails";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { Users, User, ChevronDown } from "lucide-react";
-
-const teams: Array<{ id: string; name: string }> = [];
-const agents: Array<{ id: string; name: string }> = [];
 
 export default function VoiceOfCustomerTab() {
   const { t } = useTranslation();
@@ -22,6 +21,26 @@ export default function VoiceOfCustomerTab() {
   );
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+
+  // Real workspace teams/agents — these dropdowns used to be permanently
+  // empty (hardcoded `[]`) and the selection was never sent to the backend
+  // at all, same pattern already fixed on the Performance/CSAT tabs.
+  const { data: teamsData } = useQuery<any[]>({
+    queryKey: ["/api/teams/get-all"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/teams/get-all");
+      return res.json();
+    },
+  });
+  const { data: usersData } = useQuery<any>({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/users");
+      return res.json();
+    },
+  });
+  const teams: Array<{ id: string; name: string }> = (teamsData ?? []).map((tm: any) => ({ id: tm.id, name: tm.name }));
+  const agents: Array<{ id: string; name: string }> = (usersData?.users ?? []).map((u: any) => ({ id: u.id, name: u.name }));
 
   useEffect(() => {
     setVoiceOfCustomerTab(activeSubTab.voiceOfCustomer === "voice-of-customer-summary" ? "summary" : "details");
@@ -109,8 +128,8 @@ export default function VoiceOfCustomerTab() {
 
       {/* Tab Content */}
       <div className="animate-in fade-in-50 duration-500">
-        {voiceOfCustomerTab === "summary" && <VoiceOfCustomerSummary />}
-        {voiceOfCustomerTab === "details" && <VoiceOfCustomerDetails />}
+        {voiceOfCustomerTab === "summary" && <VoiceOfCustomerSummary teamIds={selectedTeams} agentIds={selectedAgents} />}
+        {voiceOfCustomerTab === "details" && <VoiceOfCustomerDetails teamIds={selectedTeams} agentIds={selectedAgents} />}
       </div>
     </div>
   );

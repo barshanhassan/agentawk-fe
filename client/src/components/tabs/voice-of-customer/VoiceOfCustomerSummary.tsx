@@ -7,16 +7,28 @@ import { cn } from "@/lib/utils";
 import { Smile, Meh, Frown, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export default function VoiceOfCustomerSummary() {
+interface VoiceOfCustomerSummaryProps {
+  teamIds?: string[];
+  agentIds?: string[];
+}
+
+export default function VoiceOfCustomerSummary({ teamIds = [], agentIds = [] }: VoiceOfCustomerSummaryProps) {
   const { t } = useTranslation();
   const { from, to } = useDateRange().rangeFor("voice");
+  const params = new URLSearchParams();
+  if (teamIds.length) params.set("teamIds", teamIds.join(","));
+  if (agentIds.length) params.set("agentIds", agentIds.join(","));
+  params.set("from", from);
+  params.set("to", to);
+  const qs = params.toString();
+
   // Real sentiment summary — backend classifies recent incoming messages
   // via keyword matching. No new tables, no NLP API, accuracy approximate
   // but data-driven instead of mocked.
   const { data } = useQuery<any>({
-    queryKey: ["/api/statistics/sentiment-summary", from, to],
+    queryKey: ["/api/statistics/sentiment-summary", qs],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/statistics/sentiment-summary?from=${from}&to=${to}`);
+      const res = await apiRequest("GET", `/api/statistics/sentiment-summary?${qs}`);
       return res.json();
     },
     refetchInterval: 300_000,
