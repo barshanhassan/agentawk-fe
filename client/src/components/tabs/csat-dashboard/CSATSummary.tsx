@@ -41,9 +41,11 @@ export default function CSATSummary({ teamIds = [], agentIds = [] }: CSATSummary
   const axis    = dark ? "#64748b" : "#94a3b8";
   const tipCls  = dark ? "bg-[#0f1829] border-slate-700 text-white" : "bg-white border-slate-200 text-slate-800";
 
-  // All values from backend. `totalConversations` mirrors completed inboxes
-  // (real signal of how many CSAT prompts could have been sent) even though
-  // satisfaction-score/feedbackRate stay at 0 until the collection layer ships.
+  // All values from backend. Response Rate's denominator is
+  // basedOnConversations (CSAT requests actually sent) — reused here instead
+  // of the unrelated `totalConversations` (completed inboxes, a different
+  // date-scoping), which used to sit in this card looking like the % below
+  // it was computed from it when it wasn't.
   const satisfactionScore    = data?.satisfactionScore ?? 0;
   const totalResponses       = data?.totalResponses ?? 0;
   const basedOnConversations = data?.basedOnConversations ?? 0;
@@ -100,6 +102,10 @@ export default function CSATSummary({ teamIds = [], agentIds = [] }: CSATSummary
               <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.based_on")}</span>
               <span className={cn("text-[11px] font-bold", text)}>{t("csat_dashboard.conv_count", { count: basedOnConversations.toLocaleString() })}</span>
             </div>
+            <div className="flex justify-between">
+              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.completed")}</span>
+              <span className={cn("text-[11px] font-bold", text)}>{totalConversations.toLocaleString()}</span>
+            </div>
           </div>
         </div>
 
@@ -118,8 +124,8 @@ export default function CSATSummary({ teamIds = [], agentIds = [] }: CSATSummary
               <span className={cn("text-[11px] font-bold", text)}>{responded}</span>
             </div>
             <div className="flex justify-between">
-              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.total_conversations")}</span>
-              <span className={cn("text-[11px] font-bold", text)}>{totalConversations.toLocaleString()}</span>
+              <span className={cn("text-[11px]", sub)}>{t("csat_dashboard.requested")}</span>
+              <span className={cn("text-[11px] font-bold", text)}>{basedOnConversations.toLocaleString()}</span>
             </div>
           </div>
         </div>
