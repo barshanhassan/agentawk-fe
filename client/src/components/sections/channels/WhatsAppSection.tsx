@@ -113,9 +113,12 @@ export default function WhatsAppSection() {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
+    "h-11 rounded-xl text-[13px] font-bold transition-all px-4 border-2",
+    "placeholder:font-normal",
     "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
+    dark
+      ? "bg-slate-950/50 border-slate-700 text-white placeholder:text-slate-600"
+      : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-300",
   );
 
   const outlineBtn = cn(

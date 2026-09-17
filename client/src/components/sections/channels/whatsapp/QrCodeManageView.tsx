@@ -16,7 +16,6 @@ import {
   CircleAlert,
   Check,
   Loader2,
-  X,
   ExternalLink,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -848,32 +847,21 @@ export default function QrCodeManageView({
       {/* ─── Create-instance form ──────────────────────────────── */}
       {mode === "new" && (
         <div className={cn("rounded-[1.5rem] border p-6 space-y-5", softBg, softBorder)}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className={cn("text-[15px] font-semibold", text)}>{t("qr_code_manage_view.create_form_title")}</h3>
-              <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>{t("qr_code_manage_view.create_form_subtitle")}</p>
-            </div>
-            <button
-              onClick={() => {
-                resetCreateForm();
-                setMode("list");
-              }}
-              className={outlineBtn}
-            >
-              <X size={12} /> {t("qr_code_manage_view.cancel_button")}
-            </button>
+          <div>
+            <h3 className={cn("text-[15px] font-semibold", text)}>{t("qr_code_manage_view.create_form_title")}</h3>
+            <p className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>{t("qr_code_manage_view.create_form_subtitle")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className={cn("text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.instance_name_label")}</label>
+              <label className={cn("block text-[11px] font-semibold", sub)}>{t("qr_code_manage_view.instance_name_label")}</label>
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value.slice(0, 50))}
                 onKeyDown={charactersOnly}
                 maxLength={50}
                 placeholder={t("qr_code_manage_view.instance_name_placeholder")}
-                className={inputCls}
+                className={cn(inputCls, "w-full max-w-md")}
               />
               {nameError && <p className="text-rose-500 text-[11px] font-bold">{nameError}</p>}
             </div>

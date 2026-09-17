@@ -1038,24 +1038,11 @@ export default function ContactProfileSidebar({
                                     onChange={onUpdateTags}
                                     placeholder={t("contact_profile_sidebar.tags.select_tags")}
                                     width="100%"
-                                    triggerContent={
-                                        <span className="flex items-center justify-between w-full">
-                                            <span className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
-                                                {(tags || []).length === 0 ? (
-                                                    <span className="text-slate-500 text-[12px]">{t("contact_profile_sidebar.tags.select_tags")}</span>
-                                                ) : (
-                                                    (tags || []).map((id) => {
-                                                        const tagObj = tagOptions.find((o) => o.id === id);
-                                                        return tagObj ? (
-                                                            <span key={id} className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs truncate max-w-[120px]">{tagObj.name}</span>
-                                                        ) : null;
-                                                    })
-                                                )}
-                                            </span>
-                                            <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0 ml-2" />
-                                        </span>
-                                    }
                                 />
+                                {/* Selected tags render once, here, with remove buttons — the
+                                    dropdown trigger used to also list every tag name inline,
+                                    so a contact with several tags showed the same pills twice
+                                    (the wrapped trigger row, then this list right under it). */}
                                 {tags && tags.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                         {tags.map((tagId) => {

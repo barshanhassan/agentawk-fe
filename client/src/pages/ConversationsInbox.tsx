@@ -148,6 +148,14 @@ interface Message {
   errorData?: string | null;
   // WhatsApp template message → rendered as a preview card.
   template?: { name: string; components: any[]; params: any[] } | null;
+  // Buttons / list / CTA outbound (Smart Flow zapi send) → rendered as an
+  // interactive card matching what the customer actually saw on WhatsApp,
+  // instead of the flattened "1. Option A\n2. Option B" fallback text.
+  interactive?:
+    | { kind: 'buttons'; text: string; choices: { id: string; label: string; url?: string }[] }
+    | { kind: 'list'; header?: string; body: string; footer?: string; button: string; sections: { title: string; options: { id: string; title: string; description?: string }[] }[] }
+    | { kind: 'cta'; header?: string; body: string; footer?: string; buttonText: string; buttonUrl: string }
+    | null;
   // Tier-3 rich types.
   location?: { latitude?: number; longitude?: number; name?: string; address?: string } | null;
   vcards?: any[] | null;
@@ -289,6 +297,50 @@ const TemplateMessageCard: React.FC<{ template: { name: string; components: any[
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+// Buttons / list / CTA preview card for Smart Flow zapi sends — same visual
+// treatment as TemplateMessageCard so the thread shows the interactive
+// message the customer actually saw on WhatsApp, not just flattened text.
+const InteractiveMessageCard: React.FC<{ interactive: NonNullable<Message['interactive']> }> = ({ interactive }) => {
+  const body =
+    interactive.kind === 'buttons' ? interactive.text : interactive.body;
+  const header = interactive.kind === 'list' || interactive.kind === 'cta' ? interactive.header : undefined;
+  const footer = interactive.kind === 'list' || interactive.kind === 'cta' ? interactive.footer : undefined;
+
+  return (
+    <div className="rounded-md border border-black/10 dark:border-white/10 bg-white/60 dark:bg-black/20 overflow-hidden min-w-[12rem] max-w-[20rem]">
+      {header && <div className="px-3 pt-2 text-sm font-semibold">{header}</div>}
+      {body && <div className="px-3 py-2 text-sm whitespace-pre-wrap">{body}</div>}
+      {footer && <div className="px-3 pb-2 text-xs text-muted-foreground">{footer}</div>}
+      <div className="border-t border-black/10 dark:border-white/10 divide-y divide-black/10 dark:divide-white/10">
+        {interactive.kind === 'buttons' &&
+          interactive.choices.map((c, i) => (
+            <div key={i} className="px-3 py-1.5 text-xs text-center text-blue-600 dark:text-blue-400">{c.label}</div>
+          ))}
+        {interactive.kind === 'list' &&
+          interactive.sections.flatMap((s, si) =>
+            s.options.map((o, oi) => (
+              <div key={`${si}-${oi}`} className="px-3 py-1.5 text-xs">
+                <div className="text-blue-600 dark:text-blue-400">{o.title}</div>
+                {o.description && <div className="text-muted-foreground">{o.description}</div>}
+              </div>
+            )),
+          )}
+        {interactive.kind === 'cta' && (
+          <a
+            href={interactive.buttonUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="block px-3 py-1.5 text-xs text-center text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            {interactive.buttonText}
+          </a>
+        )}
+      </div>
     </div>
   );
 };
@@ -1174,7 +1226,7 @@ export default function ConversationsInbox() {
     return {
       id: m.id,
       from: m.direction === 'OUTGOING' ? 'agent' : 'user',
-      text: raw.template ? '' : displayText,
+      text: raw.template || raw.interactive ? '' : displayText,
       time: m.created_at || new Date().toISOString(),
       status: normalizeStatus(m.status),
       images: imageFiles.length > 0 ? imageFiles : undefined,
@@ -1186,6 +1238,7 @@ export default function ConversationsInbox() {
       senderName: raw.sender_name ?? null,
       errorData: raw.error_data ?? raw.error_code ?? null,
       template: raw.template ?? null,
+      interactive: raw.interactive ?? null,
       location: location && (location.latitude || location.longitude) ? location : null,
       vcards: vcards && vcards.length ? vcards : null,
       reply,
@@ -2972,7 +3025,7 @@ export default function ConversationsInbox() {
   return (
     <div className="h-full flex flex-col font-sans" data-testid="conversations-inbox">
 
-      <div className="flex-1 flex gap-0 px-6 py-6 max-h-full">
+      <div className="flex-1 min-h-0 flex gap-0 px-6 py-6 max-h-full">
         {/* Left Sidebar */}
         <div className="relative group h-full" data-sidebar>
           <Card className="flex flex-col border-r rounded-r-none h-full" style={{ width: `${sidebarWidth}px` }}>
@@ -3440,7 +3493,7 @@ export default function ConversationsInbox() {
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               </Card>
             ) : (
-            <Card className="flex-1 flex flex-col border-l-0 rounded-none">
+            <Card className="flex-1 min-h-0 flex flex-col border-l-0 rounded-none">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
                 <div className="flex items-center gap-2">
                   {/* Folder ▾ — the one-stop folder control: filter the left
@@ -3926,6 +3979,9 @@ export default function ConversationsInbox() {
 
                             {/* WhatsApp template preview card */}
                             {msg.template && <TemplateMessageCard template={msg.template} />}
+
+                            {/* Buttons / list / CTA preview card (Smart Flow zapi send) */}
+                            {msg.interactive && <InteractiveMessageCard interactive={msg.interactive} />}
 
                             {/* Location → Google Maps link card */}
                             {msg.location && (

@@ -273,9 +273,16 @@ export default function InstagramSection() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={handleAddNew} className={primaryOutlineBtn}>
-                  <Plus size={12} /> {t("instagram_section.btn_add_new")}
-                </button>
+                {/* replyagent's own "Old" card has no way to connect a NEW
+                    Facebook-managed page anymore (the Add new/Connect now
+                    buttons are commented out in Instagram.vue) — only
+                    already-connected pages can be managed here. Mirrored
+                    bug-for-bug per explicit instruction. */}
+                {isPreferred && (
+                  <button onClick={handleAddNew} className={primaryOutlineBtn}>
+                    <Plus size={12} /> {t("instagram_section.btn_add_new")}
+                  </button>
+                )}
                 <button onClick={() => setView("list")} className={outlineBtn}>
                   <ChevronLeft size={12} /> {t("instagram_section.btn_back")}
                 </button>
@@ -299,9 +306,11 @@ export default function InstagramSection() {
                         : t("instagram_section.empty_desc_old")}
                     </p>
                   </div>
-                  <button onClick={handleAddNew} className={primaryOutlineBtn}>
-                    {t("instagram_section.btn_connect_now")}
-                  </button>
+                  {isPreferred && (
+                    <button onClick={handleAddNew} className={primaryOutlineBtn}>
+                      {t("instagram_section.btn_connect_now")}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">

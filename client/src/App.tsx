@@ -306,8 +306,23 @@ function AppContent() {
                 {/* Main content — leaves room for the floating rounded
                     header above (top-3 = 12px + h-16 = 64px + 8px card
                     gap ≈ 88px, so mt-[88px]). Only applied when the top
-                    bar is visible (not on auth screens or the builder). */}
-                <main className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-[88px]" : ""}`}>
+                    bar is visible (not on auth screens or the builder).
+                    `flex-1` alone only grows this along the row's main
+                    axis (width) — the parent's default cross-axis stretch
+                    then sized it to the FULL h-screen (100vh) regardless of
+                    the 88px push-down, so its box ran 88px past the bottom
+                    of the viewport and got silently clipped by the h-screen
+                    wrapper's overflow-hidden. Every page rendered inside
+                    (e.g. the inbox) inherited that already-88px-too-tall
+                    box via h-full, so how much of it was actually visible
+                    — a gap at the bottom or content spilling into a clipped,
+                    scroll-confused 88px — depended on how the browser's
+                    zoom level happened to round the layout that particular
+                    time. An explicit height that subtracts the offset
+                    removes the ambiguity outright. */}
+                <main
+                  className={`flex-1 overflow-auto bg-accent/30 ${isLoggedIn && !isBuilderRoute ? "mt-[88px] h-[calc(100vh-88px)]" : ""}`}
+                >
                   <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
                 </main>
               </div>
