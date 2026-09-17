@@ -2636,12 +2636,15 @@ export default function ConversationsInbox() {
   // by reference (see uploadFilesToGalleryAndAttach above).
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
+    // Snapshot into a real array BEFORE resetting the input's value — clearing
+    // `.value` also clears the live FileList that `files` points to, so
+    // resetting first left every selection silently empty by the time it was read.
+    let candidates = files ? Array.from(files) : [];
     if (fileInputRef.current) fileInputRef.current.value = "";
-    if (!files || files.length === 0) return;
+    if (candidates.length === 0) return;
 
     const isInstagram = selectedConvObj?.channel === 'instagram';
     const isWhatsApp = selectedConvObj?.channel === 'whatsapp';
-    let candidates = Array.from(files);
 
     if (isInstagram) {
       const unsupported = candidates.filter((f) => {
@@ -2670,11 +2673,12 @@ export default function ConversationsInbox() {
   // Handle image attachment — same reference-based flow as handleFileAttach.
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
+    // Same fix as handleFileAttach — snapshot before clearing the input.
+    let candidates = files ? Array.from(files) : [];
     if (imageInputRef.current) imageInputRef.current.value = "";
-    if (!files || files.length === 0) return;
+    if (candidates.length === 0) return;
 
     const isWhatsApp = selectedConvObj?.channel === 'whatsapp';
-    let candidates = Array.from(files);
 
     if (isWhatsApp) {
       const tooBig = candidates.filter(f => f.size > getWaLimit(f));
