@@ -1803,11 +1803,7 @@ export default function ConversationsInbox() {
           // note (waveform bubble) instead of a generic audio-file player.
           form.append("is_voice_note", "true");
         }
-        const res = await fetch(`/api/inbox/send-message/${selectedConversation}`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}` },
-          body: form,
-        });
+        const res = await apiRequest("POST", `/api/inbox/send-message/${selectedConversation}`, form);
         if (!res.ok) throw new Error(await res.text());
         return res.json();
       }
