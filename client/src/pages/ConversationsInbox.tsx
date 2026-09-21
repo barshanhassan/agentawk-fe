@@ -5574,7 +5574,7 @@ export default function ConversationsInbox() {
           approved templates from /api/broadcasts/templates and POSTs to the
           existing send endpoint with type='template' + wa_template_id. */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("conversations_inbox.dialogs.send_template.title")}</DialogTitle>
           </DialogHeader>
@@ -5614,7 +5614,7 @@ export default function ConversationsInbox() {
               return (
                 <div className="flex flex-col items-center">
                   <label className="text-xs font-medium mb-1.5 block self-start">{t("conversations_inbox.dialogs.send_template.preview_label")}</label>
-                  <div className="h-full max-h-[50vh] w-full max-w-[31vh]">
+                  <div className="h-[380px] w-full max-w-[31vh] overflow-hidden">
                     <PreviewV2
                       mode="chat"
                       headerText={headerText}
