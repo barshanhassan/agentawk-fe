@@ -467,10 +467,9 @@ export default function CampaignManager() {
   const { data: templatesResponse } = useQuery<any>({
     queryKey: ["/api/broadcasts/templates", defaultChannel?.channelable_id ?? ""],
     queryFn: async () => {
-      const channelParam = defaultChannel?.channelable_id
-        ? `?channelable_id=${defaultChannel.channelable_id}`
-        : "";
-      const res = await apiRequest("GET", `/api/broadcasts/templates${channelParam}`);
+      const params = new URLSearchParams({ status: "APPROVED" });
+      if (defaultChannel?.channelable_id) params.set("channelable_id", String(defaultChannel.channelable_id));
+      const res = await apiRequest("GET", `/api/broadcasts/templates?${params.toString()}`);
       return res.json();
     },
     enabled: !!defaultChannel,
