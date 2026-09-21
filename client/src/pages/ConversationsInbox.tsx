@@ -1318,11 +1318,15 @@ export default function ConversationsInbox() {
   const [folderEditing, setFolderEditing] = useState<any | null>(null);
   const [folderName, setFolderName] = useState("");
 
-  // Approved WhatsApp templates for the template dialog.
+  // Approved WhatsApp templates for the template dialog. Must filter to
+  // status=APPROVED explicitly — the endpoint's default also includes PENDING
+  // (edited-but-not-yet-reapproved) templates, whose local preview reflects
+  // the new unapproved content while Meta still only delivers the last
+  // approved revision to the customer, silently mismatching what the agent sees.
   const { data: waTemplatesResponse } = useQuery<any>({
     queryKey: ["/api/broadcasts/templates", "inbox-template-send"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/broadcasts/templates");
+      const res = await apiRequest("GET", "/api/broadcasts/templates?status=APPROVED");
       return res.json();
     },
     enabled: templateDialogOpen,
@@ -2355,10 +2359,12 @@ export default function ConversationsInbox() {
   });
   const tagOptions = (tagsData?.tags || []).map((t: any) => ({ id: String(t.id), name: t.name }));
 
-  // WhatsApp templates from broadcasts endpoint
+  // WhatsApp templates from broadcasts endpoint — APPROVED only (see note on
+  // the other /api/broadcasts/templates call above: a PENDING template's
+  // local content can differ from what Meta actually delivers).
   const { data: templatesData } = useQuery({
-    queryKey: ["/api/broadcasts/templates"],
-    queryFn: async () => (await apiRequest("GET", "/api/broadcasts/templates")).json(),
+    queryKey: ["/api/broadcasts/templates", "approved"],
+    queryFn: async () => (await apiRequest("GET", "/api/broadcasts/templates?status=APPROVED")).json(),
   });
   const broadcastTemplates: Template[] = useMemo(() => {
     const raw: any[] = templatesData?.templates || [];
@@ -5599,13 +5605,23 @@ export default function ConversationsInbox() {
               const headerText = components.find((c: any) => c.type === "HEADER")?.text || "";
               const bodyText = components.find((c: any) => c.type === "BODY")?.text || "";
               const footerText = components.find((c: any) => c.type === "FOOTER")?.text || "";
+              const buttonsComp = components.find((c: any) => c.type === "BUTTONS");
+              const templateButtons = (buttonsComp?.buttons || []).map((b: any, bi: number) => {
+                if (b.type === "URL") return { id: bi + 1, type: "visit-website", buttonText: b.text, websiteUrl: b.url };
+                if (b.type === "PHONE_NUMBER") return { id: bi + 1, type: "call-phone", buttonText: b.text, phoneNumber: b.phone_number };
+                return { id: bi + 1, type: "quick-reply", buttonText: b.text };
+              });
               return (
-                <div>
-                  <label className="text-xs font-medium mb-1.5 block">{t("conversations_inbox.dialogs.send_template.preview_label")}</label>
-                  <div className="rounded-md bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/40 p-3 space-y-1">
-                    {headerText && <p className="text-sm font-semibold">{headerText}</p>}
-                    <p className="text-sm whitespace-pre-wrap">{bodyText}</p>
-                    {footerText && <p className="text-xs text-muted-foreground">{footerText}</p>}
+                <div className="flex flex-col items-center">
+                  <label className="text-xs font-medium mb-1.5 block self-start">{t("conversations_inbox.dialogs.send_template.preview_label")}</label>
+                  <div className="h-full max-h-[50vh] w-full max-w-[31vh]">
+                    <PreviewV2
+                      mode="chat"
+                      headerText={headerText}
+                      bodyText={bodyText}
+                      footerText={footerText}
+                      templateButtons={templateButtons}
+                    />
                   </div>
                 </div>
               );
