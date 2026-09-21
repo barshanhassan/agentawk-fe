@@ -7,7 +7,7 @@ import type {
 
 const TOAST_LIMIT = 1
 // How long a toast stays on screen before it closes itself.
-const TOAST_AUTO_DISMISS_DELAY = 4000
+const TOAST_AUTO_DISMISS_DELAY = 2000
 // Delay between a toast closing (dismiss) and it being removed from the
 // array entirely — gives the close animation room to finish. Not an
 // auto-dismiss timer itself; see TOAST_AUTO_DISMISS_DELAY above for that.

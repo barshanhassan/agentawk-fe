@@ -426,7 +426,10 @@ const AgencyWorkspaces = () => {
                           : "bg-slate-100 hover:bg-emerald-600 text-slate-600 hover:text-white"
                       )}
                     >
-                      <LogIn size={13} /> {loginToWorkspaceMutation.isPending ? t("agency_workspaces.logging_in") : t("agency_workspaces.login_btn")}
+                      <LogIn size={13} />{" "}
+                      {loginToWorkspaceMutation.isPending && loginToWorkspaceMutation.variables?.id === ws.id
+                        ? t("agency_workspaces.logging_in")
+                        : t("agency_workspaces.login_btn")}
                     </button>
 
                     <DropdownMenu>

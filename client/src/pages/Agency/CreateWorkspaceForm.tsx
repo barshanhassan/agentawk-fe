@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getUserInfo } from "@/lib/auth";
 import {
   Info, Globe, Users, User, Bot, MessageCircle,
@@ -102,6 +102,19 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
   });
   const members: any[] = membersData?.members || membersData?.data || membersData || [];
 
+  // Pre-fills the channel/AI limits below with what the agency's plan actually
+  // allows, instead of a hardcoded "1" — only used for a brand-new workspace;
+  // an existing one keeps its own already-saved values (see the effect below).
+  const { data: currentPlanData } = useQuery({
+    queryKey: [`/api/organizations/${agencyId}/current-plan`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/organizations/${agencyId}/current-plan`);
+      return res.json();
+    },
+    enabled: !isEdit,
+  });
+  const currentPlan = currentPlanData?.plan;
+
   const [form, setForm] = useState({
     name: initialData?.name || '',
     // The workspace's slug IS its subdomain (created via the slug on workspace
@@ -109,9 +122,15 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
     subdomain: initialData?.subdomain || initialData?.slug || '',
     timezone: initialData?.timezone || 'Asia/Karachi',
     agentId: String(initialData?.agency_agent_id ?? initialData?.agent_id ?? ''),
-    whiteLabel: initialData?.allow_branding || false,
-    allowSupport: initialData?.allow_support || false,
-    limitContacts: initialData?.limited_contacts || false,
+    // Defaults ON for a brand-new workspace (the effect below turns it back
+    // off if the agency's plan doesn't include branding, since submitting
+    // it ON on a plan without branding would be rejected on save).
+    whiteLabel: initialData?.allow_branding ?? true,
+    // Defaults ON for a brand-new workspace — the client turns it off
+    // themselves if they don't want agency support access; an existing
+    // workspace always keeps its own already-saved value.
+    allowSupport: initialData?.allow_support ?? true,
+    limitContacts: initialData?.limited_contacts ?? true,
     contactLimit: initialData?.maximum_contacts || 500,
     limitAgents: initialData?.allow_agents ?? true,
     agentLimit: initialData?.agents_limit || 4,
@@ -126,6 +145,31 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
       webchat: initialData?.webchat_channels_limit ?? 1,
     },
   });
+
+  // Once the agency's plan loads, replace the placeholder "1" defaults with
+  // what the plan actually grants — the admin can still lower any number
+  // (never raise past it; the backend re-validates on save regardless).
+  useEffect(() => {
+    if (isEdit || !currentPlan) return;
+    setForm((prev) => ({
+      ...prev,
+      aiLimit: currentPlan.free_ai_agents,
+      agentLimit: currentPlan.free_agents,
+      // Each workspace gets the plan's full contact allowance independently
+      // (not a total shared across the agency's workspaces).
+      contactLimit: currentPlan.maximum_contacts,
+      whiteLabel: prev.whiteLabel && !!currentPlan.allow_branding,
+      channels: {
+        whatsapp_api: currentPlan.free_channels,
+        whatsapp_qr: currentPlan.free_channels,
+        instagram: currentPlan.free_secondary_channels,
+        messenger: currentPlan.free_secondary_channels,
+        telegram: currentPlan.free_secondary_channels,
+        twilio: currentPlan.free_secondary_channels,
+        webchat: currentPlan.free_secondary_channels,
+      },
+    }));
+  }, [isEdit, currentPlan]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -477,10 +521,10 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
             <div className="flex-1 min-w-0">
               <p className={cn("text-sm font-medium", dark ? "text-slate-200" : "text-slate-700")}>{t("create_workspace_form.ai_chat_assistants_label")}</p>
             </div>
-            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.included_in_plan", { count: 10 })}</span>
+            <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.included_in_plan", { count: currentPlan?.free_ai_agents ?? 10 })}</span>
             <span className={cn("text-xs whitespace-nowrap", dark ? "text-slate-500" : "text-slate-400")}>{t("create_workspace_form.additional_price", { price: "$4" })}</span>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-xs font-medium text-blue-500 whitespace-nowrap">{t("create_workspace_form.connection_limit")}</span>
+              <span className="text-xs font-medium text-primary whitespace-nowrap">{t("create_workspace_form.connection_limit")}</span>
               <Info size={11} className="text-slate-400" />
               <Input
                 type="number"
