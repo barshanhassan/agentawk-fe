@@ -58,6 +58,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { WorkspaceTimezoneProvider } from "@/contexts/WorkspaceTimezoneContext";
 import { SiteProvider, useSite } from "@/contexts/SiteContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import SessionPolicyBanner from "@/components/SessionPolicyBanner";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./lib/i18n";
@@ -271,10 +272,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
-        <div className="relative w-14 h-14 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-[3px] border-primary/20 border-t-primary animate-spin" />
-          <img src="/images/agentawk-bot-green.svg" alt="AgentAwk" className="w-6 h-6" />
-        </div>
+        <LoadingSpinner size={56} />
       </div>
     );
   }

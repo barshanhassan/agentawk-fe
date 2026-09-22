@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
 import {
@@ -2849,7 +2850,7 @@ export default function CampaignManager() {
                             <tr>
                                 <td colSpan={6} className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <Loader2 size={24} className="animate-spin text-primary" />
+                                        <LoadingSpinner size={40} />
                                         <p className="text-[11px] font-semibold text-slate-400">{t("campaign_manager.list.loading")}</p>
                                     </div>
                                 </td>

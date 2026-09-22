@@ -15,6 +15,7 @@
  * automation_steps / automation_step_activities / automation_flow rows.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import { useLocation, useRoute } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -895,8 +896,8 @@ function BuilderInner() {
         {/* ─── Canvas ─── */}
         <div className="flex-1 relative">
           {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+              <LoadingSpinner size={40} />
               {t("smart_flow_builder_page.canvas.loading_flow")}
             </div>
           ) : (
