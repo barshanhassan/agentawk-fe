@@ -1015,16 +1015,23 @@ export default function ConversationsInbox() {
   });
 
   // Deep-link from the Contact profile "Live Chat" link: ?contact_id=X →
-  // auto-select that contact's conversation, then strip the param so a refresh
-  // or back-nav doesn't re-trigger it.
+  // auto-select that contact's conversation. Also supports ?inbox_id=X (used
+  // by the Notifications page, which only carries the inbox id, not the
+  // contact id) — strips whichever param matched so a refresh or back-nav
+  // doesn't re-trigger it.
   const deepLinkedRef = useRef(false);
   useEffect(() => {
     if (deepLinkedRef.current) return;
     let cid: string | null = null;
-    try { cid = new URLSearchParams(window.location.search).get("contact_id"); } catch {}
-    if (!cid) return;
-    const match = backendConversations.find(
-      (it: any) => String(it.contacts?.id) === String(cid),
+    let iid: string | null = null;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      cid = params.get("contact_id");
+      iid = params.get("inbox_id");
+    } catch {}
+    if (!cid && !iid) return;
+    const match = backendConversations.find((it: any) =>
+      cid ? String(it.contacts?.id) === String(cid) : String(it.id) === String(iid),
     );
     if (match) {
       setSelectedConversation(Number(match.id));

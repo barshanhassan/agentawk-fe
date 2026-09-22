@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   BadgeCheck,
@@ -26,11 +25,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import MediaGallerySection from "./MediaGallerySection";
 
 export default function WhiteLabelSection() {
   const { t } = useTranslation();
@@ -119,10 +120,10 @@ export default function WhiteLabelSection() {
   const [emailUser, setEmailUser] = useState("info");
   const [emailDomain, setEmailDomain] = useState("");
 
-  const [, navigate] = useLocation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const uploadTargetRef = useRef<string>("light");
   const [logoPreview, setLogoPreview] = useState<Record<string, string>>({});
+  const [galleryPickerTarget, setGalleryPickerTarget] = useState<string | null>(null);
 
   // Map UI target ("light" | "dark" | "favicon") to the backend payload key on /workspaces/branding.
   const brandingKeyFor = (target: string): "logoLight" | "logoDark" | "favicon" | null => {
@@ -141,7 +142,7 @@ export default function WhiteLabelSection() {
       return;
     }
     if (action === "gallery") {
-      navigate("/settings?tab=Media Gallery");
+      setGalleryPickerTarget(type);
       return;
     }
     if (action === "remove") {
@@ -195,6 +196,21 @@ export default function WhiteLabelSection() {
         return next;
       });
     }
+  };
+
+  // Picking an existing Media Gallery image for the logo/favicon — resolveBrandingMediaId
+  // on the backend accepts a file URL directly (looks the row up, or creates one if this
+  // URL was uploaded outside the gallery flow), so no re-upload is needed here.
+  const handleGallerySelected = (target: string, file: any) => {
+    if (file?.media_type && file.media_type !== "IMAGE") {
+      toast({ title: t("white_label_section.toast_invalid_file_title"), description: t("white_label_section.toast_invalid_file_description"), variant: "destructive" });
+      return;
+    }
+    const brandingKey = brandingKeyFor(target);
+    if (!brandingKey || !file?.url) return;
+    setLogoPreview((p) => ({ ...p, [target]: file.url }));
+    updateBrandingMutation.mutate({ [brandingKey]: file.url });
+    setGalleryPickerTarget(null);
   };
 
   // ─── Custom domain (Domain tab) ──────────────────────────────────
@@ -301,6 +317,18 @@ export default function WhiteLabelSection() {
         className="hidden"
         onChange={handleFileSelected}
       />
+      <Dialog open={galleryPickerTarget !== null} onOpenChange={(open) => !open && setGalleryPickerTarget(null)}>
+        <DialogContent className="max-w-5xl h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t("white_label_section.from_gallery")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-auto">
+            <MediaGallerySection
+              onSelect={(file) => handleGallerySelected(galleryPickerTarget!, file)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       <CardContent className="p-0">
         {/* ── Header ── */}
         <div className={cn("px-8 py-4 border-b flex items-center justify-between", border)}>

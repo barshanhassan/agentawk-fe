@@ -287,20 +287,26 @@ function AppContent() {
   }
 
   const isAgencyRoute = location.startsWith("/org");
+  const usesAgencyLayout = siteType === "AGENCY" || isAgencyRoute || window.location.host.startsWith("agency.");
 
   return (
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
         <ThemeProvider>
         <WorkspaceTimezoneProvider>
-          <GlobalBrandingFetcher />
+          {/* Agency/org pages get their branding from AgencyBrandingFetcher
+              (mounted inside AgencyLayout) — an agency user has no workspace_id
+              of their own, so this one would otherwise fall back to the
+              backend's default (workspace 1) and leak that workspace's
+              favicon/colors onto the agency dashboard. */}
+          {!usesAgencyLayout && <GlobalBrandingFetcher />}
           {/* Login-policy countdown + force-logout heartbeat. Mounted once for
               every layout so it keeps polling wherever the agent is. */}
           <SessionPolicyBanner />
           <TooltipProvider>
             {isAuthRoute ? (
               <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
-            ) : (siteType === "AGENCY" || isAgencyRoute || window.location.host.startsWith("agency.")) ? (
+            ) : usesAgencyLayout ? (
               <AgencyLayout>
                 <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
               </AgencyLayout>

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Bell, ArrowLeft, CheckCircle, AlertTriangle, Mail, Send, MessageSquare, Trash2 } from "react-feather";
+import { MailOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -7,9 +9,11 @@ import { formatInWorkspaceTz, useAgencyTimezone } from "@/contexts/WorkspaceTime
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
-function getIcon(slug?: string) {
+function getIcon(slug: string | undefined, read: boolean) {
     const s = (slug || "").toLowerCase();
-    if (s.includes("message") || s.includes("mail")) return <Mail className="text-blue-500" size={16} />;
+    if (s.includes("message") || s.includes("mail")) {
+        return read ? <MailOpen className="text-slate-400" size={16} /> : <Mail className="text-blue-500" size={16} />;
+    }
     if (s.includes("campaign") || s.includes("broadcast") || s.includes("send")) return <Send className="text-green-500" size={16} />;
     if (s.includes("approved") || s.includes("complete") || s.includes("success")) return <CheckCircle className="text-emerald-500" size={16} />;
     if (s.includes("warning") || s.includes("alert") || s.includes("maintenance")) return <AlertTriangle className="text-yellow-500" size={16} />;
@@ -32,6 +36,7 @@ export default function AgencyNotificationsPage() {
     const queryClient = useQueryClient();
     const workspaceTz = useAgencyTimezone();
     const { t } = useTranslation();
+    const [, setLocation] = useLocation();
 
     const { data: resp, isLoading } = useQuery<any>({
         queryKey: ["/api/notifications", { limit: 100 }],
@@ -61,6 +66,24 @@ export default function AgencyNotificationsPage() {
             queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
         },
     });
+
+    const markReadMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await apiRequest("POST", `/api/notifications/${id}/read`, {});
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+        },
+    });
+
+    // Agency notifications don't carry an inbox_id (that field is only ever
+    // set for workspace-scoped "message received" notifications — see
+    // NotificationsPage.tsx) — whatever action_url the backend attached is
+    // the only thing there is to jump to here.
+    const openNotification = (n: any) => {
+        if (!n.read) markReadMutation.mutate(n.id);
+        if (n.data?.action_url) setLocation(n.data.action_url);
+    };
 
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
@@ -140,14 +163,15 @@ export default function AgencyNotificationsPage() {
                                     return (
                                         <div
                                             key={n.id}
-                                            className={`flex items-start gap-3 px-5 py-4 transition-colors ${
+                                            onClick={() => openNotification(n)}
+                                            className={`flex items-start gap-3 px-5 py-4 transition-colors cursor-pointer ${
                                                 !n.read
                                                     ? "bg-blue-50/40 dark:bg-blue-900/10 hover:bg-blue-50/70 dark:hover:bg-blue-900/20"
                                                     : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                                             }`}
                                         >
                                             <div className="mt-0.5 w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-                                                {getIcon(n.slug)}
+                                                {getIcon(n.slug, n.read)}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-sm font-semibold leading-snug ${!n.read ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}>

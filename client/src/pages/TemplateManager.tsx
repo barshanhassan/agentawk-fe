@@ -40,6 +40,7 @@ import { useSocket } from "@/hooks/use-socket";
 import { cn } from "@/lib/utils";
 import { WA_TEMPLATE_LANGUAGES } from "@/lib/waTemplateLanguages";
 import { waTemplateKeysFor } from "@/lib/waTemplateKeys";
+import { getLanguageFlag } from "@/lib/languageFlags";
 import TemplateMediaPicker, { type TemplateMediaSelection } from "@/components/gallery/TemplateMediaPicker";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
@@ -1251,9 +1252,9 @@ export default function TemplateManager() {
             <div className="bg-white dark:bg-slate-900/50 rounded-[20px] border border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
                 
                 {/* 1. Branded Header Section */}
-                <div className="py-3 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-blue-50/20 dark:bg-transparent">
+                <div className="py-3 px-5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between bg-primary/10/20 dark:bg-transparent">
                     <div className="flex items-center gap-6">
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 border border-blue-500/10 shadow-inner">
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/10 shadow-inner">
                             <FileText size={20} strokeWidth={2.5} />
                         </div>
                         <div className="space-y-0.5">
@@ -1269,7 +1270,7 @@ export default function TemplateManager() {
                     <div className="flex items-center gap-3">
                         <Button 
                             onClick={() => setCreateTemplateOpen(true)}
-                            className="h-8 px-4 rounded-lg bg-blue-600 text-white font-semibold text-[11px] shadow-lg shadow-blue-500/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-blue-700"
+                            className="h-8 px-4 rounded-lg bg-primary text-white font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary"
                             data-testid="button-create-template"
                         >
                             <Plus size={14} strokeWidth={2.5} />
@@ -1297,7 +1298,7 @@ export default function TemplateManager() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/30 dark:bg-transparent divide-x divide-slate-200 dark:divide-slate-800/80">
                     <div className="p-2.5 flex flex-col justify-center">
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary/70"></span>
                             {t("template_manager.stats.total")}
                         </p>
                         <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{statsData?.total ?? 0}</p>
@@ -1342,7 +1343,7 @@ export default function TemplateManager() {
                 {/* 3. Filter Row Section */}
                 <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-transparent flex items-center gap-2 flex-wrap">
                     <div className="relative group flex-1 min-w-[280px] max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <Input
                             placeholder={t("template_manager.filters.search_placeholder")}
                             value={searchQuery}
@@ -1365,17 +1366,25 @@ export default function TemplateManager() {
                             onChange={setSelectedCategories}
                             placeholder={t("template_manager.filters.categories")}
                             width="140px"
+                            className="h-8.5"
                         />
 
                         <CustomDropdown
-                            options={WA_TEMPLATE_LANGUAGES.map((l) => ({
-                                id: l.slug,
-                                name: `${l.name} (${l.slug})`,
-                            }))}
+                            options={WA_TEMPLATE_LANGUAGES.map((l) => {
+                                const flagCode = getLanguageFlag(l.slug);
+                                return {
+                                    id: l.slug,
+                                    name: `${l.name} (${l.slug})`,
+                                    icon: flagCode ? (
+                                        <img src={`https://flagcdn.com/w20/${flagCode}.png`} alt="" className="w-4 h-3 object-cover rounded-[2px]" />
+                                    ) : undefined,
+                                };
+                            })}
                             selected={selectedLanguages}
                             onChange={setSelectedLanguages}
                             placeholder={t("template_manager.filters.languages")}
                             width="140px"
+                            className="h-8.5"
                         />
 
                         <CustomDropdown
@@ -1389,6 +1398,7 @@ export default function TemplateManager() {
                             onChange={setSelectedStatuses}
                             placeholder={t("template_manager.filters.status")}
                             width="160px"
+                            className="h-8.5"
                         />
                     </div>
 
@@ -1399,7 +1409,7 @@ export default function TemplateManager() {
                                 onClick={() => setShowSort(!showSort)}
                                 className={cn(
                                     "h-8.5 px-3 rounded-lg text-[11px] font-semibold border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-all",
-                                    sorts.length > 0 ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-white dark:bg-slate-900 hover:bg-slate-50"
+                                    sorts.length > 0 ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-900 hover:bg-slate-50"
                                 )}
                             >
                                 <ArrowUpDown size={14} />
@@ -1414,7 +1424,7 @@ export default function TemplateManager() {
                                                 <ArrowUpDown size={18} className="text-slate-300" />
                                             </div>
                                             <h3 className="font-black text-[11px] uppercase text-slate-400 mb-4">{t("template_manager.sort.no_sort_applied")}</h3>
-                                            <Button onClick={addSort} className="h-8 rounded-lg bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">{t("template_manager.sort.add_sort")}</Button>
+                                            <Button onClick={addSort} className="h-8 rounded-lg bg-primary text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">{t("template_manager.sort.add_sort")}</Button>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
@@ -1452,7 +1462,7 @@ export default function TemplateManager() {
                                                                         return (
                                                                             <li
                                                                                 key={option}
-                                                                                className={`px-3 py-2 text-[10px] font-black uppercase tracking-tighter ${isCurrentOption || isDisabled ? "bg-slate-50 text-slate-300 cursor-not-allowed" : "cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors"}`}
+                                                                                className={`px-3 py-2 text-[10px] font-black uppercase tracking-tighter ${isCurrentOption || isDisabled ? "bg-slate-50 text-slate-300 cursor-not-allowed" : "cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"}`}
                                                                                 onClick={() => {
                                                                                     if (!isDisabled && !isCurrentOption) {
                                                                                         updateSort(sort.id, option, sort.direction);
@@ -1483,7 +1493,7 @@ export default function TemplateManager() {
                                                                     {["asc", "desc"].map(option => (
                                                                         <li
                                                                             key={option}
-                                                                            className="px-3 py-2 text-[10px] font-black uppercase tracking-tighter cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                                                            className="px-3 py-2 text-[10px] font-black uppercase tracking-tighter cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
                                                                             onClick={() => {
                                                                                 updateSort(sort.id, sort.column, option as "asc" | "desc");
                                                                                 setOpenSortDirectionDropdown(null);
@@ -1518,7 +1528,7 @@ export default function TemplateManager() {
                                 onClick={() => setShowFilter(!showFilter)}
                                 className={cn(
                                     "h-8.5 px-3 rounded-lg text-[10px] font-black border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-all uppercase tracking-wider",
-                                    filters.length > 0 ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-white dark:bg-slate-900 hover:bg-slate-50"
+                                    filters.length > 0 ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-900 hover:bg-slate-50"
                                 )}
                             >
                                 <Filter size={14} />
@@ -1533,7 +1543,7 @@ export default function TemplateManager() {
                                                 <Filter size={18} className="text-slate-300" />
                                             </div>
                                             <h3 className="font-black text-[11px] uppercase text-slate-400 mb-4">{t("template_manager.filter.no_filters_applied")}</h3>
-                                            <Button onClick={addFilter} className="h-8 rounded-lg bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">{t("template_manager.filter.add_filter")}</Button>
+                                            <Button onClick={addFilter} className="h-8 rounded-lg bg-primary text-white font-black text-[10px] uppercase tracking-widest px-6" variant="outline">{t("template_manager.filter.add_filter")}</Button>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
@@ -1569,7 +1579,7 @@ export default function TemplateManager() {
                                                                         {["name", "category", "language", "status", "topBlockReason", "lastEdited"].map(option => (
                                                                             <li
                                                                                 key={option}
-                                                                                className={`px-3 py-2 text-[10px] font-black uppercase tracking-tighter ${option === filter.column ? "bg-slate-50 text-slate-300" : "cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors"}`}
+                                                                                className={`px-3 py-2 text-[10px] font-black uppercase tracking-tighter ${option === filter.column ? "bg-slate-50 text-slate-300" : "cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"}`}
                                                                                 onClick={() => {
                                                                                     updateFilter(filter.id, option, filter.operator, filter.value);
                                                                                     setOpenFilterColumnDropdown(null);
@@ -1600,7 +1610,7 @@ export default function TemplateManager() {
                                                                         {["contains", "does not contain", "is", "is not", "is empty", "is not empty"].map(option => (
                                                                             <li
                                                                                 key={option}
-                                                                                className="px-3 py-2 text-[10px] font-semibold cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                                                                className="px-3 py-2 text-[10px] font-semibold cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
                                                                                 onClick={() => {
                                                                                     updateFilter(filter.id, filter.column, option, filter.value);
                                                                                     setOpenFilterOperatorDropdown(null);
@@ -1618,7 +1628,7 @@ export default function TemplateManager() {
                                                             placeholder={t("template_manager.filter.value_placeholder")}
                                                             value={filter.value}
                                                             onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                                                            className="flex-1 px-3 py-1.5 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
+                                                            className="flex-1 px-3 py-1.5 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                                                         />
                                                     </div>
                                                 </div>
@@ -1634,12 +1644,12 @@ export default function TemplateManager() {
 
                 {/* 4. Bulk Actions Bar (Conditional) */}
                 {selectedTemplates.length > 0 && (
-                    <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900/30 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+                    <div className="px-4 py-2 bg-primary/10 dark:bg-primary/20 border-b border-primary/20 dark:border-primary/30 flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
                         <div className="flex items-center gap-3">
-                            <div className="bg-blue-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                            <div className="bg-primary text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
                                 {selectedTemplates.length}
                             </div>
-                            <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">{t("template_manager.bulk.selected")}</span>
+                            <span className="text-[11px] font-semibold text-primary dark:text-primary/70">{t("template_manager.bulk.selected")}</span>
                         </div>
                         <div className="flex gap-2">
                             <Button
@@ -1664,7 +1674,7 @@ export default function TemplateManager() {
                                     <Checkbox
                                         checked={filteredAndSortedTemplates.length > 0 && filteredAndSortedTemplates.every(tpl => selectedTemplates.includes(tpl.id))}
                                         onCheckedChange={toggleAll}
-                                        className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
+                                        className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary"
                                     />
                                 </th>
                                 <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
@@ -1723,7 +1733,7 @@ export default function TemplateManager() {
                                 <tr>
                                     <td colSpan={8} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3">
-                                            <Loader2 size={24} className="animate-spin text-blue-500" />
+                                            <Loader2 size={24} className="animate-spin text-primary" />
                                             <p className="text-[11px] font-semibold text-slate-400">{t("template_manager.table.fetching")}</p>
                                         </div>
                                     </td>
@@ -1732,7 +1742,7 @@ export default function TemplateManager() {
                                 <tr>
                                     <td colSpan={8} className="py-20 text-center bg-white dark:bg-transparent">
                                         <div className="flex flex-col items-center gap-3">
-                                            <div className="p-3.5 rounded-full bg-blue-50 dark:bg-blue-800 text-blue-300 dark:text-blue-600 shadow-inner">
+                                            <div className="p-3.5 rounded-full bg-primary/10 dark:bg-primary text-primary/50 dark:text-primary shadow-inner">
                                                 <FileText size={32} strokeWidth={1} />
                                             </div>
                                             <div className="space-y-1">
@@ -1747,8 +1757,8 @@ export default function TemplateManager() {
                                     <tr 
                                         key={template.id} 
                                         className={cn(
-                                            "group transition-all duration-200 hover:bg-blue-50/30 dark:hover:bg-blue-900/10",
-                                            selectedTemplates.includes(template.id) ? "bg-blue-50/50 dark:bg-blue-900/20" : ""
+                                            "group transition-all duration-200 hover:bg-primary/10/30 dark:hover:bg-primary/10",
+                                            selectedTemplates.includes(template.id) ? "bg-primary/10/50 dark:bg-primary/20" : ""
                                         )}
                                         data-testid={`template-row-${template.id}`}
                                     >
@@ -1756,12 +1766,12 @@ export default function TemplateManager() {
                                             <Checkbox
                                                 checked={selectedTemplates.includes(template.id)}
                                                 onCheckedChange={() => toggleTemplate(template.id)}
-                                                className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-blue-600"
+                                                className="border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary"
                                             />
                                         </td>
                                         <td className="py-2 px-3">
                                             <div className="flex flex-col">
-                                                <span className="text-[12px] font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate max-w-[200px]">
+                                                <span className="text-[12px] font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate max-w-[200px]">
                                                     {template.name}
                                                 </span>
                                             </div>
@@ -1808,9 +1818,9 @@ export default function TemplateManager() {
                                                     {["REJECTED", "PAUSED"].includes(String(template.status).toUpperCase()) && (
                                                     <DropdownMenuItem
                                                         onClick={() => handleOpenEditTemplate(template.id)}
-                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                                     >
-                                                        <Edit2 size={14} className="text-blue-500" />
+                                                        <Edit2 size={14} className="text-primary" />
                                                         {t("template_manager.row_menu.edit_template")}
                                                     </DropdownMenuItem>
                                                     )}
@@ -1819,16 +1829,16 @@ export default function TemplateManager() {
                                                             setPreviewTemplateId(template.id);
                                                             setPreviewOpen(true);
                                                         }}
-                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                                     >
-                                                        <Eye size={14} className="text-blue-500" />
+                                                        <Eye size={14} className="text-primary" />
                                                         {t("template_manager.row_menu.preview")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => handleOpenCloneDialog(template.id)}
-                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                                                        className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                                     >
-                                                        <Copy size={14} className="text-blue-500" />
+                                                        <Copy size={14} className="text-primary" />
                                                         {t("template_manager.row_menu.clone_kit")}
                                                     </DropdownMenuItem>
                                                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1"></div>
@@ -1870,8 +1880,8 @@ export default function TemplateManager() {
                                                 <li
                                                     key={option}
                                                     className={cn(
-                                                        "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors text-center",
-                                                        rowsPerPage === option ? "bg-blue-50 text-blue-600" : "text-slate-600"
+                                                        "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors text-center",
+                                                        rowsPerPage === option ? "bg-primary/10 text-primary" : "text-slate-600"
                                                     )}
                                                     onClick={() => {
                                                         setRowsPerPage(option);
@@ -2026,8 +2036,8 @@ export default function TemplateManager() {
                     data-testid="card-category-utility"
                   >
                     <CardHeader className="text-center pb-2">
-                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Bell size={24} className="text-blue-600" />
+                      <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Bell size={24} className="text-primary" />
                       </div>
                       <CardTitle className="text-base">{t("template_manager.create_dialog.category_step.utility_title")}</CardTitle>
                     </CardHeader>
@@ -2038,9 +2048,9 @@ export default function TemplateManager() {
 
                 </div>
                 {/* Category Guidelines Banner */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
-                  <h4 className="font-semibold text-base text-blue-800 mb-2 dark:text-blue-300">{t("template_manager.create_dialog.category_step.guidelines_title")}</h4>
-                  <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5 dark:text-blue-300">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 dark:bg-primary/30 dark:border-primary dark:text-primary/50">
+                  <h4 className="font-semibold text-base text-primary mb-2 dark:text-primary/50">{t("template_manager.create_dialog.category_step.guidelines_title")}</h4>
+                  <ul className="text-sm text-primary space-y-1 list-disc pl-5 dark:text-primary/50">
                     <li><strong>{t("template_manager.create_dialog.category_step.marketing_title")}:</strong> {t("template_manager.create_dialog.category_step.guideline_marketing_text")}</li>
                     <li><strong>{t("template_manager.create_dialog.category_step.utility_title")}:</strong> {t("template_manager.create_dialog.category_step.guideline_utility_text")}</li>
                   </ul>
@@ -2135,11 +2145,19 @@ export default function TemplateManager() {
                           <SelectContent>
                             {/* Values are Meta locale codes. The old list sent
                                 English words ("French"), which Meta rejects. */}
-                            {WA_TEMPLATE_LANGUAGES.map((lang) => (
-                              <SelectItem key={lang.slug} value={lang.slug}>
-                                {lang.name} ({lang.slug})
-                              </SelectItem>
-                            ))}
+                            {WA_TEMPLATE_LANGUAGES.map((lang) => {
+                              const flagCode = getLanguageFlag(lang.slug);
+                              return (
+                                <SelectItem key={lang.slug} value={lang.slug}>
+                                  <span className="flex items-center gap-2">
+                                    {flagCode && (
+                                      <img src={`https://flagcdn.com/w20/${flagCode}.png`} alt="" className="w-4 h-3 object-cover rounded-[2px]" />
+                                    )}
+                                    {lang.name} ({lang.slug})
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
