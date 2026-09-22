@@ -703,7 +703,7 @@ export default function CallLogsPage() {
 
                     <div className="flex items-center gap-2 ml-auto">
                         <Select value={dateRangePreset} onValueChange={(v) => { setDateRangePreset(v); setPage(1); }}>
-                            <SelectTrigger style={{ borderRadius: '6px' }} className="h-9 w-[140px] !rounded-md border border-input bg-white dark:bg-slate-800/50 text-[12px] font-medium shadow-sm hover:bg-slate-50 transition-all">
+                            <SelectTrigger className="h-9 w-[140px] rounded-xl border border-input bg-white dark:bg-slate-800/50 text-[12px] font-medium shadow-sm hover:bg-slate-50 transition-all">
                                 <Calendar className="h-3.5 w-3.5 mr-2 text-slate-400" />
                                 <SelectValue />
                             </SelectTrigger>
@@ -720,7 +720,7 @@ export default function CallLogsPage() {
                         {dateRangePreset === "custom" && (
                             <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" style={{ borderRadius: '6px' }} className="h-9 px-3 !rounded-md border border-input bg-white dark:bg-slate-800/50 text-[11px] font-medium gap-2 shadow-sm">
+                                    <Button variant="outline" className="h-9 px-3 rounded-xl border border-input bg-white dark:bg-slate-800/50 text-[11px] font-medium gap-2 shadow-sm">
                                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                         <span>
                                             {customDateRange?.from ? format(customDateRange.from, 'dd/MM') : t("call_logs_page.date_start")} - {customDateRange?.to ? format(customDateRange.to, 'dd/MM') : t("call_logs_page.date_end")}
@@ -744,7 +744,7 @@ export default function CallLogsPage() {
                             onChange={(v) => { setSelectedDirection(v); setPage(1); }}
                             placeholder={t("call_logs_page.direction_placeholder")}
                             width="140px"
-                            className="!w-[140px]"
+                            className="!w-[140px] border-slate-200 dark:border-slate-800"
                             showSelectedOption={true}
                             showSearch={false}
                             triggerContent={
@@ -766,7 +766,7 @@ export default function CallLogsPage() {
                             onChange={(v) => { setSelectedStatus(v); setPage(1); }}
                             placeholder={t("call_logs_page.status_placeholder")}
                             width="140px"
-                            className="!w-[140px]"
+                            className="!w-[140px] border-slate-200 dark:border-slate-800"
                             popoutAlign="right"
                             showSelectedOption={true}
                             showSearch={false}

@@ -104,7 +104,7 @@ export default function WhatsAppPricingTab() {
         {/* Right: High-density Filter */}
         <div className="flex items-center gap-3">
           <InsightsDateRangePicker tab="whatsapp" />
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
+          <div className="flex items-center gap-1.5 h-9 px-2 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
             <Globe size={11} className="text-slate-400" />
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("whatsapp_pricing_tab.region_label")}</span>
           </div>
@@ -113,7 +113,7 @@ export default function WhatsAppPricingTab() {
             selected={selectedCountries}
             onChange={setSelectedCountries}
             placeholder={t("whatsapp_pricing_tab.all_countries")}
-            className="h-8 min-w-[130px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
+            className="h-9 min-w-[130px] text-[10px] border-slate-200 dark:border-slate-800 shadow-sm"
             popoutAlign="right"
           />
         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
@@ -59,6 +59,12 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
   });
   const agentCSATData: Array<{ agentName: string; agentId: string; team: string; great: number; average: number; poor: number; total: number }> = csatDet?.agentCSAT ?? [];
   const feedbackData: Array<{ conversationId: string; customer: string; agent: string; rating: string; date: string }> = csatDet?.feedback ?? [];
+
+  // Reset to page 1 whenever the underlying data changes (e.g. team/agent/date
+  // filters from the parent), so a shorter result set never leaves the user
+  // stranded on a now-empty page.
+  useEffect(() => setPageAgent(1), [agentCSATData.length]);
+  useEffect(() => setPageFeedback(1), [feedbackData.length]);
 
   const handleAgentSort = (column: string) => {
     setPageAgent(1);

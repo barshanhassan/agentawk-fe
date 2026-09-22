@@ -31,8 +31,7 @@ export default function InsightsDateRangePicker({ tab }: { tab: InsightsTabKey }
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          style={{ borderRadius: "6px" }}
-          className="h-9 px-3 bg-white dark:bg-slate-800/50 border border-input shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 text-[12px] font-medium text-slate-700 dark:text-slate-200 gap-2"
+          className="h-9 px-3 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 text-[12px] font-medium text-slate-700 dark:text-slate-200 gap-2"
           data-testid={`button-insights-date-range-${tab}`}
         >
           {overridden ? <Unlink className="h-3.5 w-3.5 text-primary shrink-0" /> : <CalendarIcon className="h-3.5 w-3.5 text-slate-400 shrink-0" />}

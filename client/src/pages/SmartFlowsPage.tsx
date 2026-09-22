@@ -87,6 +87,11 @@ export default function SmartFlowsPage() {
     // `showSelectedOption` mode so the trigger shows the chosen option's name.
     const [selectedFolders, setSelectedFolders] = useState<string[]>(["all"]);
     const [statusFilter, setStatusFilter] = useState<string[]>(["all"]);
+    // Coordinates the toolbar's Folder/Users/Sort dropdowns so only one is
+    // open at a time — they're built on different underlying components
+    // (CustomDropdown vs Radix DropdownMenu), so without this each manages
+    // its own open state independently and they can overlap.
+    const [openToolbarDropdown, setOpenToolbarDropdown] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [newFlowName, setNewFlowName] = useState("");
@@ -456,16 +461,17 @@ export default function SmartFlowsPage() {
                 {/* Filters Section */}
                 <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-4 bg-white dark:bg-transparent">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {/* Folder Dropdown — leads the toolbar (replyagent parity) */}
-                        <CustomDropdown
-                            options={folderOptions}
-                            selected={selectedFolders}
-                            onChange={setSelectedFolders}
-                            placeholder={t("smart_flows_page.all_folders")}
-                            width="160px"
-                            showSearch={true}
-                            showSelectedOption={true}
-                        />
+                        {/* Search */}
+                        <div className="relative w-56 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-3.5 h-3.5" />
+                            <Input
+                                type="text"
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                placeholder={t("smart_flows_page.search_placeholder")}
+                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
 
                         {/* Create Folder Button */}
                         <button
@@ -510,17 +516,19 @@ export default function SmartFlowsPage() {
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                        {/* Search */}
-                        <div className="relative w-56 group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-3.5 h-3.5" />
-                            <Input
-                                type="text"
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                                placeholder={t("smart_flows_page.search_placeholder")}
-                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
-                            />
-                        </div>
+                        {/* Folder Dropdown */}
+                        <CustomDropdown
+                            options={folderOptions}
+                            selected={selectedFolders}
+                            onChange={setSelectedFolders}
+                            placeholder={t("smart_flows_page.all_folders")}
+                            width="160px"
+                            showSearch={true}
+                            showSelectedOption={true}
+                            className="border-slate-200 dark:border-slate-700"
+                            isOpen={openToolbarDropdown === "folder"}
+                            onOpenChange={(open) => setOpenToolbarDropdown(open ? "folder" : null)}
+                        />
 
                         {/* Users Dropdown — single-select */}
                         <CustomDropdown
@@ -531,11 +539,17 @@ export default function SmartFlowsPage() {
                             width="170px"
                             showSearch={true}
                             showSelectedOption={true}
+                            className="border-slate-200 dark:border-slate-700"
+                            isOpen={openToolbarDropdown === "users"}
+                            onOpenChange={(open) => setOpenToolbarDropdown(open ? "users" : null)}
                         />
                     </div>
 
                     {/* Sort dropdown — From newest / From oldest (replyagent parity) */}
-                    <DropdownMenu>
+                    <DropdownMenu
+                        open={openToolbarDropdown === "sort"}
+                        onOpenChange={(open) => setOpenToolbarDropdown(open ? "sort" : null)}
+                    >
                         <DropdownMenuTrigger asChild>
                             <button className="flex items-center gap-2 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-200 shadow-sm transition-all">
                                 {sortOrder === 'desc' ? (

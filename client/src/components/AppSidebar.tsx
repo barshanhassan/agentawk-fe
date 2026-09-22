@@ -756,6 +756,7 @@ export default function AppSidebar() {
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
+                        className="border-slate-200 dark:border-slate-800"
                       />
                     </div>
 
@@ -770,6 +771,7 @@ export default function AppSidebar() {
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
+                        className="border-slate-200 dark:border-slate-800"
                       />
                     </div>
 

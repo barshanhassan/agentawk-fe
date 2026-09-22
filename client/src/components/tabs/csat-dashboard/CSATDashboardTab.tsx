@@ -87,7 +87,7 @@ export default function CSATDashboardTab() {
             onChange={setSelectedTeams}
             placeholder={t("csat_dashboard.teams_placeholder")}
             width="120px"
-            className="!w-[120px] !rounded-md"
+            className="!w-[120px] border-slate-200 dark:border-slate-800"
             triggerContent={
               <>
                 <div className="flex items-center gap-2 truncate">
@@ -106,7 +106,7 @@ export default function CSATDashboardTab() {
             onChange={setSelectedAgents}
             placeholder={t("csat_dashboard.agents_placeholder")}
             width="120px"
-            className="!w-[120px] !rounded-md"
+            className="!w-[120px] border-slate-200 dark:border-slate-800"
             popoutAlign="right"
             triggerContent={
               <>

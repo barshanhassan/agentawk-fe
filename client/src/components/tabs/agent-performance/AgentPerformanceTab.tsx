@@ -77,7 +77,7 @@ export default function AgentPerformanceTab() {
         {/* Right: High-density Filters */}
         <div className="flex items-center gap-3">
           <InsightsDateRangePicker tab="performance" />
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
+          <div className="flex items-center gap-1.5 h-9 px-2 rounded-lg bg-slate-200/30 dark:bg-slate-800/30">
             <Filter size={11} className="text-slate-400" />
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("agent_performance_tab.filters")}</span>
           </div>
@@ -87,14 +87,14 @@ export default function AgentPerformanceTab() {
               selected={selectedTeams}
               onChange={setSelectedTeams}
               placeholder={t("agent_performance_tab.teams")}
-              className="h-8 min-w-[100px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
+              className="h-9 min-w-[100px] text-[10px] border-slate-200 dark:border-slate-800 shadow-sm"
             />
             <CustomDropdown
               options={agents}
               selected={selectedAgents}
               onChange={setSelectedAgents}
               placeholder={t("agent_performance_tab.agents")}
-              className="h-8 min-w-[100px] text-[10px] rounded-lg border-slate-200 dark:border-slate-800 shadow-sm"
+              className="h-9 min-w-[100px] text-[10px] border-slate-200 dark:border-slate-800 shadow-sm"
             />
           </div>
         </div>

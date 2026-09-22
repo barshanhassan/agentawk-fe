@@ -1409,14 +1409,14 @@ export default function ContactsSection() {
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1">
               <CustomDropdown
                 options={tagFilterOptions}
                 selected={selectedTags}
                 onChange={setSelectedTags}
                 placeholder={t("contacts_section.filters.tags")}
                 width="120px"
-                className="!w-[120px]"
+                className="!w-[120px] border-slate-200 dark:border-slate-800"
                 showSelectedOption={true}
                 showSearch={false}
                 triggerContent={
@@ -1437,7 +1437,7 @@ export default function ContactsSection() {
               {/* Created At Popover */}
               <Popover open={createdAtOpen} onOpenChange={setCreatedAtOpen}>
                 <PopoverTrigger asChild>
-                  <button style={{ borderRadius: '6px' }} className="h-9 w-[120px] px-3 flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 !rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-[11px] font-medium text-slate-600 dark:text-slate-300 shadow-sm border-0">
+                  <button className="h-9 w-[120px] px-3 flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-[11px] font-medium text-slate-600 dark:text-slate-300 shadow-sm">
                     <Calendar size={13} className="text-slate-400" />
                     <span>{createdAtRange?.from ? format(createdAtRange.from, 'dd MMM') : t("contacts_section.filters.created")}</span>
                   </button>
@@ -1451,16 +1451,15 @@ export default function ContactsSection() {
                 </PopoverContent>
               </Popover>
 
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 ml-auto" />
 
               {/* Sort Button & Dropdown */}
               <div className="relative" ref={sortDropdownRef}>
                 <Button
                   onClick={() => setShowSort(!showSort)}
                   variant="outline"
-                  style={{ borderRadius: '6px' }}
                   className={cn(
-                    "h-9 w-[120px] px-3 !rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
+                    "h-9 w-[120px] px-3 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
                     showSort ? "bg-primary/10 text-primary border-primary/30" : "bg-white text-slate-600"
                   )}
                 >
@@ -1537,9 +1536,8 @@ export default function ContactsSection() {
                 <Button
                   onClick={() => setShowFilter(!showFilter)}
                   variant="outline"
-                  style={{ borderRadius: '6px' }}
                   className={cn(
-                    "h-9 w-[120px] px-3 !rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
+                    "h-9 w-[120px] px-3 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-800 shadow-sm",
                     showFilter ? "bg-primary/10 text-primary border-primary/30" : "bg-white text-slate-600"
                   )}
                 >
@@ -1936,6 +1934,7 @@ export default function ContactsSection() {
                   onChange={(sel) => setImportCountryId(sel[0] ?? "")}
                   placeholder={t("contacts_section.import_modal.select_country", "Select country")}
                   width="100%"
+                  className="border-slate-200 dark:border-slate-800"
                 />
                 <p className="text-[10.5px] text-muted-foreground leading-snug">
                   {t(
@@ -2075,6 +2074,7 @@ export default function ContactsSection() {
                 onChange={setNewContactTags}
                 placeholder={t("contacts_section.common.select_tags")}
                 width="100%"
+                className="border-slate-200 dark:border-slate-800"
               />
             </div>
           </div>
@@ -2198,6 +2198,7 @@ export default function ContactsSection() {
                 onChange={setEditContactTags}
                 placeholder={t("contacts_section.common.select_tags")}
                 width="100%"
+                className="border-slate-200 dark:border-slate-800"
               />
             </div>
           </div>

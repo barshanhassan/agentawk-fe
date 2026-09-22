@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Trash2, Edit2, Copy, X } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -322,6 +322,10 @@ export default function UserManagementSection() {
   const [filterStatus, setFilterStatus] = useState<UserStatus[]>([]);
   const [isInvitedUserEditing, setIsInvitedUserEditing] = useState(false);
 
+  // Reset to page 1 whenever search/filters narrow the result set, so a
+  // shorter list never leaves the user stranded on a now-empty page.
+  useEffect(() => setPage(1), [search, filterRole, filterStatus]);
+
   // Create User Modal State
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [newFirstName, setNewFirstName] = useState("");
@@ -579,6 +583,7 @@ export default function UserManagementSection() {
           onChange={(selectedIds) => setFilterRole(selectedIds as UserRole[])}
           placeholder={t("user_management_section.filter_role_placeholder")}
           width="190px"
+          className="border-slate-200 dark:border-slate-800"
         />
         <CustomDropdown
           options={statusOptions}
@@ -586,6 +591,7 @@ export default function UserManagementSection() {
           onChange={(selectedIds) => setFilterStatus(selectedIds as UserStatus[])}
           placeholder={t("user_management_section.filter_status_placeholder")}
           width="120px"
+          className="border-slate-200 dark:border-slate-800"
         />
       </div>
 

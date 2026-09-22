@@ -2660,6 +2660,7 @@ export default function CampaignManager() {
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
+                        className="border-slate-200 dark:border-slate-800"
                         triggerContent={
                             <>
                                 <span className={cn("truncate text-[12px]", dateRangeFilter.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
@@ -2696,6 +2697,7 @@ export default function CampaignManager() {
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
+                        className="border-slate-200 dark:border-slate-800"
                         triggerContent={
                             <>
                                 <span className={cn("truncate text-[12px]", selectedStatus.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
@@ -2731,6 +2733,7 @@ export default function CampaignManager() {
                         width="100%"
                         showSelectedOption={true}
                         showSearch={false}
+                        className="border-slate-200 dark:border-slate-800"
                         triggerContent={
                             <>
                                 <span className={cn("truncate text-[12px]", selectedChannels.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>
@@ -2763,6 +2766,7 @@ export default function CampaignManager() {
                         width="100%"
                         showSelectedOption={true}
                         showSearch={workspaceUsers.length > 6}
+                        className="border-slate-200 dark:border-slate-800"
                         triggerContent={
                             <>
                                 <span className={cn("truncate text-[12px]", selectedAgents.length > 0 ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400")}>

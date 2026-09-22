@@ -96,9 +96,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <div
         role="button"
         tabIndex={0}
-        style={{ borderRadius: '6px' }}
         className={cn(
-          "h-9 w-full flex items-center justify-between px-3 text-left bg-white dark:bg-slate-800/50 border border-input shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer focus:outline-none text-[12px] font-medium text-slate-700 dark:text-slate-200 transition-all",
+          "h-9 w-full flex items-center justify-between px-3 text-left rounded-xl bg-white dark:bg-slate-800/50 border border-input shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer focus:outline-none text-[12px] font-medium text-slate-700 dark:text-slate-200 transition-all",
           className
         )}
         onClick={() => setIsOpen(!isOpen)}

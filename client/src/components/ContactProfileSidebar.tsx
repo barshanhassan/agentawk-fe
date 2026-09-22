@@ -1038,6 +1038,7 @@ export default function ContactProfileSidebar({
                                     onChange={onUpdateTags}
                                     placeholder={t("contact_profile_sidebar.tags.select_tags")}
                                     width="100%"
+                                    className="border-slate-200 dark:border-slate-800"
                                 />
                                 {/* Selected tags render once, here, with remove buttons — the
                                     dropdown trigger used to also list every tag name inline,
@@ -1700,6 +1701,7 @@ export default function ContactProfileSidebar({
                                 onChange={(tags) => setNewOpportunity({ ...newOpportunity, tags })}
                                 placeholder={t("contact_profile_sidebar.tags.select_tags")}
                                 width="100%"
+                                className="border-slate-200 dark:border-slate-800"
                             />
                         </div>
                         <div>

@@ -90,7 +90,7 @@ export default function VoiceOfCustomerTab() {
             onChange={setSelectedTeams}
             placeholder={t("voice_of_customer_tab.teams")}
             width="120px"
-            className="!w-[120px] !rounded-md"
+            className="!w-[120px] border-slate-200 dark:border-slate-800"
             triggerContent={
               <>
                 <div className="flex items-center gap-2 truncate">
@@ -109,7 +109,7 @@ export default function VoiceOfCustomerTab() {
             onChange={setSelectedAgents}
             placeholder={t("voice_of_customer_tab.agents")}
             width="120px"
-            className="!w-[120px] !rounded-md"
+            className="!w-[120px] border-slate-200 dark:border-slate-800"
             popoutAlign="right"
             triggerContent={
               <>

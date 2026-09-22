@@ -4852,6 +4852,7 @@ export default function ConversationsInbox() {
                   onChange={setFilterTeams}
                   placeholder={t("conversations_inbox.dialogs.filter.select_teams")}
                   width="100%"
+                  className="border-slate-200 dark:border-slate-800"
                 />
               </div>
 
@@ -4863,6 +4864,7 @@ export default function ConversationsInbox() {
                   onChange={setFilterAgents}
                   placeholder={t("conversations_inbox.dialogs.filter.select_agents")}
                   width="100%"
+                  className="border-slate-200 dark:border-slate-800"
                 />
               </div>
 
@@ -4874,6 +4876,7 @@ export default function ConversationsInbox() {
                   onChange={setFilterStatus}
                   placeholder={t("conversations_inbox.dialogs.filter.select_status")}
                   width="100%"
+                  className="border-slate-200 dark:border-slate-800"
                 />
               </div>
             </div>
@@ -5185,6 +5188,7 @@ export default function ConversationsInbox() {
                         placeholder={t("conversations_inbox.dialogs.template_message.select_template")}
                         width="100%"
                         showSelectedOption={true}
+                        className="border-slate-200 dark:border-slate-800"
                       />
                       {broadcastTemplates.length === 0 && (
                         <p className="text-sm text-muted-foreground">

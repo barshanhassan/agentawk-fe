@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Search,
@@ -339,6 +339,10 @@ export default function TagsSection() {
 
   const totalFilteredItems = filteredAndSorted.length;
   const totalPages = Math.max(1, Math.ceil(totalFilteredItems / rowsPerPage));
+
+  // Reset to page 1 whenever search/filters narrow the result set, so a
+  // shorter list never leaves the user stranded on a now-empty page.
+  useEffect(() => setPage(1), [search, forFilter, folderFilter]);
   const paginatedData = filteredAndSorted.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const openEdit = (item: Tag) => {

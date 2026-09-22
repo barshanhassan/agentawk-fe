@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -83,6 +83,12 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
       date: r.date,
       channel: r.channel,
     }));
+
+  // Reset to page 1 whenever the underlying data changes (e.g. team/agent/date
+  // filters from the parent), so a shorter result set never leaves the user
+  // stranded on a now-empty page.
+  useEffect(() => setPageAgent(1), [agentPerformanceData.length]);
+  useEffect(() => setPageConversation(1), [customerSentimentData.length]);
 
   const handleAgentSort = (column: string) => {
     setPageAgent(1);
