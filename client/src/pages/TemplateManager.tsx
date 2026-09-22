@@ -1348,7 +1348,7 @@ export default function TemplateManager() {
                             placeholder={t("template_manager.filters.search_placeholder")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-8.5 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-lg text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400"
+                            className="pl-9 h-9 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-lg text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400"
                             data-testid="input-search"
                         />
                     </div>
@@ -1366,7 +1366,7 @@ export default function TemplateManager() {
                             onChange={setSelectedCategories}
                             placeholder={t("template_manager.filters.categories")}
                             width="140px"
-                            className="h-8.5"
+                            className="h-9"
                         />
 
                         <CustomDropdown
@@ -1384,7 +1384,7 @@ export default function TemplateManager() {
                             onChange={setSelectedLanguages}
                             placeholder={t("template_manager.filters.languages")}
                             width="140px"
-                            className="h-8.5"
+                            className="h-9"
                         />
 
                         <CustomDropdown
@@ -1398,7 +1398,7 @@ export default function TemplateManager() {
                             onChange={setSelectedStatuses}
                             placeholder={t("template_manager.filters.status")}
                             width="160px"
-                            className="h-8.5"
+                            className="h-9"
                         />
                     </div>
 
@@ -1408,7 +1408,7 @@ export default function TemplateManager() {
                                 variant="outline"
                                 onClick={() => setShowSort(!showSort)}
                                 className={cn(
-                                    "h-8.5 px-3 rounded-lg text-[11px] font-semibold border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-all",
+                                    "h-9 px-3 rounded-lg text-[11px] font-semibold border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-all",
                                     sorts.length > 0 ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-900 hover:bg-slate-50"
                                 )}
                             >
@@ -1527,7 +1527,7 @@ export default function TemplateManager() {
                                 variant="outline"
                                 onClick={() => setShowFilter(!showFilter)}
                                 className={cn(
-                                    "h-8.5 px-3 rounded-lg text-[10px] font-black border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-all uppercase tracking-wider",
+                                    "h-9 px-3 rounded-lg text-[10px] font-black border-slate-200 dark:border-slate-800 flex items-center gap-2 transition-all uppercase tracking-wider",
                                     filters.length > 0 ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-900 hover:bg-slate-50"
                                 )}
                             >
