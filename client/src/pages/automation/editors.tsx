@@ -265,12 +265,17 @@ export function PrimitiveField({ field, value, onChange, contextual }: Primitive
     case "keywords":
       return (
         <Textarea
-          value={Array.isArray(value) ? value.join("\n") : value ?? ""}
+          value={Array.isArray(value) ? value.join(", ") : value ?? ""}
           rows={3}
-          placeholder="One keyword per line"
+          placeholder="Comma or newline separated"
           onChange={(e) =>
             onChange(
-              e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
+              // Split on comma AND newline — the schema labels this field
+              // "Keywords (comma separated)" but this only ever split on "\n",
+              // so a comma-separated entry like "order, support, help" saved
+              // as one single keyword string that could never match a short
+              // message, silently breaking every keyword trigger typed that way.
+              e.target.value.split(/[,\n]/).map((s) => s.trim()).filter(Boolean),
             )
           }
         />
