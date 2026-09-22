@@ -2,10 +2,6 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Trash2,
   Edit2,
 } from "react-feather";
@@ -50,6 +46,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
+import PaginationFooter from "@/components/PaginationFooter";
 
 // Replyagent's `for` filter: which entity a tag is scoped to. Backend
 // translates these to Laravel namespace paths under the hood.
@@ -640,48 +637,19 @@ export default function TagsSection() {
               </div>
 
               {!isLoading && (
-                <div className={cn("px-6 py-3 border-t flex items-center justify-between flex-wrap gap-3", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}>
-                  <span className={cn("text-[11px] font-semibold", sub)}>
-                    {t("tags_section.results_count", { count: totalFilteredItems })}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("text-[11px] font-semibold", sub)}>{t("tags_section.rows_label")}</span>
-                    <select
-                      value={rowsPerPage}
-                      onChange={(e) => {
-                        setRowsPerPage(Number(e.target.value));
-                        setPage(1);
-                      }}
-                      className={cn(selectCls, "h-8 w-20 text-[11px] px-3")}
-                    >
-                      {[10, 25, 50].map((o) => (
-                        <option key={o} value={o}>
-                          {o}
-                        </option>
-                      ))}
-                    </select>
-                    <span className={cn("text-[11px] font-semibold", sub)}>
-                      {t("tags_section.page_of", { page, totalPages })}
-                    </span>
-                    <div className="flex gap-1">
-                      {[
-                        { Icon: ChevronsLeft, onClick: () => setPage(1), disabled: page === 1 },
-                        { Icon: ChevronLeft, onClick: () => setPage((p) => Math.max(1, p - 1)), disabled: page === 1 },
-                        { Icon: ChevronRight, onClick: () => setPage((p) => Math.min(totalPages, p + 1)), disabled: page === totalPages || totalFilteredItems === 0 },
-                        { Icon: ChevronsRight, onClick: () => setPage(totalPages), disabled: page === totalPages || totalFilteredItems === 0 },
-                      ].map(({ Icon, onClick, disabled }, i) => (
-                        <button
-                          key={i}
-                          onClick={onClick}
-                          disabled={disabled}
-                          className={cn("w-8 h-8 rounded-lg border flex items-center justify-center transition-all disabled:opacity-40", softBorder, dark ? "hover:border-primary/40 hover:text-primary text-slate-400" : "hover:border-primary/40 hover:text-primary text-slate-500")}
-                        >
-                          <Icon size={14} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <PaginationFooter
+                  totalLabel={t("tags_section.results_count", { count: totalFilteredItems })}
+                  rowsLabel={t("tags_section.rows_label")}
+                  rowsOptions={[10, 25, 50]}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(1); }}
+                  page={page}
+                  totalPages={totalPages}
+                  pagePrefixLabel={t("tags_section.page_prefix")}
+                  pageOfLabel={t("tags_section.of_label")}
+                  onPageChange={setPage}
+                  className={cn("border-t", softBorder, dark ? "bg-slate-900/40" : "bg-white/60")}
+                />
               )}
             </div>
           </div>

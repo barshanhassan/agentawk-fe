@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Search, RefreshCw, MoreVertical, Download, FileText } from "react-feather";
-import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MessageSquare, Mic, Play, Pause, SkipForward, SkipBack, X, Activity } from "lucide-react";
+import { Calendar, ChevronsUpDown, ChevronDown, ChevronUp, MessageSquare, Mic, Play, Pause, SkipForward, SkipBack, X, Activity } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import CustomDropdown from "@/components/CustomDropdown";
+import PaginationFooter from "@/components/PaginationFooter";
 import { format } from "date-fns";
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -191,9 +192,6 @@ export default function CallLogsPage() {
     };
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
     const [callSorts, setCallSorts] = useState<SortEntry[]>([]);
-    const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
 
     const [speedDropdownOpen, setSpeedDropdownOpen] = useState(false);
     const speedDropdownRef = useRef<HTMLDivElement>(null);
@@ -449,9 +447,6 @@ export default function CallLogsPage() {
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setRowsDropdownOpen(false);
-            }
             if (speedDropdownRef.current && !speedDropdownRef.current.contains(event.target as Node)) {
                 setSpeedDropdownOpen(false);
             }
@@ -970,89 +965,18 @@ export default function CallLogsPage() {
                 </div>
 
                 {/* 5. Footer / Pagination Section */}
-                <div className="px-5 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-[11px] font-medium text-slate-500">
-                        <span>{t("call_logs_page.results_found", { count: logsResponse?.total || 0 })}</span>
-                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
-                        <div className="flex items-center gap-2">
-                            <span>{t("call_logs_page.show_label")}</span>
-                            <div className="relative" ref={dropdownRef}>
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 transition-colors"
-                                    onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                                >
-                                    <span className="font-bold text-slate-700 dark:text-slate-200">{rowsPerPage}</span>
-                                    <ChevronDown size={10} className="text-slate-400" />
-                                </button>
-                                {rowsDropdownOpen && (
-                                    <div className="absolute bottom-full left-0 mb-1 z-50 w-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden animate-in slide-in-from-bottom-1">
-                                        {[10, 25, 50].map(option => (
-                                            <button
-                                                key={option}
-                                                className="w-full px-3 py-1.5 text-left hover:bg-primary/10 dark:hover:bg-primary/15 text-slate-600 dark:text-slate-300 transition-colors font-medium"
-                                                onClick={() => {
-                                                    setRowsPerPage(option);
-                                                    setPage(1);
-                                                    setRowsDropdownOpen(false);
-                                                }}
-                                            >
-                                                {option}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 mr-2">
-                            <span>{t("call_logs_page.page_label")}</span>
-                            <span className="text-slate-900 dark:text-white">{page}</span>
-                            <span>{t("call_logs_page.of_label")}</span>
-                            <span>{totalPages || 1}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800 shadow-sm"
-                                onClick={() => setPage(1)}
-                                disabled={page === 1}
-                            >
-                                <ChevronsLeft size={12} />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800 shadow-sm"
-                                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                                disabled={page === 1}
-                            >
-                                <ChevronLeft size={12} />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800 shadow-sm"
-                                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={page === totalPages}
-                            >
-                                <ChevronRight size={12} />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-800 shadow-sm"
-                                onClick={() => setPage(totalPages)}
-                                disabled={page === totalPages}
-                            >
-                                <ChevronsRight size={12} />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <PaginationFooter
+                    totalLabel={t("call_logs_page.results_found", { count: logsResponse?.total || 0 })}
+                    rowsLabel={t("call_logs_page.show_label")}
+                    rowsOptions={[10, 25, 50]}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(1); }}
+                    page={page}
+                    totalPages={totalPages || 1}
+                    pagePrefixLabel={t("call_logs_page.page_label")}
+                    pageOfLabel={t("call_logs_page.of_label")}
+                    onPageChange={setPage}
+                />
             </div>
         </div>
 

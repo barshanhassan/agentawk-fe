@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, X } from "react-feather";
+import { useState } from "react";
+import { Search, Trash2, Edit2, Copy, X } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
+import PaginationFooter from "@/components/PaginationFooter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
@@ -321,9 +322,6 @@ export default function UserManagementSection() {
   const [filterStatus, setFilterStatus] = useState<UserStatus[]>([]);
   const [isInvitedUserEditing, setIsInvitedUserEditing] = useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
-
   // Create User Modal State
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [newFirstName, setNewFirstName] = useState("");
@@ -548,16 +546,6 @@ export default function UserManagementSection() {
     }
   };
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setRowsDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
     <div className="space-y-6">
       {/* Header Section - Outside Card */}
@@ -711,72 +699,19 @@ export default function UserManagementSection() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="text-muted-foreground">{t("user_management_section.results_count", { count: totalFilteredUsers() })}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">{t("user_management_section.rows_per_page_label")}</span>
-              <div className="relative w-15" ref={dropdownRef}>
-                <button
-                  type="button"
-                  className="flex items-center justify-between px-3 py-2 text-left bg-background border border-input rounded-md shadow-sm hover:bg-accent focus:outline-none text-foreground transition-colors"
-                  onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                >
-                  <span className="truncate text-xs font-normal">{rowsPerPage}</span>
-                  <ChevronDown className="h-3 w-3 ml-2 text-muted-foreground" />
-                </button>
-                {rowsDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-2 bg-background rounded-md shadow-md border border-border">
-                    <ul className="py-1">
-                      {[10, 25, 50].map(option => (
-                        <li
-                          key={option}
-                          className="px-3 py-2 text-xs cursor-pointer hover:bg-muted"
-                          onClick={() => {
-                            setRowsPerPage(option);
-                            setPage(1); // Reset to first page when rows per page changes
-                            setRowsDropdownOpen(false);
-                          }}
-                        >
-                          {option}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <span className="text-muted-foreground">{t("user_management_section.page_of_label", { page, totalPages: Math.ceil(totalFilteredUsers() / rowsPerPage) })}</span>
-              <div className="flex gap-1">
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                >
-                  <ChevronsLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(prev => Math.min(Math.ceil(totalFilteredUsers() / rowsPerPage), prev + 1))}
-                  disabled={page === Math.ceil(totalFilteredUsers() / rowsPerPage)}
-                >
-                  <ChevronRight size={16} />
-                </button>
-                <button
-                  className="p-1 hover:bg-muted rounded disabled:opacity-50"
-                  onClick={() => setPage(Math.ceil(totalFilteredUsers() / rowsPerPage))}
-                  disabled={page === Math.ceil(totalFilteredUsers() / rowsPerPage)}
-                >
-                  <ChevronsRight size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
+          <PaginationFooter
+            totalLabel={t("user_management_section.results_count", { count: totalFilteredUsers() })}
+            rowsLabel={t("user_management_section.rows_per_page_label")}
+            rowsOptions={[10, 25, 50]}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(1); }}
+            page={page}
+            totalPages={Math.max(1, Math.ceil(totalFilteredUsers() / rowsPerPage))}
+            pagePrefixLabel={t("user_management_section.page_prefix")}
+            pageOfLabel={t("user_management_section.of_label")}
+            onPageChange={setPage}
+            className="mt-4 px-0"
+          />
         </CardContent>
       </Card>
 

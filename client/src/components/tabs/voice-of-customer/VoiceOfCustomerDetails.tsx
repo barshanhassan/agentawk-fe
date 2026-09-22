@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { Search } from "lucide-react";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
+import PaginationFooter from "@/components/PaginationFooter";
 
 type SortDirection = "asc" | "desc" | "default";
 
@@ -39,13 +40,10 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
   const [searchConversation, setSearchConversation] = useState("");
   const [rowsPerPageAgent, setRowsPerPageAgent] = useState(10);
   const [rowsPerPageConversation, setRowsPerPageConversation] = useState(10);
+  const [pageAgent, setPageAgent] = useState(1);
+  const [pageConversation, setPageConversation] = useState(1);
   const [agentSort, setAgentSort] = useState<SortState>({ column: null, direction: "default" });
   const [conversationSort, setConversationSort] = useState<SortState>({ column: null, direction: "default" });
-  
-  const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
-  const [conversationDropdownOpen, setConversationDropdownOpen] = useState(false);
-  const agentDropdownRef = useRef<HTMLDivElement>(null);
-  const conversationDropdownRef = useRef<HTMLDivElement>(null);
 
   // Real sentiment details. Backend computes per-agent counts + per-conversation
   // sentiment classification (keyword-based, no NLP API).
@@ -87,6 +85,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
     }));
 
   const handleAgentSort = (column: string) => {
+    setPageAgent(1);
     setAgentSort((prev) => {
       if (prev.column === column) {
         if (prev.direction === "default") return { column, direction: "asc" };
@@ -98,6 +97,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
   };
 
   const handleConversationSort = (column: string) => {
+    setPageConversation(1);
     setConversationSort((prev) => {
       if (prev.column === column) {
         if (prev.direction === "default") return { column, direction: "asc" };
@@ -159,47 +159,13 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
     );
   };
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (agentDropdownRef.current && !agentDropdownRef.current.contains(event.target as Node)) setAgentDropdownOpen(false);
-      if (conversationDropdownRef.current && !conversationDropdownRef.current.contains(event.target as Node)) setConversationDropdownOpen(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const filteredAgentData = getSortedAgentData();
+  const agentTotalPages = Math.max(1, Math.ceil(filteredAgentData.length / rowsPerPageAgent));
+  const paginatedAgentData = filteredAgentData.slice((pageAgent - 1) * rowsPerPageAgent, pageAgent * rowsPerPageAgent);
 
-  const pagination = (count: number, rows: number, setRows: (v: number) => void, isOpen: boolean, setIsOpen: (v: boolean) => void, ref: any) => (
-    <div className="flex items-center justify-between mt-5 px-1">
-      <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("voice_of_customer_details.results_count", { count })}</span>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2.5">
-          <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("voice_of_customer_details.rows_per_page")}</span>
-          <div className="relative" ref={ref}>
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className={cn("flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all", dark ? "bg-slate-900/60 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
-            >
-              {rows} <ChevronDown size={12} className="opacity-50" />
-            </button>
-            {isOpen && (
-              <div className={cn("absolute bottom-full mb-2 left-0 w-full rounded-xl border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95", dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200")}>
-                {[10, 25, 50].map(v => (
-                  <div key={v} onClick={() => { setRows(v); setIsOpen(false); }} className={cn("px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-colors", dark ? "hover:bg-slate-800" : "hover:bg-slate-50")}>{v}</div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronsLeft size={14} /></button>
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronLeft size={14} /></button>
-          <span className={cn("text-[11px] font-bold px-2", text)}>{t("voice_of_customer_details.page_indicator")}</span>
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronRight size={14} /></button>
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", dark ? "border-slate-800 text-white" : "border-slate-200 text-slate-900")} disabled><ChevronsRight size={14} /></button>
-        </div>
-      </div>
-    </div>
-  );
+  const filteredConversationData = getSortedConversationData();
+  const conversationTotalPages = Math.max(1, Math.ceil(filteredConversationData.length / rowsPerPageConversation));
+  const paginatedConversationData = filteredConversationData.slice((pageConversation - 1) * rowsPerPageConversation, pageConversation * rowsPerPageConversation);
 
   return (
     <div className="space-y-5">
@@ -212,7 +178,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
             <input
               placeholder={t("voice_of_customer_details.search_agent_placeholder")}
               value={searchAgent}
-              onChange={(e) => setSearchAgent(e.target.value)}
+              onChange={(e) => { setSearchAgent(e.target.value); setPageAgent(1); }}
               className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)}
             />
           </div>
@@ -242,7 +208,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
               </tr>
             </thead>
             <tbody>
-              {getSortedAgentData().length > 0 ? getSortedAgentData().map((item, i) => (
+              {paginatedAgentData.length > 0 ? paginatedAgentData.map((item, i) => (
                 <tr key={i} className={cn("border-b transition-colors", divider, rowHover)}>
                   <td className={cn("py-3 px-3 text-[12px] font-semibold", text)}>{item.agentName} <span className="opacity-40 font-normal">({item.agentId})</span></td>
                   <td className={cn("py-3 px-3 text-[11px] font-medium", sub)}>{item.team}</td>
@@ -262,7 +228,19 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
             </tbody>
           </table>
         </div>
-        {pagination(getSortedAgentData().length, rowsPerPageAgent, setRowsPerPageAgent, agentDropdownOpen, setAgentDropdownOpen, agentDropdownRef)}
+        <PaginationFooter
+          totalLabel={t("voice_of_customer_details.results_count", { count: filteredAgentData.length })}
+          rowsLabel={t("voice_of_customer_details.rows_per_page")}
+          rowsOptions={[10, 25, 50]}
+          rowsPerPage={rowsPerPageAgent}
+          onRowsPerPageChange={(n) => { setRowsPerPageAgent(n); setPageAgent(1); }}
+          page={pageAgent}
+          totalPages={agentTotalPages}
+          pagePrefixLabel={t("voice_of_customer_details.page_prefix")}
+          pageOfLabel={t("voice_of_customer_details.of_label")}
+          onPageChange={setPageAgent}
+          className="mt-5 px-0 border-t-0"
+        />
       </div>
 
       {/* Customer Sentiment Analysis Table */}
@@ -274,7 +252,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
             <input
               placeholder={t("voice_of_customer_details.search_conversation_placeholder")}
               value={searchConversation}
-              onChange={(e) => setSearchConversation(e.target.value)}
+              onChange={(e) => { setSearchConversation(e.target.value); setPageConversation(1); }}
               className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)}
             />
           </div>
@@ -305,7 +283,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
               </tr>
             </thead>
             <tbody>
-              {getSortedConversationData().length > 0 ? getSortedConversationData().map((item, i) => (
+              {paginatedConversationData.length > 0 ? paginatedConversationData.map((item, i) => (
                 <tr key={i} className={cn("border-b transition-colors", divider, rowHover)}>
                   <td className={cn("py-3 px-3 text-[12px] font-semibold tabular-nums", text)}>{item.conversationId}</td>
                   <td className={cn("py-3 px-3 text-[11px] font-bold", text)}>{item.agent}</td>
@@ -327,7 +305,19 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
             </tbody>
           </table>
         </div>
-        {pagination(getSortedConversationData().length, rowsPerPageConversation, setRowsPerPageConversation, conversationDropdownOpen, setConversationDropdownOpen, conversationDropdownRef)}
+        <PaginationFooter
+          totalLabel={t("voice_of_customer_details.results_count", { count: filteredConversationData.length })}
+          rowsLabel={t("voice_of_customer_details.rows_per_page")}
+          rowsOptions={[10, 25, 50]}
+          rowsPerPage={rowsPerPageConversation}
+          onRowsPerPageChange={(n) => { setRowsPerPageConversation(n); setPageConversation(1); }}
+          page={pageConversation}
+          totalPages={conversationTotalPages}
+          pagePrefixLabel={t("voice_of_customer_details.page_prefix")}
+          pageOfLabel={t("voice_of_customer_details.of_label")}
+          onPageChange={setPageConversation}
+          className="mt-5 px-0 border-t-0"
+        />
       </div>
     </div>
   );

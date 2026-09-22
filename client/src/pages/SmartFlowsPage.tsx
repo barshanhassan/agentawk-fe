@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { getUserInfo } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
+import PaginationFooter from "@/components/PaginationFooter";
 import {
     Plus,
     Search,
@@ -22,10 +23,6 @@ import {
     CircleArrowDown,
     FolderOpen,
     Plug,
-    ChevronsLeft,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsRight,
     GitMerge,
     Workflow
 } from "lucide-react";
@@ -810,71 +807,18 @@ export default function SmartFlowsPage() {
                     </table>
                 </div>
 
-                {/* 4. Modern Pagination Footer */}
-                <div className="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">{t("smart_flows_page.results_label", { count: filteredFlows.length })}</span>
-                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{t("smart_flows_page.rows_label")}</span>
-                            <Select
-                                value={rowsPerPage.toString()}
-                                onValueChange={(value) => {
-                                    setRowsPerPage(Number(value));
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <SelectTrigger className="w-[65px] h-7.5 text-[11px] font-semibold rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm no-focus-outline">
-                                    <SelectValue placeholder={rowsPerPage} />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-[12px] border-slate-200 dark:border-slate-800 p-1">
-                                    {[10, 25, 50, 100].map((pageSize) =>(
-                                        <SelectItem key={pageSize} value={pageSize.toString()} className="text-[11px] font-semibold rounded-lg cursor-pointer">
-                                            {pageSize}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                        <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest">
-                            {t("smart_flows_page.page_label")} <span className="text-primary font-semibold">{currentPage}</span> / {Math.max(1, totalPages)}
-                        </span>
-
-                        <div className="flex items-center gap-1">
-                            <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
-                                onClick={() => setCurrentPage(1)}
-                                disabled={currentPage === 1}
-                            >
-                                <ChevronsLeft size={16} />
-                            </button>
-                            <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages || totalPages === 0}
-                            >
-                                <ChevronRight size={16} />
-                            </button>
-                            <button
-                                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-primary disabled:opacity-20 disabled:pointer-events-none transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-sm hover:shadow-md active:scale-90"
-                                onClick={() => setCurrentPage(totalPages)}
-                                disabled={currentPage === totalPages || totalPages === 0}
-                            >
-                                <ChevronsRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                {/* 4. Pagination Footer */}
+                <PaginationFooter
+                    totalLabel={t("smart_flows_page.results_label", { count: filteredFlows.length })}
+                    rowsLabel={t("smart_flows_page.rows_label")}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(n) => { setRowsPerPage(n); setCurrentPage(1); }}
+                    page={currentPage}
+                    totalPages={Math.max(1, totalPages)}
+                    pagePrefixLabel={t("smart_flows_page.page_label")}
+                    pageOfLabel="/"
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
             {/* Create Flow Modal */}

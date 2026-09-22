@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "react-feather";
+import { Search } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDateRange } from "@/contexts/DateRangeContext";
 import { cn } from "@/lib/utils";
+import PaginationFooter from "@/components/PaginationFooter";
 
 type SortDirection = "asc" | "desc" | "default";
 interface SortState { column: string | null; direction: SortDirection; }
@@ -30,20 +31,15 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
   const inputCls  = dark
     ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600"
     : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300";
-  const dropCls   = dark ? "bg-[#0f1829] border-slate-800" : "bg-white border-slate-200";
-  const dropItem  = dark ? "hover:bg-slate-800 text-slate-300" : "hover:bg-slate-50 text-slate-600";
-  const btnCls    = dark ? "border-slate-700 text-white bg-slate-900/60" : "border-slate-200 text-slate-900 bg-slate-50";
 
   const [searchAgent, setSearchAgent] = useState("");
   const [searchFeedback, setSearchFeedback] = useState("");
   const [rowsPerPageAgent, setRowsPerPageAgent] = useState(10);
   const [rowsPerPageFeedback, setRowsPerPageFeedback] = useState(10);
+  const [pageAgent, setPageAgent] = useState(1);
+  const [pageFeedback, setPageFeedback] = useState(1);
   const [agentSort, setAgentSort] = useState<SortState>({ column: null, direction: "default" });
   const [feedbackSort, setFeedbackSort] = useState<SortState>({ column: null, direction: "default" });
-  const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
-  const [feedbackDropdownOpen, setFeedbackDropdownOpen] = useState(false);
-  const agentDropdownRef = useRef<HTMLDivElement>(null);
-  const feedbackDropdownRef = useRef<HTMLDivElement>(null);
 
   const { from, to } = useDateRange().rangeFor("csat");
   const filterParams = new URLSearchParams();
@@ -65,6 +61,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
   const feedbackData: Array<{ conversationId: string; customer: string; agent: string; rating: string; date: string }> = csatDet?.feedback ?? [];
 
   const handleAgentSort = (column: string) => {
+    setPageAgent(1);
     setAgentSort((prev) => {
       if (prev.column === column) {
         if (prev.direction === "default") return { column, direction: "asc" };
@@ -76,6 +73,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
   };
 
   const handleFeedbackSort = (column: string) => {
+    setPageFeedback(1);
     setFeedbackSort((prev) => {
       if (prev.column === column) {
         if (prev.direction === "default") return { column, direction: "asc" };
@@ -126,44 +124,13 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
     return sorted.filter(item => searchFeedback === "" || item.customer.toLowerCase().includes(searchFeedback.toLowerCase()) || item.conversationId.toLowerCase().includes(searchFeedback.toLowerCase()));
   };
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (agentDropdownRef.current && !agentDropdownRef.current.contains(event.target as Node)) setAgentDropdownOpen(false);
-      if (feedbackDropdownRef.current && !feedbackDropdownRef.current.contains(event.target as Node)) setFeedbackDropdownOpen(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const filteredAgentData = getSortedAgentData();
+  const agentTotalPages = Math.max(1, Math.ceil(filteredAgentData.length / rowsPerPageAgent));
+  const paginatedAgentData = filteredAgentData.slice((pageAgent - 1) * rowsPerPageAgent, pageAgent * rowsPerPageAgent);
 
-  const Pagination = ({ count, rows, setRows, isOpen, setIsOpen, ref }: any) => (
-    <div className="flex items-center justify-between mt-5 px-1">
-      <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("csat_dashboard.results_count", { count })}</span>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2.5">
-          <span className={cn("text-[11px] font-semibold opacity-60", sub)}>{t("csat_dashboard.rows_per_page")}</span>
-          <div className="relative" ref={ref}>
-            <button onClick={() => setIsOpen(!isOpen)} className={cn("flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all", btnCls)}>
-              {rows} <ChevronDown size={12} className="opacity-50" />
-            </button>
-            {isOpen && (
-              <div className={cn("absolute bottom-full mb-2 left-0 w-full rounded-xl border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95", dropCls)}>
-                {[10, 25, 50].map(v => (
-                  <div key={v} onClick={() => { setRows(v); setIsOpen(false); }} className={cn("px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-colors", dropItem)}>{v}</div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", btnCls)} disabled><ChevronsLeft size={14} /></button>
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", btnCls)} disabled><ChevronLeft size={14} /></button>
-          <span className={cn("text-[11px] font-bold px-2", text)}>1 of 1</span>
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", btnCls)} disabled><ChevronRight size={14} /></button>
-          <button className={cn("p-1.5 rounded-lg border transition-all disabled:opacity-30", btnCls)} disabled><ChevronsRight size={14} /></button>
-        </div>
-      </div>
-    </div>
-  );
+  const filteredFeedbackData = getSortedFeedbackData();
+  const feedbackTotalPages = Math.max(1, Math.ceil(filteredFeedbackData.length / rowsPerPageFeedback));
+  const paginatedFeedbackData = filteredFeedbackData.slice((pageFeedback - 1) * rowsPerPageFeedback, pageFeedback * rowsPerPageFeedback);
 
   return (
     <div className="space-y-5">
@@ -173,7 +140,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
           <h3 className={cn("text-[13px] font-bold", text)}>{t("csat_dashboard.agent_performance_title")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
-            <input placeholder={t("csat_dashboard.search_agent_placeholder")} value={searchAgent} onChange={(e) => setSearchAgent(e.target.value)} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
+            <input placeholder={t("csat_dashboard.search_agent_placeholder")} value={searchAgent} onChange={(e) => { setSearchAgent(e.target.value); setPageAgent(1); }} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -195,7 +162,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
               </tr>
             </thead>
             <tbody>
-              {getSortedAgentData().length > 0 ? getSortedAgentData().map((item, i) => (
+              {paginatedAgentData.length > 0 ? paginatedAgentData.map((item, i) => (
                 <tr key={i} className={cn("border-b transition-colors", divider, rowHover)}>
                   <td className={cn("py-3 px-3 text-[12px] font-semibold", text)}>{item.agentName} <span className="opacity-40 font-normal text-[10px]">({item.agentId})</span></td>
                   <td className={cn("py-3 px-3 text-[11px]", sub)}>{item.team}</td>
@@ -208,7 +175,19 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
             </tbody>
           </table>
         </div>
-        <Pagination count={getSortedAgentData().length} rows={rowsPerPageAgent} setRows={setRowsPerPageAgent} isOpen={agentDropdownOpen} setIsOpen={setAgentDropdownOpen} ref={agentDropdownRef} />
+        <PaginationFooter
+          totalLabel={t("csat_dashboard.results_count", { count: filteredAgentData.length })}
+          rowsLabel={t("csat_dashboard.rows_per_page")}
+          rowsOptions={[10, 25, 50]}
+          rowsPerPage={rowsPerPageAgent}
+          onRowsPerPageChange={(n) => { setRowsPerPageAgent(n); setPageAgent(1); }}
+          page={pageAgent}
+          totalPages={agentTotalPages}
+          pagePrefixLabel={t("csat_dashboard.page_prefix")}
+          pageOfLabel={t("csat_dashboard.of_label")}
+          onPageChange={setPageAgent}
+          className="mt-5 px-0 border-t-0"
+        />
       </div>
 
       {/* Feedback Table */}
@@ -217,7 +196,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
           <h3 className={cn("text-[13px] font-bold", text)}>{t("csat_dashboard.feedback_table_title")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
-            <input placeholder={t("csat_dashboard.search_feedback_placeholder")} value={searchFeedback} onChange={(e) => setSearchFeedback(e.target.value)} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
+            <input placeholder={t("csat_dashboard.search_feedback_placeholder")} value={searchFeedback} onChange={(e) => { setSearchFeedback(e.target.value); setPageFeedback(1); }} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -238,7 +217,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
               </tr>
             </thead>
             <tbody>
-              {getSortedFeedbackData().length > 0 ? getSortedFeedbackData().map((item, i) => (
+              {paginatedFeedbackData.length > 0 ? paginatedFeedbackData.map((item, i) => (
                 <tr key={i} className={cn("border-b transition-colors", divider, rowHover)}>
                   <td className={cn("py-3 px-3 text-[12px] font-semibold tabular-nums", text)}>{item.conversationId}</td>
                   <td className={cn("py-3 px-3 text-[11px] font-bold", text)}>{item.customer}</td>
@@ -260,7 +239,19 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
             </tbody>
           </table>
         </div>
-        <Pagination count={getSortedFeedbackData().length} rows={rowsPerPageFeedback} setRows={setRowsPerPageFeedback} isOpen={feedbackDropdownOpen} setIsOpen={setFeedbackDropdownOpen} ref={feedbackDropdownRef} />
+        <PaginationFooter
+          totalLabel={t("csat_dashboard.results_count", { count: filteredFeedbackData.length })}
+          rowsLabel={t("csat_dashboard.rows_per_page")}
+          rowsOptions={[10, 25, 50]}
+          rowsPerPage={rowsPerPageFeedback}
+          onRowsPerPageChange={(n) => { setRowsPerPageFeedback(n); setPageFeedback(1); }}
+          page={pageFeedback}
+          totalPages={feedbackTotalPages}
+          pagePrefixLabel={t("csat_dashboard.page_prefix")}
+          pageOfLabel={t("csat_dashboard.of_label")}
+          onPageChange={setPageFeedback}
+          className="mt-5 px-0 border-t-0"
+        />
       </div>
     </div>
   );

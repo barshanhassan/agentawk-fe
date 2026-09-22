@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearch, useLocation } from "wouter";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Trash2, Edit2, Copy, Calendar, X, Download, Upload } from "react-feather";
+import { Search, Trash2, Edit2, Copy, Calendar, X, Download, Upload } from "react-feather";
 import { ChevronsUpDown, ChevronDown, ChevronUp, Plus, Filter, ArrowUpDown, GripVertical, MoreVertical, Users, Tag } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
@@ -25,6 +25,7 @@ import { COUNTRIES as STATIC_COUNTRIES } from "@/lib/countries";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import PaginationFooter from "@/components/PaginationFooter";
 import { cn } from "@/lib/utils";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
@@ -650,10 +651,8 @@ export default function ContactsSection() {
   const [lastActiveRange, setLastActiveRange] = useState<DateRange | undefined>(undefined);
   const [createdAtOpen, setCreatedAtOpen] = useState(false);
   const [lastActiveOpen, setLastActiveOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
-  const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
 
   // Contact Details Modal State
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -1320,9 +1319,6 @@ export default function ContactsSection() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setRowsDropdownOpen(false);
-      }
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
         setShowSort(false);
       }
@@ -1858,81 +1854,17 @@ export default function ContactsSection() {
             </div>
 
             {/* Pagination */}
-            <div className="py-3 px-5 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  {t("contacts_section.pagination.results", { count: contactsTotal })}
-                </span>
-
-                <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{t("contacts_section.pagination.rows")}</span>
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 h-7 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 transition-all text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-sm"
-                      onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                    >
-                      <span>{rowsPerPage}</span>
-                      <ChevronDown className="h-3 w-3 text-slate-400" />
-                    </button>
-                    {rowsDropdownOpen && (
-                      <div className="absolute bottom-full mb-1.5 z-10 w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <ul className="py-1">
-                          {[10, 25, 50, 100].map(option => (
-                            <li
-                              key={option}
-                              className="px-3 py-2 text-[11px] font-bold cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
-                              onClick={() => {
-                                setRowsPerPage(option);
-                                setRowsDropdownOpen(false);
-                              }}
-                            >
-                              {option}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                  {t("contacts_section.pagination.page_prefix")} <span className="text-slate-900 dark:text-slate-200">{page}</span> {t("contacts_section.pagination.page_of_suffix")} {contactsPages}
-                </div>
-                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
-                  <button
-                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
-                    disabled={page <= 1}
-                    onClick={() => setPage(1)}
-                  >
-                    <ChevronsLeft size={13} className="text-slate-600 dark:text-slate-400" />
-                  </button>
-                  <button
-                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
-                    <ChevronLeft size={13} className="text-slate-600 dark:text-slate-400" />
-                  </button>
-                  <button
-                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
-                    disabled={page >= contactsPages}
-                    onClick={() => setPage((p) => Math.min(contactsPages, p + 1))}
-                  >
-                    <ChevronRight size={13} className="text-slate-600 dark:text-slate-400" />
-                  </button>
-                  <button
-                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
-                    disabled={page >= contactsPages}
-                    onClick={() => setPage(contactsPages)}
-                  >
-                    <ChevronsRight size={13} className="text-slate-600 dark:text-slate-400" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <PaginationFooter
+              totalLabel={t("contacts_section.pagination.results", { count: contactsTotal })}
+              rowsLabel={t("contacts_section.pagination.rows")}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={setRowsPerPage}
+              page={page}
+              totalPages={contactsPages}
+              pagePrefixLabel={t("contacts_section.pagination.page_prefix")}
+              pageOfLabel={t("contacts_section.pagination.page_of_suffix")}
+              onPageChange={setPage}
+            />
           </div>
         </div>
       </div>

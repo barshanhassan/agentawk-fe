@@ -26,7 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ArrowUpDown, GripVertical, Bold, Italic, Strikethrough, Smile } from "lucide-react";
+import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ArrowUpDown, GripVertical, Bold, Italic, Strikethrough, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { WA_TEMPLATE_LANGUAGES } from "@/lib/waTemplateLanguages";
 import { waTemplateKeysFor } from "@/lib/waTemplateKeys";
 import { getLanguageFlag } from "@/lib/languageFlags";
+import PaginationFooter from "@/components/PaginationFooter";
 import TemplateMediaPicker, { type TemplateMediaSelection } from "@/components/gallery/TemplateMediaPicker";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 
@@ -648,8 +649,6 @@ export default function TemplateManager() {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [sorts, setSorts] = useState<SortEntry[]>([]);
   const [filters, setFilters] = useState<FilterEntry[]>([]);
   const [showSort, setShowSort] = useState(false);
@@ -970,9 +969,6 @@ export default function TemplateManager() {
   // Cancel dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setRowsDropdownOpen(false);
-      }
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
         setShowSort(false);
       }
@@ -1366,7 +1362,7 @@ export default function TemplateManager() {
                             onChange={setSelectedCategories}
                             placeholder={t("template_manager.filters.categories")}
                             width="140px"
-                            className="h-9"
+                            className="h-9 border-slate-200 dark:border-slate-800"
                         />
 
                         <CustomDropdown
@@ -1384,7 +1380,7 @@ export default function TemplateManager() {
                             onChange={setSelectedLanguages}
                             placeholder={t("template_manager.filters.languages")}
                             width="140px"
-                            className="h-9"
+                            className="h-9 border-slate-200 dark:border-slate-800"
                         />
 
                         <CustomDropdown
@@ -1398,7 +1394,7 @@ export default function TemplateManager() {
                             onChange={setSelectedStatuses}
                             placeholder={t("template_manager.filters.status")}
                             width="160px"
-                            className="h-9"
+                            className="h-9 border-slate-200 dark:border-slate-800"
                         />
                     </div>
 
@@ -1860,93 +1856,18 @@ export default function TemplateManager() {
                 </div>
 
                 {/* 6. Integrated Pagination Footer */}
-                <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold text-slate-500">{t("template_manager.pagination.rows_per_page")}</span>
-                            <div className="relative" ref={dropdownRef}>
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-all text-[11px] font-semibold tabular-nums"
-                                    onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                                >
-                                    {rowsPerPage}
-                                    <ChevronDown className="h-3 w-3 text-slate-400" />
-                                </button>
-                                {rowsDropdownOpen && (
-                                    <div className="absolute bottom-full mb-1 left-0 z-50 min-w-[60px] bg-white dark:bg-slate-900 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
-                                        <ul className="py-1">
-                                            {[10, 25, 50].map(option => (
-                                                <li
-                                                    key={option}
-                                                    className={cn(
-                                                        "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors text-center",
-                                                        rowsPerPage === option ? "bg-primary/10 text-primary" : "text-slate-600"
-                                                    )}
-                                                    onClick={() => {
-                                                        setRowsPerPage(option);
-                                                        setRowsDropdownOpen(false);
-                                                        setPage(1);
-                                                    }}
-                                                >
-                                                    {option}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
-                        <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                            {t("template_manager.pagination.results_total", { count: filteredAndSortedTemplates.length })}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                            {t("template_manager.pagination.page_of", { page, total: totalPages || 1 })}
-                        </span>
-                        <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30"
-                                disabled={page === 1}
-                                onClick={() => setPage(1)}
-                            >
-                                <ChevronsLeft size={14} />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30"
-                                disabled={page === 1}
-                                onClick={() => setPage(page - 1)}
-                            >
-                                <ChevronLeft size={14} />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30"
-                                disabled={page === totalPages}
-                                onClick={() => setPage(page + 1)}
-                            >
-                                <ChevronRight size={14} />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30"
-                                disabled={page === totalPages}
-                                onClick={() => setPage(totalPages)}
-                            >
-                                <ChevronsRight size={14} />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <PaginationFooter
+                    totalLabel={t("template_manager.pagination.results_total", { count: filteredAndSortedTemplates.length })}
+                    rowsLabel={t("template_manager.pagination.rows_per_page")}
+                    rowsOptions={[10, 25, 50]}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(1); }}
+                    page={page}
+                    totalPages={totalPages || 1}
+                    pagePrefixLabel="Page"
+                    pageOfLabel="of"
+                    onPageChange={setPage}
+                />
             </div>
         </div>
 

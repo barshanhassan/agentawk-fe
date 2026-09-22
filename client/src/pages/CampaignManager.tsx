@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import PaginationFooter from "@/components/PaginationFooter";
 import { useTranslation } from "react-i18next";
-import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
+import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronLeft, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
 import {
   FaWhatsapp,
   FaTelegramPlane,
@@ -206,7 +207,12 @@ export default function CampaignManager() {
   const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
   const [selectedMessageTypes, setSelectedMessageTypes] = useState<string[]>([]);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [rowsDropdownOpen, setRowsDropdownOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  // Any change to what's being asked for invalidates which page makes sense —
+  // land back on page 1 rather than showing a now out-of-range page.
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedStatus, selectedChannels, dateRangeFilter, selectedAgents]);
   const [sort, setSort] = useState<SortEntry | null>(null);
   const [csvSort, setCsvSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [campaignCreationStep, setCampaignCreationStep] = useState<"selectType" | "apiTriggeredForm" | "broadcastForm">("selectType");
@@ -709,8 +715,6 @@ export default function CampaignManager() {
   const [recipientPage, setRecipientPage] = useState(1);
   const [recipientRowsPerPage, setRecipientRowsPerPage] = useState(10);
   const [selectedRecipientStatus, setSelectedRecipientStatus] = useState<string[]>([]);
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleColumnSort = (column: string) => {
     if (sort?.column === column) {
@@ -2567,6 +2571,14 @@ export default function CampaignManager() {
     );
   }
 
+  // Pagination was decorative until now (list.page/nav buttons were hardcoded
+  // "1 / 1" — everything got fetched and shown on one page, matching only by
+  // coincidence). Computed once here so the loading/empty/row-map/footer
+  // branches below all agree on the same filtered+sliced set.
+  const filteredCampaignsList = getFilteredCampaigns();
+  const campaignsTotalPages = Math.max(1, Math.ceil(filteredCampaignsList.length / rowsPerPage));
+  const paginatedCampaignsList = filteredCampaignsList.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
   return (
     <div className="px-6 py-6 space-y-3 animate-in fade-in duration-700" data-testid="campaign-manager">
         {/* 1. Branded Header Card — replyagent splits the Broadcasts header
@@ -2855,7 +2867,7 @@ export default function CampaignManager() {
                                     </div>
                                 </td>
                             </tr>
-                        ) : getFilteredCampaigns().length === 0 ? (
+                        ) : filteredCampaignsList.length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3 opacity-60">
@@ -2879,7 +2891,7 @@ export default function CampaignManager() {
                                 </td>
                             </tr>
                         ) : (
-                            getFilteredCampaigns().map((campaign) => (
+                            paginatedCampaignsList.map((campaign) => (
                                 <tr
                                     key={campaign.id}
                                     className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
@@ -3042,68 +3054,18 @@ export default function CampaignManager() {
             </div>
 
             {/* 6. Pagination Footer Section */}
-            <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-transparent flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-slate-500">{t("campaign_manager.list.rows_per_page")}</span>
-                        <div className="relative" ref={dropdownRef}>
-                            <button
-                                type="button"
-                                className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-all text-[11px] font-semibold tabular-nums"
-                                onClick={() => setRowsDropdownOpen(!rowsDropdownOpen)}
-                            >
-                                {rowsPerPage}
-                                <ChevronDown className="h-3 w-3 text-slate-400" />
-                            </button>
-                            {rowsDropdownOpen && (
-                                <div className="absolute bottom-full left-0 mb-1 z-[60] w-full rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-                                    <ul className="py-1">
-                                        {[10, 25, 50].map(option => (
-                                            <li
-                                                key={option}
-                                                className={cn(
-                                                    "px-3 py-2 text-[11px] font-semibold tabular-nums cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors text-center",
-                                                    rowsPerPage === option ? "bg-primary/10 text-primary" : "text-slate-600"
-                                                )}
-                                                onClick={() => {
-                                                    setRowsPerPage(option);
-                                                    setRowsDropdownOpen(false);
-                                                }}
-                                            >
-                                                {option}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
-                    <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                        {t("campaign_manager.list.results_total", { count: getFilteredCampaigns().length })}
-                    </span>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <span className="text-[11px] font-semibold text-slate-500 tabular-nums">
-                        {t("campaign_manager.list.page")} 1 <span className="text-slate-300 mx-1">/</span> 1
-                    </span>
-                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
-                            <ChevronsLeft size={14} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
-                            <ChevronLeft size={14} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
-                            <ChevronRight size={14} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-50 disabled:opacity-30" disabled>
-                            <ChevronsRight size={14} />
-                        </Button>
-                    </div>
-                </div>
-            </div>
+            <PaginationFooter
+                totalLabel={t("campaign_manager.list.results_total", { count: filteredCampaignsList.length })}
+                rowsLabel={t("campaign_manager.list.rows_per_page")}
+                rowsOptions={[10, 25, 50]}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(1); }}
+                page={page}
+                totalPages={campaignsTotalPages}
+                pagePrefixLabel={t("campaign_manager.list.page")}
+                pageOfLabel="/"
+                onPageChange={setPage}
+            />
         </div>
 
       {/* Create Campaign Dialog */}
