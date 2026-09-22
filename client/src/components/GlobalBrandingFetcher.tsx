@@ -42,7 +42,22 @@ type CachedBranding = {
   outgoingBubble?: string;
   outgoingText?: string;
   linkColor?: string;
+  faviconUrl?: string;
 };
+
+// The favicon <link> is a static tag in index.html — this is the only place
+// that ever updates it, so a workspace's uploaded favicon actually shows in
+// the browser tab instead of always being the default AgentAwk icon.
+function applyFavicon(url?: string) {
+  if (!url) return;
+  let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
 
 function readCache(): CachedBranding | null {
   try {
@@ -79,6 +94,7 @@ export default function GlobalBrandingFetcher() {
     applyCssVar("--outgoing-bubble", cached.outgoingBubble);
     applyCssVar("--outgoing-text", cached.outgoingText);
     applyCssVar("--link-color", cached.linkColor);
+    applyFavicon(cached.faviconUrl);
   }, []);
 
   const { data: brandingData } = useQuery<any>({
@@ -115,6 +131,10 @@ export default function GlobalBrandingFetcher() {
     if (brandingData.link_color) {
       next.linkColor = brandingData.link_color;
       document.documentElement.style.setProperty("--link-color", brandingData.link_color);
+    }
+    if (brandingData.favicon_url) {
+      next.faviconUrl = brandingData.favicon_url;
+      applyFavicon(brandingData.favicon_url);
     }
 
     writeCache(next);

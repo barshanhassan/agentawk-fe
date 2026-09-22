@@ -120,6 +120,30 @@ function waLimitLabel(file: File): string {
   return limit >= 1024 * 1024 ? `${limit / 1024 / 1024}MB` : `${limit / 1024}KB`;
 }
 
+// Auto-links bare URLs inside message text so they're clickable — styled via
+// the workspace's "Links & Actions" colour (Settings → Colors → --link-color).
+// Message text was plain text before this with no clickable links at all.
+function linkifyText(text: string): React.ReactNode[] {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        style={{ color: "var(--link-color)" }}
+        className="underline break-all"
+      >
+        {part}
+      </a>
+    ) : (
+      <React.Fragment key={i}>{part}</React.Fragment>
+    ),
+  );
+}
+
 // Outbound delivery state for WhatsApp messages.
 //   pending  : queued in backend, not yet ack'd by Meta
 //   sent     : Meta accepted (single tick)
@@ -3893,12 +3917,23 @@ export default function ConversationsInbox() {
                             </Popover>
                           )}
 
-                          {/* WhatsApp-style bubble colors: our outgoing messages
-                              (agent) are light green, the customer's incoming
-                              messages are white — matching WhatsApp itself so
-                              the two are visually unmistakable at a glance.
+                          {/* WhatsApp-style bubble colors by default: outgoing
+                              (agent) light green, incoming (customer) white —
+                              matching WhatsApp so the two are visually
+                              unmistakable at a glance. Colors come from CSS
+                              vars (index.css sets the light/dark defaults
+                              above); Settings → Colors overrides them via
+                              GlobalBrandingFetcher, per-workspace.
                               Compact padding/text (WhatsApp-tight, not roomy). */}
-                          <div id={`message-${msg.id}`} className={`relative max-w-[70%] ${isImageMessage ? "w-fit" : ""} rounded-lg px-2.5 py-1.5 text-[14px] leading-snug ${msg.from === "user" ? "bg-white text-gray-900 dark:bg-slate-800 dark:text-slate-100 border border-black/5 dark:border-white/10" : "bg-[#dcf8c6] text-gray-900 dark:bg-emerald-900/40 dark:text-emerald-50"}`} data-testid={`message-${msg.id}`}>
+                          <div
+                            id={`message-${msg.id}`}
+                            className={`relative max-w-[70%] ${isImageMessage ? "w-fit" : ""} rounded-lg px-2.5 py-1.5 text-[14px] leading-snug ${msg.from === "user" ? "border border-black/5 dark:border-white/10" : ""}`}
+                            style={{
+                              backgroundColor: msg.from === "user" ? "var(--incoming-bubble)" : "var(--outgoing-bubble)",
+                              color: msg.from === "user" ? "var(--incoming-text)" : "var(--outgoing-text)",
+                            }}
+                            data-testid={`message-${msg.id}`}
+                          >
                             {/* Message options — a single chevron trigger inside
                                 the bubble corner (WhatsApp pattern), instead of
                                 separate floating icons. Opens quick-react emojis
@@ -4033,7 +4068,7 @@ export default function ConversationsInbox() {
 
                             {isPlainTextOnly ? (
                               <p className="text-sm [overflow-wrap:anywhere]">
-                                {msg.text}
+                                {linkifyText(msg.text || "")}
                                 <span className="inline-block w-14" />
                                 <span className={`float-right inline-flex items-center gap-1 text-[11px] translate-y-1 ${msg.from === "agent" ? "text-gray-700 dark:text-slate-400" : "text-gray-600 dark:text-slate-500"}`}>
                                   {formatMessageTime(msg.time, workspaceTz)}
@@ -4041,7 +4076,7 @@ export default function ConversationsInbox() {
                                 </span>
                               </p>
                             ) : (
-                              !isImageMessage && msg.text && <p className="text-sm">{msg.text}</p>
+                              !isImageMessage && msg.text && <p className="text-sm">{linkifyText(msg.text)}</p>
                             )}
 
                             {/* Images — just the picture, WhatsApp-style. No
@@ -4066,7 +4101,7 @@ export default function ConversationsInbox() {
                                     a headline, isn't how it displays there). */}
                                 {msg.text && (
                                   <p className="text-sm [overflow-wrap:anywhere]">
-                                    {msg.text}
+                                    {linkifyText(msg.text)}
                                     <span className="inline-block w-14" />
                                     <span className={`float-right inline-flex items-center gap-1 text-[11px] translate-y-1 ${msg.from === "agent" ? "text-gray-700 dark:text-slate-400" : "text-gray-600 dark:text-slate-500"}`}>
                                       {formatMessageTime(msg.time, workspaceTz)}

@@ -269,7 +269,14 @@ function AppContent() {
   const siteType = siteData?.app?.site_type || "WORKSPACE";
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading application...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="relative w-14 h-14 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-[3px] border-primary/20 border-t-primary animate-spin" />
+          <img src="/images/agentawk-bot-green.svg" alt="AgentAwk" className="w-6 h-6" />
+        </div>
+      </div>
+    );
   }
 
   // On the central app host (app.agentawk.com) the entry point is registration —

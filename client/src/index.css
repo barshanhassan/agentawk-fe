@@ -62,6 +62,16 @@
 
   --muted: 210 40% 92%;
 
+  /* WhatsApp-style chat bubble defaults + link colour — these are the
+     baseline every workspace sees until Settings → Colors sets a custom
+     value; GlobalBrandingFetcher then overrides them via inline style on
+     :root, which always wins over this stylesheet rule. */
+  --incoming-bubble: #ffffff;
+  --incoming-text: #111827;
+  --outgoing-bubble: #dcf8c6;
+  --outgoing-text: #111827;
+  --link-color: #2563eb;
+
   --muted-foreground: 215 16% 47%;
 
   --accent: 210 40% 94%;
@@ -175,6 +185,13 @@
   --primary: 142 70% 49%;
 
   --primary-foreground: 0 0% 100%;
+
+  /* Dark-mode chat bubble defaults — mirrors the light-mode block's comment. */
+  --incoming-bubble: #1e293b;
+  --incoming-text: #f1f5f9;
+  --outgoing-bubble: rgba(6, 78, 59, 0.4);
+  --outgoing-text: #ecfdf5;
+  --link-color: #60a5fa;
 
   --secondary: 217 33% 21%;
 
