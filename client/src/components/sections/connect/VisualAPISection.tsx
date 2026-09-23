@@ -436,7 +436,7 @@ export default function VisualAPISection() {
 
             <div className="flex items-center gap-2 shrink-0">
               {viewMode === "LIST" && (
-                <button onClick={() => setIsCreateModalOpen(true)} className={primaryOutlineBtn}>
+                <button onClick={() => setIsCreateModalOpen(true)} className={primaryBtn}>
                   <Plus size={12} /> {t("visual_api_section.add_button")}
                 </button>
               )}

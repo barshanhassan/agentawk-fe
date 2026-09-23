@@ -222,10 +222,6 @@ export default function QuickRepliesSection() {
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary",
   );
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white",
-  );
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
   const labelCls = cn("block text-[11px] font-semibold", sub);
@@ -508,7 +504,7 @@ export default function QuickRepliesSection() {
 
             <div className="flex items-center gap-2 shrink-0">
               {view === "list" && (
-                <button onClick={handleCreateCollectionClick} className={primaryOutlineBtn}>
+                <button onClick={handleCreateCollectionClick} className={primaryBtn}>
                   <Plus size={12} /> {t("quick_replies_section.add_collection")}
                 </button>
               )}
@@ -520,7 +516,7 @@ export default function QuickRepliesSection() {
               {(view === "collection_detail" || view === "create_message") && (
                 <>
                   {view === "collection_detail" && (
-                    <button onClick={handleCreateMessageClick} className={primaryOutlineBtn}>
+                    <button onClick={handleCreateMessageClick} className={primaryBtn}>
                       <Plus size={12} /> {t("quick_replies_section.add_message")}
                     </button>
                   )}

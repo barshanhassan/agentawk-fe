@@ -149,10 +149,6 @@ const DeveloperSettingsSection = () => {
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary",
   );
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white",
-  );
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
   const labelCls = cn("block text-[11px] font-semibold", sub);
@@ -407,7 +403,7 @@ const DeveloperSettingsSection = () => {
                 href={API_DOCS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(primaryOutlineBtn, "shrink-0")}
+                className={cn(outlineBtn, "shrink-0")}
               >
                 <ExternalLink size={12} /> {t("dev.viewDocs", { defaultValue: "View Docs" })}
               </a>
@@ -469,7 +465,7 @@ const DeveloperSettingsSection = () => {
                   <button
                     onClick={() => setConfirmRegenerate(true)}
                     disabled={regenerateMutation.isPending}
-                    className={cn(primaryOutlineBtn)}
+                    className={primaryBtn}
                   >
                     {regenerateMutation.isPending ? (
                       <Loader2 size={12} className="animate-spin" />
@@ -522,7 +518,7 @@ const DeveloperSettingsSection = () => {
                     </p>
                   </div>
                 </div>
-                <button onClick={openCreateWebhook} className={cn(primaryOutlineBtn, "shrink-0")}>
+                <button onClick={openCreateWebhook} className={cn(primaryBtn, "shrink-0")}>
                   <Plus size={12} /> {t("dev.configure", { defaultValue: "Configure" })}
                 </button>
               </div>

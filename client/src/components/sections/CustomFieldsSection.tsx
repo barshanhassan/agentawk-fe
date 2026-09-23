@@ -355,10 +355,6 @@ export default function CustomFieldsSection() {
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary",
   );
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white",
-  );
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
   const labelCls = cn("block text-[11px] font-semibold", sub);
@@ -820,7 +816,7 @@ export default function CustomFieldsSection() {
               <button
                 onClick={openCreate}
                 disabled={fields.length >= WORKSPACE_FIELD_LIMIT}
-                className={cn(primaryOutlineBtn, "disabled:opacity-50 disabled:cursor-not-allowed")}
+                className={primaryBtn}
               >
                 <Plus size={12} /> {t("custom_fields_section.add_new_button")}
               </button>

@@ -106,11 +106,6 @@ export default function ChatWidgetSection() {
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
   );
 
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white"
-  );
-
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
 
@@ -479,7 +474,7 @@ export default function ChatWidgetSection() {
 
             <div className="flex items-center gap-2 shrink-0">
               {!isCreateModalOpen ? (
-                <button onClick={openCreate} className={primaryOutlineBtn}>
+                <button onClick={openCreate} className={primaryBtn}>
                   <Plus size={12} /> {t("chat_widget_section.add_new")}
                 </button>
               ) : (
