@@ -232,7 +232,7 @@ export default function SmsCallsSection() {
                               <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[180px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
                                 <DropdownMenuItem
                                   onClick={() => { setAccountToDelete(account); setShowDeleteConfirm(true); }}
-                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                  className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                                 >
                                   <Trash2 size={12} /> {t("sms_calls_section.delete")}
                                 </DropdownMenuItem>

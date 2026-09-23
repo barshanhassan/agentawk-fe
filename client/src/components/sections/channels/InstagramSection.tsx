@@ -382,7 +382,7 @@ export default function InstagramSection() {
                             <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[200px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
                               <DropdownMenuItem
                                 onSelect={(e) => e.preventDefault()}
-                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] flex justify-between"
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] flex justify-between hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                               >
                                 <span className="flex items-center gap-2">
                                   <Bot size={12} className="text-primary" /> {t("instagram_section.label_ai_feeder")}
@@ -395,7 +395,7 @@ export default function InstagramSection() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => { setAccountToDelete(account); setDeleteMedia(false); setShowDeleteConfirm(true); }}
-                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                               >
                                 <Trash2 size={12} /> {t("instagram_section.btn_delete")}
                               </DropdownMenuItem>

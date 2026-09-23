@@ -548,7 +548,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                                 picker inside the Add Contact dialog. */}
                             <DropdownMenuContent className={cn("rounded-xl p-1.5 min-w-[140px] z-[70]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
                               <DropdownMenuItem
-                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   downloadObject(item.id, item.name);
@@ -557,7 +557,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                                 <Download size={12} /> {t("media_gallery_section.download")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigator.clipboard.writeText(item.url);
@@ -567,7 +567,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                                 <Share2 size={12} /> {t("media_gallery_section.share")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setRenamingId(item.id);
@@ -577,7 +577,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                                 <Pencil size={12} /> {t("media_gallery_section.rename")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                                 onClick={(e) => { e.stopPropagation(); setDeleteId(item.id); }}
                               >
                                 <Trash2 size={12} /> {t("media_gallery_section.delete")}

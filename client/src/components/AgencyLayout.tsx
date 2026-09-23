@@ -214,7 +214,7 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                         <DropdownMenuItem
                           key={n.id}
                           className={cn(
-                            "p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none",
+                            "p-3 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary cursor-pointer mb-1 outline-none",
                             !n.read && "bg-primary/5 dark:bg-primary/10"
                           )}
                           onClick={() => handleNotifClick(n)}
@@ -284,8 +284,8 @@ const AgencyLayout = ({ children }: { children: React.ReactNode }) => {
                 {/* Profile Link */}
                 <DropdownMenuItem
                   onClick={() => setLocation("/org/settings/profile")}
-                  className={cn("flex items-center justify-between p-3 rounded-md cursor-pointer group outline-none",
-                  mode === "dark" ? "hover:bg-[#334155] focus:bg-[#334155] focus:text-white" : "hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-900")}>
+                  className={cn("flex items-center justify-between p-3 rounded-md cursor-pointer group outline-none hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary",
+                  mode === "dark" ? "focus:bg-[#334155] focus:text-white" : "focus:bg-slate-100 focus:text-slate-900")}>
                   <div className="flex items-center gap-3">
                     <Avatar className="w-8 h-8">
                       {meData?.avatar_url && <AvatarImage src={meData.avatar_url} alt="Profile" />}

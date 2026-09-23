@@ -686,7 +686,7 @@ export default function SmartFlowsPage() {
                                 </tr>
                             ) : (
                                 paginatedFlows.map((flow: any) => (
-                                    <tr key={flow.id} className="group hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200">
+                                    <tr key={flow.id} className="group hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all duration-200">
                                         <td className="px-3 py-4 w-8">
                                             <input
                                                 type="checkbox"

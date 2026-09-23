@@ -8181,5 +8181,12 @@
     "theme_dark": "Tối",
     "language": "Ngôn ngữ",
     "sign_out": "Đăng xuất"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "Không thể gửi tin nhắn này vì chưa thiết lập thanh toán cho WhatsApp Business. Hãy thêm phương thức thanh toán trong Meta Business Manager để tiếp tục gửi.",
+    "meta_auth_expired": "Kết nối WhatsApp với tài khoản này đã hết hạn hoặc bị thu hồi. Vui lòng kết nối lại WhatsApp trong Cài đặt.",
+    "wa_failed_no_detail": "Tin nhắn này gửi không thành công. WhatsApp không cung cấp thêm chi tiết nào.",
+    "wa_failed_internal": "Tin nhắn này gửi không thành công do sự cố gửi từ phía chúng tôi. Vui lòng thử lại.",
+    "generic_failed": "Tin nhắn này gửi không thành công."
   }
 }

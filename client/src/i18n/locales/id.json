@@ -8181,5 +8181,12 @@
     "theme_dark": "Gelap",
     "language": "Bahasa",
     "sign_out": "Keluar"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "Pesan ini tidak dapat dikirim karena penagihan WhatsApp Business belum disiapkan. Tambahkan metode pembayaran di Meta Business Manager untuk melanjutkan pengiriman.",
+    "meta_auth_expired": "Koneksi WhatsApp ke akun ini telah kedaluwarsa atau dicabut. Silakan hubungkan kembali WhatsApp di Pengaturan.",
+    "wa_failed_no_detail": "Pesan ini gagal terkirim. WhatsApp tidak memberikan detail lebih lanjut.",
+    "wa_failed_internal": "Pesan ini gagal terkirim karena masalah pengiriman di pihak kami. Silakan coba lagi.",
+    "generic_failed": "Pesan ini gagal terkirim."
   }
 }

@@ -55,6 +55,7 @@ import { AlertCircle } from "lucide-react";
 import PreviewV2 from "@/components/PreviewV2";
 import { Textarea } from "@/components/ui/textarea";
 import { getAvatarColor } from "@/lib/avatar-utils";
+import { getMessageFailureReason } from "@/lib/messageErrors";
 import ContactProfileSidebar from "@/components/ContactProfileSidebar";
 import MediaGallerySection from "@/components/workspace/MediaGallerySection";
 
@@ -2626,6 +2627,8 @@ export default function ConversationsInbox() {
   }, [attachedFiles]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const shouldScrollToBottomRef = useRef(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
@@ -2731,37 +2734,69 @@ export default function ConversationsInbox() {
   };
 
   // Handle voice recording
+  const discardRecordingRef = useRef(false);
+
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+      discardRecordingRef.current = false;
 
       mediaRecorder.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
       };
 
       mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+        if (discardRecordingRef.current) {
+          discardRecordingRef.current = false;
+          return;
+        }
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setRecordedAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
     } catch (error) {
       console.error("Error accessing microphone:", error);
     }
   };
 
-  // Handle stop recording
+  // Handle stop recording — keeps the audio (shows the send-preview chip).
   const handleStopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     }
   };
+
+  // Cancel recording — discards the audio entirely, no preview/send.
+  const handleCancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      discardRecordingRef.current = true;
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    }
+  };
+
+  const formatRecordingTime = (totalSeconds: number) => {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    };
+  }, []);
 
   // Handle send message. Wraps the bare text + the composer's mode/reply
   // context so the backend can persist this as a real reply, an internal note
@@ -3120,7 +3155,7 @@ export default function ConversationsInbox() {
                         {SEARCH_TYPES.map((st) => (
                           <DropdownMenuItem
                             key={st.slug}
-                            className={searchType === st.slug ? "font-semibold text-primary" : ""}
+                            className={`hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary ${searchType === st.slug ? "font-semibold text-primary" : ""}`}
                             onClick={() => setSearchType(st.slug)}
                           >
                             {st.name}
@@ -3218,11 +3253,11 @@ export default function ConversationsInbox() {
                         ).map((o) => (
                           <DropdownMenuItem
                             key={`${o.column}-${o.order}`}
-                            className={
+                            className={`hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary ${
                               sortBy.column === o.column && sortBy.order === o.order
                                 ? "font-semibold text-primary"
                                 : ""
-                            }
+                            }`}
                             onClick={() => setSortBy({ ...o })}
                           >
                             {o.text}
@@ -3263,13 +3298,13 @@ export default function ConversationsInbox() {
                       <TooltipContent>{t("conversations_inbox.search.call_or_message")}</TooltipContent>
                     </Tooltip>
                     <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                      <DropdownMenuItem onClick={() => {
+                      <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => {
                         setIsMakeCallModalOpen(true);
                         setIsAddMenuOpen(false);
                       }}>
                         {t("conversations_inbox.add_menu.make_call")}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {
+                      <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => {
                         setIsTemplateMessageModalOpen(true);
                         setIsAddMenuOpen(false);
                       }}>
@@ -3321,6 +3356,7 @@ export default function ConversationsInbox() {
                       <DropdownMenuContent align="start" className="bg-white dark:bg-background">
                         {(activeTab === "all" || activeTab === "queue" || activeTab === "upcoming") && (
                           <DropdownMenuItem
+                            className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                             onClick={() => bulkStatusMutation.mutate({ ids: selectedInboxIds, action: "COMPLETED" })}
                           >
                             <CheckCircle size={14} className="mr-2" /> {t("conversations_inbox.list.mark_as_done")}
@@ -3328,6 +3364,7 @@ export default function ConversationsInbox() {
                         )}
                         {(activeTab === "all" || activeTab === "upcoming") && (
                           <DropdownMenuItem
+                            className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                             onClick={() => {
                               setBulkSnoozeUntil("");
                               setBulkSnoozeOpen(true);
@@ -3338,6 +3375,7 @@ export default function ConversationsInbox() {
                         )}
                         {canAssignConversations && (
                           <DropdownMenuItem
+                            className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                             onClick={() => {
                               setBulkAssignAgent("");
                               setBulkAssignOpen(true);
@@ -3347,11 +3385,13 @@ export default function ConversationsInbox() {
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
+                          className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           onClick={() => bulkStatusMutation.mutate({ ids: selectedInboxIds, action: "READ" })}
                         >
                           <Eye size={14} className="mr-2" /> {t("conversations_inbox.list.mark_read")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           onClick={() => bulkStatusMutation.mutate({ ids: selectedInboxIds, action: "UNREAD" })}
                         >
                           <EyeOff size={14} className="mr-2" /> {t("conversations_inbox.list.mark_unread")}
@@ -3360,7 +3400,7 @@ export default function ConversationsInbox() {
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600"
+                              className="text-red-600 focus:text-red-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                               onClick={() => {
                                 if (window.confirm(t("conversations_inbox.list.delete_confirm", { count: selectedInboxIds.length })))
                                   bulkDeleteMutation.mutate(selectedInboxIds);
@@ -3562,7 +3602,7 @@ export default function ConversationsInbox() {
                       </div>
                       <div className="px-1.5 pb-1.5 max-h-36 overflow-auto">
                         <DropdownMenuItem
-                          className={cn("gap-2 justify-between", activeFolderId === null && "bg-primary/10 text-primary font-semibold")}
+                          className={cn("gap-2 justify-between hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary", activeFolderId === null && "bg-primary/10 text-primary font-semibold")}
                           onClick={() => setActiveFolderId(null)}
                         >
                           <span className="flex items-center gap-2 truncate">
@@ -3573,7 +3613,7 @@ export default function ConversationsInbox() {
                         {folders.map((f: any) => (
                           <DropdownMenuItem
                             key={`filter-${String(f.id)}`}
-                            className={cn("gap-2 justify-between", activeFolderId === String(f.id) && "bg-primary/10 text-primary font-semibold")}
+                            className={cn("gap-2 justify-between hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary", activeFolderId === String(f.id) && "bg-primary/10 text-primary font-semibold")}
                             onClick={() => setActiveFolderId(String(f.id))}
                           >
                             <span className="flex items-center gap-2 truncate">
@@ -3595,7 +3635,7 @@ export default function ConversationsInbox() {
                       </div>
                       <div className="px-1.5 pb-1.5 max-h-36 overflow-auto">
                         <DropdownMenuItem
-                          className={cn("gap-2 justify-between", !selectedConvObj?.folderId && "bg-primary/10 text-primary font-semibold")}
+                          className={cn("gap-2 justify-between hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary", !selectedConvObj?.folderId && "bg-primary/10 text-primary font-semibold")}
                           onClick={() =>
                             selectedConversation &&
                             moveToFolderMutation.mutate({ id: selectedConversation, folderId: null })
@@ -3610,7 +3650,7 @@ export default function ConversationsInbox() {
                           folders.map((f: any) => (
                             <DropdownMenuItem
                               key={`move-${String(f.id)}`}
-                              className={cn("gap-2 justify-between", selectedConvObj?.folderId === String(f.id) && "bg-primary/10 text-primary font-semibold")}
+                              className={cn("gap-2 justify-between hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary", selectedConvObj?.folderId === String(f.id) && "bg-primary/10 text-primary font-semibold")}
                               onClick={() =>
                                 selectedConversation &&
                                 moveToFolderMutation.mutate({ id: selectedConversation, folderId: String(f.id) })
@@ -3627,7 +3667,7 @@ export default function ConversationsInbox() {
 
                       <div className="p-1.5">
                         <DropdownMenuItem
-                          className="gap-2 text-primary font-semibold"
+                          className="gap-2 text-primary font-semibold hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           onSelect={(e) => {
                             e.preventDefault();
                             setFolderEditing(null);
@@ -3664,7 +3704,7 @@ export default function ConversationsInbox() {
                       {CHAT_MODES.map((m) => (
                         <DropdownMenuItem
                           key={m.value}
-                          className={chatMode === m.value ? "font-semibold text-primary gap-2" : "gap-2"}
+                          className={`hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary ${chatMode === m.value ? "font-semibold text-primary gap-2" : "gap-2"}`}
                           onClick={() => setChatMode(m.value)}
                         >
                           <m.icon size={16} />
@@ -3740,7 +3780,7 @@ export default function ConversationsInbox() {
                                 }
                               }}
                               disabled={!isMine}
-                              className={!isMine ? "opacity-50 cursor-not-allowed" : ""}
+                              className={`hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary ${!isMine ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
                               <UserX size={16} className="mr-2" />
                               {t("conversations_inbox.header.unassign_chat")}
@@ -3751,6 +3791,7 @@ export default function ConversationsInbox() {
 
                         {/* Snooze — opens datetime picker dialog */}
                         <DropdownMenuItem
+                          className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           onClick={() => setSnoozeDialogOpen(true)}
                         >
                           <Clock size={16} className="mr-2" />
@@ -3759,6 +3800,7 @@ export default function ConversationsInbox() {
 
                         {/* Schedule Reminder — opens reminder dialog */}
                         <DropdownMenuItem
+                          className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                           onClick={() => setReminderDialogOpen(true)}
                         >
                           <Clock size={16} className="mr-2" />
@@ -3776,7 +3818,7 @@ export default function ConversationsInbox() {
                                   deleteInboxMutation.mutate(selectedConversation);
                                 }
                               }}
-                              className="text-red-600 dark:text-red-400"
+                              className="text-red-600 dark:text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                             >
                               <Trash2 size={16} className="mr-2" />
                               {t("conversations_inbox.header.delete_conversation")}
@@ -3855,7 +3897,7 @@ export default function ConversationsInbox() {
                                 </a>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs break-words">
-                                {msg.errorData || t("conversations_inbox.messages.failed_to_send")}
+                                {getMessageFailureReason(msg.errorData, t)}
                               </TooltipContent>
                             </Tooltip>
                           ) : (
@@ -3971,12 +4013,12 @@ export default function ConversationsInbox() {
                                       ))}
                                     </div>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="py-2.5" onClick={() => setReplyingTo(msg)}>
+                                    <DropdownMenuItem className="py-2.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => setReplyingTo(msg)}>
                                       <CornerUpLeft size={14} className="mr-2" /> {t("conversations_inbox.messages.reply_to_this")}
                                     </DropdownMenuItem>
                                     {msg.text && (
                                       <DropdownMenuItem
-                                        className="py-2.5"
+                                        className="py-2.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                         onClick={() => {
                                           navigator.clipboard.writeText(msg.text || "");
                                           toast({ description: t("conversations_inbox.messages.copied") });
@@ -3986,13 +4028,13 @@ export default function ConversationsInbox() {
                                       </DropdownMenuItem>
                                     )}
                                     {msg.audio && (
-                                      <DropdownMenuItem className="py-2.5" onClick={() => handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`)}>
+                                      <DropdownMenuItem className="py-2.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => handleDownload(msg.audio!.url, msg.audio!.name || `voice-message-${msg.id}`)}>
                                         <Download size={14} className="mr-2" /> {t("conversations_inbox.messages.save_as")}
                                       </DropdownMenuItem>
                                     )}
                                     {canDeleteMessage && (
                                       <DropdownMenuItem
-                                        className="py-2.5 text-red-600 focus:text-red-600"
+                                        className="py-2.5 text-red-600 focus:text-red-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                                         onClick={() => {
                                           const ch = conversations.find((c: Conversation) => c.id === selectedConversation)?.channel || "whatsapp";
                                           deleteMessageMutation.mutate({ messageId: msg.id, channel: ch });
@@ -4273,59 +4315,65 @@ export default function ConversationsInbox() {
                 <div className="p-4 flex-shrink-0 relative">
                   {/* Attached files preview */}
                   {(attachedFiles.length > 0 || attachedGalleryItems.length > 0 || recordedAudio) && (
-                    <div className="mb-3 p-3 bg-muted rounded-lg space-y-2">
+                    <div className="mb-3 p-3 bg-muted rounded-lg space-y-3">
                       {attachedGalleryItems.map((item, index) => (
-                        <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {item.thumb ? (
-                              <img src={item.thumb} alt={item.name} className="w-7 h-7 rounded object-cover flex-shrink-0" />
-                            ) : (
-                              <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
-                            )}
-                            <span className="truncate text-foreground">{item.name}</span>
-                            {item.size > 0 && <span className="text-xs text-muted-foreground flex-shrink-0">({(item.size / 1024).toFixed(1)}KB)</span>}
+                        <div key={item.id} className="flex items-center gap-3">
+                          {item.thumb ? (
+                            <img src={item.thumb} alt={item.name} className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <Paperclip size={16} className="text-primary" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground leading-tight truncate">{item.name}</p>
+                            {item.size > 0 && <p className="text-xs text-muted-foreground leading-tight">{(item.size / 1024).toFixed(1)} KB</p>}
                           </div>
                           <button
                             onClick={() => setAttachedGalleryItems((prev) => prev.filter((_, i) => i !== index))}
-                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                            className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground transition-colors shrink-0"
                           >
                             <X size={16} />
                           </button>
                         </div>
                       ))}
                       {attachedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between gap-2 text-sm">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {attachedImagePreviews[index] ? (
-                              <img
-                                src={attachedImagePreviews[index]!}
-                                alt={file.name}
-                                className="w-7 h-7 rounded object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <Paperclip size={14} className="text-muted-foreground flex-shrink-0" />
-                            )}
-                            <span className="truncate text-foreground">{file.name}</span>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">({(file.size / 1024).toFixed(1)}KB)</span>
+                        <div key={index} className="flex items-center gap-3">
+                          {attachedImagePreviews[index] ? (
+                            <img
+                              src={attachedImagePreviews[index]!}
+                              alt={file.name}
+                              className="h-9 w-9 rounded-lg object-cover shrink-0"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <Paperclip size={16} className="text-primary" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground leading-tight truncate">{file.name}</p>
+                            <p className="text-xs text-muted-foreground leading-tight">{(file.size / 1024).toFixed(1)} KB</p>
                           </div>
                           <button
                             onClick={() => removeAttachedFile(index)}
-                            className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                            className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground transition-colors shrink-0"
                           >
                             <X size={16} />
                           </button>
                         </div>
                       ))}
                       {recordedAudio && (
-                        <div className="flex items-center justify-between gap-2 text-sm">
-                          <div className="flex items-center gap-2 flex-1">
-                            <Mic size={14} className="text-muted-foreground" />
-                            <span className="text-foreground">{t("conversations_inbox.messages.voice_message")}</span>
-                            <span className="text-xs text-muted-foreground">({(recordedAudio.size / 1024).toFixed(1)}KB)</span>
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <Mic size={16} className="text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground leading-tight">{t("conversations_inbox.messages.voice_message")}</p>
+                            <p className="text-xs text-muted-foreground leading-tight">{(recordedAudio.size / 1024).toFixed(1)} KB</p>
                           </div>
                           <button
                             onClick={() => setRecordedAudio(null)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 hover:text-foreground transition-colors shrink-0"
                           >
                             <X size={16} />
                           </button>
@@ -4537,33 +4585,33 @@ export default function ConversationsInbox() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="start" side="top" className="bg-white dark:bg-background">
-                                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => fileInputRef.current?.click()}>
                                   <Paperclip size={14} className="mr-2" /> {t("conversations_inbox.composer.attach_file")}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setGalleryDialogOpen(true)}>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => setGalleryDialogOpen(true)}>
                                   <Image size={14} className="mr-2" /> {t("conversations_inbox.composer.media_gallery")}
                                 </DropdownMenuItem>
                                 {selectedConvObj?.channel === "whatsapp" && (
-                                  <DropdownMenuItem onClick={() => setTemplateDialogOpen(true)}>
+                                  <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => setTemplateDialogOpen(true)}>
                                     <FileText size={14} className="mr-2" /> {t("conversations_inbox.composer.send_template")}
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem onClick={() => { setSelectedCannedId(""); setQuickReplySearch(""); setQuickReplyPickerCollectionId(null); setQuickReplyPickerOpen(true); }}>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => { setSelectedCannedId(""); setQuickReplySearch(""); setQuickReplyPickerCollectionId(null); setQuickReplyPickerOpen(true); }}>
                                   <MessageSquare size={14} className="mr-2" /> {t("conversations_inbox.composer.quick_reply")}
                                 </DropdownMenuItem>
                                 {/* Sticker / Location — hidden for now (COMPOSER_STICKER_LOCATION_ENABLED),
                                     not deleted, so they're easy to re-enable later. */}
                                 {COMPOSER_STICKER_LOCATION_ENABLED && selectedConvObj?.channel === "whatsapp" && (
-                                  <DropdownMenuItem onClick={() => setStickerDialogOpen(true)}>
+                                  <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => setStickerDialogOpen(true)}>
                                     <Smile size={14} className="mr-2" /> {t("conversations_inbox.composer.sticker")}
                                   </DropdownMenuItem>
                                 )}
                                 {COMPOSER_STICKER_LOCATION_ENABLED && selectedConvObj?.channel === "whatsapp" && (
-                                  <DropdownMenuItem onClick={() => setLocationDialogOpen(true)}>
+                                  <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => setLocationDialogOpen(true)}>
                                     <MapPin size={14} className="mr-2" /> {t("conversations_inbox.composer.location")}
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem onClick={() => setAutomationDialogOpen(true)}>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => setAutomationDialogOpen(true)}>
                                   <Bot size={14} className="mr-2" /> {t("conversations_inbox.composer.start_automation")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -4649,10 +4697,10 @@ export default function ConversationsInbox() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="start" className="bg-white dark:bg-background">
-                                <DropdownMenuItem onClick={() => applyTextStyle("*")}><Bold size={14} className="mr-2" /> {t("conversations_inbox.composer.bold")}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => applyTextStyle("_")}><Italic size={14} className="mr-2" /> {t("conversations_inbox.composer.italic")}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => applyTextStyle("~")}><Strikethrough size={14} className="mr-2" /> {t("conversations_inbox.composer.strikethrough")}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => applyTextStyle("```")}><Code size={14} className="mr-2" /> {t("conversations_inbox.composer.monospace")}</DropdownMenuItem>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => applyTextStyle("*")}><Bold size={14} className="mr-2" /> {t("conversations_inbox.composer.bold")}</DropdownMenuItem>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => applyTextStyle("_")}><Italic size={14} className="mr-2" /> {t("conversations_inbox.composer.italic")}</DropdownMenuItem>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => applyTextStyle("~")}><Strikethrough size={14} className="mr-2" /> {t("conversations_inbox.composer.strikethrough")}</DropdownMenuItem>
+                                <DropdownMenuItem className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary" onClick={() => applyTextStyle("```")}><Code size={14} className="mr-2" /> {t("conversations_inbox.composer.monospace")}</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </>
@@ -4693,6 +4741,36 @@ export default function ConversationsInbox() {
                           </>
                         )}
                       </div>
+
+                      {isRecording && (
+                        <div className="flex items-center justify-center gap-2 flex-1 px-2 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={handleCancelRecording}
+                            title={t("conversations_inbox.composer.cancel_recording")}
+                            className="text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                          <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300 tabular-nums shrink-0">
+                            {formatRecordingTime(recordingSeconds)}
+                          </span>
+                          <div className="flex items-center gap-[2px] w-32 overflow-hidden h-4">
+                            {Array.from({ length: 24 }).map((_, i) => (
+                              <span
+                                key={i}
+                                className="w-[2px] rounded-full bg-red-400/70 dark:bg-red-400/60 shrink-0"
+                                style={{
+                                  height: `${30 + ((i * 37) % 70)}%`,
+                                  animation: "voice-wave 0.9s ease-in-out infinite",
+                                  animationDelay: `${(i % 7) * 0.1}s`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-1">
                         {composeMode === "reply" && (

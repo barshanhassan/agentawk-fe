@@ -290,10 +290,10 @@ const AgencyWhiteLabelSettings = () => {
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                              <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                              <DropdownMenuItem onClick={() => handleUploadClick('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Upload size={14} /> {t("common.uploadNew")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleRemoveAsset('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                              <DropdownMenuItem onClick={() => handleRemoveAsset('logo')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                                 <Trash2 size={14} /> {t("common.remove")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -323,10 +323,10 @@ const AgencyWhiteLabelSettings = () => {
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                          <DropdownMenuItem onClick={() => handleUploadClick('logo_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                          <DropdownMenuItem onClick={() => handleUploadClick('logo_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                             <Upload size={14} /> {t("common.uploadNew")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleRemoveAsset('logo_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                          <DropdownMenuItem onClick={() => handleRemoveAsset('logo_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                             <Trash2 size={14} /> {t("common.remove")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -363,10 +363,10 @@ const AgencyWhiteLabelSettings = () => {
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                              <DropdownMenuItem onClick={() => handleUploadClick('logo_dark')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                              <DropdownMenuItem onClick={() => handleUploadClick('logo_dark')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Upload size={14} /> {t("common.uploadNew")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleRemoveAsset('logo_dark')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                              <DropdownMenuItem onClick={() => handleRemoveAsset('logo_dark')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                                 <Trash2 size={14} /> {t("common.remove")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -396,10 +396,10 @@ const AgencyWhiteLabelSettings = () => {
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                          <DropdownMenuItem onClick={() => handleUploadClick('logo_dark_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px]">
+                          <DropdownMenuItem onClick={() => handleUploadClick('logo_dark_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                             <Upload size={14} /> {t("common.uploadNew")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleRemoveAsset('logo_dark_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:text-rose-600">
+                          <DropdownMenuItem onClick={() => handleRemoveAsset('logo_dark_small')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                             <Trash2 size={14} /> {t("common.remove")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -436,10 +436,10 @@ const AgencyWhiteLabelSettings = () => {
                       </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className={cn("w-56 rounded-2xl p-2", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                      <DropdownMenuItem onClick={() => handleUploadClick('favicon')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px]">
+                      <DropdownMenuItem onClick={() => handleUploadClick('favicon')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                         <Upload size={14} /> {t("common.uploadNew")}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleRemoveAsset('favicon')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px] text-rose-500 hover:text-rose-600">
+                      <DropdownMenuItem onClick={() => handleRemoveAsset('favicon')} className="rounded-xl py-2.5 cursor-pointer gap-2 font-bold text-[12px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                         <Trash2 size={14} /> {t("common.remove")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>

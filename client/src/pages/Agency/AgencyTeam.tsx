@@ -219,8 +219,8 @@ const AgencyTeam = () => {
               {sortOrder === 'newest' ? t('agency_team_page.newest_first') : t('agency_team_page.oldest_first')} <ChevronDown size={12} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className={cn(dark ? 'bg-[#0f1829] border-slate-800' : 'bg-white border-slate-200')}>
-              <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t('agency_team_page.newest_first')}</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t('agency_team_page.oldest_first')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">{t('agency_team_page.newest_first')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">{t('agency_team_page.oldest_first')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

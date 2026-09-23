@@ -8181,5 +8181,12 @@
     "theme_dark": "Dunkel",
     "language": "Sprache",
     "sign_out": "Abmelden"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "Diese Nachricht konnte nicht gesendet werden, da die Abrechnung für WhatsApp Business noch nicht eingerichtet ist. Fügen Sie im Meta Business Manager eine Zahlungsmethode hinzu, um den Versand fortzusetzen.",
+    "meta_auth_expired": "Die Verbindung von WhatsApp zu diesem Konto ist abgelaufen oder wurde widerrufen. Bitte verbinden Sie WhatsApp in den Einstellungen erneut.",
+    "wa_failed_no_detail": "Diese Nachricht konnte nicht gesendet werden. WhatsApp hat keine weiteren Details angegeben.",
+    "wa_failed_internal": "Diese Nachricht konnte aufgrund eines Zustellproblems unsererseits nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "generic_failed": "Diese Nachricht konnte nicht gesendet werden."
   }
 }

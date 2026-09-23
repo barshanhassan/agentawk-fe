@@ -884,7 +884,7 @@ export default function CallLogsPage() {
                                 paginatedCallLogs.map((call) => (
                                     <tr 
                                         key={call.id} 
-                                        className="group hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200"
+                                        className="group hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all duration-200"
                                     >
                                         <td className="px-5 py-2">
                                             <Checkbox
@@ -940,16 +940,16 @@ export default function CallLogsPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-40 p-1 rounded-xl shadow-xl border-slate-200 dark:border-slate-800">
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         onClick={() => handleViewDetails(call)}
-                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
+                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                                     >
                                                         <FileText size={13} className="text-primary" />
                                                         {t("call_logs_page.action_view_details")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => handleExportSingleCallLogAsCSV(call)}
-                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors"
+                                                        className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                                     >
                                                         <Download size={13} className="text-emerald-500" />
                                                         {t("call_logs_page.action_export_csv")}

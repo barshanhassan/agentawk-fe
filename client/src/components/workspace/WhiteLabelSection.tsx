@@ -80,10 +80,10 @@ export default function WhiteLabelSection() {
   const [colors, setColors] = useState({
     mainTheme: "#25D366",
     links: "#5742F5",
-    incomingBubble: "#705800",
-    incomingText: "#FFFFFF",
-    outgoingBubble: "#9C9C9C",
-    outgoingText: "#FFFFFF",
+    incomingBubble: "#FFFFFF",
+    incomingText: "#111827",
+    outgoingBubble: "#DCF8C6",
+    outgoingText: "#111827",
   });
 
   useEffect(() => {
@@ -91,10 +91,10 @@ export default function WhiteLabelSection() {
       setColors({
         mainTheme: brandingData.color || "#25D366",
         links: brandingData.link_color || "#5742F5",
-        incomingBubble: brandingData.incoming_chat_color || "#705800",
-        incomingText: brandingData.incoming_chat_text_color || "#FFFFFF",
-        outgoingBubble: brandingData.outgoing_chat_color || "#9C9C9C",
-        outgoingText: brandingData.outgoing_chat_text_color || "#FFFFFF",
+        incomingBubble: brandingData.incoming_chat_color || "#FFFFFF",
+        incomingText: brandingData.incoming_chat_text_color || "#111827",
+        outgoingBubble: brandingData.outgoing_chat_color || "#DCF8C6",
+        outgoingText: brandingData.outgoing_chat_text_color || "#111827",
       });
       // Hydrate persisted logos / favicon (backend returns signed URLs).
       setLogoPreview((prev) => ({
@@ -427,13 +427,13 @@ export default function WhiteLabelSection() {
                       </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className={cn("w-52 rounded-xl p-1.5", dark ? "bg-[#0f1829] border-slate-800" : "")}>
-                      <DropdownMenuItem onClick={() => handleLogoAction("upload", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+                      <DropdownMenuItem onClick={() => handleLogoAction("upload", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                         <Upload size={13} /> {t("white_label_section.upload_new")}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleLogoAction("gallery", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+                      <DropdownMenuItem onClick={() => handleLogoAction("gallery", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                         <ImageIcon size={13} /> {t("white_label_section.from_gallery")}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleLogoAction("remove", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
+                      <DropdownMenuItem onClick={() => handleLogoAction("remove", "favicon")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                         <Trash2 size={13} /> {t("white_label_section.remove")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -836,13 +836,13 @@ function LogoUpload({
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="center" className={cn("w-52 rounded-xl p-1.5", dark ? "bg-[#0f1829] border-slate-800" : "")}>
-          <DropdownMenuItem onClick={() => onAction("upload")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+          <DropdownMenuItem onClick={() => onAction("upload")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
             <Upload size={13} /> {t("white_label_section.upload_new")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAction("gallery")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+          <DropdownMenuItem onClick={() => onAction("gallery")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
             <ImageIcon size={13} /> {t("white_label_section.from_gallery")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAction("remove")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
+          <DropdownMenuItem onClick={() => onAction("remove")} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
             <Trash2 size={13} /> {t("white_label_section.remove")}
           </DropdownMenuItem>
         </DropdownMenuContent>

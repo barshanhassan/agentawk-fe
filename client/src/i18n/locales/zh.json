@@ -8181,5 +8181,12 @@
     "theme_dark": "深色",
     "language": "语言",
     "sign_out": "退出登录"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "由于 WhatsApp Business 尚未设置账单信息，此消息无法发送。请在 Meta Business Manager 中添加付款方式以恢复发送。",
+    "meta_auth_expired": "此账户的 WhatsApp 连接已过期或已被撤销。请在设置中重新连接 WhatsApp。",
+    "wa_failed_no_detail": "此消息发送失败。WhatsApp 未提供更多详细信息。",
+    "wa_failed_internal": "由于我们这边的发送问题，此消息发送失败。请重试。",
+    "generic_failed": "此消息发送失败。"
   }
 }

@@ -1172,6 +1172,7 @@ export default function ContactProfileModal({
                           {canManageContacts && (
                             <DropdownMenuItem
                               onClick={() => setChangeCompanyOpen(true)}
+                              className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                             >
                               <Repeat className="h-4 w-4 mr-2" />
                               {t("contact_profile_modal.menu.change_company")}
@@ -1180,12 +1181,13 @@ export default function ContactProfileModal({
                           {canMergeContacts && (
                             <DropdownMenuItem
                               onClick={() => setMergeContactsOpen(true)}
+                              className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                             >
                               <GitMerge className="h-4 w-4 mr-2" />
                               {t("contact_profile_modal.menu.merge_contacts")}
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={handleDownloadContactData}>
+                          <DropdownMenuItem onClick={handleDownloadContactData} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                             <Download className="h-4 w-4 mr-2" />
                             {t("contact_profile_modal.menu.contact_data")}
                           </DropdownMenuItem>
@@ -1194,7 +1196,7 @@ export default function ContactProfileModal({
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => setConfirmDeleteOpen(true)}
-                                className="text-destructive"
+                                className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 {t("contact_profile_modal.menu.delete")}
@@ -1202,7 +1204,7 @@ export default function ContactProfileModal({
                             </>
                           )}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={handleDownloadConversation}>
+                          <DropdownMenuItem onClick={handleDownloadConversation} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                             <MessageSquare className="h-4 w-4 mr-2" />
                             {t("contact_profile_modal.menu.conversation_history")}
                           </DropdownMenuItem>
@@ -1300,15 +1302,15 @@ export default function ContactProfileModal({
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem onClick={() => openCompanyContact(String(c.id))}>
+                              <DropdownMenuItem onClick={() => openCompanyContact(String(c.id))} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <ExternalLink className="h-3.5 w-3.5 mr-2" />
                                 {t("contact_profile_modal.sidebar.open_contact")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => downloadContactDataById(String(c.id))}>
+                              <DropdownMenuItem onClick={() => downloadContactDataById(String(c.id))} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Download className="h-3.5 w-3.5 mr-2" />
                                 {t("contact_profile_modal.menu.contact_data")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => downloadConversationById(String(c.id))}>
+                              <DropdownMenuItem onClick={() => downloadConversationById(String(c.id))} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <MessageSquare className="h-3.5 w-3.5 mr-2" />
                                 {t("contact_profile_modal.menu.conversation_history")}
                               </DropdownMenuItem>
@@ -1316,7 +1318,7 @@ export default function ContactProfileModal({
                                 <>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
-                                    className="text-destructive"
+                                    className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                                     onClick={() => deleteCompanyContactById(String(c.id), n)}
                                   >
                                     <Trash2 className="h-3.5 w-3.5 mr-2" />
@@ -1479,7 +1481,7 @@ export default function ContactProfileModal({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
                             <DropdownMenuItem
-                              className="text-destructive"
+                              className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                               onClick={async () => {
                                 try {
                                   await apiDelete(
@@ -1841,6 +1843,7 @@ export default function ContactProfileModal({
                                           mark_primary: true,
                                         })
                                       }
+                                      className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     >
                                       <Check className="h-4 w-4 mr-2" />
                                       {t("contact_profile_modal.fields.mark_primary")}
@@ -1855,6 +1858,7 @@ export default function ContactProfileModal({
                                           mark_primary: false,
                                         })
                                       }
+                                      className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     >
                                       <X className="h-4 w-4 mr-2" />
                                       {t("contact_profile_modal.fields.unmark_primary")}
@@ -1863,6 +1867,7 @@ export default function ContactProfileModal({
                                   {p.opted_in && p.optin_id && (
                                     <DropdownMenuItem
                                       onClick={() => unsubscribeMutation.mutate(String(p.optin_id))}
+                                      className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     >
                                       <X className="h-4 w-4 mr-2" />
                                       {t("contact_profile_modal.fields.unsubscribe")}
@@ -1875,7 +1880,7 @@ export default function ContactProfileModal({
                                         type: "contact",
                                       })
                                     }
-                                    className="text-destructive"
+                                    className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     {t("contact_profile_modal.fields.remove")}
@@ -1955,6 +1960,7 @@ export default function ContactProfileModal({
                                             mark_primary: true,
                                           })
                                         }
+                                        className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                       >
                                         <Check className="h-4 w-4 mr-2" />
                                         {t("contact_profile_modal.fields.mark_primary")}
@@ -1968,6 +1974,7 @@ export default function ContactProfileModal({
                                             mark_primary: false,
                                           })
                                         }
+                                        className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                       >
                                         <X className="h-4 w-4 mr-2" />
                                         {t("contact_profile_modal.fields.unmark_primary")}
@@ -2202,6 +2209,7 @@ export default function ContactProfileModal({
                                           mark_primary: true,
                                         })
                                       }
+                                      className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     >
                                       <Check className="h-4 w-4 mr-2" />
                                       {t("contact_profile_modal.fields.mark_primary")}
@@ -2210,6 +2218,7 @@ export default function ContactProfileModal({
                                   {e.opted_in && e.optin_id && (
                                     <DropdownMenuItem
                                       onClick={() => unsubscribeMutation.mutate(String(e.optin_id))}
+                                      className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     >
                                       <X className="h-4 w-4 mr-2" />
                                       {t("contact_profile_modal.fields.unsubscribe")}
@@ -2222,7 +2231,7 @@ export default function ContactProfileModal({
                                         type: "contact",
                                       })
                                     }
-                                    className="text-destructive"
+                                    className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     {t("contact_profile_modal.fields.remove")}
@@ -2544,12 +2553,13 @@ export default function ContactProfileModal({
                                   setMidView("form");
                                   setActiveCustomField(cf);
                                 }}
+                                className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                               >
                                 <ChevronRight className="h-3.5 w-3.5 mr-2" />
                                 {t("contact_profile_modal.right_panel.custom_fields.edit_value")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-destructive"
+                                className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                                 onClick={() => {
                                   if (
                                     window.confirm(
@@ -2655,12 +2665,13 @@ export default function ContactProfileModal({
                                     setEditingTag(tg);
                                     setNewTagOpen(true);
                                   }}
+                                  className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 >
                                   <TypeIcon className="h-3.5 w-3.5 mr-2" />
                                   {t("contact_profile_modal.right_panel.tags.edit_tag")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="text-destructive"
+                                  className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                                   onClick={() => {
                                     if (
                                       window.confirm(

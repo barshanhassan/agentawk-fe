@@ -271,8 +271,8 @@ const AgencyWorkspaces = () => {
                 {sortOrder === 'newest' ? t("agency_workspaces.newest_first") : t("agency_workspaces.oldest_first")} <ChevronDown size={12} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className={cn("w-40 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t("agency_workspaces.newest_first")}</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer">{t("agency_workspaces.oldest_first")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOrder('newest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">{t("agency_workspaces.newest_first")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOrder('oldest')} className="rounded-lg py-2 font-bold text-[11px] cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">{t("agency_workspaces.oldest_first")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -444,14 +444,14 @@ const AgencyWorkspaces = () => {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className={cn("w-52 rounded-xl border shadow-2xl p-1", dark ? "bg-[#0f1829] border-slate-800 text-white" : "")}>
-                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('USAGE'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('USAGE'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                           <BarChart3 size={14} className="text-primary" /> {t("agency_workspaces.usage_reports")}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('VOICE_WALLET'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                        <DropdownMenuItem onClick={() => { setSelectedWorkspace(ws); setViewMode('VOICE_WALLET'); }} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                           <Wallet size={14} className="text-primary" /> {t("agency_workspaces.voice_wallet")}
                         </DropdownMenuItem>
                         <div className={cn("my-1 h-px", dark ? "bg-slate-800" : "bg-slate-100")} />
-                        <DropdownMenuItem onClick={() => toggleStatusMutation.mutate(ws)} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5">
+                        <DropdownMenuItem onClick={() => toggleStatusMutation.mutate(ws)} className="rounded-lg py-2.5 font-bold text-[11px] cursor-pointer gap-2.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                           <Ban size={14} /> {ws.status === 'Active' ? t("agency_workspaces.suspend_access") : t("agency_workspaces.activate_access")}
                         </DropdownMenuItem>
                         <DropdownMenuItem

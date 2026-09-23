@@ -6262,6 +6262,7 @@
       "attach_file": "Attach file",
       "send_picture": "Send picture",
       "stop_recording": "Stop recording",
+      "cancel_recording": "Cancel recording",
       "send_voice_message": "Send voice message",
       "geolocation_not_supported": "Geolocation not supported by this browser",
       "instagram_unsupported_files": "Instagram does not support document files. Only images, videos, and audio can be sent.",
@@ -6905,6 +6906,7 @@
       "create_one_now": "Create one now",
       "failed_count_one": "· {{count}} failed",
       "failed_count_other": "· {{count}} failed",
+      "failed_reasons_loading": "Loading reason...",
       "sending_progress": "{{sent}} sent · {{queued}} queued",
       "edit_broadcast": "Edit campaign",
       "delete_broadcast": "Delete campaign",
@@ -8281,5 +8283,12 @@
     "theme_dark": "Dark",
     "language": "Language",
     "sign_out": "Sign out"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "This message couldn't be sent because WhatsApp Business billing isn't set up yet. Add a payment method in Meta Business Manager to resume sending.",
+    "meta_auth_expired": "WhatsApp's connection to this account has expired or was revoked. Please reconnect WhatsApp in Settings.",
+    "wa_failed_no_detail": "This message failed to send. WhatsApp didn't provide any further detail.",
+    "wa_failed_internal": "This message failed to send due to a delivery issue on our side. Please try again.",
+    "generic_failed": "This message failed to send."
   }
 }

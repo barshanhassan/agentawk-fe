@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import PaginationFooter from "@/components/PaginationFooter";
+import { getMessageFailureReason } from "@/lib/messageErrors";
 import { useTranslation } from "react-i18next";
 import { Plus, BarChart2, Edit2, Copy, Trash2, Send, Zap, Search, ChevronLeft, Archive, Calendar, FileText, X, Download, Paperclip } from "react-feather";
 import {
@@ -179,6 +180,49 @@ interface EngagementData {
   hour: string;
   delivered: number;
   viewed: number;
+}
+
+// Failed-count badge with a lazy-loaded, translated-reason tooltip — fetches
+// /broadcasts/:id/failed-reasons only when actually hovered, and only once
+// per campaign (React Query caches after that).
+function CampaignFailedBadge({ campaignId, count }: { campaignId: string; count: number }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useQuery<{ reasons: string[] }>({
+    queryKey: ["/api/broadcasts", campaignId, "failed-reasons"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/broadcasts/${campaignId}/failed-reasons`);
+      return res.json();
+    },
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const reasons = (data?.reasons ?? []).map((raw) => getMessageFailureReason(raw, t));
+  const uniqueReasons = Array.from(new Set(reasons));
+
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 tabular-nums cursor-default">
+          {t("campaign_manager.list.failed_count", { count })}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        {isLoading ? (
+          <span className="text-[11px]">{t("campaign_manager.list.failed_reasons_loading")}</span>
+        ) : uniqueReasons.length > 0 ? (
+          <ul className="text-[11px] space-y-1 list-disc pl-3">
+            {uniqueReasons.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+        ) : (
+          <span className="text-[11px]">{t("message_errors.generic_failed")}</span>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 export default function CampaignManager() {
@@ -649,10 +693,10 @@ export default function CampaignManager() {
         type: metaType,
         messageType: metaMessageType,
         sent: b.total_sent || 0,
-        // Real per-message counts for zapi/QR broadcasts (backend aggregates
-        // zapi_messages by status via broadcast_id); WhatsApp Cloud broadcasts
-        // don't carry that link yet, so they fall back to the old sent-count
-        // approximation until agentawk-meta is updated too.
+        // Real per-message counts for zapi/QR AND WhatsApp Cloud broadcasts —
+        // backend aggregates zapi_messages/wa_messages by status via
+        // broadcast_id. Falls back to the old sent-count approximation only
+        // for channel types that don't stamp broadcast_id at all yet.
         delivered: b.total_delivered != null ? b.total_delivered : (b.total_sent || 0),
         read: b.total_read != null ? b.total_read : 0,
         hasRealDeliveryStats: b.total_delivered != null,
@@ -2020,7 +2064,7 @@ export default function CampaignManager() {
                         {CONTACT_TOKENS.map((tok) => (
                           <DropdownMenuItem
                             key={tok.token}
-                            className="rounded-lg py-2 cursor-pointer font-medium text-[11px]"
+                            className="rounded-lg py-2 cursor-pointer font-medium text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                             onClick={() => setComposerZapiMessage((prev) => `${prev}${tok.token}`)}
                           >
                             {t(`campaign_manager.contact_tokens.${tok.labelKey}`)}
@@ -2135,7 +2179,7 @@ export default function CampaignManager() {
                             {CONTACT_TOKENS.map((tok) => (
                               <DropdownMenuItem
                                 key={tok.token}
-                                className="rounded-lg py-2 cursor-pointer font-medium text-[11px]"
+                                className="rounded-lg py-2 cursor-pointer font-medium text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 onClick={() =>
                                   setComposerVariables((prev) => ({
                                     ...prev,
@@ -2658,6 +2702,7 @@ export default function CampaignManager() {
                         onChange={(ids) => setDateRangeFilter(ids[0] === "" ? [] : ids)}
                         placeholder={t("campaign_manager.filters.all_time")}
                         width="100%"
+                        popoutWidth="100%"
                         showSelectedOption={true}
                         showSearch={false}
                         className="border-slate-200 dark:border-slate-800"
@@ -2695,6 +2740,7 @@ export default function CampaignManager() {
                         onChange={(ids) => setSelectedStatus(ids[0] === "" ? [] : ids)}
                         placeholder={t("campaign_manager.filters.all")}
                         width="100%"
+                        popoutWidth="100%"
                         showSelectedOption={true}
                         showSearch={false}
                         className="border-slate-200 dark:border-slate-800"
@@ -2731,6 +2777,7 @@ export default function CampaignManager() {
                         onChange={(ids) => setSelectedChannels(ids[0] === "" ? [] : ids)}
                         placeholder={t("campaign_manager.filters.all")}
                         width="100%"
+                        popoutWidth="100%"
                         showSelectedOption={true}
                         showSearch={false}
                         className="border-slate-200 dark:border-slate-800"
@@ -2764,6 +2811,7 @@ export default function CampaignManager() {
                         onChange={(ids) => setSelectedAgents(ids[0] === "" ? [] : ids)}
                         placeholder={t("campaign_manager.filters.all_agents")}
                         width="100%"
+                        popoutWidth="100%"
                         showSelectedOption={true}
                         showSearch={workspaceUsers.length > 6}
                         className="border-slate-200 dark:border-slate-800"
@@ -2898,7 +2946,7 @@ export default function CampaignManager() {
                             paginatedCampaignsList.map((campaign) => (
                                 <tr
                                     key={campaign.id}
-                                    className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                                    className="group hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
                                 >
                                     {/* NAME & CHANNEL — replyagent stacks the broadcast name above a
                                         small channel-coloured chip showing which account it'll send via. */}
@@ -2943,9 +2991,7 @@ export default function CampaignManager() {
                                                     {(campaign.audience ?? 0).toLocaleString()}
                                                 </span>
                                                 {(campaign.failed ?? 0) > 0 && (
-                                                    <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
-                                                        {t("campaign_manager.list.failed_count", { count: campaign.failed })}
-                                                    </span>
+                                                    <CampaignFailedBadge campaignId={String(campaign.id)} count={campaign.failed} />
                                                 )}
                                             </div>
                                             {campaign.status === "sending" && campaign.hasRealDeliveryStats && (

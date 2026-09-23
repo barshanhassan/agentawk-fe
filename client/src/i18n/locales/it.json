@@ -8181,5 +8181,12 @@
     "theme_dark": "Scuro",
     "language": "Lingua",
     "sign_out": "Disconnetti"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "Questo messaggio non è stato inviato perché la fatturazione di WhatsApp Business non è ancora configurata. Aggiungi un metodo di pagamento in Meta Business Manager per riprendere l'invio.",
+    "meta_auth_expired": "La connessione di WhatsApp a questo account è scaduta o è stata revocata. Ricollega WhatsApp nelle Impostazioni.",
+    "wa_failed_no_detail": "Impossibile inviare questo messaggio. WhatsApp non ha fornito ulteriori dettagli.",
+    "wa_failed_internal": "Impossibile inviare questo messaggio a causa di un problema di consegna da parte nostra. Riprova.",
+    "generic_failed": "Impossibile inviare questo messaggio."
   }
 }

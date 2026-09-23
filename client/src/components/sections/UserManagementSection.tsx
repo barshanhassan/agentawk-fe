@@ -682,15 +682,15 @@ export default function UserManagementSection() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-white dark:bg-background">
-                              <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                              <DropdownMenuItem onClick={() => handleEditUser(user)} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Edit2 size={14} className="mr-2" />
                                 {t("user_management_section.action_edit")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleCopyUser(user)}>
+                              <DropdownMenuItem onClick={() => handleCopyUser(user)} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Copy size={14} className="mr-2" />
                                 {t("user_management_section.action_copy")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-destructive">
+                              <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400">
                                 <Trash2 size={14} className="mr-2" />
                                 {t("user_management_section.action_delete")}
                               </DropdownMenuItem>

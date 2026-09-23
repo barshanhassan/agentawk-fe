@@ -1158,20 +1158,20 @@ function AccountCard(props: {
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[210px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
-              <DropdownMenuItem onClick={props.onOpenTemplates} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+              <DropdownMenuItem onClick={props.onOpenTemplates} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                 <CopyIcon size={12} /> {t("whatsapp_section.account.menu_templates")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={props.onSetupCapi} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+              <DropdownMenuItem onClick={props.onSetupCapi} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                 <Sparkles size={12} /> {account.capi ? t("whatsapp_section.account.menu_capi_configured") : t("whatsapp_section.account.menu_setup_capi")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={props.onVerifyAccount} disabled={props.isVerifying} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+              <DropdownMenuItem onClick={props.onVerifyAccount} disabled={props.isVerifying} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                 <RefreshCcw size={12} className={props.isVerifying ? "animate-spin" : ""} /> {t("whatsapp_section.account.menu_verify")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={props.onResubscribe} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+              <DropdownMenuItem onClick={props.onResubscribe} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                 <Repeat size={12} /> {t("whatsapp_section.account.menu_resubscribe")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={props.onDeleteAccount} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
+              <DropdownMenuItem onClick={props.onDeleteAccount} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                 <Trash2 size={12} /> {t("whatsapp_section.account.menu_delete_account")}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1442,25 +1442,25 @@ function PhoneNumberCard(props: {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className={cn("rounded-xl p-1.5 min-w-[190px]", dark ? "bg-[#0f1829] border-slate-800" : "")}>
-            <DropdownMenuItem onClick={props.onDefaultReply} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+            <DropdownMenuItem onClick={props.onDefaultReply} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
               <ReplyAll size={12} /> {t("whatsapp_section.phone.menu_default_reply")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={props.onTemplates} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+            <DropdownMenuItem onClick={props.onTemplates} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
               <CopyIcon size={12} /> {t("whatsapp_section.phone.menu_manage_templates")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={props.onReconnect} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+            <DropdownMenuItem onClick={props.onReconnect} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
               <RotateCw size={12} /> {t("whatsapp_section.phone.menu_refresh_status")}
             </DropdownMenuItem>
             {/* Register / 2-step PIN is Business-API only — replyagent has no
                 register flow on Coexistence numbers (they're already registered
                 via the WhatsApp Business app), so hide it for the Coex variant. */}
             {!isCoex && (
-              <DropdownMenuItem onClick={props.onRegister} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]">
+              <DropdownMenuItem onClick={props.onRegister} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                 <KeyRound size={12} /> {t("whatsapp_section.phone.menu_register_pin")}
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={props.onDelete} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500">
+            <DropdownMenuItem onClick={props.onDelete} className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
               <Trash2 size={12} /> {t("whatsapp_section.phone.menu_delete_number")}
             </DropdownMenuItem>
           </DropdownMenuContent>

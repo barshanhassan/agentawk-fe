@@ -1317,11 +1317,11 @@ function BuilderToolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onSave} disabled={saving}>
+          <DropdownMenuItem onClick={onSave} disabled={saving} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
             <Save className="h-3.5 w-3.5 mr-2" />
             {t("smart_flow_builder_page.toolbar.save_now")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onTest}>
+          <DropdownMenuItem onClick={onTest} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
             <Play className="h-3.5 w-3.5 mr-2" />
             {t("smart_flow_builder_page.toolbar.test_run")}
           </DropdownMenuItem>
@@ -1331,7 +1331,7 @@ function BuilderToolbar({
             </span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onFlushQueue}>
+          <DropdownMenuItem onClick={onFlushQueue} className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400">
             <Trash2 className="h-3.5 w-3.5 mr-2 text-destructive" />
             {t("smart_flow_builder_page.toolbar.clear_queue")}
           </DropdownMenuItem>
@@ -1473,14 +1473,14 @@ function AddNodeButton({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-[70vh] overflow-auto">
         {channelItems.map((it) => (
-          <DropdownMenuItem key={it.type} onClick={() => onPick(it.type)}>
+          <DropdownMenuItem key={it.type} onClick={() => onPick(it.type)} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
             <span className={it.color}>{it.icon}</span>
             <span className="ml-2">{it.label}</span>
           </DropdownMenuItem>
         ))}
         {channelItems.length > 0 && <DropdownMenuSeparator />}
         {featureItems.map((it) => (
-          <DropdownMenuItem key={it.type} onClick={() => onPick(it.type)}>
+          <DropdownMenuItem key={it.type} onClick={() => onPick(it.type)} className="hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
             <span className={it.color}>{it.icon}</span>
             <span className="ml-2">{it.label}</span>
           </DropdownMenuItem>
@@ -1488,7 +1488,7 @@ function AddNodeButton({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={(e) => e.stopPropagation()}
-          className="text-muted-foreground"
+          className="text-muted-foreground hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
         >
           <span className="text-slate-500 mr-2 text-xs">→</span>
           {t("smart_flow_builder_page.canvas.cancel")}

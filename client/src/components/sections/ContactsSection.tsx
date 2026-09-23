@@ -1759,7 +1759,7 @@ export default function ContactsSection() {
                     getFilteredAndSortedData().map((contact) => (
                       <tr
                         key={contact.id}
-                        className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-primary/[0.06] dark:hover:bg-primary/5 transition-all duration-200 group"
+                        className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all duration-200 group"
                       >
                         <td className="py-1.5 px-4">
                           <Checkbox
@@ -1822,12 +1822,12 @@ export default function ContactsSection() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-36 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl">
                                 {canManageContacts && (
-                                  <DropdownMenuItem onClick={() => handleEditContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                                  <DropdownMenuItem onClick={() => handleEditContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-colors cursor-pointer">
                                     <Edit2 size={13} className="text-slate-400" />
                                     <span>{t("contacts_section.row_actions.edit")}</span>
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem onClick={() => handleCopyContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                                <DropdownMenuItem onClick={() => handleCopyContact(contact)} className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-colors cursor-pointer">
                                   <Copy size={13} className="text-slate-400" />
                                   <span>{t("contacts_section.row_actions.copy")}</span>
                                 </DropdownMenuItem>

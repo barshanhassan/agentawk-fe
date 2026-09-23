@@ -8181,5 +8181,12 @@
     "theme_dark": "ダーク",
     "language": "言語",
     "sign_out": "サインアウト"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "WhatsApp Businessの請求設定がまだ完了していないため、このメッセージは送信できませんでした。送信を再開するには、Meta Business Managerで支払い方法を追加してください。",
+    "meta_auth_expired": "このアカウントへのWhatsAppの接続が期限切れになったか、取り消されました。設定でWhatsAppを再接続してください。",
+    "wa_failed_no_detail": "このメッセージの送信に失敗しました。WhatsAppから詳細情報は提供されませんでした。",
+    "wa_failed_internal": "こちら側の配信の問題により、このメッセージの送信に失敗しました。もう一度お試しください。",
+    "generic_failed": "このメッセージの送信に失敗しました。"
   }
 }

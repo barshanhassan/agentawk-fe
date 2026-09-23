@@ -76,8 +76,16 @@ function writeCache(v: CachedBranding) {
   }
 }
 
+// Explicitly clears an override when there's no value, instead of silently
+// leaving whatever was set before — otherwise a color that was once cached
+// (e.g. from a bug, or a since-reverted customization) stays stuck as an
+// inline override forever, even after the backing data goes back to null.
 function applyCssVar(name: string, value?: string) {
-  if (value) document.documentElement.style.setProperty(name, value);
+  if (value) {
+    document.documentElement.style.setProperty(name, value);
+  } else {
+    document.documentElement.style.removeProperty(name);
+  }
 }
 
 export default function GlobalBrandingFetcher() {
@@ -112,26 +120,16 @@ export default function GlobalBrandingFetcher() {
       setWorkspacePrimaryColor(hsl);
     }
 
-    if (brandingData.incoming_chat_color) {
-      next.incomingBubble = brandingData.incoming_chat_color;
-      document.documentElement.style.setProperty("--incoming-bubble", brandingData.incoming_chat_color);
-    }
-    if (brandingData.incoming_chat_text_color) {
-      next.incomingText = brandingData.incoming_chat_text_color;
-      document.documentElement.style.setProperty("--incoming-text", brandingData.incoming_chat_text_color);
-    }
-    if (brandingData.outgoing_chat_color) {
-      next.outgoingBubble = brandingData.outgoing_chat_color;
-      document.documentElement.style.setProperty("--outgoing-bubble", brandingData.outgoing_chat_color);
-    }
-    if (brandingData.outgoing_chat_text_color) {
-      next.outgoingText = brandingData.outgoing_chat_text_color;
-      document.documentElement.style.setProperty("--outgoing-text", brandingData.outgoing_chat_text_color);
-    }
-    if (brandingData.link_color) {
-      next.linkColor = brandingData.link_color;
-      document.documentElement.style.setProperty("--link-color", brandingData.link_color);
-    }
+    next.incomingBubble = brandingData.incoming_chat_color || undefined;
+    applyCssVar("--incoming-bubble", next.incomingBubble);
+    next.incomingText = brandingData.incoming_chat_text_color || undefined;
+    applyCssVar("--incoming-text", next.incomingText);
+    next.outgoingBubble = brandingData.outgoing_chat_color || undefined;
+    applyCssVar("--outgoing-bubble", next.outgoingBubble);
+    next.outgoingText = brandingData.outgoing_chat_text_color || undefined;
+    applyCssVar("--outgoing-text", next.outgoingText);
+    next.linkColor = brandingData.link_color || undefined;
+    applyCssVar("--link-color", next.linkColor);
     if (brandingData.favicon_url) {
       next.faviconUrl = brandingData.favicon_url;
       applyFavicon(brandingData.favicon_url);

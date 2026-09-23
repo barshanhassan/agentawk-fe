@@ -226,7 +226,7 @@ const AgencyLogs = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className={cn("w-48", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                   {dateRanges.map((range) => (
-                    <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer text-[12px]">
+                    <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer text-[12px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                       {range}
                     </DropdownMenuItem>
                   ))}
@@ -244,7 +244,7 @@ const AgencyLogs = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className={cn("w-48", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                   {agents.map((agent, idx) => (
-                    <DropdownMenuItem key={agent} onClick={() => setSelectedAgent(agent)} className="cursor-pointer text-[12px] gap-2">
+                    <DropdownMenuItem key={agent} onClick={() => setSelectedAgent(agent)} className="cursor-pointer text-[12px] gap-2 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                       {idx === 0
                         ? <Users size={13} className="text-primary shrink-0" />
                         : <User size={13} className="text-slate-400 shrink-0" />}

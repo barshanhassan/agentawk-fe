@@ -513,7 +513,7 @@ export default function AppSidebar() {
                         "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all",
                         searchType === option.label
                           ? "bg-primary text-primary-foreground font-bold"
-                          : theme === "dark" ? "hover:bg-slate-800 text-slate-300" : "hover:bg-slate-50 text-slate-700"
+                          : theme === "dark" ? "hover:bg-primary/20 hover:text-primary text-slate-300" : "hover:bg-primary/10 hover:text-primary text-slate-700"
                       )}
                     >
                       <div className="shrink-0">{option.icon}</div>
@@ -644,7 +644,7 @@ export default function AppSidebar() {
                       <DropdownMenuItem
                         key={n.id}
                         className={cn(
-                          "p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer mb-1 outline-none",
+                          "p-3 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary cursor-pointer mb-1 outline-none",
                           !n.read && "bg-primary/5 dark:bg-primary/10"
                         )}
                         onClick={() => handleNotifClick(n)}
@@ -724,7 +724,7 @@ export default function AppSidebar() {
                 onClick={() => setLocation("/settings?tab=My%20Profile")}
                 className={cn(
                   "flex items-center justify-between p-3 rounded-md cursor-pointer group outline-none",
-                  theme === "dark" ? "hover:bg-[#334155] focus:bg-[#334155] focus:text-white" : "hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-900"
+                  theme === "dark" ? "hover:bg-primary/20 hover:text-primary focus:bg-[#334155] focus:text-white" : "hover:bg-primary/10 hover:text-primary focus:bg-slate-100 focus:text-slate-900"
                 )}
               >
                 <div className="flex items-center gap-3">

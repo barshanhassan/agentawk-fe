@@ -572,7 +572,7 @@ export default function AIProductsSection() {
                   <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-52", card, border)}>
                     {hasBaserow && (
                       <DropdownMenuItem
-                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                         onClick={() => startCreateTheme("baserow")}
                       >
                         <ProviderIcon type="baserow" className="w-4 h-4" /> Baserow.io
@@ -580,7 +580,7 @@ export default function AIProductsSection() {
                     )}
                     {hasSupabase && (
                       <DropdownMenuItem
-                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                         onClick={() => startCreateTheme("supabase")}
                       >
                         <ProviderIcon type="supabase" className="w-4 h-4" /> Supabase
@@ -698,13 +698,13 @@ export default function AIProductsSection() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
                               <DropdownMenuItem
-                                className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                                className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 onClick={() => openUserAccess(theme)}
                               >
                                 <UserCog size={13} /> {t("ai_products_section.access")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                                className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                 onClick={() => startEditTheme(theme)}
                               >
                                 <Edit2 size={13} /> {t("ai_products_section.edit")}

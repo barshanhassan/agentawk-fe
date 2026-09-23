@@ -545,13 +545,13 @@ export default function VisualAPISection() {
                                     Manage / Rename / Delete / Logs. */}
                                 <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-48", card, border)}>
                                   <DropdownMenuItem
-                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     onClick={() => openManage(trigger)}
                                   >
                                     <SettingsIcon size={13} className="opacity-60" /> {t("visual_api_section.menu_manage")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-blue-500 focus:text-blue-500 focus:bg-blue-500/10"
+                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-blue-500 focus:text-blue-500 focus:bg-blue-500/10 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     onClick={() => {
                                       setRenameTarget(trigger);
                                       setRenameInput(trigger.name);
@@ -560,14 +560,14 @@ export default function VisualAPISection() {
                                     <Pencil size={13} /> {t("visual_api_section.menu_rename")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
+                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                                     onClick={() => setDeleteConfirmation(trigger)}
                                   >
                                     <Trash2 size={13} /> {t("visual_api_section.menu_delete")}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="my-1" />
                                   <DropdownMenuItem
-                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                     onClick={() => openLogs(trigger)}
                                   >
                                     <ListChecks size={13} className="opacity-60" /> {t("visual_api_section.menu_logs")}

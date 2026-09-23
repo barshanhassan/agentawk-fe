@@ -592,10 +592,10 @@ export default function QuickRepliesSection() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
-                            <DropdownMenuItem onClick={() => openEditModal(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
+                            <DropdownMenuItem onClick={() => openEditModal(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                               <Edit2 size={13} /> {t("quick_replies_section.edit_action")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openCollectionDetail(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
+                            <DropdownMenuItem onClick={() => openCollectionDetail(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                               <Bot size={13} /> {t("quick_replies_section.open_collection_action")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openDeleteModal(collection)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
@@ -723,7 +723,7 @@ export default function QuickRepliesSection() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
-                          <DropdownMenuItem onClick={() => openEditMessage(message)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
+                          <DropdownMenuItem onClick={() => openEditMessage(message)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                             <Edit2 size={13} /> {t("quick_replies_section.edit_action")}
                           </DropdownMenuItem>
                           <DropdownMenuItem

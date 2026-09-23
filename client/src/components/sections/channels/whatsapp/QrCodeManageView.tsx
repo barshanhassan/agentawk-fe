@@ -672,7 +672,7 @@ export default function QrCodeManageView({
                           )}
                           {s === "CONNECTED" && (
                             <DropdownMenuItem
-                              className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                              className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                               onClick={() => openDefaultReply(instance)}
                             >
                               <ReplyAll size={13} /> {t("qr_code_manage_view.auto_reply_menu_item")}
@@ -680,7 +680,7 @@ export default function QrCodeManageView({
                           )}
                           {(s === "PENDING" || s === "DISCONNECTED") && (
                             <DropdownMenuItem
-                              className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                              className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                               onClick={() => {
                                 setQrInstance(instance);
                                 setQrImage(null);
@@ -699,7 +699,7 @@ export default function QrCodeManageView({
                           )}
                           {["PENDING", "CONNECTED", "DISCONNECTED"].includes(s) && (
                             <DropdownMenuItem
-                              className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                              className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                               onClick={() => {
                                 setRenameInstance(instance);
                                 setRenameValue(instance.name);

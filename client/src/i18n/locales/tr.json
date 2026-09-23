@@ -8181,5 +8181,12 @@
     "theme_dark": "Koyu",
     "language": "Dil",
     "sign_out": "Çıkış yap"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "WhatsApp Business faturalandırması henüz ayarlanmadığı için bu mesaj gönderilemedi. Göndermeye devam etmek için Meta Business Manager'a bir ödeme yöntemi ekleyin.",
+    "meta_auth_expired": "Bu hesaba WhatsApp bağlantısının süresi doldu veya iptal edildi. Lütfen Ayarlar'dan WhatsApp'ı yeniden bağlayın.",
+    "wa_failed_no_detail": "Bu mesaj gönderilemedi. WhatsApp herhangi bir ayrıntı sağlamadı.",
+    "wa_failed_internal": "Bizim tarafımızdaki bir teslimat sorunu nedeniyle bu mesaj gönderilemedi. Lütfen tekrar deneyin.",
+    "generic_failed": "Bu mesaj gönderilemedi."
   }
 }

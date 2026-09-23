@@ -669,7 +669,7 @@ export default function AIChatAssistantsSection() {
                                 {canManageFeeder && (
                                   <DropdownMenuItem
                                     onClick={() => setFeederAgent(agent)}
-                                    className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px]"
+                                    className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                                   >
                                     <Plug size={12} /> {t("ai_chat_assistants_section.ai_feeder_menu_item")}
                                   </DropdownMenuItem>
@@ -677,7 +677,7 @@ export default function AIChatAssistantsSection() {
                                 {canDeleteKB && (
                                   <DropdownMenuItem
                                     onClick={() => { setAgentToDelete(agent); setShowDeleteConfirm(true); }}
-                                    className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500"
+                                    className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                                   >
                                     <Trash2 size={12} /> {t("ai_chat_assistants_section.delete")}
                                   </DropdownMenuItem>

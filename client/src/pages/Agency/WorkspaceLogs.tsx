@@ -200,7 +200,7 @@ const WorkspaceLogs = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className={cn("w-64", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                   {workspaces.map((ws, idx) => (
-                    <DropdownMenuItem key={ws} onClick={() => setSelectedWorkspace(ws)} className="cursor-pointer text-[12px] gap-2">
+                    <DropdownMenuItem key={ws} onClick={() => setSelectedWorkspace(ws)} className="cursor-pointer text-[12px] gap-2 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                       {idx === 0
                         ? <Layers size={13} className="text-primary shrink-0" />
                         : <Network size={13} className="text-slate-400 shrink-0" />}
@@ -221,7 +221,7 @@ const WorkspaceLogs = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className={cn("w-48", dark ? "bg-[#1e293b] border-slate-700 text-white" : "")}>
                   {dateRanges.map((range) => (
-                    <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer text-[12px]">
+                    <DropdownMenuItem key={range} onClick={() => { setSelectedDate(range); setPage(1); }} className="cursor-pointer text-[12px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                       {range}
                     </DropdownMenuItem>
                   ))}

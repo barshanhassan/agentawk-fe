@@ -570,6 +570,13 @@ button.border-b-2:hover {
   to { stroke-dashoffset: -16; }
 }
 
+/* Inbox voice-note recording indicator — a staggered bar-height pulse (not
+   audio-reactive, just enough motion to read as "recording is live"). */
+@keyframes voice-wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
 /* Active tab: theme-color underline + text */
 [data-radix-collection-item][data-state=active],
 button[data-state=active].border-b-2 {

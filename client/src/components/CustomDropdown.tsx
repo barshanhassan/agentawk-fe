@@ -158,7 +158,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             {filteredOptions.map(option => (
               <li
                 key={option.id}
-                className={`group flex items-center px-3 py-2 text-sm cursor-pointer select-none transition-colors rounded-md hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white text-foreground dark:text-gray-300`}
+                className={`group flex items-center px-3 py-2 text-sm cursor-pointer select-none transition-colors rounded-md hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary text-foreground dark:text-gray-300`}
                 onClick={() => handleSelect(option.id)}
                 title={option.name}
               >

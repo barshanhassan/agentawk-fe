@@ -166,17 +166,17 @@ const AgencyLegal = () => {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className={cn("w-44 p-1.5 shadow-xl border", dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200")}>
-                              <DropdownMenuItem className="cursor-pointer rounded-md gap-2 text-[12px] font-bold">
+                              <DropdownMenuItem className="cursor-pointer rounded-md gap-2 text-[12px] font-bold hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Eye size={14} className="text-primary" /> {t("agency.legal.actions.view")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer rounded-md gap-2 text-[12px] font-bold">
+                              <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer rounded-md gap-2 text-[12px] font-bold hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Edit size={14} className="text-primary" /> {t("agency.legal.actions.edit")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setIsAddModalOpen(true)} className="cursor-pointer rounded-md gap-2 text-[12px] font-bold">
+                              <DropdownMenuItem onClick={() => setIsAddModalOpen(true)} className="cursor-pointer rounded-md gap-2 text-[12px] font-bold hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                 <Plus size={14} className="text-primary" /> {t("agency.legal.actions.add")}
                               </DropdownMenuItem>
                               <div className={cn("h-px my-1", dark ? "bg-slate-800" : "bg-slate-100")} />
-                              <DropdownMenuItem onClick={() => setIsArchiveModalOpen(true)} className="cursor-pointer rounded-md gap-2 text-[12px] font-bold text-rose-500">
+                              <DropdownMenuItem onClick={() => setIsArchiveModalOpen(true)} className="cursor-pointer rounded-md gap-2 text-[12px] font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                                 <Trash2 size={14} /> {t("agency.legal.actions.archive")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>

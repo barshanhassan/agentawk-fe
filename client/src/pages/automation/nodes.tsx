@@ -251,7 +251,7 @@ function AddStepDropdown({
             <DropdownMenuItem
               key={it.type}
               onClick={() => addStepBelow(nodeId, it.type, handleId)}
-              className="text-xs py-1.5"
+              className="text-xs py-1.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
             >
               <span className="mr-2 flex-shrink-0">
                 {CHANNEL_DROPDOWN_ICONS[it.type] ?? (
@@ -266,7 +266,7 @@ function AddStepDropdown({
             <DropdownMenuItem
               key={it.type}
               onClick={() => addStepBelow(nodeId, it.type, handleId)}
-              className="text-xs py-1.5"
+              className="text-xs py-1.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
             >
               <span className="text-slate-500 mr-2 text-xs">→</span>
               {it.label}
@@ -281,7 +281,7 @@ function AddStepDropdown({
               so the list reads as a coherent column. */}
           <DropdownMenuItem
             onClick={(e) => e.stopPropagation()}
-            className="text-muted-foreground text-xs py-1.5"
+            className="text-muted-foreground text-xs py-1.5 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
           >
             <span className="text-slate-500 mr-2 text-xs">→</span>
             {t("automation_nodes.cancel")}

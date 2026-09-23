@@ -8181,5 +8181,12 @@
     "theme_dark": "داكن",
     "language": "اللغة",
     "sign_out": "تسجيل الخروج"
+  },
+  "message_errors": {
+    "meta_billing_not_configured": "تعذر إرسال هذه الرسالة لأن إعدادات الفوترة الخاصة بـ WhatsApp Business لم يتم ضبطها بعد. أضف طريقة دفع في Meta Business Manager لاستئناف الإرسال.",
+    "meta_auth_expired": "انتهت صلاحية اتصال WhatsApp بهذا الحساب أو تم إلغاؤه. يرجى إعادة الاتصال بـ WhatsApp من الإعدادات.",
+    "wa_failed_no_detail": "فشل إرسال هذه الرسالة. لم يقدم WhatsApp أي تفاصيل إضافية.",
+    "wa_failed_internal": "فشل إرسال هذه الرسالة بسبب مشكلة في التسليم من جانبنا. يرجى المحاولة مرة أخرى.",
+    "generic_failed": "فشل إرسال هذه الرسالة."
   }
 }

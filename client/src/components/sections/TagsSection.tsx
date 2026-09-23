@@ -521,7 +521,7 @@ export default function TagsSection() {
                           setFolderName(f.name);
                           setShowFolderModal(true);
                         }}
-                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer"
+                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                       >
                         <Edit2 size={13} /> {t("tags_section.rename")}
                       </DropdownMenuItem>
@@ -531,7 +531,7 @@ export default function TagsSection() {
                             deleteFolderMutation.mutate(folderFilter);
                           }
                         }}
-                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
+                        className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                       >
                         <Trash2 size={13} /> {t("tags_section.delete")}
                       </DropdownMenuItem>
@@ -617,7 +617,7 @@ export default function TagsSection() {
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className={cn("rounded-xl border p-1.5 w-44", card, border)}>
-                                  <DropdownMenuItem onClick={() => openEdit(item)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer">
+                                  <DropdownMenuItem onClick={() => openEdit(item)} className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary">
                                     <Edit2 size={13} /> {t("tags_section.edit")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
@@ -625,7 +625,7 @@ export default function TagsSection() {
                                       setItemToDelete(item);
                                       setShowDeleteModal(true);
                                     }}
-                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10"
+                                    className="rounded-lg text-[12px] font-bold py-2 px-3 flex gap-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                                   >
                                     <Trash2 size={13} /> {t("tags_section.delete")}
                                   </DropdownMenuItem>
