@@ -538,7 +538,7 @@ export default function AIChatAssistantsSection() {
                   <button
                     type="button"
                     onClick={() => toast({ title: t("ai_chat_assistants_section.functions_toast_title"), description: t("ai_chat_assistants_section.functions_toast_description") })}
-                    className={primaryOutlineBtn}
+                    className={primaryBtn}
                   >
                     <Plus size={12} /> {t("ai_chat_assistants_section.add_function_button")}
                   </button>
@@ -587,7 +587,7 @@ export default function AIChatAssistantsSection() {
                 <Info size={11} className="opacity-50" />
               </div>
               {canCreateKB && (
-                <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
+                <button onClick={() => handleEdit(null)} className={primaryBtn}>
                   <Plus size={12} /> {t("ai_chat_assistants_section.add_assistant")}
                 </button>
               )}

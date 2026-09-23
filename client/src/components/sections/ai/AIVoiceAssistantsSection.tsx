@@ -524,7 +524,7 @@ export default function AIVoiceAssistantsSection() {
                       ...formData,
                       call_transfer_config: [...(formData.call_transfer_config || []), { description: "", number: "" }],
                     })}
-                    className={primaryOutlineBtn}
+                    className={primaryBtn}
                   >
                     <Plus size={12} /> {t("ai_voice_assistants_section.add_rule")}
                   </button>
@@ -606,7 +606,7 @@ export default function AIVoiceAssistantsSection() {
                       {t("ai_voice_assistants_section.function_calling_desc")}
                     </p>
                   </div>
-                  <button onClick={() => toast({ title: t("ai_voice_assistants_section.toast_functions_title"), description: t("ai_voice_assistants_section.toast_functions_desc") })} className={primaryOutlineBtn}>
+                  <button onClick={() => toast({ title: t("ai_voice_assistants_section.toast_functions_title"), description: t("ai_voice_assistants_section.toast_functions_desc") })} className={primaryBtn}>
                     <Plus size={12} /> {t("ai_voice_assistants_section.add_function")}
                   </button>
                 </div>
@@ -745,7 +745,7 @@ export default function AIVoiceAssistantsSection() {
                   </pre>
                   <button
                     onClick={() => toast({ title: t("ai_voice_assistants_section.toast_copied_title"), description: t("ai_voice_assistants_section.toast_copied_desc") })}
-                    className={primaryOutlineBtn}
+                    className={primaryBtn}
                   >
                     <Copy size={12} /> {t("ai_voice_assistants_section.copy_code")}
                   </button>
@@ -804,7 +804,7 @@ export default function AIVoiceAssistantsSection() {
                 <span className="opacity-60">{t("ai_voice_assistants_section.credits_unit")}</span>
               </div>
               {canVoiceManage && (
-                <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
+                <button onClick={() => handleEdit(null)} className={primaryBtn}>
                   <Plus size={12} /> {t("ai_voice_assistants_section.add_assistant")}
                 </button>
               )}

@@ -126,10 +126,6 @@ export default function AIThemesSection() {
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
   );
 
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white"
-  );
 
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
@@ -223,7 +219,7 @@ export default function AIThemesSection() {
             <div className="flex items-center gap-2 shrink-0">
               {selectedTheme && !isCreateFormOpen && (
                 <>
-                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
+                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryBtn}>
                     <Plus size={12} /> {t("ai_themes_section.add_new")}
                   </button>
                   <button onClick={() => setSelectedTheme(null)} className={outlineBtn}>
@@ -291,7 +287,7 @@ export default function AIThemesSection() {
                         ))}
                       </div>
                       {theme.available ? (
-                        <button onClick={() => setSelectedTheme(theme)} className={primaryOutlineBtn}>
+                        <button onClick={() => setSelectedTheme(theme)} className={primaryBtn}>
                           {t("ai_themes_section.select")}
                         </button>
                       ) : (
@@ -326,7 +322,7 @@ export default function AIThemesSection() {
                       {t("ai_themes_section.empty_description")}
                     </p>
                   </div>
-                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryOutlineBtn}>
+                  <button onClick={() => setIsCreateFormOpen(true)} className={primaryBtn}>
                     <Plus size={12} /> {t("ai_themes_section.create_now")}
                   </button>
                 </div>

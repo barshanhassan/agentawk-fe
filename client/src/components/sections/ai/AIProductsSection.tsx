@@ -566,7 +566,7 @@ export default function AIProductsSection() {
               {viewMode === "list" && isPrivileged && (hasBaserow || hasSupabase) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className={primaryOutlineBtn}>
+                    <button className={primaryBtn}>
                       <Plus size={12} /> {t("ai_products_section.add_theme")} <ChevronDown size={12} className="opacity-60" />
                     </button>
                   </DropdownMenuTrigger>
@@ -609,7 +609,7 @@ export default function AIProductsSection() {
                       });
                       setViewMode("edit_product");
                     }}
-                    className={primaryOutlineBtn}
+                    className={primaryBtn}
                   >
                     <Plus size={12} /> {t("ai_products_section.add_product")}
                   </button>
@@ -898,7 +898,7 @@ export default function AIProductsSection() {
                       });
                       setViewMode("edit_product");
                     }}
-                    className={primaryOutlineBtn}
+                    className={primaryBtn}
                   >
                     <Plus size={12} /> {t("ai_products_section.add_product")}
                   </button>

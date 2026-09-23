@@ -75,10 +75,6 @@ export default function AIKnowledgeBaseSection() {
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
   );
 
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white"
-  );
 
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
@@ -304,7 +300,7 @@ export default function AIKnowledgeBaseSection() {
                     <button
                       onClick={handleFetchPages}
                       disabled={fetching || !formData.website}
-                      className={primaryOutlineBtn}
+                      className={primaryBtn}
                     >
                       {fetching ? <Loader2 size={12} className="animate-spin" /> : <Globe size={12} />}
                       {fetching ? t("ai_knowledge_base_section.btn_fetching") : t("ai_knowledge_base_section.btn_fetch_pages")}
@@ -487,7 +483,7 @@ export default function AIKnowledgeBaseSection() {
               </div>
             </div>
             {canCreateKB && (
-              <button onClick={() => handleEdit(null)} className={primaryOutlineBtn}>
+              <button onClick={() => handleEdit(null)} className={primaryBtn}>
                 <Plus size={12} /> {t("ai_knowledge_base_section.btn_add_kb")}
               </button>
             )}
