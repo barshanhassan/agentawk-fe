@@ -235,10 +235,10 @@ export default function ManageSection() {
               onClick={handleDiscard}
               disabled={updateMutation.isPending}
               className={cn(
-                "h-10 px-5 rounded-lg border text-[12px] font-semibold transition-all disabled:opacity-50",
+                "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all disabled:opacity-50",
                 dark
-                  ? "border-slate-800 text-slate-200 hover:border-slate-700"
-                  : "border-slate-200 text-slate-700 hover:border-slate-300"
+                  ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary"
+                  : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
               )}
             >
               {t("settings.workspace.manage_section.discard")}
