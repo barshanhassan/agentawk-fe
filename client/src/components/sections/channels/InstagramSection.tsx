@@ -127,10 +127,7 @@ export default function InstagramSection() {
       ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary"
       : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary",
   );
-  const primaryOutlineBtn = cn(
-    "h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
-    "border-primary text-primary hover:bg-primary hover:text-white",
-  );
+  const primaryBtn = "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
   const igGradient = "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600";
 
   const [view, setView] = useState<View>("list");
@@ -280,7 +277,7 @@ export default function InstagramSection() {
                     already-connected pages can be managed here. Mirrored
                     bug-for-bug per explicit instruction. */}
                 {isPreferred && (
-                  <button onClick={handleAddNew} className={primaryOutlineBtn}>
+                  <button onClick={handleAddNew} className={primaryBtn}>
                     <Plus size={12} /> {t("instagram_section.btn_add_new")}
                   </button>
                 )}
@@ -308,7 +305,7 @@ export default function InstagramSection() {
                     </p>
                   </div>
                   {isPreferred && (
-                    <button onClick={handleAddNew} className={primaryOutlineBtn}>
+                    <button onClick={handleAddNew} className={primaryBtn}>
                       {t("instagram_section.btn_connect_now")}
                     </button>
                   )}
@@ -592,7 +589,7 @@ export default function InstagramSection() {
             <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
               {t("instagram_section.preferred_card_desc")}
             </p>
-            <button onClick={() => setView("preferred")} className={cn(primaryOutlineBtn, "self-end")}>
+            <button onClick={() => setView("preferred")} className={cn(primaryBtn, "self-end")}>
               {t("instagram_section.btn_manage")}
             </button>
           </div>
@@ -616,7 +613,7 @@ export default function InstagramSection() {
             <p className={cn("text-[11px] font-medium opacity-70 leading-relaxed mb-5 flex-1", sub)}>
               {t("instagram_section.old_card_desc")}
             </p>
-            <button onClick={() => setView("old")} className={cn(primaryOutlineBtn, "self-end")}>
+            <button onClick={() => setView("old")} className={cn(primaryBtn, "self-end")}>
               {t("instagram_section.btn_manage")}
             </button>
           </div>
