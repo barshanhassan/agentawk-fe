@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -507,7 +508,7 @@ export default function ChatWidgetSection() {
                       {isLoading ? (
                         <tr>
                           <td colSpan={4} className="px-6 py-12 text-center">
-                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                            <LoadingSpinner size={26} />
                           </td>
                         </tr>
                       ) : widgets.length === 0 ? (

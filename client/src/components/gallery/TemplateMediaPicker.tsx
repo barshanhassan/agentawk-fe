@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loader2, Check, FileText, Film, ImageIcon } from "lucide-react";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { Check, FileText, Film, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -140,7 +141,7 @@ export default function TemplateMediaPicker({ open, format, onClose, onSelect }:
 
           {isLoading ? (
             <div className="h-56 flex items-center justify-center">
-              <Loader2 className="animate-spin text-primary" size={22} />
+              <LoadingSpinner size={24} />
             </div>
           ) : files.length === 0 ? (
             <div className={cn("h-56 flex flex-col items-center justify-center gap-2 text-center", sub)}>

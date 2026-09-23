@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -483,7 +484,7 @@ export default function IframeSection() {
                       {isLoading ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center">
-                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                            <LoadingSpinner size={26} />
                           </td>
                         </tr>
                       ) : iframes.length === 0 ? (

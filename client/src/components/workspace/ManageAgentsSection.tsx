@@ -8,6 +8,7 @@ import {
   ShieldAlert, Check, Pencil, Mail, Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -962,7 +963,7 @@ export default function ManageAgentSection() {
 
           {isLoading ? (
             <div className="flex items-center justify-center h-48">
-              <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary"></div>
+              <LoadingSpinner size={28} />
             </div>
           ) : filteredAgents.length === 0 ? (
             <div className="py-16 text-center space-y-3">

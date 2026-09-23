@@ -7,6 +7,7 @@ import {
   ChevronDown, Info, Link2, Calendar,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -408,7 +409,7 @@ export default function RolesSection() {
                     </div>
                     {loadingPerms ? (
                       <div className="flex items-center justify-center py-20">
-                        <Loader2 size={20} className="animate-spin text-primary" />
+                        <LoadingSpinner size={22} />
                       </div>
                     ) : (permsTree || []).map((group: any) => {
                       const Icon = WORKSPACE_GROUP_ICONS[group.slug] || Shield;

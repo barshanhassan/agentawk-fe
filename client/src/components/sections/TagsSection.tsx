@@ -20,6 +20,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -561,7 +562,7 @@ export default function TagsSection() {
                     {isLoading ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-12 text-center">
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                          <LoadingSpinner size={26} />
                         </td>
                       </tr>
                     ) : paginatedData.length === 0 ? (

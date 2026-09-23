@@ -3,6 +3,7 @@ import { getUserInfo } from "@/lib/auth";
 import { Shield, Users, Key, Layers, Settings, ChevronLeft, Loader2, Check, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input } from "@/components/ui/input";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -303,7 +304,7 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
         <div className="flex-1 overflow-y-auto p-6">
           {loadingPerms ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 size={20} className="animate-spin text-primary" />
+              <LoadingSpinner size={22} />
             </div>
           ) : expandedGroup === null ? (
             <div className={cn('flex flex-col items-center justify-center py-20 text-center')}>
