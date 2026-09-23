@@ -2121,7 +2121,7 @@
   "ai_report_builder_section": {
     "title": "Report Builder",
     "subtitle": "Generate reports with Artificial Intelligence",
-    "add_new": "Add New",
+    "add_new": "Add Report",
     "back": "Back",
     "empty_title": "No reports found",
     "empty_description": "Create your first AI-generated report to get started.",
@@ -2464,7 +2464,7 @@
     "toast_coming_soon_desc": "Select from gallery feature is coming soon."
   },
   "ai_knowledge_base_section": {
-    "btn_add_kb": "Add Knowledge Base",
+    "btn_add_kb": "Add Knowledge",
     "btn_add_pdf": "Add PDF",
     "btn_cancel": "Cancel",
     "btn_delete": "Delete",
