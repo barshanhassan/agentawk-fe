@@ -339,7 +339,12 @@ export default function IntegrationsSection() {
                       </div>
                       <button
                         onClick={() => handleConnect(item)}
-                        className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                        className={cn(
+                          "h-11 px-7 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
+                          connected
+                            ? "border-primary bg-primary text-white hover:bg-primary/90"
+                            : "border-primary text-primary hover:bg-primary hover:text-white"
+                        )}
                       >
                         {connected ? t("integrations_section.manage") : item.actionLabel}
                         <ArrowRight size={12} />
