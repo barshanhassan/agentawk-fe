@@ -4,7 +4,7 @@ import {
   Film, Folder, Plus, Search, Grid, List, FileText,
   Image as ImageIcon, Mic, Video, UploadCloud, Check, X,
   Pencil, Trash2, Upload, AlertCircle, Download, Share2,
-  MoreHorizontal, ArrowLeft, Filter, Loader2,
+  MoreHorizontal, ArrowLeft, Filter,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, apiUploadWithProgress } from "@/lib/queryClient";
@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTheme } from "@/contexts/ThemeContext";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface MediaGallerySectionProps {
   // May be async (the composer picker awaits a server-side download before
@@ -463,7 +464,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
           <div className="p-6 min-h-[400px]">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3">
-                <Loader2 className="w-7 h-7 animate-spin text-primary" />
+                <LoadingSpinner size={28} />
                 <p className={cn("text-[11px] font-bold opacity-60", sub)}>{t("media_gallery_section.loading_files")}</p>
               </div>
             ) : filteredMedia.length === 0 ? (
@@ -783,7 +784,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
 
             {uploadMutation.isPending ? (
               <div className={cn("rounded-[1.5rem] border p-8 flex flex-col items-center text-center gap-4", softBg, softBorder)}>
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <LoadingSpinner size={40} />
                 <div className="w-full space-y-2">
                   <div className="flex items-center justify-between">
                     <span className={cn("text-[12px] font-semibold", text)}>

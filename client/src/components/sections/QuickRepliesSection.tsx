@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import MediaGallerySection from "@/components/workspace/MediaGallerySection";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -541,7 +542,7 @@ export default function QuickRepliesSection() {
                 </div>
                 {isLoading ? (
                   <div className="py-12 flex justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <LoadingSpinner size={26} />
                   </div>
                 ) : collections.length === 0 ? (
                   <div className="py-16 px-8 flex flex-col items-center justify-center text-center space-y-3">

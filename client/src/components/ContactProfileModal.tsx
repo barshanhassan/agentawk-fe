@@ -161,6 +161,7 @@ import {
   type CustomFieldDescriptor,
 } from "@/components/contact-profile/shared";
 import { ActivityTimeline } from "@/components/contact-profile/ActivityTimeline";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   DeleteContactDialog,
   OpportunityFormDialog,
@@ -1659,7 +1660,7 @@ export default function ContactProfileModal({
               <ScrollArea className="flex-1 px-8 py-6">
                 {!enriched ? (
                   <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <LoadingSpinner size={26} />
                   </div>
                 ) : (
                   <div className="space-y-6 max-w-2xl">

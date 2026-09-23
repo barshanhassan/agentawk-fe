@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -665,7 +666,7 @@ export default function AIProductsSection() {
               {/* Themes grid */}
               {themesLoading ? (
                 <div className="flex items-center justify-center h-48">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <LoadingSpinner size={32} />
                 </div>
               ) : themes.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -767,7 +768,7 @@ export default function AIProductsSection() {
             <div className="p-8">
               {productsLoading ? (
                 <div className="flex items-center justify-center h-48">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <LoadingSpinner size={32} />
                 </div>
               ) : products.length > 0 ? (
                 <div className={cn("rounded-[1.5rem] border overflow-hidden", softBorder, softBg)}>

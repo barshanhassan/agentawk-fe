@@ -2,9 +2,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2, Users, UserPlus, BarChart2, Cpu } from "lucide-react";
+import { Users, UserPlus, BarChart2, Cpu } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Utility function to abbreviate large numbers
 const abbreviateNumber = (num: number): string => {
@@ -111,7 +112,7 @@ export default function OverviewTab() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-16">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <LoadingSpinner size={32} />
       </div>
     );
   }

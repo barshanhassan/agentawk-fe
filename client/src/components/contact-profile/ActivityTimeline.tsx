@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   Popover,
   PopoverContent,
@@ -24,7 +25,6 @@ import {
   Send,
   ArrowDown,
   ArrowUp,
-  Loader2,
   Phone as PhoneIcon,
   Mail,
   X,
@@ -259,7 +259,7 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
         <div className="p-4 space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <LoadingSpinner size={26} />
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-sm text-muted-foreground">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -190,7 +191,7 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
           <CardContent className="p-8 space-y-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <LoadingSpinner size={26} />
               </div>
             ) : (
               <>
