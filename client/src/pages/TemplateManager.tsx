@@ -1264,14 +1264,14 @@ export default function TemplateManager() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <Button 
+                        <button
                             onClick={() => setCreateTemplateOpen(true)}
-                            className="h-8 px-4 rounded-lg bg-primary text-white font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary"
+                            className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                             data-testid="button-create-template"
                         >
-                            <Plus size={14} strokeWidth={2.5} />
+                            <Plus size={12} />
                             <span>{t("template_manager.header.create_button")}</span>
-                        </Button>
+                        </button>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button

@@ -444,13 +444,13 @@ export default function SmartFlowsPage() {
                         </div>
                     </div>
 
-                    <Button
+                    <button
                         onClick={() => setShowCreateModal(true)}
-                        className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[10px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90 uppercase tracking-widest"
+                        className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                     >
-                        <Plus size={14} strokeWidth={3} />
+                        <Plus size={12} />
                         <span>{t("smart_flows_page.create_flow")}</span>
-                    </Button>
+                    </button>
                 </div>
             </div>
 

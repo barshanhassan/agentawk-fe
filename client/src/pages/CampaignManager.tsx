@@ -2657,14 +2657,14 @@ export default function CampaignManager() {
                         {t("campaign_manager.list.refresh")}
                     </Button>
                     {canManageBroadcasts && (
-                    <Button
+                    <button
                         onClick={() => setCreateOpen(true)}
-                        className="h-8 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0"
+                        className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                         data-testid="button-create-campaign"
                     >
-                        <Plus size={14} strokeWidth={2.5} />
+                        <Plus size={12} />
                         <span>{t("campaign_manager.list.new_broadcast")}</span>
-                    </Button>
+                    </button>
                     )}
                 </div>
             </div>
@@ -2931,13 +2931,12 @@ export default function CampaignManager() {
                                             <p className="text-[11px] font-medium text-slate-400">{t("campaign_manager.list.empty_desc")}</p>
                                         </div>
                                         {canManageBroadcasts && (
-                                          <Button
-                                              variant="outline"
+                                          <button
                                               onClick={() => setCreateOpen(true)}
-                                              className="mt-1 h-7.5 px-5 rounded-lg text-[10px] font-bold border-primary/30 text-primary hover:bg-primary/10 transition-all shadow-sm"
+                                              className="mt-1 h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20"
                                           >
                                               {t("campaign_manager.list.create_one_now")}
-                                          </Button>
+                                          </button>
                                         )}
                                     </div>
                                 </td>
