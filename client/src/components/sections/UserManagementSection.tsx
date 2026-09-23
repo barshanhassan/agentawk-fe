@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/select";
 import CustomDropdown from "../CustomDropdown";
 import PaginationFooter from "@/components/PaginationFooter";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -649,7 +649,7 @@ export default function UserManagementSection() {
                 {isLoadingMembers ? (
                   <tr>
                     <td colSpan={5} className="text-center py-20">
-                      <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+                      <LoadingSpinner size={32} />
                     </td>
                   </tr>
                 ) : getFilteredAndSortedData().length === 0 ? (

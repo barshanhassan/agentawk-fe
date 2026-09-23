@@ -30,11 +30,11 @@ import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ArrowUpDown, Grip
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import PreviewV2 from "@/components/PreviewV2";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { useSocket } from "@/hooks/use-socket";
 import { cn } from "@/lib/utils";
@@ -1729,7 +1729,7 @@ export default function TemplateManager() {
                                 <tr>
                                     <td colSpan={8} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3">
-                                            <Loader2 size={24} className="animate-spin text-primary" />
+                                            <LoadingSpinner size={32} />
                                             <p className="text-[11px] font-semibold text-slate-400">{t("template_manager.table.fetching")}</p>
                                         </div>
                                     </td>
@@ -1767,7 +1767,7 @@ export default function TemplateManager() {
                                         </td>
                                         <td className="py-2 px-3">
                                             <div className="flex flex-col">
-                                                <span className="text-[12px] font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate max-w-[200px]">
+                                                <span className="text-[12px] font-semibold text-slate-900 dark:text-white truncate max-w-[200px]">
                                                     {template.name}
                                                 </span>
                                             </div>
