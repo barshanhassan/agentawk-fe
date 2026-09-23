@@ -268,7 +268,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
           <button
             onClick={handleSubmit}
             disabled={saveMutation.isPending}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground shadow-sm transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground shadow-lg shadow-primary/20 transition-colors disabled:opacity-60"
           >
             {saveMutation.isPending ? (
               <>

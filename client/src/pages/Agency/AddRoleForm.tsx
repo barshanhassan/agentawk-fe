@@ -158,15 +158,15 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
           >
             {t('common.cancel')}
           </Button>
-          <Button
+          <button
             onClick={() => saveMutation.mutate(formData)}
             disabled={saveMutation.isPending || !formData.name.trim()}
-            className="h-8 px-5 text-[12px] font-semibold bg-primary hover:opacity-90 text-white"
+            className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
           >
             {saveMutation.isPending
               ? <span className="flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Saving...</span>
               : initialData ? t('common.update') : t('common.save')}
-          </Button>
+          </button>
         </div>
       </div>
 

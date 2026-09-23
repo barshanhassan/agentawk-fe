@@ -239,7 +239,7 @@ const AgencyWorkspaces = () => {
         </div>
         <button
           onClick={() => setViewMode('CREATE')}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
+          className="flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-lg shadow-primary/20"
         >
           <Plus size={14} /> {t("agency_workspaces.add_workspace")}
         </button>

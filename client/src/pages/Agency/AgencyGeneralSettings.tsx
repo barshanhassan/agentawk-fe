@@ -205,7 +205,7 @@ const AgencyGeneralSettings = () => {
     ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-slate-600'
     : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-slate-300';
   const popSurface = dark ? 'bg-[#0f1829] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900';
-  const primaryBtn = "px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm disabled:opacity-50";
+  const primaryBtn = "h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-lg shadow-primary/20 disabled:opacity-50";
   const outlineBtn = cn(
     "px-4 py-2 rounded-lg text-[12px] font-semibold border transition-colors",
     dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50"

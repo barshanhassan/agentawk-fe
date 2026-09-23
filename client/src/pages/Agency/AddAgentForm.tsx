@@ -279,15 +279,15 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
           >
             Cancel
           </Button>
-          <Button
+          <button
             onClick={handleSubmit}
             disabled={isPending || !formData.first_name.trim() || !formData.email.trim()}
-            className="h-8 px-5 text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground"
+            className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
           >
             {isPending
               ? <span className="flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" />Saving...</span>
               : initialData ? 'Update User' : 'Add User'}
-          </Button>
+          </button>
         </div>
       </div>
 
