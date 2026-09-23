@@ -242,6 +242,9 @@ export default function ContactsSection() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const primaryBtn =
+    "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
+
   // "Allow" permissions (replyagent $can) — owners pass via the `workspace.*`
   // wildcard, so restricted agents are the only ones gated.
   //  - manage  → Create/Update contacts (Add Contact, Edit, Bulk Edit)
@@ -1376,13 +1379,13 @@ export default function ContactsSection() {
                 </Button>
               )}
               {canManageContacts && (
-                <Button
+                <button
                   onClick={() => setShowAddContactModal(true)}
-                  className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-[11px] shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center gap-2 border-0 hover:bg-primary/90"
+                  className={primaryBtn}
                 >
                   <Plus size={14} strokeWidth={2.5} />
                   <span>{t("contacts_section.header.add_contact")}</span>
-                </Button>
+                </button>
               )}
             </div>
           </div>

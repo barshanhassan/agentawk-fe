@@ -246,7 +246,7 @@ export default function ManageSection() {
             <button
               onClick={handleSave}
               disabled={updateMutation.isPending}
-              className="h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[12px] font-semibold transition-all"
+              className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20"
             >
               {updateMutation.isPending ? t("settings.workspace.manage_section.saving") : t("settings.workspace.manage_section.save_changes")}
             </button>
