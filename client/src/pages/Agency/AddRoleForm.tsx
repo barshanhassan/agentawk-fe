@@ -154,7 +154,7 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
           <Button
             variant="outline"
             onClick={onCancel}
-            className={cn('h-8 px-4 text-[12px] font-semibold', dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent' : '')}
+            className={cn('h-11 px-6 rounded-xl text-[11px] font-semibold', dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent' : '')}
           >
             {t('common.cancel')}
           </Button>

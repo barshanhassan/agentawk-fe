@@ -259,7 +259,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
           <button
             onClick={onCancel}
             className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium border transition-colors",
+              "h-11 px-6 rounded-xl text-[11px] font-semibold border transition-colors",
               dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-white"
             )}
           >
