@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -108,7 +109,7 @@ export default function WhatsAppConnectPage() {
               {t("whatsapp_connect_page.verifying_business")}
             </h2>
             <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+              <LoadingSpinner size={48} />
             </div>
           </>
         )}

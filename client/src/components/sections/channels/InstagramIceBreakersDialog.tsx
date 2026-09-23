@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageSquare, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -109,7 +110,7 @@ export default function InstagramIceBreakersDialog({ open, account, onClose }: P
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>
+            <div className="flex justify-center py-8"><LoadingSpinner size={26} /></div>
           ) : items.length === 0 ? (
             <div className={cn("rounded-xl border py-10 flex flex-col items-center justify-center text-center gap-3", dark ? "border-slate-800" : "border-slate-100")}>
               <MessageSquare size={24} className="opacity-30" />

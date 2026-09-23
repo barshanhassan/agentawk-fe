@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Instagram, CheckCircle, XCircle, Loader2, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
@@ -114,7 +115,7 @@ export default function InstagramPagesCallbackPage() {
         {/* Loading */}
         {status === "loading" && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+            <LoadingSpinner size={48} />
             <p className="text-[12px] font-bold text-slate-400">{t("instagram_pages_callback_page.fetching")}</p>
           </div>
         )}

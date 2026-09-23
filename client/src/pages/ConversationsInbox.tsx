@@ -48,6 +48,7 @@ import {
 
 import { Separator } from "@/components/ui/separator";
 import Breadcrumb from "@/components/Breadcrumb";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import CustomDropdown from "@/components/CustomDropdown";
 import ActivityFilterDropdown, { type ActivityGroup } from "@/components/ActivityFilterDropdown";
 import QuickFilterModal, { type FilterFieldGroup, type QuickFilterCondition } from "@/components/QuickFilterModal";
@@ -3567,7 +3568,7 @@ export default function ConversationsInbox() {
             isLoadingInbox && !selectedConvObj ? (
               // Conversations still loading after refresh — show skeleton to avoid "Unknown" flash
               <Card className="flex-1 flex flex-col border-l-0 rounded-none items-center justify-center">
-                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <LoadingSpinner size={48} />
               </Card>
             ) : (
             <Card className="flex-1 min-h-0 flex flex-col border-l-0 rounded-none">

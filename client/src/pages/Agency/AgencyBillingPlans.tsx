@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import PaymentsSection from "@/components/sections/connect/PaymentsSection";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 import AgencyPremiumCheckout from './AgencyPremiumCheckout';
 import AgencyIgniteCheckout from './AgencyIgniteCheckout';
@@ -600,7 +601,7 @@ const AgencyBillingPlans = () => {
 
           {invoicesLoading ? (
             <div className="flex items-center justify-center py-10">
-              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <LoadingSpinner size={22} />
             </div>
           ) : invoices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2">

@@ -15,6 +15,7 @@ import {
   Activity,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { getAvatarColor } from "@/lib/avatar-utils";
 import {
   DropdownMenu,
@@ -293,7 +294,7 @@ const WorkspaceLogs = () => {
                 {isLoading && (
                   <div className="flex-1 flex items-center justify-center py-10">
                     <div className="flex items-center gap-2 text-slate-400 text-[13px] font-medium">
-                      <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <LoadingSpinner size={20} />
                       {t("agency.auditLogs.table.loading")}
                     </div>
                   </div>

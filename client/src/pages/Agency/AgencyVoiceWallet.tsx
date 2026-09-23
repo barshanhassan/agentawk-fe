@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -83,7 +84,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
             <CardContent className="p-8 flex flex-col items-center justify-center space-y-6">
               {isLoading ? (
                 <div className="flex flex-col items-center gap-4 py-8">
-                  <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                  <LoadingSpinner size={44} />
                   <p className="text-xs text-gray-500 animate-pulse">{t("agency.voiceWallet.balance.fetching")}</p>
                 </div>
               ) : (

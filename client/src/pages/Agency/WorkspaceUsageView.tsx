@@ -5,10 +5,10 @@ import {
   Users,
   MessageSquare,
   Bot,
-  Loader2,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { useTranslation } from 'react-i18next';
@@ -74,7 +74,7 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <LoadingSpinner size={26} />
         </div>
       ) : (
         <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>

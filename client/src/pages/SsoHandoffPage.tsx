@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '../lib/queryClient';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 /**
  * Cross-subdomain sign-in handoff. When an agency opens one of its workspaces,
@@ -56,7 +57,7 @@ const SsoHandoffPage: React.FC = () => {
       style={{ fontFamily: "'Manrope', sans-serif" }}
     >
       <div className="text-center">
-        <div className="mx-auto mb-4 w-10 h-10 rounded-full border-2 border-[#25d366] border-t-transparent animate-spin" />
+        <div className="mx-auto mb-4"><LoadingSpinner size={48} /></div>
         <p style={{ color: error ? '#ef4444' : '#6b7482', fontSize: 15 }}>
           {error || t('sso_handoff_page.signing_in')}
         </p>

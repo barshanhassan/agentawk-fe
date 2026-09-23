@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -322,7 +323,7 @@ const AgencyWorkspaces = () => {
                     )}>
                       {deleteMutation.isPending && deleteMutation.variables?.id === ws.id ? (
                         <>
-                          <div className="w-6 h-6 border-2 border-rose-300 border-t-rose-500 rounded-full animate-spin" />
+                          <LoadingSpinner size={26} />
                           <p className={cn("text-[12px] font-bold text-center leading-snug", text)}>
                             {t("agency_workspaces.deleting", { name: ws.name })}
                           </p>

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/queryClient";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const AgencyAPI = () => {
   const { t } = useTranslation();
@@ -124,7 +125,7 @@ const AgencyAPI = () => {
             <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mb-8 shadow-inner",
               dark ? "bg-slate-900/50" : "bg-slate-50")}>
               {isLoading
-                ? <Loader2 className="w-10 h-10 text-primary opacity-80 animate-spin" strokeWidth={1.5} />
+                ? <LoadingSpinner size={40} />
                 : <Plug className="w-10 h-10 text-primary opacity-80" strokeWidth={1.5} />
               }
             </div>

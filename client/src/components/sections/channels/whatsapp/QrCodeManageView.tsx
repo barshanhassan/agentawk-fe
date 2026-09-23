@@ -30,6 +30,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -935,7 +936,7 @@ export default function QrCodeManageView({
 
             <div className={cn("rounded-2xl border p-6 flex items-center justify-center min-h-[260px]", softBorder, dark ? "bg-slate-950/40" : "bg-slate-50")}>
               {qrLoading && !qrImage ? (
-                <Loader2 size={32} className="animate-spin text-primary" />
+                <LoadingSpinner size={34} />
               ) : qrImage ? (
                 <img src={qrImage} alt="QR" className="w-56 h-56 object-contain" />
               ) : (
