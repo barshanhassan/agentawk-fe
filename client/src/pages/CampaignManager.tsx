@@ -2866,7 +2866,7 @@ export default function CampaignManager() {
                 <table className="w-full text-left border-collapse">
                     <thead className="sticky top-0 z-20 bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80">
                         <tr>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
+                            <th className="py-2 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("name")}>
                                 <div className="flex items-center gap-2">
                                     {t("campaign_manager.table.name_channel")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2874,7 +2874,7 @@ export default function CampaignManager() {
                                     </div>
                                 </div>
                             </th>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("audience")}>
+                            <th className="py-2 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("audience")}>
                                 <div className="flex items-center gap-2">
                                     {t("campaign_manager.table.audience")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2882,7 +2882,7 @@ export default function CampaignManager() {
                                     </div>
                                 </div>
                             </th>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("createdAt")}>
+                            <th className="py-2 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("createdAt")}>
                                 <div className="flex items-center gap-2">
                                     {t("campaign_manager.table.created_at")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2890,7 +2890,7 @@ export default function CampaignManager() {
                                     </div>
                                 </div>
                             </th>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("scheduledAt")}>
+                            <th className="py-2 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("scheduledAt")}>
                                 <div className="flex items-center gap-2">
                                     {t("campaign_manager.table.scheduled")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2898,7 +2898,7 @@ export default function CampaignManager() {
                                     </div>
                                 </div>
                             </th>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("status")}>
+                            <th className="py-2 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer group" onClick={() => handleColumnSort("status")}>
                                 <div className="flex items-center gap-2">
                                     {t("campaign_manager.table.status")}
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2906,7 +2906,7 @@ export default function CampaignManager() {
                                     </div>
                                 </div>
                             </th>
-                            <th className="py-2 px-3 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">{t("campaign_manager.table.action")}</th>
+                            <th className="py-2 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400 text-right">{t("campaign_manager.table.action")}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
@@ -2949,10 +2949,10 @@ export default function CampaignManager() {
                                 >
                                     {/* NAME & CHANNEL — replyagent stacks the broadcast name above a
                                         small channel-coloured chip showing which account it'll send via. */}
-                                    <td className="py-2 px-3">
+                                    <td className="py-1.5 px-4">
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span className={cn(
-                                                "shrink-0 h-6 w-6 rounded-full border flex items-center justify-center",
+                                                "shrink-0 h-7 w-7 rounded-full border flex items-center justify-center",
                                                 channelChipClass(campaign.channelType),
                                             )}>
                                                 <ChannelChipIcon channel={campaign.channelType} />
@@ -2983,7 +2983,7 @@ export default function CampaignManager() {
                                         see the per-message delivery-profile interval), also show
                                         a live sent/queued line so progress doesn't require
                                         checking the DB by hand. */}
-                                    <td className="py-2 px-3">
+                                    <td className="py-1.5 px-4">
                                         <div className="flex flex-col gap-0.5">
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-[12px] font-semibold text-slate-900 dark:text-white tabular-nums">
@@ -3004,19 +3004,19 @@ export default function CampaignManager() {
                                         </div>
                                     </td>
                                     {/* CREATED AT */}
-                                    <td className="py-2 px-3 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    <td className="py-1.5 px-4 text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         {campaign.createdAt
                                             ? formatInWorkspaceTz(campaign.createdAt, "dd MMM yy", workspaceTz)
                                             : "—"}
                                     </td>
                                     {/* SCHEDULED */}
-                                    <td className="py-2 px-3 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    <td className="py-1.5 px-4 text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         {campaign.scheduledAt
                                             ? formatInWorkspaceTz(campaign.scheduledAt, "dd MMM, HH:mm", workspaceTz)
                                             : "—"}
                                     </td>
                                     {/* STATUS */}
-                                    <td className="py-2 px-3">
+                                    <td className="py-1.5 px-4">
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-md text-[10px] font-semibold border shadow-sm capitalize",
                                             campaign.status === "delivered" || campaign.status === "sent" ? "bg-green-50 text-green-700 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/50" :
@@ -3028,7 +3028,7 @@ export default function CampaignManager() {
                                             {campaign.status}
                                         </span>
                                     </td>
-                                    <td className="py-2 px-3 text-right">
+                                    <td className="py-1.5 px-4 text-right">
                                         {/* Inline icon actions — replyagent
                                             surfaces the three most-used
                                             actions (Edit, Delete, View
