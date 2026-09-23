@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   CreditCard,
   ShieldCheck,
@@ -167,7 +168,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <LoadingSpinner size={32} />
       </div>
     );
   }

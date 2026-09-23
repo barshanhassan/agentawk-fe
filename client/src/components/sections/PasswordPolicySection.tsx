@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
@@ -82,7 +83,7 @@ const PasswordPolicySection = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <LoadingSpinner size={32} />
       </div>
     );
   }

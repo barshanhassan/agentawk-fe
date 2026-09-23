@@ -26,6 +26,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import PaginationFooter from "@/components/PaginationFooter";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
@@ -1739,7 +1740,7 @@ export default function ContactsSection() {
                     <tr>
                       <td colSpan={8} className="text-center py-20">
                         <div className="flex flex-col items-center gap-3">
-                          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                          <LoadingSpinner size={32} />
                           <p className="text-[11px] font-medium text-slate-500">{t("contacts_section.table.loading_contacts")}</p>
                         </div>
                       </td>
