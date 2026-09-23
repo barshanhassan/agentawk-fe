@@ -192,7 +192,7 @@ export default function InstagramMainMenuDialog({ open, account, onClose }: Prop
               {items.length < 20 && (
                 <button
                   onClick={() => setItems((p) => [...p, { text: "", payloadType: "postback", payload: "", automationId: null }])}
-                  className="h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+                  className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                 >
                   <Plus size={12} /> {t("instagram_main_menu_dialog.add_item")}
                 </button>

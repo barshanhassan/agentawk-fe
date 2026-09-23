@@ -567,7 +567,7 @@ export default function QrCodeManageView({
                 resetCreateForm();
                 setMode("new");
               }}
-              className="h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+              className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
             >
               <Plus size={12} /> {t("qr_code_manage_view.create_instance_button")}
             </button>

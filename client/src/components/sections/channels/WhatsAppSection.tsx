@@ -576,7 +576,7 @@ export default function WhatsAppSection() {
                 <div className="mt-auto space-y-3">
                   <button
                     onClick={() => setView("coex_manage")}
-                    className="w-full h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+                    className="w-full h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                   >
                     {t("whatsapp_section.cards.manage")}
                   </button>
@@ -646,7 +646,7 @@ export default function WhatsAppSection() {
                 <div className="mt-auto space-y-3">
                   <button
                     onClick={() => setView("api_manage")}
-                    className="w-full h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+                    className="w-full h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                   >
                     {t("whatsapp_section.cards.manage")}
                   </button>
@@ -702,7 +702,7 @@ export default function WhatsAppSection() {
                 <div className="mt-auto space-y-3">
                   <button
                     onClick={() => setView("qr_manage")}
-                    className="w-full h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+                    className="w-full h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                   >
                     {t("whatsapp_section.cards.manage")}
                   </button>
@@ -1897,7 +1897,7 @@ function EmptyIntegrationState({
       </div>
       <button
         onClick={onConnect}
-        className="h-10 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+        className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
       >
         {t("whatsapp_section.empty.connect_now")}
       </button>
