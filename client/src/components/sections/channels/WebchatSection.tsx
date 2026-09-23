@@ -87,7 +87,7 @@ export default function WebchatSection() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size={32} />
+        <LoadingSpinner size={40} />
       </div>
     );
   }
