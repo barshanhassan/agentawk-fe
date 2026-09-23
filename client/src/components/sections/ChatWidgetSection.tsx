@@ -508,7 +508,9 @@ export default function ChatWidgetSection() {
                       {isLoading ? (
                         <tr>
                           <td colSpan={4} className="px-6 py-12 text-center">
-                            <LoadingSpinner size={26} />
+                            <div className="flex justify-center">
+                              <LoadingSpinner size={26} />
+                            </div>
                           </td>
                         </tr>
                       ) : widgets.length === 0 ? (

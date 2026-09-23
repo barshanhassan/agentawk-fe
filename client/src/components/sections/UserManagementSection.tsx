@@ -649,7 +649,9 @@ export default function UserManagementSection() {
                 {isLoadingMembers ? (
                   <tr>
                     <td colSpan={5} className="text-center py-20">
-                      <LoadingSpinner size={32} />
+                      <div className="flex justify-center">
+                        <LoadingSpinner size={32} />
+                      </div>
                     </td>
                   </tr>
                 ) : getFilteredAndSortedData().length === 0 ? (

@@ -484,7 +484,9 @@ export default function IframeSection() {
                       {isLoading ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center">
-                            <LoadingSpinner size={26} />
+                            <div className="flex justify-center">
+                              <LoadingSpinner size={26} />
+                            </div>
                           </td>
                         </tr>
                       ) : iframes.length === 0 ? (

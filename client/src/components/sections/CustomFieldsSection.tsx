@@ -912,7 +912,9 @@ export default function CustomFieldsSection() {
                     {isLoading ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-12 text-center">
-                          <LoadingSpinner size={26} />
+                          <div className="flex justify-center">
+                            <LoadingSpinner size={26} />
+                          </div>
                         </td>
                       </tr>
                     ) : fields.length === 0 ? (
