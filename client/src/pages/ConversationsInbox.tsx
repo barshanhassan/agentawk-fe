@@ -230,7 +230,7 @@ interface BackendMessage {
 
 interface SocketData {
   inbox_id: string;
-  message?: { text?: string };
+  message?: { text?: string; contact_name?: string };
 }
 
 interface AgentOption {
@@ -409,7 +409,7 @@ const MessageStatusTick: React.FC<{ status: MessageStatus }> = ({ status }) => {
 // note at a time; starting a new one pauses whichever was already playing.
 let activelyPlayingAudio: HTMLAudioElement | null = null;
 
-const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNode; avatar?: React.ReactNode }> = ({ url, timestampSlot, avatar }) => {
+const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNode; avatar?: React.ReactNode; isOutgoing?: boolean }> = ({ url, timestampSlot, avatar, isOutgoing }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -492,7 +492,7 @@ const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNod
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-full transition-colors ${i / bars.length < progress ? "bg-emerald-700 dark:bg-emerald-300" : "bg-black/20 dark:bg-white/25"}`}
+              className={`flex-1 rounded-full transition-colors ${i / bars.length < progress ? (isOutgoing ? "bg-[var(--outgoing-bubble)]" : "bg-emerald-700 dark:bg-emerald-300") : "bg-black/20 dark:bg-white/25"}`}
               style={{ height: `${h * 100}%` }}
             />
           ))}
@@ -623,8 +623,15 @@ export default function ConversationsInbox() {
         }
       }
 
+      // Desktop notifications for background/other-page tabs are handled by
+      // the always-mounted GlobalDesktopNotifications (see App.tsx) — its own
+      // socket connection covers every page, not just this one. This toast
+      // is the in-app, tab-focused equivalent.
       if (msg?.direction !== 'OUTGOING') {
-        toast({ description: msg?.text || t("conversations_inbox.toasts.new_message_received") });
+        toast({
+          title: msg?.contact_name || t("conversations_inbox.toasts.new_message_received"),
+          description: msg?.text || undefined,
+        });
       }
     };
 
@@ -3192,7 +3199,7 @@ export default function ConversationsInbox() {
                         onChange={setSelectedFilterAgents}
                         placeholder={t("conversations_inbox.search.agents")}
                         width="auto"
-                        className="h-9 w-9 px-[0.5rem] justify-center bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                        className="h-9 w-9 px-[0.5rem] justify-center rounded-md bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                         triggerContent={<User size={16} />}
                         popoutWidth="200px"
                         popoutAlign="left"
@@ -4209,6 +4216,7 @@ export default function ConversationsInbox() {
                               <div className="mt-1">
                                 <VoiceMessagePlayer
                                   url={msg.audio!.url}
+                                  isOutgoing={msg.from === "agent"}
                                   timestampSlot={
                                     <span className={`flex items-center gap-1 text-[11px] ${msg.from === "agent" ? "text-gray-700 dark:text-slate-400" : "text-gray-600 dark:text-slate-500"}`}>
                                       {formatMessageTime(msg.time, workspaceTz)}
@@ -4743,42 +4751,41 @@ export default function ConversationsInbox() {
                         )}
                       </div>
 
-                      {isRecording && (
-                        <div className="flex items-center justify-center gap-2 flex-1 px-2 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={handleCancelRecording}
-                            title={t("conversations_inbox.composer.cancel_recording")}
-                            className="text-slate-400 hover:text-red-500 transition-colors shrink-0"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-                          <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300 tabular-nums shrink-0">
-                            {formatRecordingTime(recordingSeconds)}
-                          </span>
-                          <div className="flex items-center gap-[2px] w-32 overflow-hidden h-4">
-                            {Array.from({ length: 24 }).map((_, i) => (
-                              <span
-                                key={i}
-                                className="w-[2px] rounded-full bg-red-400/70 dark:bg-red-400/60 shrink-0"
-                                style={{
-                                  height: `${30 + ((i * 37) % 70)}%`,
-                                  animation: "voice-wave 0.9s ease-in-out infinite",
-                                  animationDelay: `${(i % 7) * 0.1}s`,
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                       <div className="flex items-center gap-1">
+                        {isRecording && (
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={handleCancelRecording}
+                              title={t("conversations_inbox.composer.cancel_recording")}
+                              className="text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                            <span className="h-1.5 w-1.5 rounded-full bg-[var(--outgoing-bubble)] animate-pulse shrink-0" />
+                            <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300 tabular-nums shrink-0">
+                              {formatRecordingTime(recordingSeconds)}
+                            </span>
+                            <div className="flex items-center gap-[2px] w-20 overflow-hidden h-4">
+                              {Array.from({ length: 16 }).map((_, i) => (
+                                <span
+                                  key={i}
+                                  className="w-[2px] rounded-full bg-[var(--outgoing-bubble)] shrink-0"
+                                  style={{
+                                    height: `${30 + ((i * 37) % 70)}%`,
+                                    animation: "voice-wave 0.9s ease-in-out infinite",
+                                    animationDelay: `${(i % 7) * 0.1}s`,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         {composeMode === "reply" && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-9 w-9 ${isRecording ? "bg-red-100 text-red-600" : ""}`}
+                            className={`h-9 w-9 ${isRecording ? "bg-[var(--outgoing-bubble)] text-[var(--outgoing-text)] hover:bg-[var(--outgoing-bubble)]" : ""}`}
                             title={isRecording ? t("conversations_inbox.composer.stop_recording") : t("conversations_inbox.composer.send_voice_message")}
                             onClick={isRecording ? handleStopRecording : handleStartRecording}
                           >
