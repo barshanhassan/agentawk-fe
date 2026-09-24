@@ -268,6 +268,16 @@ export default function ContactProfileSidebar({
         setMaxTime(900);
     }, [(profileData as any)?.automations_paused_till]);
 
+    // "Manual Bot to Human Handoff" (Settings → My Profile → Notifications &
+    // Preferences) gates whether THIS agent sees the "Pause Automated
+    // Messages" control below — the pause/resume mechanism itself already
+    // exists and is fully wired (contacts.automations_paused_till), this
+    // preference is purely a per-agent visibility permission on top of it.
+    const { data: handoffPrefs } = useQuery<any>({
+        queryKey: ["/api/users/preferences"],
+        queryFn: async () => (await apiRequest("GET", "/api/users/preferences")).json(),
+    });
+
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -706,6 +716,8 @@ export default function ContactProfileSidebar({
                                     })()}
                                 </div>
 
+                                {handoffPrefs?.manualHandoff && (
+                                <>
                                 <Separator className="my-2" />
 
                                 {/* Pause Automated Messages */}
@@ -780,6 +792,8 @@ export default function ContactProfileSidebar({
                                         </div>
                                     )}
                                 </div>
+                                </>
+                                )}
                             </>
                         )}
 
