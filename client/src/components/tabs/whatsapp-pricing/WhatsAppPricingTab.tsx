@@ -113,7 +113,7 @@ export default function WhatsAppPricingTab() {
             selected={selectedCountries}
             onChange={setSelectedCountries}
             placeholder={t("whatsapp_pricing_tab.all_countries")}
-            className="h-9 min-w-[130px] text-[10px] border-slate-200 dark:border-slate-800 shadow-sm"
+            className="h-9 min-w-[130px] text-[11px] border-slate-200 dark:border-slate-800 shadow-sm"
             popoutAlign="right"
           />
         </div>

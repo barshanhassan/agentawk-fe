@@ -189,9 +189,9 @@ export default function BotDashboardContent() {
             <BarChart data={popularityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} angle={-45} textAnchor="end" height={60} />
-              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: axis }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }} />
-              <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("bot_dashboard_content.legend_interactions")} />
+              <Bar dataKey="sentiment" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={56} name={t("bot_dashboard_content.legend_interactions")} />
             </BarChart>
           </ResponsiveContainer>
         )}

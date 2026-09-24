@@ -7,7 +7,7 @@ import CustomDropdown from "@/components/CustomDropdown";
 import InsightsDateRangePicker from "@/components/InsightsDateRangePicker";
 import AgentPerformanceMain from "./AgentPerformanceMain";
 import AgentConversion from "./AgentConversion";
-import { Users2, Target, Filter } from "lucide-react";
+import { Users2, Target, Filter, Users, User, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AgentPerformanceTab() {
@@ -87,14 +87,39 @@ export default function AgentPerformanceTab() {
               selected={selectedTeams}
               onChange={setSelectedTeams}
               placeholder={t("agent_performance_tab.teams")}
-              className="h-9 min-w-[100px] text-[10px] border-slate-200 dark:border-slate-800 shadow-sm"
+              width="120px"
+              className="!w-[120px] border-slate-200 dark:border-slate-800"
+              triggerContent={
+                <>
+                  <div className="flex items-center gap-2 truncate">
+                    <Users className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <span className={cn("truncate text-[11px]", selectedTeams.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                      {selectedTeams.length === 0 ? t("agent_performance_tab.teams") : t("agent_performance_tab.teams_count", { count: selectedTeams.length })}
+                    </span>
+                  </div>
+                  <ChevronDown className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
+                </>
+              }
             />
             <CustomDropdown
               options={agents}
               selected={selectedAgents}
               onChange={setSelectedAgents}
               placeholder={t("agent_performance_tab.agents")}
-              className="h-9 min-w-[100px] text-[10px] border-slate-200 dark:border-slate-800 shadow-sm"
+              width="120px"
+              className="!w-[120px] border-slate-200 dark:border-slate-800"
+              popoutAlign="right"
+              triggerContent={
+                <>
+                  <div className="flex items-center gap-2 truncate">
+                    <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <span className={cn("truncate text-[11px]", selectedAgents.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                      {selectedAgents.length === 0 ? t("agent_performance_tab.agents") : t("agent_performance_tab.agents_count", { count: selectedAgents.length })}
+                    </span>
+                  </div>
+                  <ChevronDown className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
+                </>
+              }
             />
           </div>
         </div>
