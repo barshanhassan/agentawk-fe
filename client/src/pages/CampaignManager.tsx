@@ -2651,7 +2651,7 @@ export default function CampaignManager() {
                     <Button
                         variant="outline"
                         onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/broadcasts"] })}
-                        className="h-8 px-3 rounded-lg text-[11px] font-semibold border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        className="h-11 px-6 rounded-xl text-[11px] font-semibold border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
                         <RefreshCw size={13} strokeWidth={2.5} className="mr-1.5" />
                         {t("campaign_manager.list.refresh")}

@@ -528,7 +528,7 @@ export default function WhiteLabelSection() {
                       <button
                         onClick={() => deleteEmailMutation.mutate(String(notificationEmail.id))}
                         disabled={deleteEmailMutation.isPending}
-                        className="h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50 shrink-0"
+                        className="h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50 shrink-0"
                       >
                         <Trash2 size={12} /> {t("white_label_section.remove")}
                       </button>

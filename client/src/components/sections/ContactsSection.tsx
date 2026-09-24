@@ -1372,7 +1372,7 @@ export default function ContactsSection() {
                     setImportResult(null);
                     setShowImportModal(true);
                   }}
-                  className="h-8 px-4 rounded-lg font-semibold text-[11px] transition-all duration-300 active:scale-95 flex items-center gap-2"
+                  className="h-11 px-6 rounded-xl font-semibold text-[11px] transition-all duration-300 active:scale-95 flex items-center gap-2"
                 >
                   <Upload size={14} strokeWidth={2.5} />
                   <span>{t("contacts_section.header.import")}</span>

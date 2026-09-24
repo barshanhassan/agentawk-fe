@@ -726,7 +726,7 @@ export default function LiveChatSection() {
                           <button
                             onClick={removeFolder}
                             disabled={deleteFolderMut.isPending}
-                            className="h-10 px-5 rounded-xl border border-rose-500/30 text-rose-500 text-[11px] font-semibold transition-all hover:bg-rose-500/10 disabled:opacity-50 flex items-center gap-2"
+                            className="h-11 px-6 rounded-xl border border-rose-500/30 text-rose-500 text-[11px] font-semibold transition-all hover:bg-rose-500/10 disabled:opacity-50 flex items-center gap-2"
                           >
                             <Trash2 size={13} /> {t("live_chat_section.folders.delete_button")}
                           </button>
@@ -735,7 +735,7 @@ export default function LiveChatSection() {
                         <button
                           onClick={() => setFolderFormOpen(false)}
                           className={cn(
-                            "h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all",
+                            "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all",
                             dark
                               ? "border-slate-800 text-slate-300 hover:border-slate-700"
                               : "border-slate-200 text-slate-700 hover:border-slate-300"
@@ -751,7 +751,7 @@ export default function LiveChatSection() {
                             !folderName.trim() ||
                             (folderSource === "TEAM" && (!folderAssignedTo || folderAssignedTo === "all"))
                           }
-                          className={primaryBtn.replace("h-11", "h-10").replace("px-8", "px-6")}
+                          className={primaryBtn}
                         >
                           {createFolderMut.isPending || updateFolderMut.isPending ? t("live_chat_section.folders.saving_button") : t("live_chat_section.folders.save_button")}
                         </button>
@@ -768,7 +768,7 @@ export default function LiveChatSection() {
                       <button
                         onClick={openAddFolder}
                         className={cn(
-                          "h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
+                          "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
                           "border-primary/40 text-primary hover:bg-primary hover:text-white"
                         )}
                       >

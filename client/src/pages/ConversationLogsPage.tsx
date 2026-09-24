@@ -134,6 +134,10 @@ export default function ConversationLogsPage() {
     const [dateRangePreset, setDateRangePreset] = useState("last-7-days");
     const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
     const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
+    // Coordinates the date-range Select and the Status CustomDropdown so only
+    // one is ever open at a time — they're two independent dropdown systems
+    // with no shared state otherwise, same class of bug fixed on the Bots page.
+    const [openFilterDropdown, setOpenFilterDropdown] = useState<"date" | "status" | null>(null);
 
     // Resolve the active date range once per render so both the list + stats
     // queries stay in lockstep.
@@ -509,7 +513,7 @@ export default function ConversationLogsPage() {
                     <div className="p-4">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t("conversation_logs_page.stat_active")}</p>
                         <div className="flex items-baseline gap-2">
-                            <p className="text-xl font-bold text-blue-600">{kpiData.active}</p>
+                            <p className="text-xl font-bold text-green-600">{kpiData.active}</p>
                             <span className="text-[10px] font-medium text-slate-400">{t("conversation_logs_page.stat_in_progress_suffix")}</span>
                         </div>
                     </div>
@@ -545,7 +549,12 @@ export default function ConversationLogsPage() {
                     </div>
 
                     <div className="flex items-center gap-2 ml-auto">
-                        <Select value={dateRangePreset} onValueChange={(v) => { setDateRangePreset(v); setPage(1); }}>
+                        <Select
+                            value={dateRangePreset}
+                            onValueChange={(v) => { setDateRangePreset(v); setPage(1); }}
+                            open={openFilterDropdown === "date"}
+                            onOpenChange={(open) => setOpenFilterDropdown(open ? "date" : null)}
+                        >
                             <SelectTrigger className="h-9 w-[140px] rounded-xl border border-input bg-white dark:bg-slate-800/50 text-[12px] font-medium shadow-sm hover:bg-slate-50 transition-all">
                                 <Calendar className="h-3.5 w-3.5 mr-2 text-slate-400" />
                                 <SelectValue />
@@ -591,11 +600,13 @@ export default function ConversationLogsPage() {
                             showSearch={false}
                             className="!w-[140px] border-slate-200 dark:border-slate-800"
                             popoutAlign="right"
+                            isOpen={openFilterDropdown === "status"}
+                            onOpenChange={(open) => setOpenFilterDropdown(open ? "status" : null)}
                             triggerContent={
                                 <>
                                     <div className="flex items-center gap-2 truncate">
                                         <Activity className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                        <span className={cn("truncate text-[12px]", selectedStatus.length > 0 ? "text-slate-900 dark:text-white font-bold" : "text-slate-500 dark:text-slate-400")}>
+                                        <span className={cn("truncate text-[12px] font-medium", selectedStatus.length > 0 ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400")}>
                                             {selectedStatus.length === 0
                                                 ? t("conversation_logs_page.status_placeholder")
                                                 : selectedStatus.map(id => statusOptions.find(o => o.id === id)?.name ?? id).join(", ")}
