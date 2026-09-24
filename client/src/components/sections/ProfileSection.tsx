@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { User, Lock, Bell, Camera, Loader2, ShieldCheck, EyeOff, Smile, Bot, FileText, Mail } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -109,9 +110,8 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
   const [browserDenied, setBrowserDenied] = useState(
     typeof Notification !== "undefined" && Notification.permission === "denied"
   );
-  const [desktopNotifs, setDesktopNotifs] = useState(false);
   const [prefs, setPrefs] = useState({
-    twoFactorAuth: false,
+    desktopNotifications: false,
     autoHide: false,
     disableCSAT: false,
     manualHandoff: false,
@@ -137,6 +137,54 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
     },
   });
 
+  // ── Two-Factor Authentication ────────────────────────────────────────
+  // Real state lives on the user row (me.tfa_enabled), not the prefs blob —
+  // this toggle drives the actual /auth/2fa/* enrollment flow used at login,
+  // the same system ManageAgentsSection can force-require for other agents.
+  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [enrollData, setEnrollData] = useState<{ qr_data_uri: string; tfa_code: string } | null>(null);
+  const [enrollOtp, setEnrollOtp] = useState("");
+  const [disableOpen, setDisableOpen] = useState(false);
+  const [disablePassword, setDisablePassword] = useState("");
+
+  const startEnrollMutation = useMutation({
+    mutationFn: async () => (await apiRequest("POST", "/api/auth/2fa/make")).json(),
+    onSuccess: (data) => {
+      setEnrollData(data);
+      setEnrollOtp("");
+      setEnrollOpen(true);
+    },
+    onError: (e: any) => {
+      toast({ title: t("profile_page.error_title"), description: e.message || t("profile_page.two_factor_error_desc"), variant: "destructive" });
+    },
+  });
+
+  const verifyEnrollMutation = useMutation({
+    mutationFn: async () => apiRequest("POST", "/api/auth/2fa/verify", { otp: enrollOtp }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+      setEnrollOpen(false);
+      setEnrollData(null);
+      toast({ title: t("profile_page.two_factor_enabled_title"), description: t("profile_page.two_factor_enabled_desc") });
+    },
+    onError: (e: any) => {
+      toast({ title: t("profile_page.error_title"), description: e.message || t("profile_page.two_factor_invalid_otp"), variant: "destructive" });
+    },
+  });
+
+  const disableTfaMutation = useMutation({
+    mutationFn: async () => apiRequest("POST", "/api/auth/2fa/disable", { password: disablePassword }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+      setDisableOpen(false);
+      setDisablePassword("");
+      toast({ title: t("profile_page.two_factor_disabled_title"), description: t("profile_page.two_factor_disabled_desc") });
+    },
+    onError: (e: any) => {
+      toast({ title: t("profile_page.error_title"), description: e.message || t("profile_page.two_factor_error_desc"), variant: "destructive" });
+    },
+  });
+
   const handleTestNotification = () => {
     if (!("Notification" in window)) {
       alert(t("profile_page.notif_unsupported"));
@@ -154,6 +202,19 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
         } else if (permission === "denied") {
           setBrowserDenied(true);
         }
+      });
+    }
+  };
+
+  // Turning the switch on immediately asks for browser permission (rather
+  // than waiting for the first real message to surprise the agent with a
+  // permission prompt) — the actual notify-on-new-message listener lives in
+  // ConversationsInbox and reads this same `desktopNotifications` preference.
+  const handleToggleDesktopNotifs = (checked: boolean) => {
+    setPrefs((p) => ({ ...p, desktopNotifications: checked }));
+    if (checked && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        setBrowserDenied(permission === "denied");
       });
     }
   };
@@ -300,7 +361,7 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    disabled={!desktopNotifs || browserDenied}
+                    disabled={!prefs.desktopNotifications || browserDenied}
                     onClick={handleTestNotification}
                     className={cn(
                       "h-7 px-3 rounded-lg border text-[11px] font-semibold disabled:opacity-40",
@@ -309,7 +370,7 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
                   >
                     {t("profile_page.test_btn")}
                   </button>
-                  <Switch checked={desktopNotifs} onCheckedChange={setDesktopNotifs} disabled={browserDenied} />
+                  <Switch checked={prefs.desktopNotifications} onCheckedChange={handleToggleDesktopNotifs} disabled={browserDenied} />
                 </div>
               </div>
               {browserDenied && (
@@ -319,8 +380,27 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
               )}
             </div>
 
+            <div className="space-y-2 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-start gap-2">
+                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0"><ShieldCheck size={14} /></div>
+                  <div>
+                    <h4 className={cn("font-semibold text-[13px]", text)}>{t("profile_page.two_factor_title")}</h4>
+                    <p className={cn("text-[11px]", sub)}>{t("profile_page.two_factor_desc")}</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={!!me?.tfa_enabled}
+                  disabled={startEnrollMutation.isPending}
+                  onCheckedChange={(checked) => {
+                    if (checked) startEnrollMutation.mutate();
+                    else setDisableOpen(true);
+                  }}
+                />
+              </div>
+            </div>
+
             {[
-              { key: "twoFactorAuth", titleKey: "two_factor_title", descKey: "two_factor_desc", icon: ShieldCheck },
               // Live Chat behavior toggles — workspace-scoped conversation
               // settings, meaningless for an Agency account, so they're
               // excluded there.
@@ -380,6 +460,70 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
           </CardContent>
         </Card>
       </TabsContent>
+
+      {/* ── 2FA enrollment: scan QR, confirm with a 6-digit code ── */}
+      <Dialog open={enrollOpen} onOpenChange={(open) => { if (!open) { setEnrollOpen(false); setEnrollData(null); } }}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">{t("profile_page.two_factor_setup_title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className={cn("text-[12px]", sub)}>{t("profile_page.two_factor_setup_desc")}</p>
+            {enrollData?.qr_data_uri && (
+              <div className="flex justify-center">
+                <img src={enrollData.qr_data_uri} alt="2FA QR code" className="w-40 h-40 rounded-lg border border-slate-200 dark:border-slate-800" />
+              </div>
+            )}
+            {enrollData?.tfa_code && (
+              <p className={cn("text-[11px] text-center font-mono tracking-wider", sub)}>{enrollData.tfa_code}</p>
+            )}
+            <div className="space-y-1.5">
+              <label className={cn("text-[12px] font-semibold", text)}>{t("profile_page.two_factor_otp_label")}</label>
+              <Input
+                value={enrollOtp}
+                onChange={(e) => setEnrollOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                className={inputCls}
+              />
+            </div>
+            <button
+              onClick={() => verifyEnrollMutation.mutate()}
+              disabled={verifyEnrollMutation.isPending || enrollOtp.length !== 6}
+              className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[12px] font-semibold transition-all"
+            >
+              {verifyEnrollMutation.isPending ? t("profile_page.saving") : t("profile_page.two_factor_confirm_btn")}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── 2FA disable: confirm with account password ── */}
+      <Dialog open={disableOpen} onOpenChange={(open) => { setDisableOpen(open); if (!open) setDisablePassword(""); }}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">{t("profile_page.two_factor_disable_title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className={cn("text-[12px]", sub)}>{t("profile_page.two_factor_disable_desc")}</p>
+            <div className="space-y-1.5">
+              <label className={cn("text-[12px] font-semibold", text)}>{t("profile_page.password")}</label>
+              <Input
+                type="password"
+                value={disablePassword}
+                onChange={(e) => setDisablePassword(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <button
+              onClick={() => disableTfaMutation.mutate()}
+              disabled={disableTfaMutation.isPending || !disablePassword}
+              className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-600/90 disabled:opacity-50 text-white text-[12px] font-semibold transition-all"
+            >
+              {disableTfaMutation.isPending ? t("profile_page.saving") : t("profile_page.two_factor_disable_btn")}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 }

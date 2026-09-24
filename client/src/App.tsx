@@ -60,6 +60,7 @@ import { SiteProvider, useSite } from "@/contexts/SiteContext";
 import GlobalBrandingFetcher from "@/components/GlobalBrandingFetcher";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import SessionPolicyBanner from "@/components/SessionPolicyBanner";
+import GlobalDesktopNotifications from "@/components/GlobalDesktopNotifications";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./lib/i18n";
 
@@ -301,6 +302,7 @@ function AppContent() {
           {/* Login-policy countdown + force-logout heartbeat. Mounted once for
               every layout so it keeps polling wherever the agent is. */}
           <SessionPolicyBanner />
+          <GlobalDesktopNotifications />
           <TooltipProvider>
             {isAuthRoute ? (
               <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
