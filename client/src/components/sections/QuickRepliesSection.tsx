@@ -695,9 +695,9 @@ export default function QuickRepliesSection() {
                       key={message.id}
                       className={cn("flex items-center gap-3 px-6 py-4 border-b last:border-0 rounded-xl transition-colors hover:bg-primary/10 dark:hover:bg-primary/15", softBorder)}
                     >
-                      <div
+                      <button
                         onClick={() => openEditMessage(message)}
-                        className="flex items-center gap-3 flex-1 text-left cursor-pointer"
+                        className="flex items-center gap-3 flex-1 text-left"
                       >
                         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                           {message.type === "media" ? (
@@ -712,7 +712,7 @@ export default function QuickRepliesSection() {
                             {message.content || t("quick_replies_section.media_summary", { count: message.mediaList.length })}
                           </p>
                         </div>
-                      </div>
+                      </button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className={cn("w-9 h-9 rounded-lg border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary text-slate-400" : "border-slate-200 hover:border-primary/40 hover:text-primary text-slate-500")}>

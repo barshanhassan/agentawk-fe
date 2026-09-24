@@ -484,20 +484,20 @@ html {
   box-shadow: none !important;
 }
 
-/* Product-One Settings Buttons Styling Constraints - Removed aggressive !important background to allow custom tab styles */
+/* Product-One Settings Buttons Styling Constraints */
 .settings-pane button {
   transition: all 0.2s ease-in-out !important;
 }
 
-.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(.border-b-2):not(:disabled):hover {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  border-color: hsl(var(--primary)) !important;
-}
-
-.settings-pane button:not(.bg-primary):not(.bg-blue-600):not(.bg-destructive):not(.bg-red-500):not(.text-red-500):not(.border-b-2):not(:disabled):hover * {
-  color: hsl(var(--primary-foreground)) !important;
-}
+/* The old blanket ":hover { background: primary !important }" rule that lived
+   here forced EVERY <button> inside a .settings-pane to solid green on hover
+   unless it happened to carry one of a handful of hardcoded exclusion
+   classes — it silently overrode any component's own hover styling (Tailwind
+   hover:bg-slate-100 etc. can't beat a more-specific !important selector),
+   surfacing as an unexplained "solid green flash" bug on plain buttons across
+   Settings pages (Quick Replies message rows, Live Chat folder rows, ...).
+   Removed — every button styled during the 2026-09-23/24 consistency pass
+   already carries its own explicit hover state. */
 
 /* Custom Scrollbar for High-Density Menus */
 .custom-scrollbar::-webkit-scrollbar {
