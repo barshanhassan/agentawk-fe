@@ -653,6 +653,27 @@ export function GalleryPickButton({
 
 // ─── Choices builder (quick replies / buttons) ─────────────────────────
 
+/**
+ * A stable per-choice id, minted once when the row is created.
+ *
+ * Branch events used to be POSITIONAL (`choice_1`, `choice_2`, …), so
+ * reordering buttons or deleting the first one silently re-pointed every
+ * existing edge: the "Yes" branch quietly became the "No" branch and the flow
+ * kept running, wrong. Keying the event off an id that never moves fixes that
+ * at the source; positional ids remain the fallback for choices saved before
+ * this change.
+ */
+function newChoiceId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID().slice(0, 8);
+    }
+  } catch {
+    /* fall through */
+  }
+  return Math.random().toString(36).slice(2, 10);
+}
+
 export interface Choice {
   id?: string | number;
   label: string;
@@ -692,7 +713,7 @@ export function ChoicesBuilder({
   const remove = (idx: number) => onChange(list.filter((_, i) => i !== idx));
   const add = () => {
     if (list.length >= maxChoices) return;
-    onChange([...list, { label: "", value: "" }]);
+    onChange([...list, { id: newChoiceId(), label: "", value: "" }]);
   };
 
   return (
@@ -834,9 +855,14 @@ export function ListSectionsBuilder({
   const update = (idx: number, partial: Partial<ListSection>) =>
     onChange(list.map((s, i) => (i === idx ? { ...s, ...partial } : s)));
   const remove = (idx: number) => onChange(list.filter((_, i) => i !== idx));
+  // Running total across every section — WhatsApp's real limit.
+  const totalOptions = list.reduce(
+    (n: number, sec: any) => n + (Array.isArray(sec?.options) ? sec.options.length : 0),
+    0,
+  );
   const add = () => {
-    if (list.length >= maxSections) return;
-    onChange([...list, { title: "", options: [{ title: "" }] }]);
+    if (list.length >= maxSections || totalOptions >= 10) return;
+    onChange([...list, { title: "", options: [{ id: newChoiceId(), title: "" }] }]);
   };
   return (
     <div className="space-y-2">
@@ -905,9 +931,12 @@ export function ListSectionsBuilder({
               variant="ghost"
               size="sm"
               className="h-6 text-[10px]"
-              disabled={s.options.length >= maxOptions}
+              // WhatsApp's cap is 10 rows ACROSS ALL SECTIONS, not per
+              // section. The old per-section limit let the author build a
+              // 3x5 list that Meta rejected outright at send time.
+              disabled={s.options.length >= maxOptions || totalOptions >= 10}
               onClick={() =>
-                update(idx, { options: [...s.options, { title: "" }] })
+                update(idx, { options: [...s.options, { id: newChoiceId(), title: "" }] })
               }
             >
               {t("automation_pickers.add_option")}

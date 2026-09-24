@@ -96,6 +96,7 @@ import {
   PrimitiveFieldRenderer,
   SchemaForm,
 } from "./automation/editors";
+import { ExternalRequestEditor } from "./automation/external-request-editor";
 import {
   ChannelActivitiesPanel,
   TriggerActivitiesPanel,
@@ -226,9 +227,13 @@ function BuilderInner() {
   // cached response from the first open (before the user built the
   // flow) kept overwriting live edges on remount — nodes came back but
   // strings did not, because the cached body had `flows: []`.
+  // `mode` MUST be in both the key and the URL. The Draft / Published toggle
+  // changed local state and nothing else — the request never carried
+  // `?mode=`, so the backend always answered with the draft and the toggle
+  // was pure decoration: "View published flow" showed the draft.
   const { data: automation, isLoading } = useQuery({
-    queryKey: ["/api/automations", automationId, "graph"],
-    queryFn: () => apiGet(`/api/automations/${automationId}`),
+    queryKey: ["/api/automations", automationId, "graph", state.mode],
+    queryFn: () => apiGet(`/api/automations/${automationId}?mode=${state.mode}`),
     enabled: !!automationId,
     staleTime: 0,
     // gcTime: 0 drops the cached response the moment the component
@@ -431,6 +436,10 @@ function BuilderInner() {
   useEffect(() => {
     if (!automationId || !state.dirty) return;
     if (!hydratedRef.current) return; // don't save before first hydrate
+    // The published view is READ-ONLY. Now that the toggle actually loads the
+    // published graph, letting the autosave run would write that snapshot
+    // over the draft the moment the user nudged a node while "viewing" it.
+    if (state.mode !== 'draft') return;
     const autoSaveTimer = setTimeout(async () => {
       try {
         actions.setSaving(true);
@@ -445,9 +454,16 @@ function BuilderInner() {
           state.edges.length === 0 &&
           state.nodes.length >= 2 &&
           !userExplicitlyClearedEdgesRef.current;
-        const payload = suspiciousEmptyEdges
-          ? { nodes: state.nodes, edges: [] }
-          : { nodes: state.nodes, edges: state.edges };
+        // `edges_authoritative` tells the backend this edge list is complete.
+        // Without it the server's anti-wipe heuristic silently restored the
+        // old flows, so deleting the LAST connection in a flow could never be
+        // saved — the user deleted a wire, saw "Saved", reopened, and the
+        // wire was back.
+        const payload = {
+          nodes: state.nodes,
+          edges: suspiciousEmptyEdges ? [] : state.edges,
+          edges_authoritative: !suspiciousEmptyEdges && hydratedRef.current,
+        };
         // eslint-disable-next-line no-console
         console.info("[smartflow] auto-save", {
           automationId,
@@ -513,6 +529,9 @@ function BuilderInner() {
       apiPost(`/api/automations/${automationId}/sync-graph`, {
         nodes: state.nodes,
         edges: state.edges,
+        // An explicit Save is always authoritative — the user is looking at
+        // the canvas they want persisted.
+        edges_authoritative: true,
       }),
     onMutate: () => actions.setSaving(true),
     onSuccess: () => {
@@ -556,9 +575,31 @@ function BuilderInner() {
       // we detect that, otherwise toast generically.
       if (err?.body?.error_code === "loop_detected") {
         setLoopDialogOpen(true);
-      } else {
-        toast({ title: t("smart_flow_builder_page.toasts.publish_failed"), description: err?.message, variant: "destructive" });
+        return;
       }
+      // The backend now refuses to publish a structurally broken flow and
+      // names the offending steps. Say WHICH step is wrong and why, and
+      // select them on the canvas — a bare "Publish failed" leaves the owner
+      // hunting through a twenty-node graph.
+      const problems: Array<{ node_id: string | null; title: string; reason: string }> =
+        err?.body?.data?.problems ?? [];
+      if (err?.body?.error_code === "BROKEN_FLOW" && problems.length > 0) {
+        // The store carries a single selection, so jump to the first offender;
+        // the toast lists the rest.
+        const firstNode = problems.map((p) => p.node_id).find(Boolean);
+        if (firstNode) actions.selectNode(firstNode);
+        toast({
+          title: t("smart_flow_builder_page.toasts.publish_failed"),
+          description: [
+            ...problems.slice(0, 4).map((p) => `• ${p.title}: ${p.reason}`),
+            ...(problems.length > 4 ? [`… +${problems.length - 4} more`] : []),
+          ].join("\n"),
+          variant: "destructive",
+        });
+        return;
+      }
+      // `CONTACTS_IN_AUTOMATION` is handled by the queue modal, not here.
+      toast({ title: t("smart_flow_builder_page.toasts.publish_failed"), description: err?.message, variant: "destructive" });
     },
   });
 
@@ -821,7 +862,28 @@ function BuilderInner() {
         onUndo={actions.undo}
         onRedo={actions.redo}
         onSave={() => saveMutation.mutate()}
-        onPublish={() => {
+        onPublish={async () => {
+          // FLUSH FIRST. Publish ships whatever the DRAFT currently holds on
+          // the server, and the canvas auto-save is debounced — so editing a
+          // message and immediately clicking Publish (the two buttons sit
+          // side by side) published the version from before the edit. Exit
+          // already flushes; Publish did not.
+          if (state.dirty && automationId) {
+            try {
+              await apiPost(`/api/automations/${automationId}/sync-graph`, {
+                nodes: state.nodes,
+                edges: state.edges,
+                edges_authoritative: hydratedRef.current,
+              });
+              actions.markClean();
+            } catch (err) {
+              toast({
+                title: t("smart_flow_builder_page.toasts.save_failed"),
+                variant: "destructive",
+              });
+              return; // Never publish a draft we failed to save.
+            }
+          }
           // Publishing reads `automation.queue_count` to decide which modal
           // to open (queue contacts vs direct publish vs loop rectification).
           const qc = automation?.queue_count ?? 0;
@@ -870,6 +932,7 @@ function BuilderInner() {
               await apiPost(`/api/automations/${automationId}/sync-graph`, {
                 nodes: state.nodes,
                 edges: state.edges,
+                edges_authoritative: hydratedRef.current,
               });
               actions.markClean();
               // No invalidate needed — setLocation("/automations")
@@ -1603,11 +1666,33 @@ function SidebarPanel({
         ) : type === "randomizer" ? (
           <RandomizerEditor value={value} onChange={setValue} />
         ) : type === "condition" ? (
-          <ConditionStepEditor value={value} onChange={setValue} />
+          // Branches ARE activities, so the editor writes `data.activities`
+          // directly. Writing to `data.value` instead is why condition edits
+          // stopped persisting after the first reload: sync-graph prefers
+          // `data.activities`, which still held the pre-edit properties.
+          <ConditionStepEditor
+            activities={(node.data?.activities as any[]) ?? []}
+            legacyValue={value}
+            onChange={onChange}
+          />
         ) : type === "action" ? (
           <ActionStepEditor
             value={value}
-            onChange={setValue}
+            // Write through to the activity as well as to `data.value`.
+            // sync-graph persists `data.activities` whenever it is non-empty,
+            // and hydration always fills it — so after the first save+reopen,
+            // editing an action updated only the parallel `data.value` copy,
+            // the green "Saved" toast appeared, and the PRE-EDIT properties
+            // were written straight back.
+            onChange={(next: any) => {
+              const acts = (node.data?.activities as any[]) ?? [];
+              onChange({
+                value: next,
+                activities: acts.length
+                  ? acts.map((a, i) => (i === 0 ? { ...a, properties: next } : a))
+                  : [{ properties: next, children: [] }],
+              });
+            }}
             onPickAutomation={onPickAutomation}
           />
         ) : (
@@ -1696,11 +1781,19 @@ function ActionStepEditor({
         </Button>
       </div>
       <p className="text-sm font-medium">{schema.label}</p>
-      <SchemaForm
-        fields={schema.fields as any[]}
-        value={value ?? {}}
-        onChange={onChange}
-      />
+      {slug === "external_request" ? (
+        /* The four-tab editor (URL / headers / body / response mapping) was
+           written but never mounted — the live sidebar rendered the generic
+           SchemaForm, whose only output field is a single "Save answer to",
+           so the response-mapping feature was unreachable. */
+        <ExternalRequestEditor value={value ?? {}} onChange={onChange} />
+      ) : (
+        <SchemaForm
+          fields={schema.fields as any[]}
+          value={value ?? {}}
+          onChange={onChange}
+        />
+      )}
       {usePickAutomation && (
         <Button
           type="button"
@@ -1801,6 +1894,10 @@ function __LegacyTriggerActivitiesPanel({
         </Button>
         <TriggerEditor
           event={act.event ?? "default_url"}
+          // The PERSISTED activity slug is what the public trigger route
+          // resolves. Nothing passed `contextual` before, so the Start URL
+          // field permanently showed "not generated yet".
+          contextual={{ automationActivitySlug: act.slug }}
           value={act.payload ?? {}}
           onChange={(payload) => {
             const next = [...list];

@@ -73,17 +73,25 @@ const SELECT_OPS = [
   { value: 'is_not', label: 'Is not' },
 ];
 
+// Mirrors `enum contacts_source` in schema.prisma verbatim. These used to be
+// lowercase while the column stores uppercase, so "if source is WhatsApp"
+// never matched — a wrong answer rather than an error. `webhook` was in the
+// list but is not a member of the enum at all, while EMAIL / VISUAL_API /
+// VOICE_AI / ZAPI were missing.
 const SOURCE_VALUES = [
-  { value: 'manual', label: 'Manual' },
-  { value: 'import', label: 'Import' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'telegram', label: 'Telegram' },
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'messenger', label: 'Messenger' },
-  { value: 'sms', label: 'SMS' },
-  { value: 'api', label: 'API' },
-  { value: 'webhook', label: 'Webhook' },
-  { value: 'webchat', label: 'Webchat' },
+  { value: 'MANUAL', label: 'Manual' },
+  { value: 'IMPORT', label: 'Import' },
+  { value: 'WHATSAPP', label: 'WhatsApp' },
+  { value: 'ZAPI', label: 'WhatsApp (QR)' },
+  { value: 'TELEGRAM', label: 'Telegram' },
+  { value: 'INSTAGRAM', label: 'Instagram' },
+  { value: 'MESSENGER', label: 'Messenger' },
+  { value: 'WEBCHAT', label: 'Webchat' },
+  { value: 'SMS', label: 'SMS' },
+  { value: 'EMAIL', label: 'Email' },
+  { value: 'API', label: 'API' },
+  { value: 'VISUAL_API', label: 'Visual API' },
+  { value: 'VOICE_AI', label: 'Voice AI' },
 ];
 
 const GENDER_VALUES = [
@@ -260,13 +268,16 @@ export const CONDITION_SCHEMAS: Record<string, ConditionSchema> = {
     label: 'Current time',
     category: 'Time',
     operators: [
-      { value: 'between', label: 'Between hours' },
+      // `between_time` / `from_time` / `to_time` are replyagent's names, so an
+      // imported or exported flow keeps working. The evaluator also accepts
+      // the older `between` / `from` / `to` spellings for existing drafts.
+      { value: 'between_time', label: 'Between hours' },
       { value: 'before', label: 'Before' },
       { value: 'after', label: 'After' },
     ],
     fields: [
-      { key: 'from', label: 'From (HH:MM)', type: 'text', placeholder: '09:00' },
-      { key: 'to', label: 'To (HH:MM)', type: 'text', placeholder: '17:00' },
+      { key: 'from_time', label: 'From (HH:MM)', type: 'text', placeholder: '09:00' },
+      { key: 'to_time', label: 'To (HH:MM)', type: 'text', placeholder: '17:00' },
       {
         key: 'days',
         label: 'Days (Mon-Sun, comma separated)',
@@ -430,4 +441,31 @@ export const CONDITION_CATEGORIES = Array.from(
 
 export function getConditionSchema(key: string): ConditionSchema | null {
   return CONDITION_SCHEMAS[key] ?? null;
+}
+
+/**
+ * `field_type` tells the backend evaluator WHERE to read the actual value
+ * from: a custom field, a channel-scoped lookup, or a plain contact column.
+ * The builder never emitted it, so every condition fell through to the
+ * contact-column branch and looked up `contact['text']`.
+ *
+ * Derived from the key rather than stored on all 24 schemas so a new schema
+ * entry cannot silently forget it.
+ */
+const CUSTOM_FIELD_KEYS = new Set(['text', 'number', 'date', 'boolean', 'yes_no', 'select']);
+const SOCIAL_KEYS = new Set([
+  'tag',
+  'subscribed',
+  'opting',
+  'message_window',
+  'last_message',
+  'messenger_otn',
+]);
+
+export function conditionFieldType(key: string): 'general' | 'custom' | 'social' {
+  if (CUSTOM_FIELD_KEYS.has(key)) return 'custom';
+  if (SOCIAL_KEYS.has(key) || key.endsWith('_last_message') || key.endsWith('_window')) {
+    return 'social';
+  }
+  return 'general';
 }

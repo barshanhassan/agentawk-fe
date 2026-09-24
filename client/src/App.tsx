@@ -144,12 +144,21 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       </Route>
       {/* Self-hosted Embedded Signup launcher (replyagent "metaconnect" parity):
           Coex → /coexistence, Business API → /whatsapp. Runs the Meta dialog
-          then redirects to /settings/whatsapp-onboard with the result hash. */}
+          then redirects to /settings/whatsapp-onboard with the result hash.
+
+          Deliberately PUBLIC (no ProtectedRoute): with `VITE_FB_DOMAIN` set, the
+          browser lands here on the single Meta-whitelisted domain, which is a
+          different origin from the tenant's workspace subdomain — and
+          `auth_token` lives in localStorage, which is per-origin, so a guard
+          here would bounce every tenant to /login. The page itself calls no
+          backend endpoint; it only runs FB.login and redirects back to the
+          tenant-origin `?r=` URL, where the authenticated onboard page POSTs
+          the result. */}
       <Route path="/coexistence">
-        <ProtectedRoute><WhatsAppSignupLauncherPage /></ProtectedRoute>
+        <WhatsAppSignupLauncherPage />
       </Route>
       <Route path="/whatsapp">
-        <ProtectedRoute><WhatsAppSignupLauncherPage /></ProtectedRoute>
+        <WhatsAppSignupLauncherPage />
       </Route>
       <Route path="/instagram-callback">
         <ProtectedRoute><InstagramCallbackPage /></ProtectedRoute>
@@ -268,6 +277,11 @@ function AppContent() {
 
   const isBuilderRoute = location.startsWith("/automations/") && location.split("/").length === 3;
   const isAuthRoute = location === "/login" || location === "/forgot-password" || location === "/signup" || location === "/find-account" || location === "/sso";
+  // Embedded Signup launcher: a standalone full-screen page that, with
+  // `VITE_FB_DOMAIN` set, is served from the single Meta-whitelisted domain to
+  // visitors who have no session on THIS origin. Render it bare — no sidebar,
+  // no agency layout — exactly like the auth screens.
+  const isLauncherRoute = location === "/coexistence" || location === "/whatsapp";
   const siteType = siteData?.app?.site_type || "WORKSPACE";
 
   if (loading) {
@@ -304,7 +318,7 @@ function AppContent() {
           <SessionPolicyBanner />
           <GlobalDesktopNotifications />
           <TooltipProvider>
-            {isAuthRoute ? (
+            {isAuthRoute || isLauncherRoute ? (
               <Router siteType={siteType} isAgencyRoute={isAgencyRoute} />
             ) : usesAgencyLayout ? (
               <AgencyLayout>

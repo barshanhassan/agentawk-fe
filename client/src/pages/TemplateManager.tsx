@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, ChevronsUpDown, ChevronDown, ChevronUp, ArrowUpDown, GripVertical, Bold, Italic, Strikethrough, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import CustomDropdown from "@/components/CustomDropdown";
 import LoadingSpinner from "@/components/LoadingSpinner";
