@@ -844,7 +844,7 @@ export default function SmartFlowsPage() {
                                                         onClick={() =>
                                                             duplicateMutation.mutate({
                                                                 id: flow.id,
-                                                                name: `${flow.name || "Flow"} (Copy)`,
+                                                                name: `${flow.name || "Bot"} (Copy)`,
                                                             })
                                                         }
                                                         disabled={duplicateMutation.isPending}
