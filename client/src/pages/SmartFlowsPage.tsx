@@ -12,6 +12,7 @@ import {
     MoreVertical,
     ChevronDown,
     Copy as ClipboardCopy,
+    CopyPlus as Copy,
     ChevronsUpDown,
     ChevronUp,
     ArrowDownWideNarrow,
@@ -137,7 +138,12 @@ export default function SmartFlowsPage() {
         setBulkRunning(action);
         try {
             const ids = Array.from(selectedIds);
-            await Promise.all(
+            // allSettled, NOT all. Every request is already committed by the
+            // time a sibling rejects, so Promise.all reported the whole batch
+            // as failed while half the flows had in fact been published —
+            // and it gets worse now that publish can legitimately return 400
+            // ("contacts are mid-run") for one flow out of ten.
+            const results = await Promise.allSettled(
                 ids.map((id) => {
                     if (action === "delete") {
                         return apiRequest("DELETE", `/api/automations/${id}`);
@@ -145,11 +151,29 @@ export default function SmartFlowsPage() {
                     return apiRequest("POST", `/api/automations/${id}/${action}`, {});
                 }),
             );
+            const failed = results
+                .map((r, i) => (r.status === "rejected" ? ids[i] : null))
+                .filter(Boolean) as Array<number | string>;
+            const okCount = ids.length - failed.length;
+
             const doneTitle =
-                action === "publish" ? t("smart_flows_page.bulk_published", { count: ids.length }) :
-                action === "unpublish" ? t("smart_flows_page.bulk_unpublished", { count: ids.length }) :
-                t("smart_flows_page.bulk_deleted", { count: ids.length });
-            toast({ title: doneTitle });
+                action === "publish" ? t("smart_flows_page.bulk_published", { count: okCount }) :
+                action === "unpublish" ? t("smart_flows_page.bulk_unpublished", { count: okCount }) :
+                t("smart_flows_page.bulk_deleted", { count: okCount });
+            if (okCount > 0) toast({ title: doneTitle });
+            if (failed.length > 0) {
+                const first = results.find((r) => r.status === "rejected") as
+                    | PromiseRejectedResult
+                    | undefined;
+                toast({
+                    title: t("smart_flows_page.bulk_partial_failure", {
+                        count: failed.length,
+                        defaultValue: "{{count}} flow(s) could not be updated",
+                    }),
+                    description: String(first?.reason?.message ?? first?.reason ?? ""),
+                    variant: "destructive",
+                });
+            }
             clearSelection();
             queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
         } catch (e: any) {
@@ -325,6 +349,27 @@ export default function SmartFlowsPage() {
         },
         onError: (err: Error) => {
             toast({ title: t("smart_flows_page.toast_rename_failed"), description: err.message, variant: "destructive" });
+        },
+    });
+
+    // Duplicate mutation — POST /api/automations/:id/duplicate.
+    // The endpoint has always existed; the UI simply never offered it, so the
+    // only way to copy a flow was to rebuild it by hand.
+    const duplicateMutation = useMutation({
+        mutationFn: async ({ id, name }: { id: number | string; name: string }) => {
+            const res = await apiRequest("POST", `/api/automations/${id}/duplicate`, { name });
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/automations"] });
+            toast({ title: t("smart_flows_page.toast_flow_duplicated", "Flow duplicated") });
+        },
+        onError: (err: Error) => {
+            toast({
+                title: t("smart_flows_page.toast_duplicate_failed", "Duplicate failed"),
+                description: err.message,
+                variant: "destructive",
+            });
         },
     });
 
@@ -794,6 +839,19 @@ export default function SmartFlowsPage() {
                                                     >
                                                         <ClipboardCopy size={15} className="text-slate-400" />
                                                         {t("smart_flows_page.rename")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            duplicateMutation.mutate({
+                                                                id: flow.id,
+                                                                name: `${flow.name || "Flow"} (Copy)`,
+                                                            })
+                                                        }
+                                                        disabled={duplicateMutation.isPending}
+                                                        className="rounded-xl px-3 py-2 text-[12px] font-semibold cursor-pointer hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-all gap-3"
+                                                    >
+                                                        <Copy size={15} className="text-slate-400" />
+                                                        {t("smart_flows_page.duplicate_flow", "Duplicate")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1.5 bg-slate-200 dark:bg-slate-800" />
                                                     <DropdownMenuItem

@@ -39,6 +39,19 @@ export default function WhatsAppSignupLauncherPage() {
     new URLSearchParams(window.location.search).get("r") ||
       `${window.location.origin}/settings/whatsapp-onboard`,
   );
+  // When `VITE_FB_DOMAIN` points at a single Meta-whitelisted domain, this page
+  // runs on a DIFFERENT origin than the workspace that launched it, so
+  // `window.location.origin` is not where the user should be sent back to.
+  // The `?r=` return URL carries the tenant's own origin — derive it from there.
+  const tenantOrigin = useRef<string>(
+    (() => {
+      try {
+        return new URL(returnUrlRef.current, window.location.origin).origin;
+      } catch {
+        return window.location.origin;
+      }
+    })(),
+  ).current;
 
   const appId = import.meta.env.VITE_META_APP_ID as string | undefined;
   const configId = import.meta.env.VITE_META_ES_CONFIG_ID as string | undefined;
@@ -145,7 +158,7 @@ export default function WhatsAppSignupLauncherPage() {
         </button>
 
         <button
-          onClick={() => (window.location.href = `${window.location.origin}/settings?tab=WhatsApp`)}
+          onClick={() => (window.location.href = `${tenantOrigin}/settings?tab=WhatsApp`)}
           className={cn("mt-5 text-sm font-medium", dark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900")}
         >
           {t("whatsapp_signup_launcher_page.cancel")}

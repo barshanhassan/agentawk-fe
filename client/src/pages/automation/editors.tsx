@@ -19,6 +19,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ import {
 import {
   CONDITION_SCHEMAS,
   getConditionSchema,
+  conditionFieldType,
   type ConditionSchema,
   type ConditionFieldSchema,
 } from "./condition-schemas";
@@ -361,10 +363,14 @@ function StartUrlField({
   // Synthesize a URL from the contextual slug if the backend hasn't
   // computed it yet (new flow before first save). A placeholder is shown
   // until publish.
+  // The real route is `GET /automations/public/trigger/:slug` on the API host.
+  // This used to synthesise `<frontend origin>/api/trigger-automation/<slug>`
+  // — a path that exists nowhere — so anyone who pasted the copied link into
+  // an ad or a QR code got a 404 and the flow never ran.
   const computed =
     value ??
     (contextual?.automationActivitySlug
-      ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/trigger-automation/${contextual.automationActivitySlug}`
+      ? `${API_BASE_URL}/automations/public/trigger/${contextual.automationActivitySlug}`
       : t("automation_editors.start_url.not_generated_yet"));
 
   return (
@@ -538,7 +544,7 @@ function SystemFieldSelector({
   );
 }
 
-function ChannelAccountSelector({
+export function ChannelAccountSelector({
   value,
   onChange,
   channel,
@@ -882,86 +888,204 @@ function useMatchModes() {
   return [
     { value: "all", label: t("automation_editors.condition_editor.match_mode_all") },
     { value: "any", label: t("automation_editors.condition_editor.match_mode_any") },
-    { value: "none", label: t("automation_editors.condition_editor.match_mode_none") },
   ];
 }
 
+/** Is this activity the catch-all Else row? */
+const isElseBranch = (b: any) => String(b?.properties?.matches ?? "") === "none";
+
+/** The Else row the backend evaluates when nothing above it matched. */
+const makeElseBranch = () => ({
+  properties: { check: "else", matches: "none", conditions: [] as any[] },
+  children: [],
+});
+
+const makeBranch = () => ({
+  properties: { check: "else_if", matches: "all", conditions: [] as any[] },
+  children: [],
+});
+
+/**
+ * A condition step is a LIST OF BRANCHES, not a single condition.
+ *
+ * Each branch is a root activity of the step and owns its own outgoing edge,
+ * which is how "if VIP → A, else if returning → B, else → C" is expressed —
+ * the single most common reason to add a Condition step at all. The editor
+ * previously edited one `{match_mode, conditions[]}` object with no way to
+ * add a branch and no Else, so a contact that did not match simply dropped
+ * out of the automation.
+ *
+ * Branches live in `node.data.activities`; `legacyValue` migrates a flow that
+ * was authored under the old single-condition shape on first open.
+ */
 export function ConditionStepEditor({
-  value,
+  activities,
+  legacyValue,
   onChange,
+  maxBranches = 6,
   maxConditions = 6,
 }: {
-  value: { match_mode?: string; conditions?: any[] };
-  onChange: (next: { match_mode?: string; conditions?: any[] }) => void;
+  activities?: any[];
+  legacyValue?: { match_mode?: string; matches?: string; conditions?: any[] };
+  onChange: (next: { activities: any[] }) => void;
+  maxBranches?: number;
   maxConditions?: number;
 }) {
   const { t } = useTranslation();
   const matchModes = useMatchModes();
-  const conditions: any[] = value?.conditions ?? [];
-  const matchMode = value?.match_mode ?? "all";
 
-  const update = (idx: number, partial: any) => {
-    onChange({
-      ...value,
-      conditions: conditions.map((c, i) => (i === idx ? { ...c, ...partial } : c)),
-    });
+  // Normalise: always exactly one Else row, always last.
+  const branches: any[] = (() => {
+    let list = Array.isArray(activities) && activities.length ? [...activities] : [];
+    if (!list.length) {
+      const seeded = makeBranch();
+      if (legacyValue?.conditions?.length) {
+        seeded.properties.matches = String(
+          legacyValue.matches ?? legacyValue.match_mode ?? "all",
+        );
+        seeded.properties.conditions = legacyValue.conditions;
+      }
+      list = [seeded];
+    }
+    const real = list.filter((b) => !isElseBranch(b));
+    const existingElse = list.find((b) => isElseBranch(b));
+    return [...real, existingElse ?? makeElseBranch()];
+  })();
+
+  const realBranches = branches.filter((b) => !isElseBranch(b));
+
+  const emit = (next: any[]) => {
+    const real = next.filter((b) => !isElseBranch(b));
+    const elseRow = next.find((b) => isElseBranch(b)) ?? makeElseBranch();
+    // The Else row must be LAST: the backend takes the first branch that
+    // matches, and a catch-all that is evaluated early would swallow
+    // everything below it.
+    onChange({ activities: [...real, elseRow] });
   };
-  const remove = (idx: number) =>
-    onChange({ ...value, conditions: conditions.filter((_, i) => i !== idx) });
-  const add = () => {
-    if (conditions.length >= maxConditions) return;
-    onChange({
-      ...value,
-      conditions: [
-        ...conditions,
-        { key: "text", operator: "is", payload: {} },
-      ],
-    });
+
+  const setBranchProps = (idx: number, partial: any) =>
+    emit(
+      branches.map((b, i) =>
+        i === idx ? { ...b, properties: { ...(b.properties ?? {}), ...partial } } : b,
+      ),
+    );
+
+  const addBranch = () => {
+    if (realBranches.length >= maxBranches) return;
+    emit([...realBranches, makeBranch(), branches[branches.length - 1]]);
   };
+  const removeBranch = (idx: number) => emit(branches.filter((_, i) => i !== idx));
 
   return (
     <div className="space-y-3">
-      <div>
-        <Label className="text-xs">{t("automation_editors.condition_editor.match_mode_label")}</Label>
-        <Select
-          value={matchMode}
-          onValueChange={(v) => onChange({ ...value, match_mode: v })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {matchModes.map((m) => (
-              <SelectItem key={m.value} value={m.value}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {branches.map((branch, bIdx) => {
+        const props = branch.properties ?? {};
+        const conditions: any[] = props.conditions ?? [];
+        const isElse = isElseBranch(branch);
 
-      <div className="space-y-2">
-        {conditions.map((c, idx) => (
-          <ConditionRow
-            key={idx}
-            condition={c}
-            onChange={(partial) => update(idx, partial)}
-            onRemove={() => remove(idx)}
-          />
-        ))}
-      </div>
+        const updateCondition = (idx: number, partial: any) =>
+          setBranchProps(bIdx, {
+            conditions: conditions.map((c, i) => (i === idx ? { ...c, ...partial } : c)),
+          });
+        const removeCondition = (idx: number) =>
+          setBranchProps(bIdx, { conditions: conditions.filter((_, i) => i !== idx) });
+        const addCondition = () => {
+          if (conditions.length >= maxConditions) return;
+          setBranchProps(bIdx, {
+            conditions: [
+              ...conditions,
+              { key: "text", field_type: conditionFieldType("text"), operator: "is", value: {} },
+            ],
+          });
+        };
+
+        if (isElse) {
+          return (
+            <div key="else" className="border rounded-md p-2 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium">
+                  {t("automation_editors.condition_editor.else_branch", "Else — everything that did not match")}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {t("automation_editors.condition_editor.else_hint", "Always runs last")}
+                </span>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div key={bIdx} className="border rounded-md p-2 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium shrink-0">
+                {bIdx === 0
+                  ? t("automation_editors.condition_editor.branch_if", "If")
+                  : t("automation_editors.condition_editor.branch_else_if", "Else if")}
+              </span>
+              <Select
+                value={String(props.matches ?? "all")}
+                onValueChange={(v) => setBranchProps(bIdx, { matches: v })}
+              >
+                <SelectTrigger className="h-7 text-xs w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {matchModes.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {realBranches.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 ml-auto text-muted-foreground hover:text-destructive"
+                  onClick={() => removeBranch(bIdx)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {conditions.map((c, idx) => (
+                <ConditionRow
+                  key={idx}
+                  condition={c}
+                  onChange={(partial) => updateCondition(idx, partial)}
+                  onRemove={() => removeCondition(idx)}
+                />
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={conditions.length >= maxConditions}
+              onClick={addCondition}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              {t("automation_editors.condition_editor.add_condition")}{" "}
+              {conditions.length >= maxConditions &&
+                t("automation_editors.condition_editor.max_conditions", { maxConditions })}
+            </Button>
+          </div>
+        );
+      })}
 
       <Button
         type="button"
         variant="outline"
         size="sm"
-        disabled={conditions.length >= maxConditions}
-        onClick={add}
+        disabled={realBranches.length >= maxBranches}
+        onClick={addBranch}
       >
         <Plus className="h-3.5 w-3.5 mr-1" />
-        {t("automation_editors.condition_editor.add_condition")}{" "}
-        {conditions.length >= maxConditions &&
-          t("automation_editors.condition_editor.max_conditions", { maxConditions })}
+        {t("automation_editors.condition_editor.add_branch", "Add branch")}
       </Button>
     </div>
   );
@@ -988,7 +1112,10 @@ function ConditionRow({
         <Select
           value={condition.key ?? "text"}
           onValueChange={(v) =>
-            onChange({ key: v, operator: undefined, payload: {} })
+            // `field_type` travels with the row so the evaluator knows whether
+            // to read a custom field, a channel lookup or a contact column —
+            // without it every condition fell through to `contact[key]`.
+            onChange({ key: v, field_type: conditionFieldType(v), operator: undefined, value: {} })
           }
         >
           <SelectTrigger className="h-7 text-xs">
@@ -1031,8 +1158,12 @@ function ConditionRow({
       {showValue && (
         <SchemaForm
           fields={schema.fields as any[]}
-          value={condition.payload ?? {}}
-          onChange={(payload) => onChange({ payload })}
+          // The form used to write into `condition.payload`, which the
+          // evaluator never reads — it reads `value`, so every condition
+          // compared against `undefined`. `payload` is still read here so
+          // drafts saved under the old shape open with their values intact.
+          value={condition.value ?? condition.payload ?? {}}
+          onChange={(next) => onChange({ value: next })}
         />
       )}
     </div>

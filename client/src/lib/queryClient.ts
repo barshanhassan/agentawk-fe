@@ -90,7 +90,7 @@ function handleApiError(error: unknown) {
 // API base URL: prefer window.__API_BASE_URL__ (injected into index.html at build
 // time, never cached) so the correct backend URL is always used even if the JS
 // bundle is served from browser cache. Falls back to the Vite env var for local dev.
-const API_BASE_URL = (
+export const API_BASE_URL = (
   (typeof window !== "undefined" && (window as any).__API_BASE_URL__) ||
   import.meta.env.VITE_API_BASE_URL ||
   ""

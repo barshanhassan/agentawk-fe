@@ -310,8 +310,11 @@ const WHATSAPP_TYPES: MessageTypeSchema[] = [
       { key: 'template_params', label: 'Parameter values', type: 'json', helpText: 'Map of {{1}}, {{2}}, … to values or {{contact.x}} tokens' },
     ],
   },
-  { type: 'chatgpt_question', label: 'AI Studio Question', icon: 'fa-brain', fields: CHATGPT_FIELDS },
-  { type: 'dify_question', label: 'ChatGPT Answer', icon: 'fa-question-circle', fields: DIFY_FIELDS },
+  // These two labels were swapped: "ChatGPT Answer" opened the DIFY editor
+  // and "AI Studio Question" opened the ChatGPT one. REDUCED_TYPES already
+  // has them the right way round — this list now matches it.
+  { type: 'chatgpt_question', label: 'ChatGPT question', icon: 'fa-brain', fields: CHATGPT_FIELDS },
+  { type: 'dify_question', label: 'Dify question', icon: 'fa-question-circle', fields: DIFY_FIELDS },
   {
     type: 'cta_button',
     label: 'CTA Button',
@@ -397,6 +400,76 @@ const QUICK_REPLY_FIELDS: MessageFieldSchema[] = [
   { key: 'payload', label: 'Payload (sent to handler)', type: 'text' },
 ];
 
+// Shared with the reduced palettes below. Telegram, Webchat, Messenger and
+// Instagram all support video and an inline delay, and every one of them was
+// missing both — the author simply could not express "send a clip, wait, then
+// follow up" on any channel except WhatsApp.
+const VIDEO_TYPE: MessageTypeSchema =
+  {
+    type: 'video',
+    label: 'Video',
+    icon: 'fa-video',
+    fields: [
+      {
+        key: 'video_source',
+        label: 'Source',
+        type: 'select',
+        options: [
+          { value: 'gallery', label: 'Gallery upload' },
+          { value: 'custom_field', label: 'Custom field URL' },
+        ],
+        defaultValue: 'gallery',
+      },
+      { key: 'gallery_media_id', label: 'Pick video', type: 'gallery-pick', mediaType: 'video', dependsOn: { field: 'video_source', equals: 'gallery' } },
+      { key: 'custom_field_id', label: 'Custom field', type: 'custom-field', dependsOn: { field: 'video_source', equals: 'custom_field' } },
+      { key: 'caption', label: 'Caption (optional)', type: 'textarea', textActions: ['emoji', 'keys', 'counter'], maxLength: 1024 },
+    ],
+  };
+
+const DOCUMENT_TYPE: MessageTypeSchema =
+  {
+    type: 'document',
+    label: 'Document',
+    icon: 'fa-file-alt',
+    fields: [
+      {
+        key: 'doc_source',
+        label: 'Source',
+        type: 'select',
+        options: [
+          { value: 'gallery', label: 'Gallery upload' },
+          { value: 'custom_field', label: 'Custom field URL' },
+        ],
+        defaultValue: 'gallery',
+      },
+      { key: 'gallery_media_id', label: 'Pick document', type: 'gallery-pick', mediaType: 'document', dependsOn: { field: 'doc_source', equals: 'gallery' } },
+      { key: 'custom_field_id', label: 'Custom field', type: 'custom-field', dependsOn: { field: 'doc_source', equals: 'custom_field' } },
+      { key: 'filename', label: 'File name (shown to recipient)', type: 'text', maxLength: 240 },
+    ],
+  };
+
+const DELAY_TYPE: MessageTypeSchema =
+  {
+    type: 'delay',
+    label: 'Delay',
+    icon: 'fa-clock',
+    fields: [
+      { key: 'amount', label: 'Wait amount', type: 'number', required: true, defaultValue: 5 },
+      {
+        key: 'unit',
+        label: 'Unit',
+        type: 'select',
+        options: [
+          { value: 'seconds', label: 'Seconds' },
+          { value: 'minutes', label: 'Minutes' },
+          { value: 'hours', label: 'Hours' },
+          { value: 'days', label: 'Days' },
+        ],
+        defaultValue: 'seconds',
+      },
+    ],
+  };
+
 // Telegram / Webchat — reduced set (no card/otn — only Messenger + Instagram have those)
 const REDUCED_TYPES: MessageTypeSchema[] = [
   { type: 'text', label: 'Text', icon: 'fa-text-height', fields: TEXT_BODY_FIELDS(4096) },
@@ -412,26 +485,32 @@ const REDUCED_TYPES: MessageTypeSchema[] = [
     ],
   },
   { type: 'image_url', label: 'Image', icon: 'fa-image', fields: IMAGE_URL_FIELDS },
+  VIDEO_TYPE,
+  DOCUMENT_TYPE,
   { type: 'audio', label: 'Audio', icon: 'fa-microphone', fields: AUDIO_FIELDS },
+  DELAY_TYPE,
   { type: 'chatgpt_question', label: 'ChatGPT question', icon: 'fa-brain', fields: CHATGPT_FIELDS },
   { type: 'dify_question', label: 'Dify question', icon: 'fa-question-circle', fields: DIFY_FIELDS },
 ];
 
 // Messenger — REDUCED + Card Slide + Card Button + OTN + Quick Reply Button
-const MESSENGER_TYPES: MessageTypeSchema[] = [
-  ...REDUCED_TYPES,
-  { type: 'card_slide', label: 'Card slide', icon: 'fa-images', fields: CARD_SLIDE_FIELDS },
-  { type: 'card_button', label: 'Card button', icon: 'fa-mouse-pointer', fields: CARD_BUTTON_FIELDS },
-  { type: 'otn', label: 'One-Time Notification', icon: 'fa-bell', fields: OTN_FIELDS },
-  { type: 'quick_reply_button', label: 'Quick reply button', icon: 'fa-reply', fields: QUICK_REPLY_FIELDS },
-];
+// `card_slide`, `card_button`, `otn` and `quick_reply_button` were offered
+// here with full field forms and have NO backend renderer: resolveOutbound
+// falls through to its default arm and sends the activity's plain text body
+// (or nothing at all). So the author built a carousel, published it, and the
+// customer received a bare sentence.
+//
+// A lying control is worse than a missing one, so they are withheld until the
+// renderers exist — Messenger generic templates (`attachment.payload.
+// template_type = 'generic'`) and the ONE_TIME_NOTIF_REQ template. The field
+// schemas above (CARD_SLIDE_FIELDS / CARD_BUTTON_FIELDS / OTN_FIELDS /
+// QUICK_REPLY_FIELDS) are intentionally kept so re-enabling is one line each.
+const MESSENGER_TYPES: MessageTypeSchema[] = [...REDUCED_TYPES];
 
-// Instagram — REDUCED + Card Slide + Card Button (no OTN, no Quick Reply)
-const INSTAGRAM_TYPES: MessageTypeSchema[] = [
-  ...REDUCED_TYPES,
-  { type: 'card_slide', label: 'Card slide', icon: 'fa-images', fields: CARD_SLIDE_FIELDS },
-  { type: 'card_button', label: 'Card button', icon: 'fa-mouse-pointer', fields: CARD_BUTTON_FIELDS },
-];
+// Instagram does not accept documents in a DM, so it drops that one too.
+const INSTAGRAM_TYPES: MessageTypeSchema[] = REDUCED_TYPES.filter(
+  (t) => t.type !== 'document',
+);
 
 // Twilio SMS — text + input only
 const TWILIO_SMS_TYPES: MessageTypeSchema[] = [
@@ -490,13 +569,25 @@ const TWILIO_CALL_TYPES: MessageTypeSchema[] = [
   },
 ];
 
+// Z-API and Evolution are NOT full WhatsApp parity — they talk to a phone
+// running WhatsApp, not to the Cloud API, so there is no approved-template
+// concept at all. Aliasing them to WHATSAPP_TYPES offered a Message Template
+// picker that the send path cannot honour, and the customer received the
+// flattened fallback text instead of a template.
+const ZAPI_TYPES: MessageTypeSchema[] = WHATSAPP_TYPES.filter(
+  (t) => t.type !== 'message_template',
+);
+const EVOLUTION_TYPES: MessageTypeSchema[] = WHATSAPP_TYPES.filter(
+  (t) => !['message_template', 'cta_button'].includes(t.type),
+);
+
 export const CHANNEL_MESSAGE_TYPES: Record<string, MessageTypeSchema[]> = {
   whatsapp: WHATSAPP_TYPES,
-  zapi: WHATSAPP_TYPES, // full parity
-  evolution: WHATSAPP_TYPES, // full parity
+  zapi: ZAPI_TYPES,
+  evolution: EVOLUTION_TYPES,
   telegram: REDUCED_TYPES,
-  instagram: INSTAGRAM_TYPES, // REDUCED + card_slide + card_button
-  messenger: MESSENGER_TYPES, // REDUCED + card_slide + card_button + otn + quick_reply_button
+  instagram: INSTAGRAM_TYPES,
+  messenger: MESSENGER_TYPES,
   webchat: REDUCED_TYPES,
   twilio_sms: TWILIO_SMS_TYPES,
   twilio_call: TWILIO_CALL_TYPES,

@@ -590,14 +590,18 @@ function branchesOf(act: any): Array<{
 
   // Buttons / list rows branch PER CHOICE. Without a handle for each one the
   // node had no outputs at all, so a flow could ask the contact to pick an
-  // option and then had nowhere to go with the answer. Event names are
-  // positional (`choice_1`, …) and match what the backend seeds in
-  // branchSeedsFor(); the label shown is the author's own button text.
+  // option and then had nowhere to go with the answer.
+  //
+  // The event keys off the choice's STABLE id, not its position — positional
+  // names meant reordering or deleting a button silently re-pointed every
+  // existing edge. `choice_${i+1}` stays as the fallback for choices saved
+  // before ids existed, and MUST stay identical to branchSeedsFor() in
+  // automations.service.ts, which is what resolves `branch-<event>` on save.
   if (type === "button") {
     return (act?.properties?.choices ?? [])
       .filter((c: any) => String(c?.label ?? "").trim())
       .map((c: any, i: number) => ({
-        event: `choice_${i + 1}`,
+        event: c?.id ? `choice_${c.id}` : `choice_${i + 1}`,
         label: String(c.label),
         tone: "text-indigo-600",
         dot: "border-indigo-500",
@@ -612,7 +616,8 @@ function branchesOf(act: any): Array<{
         if (!String(opt?.title ?? "").trim()) continue;
         n += 1;
         out.push({
-          event: `choice_${n}`,
+          // Stable id first, positional fallback — same rule as buttons above.
+          event: opt?.id ? `choice_${opt.id}` : `choice_${n}`,
           label: String(opt.title),
           tone: "text-indigo-600",
           dot: "border-indigo-500",
@@ -1073,8 +1078,13 @@ SplitterNode.displayName = "SplitterNode";
 
 export const ConditionNode = memo(({ id, data }: NodeProps<any>) => {
   const { t } = useTranslation();
-  const conditions = data?.value?.conditions ?? [];
-  const mode = data?.value?.match_mode ?? "all";
+  // A condition step is a list of branches (root activities), each with its
+  // own outgoing edge — exactly like the splitter above. It used to render a
+  // single unnamed handle, so "if / else if / else" could not be wired at all
+  // even though the backend edge resolver already understood `branch-<i>`.
+  const rawBranches: any[] = Array.isArray(data?.activities) && data.activities.length
+    ? data.activities
+    : [{ properties: { matches: data?.value?.match_mode ?? "all", conditions: data?.value?.conditions ?? [] } }];
   return (
     <div
       className="group relative rounded-xl border border-slate-200 bg-white shadow-md"
@@ -1097,17 +1107,43 @@ export const ConditionNode = memo(({ id, data }: NodeProps<any>) => {
         </span>
         <span className="text-[13px] font-semibold text-slate-800">{t("automation_nodes.condition")}</span>
       </div>
-      <div className="px-3 py-2 text-[12px] text-slate-700 bg-slate-50/50">
-        <p className="font-medium truncate">
-          {conditions.length === 0
-            ? t("automation_nodes.add_a_condition")
-            : t("automation_nodes.condition_count", { count: conditions.length, mode })}
-        </p>
+      <div className="bg-slate-50/50">
+        {rawBranches.map((b: any, i: number) => {
+          const props = b?.properties ?? {};
+          const mode = String(props.matches ?? "all");
+          const count = Array.isArray(props.conditions) ? props.conditions.length : 0;
+          const isElse = mode === "none";
+          const label = isElse
+            ? t("automation_nodes.condition_else", "Else")
+            : count === 0
+              ? t("automation_nodes.add_a_condition")
+              : t("automation_nodes.condition_count", { count, mode });
+          return (
+            <div
+              key={i}
+              className="relative px-3 py-2 text-[12px] font-medium text-slate-700 border-t border-slate-100 first:border-t-0"
+              style={{ minHeight: 34 }}
+            >
+              <span className="truncate block pr-4">
+                {!isElse && (
+                  <span className="text-slate-400 mr-1">
+                    {i === 0
+                      ? t("automation_nodes.condition_if", "If")
+                      : t("automation_nodes.condition_else_if", "Else if")}
+                  </span>
+                )}
+                {label}
+              </span>
+              <AddStepDropdown
+                nodeId={id}
+                handleId={`branch-${i}`}
+                dotColor="border-teal-500"
+                style={{ right: -5, top: "50%", transform: "translateY(-50%)" }}
+              />
+            </div>
+          );
+        })}
       </div>
-      <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
-        <span>{t("automation_nodes.continue")}</span>
-      </div>
-      <AddStepDropdown nodeId={id} dotColor="border-teal-500" />
     </div>
   );
 });

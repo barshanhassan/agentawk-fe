@@ -57,6 +57,7 @@ import {
   Bell,
 } from "lucide-react";
 import { SecondaryBar } from "./SecondaryBar";
+import { ChannelAccountSelector } from "./editors";
 import { SchemaForm } from "./editors";
 import { getMessageTypes, getMessageType, CHANNEL_LABELS } from "./channel-schemas";
 import { getTriggerSchema, TRIGGER_SCHEMAS } from "./trigger-schemas";
@@ -74,8 +75,10 @@ const CHANNEL_TYPE_ICON: Record<string, React.ReactNode> = {
   delay: <ClockIcon className="h-4 w-4 text-slate-600" />,
   message_list: <ListIcon className="h-4 w-4 text-slate-600" />,
   message_template: <FileSignature className="h-4 w-4 text-slate-600" />,
-  chatgpt_question: <HelpCircle className="h-4 w-4 text-slate-600" />,
-  dify_question: <Brain className="h-4 w-4 text-slate-600" />,
+  // Icons were swapped too — the brain belongs to ChatGPT, matching the
+  // `fa-brain` / `fa-question-circle` pairing in channel-schemas.ts.
+  chatgpt_question: <Brain className="h-4 w-4 text-slate-600" />,
+  dify_question: <HelpCircle className="h-4 w-4 text-slate-600" />,
   cta_button: <MousePointerClick className="h-4 w-4 text-slate-600" />,
   call: <Phone className="h-4 w-4 text-slate-600" />,
 };
@@ -134,9 +137,10 @@ export function ChannelActivitiesPanel({
 }) {
   const { t } = useTranslation();
   const activities: Activity[] = nodeData?.activities ?? [];
-  const sendWindow: string = nodeData?.send_window ?? "in_24";
   const isWaFamily = ["whatsapp", "zapi", "evolution"].includes(channel);
-  const WA_SEND_WINDOW_OPTIONS = getWaSendWindowOptions(t);
+  // The account this NODE sends from — node-level, not per-activity, because
+  // every message in one channel node goes out on the same number.
+  const channelAccountId = nodeData?.properties?.channel_account_id;
 
   // Internal state for the SecondaryBar — either "launcher" (the type
   // grid) or {kind:'edit', index} (form for an existing activity).
@@ -180,28 +184,35 @@ export function ChannelActivitiesPanel({
   return (
     <div className="relative h-full">
       <div className="space-y-3">
-        {isWaFamily && (
-          <Select
-            value={sendWindow}
-            onValueChange={(v) => onChange({ send_window: v })}
-          >
-            <SelectTrigger className="h-10 bg-white">
-              <div className="flex items-center gap-2">
-                <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
-                  W
-                </span>
-                <SelectValue />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {WA_SEND_WINDOW_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        {/*
+          WHICH ACCOUNT THIS NODE SENDS FROM.
+          There was no picker at all, so in a workspace with more than one
+          connected number every automation message went out on whichever
+          number the contact last happened to message — the author could not
+          say "send this from the Sales number".
+
+          This replaces the old "send window" dropdown, which sat here as the
+          first control on every WhatsApp node, was written to
+          `node.data.send_window`, and was read by NOTHING: choosing "send a
+          template after the 24-hour window" still sent a free-form message,
+          Meta rejected it with a 131047, and the flow stalled on a generic
+          error. A control that lies is worse than a missing one; it comes
+          back when the send path can actually honour it.
+        */}
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {t("automation_editors.channel_editor.channel_account_label")}
+          </Label>
+          <ChannelAccountSelector
+            value={channelAccountId}
+            onChange={(v) =>
+              onChange({
+                properties: { ...(nodeData?.properties ?? {}), channel_account_id: v },
+              })
+            }
+            channel={channel.startsWith("twilio") ? "twilio" : channel}
+          />
+        </div>
 
         {/* Activities list */}
         {activities.length > 0 && (
