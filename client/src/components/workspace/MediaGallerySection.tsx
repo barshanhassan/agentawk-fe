@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Film, Folder, Plus, Search, Grid, List, FileText,
@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -67,7 +68,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
     "h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
 
   const outlineBtn = cn(
-    "h-10 px-4 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
+    "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
     dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
   );
 
@@ -80,6 +81,26 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Only used in plain-browse mode (no onSelect) — a picker context still
+  // wants a click to select the file, not preview it.
+  const [previewItem, setPreviewItem] = useState<any>(null);
+  // Conversation-transcript .txt files get parsed into WhatsApp-style
+  // bubbles instead of shown as a raw iframe — null while loading/fetching,
+  // stays null (falls back to the iframe) for a non-transcript document.
+  const [transcriptText, setTranscriptText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!previewItem || previewItem.media_type !== "DOCUMENT" || !/transcript-inbox-/i.test(previewItem.name || "")) {
+      setTranscriptText(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(previewItem.url)
+      .then((r) => r.text())
+      .then((txt) => { if (!cancelled) setTranscriptText(txt); })
+      .catch(() => { if (!cancelled) setTranscriptText(null); });
+    return () => { cancelled = true; };
+  }, [previewItem]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -490,6 +511,7 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                     onClick={() => {
                       if (item.type === "folder") setParentId(item.id);
                       else if (onSelect) onSelect(item);
+                      else setPreviewItem(item);
                     }}
                     className="group relative flex flex-col gap-2 cursor-pointer"
                   >
@@ -617,7 +639,11 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
                       <TableRow
                         key={item.id}
                         className={cn("group border-b last:border-0 transition-colors cursor-pointer", softBorder, dark ? "hover:bg-slate-900/40" : "hover:bg-white/60")}
-                        onClick={() => { if (item.type === "folder") setParentId(item.id); }}
+                        onClick={() => {
+                          if (item.type === "folder") setParentId(item.id);
+                          else if (onSelect) onSelect(item);
+                          else setPreviewItem(item);
+                        }}
                       >
                         <TableCell className="py-3 px-6">
                           <div className="flex items-center gap-3">
@@ -851,6 +877,68 @@ export default function MediaGallerySection({ onSelect }: MediaGallerySectionPro
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Plain-browse preview — never rendered when onSelect is set (picker
+          contexts keep their click-to-select behaviour untouched). */}
+      <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
+        <DialogContent className={cn("rounded-[2rem] border p-0 overflow-hidden max-w-3xl", card, border)}>
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-[14px] font-black truncate pr-6">{previewItem?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 pt-4">
+            {previewItem?.media_type === "IMAGE" ? (
+              <img src={previewItem.url} alt={previewItem.name} className="max-h-[70vh] w-full object-contain rounded-xl" />
+            ) : previewItem?.media_type === "VIDEO" ? (
+              <video src={previewItem.url} controls className="max-h-[70vh] w-full rounded-xl" />
+            ) : previewItem?.media_type === "AUDIO" ? (
+              <audio src={previewItem.url} controls className="w-full" />
+            ) : transcriptText !== null ? (
+              <div className={cn("max-h-[70vh] overflow-y-auto rounded-xl border p-4 space-y-2", softBorder, softBg)}>
+                {transcriptText.split("\n").map((line, i) => {
+                  const m = line.match(/^\[(.+?)\]\s\[(.+?)\]\s(Agent|Contact):\s(.*)$/);
+                  if (!m) {
+                    if (!line.trim()) return null;
+                    return (
+                      <p key={i} className={cn("text-[11px] text-center font-semibold", sub)}>{line}</p>
+                    );
+                  }
+                  const [, ts, channel, sender, text] = m;
+                  const isAgent = sender === "Agent";
+                  return (
+                    <div key={i} className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
+                      <div
+                        className={cn(
+                          "max-w-[75%] rounded-2xl px-3 py-2 text-[12px]",
+                          isAgent ? "bg-primary/10 text-foreground" : dark ? "bg-slate-800 text-white" : "bg-white border text-slate-900"
+                        )}
+                      >
+                        <p className="whitespace-pre-wrap break-words">{text}</p>
+                        <p className={cn("text-[9px] mt-1 opacity-50", isAgent ? "text-right" : "text-left")}>
+                          {channel} · {ts}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : previewItem ? (
+              <iframe src={previewItem.url} title={previewItem.name} className="w-full h-[70vh] rounded-xl border" />
+            ) : null}
+            {previewItem && (
+              <div className="flex justify-end pt-4">
+                <a
+                  href={previewItem.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-2 hover:bg-primary/5"
+                >
+                  <Download size={14} /> {t("media_gallery_section.download")}
+                </a>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
