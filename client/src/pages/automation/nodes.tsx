@@ -507,6 +507,14 @@ function makeChannelNode(channel: string) {
             border: "2px solid #cbd5e1",
           }}
         />
+        {/* The "Continue" output. It must be the FIRST source handle in the
+            DOM: React Flow draws an edge with no sourceHandle from the node's
+            first source handle (getHandle → bounds[0]), so when it came after
+            the branch handles every step-level edge was drawn from
+            "Answer failed" / the first button — the canvas showed a branch
+            wire that was really a Continue wire. It is absolutely positioned
+            (bottom-right corner), so moving it here changes nothing visually. */}
+        <AddStepDropdown nodeId={id} />
         {/* Header with filled colour circle + title-case label */}
         <div className="px-3 py-2.5 flex items-center gap-2.5 bg-white border-b border-slate-100">
           <span className={`h-7 w-7 rounded-full ${iconBg} flex items-center justify-center shadow-sm shrink-0 text-white`}>
@@ -565,7 +573,6 @@ function makeChannelNode(channel: string) {
         <div className="px-3 py-1.5 flex items-center justify-end gap-1.5 text-[10px] text-slate-400 bg-white">
           <span>{t("automation_nodes.continue")}</span>
         </div>
-        <AddStepDropdown nodeId={id} />
       </div>
     );
   });

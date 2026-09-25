@@ -225,7 +225,11 @@ export function OpportunityFormDialog({
   );
   const steps: any[] = useMemo(
     () =>
-      pipelines.find((p) => String(p.id) === String(pipelineId))?.steps ?? [],
+      (() => {
+        // GET /pipelines returns the stages as `pipeline_steps`.
+        const pl = pipelines.find((p) => String(p.id) === String(pipelineId));
+        return pl?.pipeline_steps ?? pl?.steps ?? [];
+      })(),
     [pipelines, pipelineId],
   );
 
@@ -242,8 +246,10 @@ export function OpportunityFormDialog({
   const submit = useMutation({
     mutationFn: () =>
       apiPost("/api/pipelines/opportunities", {
-        pipeline_id: pipelineId,
-        step_id: stepId,
+        // replyagent: the same endpoint edits when an id is sent.
+        ...(initial?.id ? { id: initial.id } : {}),
+        pl_id: pipelineId,
+        pl_step_id: stepId,
         contact_id: contactId,
         title,
         value: value ? Number(value) : 0,
