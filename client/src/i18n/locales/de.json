@@ -3015,6 +3015,18 @@
             "placeholder": "Baserow-Token eingeben"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Geben Sie Ihre Anthropic-API ein, um maßgeschneiderte KI-Antworten zu erhalten."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Geben Sie Ihre Google-Gemini-API ein, um maßgeschneiderte und präzise Antworten zu erhalten."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "Geben Sie Ihre DeepSeek-API ein, um maßgeschneiderte und präzise Antworten zu erhalten."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "Rollen & Berechtigungen",
       "teams": "Teams",
       "conversation_channels": "Konversationskanäle",
-      "ai_chat_assistants": "KI-Chat-Assistenten",
-      "ai_voice_assistants": "KI-Sprachassistenten",
-      "ai_knowledge_base": "KI-Wissensdatenbank",
-      "ai_report_builder": "KI-Berichtsersteller",
+      "ai_chat_assistants": "Chat-Assistenten",
+      "ai_voice_assistants": "Sprachassistenten",
+      "ai_knowledge_base": "Wissensdatenbank",
+      "ai_report_builder": "Berichtsgenerator",
       "connect": "Verbinden",
       "integrations": "Integrationen",
       "customization": "Anpassung",
@@ -5777,7 +5789,8 @@
       "quick_replies": "Schnellantworten",
       "media_gallery": "Mediengalerie",
       "developer_settings": "Entwicklereinstellungen",
-      "change_password": "Passwort ändern"
+      "change_password": "Passwort ändern",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "Diese Nachricht konnte nicht gesendet werden. WhatsApp hat keine weiteren Details angegeben.",
     "wa_failed_internal": "Diese Nachricht konnte aufgrund eines Zustellproblems unsererseits nicht gesendet werden. Bitte versuchen Sie es erneut.",
     "generic_failed": "Diese Nachricht konnte nicht gesendet werden."
+  },
+  "openai_integration": {
+    "eyebrow": "Integrationen",
+    "title": "OpenAI",
+    "back": "Zurück",
+    "payment_notice": "Damit alles funktioniert, muss Ihre Kreditkarte mit Ihrem OpenAI-Playground-Konto verknüpft sein.",
+    "payment_link": "Jetzt im Konto anmelden",
+    "api_key_label": "API-Schlüssel",
+    "required_field": "Dieses Feld ist erforderlich",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "toast_saved": "API-Zugangsdaten erfolgreich gespeichert",
+    "toast_updated": "Erfolgreich aktualisiert",
+    "toast_deleted": "Integration erfolgreich gelöscht",
+    "toast_invalid_key": "Ungültiger API-Schlüssel",
+    "toast_error_title": "Hoppla",
+    "confirm_title": "Sind Sie sicher?",
+    "confirm_description": "Möchten Sie wirklich löschen?",
+    "confirm_cancel": "Abbrechen",
+    "confirm_ok": "Ja",
+    "chatgpt_title": "Individuelle KI",
+    "chatgpt_description": "Aktivieren Sie diese Funktion, um personalisierte KI-Antworten für Ihre geschäftlichen Anforderungen zu erstellen – mühelos und rund um die Uhr präzise.",
+    "whisper_title": "Whisper - Audio zu Text",
+    "whisper_description": "Aktivieren Sie diese Funktion, um eingehende Sprachnachrichten automatisch in Text umzuwandeln und die Bearbeitung von Audiokommunikation mühelos zu automatisieren.",
+    "whisper_outgoing_title": "Whisper - Ausgehendes Audio zu Text (Live-Chat)",
+    "whisper_outgoing_description": "Aktivieren Sie diese Funktion, um ausgehende Sprachnachrichten aus dem Live-Chat in Text umzuwandeln.",
+    "vision_title": "Vision - Bilderkennung",
+    "vision_description": "Wir bieten die modernsten OpenAI-Modelle – GPT-4o, GPT-4o mini und GPT-4 Turbo – jetzt mit erweiterten „Vision“-Fähigkeiten. Diese Modelle verstehen nicht nur Text, sondern analysieren auch Bilder und liefern aufschlussreiche Antworten.",
+    "voice_calls_title": "KI-Sprachanrufe",
+    "voice_calls_description": "Aktivieren Sie diese Funktion, um eigene Sprach-KI-Agenten für Anrufe und Website-Sprach-Widgets zu erstellen, zugeschnitten auf die Anforderungen Ihrer Kunden.",
+    "gate_missing_title": "KI-Assistent kann nicht erstellt werden",
+    "gate_missing_description": "Um einen neuen KI-Assistenten zu erstellen, müssen Sie Ihre ChatGPT-API in Ihren Workspace integrieren.",
+    "gate_create_key_link": "Neuen API-Schlüssel bei OpenAI erstellen",
+    "gate_disabled_title": "Die ChatGPT-Integration ist derzeit deaktiviert.",
+    "gate_disabled_description": "Bitte öffnen Sie den Bereich Integrationen, aktivieren Sie ChatGPT und versuchen Sie es erneut.",
+    "gate_premium_title": "Dies ist eine Premium-Funktion",
+    "gate_premium_description": "Bitte wechseln Sie zu einem höheren Tarif, um diese Funktion zu nutzen.",
+    "gate_free_limit": "In einem kostenlosen Konto ist nur ein Bot erlaubt.",
+    "gate_go_integrations": "Zu den Integrationen",
+    "gate_close": "Schließen",
+    "voice_calls_disabled_title": "KI-Sprachanrufe sind deaktiviert",
+    "voice_calls_disabled_description": "KI-Sprachanrufe sind in den Integrationseinstellungen deaktiviert. Aktivieren Sie sie, bevor Sie Agenten erstellen."
   }
 }

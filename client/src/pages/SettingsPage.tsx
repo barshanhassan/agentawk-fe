@@ -42,10 +42,15 @@ import ManageSection from "@/components/workspace/ManageSection";
 import LiveChatSection from "@/components/workspace/LiveChatSection";
 import ProfileSection from "@/components/sections/ProfileSection";
 
-import AIChatAssistantsSection from "@/components/sections/ai/AIChatAssistantsSection";
-import AIVoiceAssistantsSection from "@/components/sections/ai/AIVoiceAssistantsSection";
-import AIKnowledgeBaseSection from "@/components/sections/ai/AIKnowledgeBaseSection";
-import AIReportBuilderSection from "@/components/sections/ai/AIReportBuilderSection";
+// AI Studio → Chat Assistants (replyagent AIStudio/ChatAssistants.vue). The
+// legacy AIChatAssistantsSection mirrored replyagent's retired Settings/AI.vue.
+import ChatAssistantsSection from "@/components/sections/ai/studio/ChatAssistantsSection";
+// AI Studio → Voice Assistants (replyagent Settings/AIVoice/Index.vue).
+import VoiceAssistantsSection from "@/components/sections/ai/studio/voice/VoiceAssistantsSection";
+// AI Studio → Knowledge Base (replyagent Settings/AIStudio/Knowledgebase.vue).
+import KnowledgebaseSection from "@/components/sections/ai/studio/knowledgebase/KnowledgebaseSection";
+// AI Studio → Report Builder (replyagent Settings/ReportBuilder/Index.vue).
+import ReportBuilderSection from "@/components/sections/ai/studio/reports/ReportBuilderSection";
 
 
 import IntegrationsSection from "@/components/sections/connect/IntegrationsSection";
@@ -92,6 +97,9 @@ const SIDEBAR_LABEL_KEYS: Record<string, string> = {
   "Roles & Permissions": "settings_page.sidebar.roles_permissions",
   "Teams": "settings_page.sidebar.teams",
   "Conversation channels": "settings_page.sidebar.conversation_channels",
+  // replyagent renamed this group "AI Studio"; the internal key stays
+  // "ChatGPT" so existing ?tab= links and the expand state keep working.
+  "ChatGPT": "settings_page.sidebar.ai_studio",
   "AI Chat Assistants": "settings_page.sidebar.ai_chat_assistants",
   "AI Voice Assistants": "settings_page.sidebar.ai_voice_assistants",
   "AI Knowledge base": "settings_page.sidebar.ai_knowledge_base",
@@ -164,8 +172,9 @@ export default function SettingsPage() {
   const canAiReports = hasAnyPerm(_connectPerms, ["workspace.ai.manage_reports"]);
   const chatGptChildren = [
     ...(canAiAssistants ? [{ name: "AI Chat Assistants", icon: Sparkles }] : []),
-    ...(canAiVoice ? [{ name: "AI Voice Assistants", icon: Mic }] : []),
+    // replyagent AI Studio order: Chat Assistants → Knowledgebase → Voice Assistants → Report Builder.
     ...(canAiKnowledgeBase ? [{ name: "AI Knowledge base", icon: Book }] : []),
+    ...(canAiVoice ? [{ name: "AI Voice Assistants", icon: Mic }] : []),
     ...(canAiReports ? [{ name: "AI Report Builder", icon: BarChart3 }] : []),
   ];
 
@@ -672,16 +681,16 @@ export default function SettingsPage() {
 
 
               {activeSection === "AI Chat Assistants" && canAiAssistants && (
-                <AIChatAssistantsSection />
+                <ChatAssistantsSection />
               )}
               {activeSection === "AI Voice Assistants" && canAiVoice && (
-                <AIVoiceAssistantsSection />
+                <VoiceAssistantsSection />
               )}
               {activeSection === "AI Knowledge base" && canAiKnowledgeBase && (
-                <AIKnowledgeBaseSection />
+                <KnowledgebaseSection />
               )}
               {activeSection === "AI Report Builder" && canAiReports && (
-                <AIReportBuilderSection />
+                <ReportBuilderSection />
               )}
 
 

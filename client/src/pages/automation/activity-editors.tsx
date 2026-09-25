@@ -154,12 +154,12 @@ export function ChannelActivitiesPanel({
   const setActivities = (next: Activity[]) =>
     onChange({ activities: next });
 
-  const addActivity = (type: string) => {
+  const addActivity = (type: string, variant?: string) => {
     const next = [
       ...activities,
       {
         slug: makeSlug(),
-        properties: { type, ...defaultPropertiesForType(type) },
+        properties: { type, ...(variant ? { variant } : {}), ...defaultPropertiesForType(type) },
         order: activities.length + 1,
         children: [],
       },
@@ -231,7 +231,7 @@ export function ChannelActivitiesPanel({
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {getMessageType(channel, a.properties?.type ?? "")?.label ?? t("activity_editors.summary.activity")}
+                    {getMessageType(channel, a.properties?.type ?? "", a.properties?.variant)?.label ?? t("activity_editors.summary.activity")}
                   </p>
                   <p className="text-[11px] text-muted-foreground truncate">
                     {activitySummary(a, t)}
@@ -273,8 +273,8 @@ export function ChannelActivitiesPanel({
       >
         <ChannelLauncherGrid
           channel={channel}
-          onPick={(type) => {
-            addActivity(type);
+          onPick={(type, variant) => {
+            addActivity(type, variant);
           }}
         />
       </SecondaryBar>
@@ -283,7 +283,8 @@ export function ChannelActivitiesPanel({
         open={secondary?.kind === "edit"}
         title={
           secondary?.kind === "edit"
-            ? getMessageType(channel, activities[secondary.index]?.properties?.type ?? "")?.label ?? t("activity_editors.edit_activity")
+            ? getMessageType(channel, activities[secondary.index]?.properties?.type ?? "", activities[secondary.index]?.properties?.variant)?.label ??
+              t("activity_editors.edit_activity")
             : ""
         }
         onClose={() => setSecondary(null)}
@@ -316,17 +317,17 @@ function ChannelLauncherGrid({
   onPick,
 }: {
   channel: string;
-  onPick: (type: string) => void;
+  onPick: (type: string, variant?: string) => void;
 }) {
   const types = getMessageTypes(channel);
   return (
     <div className="grid grid-cols-2 gap-2">
       {types.map((mt) => (
         <button
-          key={mt.type}
+          key={`${mt.type}:${mt.variant ?? ""}`}
           type="button"
           className="border rounded-md p-3 hover:bg-muted/40 flex items-center gap-2 text-sm text-left"
-          onClick={() => onPick(mt.type)}
+          onClick={() => onPick(mt.type, mt.variant)}
         >
           <span className="text-slate-600">
             {CHANNEL_TYPE_ICON[mt.type] ?? <TypeIcon className="h-4 w-4" />}
@@ -348,7 +349,7 @@ function ActivityFieldForm({
   onChange: (partial: Record<string, any>) => void;
 }) {
   const { t } = useTranslation();
-  const typeSchema = getMessageType(channel, activity.properties?.type ?? "");
+  const typeSchema = getMessageType(channel, activity.properties?.type ?? "", activity.properties?.variant);
   if (!typeSchema) {
     return (
       <p className="text-sm text-muted-foreground">

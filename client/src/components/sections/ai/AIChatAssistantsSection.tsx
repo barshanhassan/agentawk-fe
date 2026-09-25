@@ -46,6 +46,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
+import { useOpenAiGate } from "./useOpenAiGate";
 
 const gptModels = [
   { name: "gpt-4o",        value: "gpt-4o" },
@@ -77,6 +78,10 @@ export default function AIChatAssistantsSection() {
   ]);
 
   const [viewMode, setViewMode] = useState<"list" | "edit">("list");
+
+  // replyagent `validateAssistantPermission()` — OpenAI integration present,
+  // active, and allowed by the plan — before save / files / website fetch.
+  const { checkAssistant, gateDialog } = useOpenAiGate();
 
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
   const border     = dark ? "border-slate-800" : "border-slate-200";
@@ -190,6 +195,7 @@ export default function AIChatAssistantsSection() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkAssistant({ agentCount: agents.length, isCreate: !selectedAgent })) return;
     if (formData.name.trim()) {
       try {
         if (selectedAgent) {
@@ -201,8 +207,14 @@ export default function AIChatAssistantsSection() {
         }
         queryClient.invalidateQueries({ queryKey: ["/api/ai/agents"] });
         setViewMode("list");
-      } catch {
-        toast({ title: t("ai_chat_assistants_section.error_title"), description: t("ai_chat_assistants_section.save_error_description"), variant: "destructive" });
+      } catch (err: any) {
+        // The server says exactly what is wrong (no OpenAI key, integration
+        // paused, …) — show that rather than a generic failure.
+        toast({
+          title: t("ai_chat_assistants_section.error_title"),
+          description: err?.message || t("ai_chat_assistants_section.save_error_description"),
+          variant: "destructive",
+        });
       }
     }
   };
@@ -483,7 +495,10 @@ export default function AIChatAssistantsSection() {
                       <p className={cn("text-[11px] font-medium opacity-60", sub)}>{t("ai_chat_assistants_section.upload_pdf_description")}</p>
                       <button
                         type="button"
-                        onClick={() => toast({ title: t("ai_chat_assistants_section.upload_pdf_toast_title"), description: t("ai_chat_assistants_section.upload_pdf_toast_description") })}
+                        onClick={() => {
+                          if (!checkAssistant({ agentCount: agents.length, isCreate: !selectedAgent })) return;
+                          toast({ title: t("ai_chat_assistants_section.upload_pdf_toast_title"), description: t("ai_chat_assistants_section.upload_pdf_toast_description") });
+                        }}
                         className={cn(primaryOutlineBtn, "mx-auto")}
                       >
                         <Upload size={12} /> {t("ai_chat_assistants_section.select_files_button")}
@@ -501,7 +516,10 @@ export default function AIChatAssistantsSection() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => toast({ title: t("ai_chat_assistants_section.fetching_toast_title"), description: t("ai_chat_assistants_section.fetching_toast_description") })}
+                        onClick={() => {
+                          if (!checkAssistant({ agentCount: agents.length, isCreate: !selectedAgent })) return;
+                          toast({ title: t("ai_chat_assistants_section.fetching_toast_title"), description: t("ai_chat_assistants_section.fetching_toast_description") });
+                        }}
                         className={cn(primaryOutlineBtn, "mx-auto")}
                       >
                         {t("ai_chat_assistants_section.fetch_pages_button")}
@@ -557,6 +575,7 @@ export default function AIChatAssistantsSection() {
             </div>
           </CardContent>
         </Card>
+        {gateDialog}
       </form>
     );
   }
@@ -727,6 +746,7 @@ export default function AIChatAssistantsSection() {
       </AlertDialog>
 
       <AiFeederModal agent={feederAgent} onClose={() => setFeederAgent(null)} />
+      {gateDialog}
     </>
   );
 }

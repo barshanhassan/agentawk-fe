@@ -42,6 +42,12 @@ export interface MessageTypeSchema {
   label: string;
   icon: string; // FA icon name
   fields: MessageFieldSchema[];
+  /**
+   * replyagent stores some activities as the same `type` with a
+   * `properties.variant` (e.g. `chatgpt_question` + `variant: 'ai-studio'`
+   * for the AI Studio question). The launcher writes it; lookups match on it.
+   */
+  variant?: string;
 }
 
 const TEXT_BODY_FIELDS = (
@@ -171,6 +177,17 @@ const CHATGPT_FIELDS: MessageFieldSchema[] = [
     type: 'custom-field',
     dependsOn: { field: 'enable_vision', equals: 'true' },
   },
+];
+
+/**
+ * replyagent "AI Studio question" (`chatgpt_question` + `variant: 'ai-studio'`):
+ * the same step as the ChatGPT question, answered by an AI Studio assistant
+ * instead of a legacy AI agent. replyagent hides the Vision model picker for
+ * this variant — the assistant's own model is used.
+ */
+const AI_STUDIO_QUESTION_FIELDS: MessageFieldSchema[] = [
+  { key: 'assistant', label: 'AI Studio assistant', type: 'ai-studio-assistant', required: true },
+  ...CHATGPT_FIELDS.filter((f) => f.key !== 'ai_agent_id' && f.key !== 'vision_model'),
 ];
 
 const DIFY_FIELDS: MessageFieldSchema[] = [
@@ -314,6 +331,7 @@ const WHATSAPP_TYPES: MessageTypeSchema[] = [
   // and "AI Studio Question" opened the ChatGPT one. REDUCED_TYPES already
   // has them the right way round — this list now matches it.
   { type: 'chatgpt_question', label: 'ChatGPT question', icon: 'fa-brain', fields: CHATGPT_FIELDS },
+  { type: 'chatgpt_question', variant: 'ai-studio', label: 'AI Studio question', icon: 'fa-brain', fields: AI_STUDIO_QUESTION_FIELDS },
   { type: 'dify_question', label: 'Dify question', icon: 'fa-question-circle', fields: DIFY_FIELDS },
   {
     type: 'cta_button',
@@ -490,6 +508,7 @@ const REDUCED_TYPES: MessageTypeSchema[] = [
   { type: 'audio', label: 'Audio', icon: 'fa-microphone', fields: AUDIO_FIELDS },
   DELAY_TYPE,
   { type: 'chatgpt_question', label: 'ChatGPT question', icon: 'fa-brain', fields: CHATGPT_FIELDS },
+  { type: 'chatgpt_question', variant: 'ai-studio', label: 'AI Studio question', icon: 'fa-brain', fields: AI_STUDIO_QUESTION_FIELDS },
   { type: 'dify_question', label: 'Dify question', icon: 'fa-question-circle', fields: DIFY_FIELDS },
 ];
 
@@ -600,8 +619,12 @@ export function getMessageTypes(channel: string): MessageTypeSchema[] {
 export function getMessageType(
   channel: string,
   type: string,
+  variant?: string | null,
 ): MessageTypeSchema | null {
-  return getMessageTypes(channel).find((t) => t.type === type) ?? null;
+  return (
+    getMessageTypes(channel).find((t) => t.type === type && (t.variant ?? '') === (variant ?? '')) ??
+    null
+  );
 }
 
 export const CHANNEL_LABELS: Record<string, { label: string; icon: string; color: string }> = {

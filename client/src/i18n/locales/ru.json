@@ -3015,6 +3015,18 @@
             "placeholder": "Введите токен Baserow"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Укажите API Anthropic, чтобы получать более точные ответы ИИ."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Укажите API Google Gemini, чтобы получать более персонализированные и точные ответы."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "Укажите API DeepSeek, чтобы получать более персонализированные и точные ответы."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "Роли и разрешения",
       "teams": "Команды",
       "conversation_channels": "Каналы общения",
-      "ai_chat_assistants": "ИИ-ассистенты чата",
-      "ai_voice_assistants": "ИИ-голосовые ассистенты",
-      "ai_knowledge_base": "База знаний ИИ",
-      "ai_report_builder": "Конструктор отчётов ИИ",
+      "ai_chat_assistants": "Чат-ассистенты",
+      "ai_voice_assistants": "Голосовые ассистенты",
+      "ai_knowledge_base": "База знаний",
+      "ai_report_builder": "Конструктор отчётов",
       "connect": "Подключить",
       "integrations": "Интеграции",
       "customization": "Настройка",
@@ -5777,7 +5789,8 @@
       "quick_replies": "Быстрые ответы",
       "media_gallery": "Медиагалерея",
       "developer_settings": "Настройки разработчика",
-      "change_password": "Изменить пароль"
+      "change_password": "Изменить пароль",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "Не удалось отправить это сообщение. WhatsApp не предоставил дополнительных сведений.",
     "wa_failed_internal": "Не удалось отправить это сообщение из-за проблемы с доставкой на нашей стороне. Пожалуйста, попробуйте снова.",
     "generic_failed": "Не удалось отправить это сообщение."
+  },
+  "openai_integration": {
+    "eyebrow": "Интеграции",
+    "title": "OpenAI",
+    "back": "Назад",
+    "payment_notice": "Для корректной работы ваша банковская карта должна быть привязана к аккаунту OpenAI Playground.",
+    "payment_link": "Войдите в аккаунт сейчас",
+    "api_key_label": "API-ключ",
+    "required_field": "Это поле обязательно",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "toast_saved": "Данные API успешно сохранены",
+    "toast_updated": "Успешно обновлено",
+    "toast_deleted": "Интеграция успешно удалена",
+    "toast_invalid_key": "Неверный API-ключ",
+    "toast_error_title": "Ошибка",
+    "confirm_title": "Вы уверены?",
+    "confirm_description": "Вы действительно хотите удалить?",
+    "confirm_cancel": "Отмена",
+    "confirm_ok": "Да",
+    "chatgpt_title": "Собственный ИИ",
+    "chatgpt_description": "Включите эту функцию, чтобы создавать персонализированные ответы ИИ под задачи вашего бизнеса и круглосуточно давать точные ответы.",
+    "whisper_title": "Whisper — аудио в текст",
+    "whisper_description": "Включите эту функцию, чтобы автоматически переводить входящие голосовые сообщения в текст и легко автоматизировать работу с аудио.",
+    "whisper_outgoing_title": "Whisper — исходящее аудио в текст (Live Chat)",
+    "whisper_outgoing_description": "Включите эту функцию, чтобы переводить в текст исходящие голосовые сообщения, отправленные из Live Chat.",
+    "vision_title": "Vision — распознавание изображений",
+    "vision_description": "Мы предлагаем передовые модели OpenAI — GPT-4o, GPT-4o mini и GPT-4 Turbo — теперь с расширенными возможностями «Vision». Эти модели не только понимают текст, но и анализируют изображения, давая содержательные ответы.",
+    "voice_calls_title": "Голосовые звонки ИИ",
+    "voice_calls_description": "Включите эту функцию, чтобы легко создавать собственных голосовых ИИ-агентов для звонков и голосовых виджетов сайта под нужды ваших клиентов.",
+    "gate_missing_title": "Не удаётся создать ИИ-ассистента",
+    "gate_missing_description": "Чтобы создать нового ИИ-ассистента, подключите API ChatGPT к рабочему пространству.",
+    "gate_create_key_link": "Создать новый API-ключ в OpenAI",
+    "gate_disabled_title": "Интеграция ChatGPT сейчас отключена.",
+    "gate_disabled_description": "Перейдите в раздел «Интеграции», включите ChatGPT и повторите попытку.",
+    "gate_premium_title": "Это премиум-функция",
+    "gate_premium_description": "Обновите тарифный план, чтобы подключить эту функцию.",
+    "gate_free_limit": "В бесплатном аккаунте разрешён только один бот.",
+    "gate_go_integrations": "Перейти к интеграциям",
+    "gate_close": "Закрыть",
+    "voice_calls_disabled_title": "Голосовые звонки ИИ отключены",
+    "voice_calls_disabled_description": "Голосовые звонки ИИ отключены в настройках интеграции. Включите их перед созданием агентов."
   }
 }

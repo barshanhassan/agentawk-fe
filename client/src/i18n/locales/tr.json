@@ -3015,6 +3015,18 @@
             "placeholder": "Baserow Belirtecini girin"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Daha kişiselleştirilmiş yapay zeka yanıtları için Anthropic API'nizi girin."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Daha kişiselleştirilmiş ve doğru yanıtlar için Google Gemini API'nizi girin."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "Daha kişiselleştirilmiş ve doğru yanıtlar için DeepSeek API'nizi girin."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "Roller ve İzinler",
       "teams": "Ekipler",
       "conversation_channels": "Konuşma kanalları",
-      "ai_chat_assistants": "YZ Sohbet Asistanları",
-      "ai_voice_assistants": "YZ Sesli Asistanlar",
-      "ai_knowledge_base": "YZ Bilgi Bankası",
-      "ai_report_builder": "YZ Rapor Oluşturucu",
+      "ai_chat_assistants": "Sohbet Asistanları",
+      "ai_voice_assistants": "Sesli Asistanlar",
+      "ai_knowledge_base": "Bilgi Tabanı",
+      "ai_report_builder": "Rapor Oluşturucu",
       "connect": "Bağlan",
       "integrations": "Entegrasyonlar",
       "customization": "Özelleştirme",
@@ -5777,7 +5789,8 @@
       "quick_replies": "Hızlı Yanıtlar",
       "media_gallery": "Medya Galerisi",
       "developer_settings": "Geliştirici Ayarları",
-      "change_password": "Şifreyi Değiştir"
+      "change_password": "Şifreyi Değiştir",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "Bu mesaj gönderilemedi. WhatsApp herhangi bir ayrıntı sağlamadı.",
     "wa_failed_internal": "Bizim tarafımızdaki bir teslimat sorunu nedeniyle bu mesaj gönderilemedi. Lütfen tekrar deneyin.",
     "generic_failed": "Bu mesaj gönderilemedi."
+  },
+  "openai_integration": {
+    "eyebrow": "Entegrasyonlar",
+    "title": "OpenAI",
+    "back": "Geri dön",
+    "payment_notice": "Düzgün çalışması için kredi kartınızın OpenAI Playground hesabınıza bağlı olması gerekir.",
+    "payment_link": "Şimdi hesabınıza giriş yapın",
+    "api_key_label": "API anahtarı",
+    "required_field": "Bu alan zorunludur",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "toast_saved": "API bilgileri başarıyla kaydedildi",
+    "toast_updated": "Başarıyla güncellendi",
+    "toast_deleted": "Entegrasyon başarıyla silindi",
+    "toast_invalid_key": "Geçersiz API anahtarı",
+    "toast_error_title": "Hata",
+    "confirm_title": "Emin misiniz?",
+    "confirm_description": "Silmek istediğinizden emin misiniz?",
+    "confirm_cancel": "İptal",
+    "confirm_ok": "Evet",
+    "chatgpt_title": "Özel Yapay Zeka",
+    "chatgpt_description": "İşletmenizin ihtiyaçlarına göre kişiselleştirilmiş yapay zeka yanıtları oluşturmak ve günün her saati doğru yanıtlar vermek için bu özelliği etkinleştirin.",
+    "whisper_title": "Whisper - Sesten Metne",
+    "whisper_description": "Gelen sesli mesajları metne dönüştürmek ve sesli iletişimi kolayca otomatikleştirmek için bu özelliği etkinleştirin.",
+    "whisper_outgoing_title": "Whisper - Giden Sesten Metne (Canlı Sohbet)",
+    "whisper_outgoing_description": "Canlı Sohbet üzerinden gönderilen sesli mesajları metne dönüştürmek için bu özelliği etkinleştirin.",
+    "vision_title": "Vision - Görüntü tanıma",
+    "vision_description": "OpenAI'nin en gelişmiş modelleri — GPT-4o, GPT-4o mini ve GPT-4 Turbo — artık gelişmiş 'Vision' yetenekleriyle sunuluyor. Bu modeller yalnızca metni anlamakla kalmaz, görüntüleri de analiz ederek anlamlı yanıtlar verir.",
+    "voice_calls_title": "Yapay Zeka Sesli Aramalar",
+    "voice_calls_description": "Aramalar ve web sitesi sesli widgetları için müşterilerinizin ihtiyaçlarına göre kendi sesli yapay zeka ajanlarınızı kolayca oluşturmak için bu özelliği etkinleştirin.",
+    "gate_missing_title": "Yapay zeka asistanı oluşturulamıyor",
+    "gate_missing_description": "Yeni bir yapay zeka asistanı oluşturmak için ChatGPT API'nizi çalışma alanınıza entegre etmelisiniz.",
+    "gate_create_key_link": "OpenAI'de yeni bir API anahtarı oluşturun",
+    "gate_disabled_title": "ChatGPT entegrasyonu şu anda devre dışı.",
+    "gate_disabled_description": "Lütfen Entegrasyonlar bölümüne gidip ChatGPT'yi etkinleştirin ve tekrar deneyin.",
+    "gate_premium_title": "Bu bir premium özelliktir",
+    "gate_premium_description": "Bu özelliği kullanmak için lütfen planınızı yükseltin.",
+    "gate_free_limit": "Ücretsiz hesapta yalnızca bir bota izin verilir.",
+    "gate_go_integrations": "Entegrasyonlara git",
+    "gate_close": "Kapat",
+    "voice_calls_disabled_title": "Yapay zeka sesli aramaları devre dışı",
+    "voice_calls_disabled_description": "Yapay zeka sesli aramaları entegrasyon ayarlarında devre dışı. Ajan oluşturmadan önce etkinleştirin."
   }
 }

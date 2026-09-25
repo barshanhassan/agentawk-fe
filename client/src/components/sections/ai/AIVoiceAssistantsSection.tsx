@@ -58,6 +58,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
+import { useOpenAiGate } from "./useOpenAiGate";
 
 const mockVoices = [
   { name: "Alloy", id: "alloy" },
@@ -101,6 +102,10 @@ export default function AIVoiceAssistantsSection() {
 
   const [viewMode, setViewMode] = useState<"list" | "edit">("list");
   const [editStep, setEditStep] = useState<"type_selection" | "form">("type_selection");
+
+  // replyagent AIVoice: `voice_calls` gate before the editor opens, and
+  // `validateAssistantPermission()` before a save.
+  const { checkAssistant, checkVoiceCalls, gateDialog } = useOpenAiGate();
   const [activeTab, setActiveTab] = useState<"personality" | "configurations" | "transfer" | "functions" | "summary" | "design" | "embed">("personality");
 
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
@@ -164,6 +169,7 @@ export default function AIVoiceAssistantsSection() {
   const availableCredits = "1645:59";
 
   const handleEdit = (agent: any) => {
+    if (!checkVoiceCalls()) return;
     if (agent) {
       setFormData({
         ...agent,
@@ -223,6 +229,7 @@ export default function AIVoiceAssistantsSection() {
   };
 
   const handlePublish = () => {
+    if (!checkAssistant({ agentCount: agents?.length ?? 0, isCreate: !formData?.id })) return;
     if (formData?.name?.trim()) {
       toast({ title: t("ai_voice_assistants_section.toast_info_title"), description: t("ai_voice_assistants_section.toast_saving_desc") });
       setViewMode("list");
@@ -775,6 +782,7 @@ export default function AIVoiceAssistantsSection() {
           outlineBtn={outlineBtn}
           onConfirm={confirmDelete}
         />
+        {gateDialog}
       </>
     );
   }
@@ -930,6 +938,7 @@ export default function AIVoiceAssistantsSection() {
         outlineBtn={outlineBtn}
         onConfirm={confirmDelete}
       />
+      {gateDialog}
     </>
   );
 }

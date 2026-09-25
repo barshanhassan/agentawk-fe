@@ -698,7 +698,7 @@ export default function ConversationsInbox() {
     };
 
     // WhatsApp media ready — patch parsed_files onto the message without full refetch
-    const handleMediaReady = (data: { inbox_id: string; wa_message_id: string; parsed_files: any[] }) => {
+    const handleMediaReady = (data: { inbox_id: string; wa_message_id: string; parsed_files: any[]; text?: string }) => {
       if (!selectedConversation || data.inbox_id !== selectedConversation.toString()) return;
       const targetId = Number(data.wa_message_id);
       if (!Number.isFinite(targetId)) return;
@@ -707,7 +707,14 @@ export default function ConversationsInbox() {
         return {
           ...prev,
           messages: prev.messages.map((m: any) =>
-            Number(m.id) === targetId ? { ...m, parsed_files: data.parsed_files } : m
+            Number(m.id) === targetId
+              ? {
+                  ...m,
+                  parsed_files: data.parsed_files,
+                  // A voice note's Whisper transcript, when it arrives with the media.
+                  ...(data.text ? { text: data.text } : {}),
+                }
+              : m
           ),
         };
       });

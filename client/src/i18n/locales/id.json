@@ -3015,6 +3015,18 @@
             "placeholder": "Masukkan Token Baserow"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Masukkan API Anthropic Anda untuk respons AI yang lebih sesuai."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Masukkan API Google Gemini Anda untuk respons yang lebih sesuai dan akurat."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "Masukkan API DeepSeek Anda untuk respons yang lebih sesuai dan akurat."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "Peran & Izin",
       "teams": "Tim",
       "conversation_channels": "Saluran percakapan",
-      "ai_chat_assistants": "Asisten Chat AI",
-      "ai_voice_assistants": "Asisten Suara AI",
-      "ai_knowledge_base": "Basis Pengetahuan AI",
-      "ai_report_builder": "Pembuat Laporan AI",
+      "ai_chat_assistants": "Asisten Chat",
+      "ai_voice_assistants": "Asisten Suara",
+      "ai_knowledge_base": "Basis Pengetahuan",
+      "ai_report_builder": "Pembuat Laporan",
       "connect": "Hubungkan",
       "integrations": "Integrasi",
       "customization": "Kustomisasi",
@@ -5777,7 +5789,8 @@
       "quick_replies": "Balasan Cepat",
       "media_gallery": "Galeri Media",
       "developer_settings": "Pengaturan Pengembang",
-      "change_password": "Ubah Kata Sandi"
+      "change_password": "Ubah Kata Sandi",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "Pesan ini gagal terkirim. WhatsApp tidak memberikan detail lebih lanjut.",
     "wa_failed_internal": "Pesan ini gagal terkirim karena masalah pengiriman di pihak kami. Silakan coba lagi.",
     "generic_failed": "Pesan ini gagal terkirim."
+  },
+  "openai_integration": {
+    "eyebrow": "Integrasi",
+    "title": "OpenAI",
+    "back": "Kembali",
+    "payment_notice": "Agar berfungsi dengan baik, kartu kredit Anda harus terhubung dengan akun OpenAI Playground Anda.",
+    "payment_link": "Masuk ke akun Anda sekarang",
+    "api_key_label": "Kunci API",
+    "required_field": "Kolom ini wajib diisi",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "toast_saved": "Kredensial API berhasil disimpan",
+    "toast_updated": "Berhasil diperbarui",
+    "toast_deleted": "Integrasi berhasil dihapus",
+    "toast_invalid_key": "Kunci API tidak valid",
+    "toast_error_title": "Ups",
+    "confirm_title": "Apakah Anda yakin?",
+    "confirm_description": "Apakah Anda yakin ingin menghapus?",
+    "confirm_cancel": "Batal",
+    "confirm_ok": "Yakin",
+    "chatgpt_title": "AI Kustom",
+    "chatgpt_description": "Aktifkan fitur ini untuk membuat respons AI yang dipersonalisasi sesuai kebutuhan bisnis Anda, memberikan jawaban akurat sepanjang waktu dengan mudah.",
+    "whisper_title": "Whisper - Audio ke Teks",
+    "whisper_description": "Aktifkan fitur ini untuk mentranskripsikan pesan audio masuk menjadi teks, sehingga penanganan komunikasi audio dapat diotomatiskan dengan mudah.",
+    "whisper_outgoing_title": "Whisper - Audio Keluar ke Teks (Live Chat)",
+    "whisper_outgoing_description": "Aktifkan fitur ini untuk mentranskripsikan pesan audio keluar yang dikirim dari Live Chat menjadi teks.",
+    "vision_title": "Vision - Pengenalan gambar",
+    "vision_description": "Kami menghadirkan model mutakhir OpenAI — GPT-4o, GPT-4o mini, dan GPT-4 Turbo — kini dengan kemampuan \"Vision\" tingkat lanjut. Model ini tidak hanya memahami teks tetapi juga menganalisis gambar dan memberikan jawaban yang berwawasan.",
+    "voice_calls_title": "Panggilan Suara AI",
+    "voice_calls_description": "Aktifkan fitur ini untuk membuat agen AI suara Anda sendiri untuk panggilan dan widget suara situs web yang disesuaikan dengan kebutuhan bisnis pelanggan Anda.",
+    "gate_missing_title": "Tidak dapat membuat asisten AI",
+    "gate_missing_description": "Untuk membuat asisten AI baru, Anda harus mengintegrasikan API ChatGPT ke workspace Anda.",
+    "gate_create_key_link": "Buat kunci API baru di OpenAI",
+    "gate_disabled_title": "Integrasi ChatGPT saat ini dinonaktifkan.",
+    "gate_disabled_description": "Silakan buka bagian Integrasi, aktifkan ChatGPT, lalu coba lagi.",
+    "gate_premium_title": "Ini adalah fitur premium",
+    "gate_premium_description": "Silakan tingkatkan paket tagihan Anda untuk mengintegrasikan fitur ini.",
+    "gate_free_limit": "Hanya satu bot yang diizinkan di akun gratis.",
+    "gate_go_integrations": "Buka Integrasi",
+    "gate_close": "Tutup",
+    "voice_calls_disabled_title": "Panggilan Suara AI dinonaktifkan",
+    "voice_calls_disabled_description": "Panggilan Suara AI dinonaktifkan di pengaturan integrasi. Aktifkan terlebih dahulu sebelum membuat agen."
   }
 }

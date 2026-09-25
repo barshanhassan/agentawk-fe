@@ -3015,6 +3015,18 @@
             "placeholder": "Baserowトークンを入力"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Anthropic API を入力すると、より的確な AI 応答が得られます。"
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Google Gemini API を入力すると、より的確で正確な応答が得られます。"
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "DeepSeek API を入力すると、より的確で正確な応答が得られます。"
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "役割と権限",
       "teams": "チーム",
       "conversation_channels": "会話チャネル",
-      "ai_chat_assistants": "AIチャットアシスタント",
-      "ai_voice_assistants": "AIボイスアシスタント",
-      "ai_knowledge_base": "AIナレッジベース",
-      "ai_report_builder": "AIレポートビルダー",
+      "ai_chat_assistants": "チャットアシスタント",
+      "ai_voice_assistants": "音声アシスタント",
+      "ai_knowledge_base": "ナレッジベース",
+      "ai_report_builder": "レポートビルダー",
       "connect": "接続",
       "integrations": "連携",
       "customization": "カスタマイズ",
@@ -5777,7 +5789,8 @@
       "quick_replies": "クイック返信",
       "media_gallery": "メディアギャラリー",
       "developer_settings": "開発者設定",
-      "change_password": "パスワードを変更"
+      "change_password": "パスワードを変更",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "このメッセージの送信に失敗しました。WhatsAppから詳細情報は提供されませんでした。",
     "wa_failed_internal": "こちら側の配信の問題により、このメッセージの送信に失敗しました。もう一度お試しください。",
     "generic_failed": "このメッセージの送信に失敗しました。"
+  },
+  "openai_integration": {
+    "eyebrow": "連携",
+    "title": "OpenAI",
+    "back": "戻る",
+    "payment_notice": "正しく動作させるには、クレジットカードを OpenAI Playground アカウントに登録する必要があります。",
+    "payment_link": "今すぐアカウントにログイン",
+    "api_key_label": "API キー",
+    "required_field": "この項目は必須です",
+    "save": "保存",
+    "delete": "削除",
+    "toast_saved": "API 認証情報を保存しました",
+    "toast_updated": "更新しました",
+    "toast_deleted": "連携を削除しました",
+    "toast_invalid_key": "無効な API キーです",
+    "toast_error_title": "エラー",
+    "confirm_title": "よろしいですか？",
+    "confirm_description": "本当に削除しますか？",
+    "confirm_cancel": "キャンセル",
+    "confirm_ok": "はい",
+    "chatgpt_title": "カスタム AI",
+    "chatgpt_description": "この機能を有効にすると、ビジネスに合わせてパーソナライズした AI 応答を作成し、24 時間いつでも正確に回答できます。",
+    "whisper_title": "Whisper - 音声をテキストに",
+    "whisper_description": "この機能を有効にすると、受信した音声メッセージを自動でテキストに変換し、音声コミュニケーションの対応を簡単に自動化できます。",
+    "whisper_outgoing_title": "Whisper - 送信音声をテキストに（ライブチャット）",
+    "whisper_outgoing_description": "この機能を有効にすると、ライブチャットから送信した音声メッセージをテキストに変換します。",
+    "vision_title": "Vision - 画像認識",
+    "vision_description": "OpenAI の最先端モデル（GPT-4o、GPT-4o mini、GPT-4 Turbo）が高度な「Vision」機能に対応しました。テキストを理解するだけでなく、画像を分析して的確な回答を返します。",
+    "voice_calls_title": "AI 音声通話",
+    "voice_calls_description": "この機能を有効にすると、通話やウェブサイトの音声ウィジェット向けに、顧客のニーズに合わせた音声 AI エージェントを簡単に作成できます。",
+    "gate_missing_title": "AI アシスタントを作成できません",
+    "gate_missing_description": "新しい AI アシスタントを作成するには、ChatGPT API をワークスペースに連携する必要があります。",
+    "gate_create_key_link": "OpenAI で新しい API キーを作成",
+    "gate_disabled_title": "ChatGPT 連携は現在無効です。",
+    "gate_disabled_description": "連携セクションで ChatGPT を有効にしてから、もう一度お試しください。",
+    "gate_premium_title": "これはプレミアム機能です",
+    "gate_premium_description": "この機能を使うには料金プランをアップグレードしてください。",
+    "gate_free_limit": "無料アカウントで作成できるボットは 1 つだけです。",
+    "gate_go_integrations": "連携へ移動",
+    "gate_close": "閉じる",
+    "voice_calls_disabled_title": "AI 音声通話は無効です",
+    "voice_calls_disabled_description": "連携設定で AI 音声通話が無効になっています。エージェントを作成する前に有効にしてください。"
   }
 }

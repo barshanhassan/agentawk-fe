@@ -3015,6 +3015,18 @@
             "placeholder": "Baserow टोकन दर्ज करें"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "बेहतर AI जवाबों के लिए अपनी Anthropic API दर्ज करें।"
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "बेहतर और सटीक जवाबों के लिए अपनी Google Gemini API दर्ज करें।"
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "बेहतर और सटीक जवाबों के लिए अपनी DeepSeek API दर्ज करें।"
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "भूमिकाएं और अनुमतियां",
       "teams": "टीमें",
       "conversation_channels": "बातचीत चैनल",
-      "ai_chat_assistants": "AI चैट सहायक",
-      "ai_voice_assistants": "AI वॉइस सहायक",
-      "ai_knowledge_base": "AI नॉलेज बेस",
-      "ai_report_builder": "AI रिपोर्ट बिल्डर",
+      "ai_chat_assistants": "चैट असिस्टेंट",
+      "ai_voice_assistants": "वॉइस असिस्टेंट",
+      "ai_knowledge_base": "नॉलेज बेस",
+      "ai_report_builder": "रिपोर्ट बिल्डर",
       "connect": "कनेक्ट करें",
       "integrations": "एकीकरण",
       "customization": "अनुकूलन",
@@ -5777,7 +5789,8 @@
       "quick_replies": "त्वरित उत्तर",
       "media_gallery": "मीडिया गैलरी",
       "developer_settings": "डेवलपर सेटिंग्स",
-      "change_password": "पासवर्ड बदलें"
+      "change_password": "पासवर्ड बदलें",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "यह संदेश भेजने में विफल रहा। WhatsApp ने कोई और विवरण नहीं दिया।",
     "wa_failed_internal": "हमारी ओर से डिलीवरी समस्या के कारण यह संदेश भेजने में विफल रहा। कृपया पुनः प्रयास करें।",
     "generic_failed": "यह संदेश भेजने में विफल रहा।"
+  },
+  "openai_integration": {
+    "eyebrow": "इंटीग्रेशन",
+    "title": "OpenAI",
+    "back": "वापस जाएँ",
+    "payment_notice": "सही तरह काम करने के लिए आपका क्रेडिट कार्ड आपके OpenAI Playground खाते से जुड़ा होना चाहिए।",
+    "payment_link": "अभी अपने खाते में लॉग इन करें",
+    "api_key_label": "API कुंजी",
+    "required_field": "यह फ़ील्ड आवश्यक है",
+    "save": "सहेजें",
+    "delete": "हटाएँ",
+    "toast_saved": "API क्रेडेंशियल सफलतापूर्वक सहेजे गए",
+    "toast_updated": "सफलतापूर्वक अपडेट किया गया",
+    "toast_deleted": "इंटीग्रेशन सफलतापूर्वक हटाया गया",
+    "toast_invalid_key": "अमान्य API कुंजी",
+    "toast_error_title": "उफ़",
+    "confirm_title": "क्या आप निश्चित हैं?",
+    "confirm_description": "क्या आप वाकई हटाना चाहते हैं?",
+    "confirm_cancel": "रद्द करें",
+    "confirm_ok": "हाँ",
+    "chatgpt_title": "कस्टम AI",
+    "chatgpt_description": "अपने व्यवसाय की ज़रूरतों के अनुसार व्यक्तिगत AI जवाब बनाने के लिए यह सुविधा चालू करें, जो चौबीसों घंटे सटीक जवाब देती है।",
+    "whisper_title": "Whisper - ऑडियो से टेक्स्ट",
+    "whisper_description": "आने वाले वॉइस संदेशों को अपने-आप टेक्स्ट में बदलने के लिए यह सुविधा चालू करें, ताकि ऑडियो बातचीत आसानी से ऑटोमेट हो सके।",
+    "whisper_outgoing_title": "Whisper - भेजा गया ऑडियो टेक्स्ट में (लाइव चैट)",
+    "whisper_outgoing_description": "लाइव चैट से भेजे गए वॉइस संदेशों को टेक्स्ट में बदलने के लिए यह सुविधा चालू करें।",
+    "vision_title": "Vision - छवि पहचान",
+    "vision_description": "हम OpenAI के अत्याधुनिक मॉडल — GPT-4o, GPT-4o mini और GPT-4 Turbo — अब उन्नत \"Vision\" क्षमता के साथ पेश करते हैं। ये मॉडल न सिर्फ़ टेक्स्ट समझते हैं बल्कि छवियों का विश्लेषण करके उपयोगी जवाब भी देते हैं।",
+    "voice_calls_title": "AI वॉइस कॉल",
+    "voice_calls_description": "कॉल और वेबसाइट वॉइस विजेट के लिए अपने ग्राहकों की ज़रूरतों के अनुसार वॉइस AI एजेंट बनाने के लिए यह सुविधा चालू करें।",
+    "gate_missing_title": "AI असिस्टेंट नहीं बनाया जा सका",
+    "gate_missing_description": "नया AI असिस्टेंट बनाने के लिए अपनी ChatGPT API को वर्कस्पेस से जोड़ना ज़रूरी है।",
+    "gate_create_key_link": "OpenAI पर नई API कुंजी बनाएँ",
+    "gate_disabled_title": "ChatGPT इंटीग्रेशन अभी बंद है।",
+    "gate_disabled_description": "कृपया इंटीग्रेशन सेक्शन में जाकर ChatGPT चालू करें, फिर दोबारा कोशिश करें।",
+    "gate_premium_title": "यह एक प्रीमियम सुविधा है",
+    "gate_premium_description": "इस सुविधा के लिए अपना बिलिंग प्लान अपग्रेड करें।",
+    "gate_free_limit": "फ़्री खाते में केवल एक बॉट की अनुमति है।",
+    "gate_go_integrations": "इंटीग्रेशन पर जाएँ",
+    "gate_close": "बंद करें",
+    "voice_calls_disabled_title": "AI वॉइस कॉल बंद हैं",
+    "voice_calls_disabled_description": "AI वॉइस कॉल इंटीग्रेशन सेटिंग में बंद हैं। एजेंट बनाने से पहले इन्हें चालू करें।"
   }
 }

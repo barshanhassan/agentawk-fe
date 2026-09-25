@@ -25,7 +25,11 @@ export type FieldType =
   | 'custom-field'
   | 'system-field'
   | 'ai-agent'
+  /** AI Studio chat assistant — stored as `{ id, name, provider }` (replyagent `properties.assistant`). */
+  | 'ai-studio-assistant'
   | 'ai-voice-agent'
+  /** AI Report Builder report — stored as its id (replyagent `value.report_id`). */
+  | 'report'
   | 'dify-bot'
   | 'user'
   | 'automation'
@@ -505,8 +509,23 @@ export const ACTION_SCHEMAS: Record<string, ActionSchema> = {
       SAVE_TO_FIELD,
     ],
   },
-  get_report: { slug: 'get_report', label: 'Get report', group: 'Other integrations', fields: [{ key: 'report.id', label: 'Report ID', type: 'text', required: true }, SAVE_TO_FIELD] },
-  trigger_report: { slug: 'trigger_report', label: 'Trigger report', group: 'Other integrations', fields: [{ key: 'report.id', label: 'Report ID', type: 'text', required: true }] },
+  // replyagent "Report Actions": TriggerReport.vue / GetReport.vue (`value.report_id`, `content_field`, `pdf_field`).
+  trigger_report: {
+    slug: 'trigger_report',
+    label: 'Trigger a report',
+    group: 'Report Actions',
+    fields: [{ key: 'report_id', label: 'Select Report', type: 'report', required: true }],
+  },
+  get_report: {
+    slug: 'get_report',
+    label: 'Get a report',
+    group: 'Report Actions',
+    fields: [
+      { key: 'report_id', label: 'Select Report', type: 'report', required: true },
+      { key: 'content_field', label: 'Save report content to a Custom Field', type: 'custom-field' },
+      { key: 'pdf_field', label: 'Save report PDF link to a Custom Field', type: 'custom-field' },
+    ],
+  },
   share_clone_kit: { slug: 'share_clone_kit', label: 'Share clone kit', group: 'Other integrations', fields: [{ key: 'bundle_id', label: 'Bundle ID', type: 'text', required: true }, { key: 'recipient_workspace_id', label: 'Recipient workspace ID', type: 'text' }] },
   unstract: { slug: 'unstract', label: 'Unstract document', group: 'Other integrations', fields: [{ key: 'document_url', label: 'Document URL', type: 'text', required: true }, { key: 'workflow', label: 'Workflow name', type: 'text' }, SAVE_TO_FIELD] },
   woovi: { slug: 'woovi', label: 'Woovi payment', group: 'Other integrations', fields: [{ key: 'amount', label: 'Amount', type: 'number', required: true }, { key: 'comment', label: 'Comment', type: 'text' }, SAVE_TO_FIELD] },

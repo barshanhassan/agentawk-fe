@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
+import OpenAIIntegrationView, { AiProviderType } from "./OpenAIIntegrationView";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +38,10 @@ const INTEGRATION_PERMS: Record<string, string> = {
   CLOUDINARY: "workspace.settings.cloudinary",
   ACTIVECAMPAIGN: "workspace.settings.active_campaign",
   CHATGPT: "workspace.settings.open_ai",
+  // AI Studio providers (replyagent Integrations.vue canConnectAnthropic / Google / DeepSeek).
+  ANTHROPIC: "workspace.settings.anthropic",
+  GOOGLE: "workspace.settings.google_gemini",
+  DEEPSEEK: "workspace.settings.deepseek",
   MAKE: "workspace.settings.make_dot_com",
   ELEVENLABS: "workspace.settings.eleven_labs",
 };
@@ -49,6 +55,25 @@ export default function IntegrationsSection() {
   const _intPerms = getUserInfo().permissions ?? [];
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
+
+  // OpenAI has its own page (replyagent `/w/settings/integration/openai`),
+  // addressed as `?tab=Integrations&view=openai` so the browser Back button
+  // and a shared link both land on it — same idiom as WhatsAppSection.
+  const [, navigate] = useLocation();
+  const view = new URLSearchParams(useSearch()).get("view");
+  const openOpenAI = () => navigate("/settings?tab=Integrations&view=openai");
+  // replyagent /w/settings/integration/{anthropic,google,deepseek}.
+  const AI_PROVIDER_VIEWS: Record<string, AiProviderType> = {
+    openai: "CHATGPT",
+    anthropic: "ANTHROPIC",
+    google: "GOOGLE",
+    deepseek: "DEEPSEEK",
+  };
+  const openProvider = (type: AiProviderType) => {
+    const v = Object.keys(AI_PROVIDER_VIEWS).find((k) => AI_PROVIDER_VIEWS[k] === type) ?? "openai";
+    navigate(`/settings?tab=Integrations&view=${v}`);
+  };
+  const closeSubView = () => navigate("/settings?tab=Integrations");
 
   // ── Design tokens ─────────────────────────────────────────
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
@@ -156,6 +181,17 @@ export default function IntegrationsSection() {
       actionLabel: t("integrations_section.items.CHATGPT.action_label"),
       fields: [{ key: "api_key", label: t("integrations_section.items.CHATGPT.fields.api_key.label"), placeholder: "sk-..." }],
     },
+    // replyagent AI Studio providers — each opens its own key page.
+    ...(["ANTHROPIC", "GOOGLE", "DEEPSEEK"] as const).map((id) => ({
+      id,
+      name: t(`integrations_section.items.${id}.name`),
+      category: t("integrations_section.items.CHATGPT.category"),
+      description: t(`integrations_section.items.${id}.description`),
+      icon: `/images/ai-providers/${id === "ANTHROPIC" ? "anthropic" : id === "GOOGLE" ? "google" : "deepseek"}.svg`,
+      actionLabel: t("integrations_section.items.CHATGPT.action_label"),
+      // Never used — these open their own key page — but keeps the card shape uniform.
+      fields: [] as { key: string; label: string; placeholder?: string }[],
+    })),
     {
       id: "MAKE",
       name: "Make.com",
@@ -206,6 +242,16 @@ export default function IntegrationsSection() {
       window.open(item.externalUrl, "_blank");
       return;
     }
+    // OpenAI is managed on its own page (key, delete, feature toggles), both
+    // before and after it is connected.
+    if (item.id === "CHATGPT") {
+      openOpenAI();
+      return;
+    }
+    if (item.id === "ANTHROPIC" || item.id === "GOOGLE" || item.id === "DEEPSEEK") {
+      openProvider(item.id);
+      return;
+    }
     const existing = integrationsData?.integrations?.find((i: any) => i.type === item.id);
     if (existing) {
       toast({ title: t("integrations_section.toast_active_session_title"), description: t("integrations_section.toast_already_operational_description", { name: item.name }) });
@@ -234,6 +280,11 @@ export default function IntegrationsSection() {
 
   const currentConnecting = staticIntegrations.find((i) => i.id === connectingId);
   const connectedCount = integrationsData?.integrations?.length || 0;
+
+  const viewType = view ? AI_PROVIDER_VIEWS[view] : undefined;
+  if (viewType && hasAnyPerm(_intPerms, [INTEGRATION_PERMS[viewType]])) {
+    return <OpenAIIntegrationView key={viewType} type={viewType} onBack={closeSubView} />;
+  }
 
   if (isLoading) {
     return (

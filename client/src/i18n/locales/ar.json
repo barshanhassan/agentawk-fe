@@ -3015,6 +3015,18 @@
             "placeholder": "أدخل رمز Baserow"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "أدخل واجهة Anthropic البرمجية للحصول على ردود ذكاء اصطناعي أكثر ملاءمة."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "أدخل واجهة Google Gemini البرمجية للحصول على ردود أكثر ملاءمة ودقة."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "أدخل واجهة DeepSeek البرمجية للحصول على ردود أكثر ملاءمة ودقة."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "الأدوار والصلاحيات",
       "teams": "الفرق",
       "conversation_channels": "قنوات المحادثة",
-      "ai_chat_assistants": "مساعدو الدردشة بالذكاء الاصطناعي",
-      "ai_voice_assistants": "مساعدو الصوت بالذكاء الاصطناعي",
-      "ai_knowledge_base": "قاعدة المعرفة بالذكاء الاصطناعي",
-      "ai_report_builder": "منشئ التقارير بالذكاء الاصطناعي",
+      "ai_chat_assistants": "مساعدو الدردشة",
+      "ai_voice_assistants": "المساعدون الصوتيون",
+      "ai_knowledge_base": "قاعدة المعرفة",
+      "ai_report_builder": "منشئ التقارير",
       "connect": "الاتصال",
       "integrations": "التكاملات",
       "customization": "التخصيص",
@@ -5777,7 +5789,8 @@
       "quick_replies": "الردود السريعة",
       "media_gallery": "معرض الوسائط",
       "developer_settings": "إعدادات المطور",
-      "change_password": "تغيير كلمة المرور"
+      "change_password": "تغيير كلمة المرور",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "فشل إرسال هذه الرسالة. لم يقدم WhatsApp أي تفاصيل إضافية.",
     "wa_failed_internal": "فشل إرسال هذه الرسالة بسبب مشكلة في التسليم من جانبنا. يرجى المحاولة مرة أخرى.",
     "generic_failed": "فشل إرسال هذه الرسالة."
+  },
+  "openai_integration": {
+    "eyebrow": "التكاملات",
+    "title": "OpenAI",
+    "back": "رجوع",
+    "payment_notice": "لضمان العمل بشكل صحيح، يجب ربط بطاقتك الائتمانية بحسابك في OpenAI Playground.",
+    "payment_link": "سجّل الدخول إلى حسابك الآن",
+    "api_key_label": "مفتاح API",
+    "required_field": "هذا الحقل مطلوب",
+    "save": "حفظ",
+    "delete": "حذف",
+    "toast_saved": "تم حفظ بيانات API بنجاح",
+    "toast_updated": "تم التحديث بنجاح",
+    "toast_deleted": "تم حذف التكامل بنجاح",
+    "toast_invalid_key": "مفتاح API غير صالح",
+    "toast_error_title": "عذرًا",
+    "confirm_title": "هل أنت متأكد؟",
+    "confirm_description": "هل أنت متأكد أنك تريد الحذف؟",
+    "confirm_cancel": "إلغاء",
+    "confirm_ok": "نعم",
+    "chatgpt_title": "ذكاء اصطناعي مخصص",
+    "chatgpt_description": "فعّل هذه الميزة لإنشاء ردود ذكاء اصطناعي مخصصة لاحتياجات عملك، مع إجابات دقيقة على مدار الساعة دون عناء.",
+    "whisper_title": "Whisper - تحويل الصوت إلى نص",
+    "whisper_description": "فعّل هذه الميزة لتحويل الرسائل الصوتية الواردة إلى نص، مما يتيح لك أتمتة التعامل مع التواصل الصوتي بسهولة.",
+    "whisper_outgoing_title": "Whisper - تحويل الصوت الصادر إلى نص (الدردشة المباشرة)",
+    "whisper_outgoing_description": "فعّل هذه الميزة لتحويل الرسائل الصوتية الصادرة من الدردشة المباشرة إلى نص.",
+    "vision_title": "Vision - التعرف على الصور",
+    "vision_description": "نقدّم نماذج OpenAI المتقدمة — GPT-4o وGPT-4o mini وGPT-4 Turbo — الآن مع قدرات \"Vision\" المتطورة. لا تفهم هذه النماذج النص فحسب، بل تحلل الصور أيضًا وتقدم إجابات مفيدة.",
+    "voice_calls_title": "مكالمات صوتية بالذكاء الاصطناعي",
+    "voice_calls_description": "فعّل هذه الميزة لإنشاء وكلاء ذكاء اصطناعي صوتيين للمكالمات وأدوات صوتية لموقعك الإلكتروني تناسب احتياجات عملائك.",
+    "gate_missing_title": "تعذّر إنشاء مساعد ذكاء اصطناعي",
+    "gate_missing_description": "لإنشاء مساعد ذكاء اصطناعي جديد، يجب ربط واجهة ChatGPT البرمجية بمساحة عملك.",
+    "gate_create_key_link": "أنشئ مفتاح API جديدًا على OpenAI",
+    "gate_disabled_title": "تكامل ChatGPT معطّل حاليًا.",
+    "gate_disabled_description": "يرجى الانتقال إلى قسم التكاملات وتفعيل ChatGPT ثم المحاولة مرة أخرى.",
+    "gate_premium_title": "هذه ميزة مميزة",
+    "gate_premium_description": "يرجى ترقية خطة الفوترة لتفعيل هذه الميزة.",
+    "gate_free_limit": "يُسمح ببوت واحد فقط في الحساب المجاني.",
+    "gate_go_integrations": "الانتقال إلى التكاملات",
+    "gate_close": "إغلاق",
+    "voice_calls_disabled_title": "المكالمات الصوتية بالذكاء الاصطناعي معطّلة",
+    "voice_calls_disabled_description": "المكالمات الصوتية بالذكاء الاصطناعي معطّلة في إعدادات التكامل. فعّلها أولًا قبل إنشاء الوكلاء."
   }
 }

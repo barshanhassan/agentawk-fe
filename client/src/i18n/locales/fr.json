@@ -3015,6 +3015,18 @@
             "placeholder": "Saisissez le jeton Baserow"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Saisissez votre API Anthropic pour des réponses IA plus personnalisées."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Saisissez votre API Google Gemini pour des réponses plus personnalisées et précises."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "Saisissez votre API DeepSeek pour des réponses plus personnalisées et précises."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "Rôles et autorisations",
       "teams": "Équipes",
       "conversation_channels": "Canaux de conversation",
-      "ai_chat_assistants": "Assistants de chat IA",
-      "ai_voice_assistants": "Assistants vocaux IA",
-      "ai_knowledge_base": "Base de connaissances IA",
-      "ai_report_builder": "Générateur de rapports IA",
+      "ai_chat_assistants": "Assistants de chat",
+      "ai_voice_assistants": "Assistants vocaux",
+      "ai_knowledge_base": "Base de connaissances",
+      "ai_report_builder": "Générateur de rapports",
       "connect": "Connecter",
       "integrations": "Intégrations",
       "customization": "Personnalisation",
@@ -5777,7 +5789,8 @@
       "quick_replies": "Réponses rapides",
       "media_gallery": "Galerie multimédia",
       "developer_settings": "Paramètres développeur",
-      "change_password": "Changer le mot de passe"
+      "change_password": "Changer le mot de passe",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "L'envoi de ce message a échoué. WhatsApp n'a fourni aucun détail supplémentaire.",
     "wa_failed_internal": "L'envoi de ce message a échoué en raison d'un problème de livraison de notre côté. Veuillez réessayer.",
     "generic_failed": "L'envoi de ce message a échoué."
+  },
+  "openai_integration": {
+    "eyebrow": "Intégrations",
+    "title": "OpenAI",
+    "back": "Retour",
+    "payment_notice": "Pour un bon fonctionnement, votre carte bancaire doit être liée à votre compte OpenAI Playground.",
+    "payment_link": "Connectez-vous à votre compte maintenant",
+    "api_key_label": "Clé API",
+    "required_field": "Ce champ est obligatoire",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "toast_saved": "Identifiants API enregistrés avec succès",
+    "toast_updated": "Mis à jour avec succès",
+    "toast_deleted": "Intégration supprimée avec succès",
+    "toast_invalid_key": "Clé API invalide",
+    "toast_error_title": "Oups",
+    "confirm_title": "Êtes-vous sûr ?",
+    "confirm_description": "Voulez-vous vraiment supprimer ?",
+    "confirm_cancel": "Annuler",
+    "confirm_ok": "Oui",
+    "chatgpt_title": "IA personnalisée",
+    "chatgpt_description": "Activez cette fonctionnalité pour créer des réponses IA personnalisées adaptées aux besoins de votre entreprise, avec des réponses précises 24 h/24, sans effort.",
+    "whisper_title": "Whisper - Audio vers texte",
+    "whisper_description": "Activez cette fonctionnalité pour transcrire automatiquement en texte les messages audio entrants et automatiser facilement le traitement des communications audio.",
+    "whisper_outgoing_title": "Whisper - Audio sortant vers texte (Live Chat)",
+    "whisper_outgoing_description": "Activez cette fonctionnalité pour transcrire en texte les messages audio sortants envoyés depuis le Live Chat.",
+    "vision_title": "Vision - Reconnaissance d'images",
+    "vision_description": "Nous proposons les modèles de pointe d'OpenAI — GPT-4o, GPT-4o mini et GPT-4 Turbo — désormais dotés de capacités « Vision » avancées. Ces modèles comprennent le texte mais analysent aussi les images et fournissent des réponses pertinentes, pour porter votre expérience IA à un tout autre niveau.",
+    "voice_calls_title": "Appels vocaux IA",
+    "voice_calls_description": "Activez cette fonctionnalité pour créer facilement vos propres agents vocaux IA pour les appels et des widgets vocaux de site web adaptés aux besoins de vos clients.",
+    "gate_missing_title": "Impossible de créer un assistant IA",
+    "gate_missing_description": "Pour créer un nouvel assistant IA, vous devez intégrer votre API ChatGPT à votre espace de travail.",
+    "gate_create_key_link": "Créer une nouvelle clé API sur OpenAI",
+    "gate_disabled_title": "L'intégration ChatGPT est actuellement désactivée.",
+    "gate_disabled_description": "Rendez-vous dans la section Intégrations, activez ChatGPT, puis réessayez.",
+    "gate_premium_title": "Ceci est une fonctionnalité premium",
+    "gate_premium_description": "Veuillez passer à un forfait supérieur pour intégrer cette fonctionnalité.",
+    "gate_free_limit": "Un seul bot est autorisé sur un compte gratuit.",
+    "gate_go_integrations": "Aller aux intégrations",
+    "gate_close": "Fermer",
+    "voice_calls_disabled_title": "Les appels vocaux IA sont désactivés",
+    "voice_calls_disabled_description": "Les appels vocaux IA sont désactivés dans les paramètres de l'intégration. Activez-les avant de créer des agents."
   }
 }

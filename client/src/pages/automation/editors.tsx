@@ -195,13 +195,25 @@ export function PrimitiveField({ field, value, onChange, contextual }: Primitive
           labelKey="name"
         />
       );
+    case "ai-studio-assistant":
+      return <AiStudioAssistantSelector value={value} onChange={onChange} />;
     case "ai-voice-agent":
       return (
         <RemoteSelector
           value={value}
           onChange={onChange}
-          url="/api/ai/voice-agents"
+          url="/api/ai/voice-agent"
           listKey="agents"
+          labelKey="name"
+        />
+      );
+    case "report":
+      return (
+        <RemoteSelector
+          value={value}
+          onChange={onChange}
+          url="/api/reports?select=id&select=name"
+          listKey="reports"
           labelKey="name"
         />
       );
@@ -445,6 +457,60 @@ function RemoteSelector({
         {list.map((item: any) => (
           <SelectItem key={item.id} value={String(item.id)}>
             {item[labelKey] ?? item.name ?? `#${item.id}`}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+/**
+ * replyagent AI Studio question → assistant picker: only ACTIVE assistants,
+ * with their provider logo, stored as `{ id, name, provider }`.
+ */
+function AiStudioAssistantSelector({
+  value,
+  onChange,
+}: {
+  value: any;
+  onChange: (v: any) => void;
+}) {
+  const { t } = useTranslation();
+  const { data } = useQuery({
+    queryKey: ["/api/ai-studio/chat-assistants", "active"],
+    queryFn: async () => {
+      try {
+        return await apiGet("/api/ai-studio/chat-assistants");
+      } catch {
+        return { agents: { data: [] } };
+      }
+    },
+    retry: false,
+  });
+  const list: any[] = (data?.agents?.data ?? []).filter((a: any) => a.status === "ACTIVE");
+  return (
+    <Select
+      value={value?.id != null ? String(value.id) : ""}
+      onValueChange={(id) => {
+        const a = list.find((x) => String(x.id) === id);
+        if (a) onChange({ id: a.id, name: a.name, provider: a.provider });
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder={t("automation_editors.common.choose_ellipsis")} />
+      </SelectTrigger>
+      <SelectContent>
+        {list.length === 0 && (
+          <SelectItem value="__none__" disabled>
+            {t("automation_editors.common.no_options")}
+          </SelectItem>
+        )}
+        {list.map((a) => (
+          <SelectItem key={a.id} value={String(a.id)}>
+            <span className="flex items-center gap-2">
+              <img src={`/images/ai-providers/${a.provider}.svg`} alt="" className="h-4 w-4" />
+              {a.name}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>
@@ -774,7 +840,7 @@ export function ChannelEditor({
   const waSendWindowOptions = useWaSendWindowOptions();
   const types = getMessageTypes(channel);
   const activeType: string | undefined = value?.type;
-  const activeTypeSchema = activeType ? getMessageType(channel, activeType) : null;
+  const activeTypeSchema = activeType ? getMessageType(channel, activeType, value?.variant) : null;
 
   const isWaFamily = ["whatsapp", "zapi", "evolution"].includes(channel);
   const sendWindow: string = value?.send_window ?? "in_24";
@@ -786,7 +852,7 @@ export function ChannelEditor({
         <button
           type="button"
           className="text-emerald-700 text-sm flex items-center gap-1 hover:underline"
-          onClick={() => onChange({ ...(value ?? {}), type: undefined })}
+          onClick={() => onChange({ ...(value ?? {}), type: undefined, variant: undefined })}
         >
           <ArrowLeftIcon className="h-3 w-3" />
           {t("automation_editors.channel_editor.back_to_message_types")}
@@ -835,10 +901,10 @@ export function ChannelEditor({
       <div className="grid grid-cols-2 gap-2">
         {types.map((mt) => (
           <button
-            key={mt.type}
+            key={`${mt.type}:${mt.variant ?? ""}`}
             type="button"
             className="border rounded-md p-3 hover:bg-muted/40 flex items-center gap-2 text-sm text-left"
-            onClick={() => onChange({ ...(value ?? {}), type: mt.type })}
+            onClick={() => onChange({ ...(value ?? {}), type: mt.type, variant: mt.variant })}
           >
             <span className="text-slate-600">{TYPE_ICON_MAP[mt.type] ?? <TypeIcon className="h-4 w-4" />}</span>
             <span>{mt.label}</span>

@@ -3015,6 +3015,18 @@
             "placeholder": "输入 Baserow 令牌"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "输入您的 Anthropic API，获得更贴合需求的 AI 回复。"
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "输入您的 Google Gemini API，获得更贴合、更准确的回复。"
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "输入您的 DeepSeek API，获得更贴合、更准确的回复。"
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "角色与权限",
       "teams": "团队",
       "conversation_channels": "会话渠道",
-      "ai_chat_assistants": "AI聊天助手",
-      "ai_voice_assistants": "AI语音助手",
-      "ai_knowledge_base": "AI知识库",
-      "ai_report_builder": "AI报告生成器",
+      "ai_chat_assistants": "聊天助手",
+      "ai_voice_assistants": "语音助手",
+      "ai_knowledge_base": "知识库",
+      "ai_report_builder": "报告生成器",
       "connect": "连接",
       "integrations": "集成",
       "customization": "自定义",
@@ -5777,7 +5789,8 @@
       "quick_replies": "快捷回复",
       "media_gallery": "媒体库",
       "developer_settings": "开发者设置",
-      "change_password": "修改密码"
+      "change_password": "修改密码",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "此消息发送失败。WhatsApp 未提供更多详细信息。",
     "wa_failed_internal": "由于我们这边的发送问题，此消息发送失败。请重试。",
     "generic_failed": "此消息发送失败。"
+  },
+  "openai_integration": {
+    "eyebrow": "集成",
+    "title": "OpenAI",
+    "back": "返回",
+    "payment_notice": "为确保正常使用，您的信用卡必须绑定到 OpenAI Playground 账户。",
+    "payment_link": "立即登录您的账户",
+    "api_key_label": "API 密钥",
+    "required_field": "此字段为必填项",
+    "save": "保存",
+    "delete": "删除",
+    "toast_saved": "API 凭据保存成功",
+    "toast_updated": "更新成功",
+    "toast_deleted": "集成已成功删除",
+    "toast_invalid_key": "API 密钥无效",
+    "toast_error_title": "出错了",
+    "confirm_title": "确定吗？",
+    "confirm_description": "确定要删除吗？",
+    "confirm_cancel": "取消",
+    "confirm_ok": "确定",
+    "chatgpt_title": "自定义 AI",
+    "chatgpt_description": "启用此功能，根据您的业务需求打造个性化 AI 回复，全天候轻松提供准确答案。",
+    "whisper_title": "Whisper - 语音转文字",
+    "whisper_description": "启用此功能，将收到的语音消息自动转写为文字，轻松实现语音沟通自动化。",
+    "whisper_outgoing_title": "Whisper - 发出语音转文字（在线聊天）",
+    "whisper_outgoing_description": "启用此功能，将在线聊天中发出的语音消息转写为文字。",
+    "vision_title": "Vision - 图像识别",
+    "vision_description": "我们提供 OpenAI 的前沿模型——GPT-4o、GPT-4o mini 和 GPT-4 Turbo，现已具备先进的“Vision”能力。这些模型不仅能理解文字，还能分析图像并给出有见地的回答。",
+    "voice_calls_title": "AI 语音通话",
+    "voice_calls_description": "启用此功能，即可为通话和网站语音组件轻松构建符合客户业务需求的语音 AI 代理。",
+    "gate_missing_title": "无法创建 AI 助手",
+    "gate_missing_description": "要创建新的 AI 助手，必须先将 ChatGPT API 集成到您的工作区。",
+    "gate_create_key_link": "在 OpenAI 上创建新的 API 密钥",
+    "gate_disabled_title": "ChatGPT 集成当前已停用。",
+    "gate_disabled_description": "请前往“集成”页面启用 ChatGPT，然后重试。",
+    "gate_premium_title": "这是高级功能",
+    "gate_premium_description": "请升级您的计费方案以使用此功能。",
+    "gate_free_limit": "免费账户只能创建一个机器人。",
+    "gate_go_integrations": "前往集成",
+    "gate_close": "关闭",
+    "voice_calls_disabled_title": "AI 语音通话已停用",
+    "voice_calls_disabled_description": "AI 语音通话已在集成设置中停用。请先启用，再创建代理。"
   }
 }

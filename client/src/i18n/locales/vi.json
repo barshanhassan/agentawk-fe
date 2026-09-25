@@ -3015,6 +3015,18 @@
             "placeholder": "Nhập Token Baserow"
           }
         }
+      },
+      "ANTHROPIC": {
+        "name": "Anthropic",
+        "description": "Nhập API Anthropic để có câu trả lời AI phù hợp hơn."
+      },
+      "GOOGLE": {
+        "name": "Google Gemini",
+        "description": "Nhập API Google Gemini để có câu trả lời phù hợp và chính xác hơn."
+      },
+      "DEEPSEEK": {
+        "name": "DeepSeek",
+        "description": "Nhập API DeepSeek để có câu trả lời phù hợp và chính xác hơn."
       }
     }
   },
@@ -5764,10 +5776,10 @@
       "roles_permissions": "Vai trò & Quyền",
       "teams": "Nhóm",
       "conversation_channels": "Kênh trò chuyện",
-      "ai_chat_assistants": "Trợ lý trò chuyện AI",
-      "ai_voice_assistants": "Trợ lý giọng nói AI",
-      "ai_knowledge_base": "Cơ sở kiến thức AI",
-      "ai_report_builder": "Trình tạo báo cáo AI",
+      "ai_chat_assistants": "Trợ lý chat",
+      "ai_voice_assistants": "Trợ lý giọng nói",
+      "ai_knowledge_base": "Cơ sở tri thức",
+      "ai_report_builder": "Trình tạo báo cáo",
       "connect": "Kết nối",
       "integrations": "Tích hợp",
       "customization": "Tùy chỉnh",
@@ -5777,7 +5789,8 @@
       "quick_replies": "Trả lời nhanh",
       "media_gallery": "Thư viện phương tiện",
       "developer_settings": "Cài đặt nhà phát triển",
-      "change_password": "Đổi mật khẩu"
+      "change_password": "Đổi mật khẩu",
+      "ai_studio": "AI Studio"
     }
   },
   "login_page": {
@@ -8187,5 +8200,47 @@
     "wa_failed_no_detail": "Tin nhắn này gửi không thành công. WhatsApp không cung cấp thêm chi tiết nào.",
     "wa_failed_internal": "Tin nhắn này gửi không thành công do sự cố gửi từ phía chúng tôi. Vui lòng thử lại.",
     "generic_failed": "Tin nhắn này gửi không thành công."
+  },
+  "openai_integration": {
+    "eyebrow": "Tích hợp",
+    "title": "OpenAI",
+    "back": "Quay lại",
+    "payment_notice": "Để hoạt động đúng, thẻ tín dụng của bạn phải được liên kết với tài khoản OpenAI Playground.",
+    "payment_link": "Đăng nhập vào tài khoản ngay",
+    "api_key_label": "Khóa API",
+    "required_field": "Trường này là bắt buộc",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "toast_saved": "Đã lưu thông tin API thành công",
+    "toast_updated": "Cập nhật thành công",
+    "toast_deleted": "Đã xóa tích hợp thành công",
+    "toast_invalid_key": "Khóa API không hợp lệ",
+    "toast_error_title": "Rất tiếc",
+    "confirm_title": "Bạn có chắc không?",
+    "confirm_description": "Bạn có chắc chắn muốn xóa?",
+    "confirm_cancel": "Hủy",
+    "confirm_ok": "Chắc chắn",
+    "chatgpt_title": "AI tùy chỉnh",
+    "chatgpt_description": "Bật tính năng này để tạo câu trả lời AI được cá nhân hóa theo nhu cầu doanh nghiệp, trả lời chính xác suốt ngày đêm một cách dễ dàng.",
+    "whisper_title": "Whisper - Âm thanh thành văn bản",
+    "whisper_description": "Bật tính năng này để chuyển tin nhắn thoại đến thành văn bản, giúp tự động hóa việc xử lý giao tiếp bằng âm thanh.",
+    "whisper_outgoing_title": "Whisper - Âm thanh gửi đi thành văn bản (Live Chat)",
+    "whisper_outgoing_description": "Bật tính năng này để chuyển tin nhắn thoại gửi đi từ Live Chat thành văn bản.",
+    "vision_title": "Vision - Nhận dạng hình ảnh",
+    "vision_description": "Chúng tôi cung cấp các mô hình tiên tiến của OpenAI — GPT-4o, GPT-4o mini và GPT-4 Turbo — nay có khả năng \"Vision\" nâng cao. Các mô hình này không chỉ hiểu văn bản mà còn phân tích hình ảnh và đưa ra câu trả lời sâu sắc.",
+    "voice_calls_title": "Cuộc gọi thoại AI",
+    "voice_calls_description": "Bật tính năng này để dễ dàng xây dựng các tác nhân AI giọng nói cho cuộc gọi và widget giọng nói trên website phù hợp với nhu cầu khách hàng.",
+    "gate_missing_title": "Không thể tạo trợ lý AI",
+    "gate_missing_description": "Để tạo trợ lý AI mới, bạn phải tích hợp API ChatGPT vào không gian làm việc.",
+    "gate_create_key_link": "Tạo khóa API mới trên OpenAI",
+    "gate_disabled_title": "Tích hợp ChatGPT hiện đang bị tắt.",
+    "gate_disabled_description": "Vui lòng vào mục Tích hợp, bật ChatGPT rồi thử lại.",
+    "gate_premium_title": "Đây là tính năng cao cấp",
+    "gate_premium_description": "Vui lòng nâng cấp gói thanh toán để tích hợp tính năng này.",
+    "gate_free_limit": "Tài khoản miễn phí chỉ được phép có một bot.",
+    "gate_go_integrations": "Đi tới Tích hợp",
+    "gate_close": "Đóng",
+    "voice_calls_disabled_title": "Cuộc gọi thoại AI đang bị tắt",
+    "voice_calls_disabled_description": "Cuộc gọi thoại AI đang bị tắt trong cài đặt tích hợp. Hãy bật trước khi tạo tác nhân."
   }
 }
