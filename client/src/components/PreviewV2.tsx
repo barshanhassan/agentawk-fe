@@ -283,7 +283,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
     }
   }, [bodyText, headerText, footerText, selectedMediaFile, templateButtons]);
 
-  const mobilePadding = 30;
+  const mobilePadding = 14;
 
   const whiteContentDiv = (
     <div className='flex flex-col flex-grow rounded-[14px] -m-px'
@@ -295,24 +295,24 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       }}
     >
       {showTopBar && (
-        <div className='relative w-full h-[30px] shrink-0 flex items-center justify-center'>
-          {/* Dynamic Island — floats directly on the phone bezel, no status-bar strip behind it */}
-          <div className="w-[90px] h-[24px] bg-black rounded-full" />
+        <div className="relative w-full h-[30px] shrink-0 bg-black rounded-t-[14px] flex items-center justify-end gap-1 px-5">
+          <div className="w-1 h-1 rounded-full bg-white opacity-80" />
+          <div className="w-1 h-1 rounded-full bg-white opacity-80" />
         </div>
       )}
 
       {mode === 'chat' && (
         <>
-          <div className={`w-full max-h-[72px] h-full bg-white -mt-px flex items-center justify-between px-[16px] rounded-t-[14px]`} style={{ boxShadow: 'inset 0 -3px 0 0 #e6e6e6' }}>
+          <div className={`w-full max-h-[72px] h-full bg-[#075E54] -mt-px flex items-center justify-between px-[16px] ${showTopBar ? '' : 'rounded-t-[14px]'}`}>
             <div className="flex items-center">
-              <ArrowLeft size={24} color="#111B21" />
+              <ArrowLeft size={24} color="#ffffff" />
               <img src={profilePfpUrl} className="ml-[10px] mr-[9px] w-[40px] h-[40px] bg-gray-300 rounded-full object-cover" alt={t("preview_v2.profile_picture_alt")} />
               <div className="flex flex-col">
-                <span className="text-[19px] font-semibold truncate max-w-[230px] text-[#111B21]">{resolvedProfileName}</span>
-                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px] text-[#111B21]">{resolvedProfileSubText}</span>
+                <span className="text-[19px] font-semibold truncate max-w-[230px] text-white">{resolvedProfileName}</span>
+                <span className="text-[15px] mt-[-3.5px] truncate max-w-[230px] text-white opacity-80">{resolvedProfileSubText}</span>
               </div>
             </div>
-            <MoreVertical size={24} />
+            <MoreVertical size={24} color="#ffffff" />
           </div>
           <div
             ref={chatAreaRef}
@@ -563,7 +563,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       {mode === 'profile' && (
         <>
           <div className={`pb-[30px] w-full h-full bg-white -mt-px px-[16px] overflow-y-auto overflow-x-hidden flex flex-col scrollbar-hide ${!showBottomBar ? 'rounded-b-[14px]' : ''}`}>
-            <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between rounded-t-[14px]`}>
+            <div className={`pt-[24px] w-full h-fit bg-white -mt-px flex items-start justify-between ${showTopBar ? '' : 'rounded-t-[14px]'}`}>
               <ArrowLeft size={24} />
               <img src={profilePfpUrl} className="w-[130px] h-[130px] rounded-full object-cover" alt={t("preview_v2.profile_alt")} />
               <MoreVertical size={24} />
@@ -687,7 +687,7 @@ const PreviewV2: React.FC<PreviewV2Props> = ({
       >
         <div className='flex p-[0px] h-full w-full'>
           {showMobile ? (
-            <div className={`flex flex-grow bg-black rounded-[24px]`} style={{ padding: `${mobilePadding}px` }}>
+            <div className={`flex flex-grow bg-black rounded-[40px]`} style={{ padding: `${mobilePadding}px` }}>
               {whiteContentDiv}
             </div>
           ) : (

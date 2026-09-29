@@ -215,6 +215,9 @@ interface BackendConversation {
   modelable_type?: string;
   is_assigned?: number | boolean;
   folder_id?: number | string | null;
+  // WhatsApp per-row badge data (M19) — which number the chat belongs to + opt-in.
+  phoneNumber?: string | null;
+  has_opted_in?: boolean;
 }
 
 interface BackendMessage {
@@ -2422,7 +2425,7 @@ export default function ConversationsInbox() {
       const footerComp = components.find((c: any) => c.type === "FOOTER");
       const buttonsComp = components.find((c: any) => c.type === "BUTTONS");
       const bodyText: string = bodyComp?.text || "";
-      const varMatches = [...bodyText.matchAll(/\{\{(\d+)\}\}/g)];
+      const varMatches = Array.from(bodyText.matchAll(/\{\{(\d+)\}\}/g));
       const variables = varMatches.map((m) => m[1]);
       const buttons = (buttonsComp?.buttons || []).map((b: any, bi: number) => {
         if (b.type === "QUICK_REPLY") return { id: bi + 1, type: "quick-reply", buttonText: b.text };
@@ -2525,7 +2528,7 @@ export default function ConversationsInbox() {
 
     // Backend profile-action expects tag NAME — resolve from tagOptions
     for (const tagId of added) {
-      const tagName = tagOptions.find((t) => t.id === tagId)?.name;
+      const tagName = tagOptions.find((t: { id: string; name: string }) => t.id === tagId)?.name;
       if (!tagName) continue;
       try {
         await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "apply_tag", tag: tagName });
@@ -2534,7 +2537,7 @@ export default function ConversationsInbox() {
       }
     }
     for (const tagId of removed) {
-      const tagName = tagOptions.find((t) => t.id === tagId)?.name;
+      const tagName = tagOptions.find((t: { id: string; name: string }) => t.id === tagId)?.name;
       if (!tagName) continue;
       try {
         await apiRequest("POST", `/api/inbox/profile-action/${selectedConversation}`, { action: "remove_tag", tag: tagName });
@@ -3180,14 +3183,14 @@ export default function ConversationsInbox() {
                     </DropdownMenu>
                   )}
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                     <Input
                       placeholder={
                         isSearchFocused
                           ? t("conversations_inbox.search.search_by", { field: (SEARCH_TYPES.find((st) => st.slug === searchType)?.name ?? t("conversations_inbox.search.name_fallback")).toLowerCase(), min: searchMinChars })
                           : t("conversations_inbox.search.placeholder")
                       }
-                      className="pl-10 border-input h-9 text-xs"
+                      className="pl-9 border-input h-9 text-xs rounded-xl"
                       data-testid="input-search"
                       onFocus={() => setIsSearchFocused(true)}
                       value={searchQuery}
@@ -3206,7 +3209,7 @@ export default function ConversationsInbox() {
                         onChange={setSelectedFilterAgents}
                         placeholder={t("conversations_inbox.search.agents")}
                         width="auto"
-                        className="h-9 w-9 px-[0.5rem] justify-center rounded-md bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                        className="h-9 w-9 px-[0.5rem] justify-center rounded-xl bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                         triggerContent={<User size={16} />}
                         popoutWidth="200px"
                         popoutAlign="left"
@@ -3232,7 +3235,7 @@ export default function ConversationsInbox() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 ${showFilter || filters.length > 0 ? 'bg-accent dark:bg-slate-700 text-primary' : ''}`}
+                            className={`h-9 w-9 rounded-xl bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 ${showFilter || filters.length > 0 ? 'bg-accent dark:bg-slate-700 text-primary' : ''}`}
                             onClick={() => setShowFilter(!showFilter)}
                           >
                             <Filter size={16} />
@@ -3253,7 +3256,7 @@ export default function ConversationsInbox() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                              className="h-9 w-9 rounded-xl bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                               data-testid="sort-trigger"
                             >
                               <ArrowUp size={16} style={{ transform: sortBy.order === "asc" ? "rotate(0deg)" : "rotate(180deg)" }} />
@@ -3289,7 +3292,7 @@ export default function ConversationsInbox() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
+                        className="h-9 w-9 rounded-xl bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700"
                         onClick={() => {
                           setSearchQuery("");
                           setIsSearchFocused(false);
@@ -3305,7 +3308,7 @@ export default function ConversationsInbox() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700">
                             <Plus size={16} />
                           </Button>
                         </DropdownMenuTrigger>
@@ -3337,7 +3340,7 @@ export default function ConversationsInbox() {
               <div className="flex items-center gap-2 px-4 py-1.5 border-b flex-shrink-0">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-input text-primary cursor-pointer"
+                  className="h-4 w-4 rounded-lg border-input text-primary cursor-pointer"
                   aria-label={t("conversations_inbox.list.select_all_aria")}
                   checked={
                     selectedInboxIds.length > 0 &&
@@ -3456,7 +3459,7 @@ export default function ConversationsInbox() {
                         <div className="self-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            className={`h-3.5 w-3.5 rounded border-input text-primary cursor-pointer transition-opacity ${
+                            className={`h-3.5 w-3.5 rounded-lg border-input text-primary cursor-pointer transition-opacity ${
                               selectedInboxIds.length > 0 || selectedInboxIds.includes(conv.id)
                                 ? "opacity-100"
                                 : "opacity-0 group-hover:opacity-100"
@@ -3690,7 +3693,7 @@ export default function ConversationsInbox() {
                             setFolderModalOpen(true);
                           }}
                         >
-                          <Plus size={13} /> {t("conversations_inbox.folders.new")}
+                          <Plus size={12} /> {t("conversations_inbox.folders.new")}
                         </DropdownMenuItem>
                       </div>
                     </DropdownMenuContent>
@@ -4003,7 +4006,7 @@ export default function ConversationsInbox() {
                                 separate floating icons. Opens quick-react emojis
                                 + Reply/Copy/Save as/Delete, whichever apply. */}
                             {selectedConversation && (
-                              <div className="absolute top-1 right-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity z-10">
+                              <div className="absolute top-0.5 right-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity z-10">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <button
@@ -5111,12 +5114,12 @@ export default function ConversationsInbox() {
             {makeCallTab === "search-contacts" && (
               <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     placeholder={t("conversations_inbox.dialogs.make_call.search_placeholder")}
                     value={searchContactsQuery}
                     onChange={(e) => setSearchContactsQuery(e.target.value)}
-                    className="border-input pl-9"
+                    className="border-input pl-9 rounded-xl"
                   />
                 </div>
 
@@ -5813,14 +5816,14 @@ export default function ConversationsInbox() {
                   placeholder={t("conversations_inbox.dialogs.quick_reply_picker.search_placeholder")}
                   value={quickReplySearch}
                   onChange={(e) => setQuickReplySearch(e.target.value)}
-                  className="pl-8 h-9"
+                  className="pl-9 h-9 rounded-xl"
                 />
               </div>
             </div>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden grid grid-cols-2 gap-6 min-h-0">
-            <div className="overflow-y-auto -ml-1 pr-1 divide-y max-h-[55vh]">
+            <div className="overflow-y-auto px-1 max-h-[55vh]">
               {quickReplyPickerCollectionId === null ? (
                 // ── Collections list ──
                 quickReplyCollections
@@ -5834,7 +5837,7 @@ export default function ConversationsInbox() {
                       <button
                         key={f.id}
                         onClick={() => { setQuickReplyPickerCollectionId(f.id); setQuickReplySearch(""); }}
-                        className="w-full text-left px-2 py-2.5 flex items-center gap-3 hover:bg-muted transition-colors"
+                        className="w-full text-left px-3 py-3 mb-1 rounded-xl flex items-center gap-3 hover:bg-muted transition-colors"
                         data-testid={`quick-reply-collection-${f.id}`}
                       >
                         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -5860,7 +5863,7 @@ export default function ConversationsInbox() {
                       key={c.id}
                       onClick={() => setSelectedCannedId(c.id)}
                       className={cn(
-                        "w-full text-left px-2 py-2.5 flex items-start gap-3 hover:bg-muted transition-colors",
+                        "w-full text-left px-3 py-3 mb-1 rounded-xl flex items-start gap-3 hover:bg-muted transition-colors",
                         selectedCannedId === c.id && "bg-primary/5",
                       )}
                       data-testid={`quick-reply-option-${c.id}`}
@@ -5888,7 +5891,7 @@ export default function ConversationsInbox() {
                 )}
             </div>
 
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center w-56 ml-auto">
               <div className="h-full max-h-[55vh] w-full max-w-[28vh]">
                 <PreviewV2
                   mode="chat"
