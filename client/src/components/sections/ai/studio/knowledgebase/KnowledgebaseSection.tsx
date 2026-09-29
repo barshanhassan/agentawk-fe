@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ChevronDown, ChevronUp, Download, ExternalLink, FileText, FolderOpen, Globe, Info, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, Book, ChevronDown, ChevronLeft, ChevronUp, Download, ExternalLink, FileText, FolderOpen, Globe, Info, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSocket } from "@/hooks/use-socket";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +20,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GalleryPickerDialog } from "@/components/contact-profile/sub-dialogs";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -50,6 +59,17 @@ const statusTag = (s: string) =>
 
 const emptyForm = () => ({ name: "", pending_files: [] as any[], website: "", website_content: "" });
 
+function Hint({ text, children }: { text: string; children: React.ReactNode }) {
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent className="text-xs">{text}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export default function KnowledgebaseSection() {
   const { t } = useTranslation();
   const ra = (k: string, o?: any) => t(`ai_studio.ra.${k}`, o) as string;
@@ -69,6 +89,9 @@ export default function KnowledgebaseSection() {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [toDelete, setToDelete] = useState<any | null>(null);
   const [viewing, setViewing] = useState<any | null>(null);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | KbType>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "PUBLISHED" | "FAILED" | "PENDING">("all");
 
   // ─── List: chat + voice, merged (chat first) ───────────────────────
   const listKey = ["ai-studio-knowledgebases-page"];
@@ -90,6 +113,22 @@ export default function KnowledgebaseSection() {
     queryClient.invalidateQueries({ queryKey: listKey });
     queryClient.invalidateQueries({ queryKey: ["/api/ai-studio/knowledgebases"] });
   };
+
+  // Stats always reflect the full list — mirrors Chat Assistants, whose
+  // AgentStats cards don't move when the search/filter fields change.
+  const stats = {
+    total: rows.length,
+    chat: rows.filter((r: any) => r.kb_type === "chat").length,
+    voice: rows.filter((r: any) => r.kb_type === "voice").length,
+    files: rows.reduce((sum: number, r: any) => sum + (r.text_files_count ?? 0) + (r.pdf_files_count ?? 0) + (r.website_files_count ?? 0), 0),
+  };
+  const hasFilters = !!(search || typeFilter !== "all" || statusFilter !== "all");
+  const filteredRows = rows.filter((kb: any) => {
+    if (search && !String(kb.name ?? "").toLowerCase().includes(search.toLowerCase())) return false;
+    if (typeFilter !== "all" && kb.kb_type !== typeFilter) return false;
+    if (statusFilter !== "all" && kb.status !== statusFilter) return false;
+    return true;
+  });
 
   // replyagent listens for `ai.knowledgebase` → `updated` (voice knowledge bases being published).
   const workspaceId = user.workspace_id ?? user.modelable_id;
@@ -205,35 +244,114 @@ export default function KnowledgebaseSection() {
 
   // ─── Layout ────────────────────────────────────────────────────────
 
-  const card = "rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
-  const label = "block text-[13px] font-semibold mb-1.5";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const label = "block text-[11px] font-semibold mb-1.5";
 
   return (
     <div className={card}>
       <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <img src="/images/ai-studio.png" alt="" className="h-14 w-14 rounded-xl" />
+          {mode !== "LIST" && (
+            <button type="button" onClick={cancel} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+              <ChevronLeft size={20} />
+            </button>
+          )}
+          <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+            <Book className="w-5 h-5 text-primary" />
+          </div>
           <div>
-            <h1 className="text-[16px] font-bold">{ra("ai.knowledgebase")}</h1>
-            <p className="text-[12px] text-slate-500">{ra("ai.knowledgebase_subtitle")}</p>
+            <h1 className="text-[16px] font-bold tracking-tight">{ra("ai.knowledgebase")}</h1>
+            <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{ra("ai.knowledgebase_subtitle")}</p>
           </div>
         </div>
-        {mode === "LIST" ? (
-          canCreate && <CreateMenu onPick={create} ra={ra} />
-        ) : (
-          <button type="button" onClick={cancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-            {ra("back")}
-          </button>
-        )}
+        {mode === "LIST" && canCreate && <CreateMenu onPick={create} ra={ra} />}
       </div>
 
       {mode === "LIST" && (
-        <div className="p-8">
+        <>
+        <div className="px-6 py-3 border-b dark:border-slate-800">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="relative w-full md:w-72">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={ra("ai.search_kb_placeholder")}
+                className="w-full h-9 rounded-xl border pl-9 pr-3 text-[13px] bg-white dark:bg-slate-950/50 dark:border-slate-800 outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="w-full sm:w-32">
+                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+                  <SelectTrigger className="h-9 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{ra("ai.all_types")}</SelectItem>
+                    <SelectItem value="chat">{ra("ai_studio.knowledgebase.for_chat_assistants")}</SelectItem>
+                    <SelectItem value="voice">{ra("ai_studio.knowledgebase.for_voice_assistants")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full sm:w-32">
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+                  <SelectTrigger className="h-9 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{ra("ai.all_kb_status")}</SelectItem>
+                    <SelectItem value="PUBLISHED">{ra("published")}</SelectItem>
+                    <SelectItem value="FAILED">{ra("failed")}</SelectItem>
+                    <SelectItem value="PENDING">{ra("pending")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={() => { setSearch(""); setTypeFilter("all"); setStatusFilter("all"); }}
+                  className="h-9 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-1.5 hover:border-primary/40 hover:text-primary dark:border-slate-800"
+                >
+                  <X size={12} /> {t("ai_studio.clear")}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-3 border-b dark:border-slate-800">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: ra("ai.total_knowledgebases"), tip: ra("ai.total_knowledgebases_tooltip"), value: stats.total },
+              { label: ra("ai.chat_kbs"), tip: ra("ai.chat_kbs_tooltip"), value: stats.chat },
+              { label: ra("ai.voice_kbs"), tip: ra("ai.voice_kbs_tooltip"), value: stats.voice },
+              { label: ra("ai.total_files"), tip: ra("ai.total_files_tooltip"), value: stats.files },
+            ].map((c) => (
+              <div key={c.label} className="rounded-2xl border bg-white dark:bg-slate-900/40 dark:border-slate-800 px-4 py-3">
+                <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500">
+                  {c.label}
+                  <Hint text={c.tip}>
+                    <Info size={12} className="cursor-help" />
+                  </Hint>
+                </div>
+                <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white">{c.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-1.5 text-[12px] text-slate-500">
+            <Hint text={ra("ai.kb_stats_tooltip")}>
+              <Info size={12} className="cursor-help" />
+            </Hint>
+            {ra("ai.kb_stats_info")}
+          </div>
+        </div>
+
+        <div className="p-6">
           {isLoading ? (
             <div className="py-10 flex justify-center">
-              <Loader2 className="animate-spin text-slate-400" />
+              <LoadingSpinner size={32} />
             </div>
-          ) : rows.length > 0 ? (
+          ) : filteredRows.length > 0 ? (
             <div className="rounded-2xl border dark:border-slate-800 overflow-x-auto">
               <table className="w-full text-[13px]">
                 <thead className="text-[11px] uppercase tracking-wide text-slate-500 border-b dark:border-slate-800">
@@ -245,7 +363,7 @@ export default function KnowledgebaseSection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((kb: any) => (
+                  {filteredRows.map((kb: any) => (
                     <tr key={`${kb.kb_type}-${kb.id}`} className="border-t dark:border-slate-800">
                       <td className="px-5 py-3.5 break-words">
                         {kb.kb_type === "chat" ? (
@@ -283,19 +401,32 @@ export default function KnowledgebaseSection() {
                 </tbody>
               </table>
             </div>
+          ) : hasFilters ? (
+            <div className="py-12 flex flex-col items-center text-center">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/15 text-primary flex items-center justify-center">
+                <Book size={24} />
+              </div>
+              <h3 className="mt-4 text-[15px] font-bold">{ra("ai.no_kb_match")}</h3>
+              <p className="mt-1.5 max-w-md text-[12px] text-slate-500">{ra("ai.no_kb_match_desc")}</p>
+              <button
+                type="button"
+                onClick={() => { setSearch(""); setTypeFilter("all"); setStatusFilter("all"); }}
+                className="mt-5 h-10 px-5 rounded-xl border text-[11px] font-semibold dark:border-slate-800"
+              >
+                {t("ai_studio.clear")}
+              </button>
+            </div>
           ) : (
             <div className="py-12 flex flex-col items-center text-center">
-              <img src="/images/ai-studio.png" alt="" className="h-12 w-12 rounded-xl" />
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/15 text-primary flex items-center justify-center">
+                <Book size={24} />
+              </div>
               <h3 className="mt-4 text-[15px] font-bold">{ra("ai.create_knowledgebase")}</h3>
               <p className="mt-1.5 max-w-md text-[12px] text-slate-500">{ra("ai.create_knowledgebase_desc")}</p>
-              {canCreate && (
-                <div className="mt-5">
-                  <CreateMenu onPick={create} ra={ra} />
-                </div>
-              )}
             </div>
           )}
         </div>
+        </>
       )}
 
       {mode === "EDIT" && (
@@ -307,6 +438,7 @@ export default function KnowledgebaseSection() {
                 <Input
                   maxLength={250}
                   value={form.name}
+                  placeholder={ra("name_placeholder")}
                   onChange={(e) => {
                     setForm((f) => ({ ...f, name: e.target.value }));
                     setNameError("");
@@ -399,7 +531,7 @@ export default function KnowledgebaseSection() {
                       </span>
                       <Input disabled value={form.website} placeholder="yoursite.com" className="h-11 rounded-l-none rounded-r-xl" />
                     </div>
-                    <button type="button" disabled className="h-11 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold cursor-not-allowed">
+                    <button type="button" disabled className="h-11 px-7 rounded-xl bg-primary text-white text-[11px] font-semibold shadow-lg shadow-primary/20 cursor-not-allowed">
                       {ra("ai.fetch_pages")}
                     </button>
                   </div>
@@ -409,10 +541,7 @@ export default function KnowledgebaseSection() {
           </div>
 
           <div className="px-8 py-5 border-t dark:border-slate-800 flex justify-end gap-2">
-            <button type="button" onClick={cancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-              {ra("cancel")}
-            </button>
-            <button type="submit" disabled={saving} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-60">
+            <button type="submit" disabled={saving} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
               {saving && <Loader2 size={13} className="animate-spin" />}
               {ra("publish")}
             </button>
@@ -463,39 +592,25 @@ export default function KnowledgebaseSection() {
 
 /** "Create new ▾" with For Chat / For Voice. */
 function CreateMenu({ onPick, ra }: { onPick: (t: KbType) => void; ra: (k: string) => string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
   return (
-    <div ref={ref} className="relative inline-block">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2">
-        {ra("create_new")} <ChevronDown size={14} />
-      </button>
-      {open && (
-        <div className="absolute right-0 z-20 mt-2 w-52 rounded-xl border bg-white dark:bg-slate-900 dark:border-slate-800 shadow-lg py-1 text-left">
-          {(["chat", "voice"] as KbType[]).map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onPick(type);
-              }}
-              className="w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              {type === "chat" ? ra("ai_studio.knowledgebase.for_chat_assistants") : ra("ai_studio.knowledgebase.for_voice_assistants")}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className="h-11 w-[178px] px-4 justify-center whitespace-nowrap rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+          <Plus size={12} /> {ra("create_new")} <ChevronDown size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52 bg-white dark:bg-background">
+        {(["chat", "voice"] as KbType[]).map((type) => (
+          <DropdownMenuItem
+            key={type}
+            onClick={() => onPick(type)}
+            className="text-[13px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+          >
+            {type === "chat" ? ra("ai_studio.knowledgebase.for_chat_assistants") : ra("ai_studio.knowledgebase.for_voice_assistants")}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

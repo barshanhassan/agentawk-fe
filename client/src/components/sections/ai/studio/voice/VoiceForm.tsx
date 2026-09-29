@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  ChevronLeft,
   ChevronRight,
   Copy,
   Info,
   ListChecks,
   Loader2,
+  Mic,
   Pause,
   PhoneForwarded,
   Play,
@@ -253,8 +255,8 @@ export default function VoiceForm({
     }
   };
 
-  const label = "block text-[12px] font-semibold mb-1.5";
-  const card = "rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const label = "block text-[11px] font-semibold mb-1.5";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
   const err = (k: string) => (errors[k] ? <span className="text-[11px] text-red-500">{errors[k]}</span> : null);
   const d = agent.design ?? {};
 
@@ -276,20 +278,16 @@ export default function VoiceForm({
       {/* Header */}
       <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <img src="/images/integrations/chat_gpt.svg" alt="" className="h-10 w-10" />
-          <div>
-            <h1 className="text-[16px] font-bold">{ra("acl.ai_voice_assistants")}</h1>
-            <p className="text-[12px] text-slate-500">{ra("ai.ai_voice_subtitle")}</p>
+          <button type="button" onClick={onCancel} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+            <ChevronLeft size={20} />
+          </button>
+          <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+            <Mic className="w-5 h-5 text-primary" />
           </div>
-        </div>
-        <div className="flex gap-2">
-          <button type="button" onClick={onCancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-            {ra("cancel")}
-          </button>
-          <button type="submit" disabled={saving} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-60">
-            {saving && <Loader2 size={13} className="animate-spin" />}
-            {ra("publish")}
-          </button>
+          <div>
+            <h1 className="text-[16px] font-bold tracking-tight">{ra("acl.ai_voice_assistants")}</h1>
+            <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{ra("ai.ai_voice_subtitle")}</p>
+          </div>
         </div>
       </div>
 
@@ -495,7 +493,7 @@ export default function VoiceForm({
                     className="h-11 rounded-xl"
                   />
                   {agent.id != null && (
-                    <button type="button" onClick={() => setResetOpen(true)} className="h-11 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
+                    <button type="button" onClick={() => setResetOpen(true)} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20">
                       {ra("reset")}
                     </button>
                   )}
@@ -573,7 +571,7 @@ export default function VoiceForm({
                 onClick={() =>
                   set({ call_transfer_config: [...(agent.call_transfer_config ?? []), { transfer_description: null, call_transfer_to_number: null }] })
                 }
-                className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold shrink-0"
+                className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 shrink-0"
               >
                 {ra("ai.add_call_transfer")}
               </button>
@@ -956,7 +954,7 @@ export default function VoiceForm({
                 <button
                   type="button"
                   onClick={() => copy(d.type === "iframe" ? embedIframe : agent.embed_url ?? "")}
-                  className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2"
+                  className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                 >
                   <Copy size={13} /> {ra("copy_clipboard")}
                 </button>
@@ -968,15 +966,20 @@ export default function VoiceForm({
         {/* Back / Next */}
         <div className="flex justify-between border-t pt-5 dark:border-slate-800">
           {stepIndex > 0 ? (
-            <button type="button" onClick={() => setStep(steps[stepIndex - 1].key)} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
+            <button type="button" onClick={() => setStep(steps[stepIndex - 1].key)} className="h-10 px-5 rounded-xl border text-[11px] font-semibold dark:border-slate-800">
               {ra("back")}
             </button>
           ) : (
             <span />
           )}
-          {stepIndex < steps.length - 1 && (
-            <button type="button" onClick={() => setStep(steps[stepIndex + 1].key)} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
+          {stepIndex < steps.length - 1 ? (
+            <button type="button" onClick={() => setStep(steps[stepIndex + 1].key)} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20">
               {ra("pagination.next")}
+            </button>
+          ) : (
+            <button type="submit" disabled={saving} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              {ra("publish")}
             </button>
           )}
         </div>

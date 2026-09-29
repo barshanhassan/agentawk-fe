@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Eye, Inbox, RefreshCw } from "lucide-react";
+import { ChevronLeft, Eye, Inbox, Info, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { studioApi } from "./api";
 import { ProviderLogos } from "./parts";
@@ -34,6 +35,17 @@ function rangeBounds(range: Range, custom: { from: string; to: string }) {
         ? { date_from: new Date(custom.from).toISOString(), date_to: new Date(custom.to).toISOString() }
         : {};
   }
+}
+
+function Hint({ text, children }: { text: string; children: React.ReactNode }) {
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent className="text-xs">{text}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 const formatJson = (data: any) => {
@@ -84,28 +96,30 @@ export default function AgentLogs({ agent, onBack }: { agent: any; onBack: () =>
   const contactName = (c: any) => c?.full_name || [c?.first_name, c?.last_name].filter(Boolean).join(" ") || null;
 
   return (
-    <div className="rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
+    <div className="rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
       <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[16px] font-bold">{t("ai_studio.logs.title")}</h1>
-          <p className="text-[12px] text-slate-500">
-            {t("ai_studio.logs.subtitle")}: <strong>{agent.name}</strong>
-          </p>
+        <div className="flex items-center gap-4">
+          <button type="button" onClick={onBack} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+            <ChevronLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-[16px] font-bold tracking-tight">{t("ai_studio.logs.title")}</h1>
+            <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">
+              {t("ai_studio.logs.subtitle")}: <strong>{agent.name}</strong>
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={refresh} className="h-10 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-2 dark:border-slate-800">
             <RefreshCw size={12} className={cn(logsQuery.isFetching && "animate-spin")} /> {t("ai_studio.logs.refresh")}
           </button>
-          <button type="button" onClick={onBack} className="h-10 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-2 dark:border-slate-800">
-            <ArrowLeft size={12} /> {t("ai_studio.logs.back_to_list")}
-          </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="px-8 py-5 border-b dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="px-6 py-3 border-b dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-[12px] font-semibold mb-1.5">{t("ai_studio.logs.filters.date_range")}</label>
+          <label className="block text-[11px] font-semibold mb-1.5">{t("ai_studio.logs.filters.date_range")}</label>
           <Select value={range} onValueChange={(v) => { setRange(v as Range); setPage(1); }}>
             <SelectTrigger className="h-10 rounded-xl">
               <SelectValue />
@@ -125,7 +139,7 @@ export default function AgentLogs({ agent, onBack }: { agent: any; onBack: () =>
           )}
         </div>
         <div>
-          <label className="block text-[12px] font-semibold mb-1.5">{t("ai_studio.logs.filters.status")}</label>
+          <label className="block text-[11px] font-semibold mb-1.5">{t("ai_studio.logs.filters.status")}</label>
           <Select value={status || "__all__"} onValueChange={(v) => { setStatus(v === "__all__" ? "" : v); setPage(1); }}>
             <SelectTrigger className="h-10 rounded-xl">
               <SelectValue />
@@ -139,7 +153,7 @@ export default function AgentLogs({ agent, onBack }: { agent: any; onBack: () =>
           </Select>
         </div>
         <div>
-          <label className="block text-[12px] font-semibold mb-1.5">{t("ai_studio.logs.filters.fallback")}</label>
+          <label className="block text-[11px] font-semibold mb-1.5">{t("ai_studio.logs.filters.fallback")}</label>
           <Select value={fallback || "__all__"} onValueChange={(v) => { setFallback(v === "__all__" ? "" : v); setPage(1); }}>
             <SelectTrigger className="h-10 rounded-xl">
               <SelectValue />
@@ -153,16 +167,21 @@ export default function AgentLogs({ agent, onBack }: { agent: any; onBack: () =>
       </div>
 
       {/* Stats */}
-      <div className="px-8 py-5 border-b dark:border-slate-800 grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="px-6 py-3 border-b dark:border-slate-800 grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { l: t("ai_studio.logs.stats.total_conversations"), v: s.total_queries ?? 0 },
-          { l: t("ai_studio.logs.stats.success_rate"), v: `${successRate}%` },
-          { l: t("ai_studio.logs.stats.avg_response_time"), v: `${s.avg_response_time_ms ?? 0}ms` },
-          { l: t("ai_studio.logs.stats.total_tokens"), v: Number(s.total_tokens_consumed ?? 0).toLocaleString() },
+          { l: t("ai_studio.logs.stats.total_conversations"), tip: t("ai_studio.logs.stats.total_conversations_tooltip"), v: s.total_queries ?? 0 },
+          { l: t("ai_studio.logs.stats.success_rate"), tip: t("ai_studio.logs.stats.success_rate_tooltip"), v: `${successRate}%` },
+          { l: t("ai_studio.logs.stats.avg_response_time"), tip: t("ai_studio.logs.stats.avg_response_time_tooltip"), v: `${s.avg_response_time_ms ?? 0}ms` },
+          { l: t("ai_studio.logs.stats.total_tokens"), tip: t("ai_studio.logs.stats.total_tokens_tooltip"), v: Number(s.total_tokens_consumed ?? 0).toLocaleString() },
         ].map((c) => (
-          <div key={c.l} className="rounded-2xl border dark:border-slate-800 p-4">
-            <div className="text-[12px] text-slate-500">{c.l}</div>
-            <div className="mt-1 text-xl font-bold">{c.v}</div>
+          <div key={c.l} className="rounded-2xl border bg-white dark:bg-slate-900/40 dark:border-slate-800 px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500">
+              {c.l}
+              <Hint text={c.tip}>
+                <Info size={12} className="cursor-help" />
+              </Hint>
+            </div>
+            <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white">{c.v}</div>
           </div>
         ))}
       </div>

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, MessageSquareDashed, MoreVertical, NotebookText, Pencil, Trash2, UserCog, Users } from "lucide-react";
+import { ChevronLeft, Loader2, MessageSquareDashed, MoreVertical, NotebookText, Pencil, Plus, Sparkles, Trash2, UserCog, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -190,21 +192,23 @@ export default function ChatAssistantsSection() {
   if (mode === "LOGS" && selected) return <AgentLogs agent={selected} onBack={backToList} />;
   if (mode === "TEST" && selected) return <AgentTest agent={selected} onBack={backToList} onEdit={() => withAgent(selected, "EDIT")} />;
 
-  const card = "rounded-3xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
 
   if (mode === "ACCESS" && selected) {
     return (
       <div className={card}>
         <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between">
-          <div>
-            <h1 className="text-[16px] font-bold">{t("ai_studio.assistant_access.manage_access")}</h1>
-            <p className="text-[12px] text-slate-500">
-              {t("ai_studio.assistant_access.manage_access_subtitle")}: <strong>{selected.name}</strong>
-            </p>
+          <div className="flex items-center gap-4">
+            <button type="button" onClick={backToList} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+              <ChevronLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-[16px] font-bold tracking-tight">{t("ai_studio.assistant_access.manage_access")}</h1>
+              <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">
+                {t("ai_studio.assistant_access.manage_access_subtitle")}: <strong>{selected.name}</strong>
+              </p>
+            </div>
           </div>
-          <button type="button" onClick={backToList} className="h-10 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-2 dark:border-slate-800">
-            <ArrowLeft size={12} /> {t("ai_studio.back")}
-          </button>
         </div>
         <div className="p-8">
           {members.length > 0 ? (
@@ -252,16 +256,18 @@ export default function ChatAssistantsSection() {
   return (
     <>
       <div className={card}>
-        <div className="px-6 py-3.5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
+        <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/images/ai-studio.png" alt="AI Studio" className="h-10 w-10 rounded-xl" />
+            <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <h1 className="text-[15px] font-bold">{t("ai_studio.chat_assistants")}</h1>
-              <p className="text-[12px] text-slate-500">{t("ai_studio.manage_assistants_subtitle")}</p>
+              <h1 className="text-[16px] font-bold tracking-tight">{t("ai_studio.chat_assistants")}</h1>
+              <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{t("ai_studio.manage_assistants_subtitle")}</p>
             </div>
           </div>
-          <button type="button" onClick={createNew} className="h-9 px-4 rounded-xl border border-primary text-primary text-[12px] font-semibold hover:bg-primary hover:text-white transition-colors">
-            {t("ai_studio.create_new")}
+          <button type="button" onClick={createNew} className="h-11 w-[152px] justify-center rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+            <Plus size={12} /> {t("ai_studio.create_new")}
           </button>
         </div>
 
@@ -275,7 +281,7 @@ export default function ChatAssistantsSection() {
         <div className="p-6">
           {isLoading || busy ? (
             <div className="py-10 flex justify-center">
-              <Loader2 className="animate-spin text-slate-400" />
+              <LoadingSpinner size={32} />
             </div>
           ) : agents.length > 0 ? (
             <>

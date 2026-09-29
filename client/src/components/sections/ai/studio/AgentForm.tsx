@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   BookOpen,
   Check,
+  ChevronLeft,
   ChevronRight,
   FileText,
   Info,
@@ -13,6 +14,7 @@ import {
   Pin,
   Plug,
   RotateCw,
+  Sparkles,
   Trash2,
   UserCog,
   Wand2,
@@ -266,8 +268,8 @@ export default function AgentForm({
   };
 
   // ─── Render ────────────────────────────────────────────────────────
-  const card = "rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
-  const lbl = "block text-[13px] font-semibold mb-1.5";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const lbl = "block text-[11px] font-semibold mb-1.5";
   const err = (k: string) => (errors[k] ? <p className="mt-1 text-[11px] text-red-500">{errors[k]}</p> : null);
   // A plain render helper, not a component: a component declared inside
   // render would remount on every value change and break the drag.
@@ -280,20 +282,16 @@ export default function AgentForm({
       {/* Header */}
       <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <img src="/images/ai-studio.png" alt="AI Studio" className="h-12 w-12 rounded-xl" />
-          <div>
-            <h1 className="text-[16px] font-bold">{ra("acl.ai_assistants")}</h1>
-            <p className="text-[12px] text-slate-500">{ra("ai.ai_subtitle")}</p>
+          <button type="button" onClick={onCancel} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+            <ChevronLeft size={20} />
+          </button>
+          <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
-        </div>
-        <div className="flex gap-2">
-          <button type="button" onClick={onCancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-            {ra("back")}
-          </button>
-          <button type="submit" disabled={saving} className="h-10 px-6 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-60">
-            {saving && <Loader2 size={12} className="animate-spin" />}
-            {ra("publish")}
-          </button>
+          <div>
+            <h1 className="text-[16px] font-bold tracking-tight">{ra("acl.ai_assistants")}</h1>
+            <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{ra("ai.ai_subtitle")}</p>
+          </div>
         </div>
       </div>
 
@@ -323,7 +321,7 @@ export default function AgentForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className={lbl}>{ra("ai.assistant_name")}</label>
-                <Input maxLength={250} value={agent.name} onChange={(e) => set({ name: e.target.value })} className="h-11 rounded-xl" />
+                <Input maxLength={250} value={agent.name} placeholder={ra("ai.assistant_name_placeholder")} onChange={(e) => set({ name: e.target.value })} className="h-11 rounded-xl" />
                 {err("name")}
               </div>
               <div className="flex items-end pb-2">
@@ -335,12 +333,9 @@ export default function AgentForm({
             </div>
             <hr className="dark:border-slate-800" />
             {agent.fallback_allowed && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div />
-                <div className="flex gap-2 rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/30 dark:border-sky-900 p-3 text-[12px] text-sky-800 dark:text-sky-200">
-                  <Info size={14} className="shrink-0 mt-0.5" />
-                  <span className="whitespace-pre-line">{t("ai_studio.fallback_compatibility_note")}</span>
-                </div>
+              <div className="flex gap-2 rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/30 dark:border-sky-900 p-3 text-[12px] text-sky-800 dark:text-sky-200">
+                <Info size={14} className="shrink-0 mt-0.5" />
+                <span className="whitespace-pre-line">{t("ai_studio.fallback_compatibility_note")}</span>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -702,7 +697,7 @@ export default function AgentForm({
                   <button type="button" onClick={() => setMcpForm(null)} className="h-9 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
                     {ra("cancel")}
                   </button>
-                  <button type="button" onClick={saveMcp} className="h-9 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
+                  <button type="button" onClick={saveMcp} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20">
                     {ra("save")}
                   </button>
                 </div>
@@ -771,16 +766,12 @@ export default function AgentForm({
         )}
       </div>
 
-      {step === "personalize" && (
-        <div className="px-8 py-5 border-t dark:border-slate-800 flex justify-end gap-3">
-          <button type="button" onClick={onCancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-            {ra("cancel")}
-          </button>
-          <button type="submit" disabled={saving} className="h-10 px-6 rounded-xl bg-primary text-white text-[12px] font-semibold disabled:opacity-60">
-            {ra("publish")}
-          </button>
-        </div>
-      )}
+      <div className="px-8 py-5 border-t dark:border-slate-800 flex justify-end gap-3">
+        <button type="submit" disabled={saving} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+          {saving && <Loader2 size={12} className="animate-spin" />}
+          {ra("publish")}
+        </button>
+      </div>
     </form>
   );
 }

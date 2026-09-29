@@ -212,7 +212,7 @@ export default function PlaceholderPicker({ onPick }: { onPick: (value: string) 
       <PopoverContent align="end" className="w-auto max-w-[95vw] p-0">
         <div className="p-2 border-b dark:border-slate-800">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               autoFocus
               value={search}
@@ -221,7 +221,7 @@ export default function PlaceholderPicker({ onPick }: { onPick: (value: string) 
                 setPath([0]);
               }}
               placeholder={ra("search")}
-              className="w-full h-8 rounded-lg border pl-8 pr-2 text-[12px] bg-white dark:bg-slate-950 dark:border-slate-800 outline-none"
+              className="w-full h-9 rounded-xl border pl-9 pr-2 text-[12px] bg-white dark:bg-slate-950 dark:border-slate-800 outline-none"
             />
           </div>
         </div>

@@ -233,7 +233,7 @@ export default function AgentFunctions({
   };
 
   const input = "h-10 rounded-xl";
-  const label = "block text-[12px] font-semibold mb-1.5";
+  const label = "block text-[11px] font-semibold mb-1.5";
 
   // ─── Form ──────────────────────────────────────────────────────────
   if (draft) {
@@ -295,7 +295,7 @@ export default function AgentFunctions({
               onClick={() =>
                 set({ parameters: [...draft.parameters, { name: "", type: "string", description: "", test_value: "", custom_field: null }] })
               }
-              className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-50"
+              className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
             >
               <Plus size={12} /> {ra("whatsapp.add_variable")}
             </button>
@@ -457,7 +457,7 @@ export default function AgentFunctions({
           <button type="button" onClick={() => setDraft(null)} className="h-9 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
             {ra("cancel")}
           </button>
-          <button type="button" onClick={save} className="h-9 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
+          <button type="button" onClick={save} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20">
             {ra("save")}
           </button>
         </div>

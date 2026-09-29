@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, FileText, Kanban, Loader2, Pencil, PieChart, Play, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, BarChart3, ChevronLeft, FileText, Info, Kanban, Loader2, Pencil, PieChart, Play, Plus, Search, Trash2, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useSocket } from "@/hooks/use-socket";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -66,6 +68,9 @@ export default function ReportBuilderSection() {
   const [response, setResponse] = useState<string | null>(null);
   const [runFor, setRunFor] = useState<any | null>(null);
   const [toDelete, setToDelete] = useState<any | null>(null);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | "text" | "graph">("all");
+  const [providerFilter, setProviderFilter] = useState("all");
 
   const listKey = ["/api/reports"];
   const { data, isLoading } = useQuery({
@@ -74,6 +79,23 @@ export default function ReportBuilderSection() {
   });
   const reports: any[] = data?.reports ?? [];
   const refresh = () => queryClient.invalidateQueries({ queryKey: listKey });
+
+  // Stats always reflect the full list — mirrors Chat Assistants, whose
+  // AgentStats cards don't move when the search/filter fields change.
+  const stats = {
+    total: reports.length,
+    text: reports.filter((r) => r.type === "text").length,
+    graph: reports.filter((r) => r.type === "graph").length,
+    pdf: reports.filter((r) => r.save_pdf).length,
+  };
+  const providers = Array.from(new Set(reports.map((r) => r.provider).filter(Boolean)));
+  const hasFilters = !!(search || typeFilter !== "all" || providerFilter !== "all");
+  const filteredReports = reports.filter((r) => {
+    if (search && !String(r.name ?? "").toLowerCase().includes(search.toLowerCase())) return false;
+    if (typeFilter !== "all" && r.type !== typeFilter) return false;
+    if (providerFilter !== "all" && r.provider !== providerFilter) return false;
+    return true;
+  });
 
   // replyagent Echo `.report.generated` / `.report.failed` on the workspace channel.
   const socket = useSocket(user.workspace_id ?? user.modelable_id);
@@ -114,7 +136,7 @@ export default function ReportBuilderSection() {
     }
   };
 
-  const card = "rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
 
   if (mode === "ADD" && editing) {
     return (
@@ -136,13 +158,7 @@ export default function ReportBuilderSection() {
   if (mode === "RESPONSE") {
     return (
       <div className={card}>
-        <ReportHeader
-          right={
-            <button type="button" onClick={() => setMode("LIST")} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-              {ra("back")}
-            </button>
-          }
-        />
+        <ReportHeader onBack={() => setMode("LIST")} />
         {/* AI-written HTML: scripts may run (Chart.js), but the frame gets no access to this page or its session. */}
         <iframe title="report" sandbox="allow-scripts" srcDoc={response ?? ""} className="w-full bg-white" style={{ height: "75vh" }} />
       </div>
@@ -159,16 +175,94 @@ export default function ReportBuilderSection() {
       <div className={card}>
         <ReportHeader
           right={
-            <button type="button" onClick={createNew} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
-              {ra("create_new")}
+            <button type="button" onClick={createNew} className="h-11 w-[152px] justify-center rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+              <Plus size={12} /> {ra("create_new")}
             </button>
           }
         />
+        <div className="px-6 py-3 border-b dark:border-slate-800">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="relative w-full md:w-72">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={ra("report_builder.search_placeholder")}
+                className="w-full h-9 rounded-xl border pl-9 pr-3 text-[13px] bg-white dark:bg-slate-950/50 dark:border-slate-800 outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="w-full sm:w-32">
+                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+                  <SelectTrigger className="h-9 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{ra("report_builder.all_types")}</SelectItem>
+                    <SelectItem value="text">{ra("report_builder.type_text")}</SelectItem>
+                    <SelectItem value="graph">{ra("report_builder.type_graph")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full sm:w-32">
+                <Select value={providerFilter} onValueChange={setProviderFilter}>
+                  <SelectTrigger className="h-9 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("ai_studio.all_providers")}</SelectItem>
+                    {providers.map((p) => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={() => { setSearch(""); setTypeFilter("all"); setProviderFilter("all"); }}
+                  className="h-9 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-1.5 hover:border-primary/40 hover:text-primary dark:border-slate-800"
+                >
+                  <X size={12} /> {t("ai_studio.clear")}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-3 border-b dark:border-slate-800">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: ra("report_builder.total_reports"), tip: ra("report_builder.total_reports_tooltip"), value: stats.total },
+              { label: ra("report_builder.text_reports"), tip: ra("report_builder.text_reports_tooltip"), value: stats.text },
+              { label: ra("report_builder.graph_reports"), tip: ra("report_builder.graph_reports_tooltip"), value: stats.graph },
+              { label: ra("report_builder.pdf_enabled"), tip: ra("report_builder.pdf_enabled_tooltip"), value: stats.pdf },
+            ].map((c) => (
+              <div key={c.label} className="rounded-2xl border bg-white dark:bg-slate-900/40 dark:border-slate-800 px-4 py-3">
+                <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500">
+                  {c.label}
+                  <Hint text={c.tip}>
+                    <Info size={12} className="cursor-help" />
+                  </Hint>
+                </div>
+                <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white">{c.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-1.5 text-[12px] text-slate-500">
+            <Hint text={ra("report_builder.report_stats_tooltip")}>
+              <Info size={12} className="cursor-help" />
+            </Hint>
+            {ra("report_builder.report_stats_info")}
+          </div>
+        </div>
+
+        <div className="p-6">
         {isLoading ? (
           <div className="py-10 flex justify-center">
-            <Loader2 className="animate-spin text-slate-400" />
+            <LoadingSpinner size={32} />
           </div>
-        ) : reports.length ? (
+        ) : filteredReports.length ? (
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead className="text-[11px] uppercase tracking-wide text-slate-500 border-b dark:border-slate-800">
@@ -180,7 +274,7 @@ export default function ReportBuilderSection() {
                 </tr>
               </thead>
               <tbody>
-                {reports.map((r) => (
+                {filteredReports.map((r) => (
                   <tr key={r.id} className="border-t dark:border-slate-800">
                     <td className="px-8 py-3.5 font-medium">
                       <span className="flex items-center gap-2">
@@ -239,18 +333,31 @@ export default function ReportBuilderSection() {
               </tbody>
             </table>
           </div>
+        ) : hasFilters ? (
+          <div className="p-10 flex flex-col items-center text-center">
+            <span className="h-14 w-14 rounded-xl bg-primary/10 dark:bg-primary/15 text-primary flex items-center justify-center">
+              <BarChart3 size={26} />
+            </span>
+            <h2 className="mt-3 text-xl font-medium">{ra("report_builder.no_report_match")}</h2>
+            <p className="mt-3 text-[13px] text-slate-500">{ra("report_builder.no_report_match_desc")}</p>
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setTypeFilter("all"); setProviderFilter("all"); }}
+              className="mt-5 h-10 px-5 rounded-xl border text-[11px] font-semibold dark:border-slate-800"
+            >
+              {t("ai_studio.clear")}
+            </button>
+          </div>
         ) : (
           <div className="p-10 flex flex-col items-center text-center">
-            <span className="h-14 w-14 rounded-full bg-red-400 text-white flex items-center justify-center">
-              <Kanban size={26} />
+            <span className="h-14 w-14 rounded-xl bg-primary/10 dark:bg-primary/15 text-primary flex items-center justify-center">
+              <BarChart3 size={26} />
             </span>
             <h2 className="mt-3 text-xl font-medium">{ra("report_builder.title")}</h2>
             <p className="mt-3 text-[13px] text-slate-500">{ra("report_builder.empty_description")}</p>
-            <button type="button" onClick={createNew} className="mt-5 h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
-              {ra("create_new")}
-            </button>
           </div>
         )}
+        </div>
       </div>
 
       {runFor && (
@@ -344,7 +451,7 @@ function RunDialog({ report, onClose, onStarted }: { report: any; onClose: () =>
               </SelectContent>
             </Select>
             <div className="relative flex-1">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <Input
                 value={contact ? contact.full_name ?? contact.name ?? `#${contact.id}` : search}
                 onChange={(e) => {
@@ -353,7 +460,7 @@ function RunDialog({ report, onClose, onStarted }: { report: any; onClose: () =>
                   setError("");
                 }}
                 placeholder={ra("select_contact")}
-                className="h-11 border-0 rounded-none pl-8 focus-visible:ring-0"
+                className="h-9 rounded-xl border dark:border-slate-800 pl-9 focus-visible:ring-0"
               />
             </div>
           </div>
@@ -383,10 +490,10 @@ function RunDialog({ report, onClose, onStarted }: { report: any; onClose: () =>
           {error && <p className="text-[11px] italic text-red-500">{error}</p>}
         </div>
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
+          <button type="button" onClick={onClose} className="h-11 px-6 rounded-xl border text-[11px] font-semibold dark:border-slate-800">
             {ra("cancel")}
           </button>
-          <button type="button" onClick={generate} disabled={busy} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-60">
+          <button type="button" onClick={generate} disabled={busy} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
             {busy && <Loader2 size={13} className="animate-spin" />}
             {ra("ai_feeder.generate")}
           </button>

@@ -9,6 +9,7 @@ import {
   CloudDownload,
   Eye,
   Loader2,
+  Mic,
   NotebookText,
   Pause,
   PhoneIncoming,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { formatSeconds, voiceApi } from "./voiceApi";
 
 /**
@@ -34,22 +36,24 @@ function Header({ title, subtitle, onRefresh, loading, onBack }: { title: string
   return (
     <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
-        <img src="/images/integrations/chat_gpt.svg" alt="" className="h-10 w-10" />
+        <button type="button" onClick={onBack} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+          <ChevronLeft size={20} />
+        </button>
+        <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+          <Mic className="w-5 h-5 text-primary" />
+        </div>
         <div>
-          <h1 className="text-[16px] font-bold">{title}</h1>
-          <p className="text-[12px] text-slate-500">{subtitle}</p>
+          <h1 className="text-[16px] font-bold tracking-tight">{title}</h1>
+          <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{subtitle}</p>
         </div>
       </div>
       <div className="flex gap-2">
         {onRefresh && (
-          <button type="button" onClick={onRefresh} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2">
+          <button type="button" onClick={onRefresh} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
             {loading && <Loader2 size={13} className="animate-spin" />}
             {ra("refresh")}
           </button>
         )}
-        <button type="button" onClick={onBack} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-          {ra("back")}
-        </button>
       </div>
     </div>
   );
@@ -97,7 +101,7 @@ export function VoiceCallLogs({ agent, onBack }: { agent: any; onBack: () => voi
     queryFn: () => voiceApi.logs(agent.id, page).catch(() => ({ logs: { data: [] } })),
   });
   const logs = data?.logs ?? { data: [] };
-  const card = "rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
 
   if (selected) return <Transcript log={selected} onBack={() => setSelected(null)} card={card} />;
 
@@ -152,7 +156,7 @@ export function VoiceCallLogs({ agent, onBack }: { agent: any; onBack: () => voi
           </>
         ) : (
           <div className="py-12 flex flex-col items-center text-slate-400">
-            {isFetching ? <Loader2 size={24} className="animate-spin" /> : <NotebookText size={34} />}
+            {isFetching ? <LoadingSpinner size={32} /> : <NotebookText size={34} />}
             {!isFetching && <p className="mt-3 text-[13px]">{ra("ai.thread_message_no_history")}</p>}
           </div>
         )}
@@ -341,7 +345,7 @@ export function VoiceFunctionLogs({ agent, onBack }: { agent: any; onBack: () =>
   };
 
   return (
-    <div className="relative rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
+    <div className="relative rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
       <Header title={ra("ai.function_logs")} subtitle={agent.name} onRefresh={() => refetch()} loading={isFetching} onBack={onBack} />
       <div className="p-8">
         {logs.data?.length ? (
@@ -386,7 +390,7 @@ export function VoiceFunctionLogs({ agent, onBack }: { agent: any; onBack: () =>
           </>
         ) : (
           <div className="py-12 flex flex-col items-center text-slate-400">
-            {isFetching ? <Loader2 size={24} className="animate-spin" /> : <NotebookText size={34} />}
+            {isFetching ? <LoadingSpinner size={32} /> : <NotebookText size={34} />}
             {!isFetching && <p className="mt-3 text-[13px]">{ra("ai.no_function_logs")}</p>}
           </div>
         )}

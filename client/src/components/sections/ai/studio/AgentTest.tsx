@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bot, Image as ImageIcon, Loader2, MessageSquareText, Pencil, Search, Send, Trash2, X, Zap } from "lucide-react";
+import { Bot, ChevronLeft, Image as ImageIcon, Loader2, MessageSquareText, Pencil, Search, Send, Trash2, X, Zap } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -154,20 +154,22 @@ export default function AgentTest({ agent, onBack, onEdit }: { agent: any; onBac
   const contactLabel = (c: any) => c?.full_name || [c?.first_name, c?.last_name].filter(Boolean).join(" ") || c?.mobile_number || `#${c?.id}`;
 
   return (
-    <div className="rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
+    <div className="rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
       <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[16px] font-bold">{t("ai_studio.test_agent.title")}</h1>
-          <p className="text-[12px] text-slate-500">
-            {t("ai_studio.test_agent.sub_title")}: <strong>{agent.name}</strong>
-          </p>
+        <div className="flex items-center gap-4">
+          <button type="button" onClick={onBack} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+            <ChevronLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-[16px] font-bold tracking-tight">{t("ai_studio.test_agent.title")}</h1>
+            <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">
+              {t("ai_studio.test_agent.sub_title")}: <strong>{agent.name}</strong>
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={onEdit} className="h-10 px-4 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2">
+          <button type="button" onClick={onEdit} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
             <Pencil size={12} /> {t("ai_studio.test_agent.edit_assistant")}
-          </button>
-          <button type="button" onClick={onBack} className="h-10 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-2 dark:border-slate-800">
-            <ArrowLeft size={12} /> {t("ai_studio.test_agent.back_to_list")}
           </button>
         </div>
       </div>
@@ -193,12 +195,12 @@ export default function AgentTest({ agent, onBack, onEdit }: { agent: any; onBac
                 </div>
               ) : (
                 <>
-                  <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     value={contactSearch}
                     onChange={(e) => setContactSearch(e.target.value)}
                     placeholder={t("ai_studio.test_agent.select_contact_first")}
-                    className="w-full h-9 rounded-xl border pl-8 pr-3 bg-white dark:bg-slate-950 dark:border-slate-800 outline-none"
+                    className="w-full h-9 rounded-xl border pl-9 pr-3 bg-white dark:bg-slate-950 dark:border-slate-800 outline-none"
                   />
                   {(contactResults?.contacts?.length ?? 0) > 0 && (
                     <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-xl border bg-white dark:bg-slate-900 dark:border-slate-800 shadow-lg">
@@ -385,7 +387,7 @@ export default function AgentTest({ agent, onBack, onEdit }: { agent: any; onBac
                 setVisionWarning(false);
                 setGalleryOpen(true);
               }}
-              className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-semibold"
+              className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20"
             >
               {t("ai_studio.test_agent.continue_upload")}
             </button>

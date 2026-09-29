@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, AppWindow, Info, Loader2, MoreVertical, NotebookText, Pencil, Phone, PhoneIncoming, PhoneOutgoing, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, AppWindow, ChevronLeft, Info, Loader2, Mic, MoreVertical, NotebookText, Pencil, Phone, PhoneIncoming, PhoneOutgoing, Plus, Search, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -184,7 +185,7 @@ export default function VoiceAssistantsSection() {
 
   // ─── Modes ─────────────────────────────────────────────────────────
 
-  const card = "rounded-3xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
+  const card = "rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm";
 
   if (mode === "LOGS" && logAgent) return <VoiceCallLogs agent={logAgent} onBack={() => setMode("LIST")} />;
   if (mode === "FUNCTION_LOGS" && logAgent) return <VoiceFunctionLogs agent={logAgent} onBack={() => setMode("LIST")} />;
@@ -199,15 +200,17 @@ export default function VoiceAssistantsSection() {
       <div className={card}>
         <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <img src="/images/integrations/chat_gpt.svg" alt="" className="h-10 w-10" />
+            <button type="button" onClick={cancelEdit} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+              <ChevronLeft size={20} />
+            </button>
+            <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+              <Mic className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <h1 className="text-[16px] font-bold">{ra("acl.ai_voice_assistants")}</h1>
-              <p className="text-[12px] text-slate-500">{ra("ai.ai_voice_type_subtitle")}</p>
+              <h1 className="text-[16px] font-bold tracking-tight">{ra("acl.ai_voice_assistants")}</h1>
+              <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{ra("ai.ai_voice_type_subtitle")}</p>
             </div>
           </div>
-          <button type="button" onClick={cancelEdit} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-            {ra("back")}
-          </button>
         </div>
         <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {types.map(({ type, icon: Icon }) => (
@@ -252,70 +255,89 @@ export default function VoiceAssistantsSection() {
   return (
     <>
       <div className={card}>
-        <div className="px-6 py-3.5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
+        <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/images/integrations/chat_gpt.svg" alt="" className="h-10 w-10" />
+            <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+              <Mic className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <h1 className="text-[15px] font-bold">{ra("acl.ai_voice_assistants")}</h1>
-              <p className="text-[12px] text-slate-500">{ra("ai.voice_assistants_subtitle")}</p>
+              <h1 className="text-[16px] font-bold tracking-tight">{ra("acl.ai_voice_assistants")}</h1>
+              <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{ra("ai.voice_assistants_subtitle")}</p>
             </div>
           </div>
           {canManage && (
-            <button type="button" onClick={() => editAssistant(null)} className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-semibold">
+            <button type="button" onClick={() => editAssistant(null)} className="h-11 w-[152px] justify-center rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+              <Plus size={12} />
               {ra("create_new")}
             </button>
           )}
         </div>
 
-        <div className="px-6 py-3 border-b dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center">
-          <div className="relative flex-1 max-w-xl">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={ra("ai.voice_search_placeholder")} className="h-9 rounded-xl pl-10" />
+        <div className="px-6 py-3 border-b dark:border-slate-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="relative w-full md:w-72">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={ra("ai.voice_search_placeholder")}
+              className="w-full h-9 rounded-xl border pl-9 pr-3 text-[13px] bg-white dark:bg-slate-950/50 dark:border-slate-800 outline-none focus:ring-2 focus:ring-primary/30"
+            />
           </div>
-          <div className="w-full md:w-44">
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-9 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{ra("ai.voice_all_status")}</SelectItem>
-                <SelectItem value="ACTIVE">{t("ai_studio.status_active")}</SelectItem>
-                <SelectItem value="PENDING">{t("ai_studio.status_pending")}</SelectItem>
-                <SelectItem value="PAUSED">{t("ai_studio.status_paused")}</SelectItem>
-                <SelectItem value="FAILED">{t("ai_studio.status_failed")}</SelectItem>
-                <SelectItem value="DEACTIVATED">Deactivated</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="w-full md:w-48">
-            <Select value={provider || "__all__"} onValueChange={(v) => setProvider(v === "__all__" ? "" : v)}>
-              <SelectTrigger className="h-9 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">{ra("ai_studio.all_providers")}</SelectItem>
-                {VOICE_PROVIDERS.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    <span className="flex items-center gap-2">
-                      <img src={p.logo} alt="" className="h-4 w-4 object-contain" /> {p.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="w-full sm:w-32">
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="h-9 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{ra("ai.voice_all_status")}</SelectItem>
+                  <SelectItem value="ACTIVE">{t("ai_studio.status_active")}</SelectItem>
+                  <SelectItem value="PENDING">{t("ai_studio.status_pending")}</SelectItem>
+                  <SelectItem value="PAUSED">{t("ai_studio.status_paused")}</SelectItem>
+                  <SelectItem value="FAILED">{t("ai_studio.status_failed")}</SelectItem>
+                  <SelectItem value="DEACTIVATED">Deactivated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full sm:w-32">
+              <Select value={provider || "__all__"} onValueChange={(v) => setProvider(v === "__all__" ? "" : v)}>
+                <SelectTrigger className="h-9 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{ra("ai_studio.all_providers")}</SelectItem>
+                  {VOICE_PROVIDERS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      <span className="flex items-center gap-2">
+                        <img src={p.logo} alt="" className="h-4 w-4 object-contain" /> {p.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="px-6 py-3 border-b dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label={ra("ai.voice_total_assistants")} tip={ra("ai.voice_total_assistants")} value={agents.length} />
-          <StatCard label={ra("ai.voice_credits_remaining")} value={Number(data?.credits_remaining ?? 0)} credits />
-          <StatCard label={ra("ai.voice_credits_used")} value={Number(data?.credits_used ?? 0)} credits />
+        <div className="px-6 py-3 border-b dark:border-slate-800">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard label={ra("ai.voice_total_assistants")} tip={ra("ai.voice_total_assistants_tooltip")} value={agents.length} />
+            <StatCard label={ra("ai.voice_active_assistants")} tip={ra("ai.voice_active_assistants_tooltip")} value={agents.filter((a) => a.status === "ACTIVE").length} />
+            <StatCard label={ra("ai.voice_credits_remaining")} tip={ra("ai.voice_credits_remaining_tooltip")} value={Number(data?.credits_remaining ?? 0)} credits />
+            <StatCard label={ra("ai.voice_credits_used")} tip={ra("ai.voice_credits_used_tooltip")} value={Number(data?.credits_used ?? 0)} credits />
+          </div>
+          <div className="mt-3 flex items-center gap-1.5 text-[12px] text-slate-500">
+            <Hint text={ra("ai.voice_stats_tooltip")}>
+              <Info size={12} className="cursor-help" />
+            </Hint>
+            {ra("ai.voice_stats_info")}
+          </div>
         </div>
 
         <div className="p-6">
           {isLoading ? (
             <div className="py-10 flex justify-center">
-              <Loader2 className="animate-spin text-slate-400" />
+              <LoadingSpinner size={32} />
             </div>
           ) : agents.length > 0 ? (
             <div className="rounded-2xl border dark:border-slate-800 overflow-x-auto">
@@ -409,14 +431,11 @@ export default function VoiceAssistantsSection() {
             </div>
           ) : (
             <div className="py-6 flex flex-col items-center text-center">
-              <img src="/images/integrations/chat_gpt.svg" alt="" className="h-12 w-12" />
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/15 text-primary flex items-center justify-center">
+                <Mic size={24} />
+              </div>
               <h3 className="mt-4 text-[15px] font-bold">{ra("ai.create_assistant")}</h3>
               <p className="mt-1.5 max-w-md text-[12px] text-slate-500">{ra("ai.create_assistant_desc")}</p>
-              {canManage && (
-                <button type="button" onClick={() => editAssistant(null)} className="mt-5 h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
-                  {ra("create_new")}
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -441,14 +460,14 @@ export default function VoiceAssistantsSection() {
             <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder={ra("enter_code_here")} className="h-10 rounded-xl" />
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setToDelete(null)} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
+            <button type="button" onClick={() => setToDelete(null)} className="h-10 px-5 rounded-xl border text-[11px] font-semibold dark:border-slate-800">
               {ra("cancel")}
             </button>
             <button
               type="button"
               disabled={parseInt(code, 10) !== randomKey || deleting}
               onClick={confirmDelete}
-              className="h-10 px-5 rounded-xl bg-red-500 text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-50"
+              className="h-10 px-5 rounded-xl bg-rose-500 text-white text-[11px] font-semibold flex items-center gap-2 disabled:opacity-50"
             >
               {deleting && <Loader2 size={13} className="animate-spin" />}
               {ra("delete")}

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Info, Search, X } from "lucide-react";
+import { Info, Search, Sparkles, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -136,7 +136,7 @@ export function ModelSelector({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-[12px] font-semibold">{label} Provider</label>
+        <label className="text-[11px] font-semibold">{label} Provider</label>
         <ProviderSelect
           value={value.provider}
           onChange={(p) => onChange({ provider: p, model: "" })}
@@ -146,7 +146,7 @@ export function ModelSelector({
         />
       </div>
       <div className="space-y-1.5">
-        <label className="text-[12px] font-semibold">{label} Model</label>
+        <label className="text-[11px] font-semibold">{label} Model</label>
         <Select
           value={value.model || ""}
           onValueChange={(m) => onChange({ provider: value.provider, model: m })}
@@ -225,48 +225,50 @@ export function AgentFilters({
   const active = !!(value.search || value.status || value.provider);
   const ALL = "__all__";
   return (
-    <div className="flex flex-col md:flex-row gap-3 md:items-center">
-      <div className="relative flex-1 max-w-xl">
-        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="relative w-full md:w-72">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           value={value.search}
           onChange={(e) => onChange({ ...value, search: e.target.value })}
           placeholder={t("ai_studio.search_placeholder")}
-          className="w-full h-9 rounded-xl border pl-10 pr-3 text-[13px] bg-white dark:bg-slate-950/50 dark:border-slate-800 outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full h-9 rounded-xl border pl-9 pr-3 text-[13px] bg-white dark:bg-slate-950/50 dark:border-slate-800 outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
-      <div className="w-full md:w-44">
-        <Select value={value.status || ALL} onValueChange={(v) => onChange({ ...value, status: v === ALL ? "" : v })}>
-          <SelectTrigger className="h-9 rounded-xl">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{t("ai_studio.all_status")}</SelectItem>
-            <SelectItem value="ACTIVE">{t("ai_studio.status_active")}</SelectItem>
-            <SelectItem value="PENDING">{t("ai_studio.status_pending")}</SelectItem>
-            <SelectItem value="PAUSED">{t("ai_studio.status_paused")}</SelectItem>
-            <SelectItem value="FAILED">{t("ai_studio.status_failed")}</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="w-full sm:w-32">
+          <Select value={value.status || ALL} onValueChange={(v) => onChange({ ...value, status: v === ALL ? "" : v })}>
+            <SelectTrigger className="h-9 rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t("ai_studio.all_status")}</SelectItem>
+              <SelectItem value="ACTIVE">{t("ai_studio.status_active")}</SelectItem>
+              <SelectItem value="PENDING">{t("ai_studio.status_pending")}</SelectItem>
+              <SelectItem value="PAUSED">{t("ai_studio.status_paused")}</SelectItem>
+              <SelectItem value="FAILED">{t("ai_studio.status_failed")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full sm:w-32">
+          <ProviderSelect
+            value={value.provider}
+            onChange={(p) => onChange({ ...value, provider: p })}
+            allOption={t("ai_studio.all_providers")}
+            placeholder={t("ai_studio.all_providers")}
+            triggerClassName="h-9"
+          />
+        </div>
+        {active && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="h-9 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-1.5 hover:border-primary/40 hover:text-primary dark:border-slate-800"
+          >
+            <X size={12} /> {t("ai_studio.clear")}
+          </button>
+        )}
       </div>
-      <div className="w-full md:w-48">
-        <ProviderSelect
-          value={value.provider}
-          onChange={(p) => onChange({ ...value, provider: p })}
-          allOption={t("ai_studio.all_providers")}
-          placeholder={t("ai_studio.all_providers")}
-          triggerClassName="h-9"
-        />
-      </div>
-      {active && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="h-9 px-4 rounded-xl border text-[12px] font-semibold flex items-center gap-1.5 hover:border-primary/40 hover:text-primary dark:border-slate-800"
-        >
-          <X size={12} /> {t("ai_studio.clear")}
-        </button>
-      )}
     </div>
   );
 }
@@ -286,7 +288,7 @@ export function AgentsEmptyState({
   return (
     <div className="py-6 flex flex-col items-center text-center">
       <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-        <Bot size={24} />
+        <Sparkles size={24} />
       </div>
       <h3 className="mt-4 text-[15px] font-bold">
         {hasFilters ? t("ai_studio.no_agents_found") : t("ai_studio.no_assistants_yet")}
@@ -294,16 +296,13 @@ export function AgentsEmptyState({
       <p className="mt-1.5 max-w-md text-[12px] text-slate-500">
         {hasFilters ? t("ai_studio.no_match_description") : t("ai_studio.empty_state_description")}
       </p>
-      <div className="mt-5 flex gap-2">
-        {hasFilters && (
-          <button type="button" onClick={onClear} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
+      {hasFilters && (
+        <div className="mt-5">
+          <button type="button" onClick={onClear} className="h-10 px-5 rounded-xl border text-[11px] font-semibold dark:border-slate-800">
             {t("ai_studio.clear_filters")}
           </button>
-        )}
-        <button type="button" onClick={onCreate} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
-          {t("ai_studio.create_new_assistant")}
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

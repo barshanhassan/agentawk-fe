@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Kanban, Loader2 } from "lucide-react";
+import { BarChart3, ChevronLeft, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -29,18 +29,23 @@ export interface ReportModel {
 
 export const emptyReport = (): ReportModel => ({ id: null, name: "", provider: "openai", model: "gpt-5.4", type: "text", save_pdf: false, prompt: "" });
 
-export function ReportHeader({ right }: { right?: React.ReactNode }) {
+export function ReportHeader({ right, onBack }: { right?: React.ReactNode; onBack?: () => void }) {
   const { t } = useTranslation();
   const ra = (k: string) => t(`ai_studio.ra.${k}`) as string;
   return (
     <div className="px-8 py-5 border-b dark:border-slate-800 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
-        <span className="h-11 w-11 rounded-full bg-red-400 text-white flex items-center justify-center shrink-0">
-          <Kanban size={20} />
-        </span>
+        {onBack && (
+          <button type="button" onClick={onBack} className="text-slate-400 hover:text-primary transition-colors shrink-0">
+            <ChevronLeft size={20} />
+          </button>
+        )}
+        <div className="p-2.5 rounded-xl shadow-sm bg-primary/10 dark:bg-primary/15">
+          <BarChart3 className="w-5 h-5 text-primary" />
+        </div>
         <div>
-          <h1 className="text-[16px] font-bold">{ra("report_builder.title")}</h1>
-          <p className="text-[12px] text-slate-500">{ra("report_builder.subtitle")}</p>
+          <h1 className="text-[16px] font-bold tracking-tight">{ra("report_builder.title")}</h1>
+          <p className="text-[11px] font-bold mt-0.5 opacity-60 text-slate-500">{ra("report_builder.subtitle")}</p>
         </div>
       </div>
       {right}
@@ -65,6 +70,14 @@ export default function ReportForm({
   const [saving, setSaving] = useState(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const set = (patch: Partial<ReportModel>) => setReport((r) => ({ ...r, ...patch }));
+
+  // Auto-grow the prompt textarea with its content instead of a fixed 25-row block.
+  useEffect(() => {
+    const el = promptRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [report.prompt]);
 
   const { data: integrationsData } = useWorkspaceIntegrations();
   // replyagent ModelSelector with exclude-provider="deepseek": connected providers only.
@@ -114,23 +127,18 @@ export default function ReportForm({
   };
 
   const req = <span className="text-[11px] italic text-red-500">{ra("validation.required_field")}</span>;
-  const label = "block text-[13px] font-semibold mb-1.5";
+  const label = "block text-[11px] font-semibold mb-1.5";
 
   return (
-    <form onSubmit={save} className="rounded-[2rem] border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
-      <ReportHeader
-        right={
-          <button type="button" onClick={onCancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-            {ra("back")}
-          </button>
-        }
-      />
+    <form onSubmit={save} className="rounded-2xl border bg-white dark:bg-[#0f1829] dark:border-slate-800 overflow-hidden shadow-sm">
+      <ReportHeader onBack={onCancel} />
       <div className="p-8 grid gap-6 md:grid-cols-2 2xl:grid-cols-3">
         <div>
           <label className={label}>{ra("name")}</label>
           <Input
             value={report.name}
             maxLength={255}
+            placeholder={ra("report_builder.name_placeholder")}
             onChange={(e) => {
               set({ name: e.target.value });
               setErrors((x) => ({ ...x, name: false }));
@@ -211,27 +219,25 @@ export default function ReportForm({
 
         <div className="col-span-full">
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-[13px] font-semibold">{ra("report_builder.prompt_label")}</label>
+            <label className={label}>{ra("report_builder.prompt_label")}</label>
             <PlaceholderPicker onPick={insert} />
           </div>
           <Textarea
             ref={promptRef}
-            rows={25}
+            rows={5}
             value={report.prompt}
+            placeholder={ra("report_builder.prompt_placeholder")}
             onChange={(e) => {
               set({ prompt: e.target.value });
               setErrors((x) => ({ ...x, prompt: false }));
             }}
-            className="font-mono text-[12px]"
+            className="resize-none max-h-[500px] overflow-y-auto"
           />
           {errors.prompt && req}
         </div>
       </div>
       <div className="px-8 py-5 border-t dark:border-slate-800 flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="h-10 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
-          {ra("cancel")}
-        </button>
-        <button type="submit" disabled={saving} className="h-10 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-60">
+        <button type="submit" disabled={saving} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
           {saving && <Loader2 size={13} className="animate-spin" />}
           {ra("publish")}
         </button>

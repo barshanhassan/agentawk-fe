@@ -247,7 +247,7 @@ export default function VoiceFunctions({
     onChange(functions.filter((_, j) => j !== index));
   };
 
-  const label = "block text-[12px] font-semibold mb-1.5";
+  const label = "block text-[11px] font-semibold mb-1.5";
 
   // ─── Create / edit ─────────────────────────────────────────────────
   if (draft) {
@@ -286,7 +286,7 @@ export default function VoiceFunctions({
             {rows.length > 0 && <VariableTable rows={rows} onUpdate={updateRow} onRemove={removeRow} withType withValue fixedNames ra={ra} />}
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-semibold">{ra("results")}:</span>
-              <button type="button" onClick={testCurl} disabled={curlLoading} className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-60">
+              <button type="button" onClick={testCurl} disabled={curlLoading} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
                 {curlLoading && <Loader2 size={12} className="animate-spin" />}
                 {ra("api_triggers.test_mode")} cURL
               </button>
@@ -345,7 +345,7 @@ export default function VoiceFunctions({
               type="button"
               disabled={rows.length >= MAX_VARIABLES}
               onClick={() => set({ data: [...rows, { name: "", type: "string", description: "", value: "", custom_field: null }] })}
-              className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-semibold flex items-center gap-2 disabled:opacity-50"
+              className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
             >
               <Plus size={12} /> {ra("whatsapp.add_variable")}
             </button>
@@ -371,10 +371,10 @@ export default function VoiceFunctions({
         )}
 
         <div className="flex justify-between gap-3 border-t pt-5 dark:border-slate-800">
-          <button type="button" onClick={() => setDraft(null)} className="h-9 px-5 rounded-xl border text-[12px] font-semibold dark:border-slate-800">
+          <button type="button" onClick={() => setDraft(null)} className="h-10 px-5 rounded-xl border text-[11px] font-semibold dark:border-slate-800">
             {ra("back")}
           </button>
-          <button type="button" onClick={save} className="h-9 px-5 rounded-xl bg-primary text-white text-[12px] font-semibold">
+          <button type="button" onClick={save} className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20">
             {ra("save")}
           </button>
         </div>

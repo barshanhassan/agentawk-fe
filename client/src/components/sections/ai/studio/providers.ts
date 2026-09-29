@@ -12,9 +12,9 @@ export interface ProviderInfo {
 }
 
 export const AI_PROVIDERS: ProviderInfo[] = [
-  { value: "openai", label: "OpenAI ChatGPT", logo: "/images/ai-providers/openai.svg" },
+  { value: "openai", label: "ChatGPT", logo: "/images/ai-providers/openai.svg" },
   { value: "anthropic", label: "Anthropic Claude", logo: "/images/ai-providers/anthropic.svg" },
-  { value: "google", label: "Google Gemini", logo: "/images/ai-providers/google.svg" },
+  { value: "google", label: "Gemini", logo: "/images/ai-providers/google.svg" },
   { value: "deepseek", label: "DeepSeek", logo: "/images/ai-providers/deepseek.svg" },
 ];
 
