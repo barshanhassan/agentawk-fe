@@ -201,8 +201,7 @@ export default function QuickRepliesSection() {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full h-11 rounded-xl transition-all px-4 border outline-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
   const selectCls = cn(
@@ -214,8 +213,7 @@ export default function QuickRepliesSection() {
     "[background-position:right_1rem_center]",
   );
   const textareaCls = cn(
-    "w-full rounded-xl text-[13px] font-medium transition-all px-4 py-3 border outline-none resize-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full rounded-xl transition-all px-4 py-3 border outline-none resize-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
   const outlineBtn = cn(
@@ -484,11 +482,21 @@ export default function QuickRepliesSection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
+              {view === "create_collection" && (
+                <button onClick={handleCancelCreateCollection} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
+              {(view === "collection_detail" || view === "create_message") && (
+                <button onClick={() => setView("list")} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
                 <Bot className="w-5 h-5 text-primary" />
               </div>
@@ -508,22 +516,10 @@ export default function QuickRepliesSection() {
                   <Plus size={12} /> {t("quick_replies_section.add_collection")}
                 </button>
               )}
-              {view === "create_collection" && (
-                <button onClick={handleCancelCreateCollection} className={outlineBtn}>
-                  <ChevronLeft size={12} /> {t("quick_replies_section.back")}
+              {view === "collection_detail" && (
+                <button onClick={handleCreateMessageClick} className={primaryBtn}>
+                  <Plus size={12} /> {t("quick_replies_section.add_message")}
                 </button>
-              )}
-              {(view === "collection_detail" || view === "create_message") && (
-                <>
-                  {view === "collection_detail" && (
-                    <button onClick={handleCreateMessageClick} className={primaryBtn}>
-                      <Plus size={12} /> {t("quick_replies_section.add_message")}
-                    </button>
-                  )}
-                  <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> {t("quick_replies_section.collections")}
-                  </button>
-                </>
               )}
             </div>
           </div>

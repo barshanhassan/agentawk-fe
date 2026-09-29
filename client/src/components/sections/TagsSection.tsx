@@ -128,8 +128,7 @@ export default function TagsSection() {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full h-11 rounded-xl transition-all px-4 border outline-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
 
@@ -421,7 +420,7 @@ export default function TagsSection() {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           maxLength={9}
-          className={cn(inputCls, "w-28 h-9 text-[11px] font-mono")}
+          className={cn(inputCls, "w-28 h-9 font-mono")}
           placeholder={t("tags_section.hex_placeholder")}
         />
       </div>
@@ -430,7 +429,7 @@ export default function TagsSection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
@@ -468,19 +467,19 @@ export default function TagsSection() {
             {/* Filters */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="relative flex-1 min-w-[200px] max-w-xs">
-                <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4", sub)} />
+                <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
                 <input
                   type="text"
                   placeholder={t("tags_section.search_placeholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className={cn(inputCls, "pl-11 h-10 text-[12px] font-medium")}
+                  className={cn(inputCls, "pl-9 h-9")}
                 />
               </div>
               <select
                 value={forFilter}
                 onChange={(e) => setForFilter(e.target.value as TagFor)}
-                className={cn(selectCls, "max-w-[180px] h-10 text-[12px] font-medium")}
+                className={cn(selectCls, "max-w-[180px] h-10")}
               >
                 <option value="">{t("tags_section.filter_all_entities")}</option>
                 <option value="WORKSPACE">{t("tags_section.filter_workspace")}</option>
@@ -492,7 +491,7 @@ export default function TagsSection() {
                 <select
                   value={folderFilter}
                   onChange={(e) => setFolderFilter(e.target.value)}
-                  className={cn(selectCls, "max-w-[200px] h-10 text-[12px] font-medium")}
+                  className={cn(selectCls, "max-w-[200px] h-10")}
                 >
                   <option value="ALL">{t("tags_section.filter_all_folders")}</option>
                   <option value="root">{t("tags_section.filter_root_folder")}</option>

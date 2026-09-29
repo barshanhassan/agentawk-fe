@@ -141,8 +141,7 @@ const DeveloperSettingsSection = () => {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full h-11 rounded-xl transition-all px-4 border outline-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
   const outlineBtn = cn(
@@ -363,7 +362,7 @@ const DeveloperSettingsSection = () => {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
@@ -436,7 +435,7 @@ const DeveloperSettingsSection = () => {
                         readOnly
                         type={showApiKey ? "text" : "password"}
                         value={tokenResp.api_token}
-                        className={cn(inputCls, "pr-12 font-mono text-[12px]")}
+                        className={cn(inputCls, "pr-12 font-mono")}
                       />
                       <button
                         onClick={() => setShowApiKey(!showApiKey)}

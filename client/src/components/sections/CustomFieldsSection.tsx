@@ -22,6 +22,7 @@ import {
   Plus,
   Loader2,
   AlertCircle,
+  ChevronLeft,
   Folder,
   FolderPlus,
   X,
@@ -334,8 +335,7 @@ export default function CustomFieldsSection() {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full h-11 rounded-xl transition-all px-4 border outline-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
   const selectCls = cn(
@@ -347,8 +347,7 @@ export default function CustomFieldsSection() {
     "[background-position:right_1rem_center]",
   );
   const textareaCls = cn(
-    "w-full rounded-xl text-[13px] font-medium transition-all px-4 py-3 border outline-none resize-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full rounded-xl transition-all px-4 py-3 border outline-none resize-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
   );
   const outlineBtn = cn(
@@ -787,7 +786,8 @@ export default function CustomFieldsSection() {
   // ── Render ───────────────────────────────────────────────────────
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      {!showFieldDialog && (
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
@@ -832,7 +832,7 @@ export default function CustomFieldsSection() {
                   <select
                     value={folderFilter}
                     onChange={(e) => setFolderFilter(e.target.value)}
-                    className={cn(selectCls, "h-9 text-[11px] py-0 w-[180px]")}
+                    className={cn(selectCls, "h-9 py-0 w-[180px]")}
                   >
                     <option value="ALL">{t("custom_fields_section.folder_filter_all")}</option>
                     <option value="root">{t("custom_fields_section.folder_filter_root")}</option>
@@ -878,7 +878,7 @@ export default function CustomFieldsSection() {
                   <select
                     value={contentTypeFilter}
                     onChange={(e) => setContentTypeFilter(e.target.value)}
-                    className={cn(selectCls, "h-9 text-[11px] py-0 w-[180px]")}
+                    className={cn(selectCls, "h-9 py-0 w-[180px]")}
                   >
                     <option value="">{t("custom_fields_section.content_type_filter_all")}</option>
                     {contentOptions.map((c) => (
@@ -1009,28 +1009,32 @@ export default function CustomFieldsSection() {
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* ── Create / Edit Modal ── */}
-      <Dialog open={showFieldDialog} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className={cn("border p-0 overflow-hidden rounded-[2rem] max-w-2xl max-h-[92vh] overflow-y-auto", card, border)}>
-          <div className="p-6 space-y-5">
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Database size={18} />
-                </div>
-                <div className="text-left">
-                  <DialogTitle className={cn("text-[14px] font-semibold", text)}>
-                    {isEditMode ? t("custom_fields_section.modal_title_edit") : t("custom_fields_section.modal_title_create")}
-                  </DialogTitle>
-                  <DialogDescription className={cn("text-[11px] font-medium opacity-60 mt-0.5", sub)}>
-                    {t("custom_fields_section.modal_description")}
-                  </DialogDescription>
-                </div>
+      {/* ── Create / Edit — full page (no popup) ── */}
+      {showFieldDialog && (
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <CardContent className="p-0">
+          <div className={cn("px-8 py-5 border-b flex items-center justify-between gap-3", border)}>
+            <div className="flex items-center gap-4">
+              <button onClick={closeDialog} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                <ChevronLeft size={20} />
+              </button>
+              <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
+                <Database className="w-5 h-5 text-primary" />
               </div>
-            </DialogHeader>
+              <div>
+                <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
+                  {isEditMode ? t("custom_fields_section.modal_title_edit") : t("custom_fields_section.modal_title_create")}
+                </h1>
+                <p className={cn("text-[11px] font-medium mt-0.5 opacity-60 max-w-2xl", sub)}>
+                  {t("custom_fields_section.modal_description")}
+                </p>
+              </div>
+            </div>
+          </div>
 
-            <div className="space-y-5">
+            <div className="p-8 space-y-5">
               {/* Display Name */}
               <div className="space-y-2">
                 <label className={labelCls}>{t("custom_fields_section.display_name_label")}</label>
@@ -1058,7 +1062,7 @@ export default function CustomFieldsSection() {
                       type="text"
                       value={form.systemName}
                       onChange={(e) => onSystemNameChange(e.target.value)}
-                      className={cn(inputCls, "lowercase pr-10 font-mono")}
+                      className={cn(inputCls, "lowercase pr-10")}
                       placeholder={t("custom_fields_section.system_name_placeholder")}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -1514,7 +1518,7 @@ export default function CustomFieldsSection() {
                           onClick={addProperty}
                           className="flex items-center gap-1 text-primary text-[12px] font-bold mt-1"
                         >
-                          <Plus size={14} /> {t("custom_fields_section.add_more_option")}
+                          <Plus size={12} /> {t("custom_fields_section.add_more_option")}
                         </button>
                       </div>
                     )}
@@ -1595,18 +1599,18 @@ export default function CustomFieldsSection() {
               </div>
             </div>
 
-            <div className={cn("flex justify-end gap-2 pt-4 border-t", softBorder)}>
-              <button onClick={closeDialog} className={outlineBtn}>
-                {t("custom_fields_section.cancel_button")}
-              </button>
-              <button onClick={handleSave} disabled={saveMutation.isPending} className={primaryBtn}>
-                {saveMutation.isPending && <Loader2 size={12} className="animate-spin" />}
-                {isEditMode ? t("custom_fields_section.update_button") : t("custom_fields_section.create_button")}
-              </button>
-            </div>
+          <div className={cn("px-8 py-5 border-t flex justify-end gap-2", border)}>
+            <button onClick={closeDialog} className={outlineBtn}>
+              {t("custom_fields_section.cancel_button")}
+            </button>
+            <button onClick={handleSave} disabled={saveMutation.isPending} className={primaryBtn}>
+              {saveMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+              {isEditMode ? t("custom_fields_section.update_button") : t("custom_fields_section.create_button")}
+            </button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
+      )}
 
       {/* ── Folder Modal ── */}
       <Dialog

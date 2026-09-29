@@ -87,8 +87,7 @@ export default function ChatWidgetSection() {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+    "w-full h-11 rounded-xl transition-all px-4 border outline-none",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
   );
 
@@ -450,11 +449,16 @@ export default function ChatWidgetSection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header — dynamic per view */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
+              {isCreateModalOpen && (
+                <button onClick={closeForm} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
                 <MessageCircle className="w-5 h-5 text-primary" />
               </div>
@@ -473,13 +477,9 @@ export default function ChatWidgetSection() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              {!isCreateModalOpen ? (
+              {!isCreateModalOpen && (
                 <button onClick={openCreate} className={primaryBtn}>
                   <Plus size={12} /> {t("chat_widget_section.add_new")}
-                </button>
-              ) : (
-                <button onClick={closeForm} className={outlineBtn}>
-                  <ChevronLeft size={12} /> {t("chat_widget_section.back")}
                 </button>
               )}
             </div>

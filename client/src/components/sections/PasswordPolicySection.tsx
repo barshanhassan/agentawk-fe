@@ -48,8 +48,8 @@ const PasswordPolicySection = () => {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
   const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed",
+    "w-full h-11 rounded-xl transition-all px-4 border outline-none",
+    "disabled:opacity-40 disabled:cursor-not-allowed",
     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
   );
 
