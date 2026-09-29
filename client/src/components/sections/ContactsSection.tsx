@@ -1383,7 +1383,7 @@ export default function ContactsSection() {
                   onClick={() => setShowAddContactModal(true)}
                   className={primaryBtn}
                 >
-                  <Plus size={14} strokeWidth={2.5} />
+                  <Plus size={12} strokeWidth={2.5} />
                   <span>{t("contacts_section.header.add_contact")}</span>
                 </button>
               )}
@@ -1408,7 +1408,7 @@ export default function ContactsSection() {
                 placeholder={t("contacts_section.filters.search_placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="block w-full pl-9 pr-3 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
+                className="block w-full pl-9 pr-3 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all duration-200 shadow-sm shadow-slate-100/50 dark:shadow-none"
               />
             </div>
 
@@ -1603,7 +1603,7 @@ export default function ContactsSection() {
                                 {t("contacts_section.filter_panel.no_value")}
                               </div>
                             ) : (
-                              <input type="text" placeholder={t("contacts_section.filter_panel.value_placeholder")} value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1" />
+                              <input type="text" placeholder={t("contacts_section.filter_panel.value_placeholder")} value={filter.value} onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)} className="h-8 px-3 text-[11px] font-medium border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all bg-slate-50 dark:bg-slate-800/50 flex-1 placeholder:font-normal placeholder:text-[11px]" />
                             )}
                             <button onClick={() => removeFilter(filter.id)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={13} /></button>
                             <GripVertical size={13} className="text-slate-300 cursor-grab active:cursor-grabbing" />

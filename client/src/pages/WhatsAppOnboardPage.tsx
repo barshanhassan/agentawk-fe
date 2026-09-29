@@ -217,7 +217,7 @@ export default function WhatsAppOnboardPage() {
               />
               <button
                 onClick={() => setShowCode((s) => !s)}
-                className="h-10 px-5 rounded-lg border text-[10px] font-black uppercase tracking-widest border-primary text-primary hover:bg-primary hover:text-white transition-all"
+                className="h-10 px-5 rounded-xl border text-[11px] font-semibold border-primary text-primary hover:bg-primary hover:text-white transition-all"
               >
                 {showCode ? t("whats_app_onboard_page.hide_code") : t("whats_app_onboard_page.show_code")}
               </button>
@@ -242,7 +242,7 @@ export default function WhatsAppOnboardPage() {
             <p className={cn("text-sm leading-relaxed", dark ? "text-slate-400" : "text-slate-600")}>{error}</p>
             <button
               onClick={() => redirectBack()}
-              className="h-10 px-5 rounded-lg border text-[10px] font-black uppercase tracking-widest border-primary text-primary hover:bg-primary hover:text-white transition-all"
+              className="h-10 px-5 rounded-xl border text-[11px] font-semibold border-primary text-primary hover:bg-primary hover:text-white transition-all"
             >
               {t("whats_app_onboard_page.back_to_settings")}
             </button>

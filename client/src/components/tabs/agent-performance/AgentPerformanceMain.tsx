@@ -130,7 +130,7 @@ export default function AgentPerformanceMain({ teamIds = [], agentIds = [] }: Ag
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
             <input placeholder={t("agent_performance_main.search_agents_placeholder")} value={availSearch} onChange={e => setAvailSearch(e.target.value)}
-              className={cn("pl-9 pr-3 h-8 w-44 text-[11px] rounded-lg border outline-none", inputCls)} />
+              className={cn("pl-9 pr-3 h-9 w-44 text-[11px] rounded-xl border outline-none", inputCls)} />
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -196,7 +196,7 @@ export default function AgentPerformanceMain({ teamIds = [], agentIds = [] }: Ag
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
             <input placeholder={t("agent_performance_main.search_by_agent_placeholder")} value={perfSearch} onChange={e => setPerfSearch(e.target.value)}
-              className={cn("pl-9 pr-3 h-8 w-52 text-[11px] rounded-lg border outline-none", inputCls)} />
+              className={cn("pl-9 pr-3 h-9 w-52 text-[11px] rounded-xl border outline-none", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">

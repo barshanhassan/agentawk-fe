@@ -347,13 +347,13 @@ export default function QuickFilterModal({
 
             <div className="px-7">
               <div className="relative">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   autoFocus
                   value={pickSearch}
                   onChange={(e) => setPickSearch(e.target.value)}
                   placeholder={t("conversations_inbox.quick_filter.search")}
-                  className="w-full h-12 pl-10 pr-3 text-sm rounded-md border border-input bg-white dark:bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full h-9 pl-9 pr-3 text-sm rounded-xl border border-input bg-white dark:bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>

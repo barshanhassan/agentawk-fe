@@ -185,7 +185,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
               placeholder={t("voice_of_customer_details.search_agent_placeholder")}
               value={searchAgent}
               onChange={(e) => { setSearchAgent(e.target.value); setPageAgent(1); }}
-              className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)}
+              className={cn("pl-9 pr-3 h-9 w-64 text-[11px] rounded-xl border outline-none transition-colors", inputCls)}
             />
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function VoiceOfCustomerDetails({ teamIds = [], agentIds = [] }: 
               placeholder={t("voice_of_customer_details.search_conversation_placeholder")}
               value={searchConversation}
               onChange={(e) => { setSearchConversation(e.target.value); setPageConversation(1); }}
-              className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)}
+              className={cn("pl-9 pr-3 h-9 w-64 text-[11px] rounded-xl border outline-none transition-colors", inputCls)}
             />
           </div>
         </div>

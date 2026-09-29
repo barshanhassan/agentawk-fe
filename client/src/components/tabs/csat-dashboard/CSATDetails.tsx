@@ -146,7 +146,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
           <h3 className={cn("text-[13px] font-bold", text)}>{t("csat_dashboard.agent_performance_title")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
-            <input placeholder={t("csat_dashboard.search_agent_placeholder")} value={searchAgent} onChange={(e) => { setSearchAgent(e.target.value); setPageAgent(1); }} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
+            <input placeholder={t("csat_dashboard.search_agent_placeholder")} value={searchAgent} onChange={(e) => { setSearchAgent(e.target.value); setPageAgent(1); }} className={cn("pl-9 pr-3 h-9 w-64 text-[11px] rounded-xl border outline-none transition-colors", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -202,7 +202,7 @@ export default function CSATDetails({ teamIds = [], agentIds = [] }: CSATDetails
           <h3 className={cn("text-[13px] font-bold", text)}>{t("csat_dashboard.feedback_table_title")}</h3>
           <div className="relative">
             <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5", sub)} />
-            <input placeholder={t("csat_dashboard.search_feedback_placeholder")} value={searchFeedback} onChange={(e) => { setSearchFeedback(e.target.value); setPageFeedback(1); }} className={cn("pl-9 pr-3 h-8 w-64 text-[11px] rounded-lg border outline-none transition-colors", inputCls)} />
+            <input placeholder={t("csat_dashboard.search_feedback_placeholder")} value={searchFeedback} onChange={(e) => { setSearchFeedback(e.target.value); setPageFeedback(1); }} className={cn("pl-9 pr-3 h-9 w-64 text-[11px] rounded-xl border outline-none transition-colors", inputCls)} />
           </div>
         </div>
         <div className="overflow-x-auto">

@@ -383,7 +383,7 @@ export default function SettingsPage() {
               <div className="p-4 border-b border-slate-200 dark:border-slate-800 relative z-10">
                 <div className="relative group">
                   <Search
-                    size={16}
+                    size={14}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors"
                   />
                   <input
@@ -391,7 +391,7 @@ export default function SettingsPage() {
                     placeholder={t("settings_page.search_placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-slate-200 dark:border-slate-700 rounded-[10px]
+                    className="w-full pl-9 pr-3 h-9 text-[13px] border border-slate-200 dark:border-slate-700 rounded-xl
                              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
                              bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100
                              placeholder:text-slate-400 dark:placeholder:text-slate-500

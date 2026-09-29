@@ -533,7 +533,7 @@ export default function AppSidebar() {
                 onChange={(e) => { setSearchValue(e.target.value); setShowSearchResults(true); }}
                 onFocus={() => setShowSearchResults(true)}
                 placeholder={t("app_sidebar.search_anything_placeholder")}
-                className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400"
+                className="flex-1 bg-transparent text-sm font-medium outline-none border-none shadow-none focus:ring-0 placeholder-gray-400 placeholder:font-normal"
               />
 
               <button

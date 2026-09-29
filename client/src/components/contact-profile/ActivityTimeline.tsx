@@ -235,12 +235,12 @@ export function ActivityTimeline({ contactId }: { contactId: string | null }) {
         </Popover>
 
         <div className="relative flex-1 max-w-sm">
-          <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("activity_timeline.search_timeline_placeholder")}
-            className="pl-7 h-8 text-sm"
+            className="pl-9 h-9 rounded-xl text-sm"
           />
           {search && (
             <button

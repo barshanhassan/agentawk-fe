@@ -517,7 +517,7 @@ export default function ProfileSection({ context = "workspace" }: ProfileSection
             <button
               onClick={() => disableTfaMutation.mutate()}
               disabled={disableTfaMutation.isPending || !disablePassword}
-              className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-600/90 disabled:opacity-50 text-white text-[12px] font-semibold transition-all"
+              className="w-full h-11 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white text-[11px] font-semibold transition-all"
             >
               {disableTfaMutation.isPending ? t("profile_page.saving") : t("profile_page.two_factor_disable_btn")}
             </button>

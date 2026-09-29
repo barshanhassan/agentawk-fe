@@ -135,7 +135,7 @@ export default function TopNavbar({ onToggleSidebar }: TopNavbarProps) {
 
         {/* Workspace Dropdown */}
         <Select defaultValue="workspace-a">
-          <SelectTrigger className="w-[150px] h-9 text-[12px] font-bold border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg">
+          <SelectTrigger className="w-[150px] h-9 text-[12px] font-bold [&_[data-placeholder]]:font-normal border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg">
             <SelectValue placeholder={t("top_navbar.select_workspace")} />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">

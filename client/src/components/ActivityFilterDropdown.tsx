@@ -98,7 +98,7 @@ const ActivityFilterDropdown: React.FC<ActivityFilterDropdownProps> = ({
         type="button"
         title={label}
         className={cn(
-          "h-9 w-9 flex items-center justify-center rounded-md bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 transition-colors",
+          "h-9 w-9 flex items-center justify-center rounded-xl bg-white dark:bg-background border border-input dark:border-slate-700 hover:bg-accent dark:hover:bg-slate-700 transition-colors",
           !allSelected && totalCount > 0 && "border-primary text-primary bg-primary/5",
           className,
         )}

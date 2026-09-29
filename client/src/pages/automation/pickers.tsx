@@ -230,7 +230,7 @@ export function FieldPicker({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("automation_pickers.search_fields_placeholder")}
-                  className="h-7 pl-7 text-xs"
+                  className="h-9 pl-7 rounded-xl text-xs"
                 />
               </div>
             </div>

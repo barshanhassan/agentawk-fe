@@ -567,14 +567,14 @@ export default function UserManagementSection() {
 
       {/* Search Section */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs" style={{ height: "38px" }}>
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <div className="relative flex-1 max-w-xs h-9">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
           <input
             type="text"
             placeholder={t("user_management_section.search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 text-sm w-full h-full border border-input rounded-md bg-background focus:outline-none transition-colors"
+            className="pl-9 text-sm w-full h-full border border-input rounded-xl bg-background focus:outline-none transition-colors"
           />
         </div>
         <CustomDropdown

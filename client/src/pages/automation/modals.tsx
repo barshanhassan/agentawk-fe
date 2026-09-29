@@ -375,12 +375,12 @@ export function TriggersModal({
             </SelectContent>
           </Select>
           <div className="relative flex-1">
-            <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("automation_modals.search_placeholder")}
-              className="pl-7 h-9"
+              className="pl-9 h-9 rounded-xl"
             />
           </div>
         </div>

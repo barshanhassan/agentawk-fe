@@ -1345,7 +1345,7 @@ export default function TemplateManager() {
                             placeholder={t("template_manager.filters.search_placeholder")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-9 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400"
+                            className="pl-9 h-9 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400 placeholder:font-normal"
                             data-testid="input-search"
                         />
                     </div>
@@ -1625,7 +1625,7 @@ export default function TemplateManager() {
                                                             placeholder={t("template_manager.filter.value_placeholder")}
                                                             value={filter.value}
                                                             onChange={(e) => updateFilter(filter.id, filter.column, filter.operator, e.target.value)}
-                                                            className="flex-1 px-3 py-1.5 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                                                            className="flex-1 px-3 py-1.5 text-[11px] font-semibold placeholder:font-normal placeholder:text-[11px] border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                                                         />
                                                     </div>
                                                 </div>
