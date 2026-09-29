@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { formatInWorkspaceTz, useWorkspaceTimezone } from "@/contexts/WorkspaceTimezoneContext";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 function getIcon(slug: string | undefined, read: boolean) {
     const s = (slug || "").toLowerCase();
@@ -149,7 +150,9 @@ export default function NotificationsPage() {
                 <div>
                 <ScrollArea className="h-[calc(100vh-130px)]">
                     {isLoading ? (
-                        <div className="p-10 text-center text-sm text-slate-400">{t("notifications_page.loading")}</div>
+                        <div className="py-16 flex justify-center">
+                            <LoadingSpinner size={36} />
+                        </div>
                     ) : notifications.length === 0 ? (
                         <div className="p-16 text-center space-y-2">
                             <Bell className="mx-auto opacity-20 text-slate-400" size={36} />
