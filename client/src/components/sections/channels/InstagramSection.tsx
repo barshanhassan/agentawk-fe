@@ -251,11 +251,14 @@ export default function InstagramSection() {
     const isPreferred = view === "preferred";
     return (
       <>
-        <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm", card, border)}>
+        <Card className={cn("rounded-2xl border overflow-hidden shadow-sm", card, border)}>
           <CardContent className="p-0">
             {/* Header */}
             <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
               <div className="flex items-center gap-4">
+                <button onClick={() => setView("list")} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
                 <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-pink-500/15" : "bg-pink-500/10")}>
                   <Instagram className="w-5 h-5 text-pink-500" />
                 </div>
@@ -281,9 +284,6 @@ export default function InstagramSection() {
                     <Plus size={12} /> {t("instagram_section.btn_add_new")}
                   </button>
                 )}
-                <button onClick={() => setView("list")} className={outlineBtn}>
-                  <ChevronLeft size={12} /> {t("instagram_section.btn_back")}
-                </button>
               </div>
             </div>
 
@@ -551,7 +551,7 @@ export default function InstagramSection() {
 
   // ── List view: 2 cards (Preferred + Old) ────────────────────────────
   return (
-    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+    <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <CardContent className="p-0">
         {/* Header */}
         <div className={cn("px-8 py-5 border-b flex items-center gap-4", border)}>

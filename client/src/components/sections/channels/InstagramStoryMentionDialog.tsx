@@ -32,10 +32,7 @@ export default function InstagramStoryMentionDialog({ open, account, onClose }: 
 
   const text = dark ? "text-white" : "text-slate-900";
   const sub = dark ? "text-slate-500" : "text-slate-400";
-  const selectCls = cn(
-    "w-full h-11 px-4 rounded-xl border text-[13px] font-bold transition-all focus:outline-none focus:ring-2 focus:ring-primary/30",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
+  const selectCls = "w-full h-11 rounded-xl border px-3";
 
   const [enabled, setEnabled] = useState(false);
   const [automationId, setAutomationId] = useState<string | null>(null);

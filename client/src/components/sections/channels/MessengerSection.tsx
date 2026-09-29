@@ -94,11 +94,16 @@ export default function MessengerSection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header — dynamic per view */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
+              {view === "manage" && (
+                <button onClick={() => setView("list")} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-blue-600/15" : "bg-blue-600/10")}>
                 <img src="/images/automations/messenger.svg" alt="Messenger" className="w-5 h-5" />
               </div>
@@ -114,14 +119,9 @@ export default function MessengerSection() {
 
             <div className="flex items-center gap-2 shrink-0">
               {view === "manage" && (
-                <>
-                  <button onClick={handleConnect} className={primaryBtn}>
-                    <Plus size={12} /> {t("messenger_section.add_new")}
-                  </button>
-                  <button onClick={() => setView("list")} className={outlineBtn}>
-                    <ChevronLeft size={12} /> {t("messenger_section.back")}
-                  </button>
-                </>
+                <button onClick={handleConnect} className={primaryBtn}>
+                  <Plus size={12} /> {t("messenger_section.add_new")}
+                </button>
               )}
             </div>
           </div>

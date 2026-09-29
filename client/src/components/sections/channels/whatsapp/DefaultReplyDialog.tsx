@@ -139,10 +139,7 @@ export default function DefaultReplyDialog({ open, number, onClose }: Props) {
               <select
                 value={automationId}
                 onChange={(e) => setAutomationId(e.target.value)}
-                className={cn(
-                  "w-full h-11 px-4 rounded-xl border text-[13px] font-bold focus:ring-2 focus:ring-primary/30 transition-all",
-                  dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-                )}
+                className="w-full h-11 rounded-xl border px-3"
               >
                 <option value="">{t("default_reply_dialog.choose_automation")}</option>
                 {automations.map((a: any) => (
@@ -167,10 +164,7 @@ export default function DefaultReplyDialog({ open, number, onClose }: Props) {
               <select
                 value={interval}
                 onChange={(e) => setInterval(e.target.value)}
-                className={cn(
-                  "w-full h-11 px-4 rounded-xl border text-[13px] font-bold focus:ring-2 focus:ring-primary/30 transition-all",
-                  dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-                )}
+                className="w-full h-11 rounded-xl border px-3"
               >
                 {INTERVAL_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>

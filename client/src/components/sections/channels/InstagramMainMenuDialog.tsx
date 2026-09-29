@@ -33,14 +33,8 @@ export default function InstagramMainMenuDialog({ open, account, onClose }: Prop
 
   const text = dark ? "text-white" : "text-slate-900";
   const sub = dark ? "text-slate-500" : "text-slate-400";
-  const inputCls = cn(
-    "w-full h-10 px-3 rounded-xl border text-[12px] font-bold transition-all focus:outline-none focus:ring-2 focus:ring-primary/30",
-    dark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
-  const selectCls = cn(
-    "h-10 px-3 rounded-xl border text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-primary/30",
-    dark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
+  const inputCls = "w-full h-10 rounded-xl border px-3";
+  const selectCls = "h-10 rounded-xl border px-3";
 
   const [items, setItems] = useState<MenuItem[]>([]);
 

@@ -45,10 +45,7 @@ export default function DeletionGuard({ phrase, onValid, className }: Props) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={target}
-        className={cn(
-          "h-11 rounded-xl text-[13px] font-bold",
-          dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-        )}
+        className="h-11 rounded-xl"
       />
     </div>
   );

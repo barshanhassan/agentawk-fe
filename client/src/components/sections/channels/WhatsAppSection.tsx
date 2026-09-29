@@ -113,14 +113,7 @@ export default function WhatsAppSection() {
   const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4 border-2",
-    "placeholder:font-normal",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark
-      ? "bg-slate-950/50 border-slate-700 text-white placeholder:text-slate-600"
-      : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-300",
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
@@ -463,11 +456,16 @@ export default function WhatsAppSection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* ── Header — dynamic per view ── */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
+              {view !== "list" && (
+                <button onClick={() => setView("list")} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <div className={cn("p-2.5 rounded-xl shadow-sm bg-emerald-500/10")}>
                 <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />
               </div>
@@ -514,11 +512,6 @@ export default function WhatsAppSection() {
                   className="h-11 px-5 rounded-xl bg-primary text-white text-[11px] font-semibold flex items-center gap-2 hover:bg-primary/90 transition-all"
                 >
                   <Plus size={12} /> {t("whatsapp_section.header.add_new")}
-                </button>
-              )}
-              {view !== "list" && (
-                <button onClick={() => setView("list")} className={outlineBtn}>
-                  <ChevronLeft size={12} /> {t("whatsapp_section.header.back")}
                 </button>
               )}
             </div>
@@ -902,7 +895,7 @@ export default function WhatsAppSection() {
                   placeholder={t("whatsapp_section.manual.access_token_placeholder")}
                   value={manualForm.access_token}
                   onChange={(e) => setManualForm({ ...manualForm, access_token: e.target.value })}
-                  className={cn(inputCls, "h-24 py-3 font-mono text-[11px] resize-none")}
+                  className={cn(inputCls, "h-24 resize-none")}
                   disabled={manualOnboardMutation.isPending}
                 />
                 <p className={cn("text-[10px] font-medium opacity-50 pl-1", sub)}>
@@ -1658,7 +1651,7 @@ function CapiSetupDialog({
                 <button
                   onClick={() => deleteMutation.mutate()}
                   disabled={deleteMutation.isPending}
-                  className="h-9 px-4 rounded-lg border text-[11px] font-semibold border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
+                  className="h-11 px-6 rounded-xl border text-[11px] font-semibold border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
                 >
                   {t("whatsapp_section.capi.remove")}
                 </button>
@@ -1687,7 +1680,7 @@ function CapiSetupDialog({
                   value={datasetId}
                   onChange={(e) => setDatasetId(e.target.value)}
                   placeholder={t("whatsapp_section.capi.dataset_placeholder")}
-                  className={cn("h-11 rounded-xl text-[13px] font-bold", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div className="space-y-2">
@@ -1696,7 +1689,7 @@ function CapiSetupDialog({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("whatsapp_section.capi.name_placeholder")}
-                  className={cn("h-11 rounded-xl text-[13px] font-bold", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900")}
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div className="space-y-2">
@@ -1708,7 +1701,7 @@ function CapiSetupDialog({
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     placeholder="EAA..."
-                    className={cn("h-24 rounded-xl py-3 font-mono text-[11px] resize-none", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900", showToken ? "" : "text-security-disc")}
+                    className={cn("h-24 rounded-xl resize-none", showToken ? "" : "text-security-disc")}
                   />
                   <button
                     onClick={() => setShowToken((s) => !s)}
