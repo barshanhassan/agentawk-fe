@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { getUserInfo } from "@/lib/auth";
 import { ChevronLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
@@ -234,14 +233,9 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
   const text   = dark ? 'text-white'    : 'text-slate-900';
   const sub    = dark ? 'text-slate-500' : 'text-slate-400';
 
-  const inputCls = cn(
-    'h-9 text-[12px] font-medium transition-colors focus-visible:ring-1 focus-visible:ring-primary/50',
-    dark
-      ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600'
-      : 'bg-white border-slate-200 placeholder:text-slate-400'
-  );
+  const inputCls = 'h-11 rounded-xl';
 
-  const labelCls = cn('block text-[10px] font-bold uppercase tracking-widest mb-1.5', dark ? 'text-slate-500' : 'text-slate-400');
+  const labelCls = cn('block text-[11px] font-semibold mb-1.5', dark ? 'text-slate-500' : 'text-slate-400');
 
   const sectionCls = cn('rounded-xl border p-5 space-y-4', card, border);
 
@@ -256,12 +250,9 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
       <div className={cn('flex items-center gap-4 px-7 py-4 border-b shrink-0', card, border)}>
         <button
           onClick={onCancel}
-          className={cn(
-            'flex items-center justify-center w-8 h-8 rounded-lg border transition-colors shrink-0',
-            dark ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-          )}
+          className={cn('transition-colors shrink-0', dark ? 'text-slate-500 hover:text-primary' : 'text-slate-400 hover:text-primary')}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={20} />
         </button>
         <div className="min-w-0">
           <h1 className={cn('text-[14px] font-bold', text)}>
@@ -272,13 +263,6 @@ const AddAgentForm: React.FC<AddAgentFormProps> = ({ onCancel, initialData }) =>
           </p>
         </div>
         <div className="ml-auto flex gap-2 shrink-0">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className={cn('h-11 px-6 rounded-xl text-[11px] font-semibold', dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent' : '')}
-          >
-            Cancel
-          </Button>
           <button
             onClick={handleSubmit}
             disabled={isPending || !formData.first_name.trim() || !formData.email.trim()}

@@ -54,20 +54,20 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
     <div className={cn("p-6 font-sans transition-colors duration-300", isDark ? "text-white" : "text-slate-900")}>
       {/* Header */}
       <div className={cn("flex items-center justify-between mb-8 p-4 rounded-md border shadow-sm transition-colors",
-        isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+        isDark ? "bg-[#0f1829] border-slate-700" : "bg-white border-slate-200")}>
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className={cn("p-2 rounded-full transition-colors", isDark ? "hover:bg-slate-700" : "hover:bg-slate-100")}
+            className={cn("transition-colors shrink-0", isDark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft size={20} />
           </button>
-          <div className={cn("p-2 rounded", isDark ? "bg-[#334155]" : "bg-slate-100")}>
-            <Wallet className={cn("w-6 h-6", isDark ? "text-white" : "text-primary")} />
+          <div className={cn("p-2.5 rounded-xl shadow-sm", isDark ? "bg-primary/15" : "bg-primary/10")}>
+            <Wallet className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold">{t("agency.voiceWallet.title", { name: workspace?.name })}</h1>
-            <p className="text-gray-400 text-sm">{t("agency.voiceWallet.desc")}</p>
+            <h1 className="text-[16px] font-bold tracking-tight">{t("agency.voiceWallet.title", { name: workspace?.name })}</h1>
+            <p className="text-[11px] font-bold mt-0.5 opacity-60 text-gray-400">{t("agency.voiceWallet.desc")}</p>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Balance Card */}
         <div className="lg:col-span-4">
-          <Card className={cn("border transition-colors h-full", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+          <Card className={cn("border transition-colors h-full", isDark ? "bg-[#0f1829] border-slate-700" : "bg-white border-slate-200")}>
             <CardHeader className="border-b border-slate-700/50 pb-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <PhoneCall className="w-5 h-5 text-primary" /> {t("agency.voiceWallet.balance.title")}
@@ -118,7 +118,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
 
         {/* Right column: locked top-up + real transaction history */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+          <Card className={cn("border transition-colors", isDark ? "bg-[#0f1829] border-slate-700" : "bg-white border-slate-200")}>
             <CardContent className="p-8 flex items-center gap-4">
               <div className={cn("p-3 rounded-full", isDark ? "bg-slate-800" : "bg-slate-100")}>
                 <Lock className="w-5 h-5 text-slate-400" />
@@ -130,7 +130,7 @@ const AgencyVoiceWallet: React.FC<AgencyVoiceWalletProps> = ({ workspace, onBack
             </CardContent>
           </Card>
 
-          <Card className={cn("border transition-colors", isDark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200")}>
+          <Card className={cn("border transition-colors", isDark ? "bg-[#0f1829] border-slate-700" : "bg-white border-slate-200")}>
             <CardHeader className="border-b border-slate-700/50 pb-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <History className="w-5 h-5 text-gray-400" /> Transaction History

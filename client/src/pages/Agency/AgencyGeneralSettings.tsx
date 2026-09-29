@@ -201,14 +201,11 @@ const AgencyGeneralSettings = () => {
   const sub    = dark ? 'text-slate-500' : 'text-slate-400';
   const fieldLabel = dark ? 'text-slate-300' : 'text-slate-700';
   const rowBorder = dark ? 'border-slate-800' : 'border-slate-100';
-  const inputCls = dark
-    ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-slate-600'
-    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-slate-300';
   const popSurface = dark ? 'bg-[#0f1829] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900';
-  const primaryBtn = "h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-lg shadow-primary/20 disabled:opacity-50";
+  const primaryBtn = "h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/20 disabled:opacity-50";
   const outlineBtn = cn(
-    "px-4 py-2 rounded-lg text-[12px] font-semibold border transition-colors",
-    dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50"
+    "h-11 px-6 rounded-xl text-[11px] font-semibold border transition-all",
+    dark ? "border-slate-800 text-slate-300 hover:border-primary/40 hover:text-primary" : "border-slate-200 text-slate-700 hover:border-primary/40 hover:text-primary"
   );
 
   const { data: agencyResponse, isLoading } = useQuery({
@@ -397,15 +394,15 @@ const AgencyGeneralSettings = () => {
     <div className={cn("min-h-screen p-8 font-sans transition-colors duration-300 space-y-6", bg, text)}>
 
       {/* Settings Section */}
-      <Card className={cn("rounded-[20px] border shadow-sm overflow-hidden transition-colors", card, border)}>
+      <Card className={cn("rounded-2xl border shadow-sm overflow-hidden transition-colors", card, border)}>
         <div className={cn("px-8 py-5 border-b flex items-center justify-between transition-colors", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
               <Settings className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className={cn("font-bold text-[15px] tracking-tight", text)}>{t("agency.settings.general.title")}</h2>
-              <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.general.desc")}</p>
+              <h2 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("agency.settings.general.title")}</h2>
+              <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>{t("agency.settings.general.desc")}</p>
             </div>
           </div>
         </div>
@@ -414,28 +411,28 @@ const AgencyGeneralSettings = () => {
           <div className="px-8">
              <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.general.name")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.general.name")}</span>
                </div>
                <div className="flex-1">
                  <Input
                    value={generalData.name}
                    onChange={(e) => setGeneralData({ ...generalData, name: e.target.value })}
                    placeholder="Your agency name"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
+                   className="h-11 rounded-xl"
                  />
                </div>
              </div>
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-5 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.general.timezone")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.general.timezone")}</span>
                </div>
                <div className="flex-1">
                  <Select
                    value={generalData.timezone}
                    onValueChange={(val) => setGeneralData({ ...generalData, timezone: val })}
                  >
-                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}>
+                   <SelectTrigger className="h-11 rounded-xl">
                      <SelectValue placeholder={t("agency.settings.general.selectTimezone")} />
                    </SelectTrigger>
                    <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
@@ -449,7 +446,7 @@ const AgencyGeneralSettings = () => {
 
              <div className="flex flex-col md:flex-row md:items-center py-5">
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.general.phone")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.general.phone")}</span>
                </div>
                <div className="flex-1">
                  <div className="relative">
@@ -458,7 +455,7 @@ const AgencyGeneralSettings = () => {
                      readOnly
                      onClick={handleOpenPhoneModal}
                      placeholder="Add a phone number"
-                     className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg pr-10 cursor-pointer", inputCls)}
+                     className="h-11 rounded-xl pr-10 cursor-pointer"
                    />
                    <Edit2 className="absolute right-3 top-3 w-4 h-4 text-primary cursor-pointer" onClick={handleOpenPhoneModal} />
                  </div>
@@ -478,14 +475,14 @@ const AgencyGeneralSettings = () => {
       </Card>
 
       {/* Billing Details Section */}
-      <Card className={cn("rounded-[20px] border shadow-sm overflow-hidden transition-colors", card, border)}>
+      <Card className={cn("rounded-2xl border shadow-sm overflow-hidden transition-colors", card, border)}>
         <div className={cn("px-8 py-5 border-b flex items-center gap-4 transition-colors", border)}>
           <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
             <CreditCard className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className={cn("font-bold text-[15px] tracking-tight", text)}>{t("agency.settings.billing.title")}</h2>
-            <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.billing.desc")}</p>
+            <h2 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("agency.settings.billing.title")}</h2>
+            <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>{t("agency.settings.billing.desc")}</p>
           </div>
         </div>
 
@@ -493,7 +490,7 @@ const AgencyGeneralSettings = () => {
           <div className="px-8">
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.company")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.company")}</span>
                </div>
                <div className="flex-1">
                  <Input
@@ -503,9 +500,7 @@ const AgencyGeneralSettings = () => {
                      if (e.target.value) setBillingErrors(prev => ({ ...prev, billing_company: "" }));
                    }}
                    placeholder="Legal company name"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                     billingErrors.billing_company && "border-red-400 focus-visible:ring-red-400",
-                     inputCls)}
+                   className={cn("h-11 rounded-xl", billingErrors.billing_company && "border-red-400 focus-visible:ring-red-400")}
                  />
                  {billingErrors.billing_company && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.billing_company}</div>}
                </div>
@@ -513,7 +508,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.person")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.person")}</span>
                </div>
                <div className="flex-1">
                  <Input
@@ -523,9 +518,7 @@ const AgencyGeneralSettings = () => {
                      if (e.target.value) setBillingErrors(prev => ({ ...prev, billing_person: "" }));
                    }}
                    placeholder="Full name of billing contact"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                     billingErrors.billing_person && "border-red-400 focus-visible:ring-red-400",
-                     inputCls)}
+                   className={cn("h-11 rounded-xl", billingErrors.billing_person && "border-red-400 focus-visible:ring-red-400")}
                  />
                  {billingErrors.billing_person && <div className="text-red-400 text-[12px] italic mt-1.5">{billingErrors.billing_person}</div>}
                </div>
@@ -533,7 +526,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxId")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxId")}</span>
                </div>
                <div className="flex-1">
                  <Select
@@ -543,7 +536,7 @@ const AgencyGeneralSettings = () => {
                      setBillingData({ ...billingData, tax_id: val === TAX_ID_OTHER ? "" : val });
                    }}
                  >
-                   <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}>
+                   <SelectTrigger className="h-11 rounded-xl">
                      <SelectValue placeholder={t("agency.settings.billing.selectTaxId")} />
                    </SelectTrigger>
                    <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
@@ -558,7 +551,7 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxIdName")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.taxIdName")}</span>
                </div>
                <div className="flex-1 grid grid-cols-2 gap-4">
                  <Input
@@ -566,36 +559,35 @@ const AgencyGeneralSettings = () => {
                    onChange={(e) => setBillingData({ ...billingData, tax_id: e.target.value })}
                    readOnly={taxIdType !== TAX_ID_OTHER && taxIdType !== ""}
                    placeholder="NTN / Tax ID"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                     taxIdType !== TAX_ID_OTHER && taxIdType !== "" && "opacity-60 cursor-not-allowed",
-                     inputCls)}
+                   className={cn("h-11 rounded-xl",
+                     taxIdType !== TAX_ID_OTHER && taxIdType !== "" && "opacity-60 cursor-not-allowed")}
                  />
                  <Input
                    value={billingData.vat}
                    onChange={(e) => setBillingData({ ...billingData, vat: e.target.value })}
                    placeholder="VAT / STRN (optional)"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
+                   className="h-11 rounded-xl"
                  />
                </div>
              </div>
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.address")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.address")}</span>
                </div>
                <div className="flex-1">
                  <Input
                    value={billingData.address.street}
                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, street: e.target.value } })}
                    placeholder="Street address"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
+                   className="h-11 rounded-xl"
                  />
                </div>
              </div>
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.country")}</span>
+                  <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.country")}</span>
                 </div>
                 <div className="flex-1">
                   <Select
@@ -605,9 +597,8 @@ const AgencyGeneralSettings = () => {
                       if (val) setBillingErrors(prev => ({ ...prev, country_iso2: "" }));
                     }}
                   >
-                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg",
-                      billingErrors.country_iso2 && "border-red-400 focus-visible:ring-red-400",
-                      inputCls)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl",
+                      billingErrors.country_iso2 && "border-red-400 focus-visible:ring-red-400")}>
                       <SelectValue placeholder={t("agency.settings.billing.selectCountry")} />
                     </SelectTrigger>
                     <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
@@ -624,7 +615,7 @@ const AgencyGeneralSettings = () => {
 
               <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.state")}</span>
+                  <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.state")}</span>
                 </div>
                 <div className="flex-1">
                   <Select
@@ -635,9 +626,8 @@ const AgencyGeneralSettings = () => {
                     }}
                     disabled={!billingData.address.country_iso2}
                   >
-                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg disabled:opacity-50",
-                      billingErrors.state && "border-red-400 focus-visible:ring-red-400",
-                      inputCls)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl disabled:opacity-50",
+                      billingErrors.state && "border-red-400 focus-visible:ring-red-400")}>
                       <SelectValue placeholder={t("agency.settings.billing.selectState")} />
                     </SelectTrigger>
                     <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
@@ -657,7 +647,7 @@ const AgencyGeneralSettings = () => {
 
               <div className={cn("flex flex-col md:flex-row md:items-center py-4 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.city")}</span>
+                  <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.city")}</span>
                 </div>
                 <div className="flex-1">
                   <Select
@@ -668,9 +658,8 @@ const AgencyGeneralSettings = () => {
                     }}
                     disabled={!billingData.address.country_iso2 || (!billingData.address.state && State.getStatesOfCountry(billingData.address.country_iso2).length > 0)}
                   >
-                    <SelectTrigger className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg disabled:opacity-50",
-                      billingErrors.city && "border-red-400 focus-visible:ring-red-400",
-                      inputCls)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl disabled:opacity-50",
+                      billingErrors.city && "border-red-400 focus-visible:ring-red-400")}>
                       <SelectValue placeholder={t("agency.settings.billing.selectCity")} />
                     </SelectTrigger>
                     <SelectContent className={cn("border shadow-2xl rounded-xl transition-colors max-h-[300px]", popSurface)}>
@@ -698,14 +687,14 @@ const AgencyGeneralSettings = () => {
 
              <div className={cn("flex flex-col md:flex-row md:items-center py-4")}>
                <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                 <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.billing.zip")}</span>
+                 <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.billing.zip")}</span>
                </div>
                <div className="flex-1">
                  <Input
                    value={billingData.address.zip}
                    onChange={(e) => setBillingData({ ...billingData, address: { ...billingData.address, zip: e.target.value } })}
                    placeholder="Zip / Postal code"
-                   className={cn("text-[13px] h-10 transition-colors shadow-none rounded-lg", inputCls)}
+                   className="h-11 rounded-xl"
                  />
                </div>
              </div>
@@ -723,14 +712,14 @@ const AgencyGeneralSettings = () => {
       </Card>
 
       {/* Invoice Recipients Section */}
-      <Card className={cn("rounded-[20px] border shadow-sm overflow-hidden transition-colors", card, border)}>
+      <Card className={cn("rounded-2xl border shadow-sm overflow-hidden transition-colors", card, border)}>
         <div className={cn("px-8 py-5 border-b flex items-center gap-4 transition-colors", border)}>
           <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
             <Mail className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className={cn("font-bold text-[15px] tracking-tight", text)}>{t("agency.settings.recipients.title")}</h2>
-            <p className={cn("text-[11px] mt-0.5", sub)}>{t("agency.settings.recipients.desc")}</p>
+            <h2 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("agency.settings.recipients.title")}</h2>
+            <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>{t("agency.settings.recipients.desc")}</p>
           </div>
         </div>
 
@@ -739,13 +728,13 @@ const AgencyGeneralSettings = () => {
             {recipients.map((recipient, index) => (
               <div key={index} className={cn("flex flex-col md:flex-row md:items-center py-2 border-b", rowBorder)}>
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.recipients.label")} {index + 1}</span>
+                  <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.recipients.label")} {index + 1}</span>
                 </div>
                 <div className="flex-1 flex gap-2">
                   <Input
                     value={recipient}
                     readOnly
-                    className={cn("text-[13px] h-10 flex-1 transition-all rounded-lg shadow-none", inputCls)}
+                    className="h-11 rounded-xl flex-1"
                   />
                   <button
                     onClick={() => handleDeleteRecipient(index)}
@@ -765,14 +754,14 @@ const AgencyGeneralSettings = () => {
             {isAdding ? (
               <div className="flex flex-col md:flex-row md:items-center py-2 animate-in fade-in slide-in-from-left-2">
                 <div className="w-[250px] shrink-0 mb-2 md:mb-0">
-                  <span className={cn("text-[12px] font-semibold", fieldLabel)}>{t("agency.settings.recipients.new")}</span>
+                  <span className={cn("text-[11px] font-semibold", fieldLabel)}>{t("agency.settings.recipients.new")}</span>
                 </div>
                 <div className="flex-1 flex gap-2">
                   <Input
                     placeholder="name@company.com"
                     value={newRecipient}
                     onChange={(e) => setNewRecipient(e.target.value)}
-                    className={cn("text-[13px] h-10 flex-1 transition-all rounded-lg shadow-none", inputCls)}
+                    className="h-11 rounded-xl flex-1"
                   />
                   <button
                     onClick={handleSaveRecipient}
@@ -809,7 +798,7 @@ const AgencyGeneralSettings = () => {
           </DialogHeader>
 
           <div className="p-6 space-y-3">
-            <label className={cn("text-[12px] font-semibold", fieldLabel)}>
+            <label className={cn("text-[11px] font-semibold", fieldLabel)}>
               {t("agency.settings.general.phoneModal.label")}
             </label>
             <div className="flex flex-col gap-3">
@@ -830,12 +819,12 @@ const AgencyGeneralSettings = () => {
                   >
                     <div className={cn("p-2 border-b", border)}>
                       <div className="relative">
-                        <Search className={cn("absolute left-2.5 top-2.5 h-4 w-4", sub)} />
+                        <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5", sub)} />
                         <Input
                           placeholder={t("common.search")}
                           value={phoneSearchQuery}
                           onChange={(e) => setPhoneSearchQuery(e.target.value)}
-                          className={cn("h-9 pl-9 text-[13px] shadow-none rounded-lg", inputCls)}
+                          className="h-9 pl-9 rounded-xl"
                         />
                       </div>
                     </div>
@@ -888,7 +877,7 @@ const AgencyGeneralSettings = () => {
                     selectedCountry.code === "SA" ? t("agency.settings.general.phoneModal.placeholder_sa") :
                     t("agency.settings.general.phoneModal.placeholder_default")
                   }
-                  className={cn("flex-1 h-10 border-0 focus-visible:ring-0 text-[13px] bg-transparent", text)}
+                  className="flex-1 h-10 border-0 focus-visible:ring-0 bg-transparent"
                 />
               </div>
               {phoneError && <div className="text-red-400 text-[12px] italic">{phoneError}</div>}

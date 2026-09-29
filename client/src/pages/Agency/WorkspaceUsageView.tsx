@@ -58,9 +58,9 @@ const WorkspaceUsageView: React.FC<WorkspaceUsageViewProps> = ({ workspace, onBa
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className={cn("p-2 rounded-full transition-colors", isDark ? "hover:bg-slate-700" : "hover:bg-slate-100")}
+            className={cn("transition-colors shrink-0", isDark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft size={20} />
           </button>
           <div className={cn("p-2 rounded", isDark ? "bg-[#334155]" : "bg-slate-100")}>
             <BarChart3 className={cn("w-6 h-6", isDark ? "text-white" : "text-primary")} />

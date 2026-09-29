@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Bell, ArrowLeft, CheckCircle, AlertTriangle, Mail, Send, MessageSquare, Trash2 } from "react-feather";
+import { Bell, ChevronLeft, CheckCircle, AlertTriangle, Mail, Send, MessageSquare, Trash2 } from "react-feather";
 import { MailOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -108,9 +108,9 @@ export default function AgencyNotificationsPage() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => window.history.back()}
-                            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400"
+                            className="text-slate-400 dark:text-slate-500 hover:text-primary transition-colors shrink-0"
                         >
-                            <ArrowLeft size={18} />
+                            <ChevronLeft size={20} />
                         </button>
                         <div>
                             <h1 className="text-base font-bold text-slate-900 dark:text-white leading-none">{t("agency_notifications_page.title")}</h1>

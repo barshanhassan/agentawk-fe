@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowLeft,
+  ChevronLeft,
   ShieldCheck,
   Sparkles,
   Building2,
@@ -170,9 +170,9 @@ const AgencyPremiumCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
         </div>
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
+          className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
         >
-          <ArrowLeft size={14} /> Back
+          <ChevronLeft size={20} />
         </button>
       </div>
 
@@ -180,12 +180,12 @@ const AgencyPremiumCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left Column: real plan features */}
           <div className="lg:col-span-7">
-            <div className={cn("rounded-[20px] border shadow-sm overflow-hidden", card, border)}>
+            <div className={cn("rounded-2xl border shadow-sm overflow-hidden", card, border)}>
               <div className={cn("px-5 py-4 border-b flex items-center gap-3", border)}>
                 <div className="p-2 rounded-lg bg-primary/10"><Sparkles className="w-4 h-4 text-primary" /></div>
                 <div>
-                  <p className={cn("text-[14px] font-bold", text)}>{plan?.external_name || "Premium plan"}</p>
-                  <p className={cn("text-[11px] font-medium", sub)}>What's included, straight from your account's plan data</p>
+                  <p className={cn("text-[16px] font-bold tracking-tight", text)}>{plan?.external_name || "Premium plan"}</p>
+                  <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>What's included, straight from your account's plan data</p>
                 </div>
               </div>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -215,7 +215,7 @@ const AgencyPremiumCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-5">
-            <div className={cn("rounded-[20px] border p-8 sticky top-8 shadow-xl", card, border)}>
+            <div className={cn("rounded-2xl border p-8 sticky top-8 shadow-xl", card, border)}>
               <h3 className={cn("text-[16px] font-bold mb-6", text)}>Order summary</h3>
 
               <div className="pb-6 border-b border-dashed border-slate-200 dark:border-slate-700">
@@ -270,8 +270,7 @@ const AgencyPremiumCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>Your Mobile Number</label>
                 <input
                   className={cn(
-                    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-                    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
+                    "w-full h-11 rounded-xl px-4 border outline-none",
                     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
                   )}
                   placeholder="03xxxxxxxxx"
@@ -286,7 +285,7 @@ const AgencyPremiumCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
               <button
                 onClick={() => checkoutMutation.mutate()}
                 disabled={checkoutMutation.isPending || !msisdn.trim()}
-                className="w-full bg-primary hover:opacity-90 disabled:opacity-60 text-white py-3.5 rounded-xl font-black text-[14px] mt-6 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full bg-primary hover:bg-primary/90 disabled:opacity-60 text-white py-3.5 rounded-xl font-black text-[14px] mt-6 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 {checkoutMutation.isPending && <Loader2 size={16} className="animate-spin" />}
                 Proceed To Checkout (Rs. 1.00 test charge)

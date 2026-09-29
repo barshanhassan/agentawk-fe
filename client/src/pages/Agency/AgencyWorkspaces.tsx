@@ -231,17 +231,17 @@ const AgencyWorkspaces = () => {
             <Network className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn("text-[15px] font-bold tracking-tight", text)}>{t("agency_workspaces.title")}</h1>
-            <p className={cn("text-[11px] mt-0.5", sub)}>
+            <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("agency_workspaces.title")}</h1>
+            <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
               {t("agency_workspaces.count_summary", { total: filteredWorkspaces.length, active: filteredWorkspaces.filter((ws: any) => ws.status === 'Active').length })}
             </p>
           </div>
         </div>
         <button
           onClick={() => setViewMode('CREATE')}
-          className="flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-lg shadow-primary/20"
+          className="flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/20"
         >
-          <Plus size={14} /> {t("agency_workspaces.add_workspace")}
+          <Plus size={12} /> {t("agency_workspaces.add_workspace")}
         </button>
       </div>
 
@@ -254,7 +254,7 @@ const AgencyWorkspaces = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
-              "pl-9 pr-3 h-8 w-full text-[12px] rounded-lg border outline-none transition-colors",
+              "pl-9 pr-3 h-9 w-full text-[12px] rounded-xl border outline-none transition-colors",
               dark
                 ? "bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600"
                 : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300"
@@ -474,7 +474,7 @@ const AgencyWorkspaces = () => {
             <div className="mt-10 flex justify-center">
               <button
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold bg-primary text-white hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-sm"
               >
                 <ChevronDown size={14} /> {t("agency_workspaces.show_more")}
               </button>

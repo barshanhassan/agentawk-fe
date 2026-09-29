@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, ShieldCheck, Wallet, Loader2 } from "lucide-react";
+import { ChevronLeft, ShieldCheck, Wallet, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -119,9 +119,9 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
         </div>
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-sm"
+          className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
         >
-          <ArrowLeft size={14} /> {t("agency_swich_checkout.back")}
+          <ChevronLeft size={20} />
         </button>
       </div>
 
@@ -129,7 +129,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left Column: single line item */}
           <div className="lg:col-span-7">
-            <div className={cn("rounded-[20px] border shadow-sm overflow-hidden", card, border)}>
+            <div className={cn("rounded-2xl border shadow-sm overflow-hidden", card, border)}>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 <div className="p-5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
 
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-5">
-            <div className={cn("rounded-[20px] border p-8 sticky top-8 shadow-xl", card, border)}>
+            <div className={cn("rounded-2xl border p-8 sticky top-8 shadow-xl", card, border)}>
               <h3 className={cn("text-[16px] font-bold mb-8", text)}>{t("agency_swich_checkout.order_summary")}</h3>
 
               <div className="space-y-4 mb-8">
@@ -184,8 +184,7 @@ const AgencySwichCheckout: React.FC<CheckoutProps> = ({ onBack }) => {
                 <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("agency_swich_checkout.mobile_label")}</label>
                 <input
                   className={cn(
-                    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-                    "focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50",
+                    "w-full h-11 rounded-xl px-4 border outline-none",
                     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
                   )}
                   placeholder="03xxxxxxxxx"

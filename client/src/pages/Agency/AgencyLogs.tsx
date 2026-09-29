@@ -199,8 +199,8 @@ const AgencyLogs = () => {
             <Layers className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>{t("agency.logs.title")}</h1>
-            <p className={cn('text-[11px] mt-0.5', sub)}>
+            <h1 className={cn('text-[16px] font-bold tracking-tight', text)}>{t("agency.logs.title")}</h1>
+            <p className={cn('text-[11px] font-bold mt-0.5 opacity-60', sub)}>
               {total} total activities recorded
             </p>
           </div>

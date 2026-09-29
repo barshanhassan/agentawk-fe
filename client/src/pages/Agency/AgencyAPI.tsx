@@ -100,8 +100,8 @@ const AgencyAPI = () => {
             <Plug className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>{t("agency.api.title")}</h1>
-            <p className={cn('text-[11px] mt-0.5', sub)}>
+            <h1 className={cn('text-[16px] font-bold tracking-tight', text)}>{t("agency.api.title")}</h1>
+            <p className={cn('text-[11px] font-bold mt-0.5 opacity-60', sub)}>
               {t("agency.api.desc")}
             </p>
           </div>
@@ -163,7 +163,7 @@ const AgencyAPI = () => {
                     type="text"
                     readOnly
                     value={apiKey}
-                    className={cn("w-full px-6 py-4 rounded-xl border text-center font-mono text-[13px] font-bold tracking-wider transition-all focus:outline-none shadow-sm",
+                    className={cn("w-full px-6 py-4 rounded-xl border text-center font-mono text-[13px] font-bold placeholder:font-sans placeholder:font-normal placeholder:text-[13px] tracking-wider transition-all focus:outline-none shadow-sm",
                       dark
                         ? "bg-slate-950/50 border-slate-800 text-slate-300 focus:border-primary/50"
                         : "bg-slate-50/50 border-slate-100 text-slate-600 focus:border-primary/30")}

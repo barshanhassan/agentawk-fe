@@ -316,8 +316,8 @@ const AgencyBillingPlans = () => {
             <CreditCard className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>Billing & Subscription</h1>
-            <p className={cn('text-[11px] mt-0.5', sub)}>Choose a plan and manage your billing, all in one place.</p>
+            <h1 className={cn('text-[16px] font-bold tracking-tight', text)}>Billing & Subscription</h1>
+            <p className={cn('text-[11px] font-bold mt-0.5 opacity-60', sub)}>Choose a plan and manage your billing, all in one place.</p>
           </div>
         </div>
         {currentPlanResp?.plan?.external_name && (
@@ -513,10 +513,7 @@ const AgencyBillingPlans = () => {
                         placeholder={t("agency.billing.coupons.placeholder")}
                         value={couponCode}
                         onChange={(e) => { setCouponCode(e.target.value); if (e.target.value.trim()) setCouponError(false); }}
-                        className={cn("text-[12px] h-9 rounded-lg transition-all shadow-none",
-                          dark ? "bg-slate-950/50 border-slate-800 text-white focus-visible:ring-primary/30"
-                               : "bg-white border-slate-200 text-slate-900 focus-visible:ring-primary/20",
-                          couponError && "border-rose-500")}
+                        className={cn("h-9 rounded-lg", couponError && "border-rose-500")}
                       />
                       <button
                         onClick={applyCoupon}
@@ -835,7 +832,7 @@ const AgencyBillingPlans = () => {
                   <button
                     onClick={() => cancelSubscriptionMutation.mutate()}
                     disabled={!checks.c1 || !checks.c2 || !checks.c3 || cancelCodeInput !== generatedCode || cancelSubscriptionMutation.isPending}
-                    className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[13px] transition-all shadow-lg shadow-rose-500/20">
+                    className="h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-rose-500/20">
                     {cancelSubscriptionMutation.isPending ? "Cancelling…" : t("common.delete")}
                   </button>
                 </div>

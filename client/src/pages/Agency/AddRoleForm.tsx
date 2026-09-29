@@ -4,7 +4,6 @@ import { Shield, Users, Key, Layers, Settings, ChevronLeft, Loader2, Check, Shie
 import { useTranslation } from 'react-i18next';
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
@@ -130,10 +129,9 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
         dark ? 'bg-[#0f1829] border-slate-800' : 'bg-white border-slate-200')}>
         <button
           onClick={onCancel}
-          className={cn('flex items-center justify-center w-8 h-8 rounded-lg border transition-colors',
-            dark ? 'border-slate-700 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-50')}
+          className={cn('transition-colors shrink-0', dark ? 'text-slate-500 hover:text-primary' : 'text-slate-400 hover:text-primary')}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={20} />
         </button>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
@@ -151,13 +149,6 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
 
         {/* Save button in header */}
         <div className="ml-auto flex gap-2">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className={cn('h-11 px-6 rounded-xl text-[11px] font-semibold', dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800 bg-transparent' : '')}
-          >
-            {t('common.cancel')}
-          </Button>
           <button
             onClick={() => saveMutation.mutate(formData)}
             disabled={saveMutation.isPending || !formData.name.trim()}
@@ -178,12 +169,12 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
           dark ? 'bg-[#0f1829] border-slate-800' : 'bg-white border-slate-200')}>
           <div className="p-5 space-y-4 flex-1 overflow-y-auto">
             <div>
-              <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
+              <label className={cn('text-[11px] font-semibold mb-1.5 block',
                 dark ? 'text-slate-500' : 'text-slate-400')}>
                 {t('agency.roles.form.name')} *
               </label>
               <Input
-                className={cn('h-9 text-[13px]', dark ? 'bg-[#0b1120] border-slate-700 text-white' : 'border-slate-200')}
+                className="h-11 rounded-xl"
                 placeholder="e.g. Support Manager"
                 maxLength={100}
                 value={formData.name}
@@ -195,12 +186,12 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
                 shows the chosen icon + its fa- name, and the dropdown lists the same
                 options (icon + name). The stored value matches the gateway exactly. */}
             <div>
-              <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
+              <label className={cn('text-[11px] font-semibold mb-1.5 block',
                 dark ? 'text-slate-500' : 'text-slate-400')}>
                 {t('select_icon', 'Select Icon')}
               </label>
               <Select value={formData.icon} onValueChange={(icon) => setFormData(p => ({ ...p, icon }))}>
-                <SelectTrigger className={cn('h-9 text-[13px]', dark ? 'bg-[#0b1120] border-slate-700 text-white' : 'border-slate-200')}>
+                <SelectTrigger className="h-11 rounded-xl">
                   <span className="flex items-center gap-2">
                     <i className={cn('fa-solid w-4 text-center', formData.icon)} />
                     {formData.icon}
@@ -220,19 +211,14 @@ const AddRoleForm: React.FC<Props> = ({ onCancel, initialData }) => {
             </div>
 
             <div>
-              <label className={cn('text-[11px] font-bold uppercase tracking-wide mb-1.5 block',
+              <label className={cn('text-[11px] font-semibold mb-1.5 block',
                 dark ? 'text-slate-500' : 'text-slate-400')}>
                 {t('agency.roles.form.description')}
               </label>
               <textarea
                 rows={3}
                 maxLength={300}
-                className={cn(
-                  'w-full px-3 py-2 text-[12px] rounded-md border outline-none resize-none transition-colors',
-                  dark
-                    ? 'bg-[#0b1120] border-slate-700 text-white placeholder:text-slate-600 focus:border-slate-600'
-                    : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300'
-                )}
+                className="w-full px-3 py-2 rounded-xl border outline-none resize-none"
                 placeholder="What is this role for?"
                 value={formData.description}
                 onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}

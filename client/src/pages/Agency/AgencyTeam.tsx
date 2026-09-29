@@ -166,21 +166,21 @@ const AgencyTeam = () => {
       {/* ── Header ── */}
       <div className={cn('px-8 py-5 border-b flex items-center justify-between', card, border)}>
         <div className="flex items-center gap-4">
-          <div className={cn('p-2.5 rounded-xl', dark ? 'bg-primary/15' : 'bg-primary/10')}>
+          <div className={cn('p-2.5 rounded-xl shadow-sm', dark ? 'bg-primary/15' : 'bg-primary/10')}>
             <Users className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>{t('agency_team_page.title')}</h1>
-            <p className={cn('text-[11px] mt-0.5', sub)}>
+            <h1 className={cn('text-[16px] font-bold tracking-tight', text)}>{t('agency_team_page.title')}</h1>
+            <p className={cn('text-[11px] font-bold mt-0.5 opacity-60', sub)}>
               {t('agency_team_page.active_inactive_count', { active: activeCount, inactive: inactiveCount })}
             </p>
           </div>
         </div>
         <button
           onClick={() => { setEditingMember(null); setViewMode('ADD'); }}
-          className="flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-colors shadow-lg shadow-primary/20"
+          className="flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/20"
         >
-          <Plus size={14} /> {t('agency_team_page.add_user')}
+          <Plus size={12} /> {t('agency_team_page.add_user')}
         </button>
       </div>
 
@@ -193,7 +193,7 @@ const AgencyTeam = () => {
             onChange={e => setSearch(e.target.value)}
             placeholder={t('agency_team_page.search_placeholder')}
             className={cn(
-              'pl-9 pr-3 h-8 w-full text-[12px] rounded-lg border outline-none transition-colors',
+              'pl-9 pr-3 h-9 w-full text-[12px] rounded-xl border outline-none transition-colors',
               dark
                 ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-500 focus:border-slate-600'
                 : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-300'
@@ -274,9 +274,9 @@ const AgencyTeam = () => {
               {!search && (
                 <button
                   onClick={() => setViewMode('ADD')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold bg-primary hover:opacity-90 text-primary-foreground"
+                  className="flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/20"
                 >
-                  <Plus size={13} /> {t('agency_team_page.add_user')}
+                  <Plus size={12} /> {t('agency_team_page.add_user')}
                 </button>
               )}
             </div>
@@ -458,7 +458,7 @@ const AgencyTeam = () => {
                   onChange={e => setDeleteConfirm(e.target.value)}
                   placeholder={deleteTarget.name.split(' ')[0]}
                   className={cn(
-                    'h-9 text-[12px] font-medium transition-colors',
+                    'h-9 text-[12px] font-medium placeholder:font-normal placeholder:text-[12px] transition-colors',
                     dark
                       ? 'bg-slate-900/60 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-red-500/40'
                       : 'bg-white border-slate-200 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-red-400/40'

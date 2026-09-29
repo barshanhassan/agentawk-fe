@@ -97,8 +97,8 @@ const AgencyLegal = () => {
             <Gavel className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>{t("agency.legal.title")}</h1>
-            <p className={cn('text-[11px] mt-0.5', sub)}>
+            <h1 className={cn('text-[16px] font-bold tracking-tight', text)}>{t("agency.legal.title")}</h1>
+            <p className={cn('text-[11px] font-bold mt-0.5 opacity-60', sub)}>
               {t("agency.legal.desc")}
             </p>
           </div>
@@ -311,36 +311,36 @@ const AgencyLegal = () => {
             <div className="px-8 py-8 space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className={cn("block text-[12px] font-black uppercase tracking-widest", sub)}>{t("agency.legal.modals.edit.doc_name")}</label>
-                  <input 
-                    type="text" 
-                    defaultValue="Terms" 
-                    className={cn("w-full px-4 py-2.5 rounded-xl border text-[13px] font-bold outline-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
-                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                  <label className={cn("block text-[11px] font-semibold", sub)}>{t("agency.legal.modals.edit.doc_name")}</label>
+                  <input
+                    type="text"
+                    defaultValue="Terms"
+                    className={cn("w-full px-4 py-2.5 rounded-xl border outline-none",
+                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className={cn("block text-[12px] font-black uppercase tracking-widest", sub)}>{t("agency.legal.modals.edit.link_text")}</label>
-                  <input 
-                    type="text" 
-                    defaultValue="Terms" 
-                    className={cn("w-full px-4 py-2.5 rounded-xl border text-[13px] font-bold outline-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
-                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                  <label className={cn("block text-[11px] font-semibold", sub)}>{t("agency.legal.modals.edit.link_text")}</label>
+                  <input
+                    type="text"
+                    defaultValue="Terms"
+                    className={cn("w-full px-4 py-2.5 rounded-xl border outline-none",
+                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
                   />
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className={cn("text-[12px] font-black uppercase tracking-widest", sub)}>{t("agency.legal.modals.edit.checkbox_text_label")}</label>
+                  <label className={cn("text-[11px] font-semibold", sub)}>{t("agency.legal.modals.edit.checkbox_text_label")}</label>
                   <button className="text-[11px] font-bold px-3 py-1 rounded-lg border border-primary/30 text-primary hover:bg-primary/5 transition-all">
                     {t("agency.legal.modals.edit.doc_link_btn")}
                   </button>
                 </div>
-                <textarea 
-                  defaultValue="I Accept the [LINK] and Conditions" 
-                  className={cn("w-full px-4 py-3 rounded-xl border text-[13px] font-bold outline-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20 min-h-[100px] resize-none",
-                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")} 
+                <textarea
+                  defaultValue="I Accept the [LINK] and Conditions"
+                  className={cn("w-full px-4 py-3 rounded-xl border outline-none min-h-[100px] resize-none",
+                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
                 />
                 <div className={cn("p-3 rounded-lg border border-dashed text-[12px] font-bold flex gap-2", border)}>
                   <Info size={14} className="text-primary shrink-0 mt-0.5" />
@@ -386,12 +386,12 @@ const AgencyLegal = () => {
             <div className="px-8 py-8 space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className={cn("block text-[12px] font-black uppercase tracking-widest", sub)}>{t("agency.legal.modals.edit.doc_name")}</label>
-                  <input type="text" className={cn("w-full px-4 py-2.5 rounded-xl border text-[13px] font-bold outline-none transition-all", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200")} />
+                  <label className={cn("block text-[11px] font-semibold", sub)}>{t("agency.legal.modals.edit.doc_name")}</label>
+                  <input type="text" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200")} />
                 </div>
                 <div className="space-y-2">
-                  <label className={cn("block text-[12px] font-black uppercase tracking-widest", sub)}>{t("agency.legal.modals.edit.link_text")}</label>
-                  <input type="text" className={cn("w-full px-4 py-2.5 rounded-xl border text-[13px] font-bold outline-none transition-all", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200")} />
+                  <label className={cn("block text-[11px] font-semibold", sub)}>{t("agency.legal.modals.edit.link_text")}</label>
+                  <input type="text" className={cn("w-full px-4 py-2.5 rounded-xl border outline-none", dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200")} />
                 </div>
               </div>
 
@@ -437,7 +437,7 @@ const AgencyLegal = () => {
               <button onClick={() => setIsArchiveModalOpen(false)} className={cn("flex-1 py-3 text-[13px] font-black uppercase tracking-widest border rounded-xl transition-all", dark ? "border-slate-700 text-slate-400 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50")}>
                 {t("common.no")}
               </button>
-              <button onClick={() => setIsArchiveModalOpen(false)} className="flex-1 py-3 text-[13px] font-black uppercase tracking-widest bg-rose-500 text-white rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-500/20 transition-all">
+              <button onClick={() => setIsArchiveModalOpen(false)} className="flex-1 h-11 text-[11px] font-semibold bg-rose-500 text-white rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-500/20 transition-all">
                 {t("common.yes")}
               </button>
             </div>

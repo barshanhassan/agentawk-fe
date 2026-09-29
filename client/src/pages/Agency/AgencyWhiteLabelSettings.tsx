@@ -184,7 +184,7 @@ const AgencyWhiteLabelSettings = () => {
             <Settings className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn("text-[15px] font-black tracking-tight uppercase tracking-widest", text)}>White Label</h1>
+            <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>White Label</h1>
             <p className={cn("text-[11px] font-bold mt-0.5 opacity-60", sub)}>
               Personalize your agency branding and domains.
             </p>
@@ -193,7 +193,7 @@ const AgencyWhiteLabelSettings = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-8 custom-scrollbar pb-24">
-        <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+        <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
           <CardContent className="p-0">
             <Tabs defaultValue="features" className="w-full">
               <div className={cn("px-8 border-b flex justify-start", dark ? "border-slate-800" : "border-slate-100")}>
@@ -460,24 +460,24 @@ const AgencyWhiteLabelSettings = () => {
                      dark ? "bg-slate-950/50 border-slate-800 focus-within:border-primary/50" : "bg-white border-slate-200 focus-within:border-primary/30")}>
                       <span className={cn("px-4 text-[11px] font-black uppercase tracking-widest border-r h-full flex items-center transition-colors",
                         dark ? "text-slate-600 border-slate-800 bg-slate-900/30" : "text-slate-400 border-slate-100 bg-slate-50")}>https://</span>
-                      <input 
-                        placeholder="app" 
+                      <input
+                        placeholder="app"
                         value={brandingData.slug}
                         onChange={(e) => setBrandingData({ ...brandingData, slug: e.target.value })}
-                        className={cn("bg-transparent h-full text-[12px] font-black outline-none px-4 flex-1", text)} 
+                        className={cn("bg-transparent h-full text-[12px] font-black placeholder:font-normal placeholder:text-[12px] outline-none px-4 flex-1", text)}
                       />
                       <span className={cn("px-4 text-[12px] font-bold text-slate-400 border-l h-full flex items-center", dark ? "border-slate-800" : "border-slate-100")}>.</span>
-                      <input 
-                        placeholder="yourdomain.com" 
+                      <input
+                        placeholder="yourdomain.com"
                         value={brandingData.domain}
                         onChange={(e) => setBrandingData({ ...brandingData, domain: e.target.value })}
-                        className={cn("bg-transparent h-full text-[12px] font-black outline-none px-4 flex-1", text)} 
+                        className={cn("bg-transparent h-full text-[12px] font-black placeholder:font-normal placeholder:text-[12px] outline-none px-4 flex-1", text)}
                       />
                    </div>
 
                    <button 
                     onClick={() => updateMutation.mutate({ domain: brandingData.domain, slug: brandingData.slug })}
-                    className="px-7 py-0 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/20">
+                    className="px-7 py-0 h-11 rounded-xl text-[11px] font-semibold bg-primary hover:bg-primary/90 text-white transition-all shadow-lg shadow-primary/20">
                       {updateMutation.isPending ? t("common.connecting") : t("common.connect")}
                    </button>
                 </div>
@@ -540,15 +540,15 @@ const AgencyWhiteLabelSettings = () => {
                           <div className={cn("h-full px-3 flex items-center text-slate-400 font-black text-md", dark ? "bg-slate-900/30" : "bg-slate-50")}>
                             @
                           </div>
-                          <input 
+                          <input
                             placeholder="your-domain.com"
                             value={emailFormData.domain}
                             onChange={(e) => setEmailFormData(prev => ({ ...prev, domain: e.target.value }))}
-                            className={cn("flex-1 h-full text-[12px] font-black outline-none px-4", text)} 
+                            className={cn("flex-1 h-full text-[12px] font-black placeholder:font-normal placeholder:text-[12px] outline-none px-4", text)}
                           />
                         </div>
                         
-                        <button className="h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+                        <button className="h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20">
                            {t("common.continue")}
                         </button>
                         <button onClick={() => setShowEmailForm(false)} className={cn("h-11 w-11 rounded-xl flex items-center justify-center border", dark ? "border-slate-800 hover:bg-slate-900" : "border-slate-100 hover:bg-slate-50")}>

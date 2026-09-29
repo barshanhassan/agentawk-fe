@@ -109,8 +109,8 @@ const AgencyNotificationsSettings = () => {
             <Bell className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className={cn('text-[15px] font-bold', text)}>{t("agency.settings.notifications.title")}</h1>
-            <p className={cn('text-[11px] mt-0.5', sub)}>
+            <h1 className={cn('text-[16px] font-bold tracking-tight', text)}>{t("agency.settings.notifications.title")}</h1>
+            <p className={cn('text-[11px] font-bold mt-0.5 opacity-60', sub)}>
               {t("agency.settings.notifications.updated")}
             </p>
           </div>
@@ -146,7 +146,7 @@ const AgencyNotificationsSettings = () => {
                   value={notifEmail}
                   onChange={(e) => setNotifEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className={cn("text-[13px] h-11 px-4 rounded-xl transition-all border shadow-none focus-visible:ring-primary/20 focus-visible:border-primary/50",
+                  className={cn("h-11 px-4 rounded-xl border shadow-none",
                     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}
                 />
                 <p className={cn("text-[11px] font-bold leading-relaxed", sub)}>
@@ -166,7 +166,7 @@ const AgencyNotificationsSettings = () => {
 
               <div className="space-y-2">
                 <Select value={notifLanguage} onValueChange={setNotifLanguage}>
-                  <SelectTrigger className={cn("text-[13px] h-11 px-4 rounded-xl transition-all border shadow-none focus-visible:ring-primary/20", 
+                  <SelectTrigger className={cn("h-11 px-4 rounded-xl border shadow-none",
                     dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900")}>
                     <SelectValue placeholder={t("agency.settings.notifications.selectLanguage")}>
                       <div className="flex items-center gap-2">

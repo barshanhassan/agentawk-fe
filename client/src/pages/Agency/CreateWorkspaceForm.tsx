@@ -228,11 +228,11 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
   const selectedMemberIndex = members.findIndex((m: any) => String(m.id) === form.agentId);
 
   const cardCls = cn("rounded-xl border", dark ? "bg-[#1e293b] border-slate-700" : "bg-white border-slate-200");
-  const labelCls = cn("block text-xs font-semibold mb-1.5", dark ? "text-slate-300" : "text-slate-600");
-  const inputCls = cn("h-10 text-sm focus:ring-2 focus:ring-primary focus:ring-offset-0 focus:border-primary", dark ? "bg-[#0f172a] border-slate-700 text-white placeholder:text-slate-600" : "border-slate-200");
+  const labelCls = cn("block text-[11px] font-semibold mb-1.5", dark ? "text-slate-300" : "text-slate-600");
+  const inputCls = "h-11 rounded-xl";
   const rowCls = cn("flex items-center gap-3 p-3.5 rounded-xl", dark ? "bg-[#0f172a]" : "bg-slate-50");
   const switchCls = "data-[state=checked]:bg-primary data-[state=unchecked]:bg-slate-300 dark:data-[state=unchecked]:bg-slate-600";
-  const selectCls = cn("h-10 text-sm focus:ring-1 focus:ring-offset-0", dark ? "bg-[#0f172a] border-slate-700 text-white" : "border-slate-300");
+  const selectCls = "h-11 rounded-xl";
 
   return (
     <div className={cn("min-h-screen", dark ? "bg-[#0f172a] text-white" : "bg-slate-50 text-slate-900")}>
@@ -244,9 +244,9 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={onCancel}
-            className={cn("p-2 rounded-lg border transition-colors", dark ? "border-slate-700 hover:bg-slate-800 text-slate-400" : "border-slate-200 hover:bg-white text-slate-500")}
+            className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={20} />
           </button>
           <div>
             <h1 className="text-lg font-bold">{isEdit ? t("create_workspace_form.edit_title", { name: initialData.name }) : t("create_workspace_form.create_title")}</h1>
@@ -257,18 +257,9 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
         </div>
         <div className="flex items-center gap-2.5">
           <button
-            onClick={onCancel}
-            className={cn(
-              "h-11 px-6 rounded-xl text-[11px] font-semibold border transition-colors",
-              dark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-white"
-            )}
-          >
-            {t("create_workspace_form.cancel")}
-          </button>
-          <button
             onClick={handleSubmit}
             disabled={saveMutation.isPending}
-            className="inline-flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:opacity-90 text-primary-foreground shadow-lg shadow-primary/20 transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-2 h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all disabled:opacity-60"
           >
             {saveMutation.isPending ? (
               <>
@@ -335,7 +326,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                   value={form.subdomain}
                   onChange={(e) => set('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
                   disabled={isEdit}
-                  className={cn("rounded-none border-0 flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 h-full disabled:opacity-100", dark ? "bg-[#0f172a] text-white" : "bg-white")}
+                  className="rounded-none border-0 flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 h-full disabled:opacity-100"
                 />
                 <span className={cn(
                   "flex items-center px-3 border-l text-xs font-medium whitespace-nowrap shrink-0",
@@ -468,7 +459,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                       if (cleaned !== e.target.value) e.target.value = cleaned;
                       set('contactLimit', Math.max(0, parseInt(cleaned) || 0));
                     }}
-                    className={cn("w-20 h-8 text-xs text-center", dark ? "bg-slate-900 border-slate-700 text-white" : "border-slate-200")}
+                    className="w-20 h-8 text-center"
                   />
                 )}
                 <Switch checked={form.limitContacts} onCheckedChange={(v) => set('limitContacts', v)} className={switchCls} />
@@ -493,7 +484,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                     if (cleaned !== e.target.value) e.target.value = cleaned;
                     set('agentLimit', Math.max(0, parseInt(cleaned) || 0));
                   }}
-                  className={cn("w-20 h-8 text-xs text-center", dark ? "bg-slate-900 border-slate-700 text-white" : "border-slate-200")}
+                  className="w-20 h-8 text-center"
                 />
                 <Switch checked={form.limitAgents} onCheckedChange={(v) => set('limitAgents', v)} className={switchCls} />
               </div>
@@ -535,7 +526,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                   if (cleaned !== e.target.value) e.target.value = cleaned;
                   set('aiLimit', Math.max(0, parseInt(cleaned) || 0));
                 }}
-                className={cn("w-16 h-8 text-xs text-center", dark ? "bg-[#0f172a] border-slate-700 text-white" : "border-slate-200 bg-white")}
+                className="w-16 h-8 text-center"
               />
             </div>
           </div>
@@ -575,7 +566,7 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                       if (cleaned !== e.target.value) e.target.value = cleaned;
                       setChannel(ch.id, Math.max(0, parseInt(cleaned) || 0));
                     }}
-                    className={cn("w-16 h-8 text-xs text-center", dark ? "bg-[#0f172a] border-slate-700 text-white" : "border-slate-200 bg-white")}
+                    className="w-16 h-8 text-center"
                   />
                 </div>
               </div>
