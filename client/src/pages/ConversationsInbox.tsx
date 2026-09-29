@@ -495,7 +495,7 @@ const VoiceMessagePlayer: React.FC<{ url: string; timestampSlot?: React.ReactNod
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-full transition-colors ${i / bars.length < progress ? (isOutgoing ? "bg-[var(--outgoing-bubble)]" : "bg-emerald-700 dark:bg-emerald-300") : "bg-black/20 dark:bg-white/25"}`}
+              className={`flex-1 rounded-full transition-colors ${i / bars.length < progress ? (isOutgoing ? "bg-[var(--outgoing-text)]" : "bg-[var(--incoming-text)]") : "bg-black/20 dark:bg-white/25"}`}
               style={{ height: `${h * 100}%` }}
             />
           ))}
@@ -3513,30 +3513,11 @@ export default function ConversationsInbox() {
                             </div>
                             <span className="text-xs text-muted-foreground flex-shrink-0">{formatConversationTime(conv.time, workspaceTz)}</span>
                           </div>
-                          <p className="text-sm truncate mb-1 font-normal text-muted-foreground" style={{ maxWidth: `${sidebarWidth - 96}px` }}>{conv.lastMessage}</p>
-                          {/* Per-row WhatsApp number badge (M19) — only when the
-                              workspace has more than one number, so the agent can
-                              tell which number a chat arrived on. */}
-                          {conv.channelNumber?.phone_number && waFilterNumbers.length > 1 && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/60 rounded px-1.5 py-0.5 mb-1 max-w-full truncate">
-                              <img src="/images/automations/whatsapp.svg" alt="WA" className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{conv.channelNumber.name || conv.channelNumber.phone_number}</span>
-                            </span>
-                          )}
-                          {/* Footer row (replyagent): assignee on the left
-                              ("Waiting for assistance" when unassigned) + a
-                              New/Transferred badge on the right. */}
+                          {/* Footer row: last-message preview on the left
+                              (was the assignee/"Waiting for assistance" line)
+                              + a New/Transferred badge on the right. */}
                           <div className="flex items-center justify-between gap-2">
-                            {conv.assignedAgent ? (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {t("conversations_inbox.list.assigned_to")} <span className="font-medium">{conv.assignedAgentName || getAgentName(conv.assignedAgent)}</span>
-                              </p>
-                            ) : (
-                              <span className="flex items-center gap-1 text-xs text-red-600">
-                                <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                                {t("conversations_inbox.list.waiting_for_assistance")}
-                              </span>
-                            )}
+                            <p className="text-xs text-muted-foreground truncate">{conv.lastMessage}</p>
                             {conv.unread > 0 ? (
                               <span className="flex items-center gap-1 text-[11px] text-red-600 flex-shrink-0">
                                 <span className="h-1.5 w-1.5 rounded-full bg-red-600" /> {t("conversations_inbox.list.new")}
