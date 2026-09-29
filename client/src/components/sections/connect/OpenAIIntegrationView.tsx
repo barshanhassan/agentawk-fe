@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import {
@@ -16,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, ExternalLink, Info, KeyRound, Loader2, Trash2 } from "lucide-react";
+import { ChevronLeft, ExternalLink, Info, KeyRound, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -107,15 +108,11 @@ export default function OpenAIIntegrationView({
   const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 pl-11 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
+  const inputCls = "h-11 rounded-xl pl-11";
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
   const dangerBtn =
-    "h-11 px-7 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all flex items-center gap-2";
+    "h-11 px-7 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all flex items-center gap-2";
   const outlineBtn = cn(
     "h-10 px-5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
     dark
@@ -263,11 +260,14 @@ export default function OpenAIIntegrationView({
 
   return (
     <div className="space-y-5">
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between gap-4", border)}>
             <div className="flex items-center gap-4">
+              <button onClick={onBack} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                <ChevronLeft size={20} />
+              </button>
               <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center border shrink-0", dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200")}>
                 <img src={page.logo} alt={page.name} className="h-8 w-8 object-contain" />
               </div>
@@ -276,10 +276,6 @@ export default function OpenAIIntegrationView({
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{isOpenAi ? t("openai_integration.title") : page.name}</h1>
               </div>
             </div>
-            <button onClick={onBack} className={outlineBtn}>
-              <ArrowLeft size={12} />
-              {t("openai_integration.back")}
-            </button>
           </div>
 
           <div className="p-8 space-y-6">
@@ -317,14 +313,14 @@ export default function OpenAIIntegrationView({
                       <KeyRound size={14} />
                     </div>
                     {account ? (
-                      <input
+                      <Input
                         type="text"
                         readOnly
                         value={account.api_key ?? ""}
                         className={cn(inputCls, "opacity-70 cursor-not-allowed")}
                       />
                     ) : (
-                      <input
+                      <Input
                         type="text"
                         value={apiKey}
                         onChange={(e) => {

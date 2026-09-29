@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -83,11 +84,7 @@ export default function IntegrationsSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 pl-11 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl pl-11";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
@@ -296,7 +293,7 @@ export default function IntegrationsSection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
@@ -439,7 +436,7 @@ export default function IntegrationsSection() {
                     <div className={cn("absolute left-4 top-1/2 -translate-y-1/2", sub)}>
                       <Info size={14} />
                     </div>
-                    <input
+                    <Input
                       type="text"
                       value={formData[field.key] || ""}
                       onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}

@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   CreditCard,
@@ -71,11 +72,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
   const sub = dark ? "text-slate-500" : "text-slate-400";
   const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
 
-  const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
@@ -176,7 +173,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
   return (
     <div className="space-y-6">
       {/* ── Credentials card ── */}
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
@@ -248,7 +245,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.client_id")}</label>
-                      <input
+                      <Input
                         className={inputCls}
                         placeholder={t("payments_section.provided_by_swich")}
                         value={credForm.client_id}
@@ -257,7 +254,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     </div>
                     <div>
                       <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.client_secret")}</label>
-                      <input
+                      <Input
                         type="password"
                         className={inputCls}
                         placeholder={isConnected ? t("payments_section.leave_blank_keep_current") : t("payments_section.provided_by_swich")}
@@ -276,7 +273,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.pwa_client_id")}</label>
-                      <input
+                      <Input
                         className={inputCls}
                         placeholder={t("payments_section.provided_by_swich")}
                         value={credForm.pwa_client_id}
@@ -285,7 +282,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     </div>
                     <div>
                       <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.pwa_client_secret")}</label>
-                      <input
+                      <Input
                         type="password"
                         className={inputCls}
                         placeholder={account?.has_pwa_credentials ? t("payments_section.leave_blank_keep_current") : t("payments_section.provided_by_swich")}
@@ -328,7 +325,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.checksum_secret_optional")}</label>
-                      <input
+                      <Input
                         type="password"
                         className={inputCls}
                         placeholder={t("payments_section.checksum_secret_placeholder")}
@@ -338,7 +335,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
                     </div>
                     <div>
                       <label className={cn("text-[11px] font-semibold mb-1.5 block", sub)}>{t("payments_section.aes_key_optional")}</label>
-                      <input
+                      <Input
                         type="password"
                         className={inputCls}
                         placeholder={t("payments_section.aes_key_placeholder")}
@@ -367,7 +364,7 @@ export default function PaymentsSection({ basePath = "/api/swich" }: PaymentsSec
 
       {/* ── Recent transactions ── */}
       {isConnected && (
-        <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm", card, border)}>
+        <Card className={cn("rounded-2xl border overflow-hidden shadow-sm", card, border)}>
           <CardContent className="p-8 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className={cn("text-[14px] font-bold", text)}>{t("payments_section.recent_transactions")}</h2>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   AlertDialog,
@@ -105,7 +106,7 @@ export default function APISection() {
 
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
@@ -159,14 +160,11 @@ export default function APISection() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                      <input
+                      <Input
                         type={showKey ? "text" : "password"}
                         value={currentKey.token}
                         readOnly
-                        className={cn(
-                          "w-full h-11 pl-4 pr-12 rounded-xl font-mono text-[12px] border outline-none transition-all",
-                          dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-                        )}
+                        className="h-11 pr-12 rounded-xl font-mono"
                       />
                       <button
                         onClick={() => setShowKey(!showKey)}

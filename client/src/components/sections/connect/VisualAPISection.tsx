@@ -24,6 +24,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -128,11 +129,7 @@ export default function VisualAPISection() {
   const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
@@ -419,12 +416,17 @@ export default function VisualAPISection() {
   // ── Render ────────────────────────────────────────────────────────
   return (
     <>
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header — same icon/title/subtitle across LIST/MANAGE/LOGS, only
               right-side controls change. Mirrors replyagent's `panel_heading`. */}
           <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
             <div className="flex items-center gap-4">
+              {(viewMode === "MANAGE" || viewMode === "LOGS") && (
+                <button onClick={goBack} className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <div className={cn("p-2.5 rounded-xl shadow-sm", "bg-primary/10")}>
                 <Plug className="w-5 h-5 text-primary" />
               </div>
@@ -440,20 +442,10 @@ export default function VisualAPISection() {
                   <Plus size={12} /> {t("visual_api_section.add_button")}
                 </button>
               )}
-              {viewMode === "MANAGE" && (
-                <button onClick={goBack} className={primaryOutlineBtn}>
-                  <ChevronLeft size={12} /> {t("visual_api_section.go_back_button")}
-                </button>
-              )}
               {viewMode === "LOGS" && (
-                <>
-                  <button onClick={() => refetchLogs()} className={primaryOutlineBtn}>
-                    <RefreshCcw size={12} className={cn(logsLoading && "animate-spin")} /> {t("visual_api_section.refresh_logs_button")}
-                  </button>
-                  <button onClick={goBack} className={outlineBtn}>
-                    <ChevronLeft size={12} /> {t("visual_api_section.go_back_button")}
-                  </button>
-                </>
+                <button onClick={() => refetchLogs()} className={primaryOutlineBtn}>
+                  <RefreshCcw size={12} className={cn(logsLoading && "animate-spin")} /> {t("visual_api_section.refresh_logs_button")}
+                </button>
               )}
             </div>
           </div>
@@ -931,7 +923,7 @@ export default function VisualAPISection() {
 
             <div className="space-y-2">
               <label className={labelCls}>{t("visual_api_section.name_label")}</label>
-              <input
+              <Input
                 placeholder={t("visual_api_section.name_placeholder")}
                 value={newTriggerName}
                 onChange={(e) => {
@@ -979,7 +971,7 @@ export default function VisualAPISection() {
 
             <div className="space-y-2">
               <label className={labelCls}>{t("visual_api_section.name_label")}</label>
-              <input
+              <Input
                 value={renameInput}
                 onChange={(e) => setRenameInput(e.target.value.slice(0, 100))}
                 maxLength={100}
@@ -1043,7 +1035,7 @@ export default function VisualAPISection() {
                 value={pickerSearch}
                 onChange={(e) => setPickerSearch(e.target.value)}
                 placeholder={t("visual_api_section.picker_search_placeholder")}
-                className={cn("flex-1 bg-transparent outline-none text-[13px] font-bold", text)}
+                className="flex-1 bg-transparent outline-none"
               />
             </div>
             <div className="max-h-80 overflow-y-auto">
@@ -1171,7 +1163,7 @@ function MappingRow(props: {
           placeholder={t("visual_api_section.mapping_row_prefix_placeholder")}
           value={mappingRow.prefix ?? ""}
           onChange={(e) => updateRow({ prefix: e.target.value })}
-          className={cn("h-10 bg-transparent border-0 outline-none text-[12px] font-bold", "w-20 text-center")}
+          className="h-10 bg-transparent border-0 outline-none w-20 text-center"
         />
         <div
           onClick={openPicker}
@@ -1200,7 +1192,7 @@ function MappingRow(props: {
           placeholder={t("visual_api_section.mapping_row_postfix_placeholder")}
           value={mappingRow.postfix ?? ""}
           onChange={(e) => updateRow({ postfix: e.target.value })}
-          className={cn("h-10 bg-transparent border-0 outline-none text-[12px] font-bold", "w-20 text-center")}
+          className="h-10 bg-transparent border-0 outline-none w-20 text-center"
         />
       </div>
     </div>
