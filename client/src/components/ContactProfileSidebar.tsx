@@ -647,8 +647,8 @@ export default function ContactProfileSidebar({
                                         <h4 className="font-semibold text-sm mb-3">{t("contact_profile_sidebar.details.chatting_with_channel")}</h4>
                                         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-muted/50 dark:bg-muted/20 w-fit">
                                             <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                                                {CHANNEL_ICON_SRC[profileData.channel.type] ? (
-                                                    <img src={CHANNEL_ICON_SRC[profileData.channel.type]} alt={profileData.channel.type} className="w-4 h-4" />
+                                                {CHANNEL_ICON_SRC[profileData.channel.type ?? ""] ? (
+                                                    <img src={CHANNEL_ICON_SRC[profileData.channel.type ?? ""]} alt={profileData.channel.type} className="w-4 h-4" />
                                                 ) : (
                                                     <MessageSquare size={14} />
                                                 )}
