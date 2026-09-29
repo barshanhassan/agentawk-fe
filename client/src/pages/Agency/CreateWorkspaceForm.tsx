@@ -386,10 +386,10 @@ const CreateWorkspaceForm: React.FC<Props> = ({ onCancel, initialData }) => {
                             <MemberAvatar name={fullName} index={i} size="sm" />
                             <div>
                               <p className={cn(
-                                "text-sm font-medium group-data-[highlighted]:text-white",
+                                "text-sm font-medium",
                                 dark ? "text-white" : "text-slate-800"
                               )}>{fullName}</p>
-                              {m.email && <p className="text-xs text-slate-400 group-data-[highlighted]:text-white/90">{m.email}</p>}
+                              {m.email && <p className="text-xs text-slate-400">{m.email}</p>}
                             </div>
                           </div>
                         </SelectItem>
