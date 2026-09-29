@@ -115,17 +115,9 @@ export default function AIVoiceAssistantsSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
-  const textareaCls = cn(
-    "rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const textareaCls = "rounded-xl resize-none";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",

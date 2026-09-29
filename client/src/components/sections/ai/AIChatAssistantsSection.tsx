@@ -90,11 +90,7 @@ export default function AIChatAssistantsSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
@@ -327,11 +323,7 @@ export default function AIChatAssistantsSection() {
                         value={formData.instructions}
                         onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                         placeholder={t("ai_chat_assistants_section.placeholder_instructions")}
-                        className={cn(
-                          "rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
-                          "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-                          dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-                        )}
+                        className="rounded-xl resize-none"
                       />
                       <p className={cn("text-[10px] font-bold opacity-50 text-right", sub)}>{formData.instructions.length}/100000</p>
                     </div>
@@ -531,11 +523,7 @@ export default function AIChatAssistantsSection() {
                     <Textarea
                       rows={8}
                       placeholder={t("ai_chat_assistants_section.placeholder_text_content")}
-                      className={cn(
-                        "w-full rounded-xl text-[13px] font-medium leading-relaxed resize-none p-4 transition-all",
-                        "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-                        dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-                      )}
+                      className="w-full rounded-xl resize-none"
                     />
                   )}
                 </div>
@@ -874,11 +862,11 @@ function AiFeederModal({ agent, onClose }: { agent: any | null; onClose: () => v
             <Textarea value={feed} onChange={(e) => setFeed(e.target.value)} placeholder={t("ai_chat_assistants_section.placeholder_knowledge_feed")} className="min-h-24" />
           </div>
           <div className="flex justify-end gap-2 pt-1">
-            <button onClick={close} className="h-9 px-4 rounded-lg border text-[11px] font-semibold">{t("ai_chat_assistants_section.cancel")}</button>
+            <button onClick={close} className="h-10 px-5 rounded-xl border text-[11px] font-semibold">{t("ai_chat_assistants_section.cancel")}</button>
             <button
               onClick={() => mutation.mutate()}
               disabled={!valid || mutation.isPending}
-              className="h-9 px-4 rounded-lg text-[11px] font-semibold bg-primary text-white disabled:opacity-40"
+              className="h-11 px-7 rounded-xl text-[11px] font-semibold bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-40"
             >
               {mutation.isPending ? t("ai_chat_assistants_section.creating_feeder") : t("ai_chat_assistants_section.create_feeder_button")}
             </button>

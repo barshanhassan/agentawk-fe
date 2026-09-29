@@ -46,11 +46,7 @@ export default function AITopicsSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "w-full h-11 rounded-xl border px-4";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",

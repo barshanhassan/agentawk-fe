@@ -118,17 +118,9 @@ export default function AIProductsSection() {
   const softBg = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "w-full h-11 rounded-xl text-[13px] font-bold transition-all px-4 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
+  const inputCls = "w-full h-11 rounded-xl border px-4";
 
-  const textareaCls = cn(
-    "w-full rounded-xl text-[13px] font-mono transition-all px-4 py-3 border outline-none",
-    "focus:ring-2 focus:ring-primary/30 focus:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900",
-  );
+  const textareaCls = "w-full rounded-xl border px-4 py-3 font-mono";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
@@ -1148,7 +1140,7 @@ export default function AIProductsSection() {
                     <input
                       readOnly
                       value={editingProduct?.trigger_url ?? t("ai_products_section.generated_after_save")}
-                      className={cn(inputCls, "font-mono text-[12px] opacity-60")}
+                      className={cn(inputCls, "font-mono opacity-60")}
                     />
                     <p className={cn("text-[10px] font-medium opacity-60", sub)}>
                       {t("ai_products_section.trigger_url_hint")}
@@ -1186,12 +1178,12 @@ export default function AIProductsSection() {
 
               {/* Search input */}
               <div className="relative">
-                <Search size={14} className={cn("absolute left-4 top-1/2 -translate-y-1/2", sub)} />
+                <Search size={14} className={cn("absolute left-3 top-1/2 -translate-y-1/2", sub)} />
                 <input
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
                   placeholder={t("ai_products_section.search_members_placeholder")}
-                  className={cn(inputCls, "pl-10")}
+                  className={cn(inputCls, "h-9 pl-9")}
                 />
               </div>
 

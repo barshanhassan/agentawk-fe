@@ -64,11 +64,7 @@ export default function AIKnowledgeBaseSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const outlineBtn = cn(
     "h-11 px-6 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-2",
@@ -294,7 +290,7 @@ export default function AIKnowledgeBaseSection() {
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                         placeholder={t("ai_knowledge_base_section.placeholder_yoursite")}
-                        className={cn("bg-transparent h-full text-[13px] font-bold outline-none px-3 flex-1 min-w-0", text)}
+                        className="bg-transparent h-full outline-none px-3 flex-1 min-w-0"
                       />
                     </div>
                     <button
@@ -324,12 +320,12 @@ export default function AIKnowledgeBaseSection() {
                           </label>
                         </div>
                         <div className="relative w-full sm:w-auto">
-                          <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <Input
                             placeholder={t("ai_knowledge_base_section.placeholder_search_urls")}
                             value={searchUrl}
                             onChange={(e) => setSearchUrl(e.target.value)}
-                            className={cn(inputCls, "h-9 pl-8 w-full sm:w-[220px] text-[12px]")}
+                            className={cn(inputCls, "h-9 pl-9 w-full sm:w-[220px]")}
                           />
                         </div>
                       </div>
@@ -439,11 +435,7 @@ export default function AIKnowledgeBaseSection() {
                   onChange={(e) => setFormData({ ...formData, website_content: e.target.value })}
                   rows={12}
                   placeholder={t("ai_knowledge_base_section.placeholder_text_content")}
-                  className={cn(
-                    "rounded-xl text-[12px] font-mono leading-relaxed resize-none p-4 transition-all",
-                    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-                    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-                  )}
+                  className="rounded-xl resize-none"
                 />
                 <p className={cn("text-[10px] font-medium opacity-60", sub)}>
                   {t("ai_knowledge_base_section.text_content_hint")}
