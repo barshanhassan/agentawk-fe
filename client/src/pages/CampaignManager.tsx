@@ -35,7 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronDown, ChevronsUpDown, ChevronUp, ChevronDown as ChevronDownIcon, ArrowLeft, Info, Activity, Megaphone, MessageSquare, RefreshCw, Eye, UsersRound, CheckCircle2, Mail, AlertTriangle, Clock, Minus, Filter, Tag, Hash, User, Phone as PhoneIcon, Link2, Globe, DollarSign, Percent, CheckSquare, MessageCircle } from "lucide-react";
+import { MoreVertical, ChevronDown, ChevronsUpDown, ChevronUp, ChevronDown as ChevronDownIcon, Info, Activity, Megaphone, MessageSquare, RefreshCw, Eye, UsersRound, CheckCircle2, Mail, AlertTriangle, Clock, Minus, Filter, Tag, Hash, User, Phone as PhoneIcon, Link2, Globe, DollarSign, Percent, CheckSquare, MessageCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -1742,10 +1742,10 @@ export default function CampaignManager() {
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={closeComposer}
-                className="shrink-0 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors"
+                className="shrink-0 text-slate-400 hover:text-primary dark:text-slate-500 transition-colors"
                 title={t("campaign_manager.composer.back")}
               >
-                <ArrowLeft size={16} />
+                <ChevronLeft size={20} />
               </button>
               <div className="shrink-0 p-2 rounded-xl bg-primary text-primary-foreground shadow-sm">
                 <Megaphone size={18} strokeWidth={2.5} />
@@ -1763,37 +1763,6 @@ export default function CampaignManager() {
                   {t("campaign_manager.composer.subtitle")}
                 </p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeComposer}
-                className="h-8 px-3 text-[12px] font-semibold text-slate-600 dark:text-slate-300"
-              >
-                {t("campaign_manager.common.cancel")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleComposerSaveDraft}
-                disabled={isSubmitting}
-                className="h-8 px-3 text-[12px] font-semibold border-slate-200 dark:border-slate-800"
-              >
-                {createBroadcastMutation.isPending && <Loader2 size={12} className="mr-1.5 animate-spin" />}
-                {t("campaign_manager.composer.save_as_draft")}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleComposerSend}
-                disabled={isSubmitting || readyCount < 3}
-                className="h-8 px-4 text-[12px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm shadow-primary/20 disabled:opacity-60"
-              >
-                {sendBroadcastMutation.isPending
-                  ? <Loader2 size={12} className="mr-1.5 animate-spin" />
-                  : <Send size={13} strokeWidth={2.5} className="mr-1.5" />}
-                {composerScheduleMode === "now" ? t("campaign_manager.composer.send_broadcast") : t("campaign_manager.composer.schedule_action")}
-              </Button>
             </div>
           </div>
 
@@ -1833,7 +1802,7 @@ export default function CampaignManager() {
             {/* Column 1: Audience */}
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-4 space-y-4">
               <div className="flex items-start gap-2.5">
-                <span className="h-8 w-8 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-900/40 flex items-center justify-center text-fuchsia-600 dark:text-fuchsia-400 shrink-0">
+                <span className="h-8 w-8 rounded-xl bg-fuchsia-100 dark:bg-fuchsia-900/40 flex items-center justify-center text-fuchsia-600 dark:text-fuchsia-400 shrink-0">
                   <UsersRound size={16} strokeWidth={2.5} />
                 </span>
                 <div className="min-w-0">
@@ -1844,7 +1813,7 @@ export default function CampaignManager() {
               {/* Sending from */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex items-center gap-3">
                 <span className={cn(
-                  "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+                  "h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
                   ({
                     whatsapp: "bg-emerald-100 text-emerald-600",
                     telegram: "bg-sky-100 text-sky-600",
@@ -1874,7 +1843,7 @@ export default function CampaignManager() {
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value.slice(0, 512))}
                   className={cn(
-                    "h-9 text-[13px] rounded-lg",
+                    "h-9 text-[13px] rounded-xl",
                     composerSendAttempted && !campaignName.trim()
                       ? "border-rose-300 dark:border-rose-800 focus-visible:ring-rose-300"
                       : "border-slate-200 dark:border-slate-800",
@@ -1901,7 +1870,7 @@ export default function CampaignManager() {
                 )}
               >
                 <span className={cn(
-                  "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+                  "h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
                   composerSelectAll ? "bg-primary/10 text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-400",
                 )}>
                   <UsersRound size={16} />
@@ -1930,13 +1899,13 @@ export default function CampaignManager() {
               {/* Match */}
               <div className="space-y-1.5">
                 <label className="text-[11.5px] font-semibold text-slate-700 dark:text-slate-300">{t("campaign_manager.composer.match")}</label>
-                <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-slate-100 dark:bg-slate-800/60">
+                <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60">
                   {(["any", "all"] as const).map((m) => (
                     <button
                       key={m}
                       onClick={() => setComposerAudienceMatch(m)}
                       className={cn(
-                        "py-1.5 rounded-md text-[11.5px] font-semibold transition-all",
+                        "py-1.5 rounded-xl text-[11.5px] font-semibold transition-all",
                         composerAudienceMatch === m
                           ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
@@ -1981,7 +1950,7 @@ export default function CampaignManager() {
                           </button>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="h-6 w-6 rounded-md bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 shrink-0">
+                          <span className="h-6 w-6 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 shrink-0">
                             <ConditionGlyph name={c.icon} size={11} />
                           </span>
                           <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 truncate flex-1">
@@ -2036,7 +2005,7 @@ export default function CampaignManager() {
             {/* Column 2: Configuration */}
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-4 space-y-4">
               <div className="flex items-start gap-2.5">
-                <span className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <span className="h-8 w-8 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                   <MessageSquare size={16} strokeWidth={2.5} />
                 </span>
                 <div className="min-w-0">
@@ -2055,7 +2024,7 @@ export default function CampaignManager() {
                         <button
                           type="button"
                           title={t("campaign_manager.composer.insert_contact_field")}
-                          className="h-7 px-2 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-[10.5px] font-semibold text-slate-500 hover:text-primary shrink-0"
+                          className="h-8 px-2 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-primary shrink-0"
                         >
                           <User className="h-3 w-3" /> {t("campaign_manager.composer.insert_contact_field")}
                         </button>
@@ -2115,7 +2084,7 @@ export default function CampaignManager() {
                       : "border-slate-200 dark:border-slate-800",
                   )}>
                     <div className="flex items-center gap-2">
-                      <span className="h-6 w-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-amber-500">★</span>
+                      <span className="h-6 w-6 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-amber-500">★</span>
                       <SelectValue placeholder={t("campaign_manager.composer.select_template")} />
                     </div>
                   </SelectTrigger>
@@ -2147,7 +2116,7 @@ export default function CampaignManager() {
                     const personalised = /\[[A-Z_]+\]/.test(value);
                     return (
                       <div key={key} className="flex items-center gap-2">
-                        <span className="h-9 min-w-[3rem] px-2 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[11px] font-bold text-slate-500 shrink-0">
+                        <span className="h-9 min-w-[3rem] px-2 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[11px] font-bold text-slate-500 shrink-0">
                           {`{{${key}}}`}
                         </span>
                         <Input
@@ -2157,7 +2126,7 @@ export default function CampaignManager() {
                           }
                           placeholder={t("campaign_manager.composer.variable_placeholder", { key: `{{${key}}}` })}
                           className={cn(
-                            "h-9 rounded-lg text-[12px]",
+                            "h-9 rounded-xl text-[12px]",
                             missing
                               ? "border-rose-300 dark:border-rose-800 focus-visible:ring-rose-300"
                               : personalised
@@ -2170,7 +2139,7 @@ export default function CampaignManager() {
                             <button
                               type="button"
                               title={t("campaign_manager.composer.insert_contact_field")}
-                              className="h-9 w-9 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-primary shrink-0"
+                              className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-primary shrink-0"
                             >
                               <User className="h-3.5 w-3.5" />
                             </button>
@@ -2211,7 +2180,7 @@ export default function CampaignManager() {
 
               {/* Pause if Marketing */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 flex items-start gap-3">
-                <span className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 shrink-0">
+                <span className="h-7 w-7 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 shrink-0">
                   <CheckCircle2 size={13} strokeWidth={2.5} />
                 </span>
                 <div className="flex-1 min-w-0">
@@ -2275,7 +2244,7 @@ export default function CampaignManager() {
                         <Button
                           variant="outline"
                           className={cn(
-                            "h-9 justify-between text-left font-normal text-[12px] rounded-lg",
+                            "h-9 justify-between text-left font-normal text-[12px] rounded-xl",
                             composerSendAttempted && !composerScheduleDate
                               ? "border-rose-300 dark:border-rose-800"
                               : "border-slate-200 dark:border-slate-800",
@@ -2305,7 +2274,7 @@ export default function CampaignManager() {
                     </Popover>
                     <div className="grid grid-cols-2 gap-1">
                       <Select value={composerScheduleHour} onValueChange={setComposerScheduleHour}>
-                        <SelectTrigger className="h-9 text-[12px] rounded-lg">
+                        <SelectTrigger className="h-9 text-[12px] rounded-xl">
                           <SelectValue placeholder={t("campaign_manager.composer.hh")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -2315,7 +2284,7 @@ export default function CampaignManager() {
                         </SelectContent>
                       </Select>
                       <Select value={composerScheduleMinute} onValueChange={setComposerScheduleMinute}>
-                        <SelectTrigger className="h-9 text-[12px] rounded-lg">
+                        <SelectTrigger className="h-9 text-[12px] rounded-xl">
                           <SelectValue placeholder={t("campaign_manager.composer.mm")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -2335,7 +2304,7 @@ export default function CampaignManager() {
               {/* Tag failed contacts */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
                 <div className="flex items-start gap-2.5 mb-2">
-                  <span className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="h-7 w-7 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 shrink-0">
                     <span className="text-[11px]">🏷</span>
                   </span>
                   <div className="min-w-0 flex-1">
@@ -2346,7 +2315,7 @@ export default function CampaignManager() {
                   </div>
                 </div>
                 <Select value={composerTagFailed} onValueChange={setComposerTagFailed}>
-                  <SelectTrigger className="h-9 rounded-lg text-[12px]">
+                  <SelectTrigger className="h-9 rounded-xl text-[12px]">
                     <SelectValue placeholder={t("campaign_manager.composer.tag_placeholder")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -2362,7 +2331,7 @@ export default function CampaignManager() {
             {/* Column 3: Preview */}
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-4 space-y-4">
               <div className="flex items-start gap-2.5">
-                <span className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <span className="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                   <Eye size={16} strokeWidth={2.5} />
                 </span>
                 <div className="min-w-0">
@@ -2417,7 +2386,7 @@ export default function CampaignManager() {
           {/* Delivery profile */}
           <div className="px-5 py-5 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-start gap-2.5 mb-4">
-              <span className="h-8 w-8 rounded-lg bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
+              <span className="h-8 w-8 rounded-xl bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
                 <Activity size={16} strokeWidth={2.5} />
               </span>
               <div className="min-w-0">
@@ -2444,7 +2413,7 @@ export default function CampaignManager() {
                   )}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <span className={cn("h-7 w-7 rounded-lg flex items-center justify-center text-white", p.iconBg)}>
+                    <span className={cn("h-7 w-7 rounded-xl flex items-center justify-center text-white", p.iconBg)}>
                       <p.Icon size={13} strokeWidth={2.5} />
                     </span>
                     <span className={cn(
@@ -2511,26 +2480,26 @@ export default function CampaignManager() {
             </span></span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={closeComposer} className="h-9 px-4 text-[12.5px]">{t("campaign_manager.common.cancel")}</Button>
+            <Button variant="outline" size="sm" onClick={closeComposer} className="h-10 px-5 rounded-xl text-[11px] font-semibold border-slate-200 dark:border-slate-800">{t("campaign_manager.common.cancel")}</Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleComposerSaveDraft}
               disabled={isSubmitting}
-              className="h-9 px-4 text-[12.5px] border-slate-200 dark:border-slate-800"
+              className="h-10 px-5 rounded-xl text-[11px] font-semibold border-slate-200 dark:border-slate-800"
             >
-              {createBroadcastMutation.isPending && <Loader2 size={12} className="mr-1.5 animate-spin" />}
+              {createBroadcastMutation.isPending && <Loader2 size={12} className="animate-spin" />}
               {t("campaign_manager.composer.save_as_draft")}
             </Button>
             <Button
               size="sm"
               onClick={handleComposerSend}
               disabled={isSubmitting || readyCount < 3}
-              className="h-9 px-5 text-[12.5px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm shadow-primary/20 disabled:opacity-60"
+              className="h-10 px-5 rounded-xl text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-60"
             >
               {sendBroadcastMutation.isPending
-                ? <Loader2 size={12} className="mr-1.5 animate-spin" />
-                : <Send size={13} strokeWidth={2.5} className="mr-1.5" />}
+                ? <Loader2 size={12} className="animate-spin" />
+                : <Send size={13} strokeWidth={2.5} />}
               {composerScheduleMode === "now" ? t("campaign_manager.composer.send_broadcast") : t("campaign_manager.composer.schedule_action")}
             </Button>
           </div>
@@ -2853,7 +2822,7 @@ export default function CampaignManager() {
                         placeholder={t("campaign_manager.list.search_placeholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-md text-[12px] font-medium placeholder:text-slate-400"
+                        className="pl-9 h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-[12px] font-medium placeholder:text-slate-400 placeholder:font-normal"
                         data-testid="input-search"
                     />
                 </div>
@@ -2990,7 +2959,7 @@ export default function CampaignManager() {
                                                     {(campaign.audience ?? 0).toLocaleString()}
                                                 </span>
                                                 {(campaign.failed ?? 0) > 0 && (
-                                                    <CampaignFailedBadge campaignId={String(campaign.id)} count={campaign.failed} />
+                                                    <CampaignFailedBadge campaignId={String(campaign.id)} count={campaign.failed ?? 0} />
                                                 )}
                                             </div>
                                             {campaign.status === "sending" && campaign.hasRealDeliveryStats && (
@@ -3347,7 +3316,7 @@ export default function CampaignManager() {
                       setCreateOpen(false);
                       resetCreateCampaignForm();
                     }}
-                    className="h-9 px-4 rounded-lg font-semibold text-[12.5px] border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="h-10 px-5 rounded-xl font-semibold text-[11px] border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     {t("campaign_manager.common.cancel")}
                   </Button>
@@ -3363,9 +3332,9 @@ export default function CampaignManager() {
                       setCreateOpen(false);
                       setComposerOpen(true);
                     }}
-                    className="h-9 px-4 rounded-lg font-semibold text-[12.5px] bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm shadow-primary/20 disabled:shadow-none disabled:opacity-60"
+                    className="h-10 px-5 rounded-xl font-semibold text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:shadow-none disabled:opacity-60"
                   >
-                    <Plus size={14} className="mr-1.5" strokeWidth={2.5} />
+                    <Plus size={12} strokeWidth={2.5} />
                     {t("campaign_manager.create_dialog.create_broadcast")}
                   </Button>
                 </div>
@@ -3706,7 +3675,7 @@ function ConditionPickerModal({
               placeholder={t("campaign_manager.condition_picker.search")}
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9 h-10 rounded-lg border-slate-200 dark:border-slate-800 text-[13px]"
+              className="pl-9 h-9 rounded-xl border-slate-200 dark:border-slate-800 text-[13px]"
               autoFocus
             />
           </div>
@@ -3731,7 +3700,7 @@ function ConditionPickerModal({
                       onClick={() => onPick(opt)}
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 text-left transition-all"
                     >
-                      <span className="h-7 w-7 rounded-md flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 dark:text-emerald-400">
+                      <span className="h-7 w-7 rounded-xl flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 dark:text-emerald-400">
                         {glyph(opt.icon)}
                       </span>
                       <span className="text-[12.5px] font-semibold text-slate-800 dark:text-slate-200 truncate">
@@ -3890,7 +3859,7 @@ function ConfigureConditionModal({
         <div className="px-5 py-4 space-y-4">
           {/* Field breadcrumb card */}
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2.5 flex items-center gap-2.5">
-            <span className="h-8 w-8 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 flex items-center justify-center shrink-0">
+            <span className="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 flex items-center justify-center shrink-0">
               <ConditionGlyph name={field.icon} />
             </span>
             <div className="min-w-0">
@@ -3905,7 +3874,7 @@ function ConfigureConditionModal({
               {field.fieldType === "enum" ? t("campaign_manager.configure_condition.where") : t("campaign_manager.configure_condition.when")}
             </label>
             <Select value={operator} onValueChange={onOperatorChange}>
-              <SelectTrigger className="h-9 rounded-lg text-[12.5px]">
+              <SelectTrigger className="h-9 rounded-xl text-[12.5px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -3931,7 +3900,7 @@ function ConfigureConditionModal({
                     onValueLabelChange(found?.label ?? v);
                   }}
                 >
-                  <SelectTrigger className="h-9 rounded-lg text-[12.5px]">
+                  <SelectTrigger className="h-9 rounded-xl text-[12.5px]">
                     <SelectValue placeholder={t("campaign_manager.configure_condition.select_value", { field: field.fieldLabel.toLowerCase() })} />
                   </SelectTrigger>
                   <SelectContent>
@@ -3949,7 +3918,7 @@ function ConfigureConditionModal({
                   type="date"
                   value={value}
                   onChange={(e) => onValueChange(e.target.value)}
-                  className="h-9 rounded-lg text-[12.5px]"
+                  className="h-9 rounded-xl text-[12.5px]"
                 />
               ) : field.fieldType === "number" ? (
                 <Input
@@ -3957,14 +3926,14 @@ function ConfigureConditionModal({
                   value={value}
                   onChange={(e) => onValueChange(e.target.value)}
                   placeholder={t("campaign_manager.configure_condition.enter_number")}
-                  className="h-9 rounded-lg text-[12.5px]"
+                  className="h-9 rounded-xl text-[12.5px]"
                 />
               ) : (
                 <Input
                   value={value}
                   onChange={(e) => onValueChange(e.target.value)}
                   placeholder={t("campaign_manager.configure_condition.enter_value", { field: field.fieldLabel.toLowerCase() })}
-                  className="h-9 rounded-lg text-[12.5px]"
+                  className="h-9 rounded-xl text-[12.5px]"
                 />
               )}
             </div>
@@ -3996,7 +3965,7 @@ function ConfigureConditionModal({
               size="sm"
               onClick={onSave}
               disabled={!canSave}
-              className="h-9 px-4 text-[12.5px] font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-500/20 disabled:opacity-60"
+              className="h-9 px-4 text-[12.5px] font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm shadow-primary/20 disabled:opacity-60"
             >
               <CheckCircle2 size={13} strokeWidth={2.5} className="mr-1.5" />
               {t("campaign_manager.configure_condition.save")}
