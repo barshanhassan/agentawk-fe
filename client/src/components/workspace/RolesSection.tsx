@@ -85,6 +85,11 @@ export default function RolesSection() {
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Sidebar/permissions split resize — drag the handle to widen/narrow the
+  // left form panel, same interaction as the Inbox conversation-list resize.
+  const [sidebarPanelWidth, setSidebarPanelWidth] = useState(288);
+  const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
+
   const card       = dark ? "bg-[#0f1829]"    : "bg-white";
   const border     = dark ? "border-slate-800" : "border-slate-200";
   const text       = dark ? "text-white"      : "text-slate-900";
@@ -92,11 +97,7 @@ export default function RolesSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
@@ -230,6 +231,26 @@ export default function RolesSection() {
   // (replyagent: role.slug === 'owner' → all switches ON + disabled).
   const roleLocked = !!editingRole?.isSystem;
 
+  const handleSidebarResizeStart = () => setIsDraggingSidebar(true);
+
+  useEffect(() => {
+    if (!isDraggingSidebar) return;
+    const onMove = (e: MouseEvent) => {
+      const containerLeft = document.querySelector('[data-role-split]')?.getBoundingClientRect().left ?? 0;
+      const next = e.clientX - containerLeft;
+      const minWidth = 240;
+      const maxWidth = 420;
+      if (next >= minWidth && next <= maxWidth) setSidebarPanelWidth(next);
+    };
+    const onUp = () => setIsDraggingSidebar(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [isDraggingSidebar]);
+
   // Validation mirrors replyagent: name required (3–100), description ≤300,
   // at least one permission selected.
   const validateRole = (): string | null => {
@@ -272,19 +293,19 @@ export default function RolesSection() {
   /* ── ADD / EDIT VIEW ─────────────────────────────────────────── */
   if (view === "add" || view === "edit") {
     return (
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => { setView("list"); resetForm(); }}
-                className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}
+                className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={20} />
               </button>
               <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
-                <Shield className="w-5 h-5 text-primary" />
+                <ShieldCheck className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
@@ -296,9 +317,6 @@ export default function RolesSection() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => { setView("list"); resetForm(); }} className={outlineBtn}>
-                {t("roles_section.btn_cancel")}
-              </button>
               <button
                 onClick={handleSave}
                 disabled={createMutation.isPending || updateMutation.isPending || !roleName.trim()}
@@ -314,10 +332,13 @@ export default function RolesSection() {
             </div>
           </div>
 
-            <div className="flex flex-col md:flex-row">
+            <div className="flex flex-col md:flex-row md:relative" data-role-split>
 
               {/* Sidebar */}
-              <div className={cn("w-full md:w-72 md:shrink-0 border-b md:border-r p-6 space-y-6", border, softBg)}>
+              <div
+                className={cn("w-full border-b md:border-r p-6 space-y-6 md:shrink-0", border, softBg)}
+                style={window.innerWidth >= 768 ? { width: sidebarPanelWidth } : undefined}
+              >
                 <div className="space-y-2">
                   <FieldLabel dark={dark}>{t("roles_section.label_role_name")}</FieldLabel>
                   <Input
@@ -334,11 +355,7 @@ export default function RolesSection() {
                     placeholder={t("roles_section.placeholder_description")}
                     value={roleDescription}
                     onChange={(e) => setRoleDescription(e.target.value)}
-                    className={cn(
-                      "min-h-[96px] rounded-xl text-[12px] font-medium leading-relaxed resize-none p-3 transition-all",
-                      "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-                    )}
+                    className="min-h-[96px] rounded-xl resize-none"
                   />
                 </div>
 
@@ -388,6 +405,18 @@ export default function RolesSection() {
                   </div>
                 </div>
               </div>
+
+              {/* Resize handle — drag to widen/narrow the left panel, same
+                  interaction as the Inbox conversation-list resize. Desktop only. */}
+              <div
+                onMouseDown={handleSidebarResizeStart}
+                className={cn(
+                  "hidden md:block absolute w-1.5 h-10 rounded-full transition-colors z-10",
+                  isDraggingSidebar ? "bg-primary" : "bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
+                )}
+                style={{ cursor: "col-resize", left: sidebarPanelWidth - 3, top: "50%", transform: "translateY(-50%)" }}
+                title={t("roles_section.drag_to_resize")}
+              />
 
               {/* Right Panel: Permissions — collapsible accordion (replyagent Disclosure parity) */}
               <div className="flex-1 flex flex-col min-w-0">
@@ -528,71 +557,61 @@ export default function RolesSection() {
 
   /* ── LIST VIEW ─────────────────────────────────────────────── */
   return (
-    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+    <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <CardContent className="p-0">
         {/* Header */}
         <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
-              <Shield className="w-5 h-5 text-primary" />
+              <ShieldCheck className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("roles_section.header_title")}</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold flex items-center gap-1">
-                  <ShieldCheck size={10} /> {t("roles_section.stat_active_count", { count: activeRoles.length })}
-                </span>
-                <span className={cn("px-2 py-0.5 rounded-md text-[11px] font-semibold flex items-center gap-1", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")}>
-                  <Archive size={10} /> {t("roles_section.stat_archived_count", { count: archivedRoles.length })}
-                </span>
-              </div>
+              <p className={cn("text-[11px] font-medium mt-0.5 opacity-60", sub)}>
+                {t("roles_section.header_subtitle")}
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab("active")}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-all",
+                activeTab === "active"
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30"
+                  : cn("opacity-50 hover:opacity-80", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")
+              )}
+            >
+              <ShieldCheck size={11} /> {t("roles_section.stat_active_count", { count: activeRoles.length })}
+            </button>
+            <button
+              onClick={() => setActiveTab("archived")}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-all",
+                activeTab === "archived"
+                  ? cn("ring-1 ring-primary/30", dark ? "bg-slate-800 text-slate-200" : "bg-slate-100 text-slate-700")
+                  : cn("opacity-50 hover:opacity-80", dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500")
+              )}
+            >
+              <Archive size={11} /> {t("roles_section.stat_archived_count", { count: archivedRoles.length })}
+            </button>
           </div>
         </div>
 
-        {/* Tabs + Actions */}
-        <div className={cn("px-6 border-b flex flex-wrap items-center justify-between gap-3", softBorder)}>
-            <div className="flex gap-6">
-              {[
-                { key: "active",   label: t("roles_section.tab_active"),   icon: ShieldCheck, count: activeRoles.length },
-                { key: "archived", label: t("roles_section.tab_archived"), icon: Archive,     count: archivedRoles.length },
-              ].map((tab) => {
-                const active = activeTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key as any)}
-                    className={cn(
-                      "flex items-center gap-2 py-5 text-[12px] font-semibold border-b-2 transition-all",
-                      active ? "border-primary text-primary" : cn("border-transparent hover:text-primary", sub)
-                    )}
-                  >
-                    <tab.icon size={12} />
-                    {tab.label}
-                    <span className={cn(
-                      "px-1.5 py-0.5 rounded-md text-[9px] font-black",
-                      active ? "bg-primary/10 text-primary" : dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"
-                    )}>
-                      {tab.count}
-                    </span>
-                  </button>
-                );
-              })}
+        {/* Toolbar */}
+        <div className={cn("px-6 py-4 border-b flex items-center justify-between gap-3", softBorder)}>
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <Input
+                placeholder={t("roles_section.placeholder_search_roles")}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={cn(inputCls, "pl-9 h-9")}
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                <Input
-                  placeholder={t("roles_section.placeholder_search_roles")}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={cn(inputCls, "h-10 pl-9 w-56")}
-                />
-              </div>
-              <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
-                <Plus size={12} /> {t("roles_section.btn_add_role")}
-              </button>
-            </div>
+            <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>
+              <Plus size={12} /> {t("roles_section.btn_add_role")}
+            </button>
           </div>
 
           {/* Body */}

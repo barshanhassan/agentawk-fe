@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-  MessageSquare,
+  MessageCircle,
   UserCheck,
   Trash2,
   FolderSearch,
@@ -23,6 +23,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import {
@@ -59,11 +60,7 @@ export default function LiveChatSection() {
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
   const tabBorder  = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const primaryBtn =
     "h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20";
@@ -249,13 +246,13 @@ export default function LiveChatSection() {
   ];
 
   return (
-    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+    <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <CardContent className="p-0">
         {/* ── Header ── */}
         <div className={cn("px-8 py-4 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
-              <MessageSquare className="w-5 h-5 text-primary" />
+              <MessageCircle className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("live_chat_section.title")}</h1>
@@ -573,15 +570,11 @@ export default function LiveChatSection() {
 
                 <div className="lg:col-span-2 space-y-2">
                   <FieldLabel dark={dark}>{t("live_chat_section.correction.custom_prompt_label")}</FieldLabel>
-                  <textarea
+                  <Textarea
                     value={correctionPrompt}
                     onChange={(e) => setCorrectionPrompt(e.target.value)}
                     placeholder={t("live_chat_section.correction.custom_prompt_placeholder")}
-                    className={cn(
-                      "w-full min-h-[170px] rounded-xl border p-4 text-[13px] font-medium leading-relaxed resize-none transition-all",
-                      "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 focus:outline-none",
-                      dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-                    )}
+                    className="min-h-[170px] rounded-xl resize-none"
                   />
                   <div className={cn("flex items-center gap-2 text-[10px] font-bold opacity-50 pl-1", sub)}>
                     <Info size={11} /> {t("live_chat_section.correction.custom_prompt_hint")}

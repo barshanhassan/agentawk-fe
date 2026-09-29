@@ -144,7 +144,9 @@ export default function ManageSection() {
       <CardContent className="p-0">
         {/* ── Header ── */}
         <div className={cn("px-8 py-5 border-b flex items-center gap-3", border)}>
-          <Settings className={cn("w-5 h-5", text)} />
+          <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
+            <Settings className="w-5 h-5 text-primary" />
+          </div>
           <div>
             <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("settings.workspace.manage_section.title")}</h1>
             <p className={cn("text-[12px] font-medium mt-0.5 opacity-60", sub)}>

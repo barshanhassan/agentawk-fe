@@ -73,11 +73,7 @@ export default function TeamsSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const primaryBtn =
     "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
@@ -172,19 +168,19 @@ export default function TeamsSection() {
     const accentCls = ROW_ACCENTS[accentIdx];
 
     return (
-      <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+      <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
         <CardContent className="p-0">
           {/* Header */}
           <div className={cn("px-8 py-5 border-b flex flex-wrap items-center justify-between gap-3", border)}>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => { resetForm(); setView("list"); }}
-                className={cn("w-10 h-10 rounded-xl border flex items-center justify-center transition-all", dark ? "border-slate-800 hover:border-primary/40 hover:text-primary" : "border-slate-200 hover:border-primary/40 hover:text-primary")}
+                className={cn("transition-colors shrink-0", dark ? "text-slate-500 hover:text-primary" : "text-slate-400 hover:text-primary")}
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={20} />
               </button>
               <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
-                <Users2 className="w-5 h-5 text-primary" />
+                <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>
@@ -196,9 +192,6 @@ export default function TeamsSection() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => { resetForm(); setView("list"); }} className={outlineBtn}>
-                {t("teams_section.cancel")}
-              </button>
               <button
                 onClick={handleSave}
                 disabled={!teamName.trim() || !isPriorityValid || saveMutation.isPending}
@@ -493,13 +486,13 @@ export default function TeamsSection() {
   /* ── LIST VIEW ─────────────────────────────────────────────── */
   return (
     <>
-    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+    <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <CardContent className="p-0">
         {/* Header */}
         <div className={cn("px-8 py-5 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
-              <Users2 className="w-5 h-5 text-primary" />
+              <Users className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("teams_section.page_title")}</h1>
@@ -521,7 +514,7 @@ export default function TeamsSection() {
                 placeholder={t("teams_section.search_placeholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={cn(inputCls, "pl-9 h-10")}
+                className={cn(inputCls, "pl-9 h-9")}
               />
             </div>
             <button onClick={() => { resetForm(); setView("add"); }} className={primaryBtn}>

@@ -47,11 +47,7 @@ export default function WhiteLabelSection() {
   const softBg     = dark ? "bg-slate-950/40" : "bg-slate-50/50";
   const softBorder = dark ? "border-slate-800" : "border-slate-100";
 
-  const inputCls = cn(
-    "h-11 rounded-xl text-[13px] font-bold transition-all px-4",
-    "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50",
-    dark ? "bg-slate-950/50 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
-  );
+  const inputCls = "h-11 rounded-xl";
 
   const primaryBtn =
     "h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20";
@@ -310,7 +306,7 @@ export default function WhiteLabelSection() {
   ];
 
   return (
-    <Card className={cn("rounded-[2rem] border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
+    <Card className={cn("rounded-2xl border overflow-hidden shadow-sm transition-all duration-300", card, border)}>
       <input
         ref={fileInputRef}
         type="file"
@@ -335,7 +331,7 @@ export default function WhiteLabelSection() {
         <div className={cn("px-8 py-4 border-b flex items-center justify-between", border)}>
           <div className="flex items-center gap-4">
             <div className={cn("p-2.5 rounded-xl shadow-sm", dark ? "bg-primary/15" : "bg-primary/10")}>
-              <BadgeCheck className="w-5 h-5 text-primary" />
+              <Palette className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h1 className={cn("text-[16px] font-bold tracking-tight", text)}>{t("white_label_section.header_title")}</h1>
@@ -620,7 +616,7 @@ export default function WhiteLabelSection() {
                         placeholder={t("white_label_section.domain_placeholder")}
                         value={emailDomain}
                         onChange={(e) => setEmailDomain(e.target.value)}
-                        className={cn("flex-1 h-full text-[12px] font-black outline-none px-3 min-w-0", text)}
+                        className={cn("flex-1 h-full text-[12px] font-black placeholder:font-normal placeholder:text-[12px] outline-none px-3 min-w-0", text)}
                       />
                     </div>
                   </div>
