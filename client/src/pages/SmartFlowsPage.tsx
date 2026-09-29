@@ -514,7 +514,7 @@ export default function SmartFlowsPage() {
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                                 placeholder={t("smart_flows_page.search_placeholder")}
-                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 text-slate-800 dark:text-slate-200"
+                                className="pl-9 h-9 text-[11px] font-medium w-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 placeholder:font-normal text-slate-800 dark:text-slate-200"
                             />
                         </div>
 
@@ -716,16 +716,9 @@ export default function SmartFlowsPage() {
                                                 <FolderOpen size={32} strokeWidth={1} />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[14px] font-semibold text-slate-900 dark:text-white uppercase tracking-tight">{t("smart_flows_page.empty_title")}</p>
+                                                <p className="text-[15px] font-bold text-slate-900 dark:text-white">{t("smart_flows_page.empty_title")}</p>
                                                 <p className="text-[11px] font-normal text-slate-400 tracking-wide">{t("smart_flows_page.empty_subtitle")}</p>
                                             </div>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setShowCreateModal(true)}
-                                                className="mt-1 h-7.5 px-5 rounded-lg text-[9px] font-semibold border-primary/30 text-primary hover:bg-primary/10 transition-all shadow-sm"
-                                            >
-                                                {t("smart_flows_page.empty_cta")}
-                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
