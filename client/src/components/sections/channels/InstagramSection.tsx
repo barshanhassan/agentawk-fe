@@ -46,6 +46,7 @@ import InstagramIceBreakersDialog from "./InstagramIceBreakersDialog";
 import InstagramMainMenuDialog from "./InstagramMainMenuDialog";
 import InstagramStoryMentionDialog from "./InstagramStoryMentionDialog";
 import InstagramPageUsersDialog from "./InstagramPageUsersDialog";
+import { oauthRedirectUri, buildOAuthState } from "@/lib/instagramOAuth";
 
 type View = "list" | "preferred" | "old";
 
@@ -64,20 +65,25 @@ const FB_SCOPES = [
   "pages_read_engagement",
 ].join(",");
 
-function buildIgAuthUrl(appId: string): string {
-  const redirectUri = encodeURIComponent(`${window.location.origin}/instagram-callback`);
-  return `https://www.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(IG_SCOPES)}&response_type=code`;
+// Workspace subdomains return through the central app host (see lib/instagramOAuth);
+// `state` carries this workspace's origin so the code is relayed back here.
+function buildIgAuthUrl(appId: string, pageId?: string | number): string {
+  const redirectUri = encodeURIComponent(oauthRedirectUri("/instagram-callback"));
+  const state = encodeURIComponent(buildOAuthState(pageId));
+  return `https://www.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(IG_SCOPES)}&response_type=code&state=${state}`;
 }
 
 // Reconnect variant: carries the existing page id in OAuth `state` so the
 // callback refreshes that account's token in place (replyagent "Refresh").
 function buildIgReconnectAuthUrl(appId: string, pageId: string | number): string {
-  return `${buildIgAuthUrl(appId)}&state=${encodeURIComponent(String(pageId))}`;
+  return buildIgAuthUrl(appId, pageId);
 }
 
+// Same app-host relay as above; Facebook returns the token (and state) in the URL hash.
 function buildFbAuthUrl(appId: string, version: string): string {
-  const redirectUri = encodeURIComponent(`${window.location.origin}/instagram-pages`);
-  return `https://www.facebook.com/${version}/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(FB_SCOPES)}&response_type=token`;
+  const redirectUri = encodeURIComponent(oauthRedirectUri("/instagram-pages"));
+  const state = encodeURIComponent(buildOAuthState());
+  return `https://www.facebook.com/${version}/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(FB_SCOPES)}&response_type=token&state=${state}`;
 }
 
 function statusBadge(status: string, t: (key: string) => string) {

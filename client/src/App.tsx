@@ -25,7 +25,8 @@ import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
 import WhatsAppOnboardPage from "@/pages/WhatsAppOnboardPage";
 import WhatsAppConnectPage from "@/pages/WhatsAppConnectPage";
 import WhatsAppSignupLauncherPage from "@/pages/WhatsAppSignupLauncherPage";
-import InstagramCallbackPage from "@/pages/InstagramCallbackPage";
+import InstagramCallbackPage, { InstagramOAuthRelay } from "@/pages/InstagramCallbackPage";
+import { oauthRelayTarget } from "@/lib/instagramOAuth";
 import InstagramPagesCallbackPage from "@/pages/InstagramPagesCallbackPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
@@ -160,11 +161,24 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       <Route path="/whatsapp">
         <WhatsAppSignupLauncherPage />
       </Route>
+      {/* On the central app host this only relays Instagram's code to the
+          workspace subdomain that started the login (lib/instagramOAuth) —
+          PUBLIC for the same per-origin-session reason as the launcher above. */}
       <Route path="/instagram-callback">
-        <ProtectedRoute><InstagramCallbackPage /></ProtectedRoute>
+        {(() => {
+          const relayTo = oauthRelayTarget("/instagram-callback");
+          return relayTo
+            ? <InstagramOAuthRelay to={relayTo} />
+            : <ProtectedRoute><InstagramCallbackPage /></ProtectedRoute>;
+        })()}
       </Route>
       <Route path="/instagram-pages">
-        <ProtectedRoute><InstagramPagesCallbackPage /></ProtectedRoute>
+        {(() => {
+          const relayTo = oauthRelayTarget("/instagram-pages");
+          return relayTo
+            ? <InstagramOAuthRelay to={relayTo} />
+            : <ProtectedRoute><InstagramPagesCallbackPage /></ProtectedRoute>;
+        })()}
       </Route>
       <Route path="/settings">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>
@@ -281,7 +295,8 @@ function AppContent() {
   // `VITE_FB_DOMAIN` set, is served from the single Meta-whitelisted domain to
   // visitors who have no session on THIS origin. Render it bare — no sidebar,
   // no agency layout — exactly like the auth screens.
-  const isLauncherRoute = location === "/coexistence" || location === "/whatsapp";
+  const isLauncherRoute = location === "/coexistence" || location === "/whatsapp"
+    || ((location === "/instagram-callback" || location === "/instagram-pages") && !!oauthRelayTarget(location));
   const siteType = siteData?.app?.site_type || "WORKSPACE";
 
   if (loading) {

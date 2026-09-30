@@ -4,9 +4,29 @@ import { useTranslation } from "react-i18next";
 import { Instagram, CheckCircle, XCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { oauthRedirectUri, parseOAuthState } from "@/lib/instagramOAuth";
 
 // Back to the Instagram (new API) account list, not the home page.
 const BACK_TO_SETTINGS = "/settings?tab=Instagram&view=preferred";
+
+/**
+ * Central app host only: Meta came back here for a workspace on another
+ * subdomain — pass the code / token straight on to that workspace's own
+ * callback. No session is needed (and none exists on this origin). Used by
+ * both /instagram-callback and /instagram-pages.
+ */
+export function InstagramOAuthRelay({ to }: { to: string }) {
+  const { t } = useTranslation();
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return (
+    <div className="min-h-screen bg-[#0f1829] flex flex-col items-center justify-center gap-3 p-6">
+      <LoadingSpinner size={48} />
+      <p className="text-[12px] font-bold text-slate-400">{t("instagram_callback_page.connecting")}</p>
+    </div>
+  );
+}
 
 export default function InstagramCallbackPage() {
   const { t } = useTranslation();
@@ -20,7 +40,7 @@ export default function InstagramCallbackPage() {
     const errorParam = params.get("error");
     // `state` carries the page id when this is a RECONNECT (re-auth of an
     // existing account) rather than a fresh connect.
-    const reconnectPageId = params.get("state");
+    const reconnectPageId = parseOAuthState(params.get("state")).pageId;
 
     if (errorParam) {
       const desc = params.get("error_description") ?? errorParam;
@@ -37,7 +57,8 @@ export default function InstagramCallbackPage() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/instagram-callback`;
+    // Must be the exact redirect_uri the authorize step used (the app host for workspace subdomains).
+    const redirectUri = oauthRedirectUri("/instagram-callback");
 
     const endpoint = reconnectPageId
       ? "/api/instagram/reconnect-business"
