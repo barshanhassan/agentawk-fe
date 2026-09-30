@@ -126,7 +126,7 @@ export default function InstagramPagesCallbackPage() {
             <XCircle className="w-8 h-8 text-rose-500" />
             <p className="text-[12px] font-bold text-rose-400">{errorMsg}</p>
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/settings?tab=Instagram&view=old")}
               className="h-9 px-6 rounded-xl border border-slate-700 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:border-primary/40 hover:text-primary transition-all"
             >
               {t("instagram_pages_callback_page.back_to_settings")}
@@ -186,7 +186,7 @@ export default function InstagramPagesCallbackPage() {
             )}
 
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/settings?tab=Instagram&view=old")}
               className="h-9 px-6 rounded-xl border border-slate-700 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:border-primary/40 hover:text-primary transition-all self-end"
             >
               {t("instagram_pages_callback_page.back_to_settings")}

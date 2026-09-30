@@ -5,6 +5,9 @@ import { Instagram, CheckCircle, XCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
+// Back to the Instagram (new API) account list, not the home page.
+const BACK_TO_SETTINGS = "/settings?tab=Instagram&view=preferred";
+
 export default function InstagramCallbackPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
@@ -23,14 +26,14 @@ export default function InstagramCallbackPage() {
       const desc = params.get("error_description") ?? errorParam;
       setStatus("error");
       setMessage(desc);
-      setTimeout(() => setLocation("/"), 3000);
+      setTimeout(() => setLocation(BACK_TO_SETTINGS), 3000);
       return;
     }
 
     if (!code) {
       setStatus("error");
       setMessage(t("instagram_callback_page.no_auth_code"));
-      setTimeout(() => setLocation("/"), 3000);
+      setTimeout(() => setLocation(BACK_TO_SETTINGS), 3000);
       return;
     }
 
@@ -54,12 +57,12 @@ export default function InstagramCallbackPage() {
             ? t("instagram_callback_page.reconnected_success")
             : t("instagram_callback_page.connected_success"),
         );
-        setTimeout(() => setLocation("/"), 2500);
+        setTimeout(() => setLocation(BACK_TO_SETTINGS), 2500);
       })
       .catch((err) => {
         setStatus("error");
         setMessage(err?.message ?? t("instagram_callback_page.connect_failed"));
-        setTimeout(() => setLocation("/"), 3500);
+        setTimeout(() => setLocation(BACK_TO_SETTINGS), 3500);
       });
   }, [setLocation]);
 

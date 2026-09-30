@@ -130,7 +130,12 @@ export default function InstagramSection() {
   const primaryBtn = "h-11 px-7 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-[11px] font-semibold transition-all shadow-lg shadow-primary/20 flex items-center gap-2";
   const igGradient = "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600";
 
-  const [view, setView] = useState<View>("list");
+  // `?view=preferred|old` lands straight on that account list — the OAuth
+  // callback pages send the user back here (same pattern as WhatsAppSection).
+  const [view, setView] = useState<View>(() => {
+    const v = new URLSearchParams(window.location.search).get("view");
+    return v === "preferred" || v === "old" ? v : "list";
+  });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<any>(null);
   // replyagent "delete_media": also purge this account's stored media on delete.

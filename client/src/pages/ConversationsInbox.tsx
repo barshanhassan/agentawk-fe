@@ -1270,6 +1270,8 @@ export default function ConversationsInbox() {
       msgType === 'document' ? '📄 Document' :
       msgType === 'sticker' ? '🌟 Sticker' :
       msgType === 'call' ? '📞 Missed call' :
+      // Instagram "view once" photo/video — Meta never shares its content.
+      msgType === 'ephemeral' ? '👁 View-once media — open the Instagram app to view it' :
       ''
     ) : '');
 
