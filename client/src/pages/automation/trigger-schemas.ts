@@ -14,7 +14,7 @@ import type { FieldType } from './action-schemas';
 export interface TriggerFieldSchema {
   key: string;
   label: string;
-  type: FieldType | 'start-url' | 'ref-text' | 'keywords' | 'match-type' | 'payload-toggle';
+  type: FieldType | 'start-url' | 'ref-text' | 'keywords' | 'match-type' | 'payload-toggle' | 'ig-media-pick' | 'text-list';
   options?: Array<{ value: string; label: string }>;
   channel?: string;
   required?: boolean;
@@ -23,6 +23,12 @@ export interface TriggerFieldSchema {
   maxLength?: number;
   // When true, render in a collapsed "Payload" section toggled by a switch.
   inPayloadSection?: boolean;
+  // Show only while another field has this value (SchemaForm `shouldShow`).
+  dependsOn?: { field: string; equals?: string };
+  // ig-media-pick: which of the Instagram account's media to pick from.
+  mediaKind?: 'posts' | 'stories';
+  // text-list: most entries allowed.
+  maxItems?: number;
 }
 
 export interface TriggerSchema {
@@ -34,6 +40,8 @@ export interface TriggerSchema {
   // We tell the editor which URL to fetch by setting urlField.
   urlField?: 'default' | 'telegram' | 'whatsapp' | 'webchat' | 'evolution' | 'zapi' | 'fb_ref' | 'ig_ref';
   fields: TriggerFieldSchema[];
+  // Initial properties when the trigger is picked (replyagent AutomationStore defaults).
+  defaults?: Record<string, any>;
 }
 
 const MATCH_TYPE_OPTIONS = [
@@ -416,16 +424,92 @@ export const TRIGGER_SCHEMAS: Record<string, TriggerSchema> = {
       { key: 'channel_account_id', label: 'Instagram account', type: 'channel-account', channel: 'instagram', required: true },
     ],
   },
+  // replyagent `instagram_post_comment` (Trigger.vue "Instagram comment reply" panel).
   ig_comment_reply: {
     event: 'ig_comment_reply',
-    label: 'Instagram comment reply',
+    label: 'Instagram post comment',
     category: 'Instagram',
     icon: 'fa-instagram',
+    defaults: {
+      post_filter: 'any',
+      post: null,
+      comment_filter: 'any',
+      includeKeywords: [],
+      excludeKeywords: [],
+      reply: false,
+      replies: [],
+      save_to_cf: false,
+      custom_field: null,
+    },
     fields: [
       { key: 'channel_account_id', label: 'Instagram account', type: 'channel-account', channel: 'instagram', required: true },
-      { key: 'post_id', label: 'Post ID (any if blank)', type: 'text' },
-      { key: 'match_type', label: 'Match type', type: 'select', options: MATCH_TYPE_OPTIONS },
-      { key: 'keywords', label: 'Keywords (any if blank)', type: 'keywords' },
+      {
+        key: 'post_filter', label: 'When someone comments on', type: 'select',
+        options: [
+          { value: 'any', label: 'Any post' },
+          { value: 'specific', label: 'A specific post' },
+        ],
+      },
+      { key: 'post', label: 'Post', type: 'ig-media-pick', mediaKind: 'posts', dependsOn: { field: 'post_filter', equals: 'specific' } },
+      {
+        key: 'comment_filter', label: 'And the comment', type: 'select',
+        options: [
+          { value: 'any', label: 'Is anything' },
+          { value: 'specific', label: 'Contains specific keywords' },
+        ],
+      },
+      {
+        key: 'includeKeywords', label: 'Keywords', type: 'keywords',
+        helpText: 'The comment must contain one of these.',
+        dependsOn: { field: 'comment_filter', equals: 'specific' },
+      },
+      {
+        key: 'excludeKeywords', label: 'Except comments containing', type: 'keywords',
+        helpText: 'Optional — comments with any of these words are ignored.',
+        dependsOn: { field: 'comment_filter', equals: 'any' },
+      },
+      { key: 'reply', label: 'Reply publicly to the comment', type: 'checkbox' },
+      {
+        key: 'replies', label: 'Replies', type: 'text-list', maxItems: 10, maxLength: 1000,
+        helpText: 'One of these is picked at random and posted under the comment.',
+        dependsOn: { field: 'reply', equals: 'true' },
+      },
+      { key: 'save_to_cf', label: 'Save the comment to a custom field', type: 'checkbox' },
+      { key: 'custom_field', label: 'Custom field', type: 'custom-field', dependsOn: { field: 'save_to_cf', equals: 'true' } },
+    ],
+  },
+  // replyagent `instagram_story_reply` (Trigger.vue "Instagram Story reply" panel).
+  ig_story_reply: {
+    event: 'ig_story_reply',
+    label: 'Instagram story reply',
+    category: 'Instagram',
+    icon: 'fa-instagram',
+    defaults: {
+      story_type: 'any',
+      story: null,
+      keyword_type: 'any',
+      keywords: [],
+      like_reply: false,
+    },
+    fields: [
+      { key: 'channel_account_id', label: 'Instagram account', type: 'channel-account', channel: 'instagram', required: true },
+      {
+        key: 'story_type', label: 'When someone replies to', type: 'select',
+        options: [
+          { value: 'any', label: 'Any story' },
+          { value: 'specific', label: 'A specific story' },
+        ],
+      },
+      { key: 'story', label: 'Story', type: 'ig-media-pick', mediaKind: 'stories', dependsOn: { field: 'story_type', equals: 'specific' } },
+      {
+        key: 'keyword_type', label: 'And the reply', type: 'select',
+        options: [
+          { value: 'any', label: 'Is anything' },
+          { value: 'specific', label: 'Contains specific keywords' },
+        ],
+      },
+      { key: 'keywords', label: 'Keywords', type: 'keywords', dependsOn: { field: 'keyword_type', equals: 'specific' } },
+      { key: 'like_reply', label: 'Like the reply', type: 'checkbox', helpText: "React with ❤️ to the contact's reply." },
     ],
   },
   wa_ref_start: {

@@ -406,6 +406,7 @@ const TRIGGER_EVENT_ICON: Record<string, React.ReactNode> = {
   wa_ad_clicked: <Hand className="h-4 w-4 text-emerald-600" />,
   ig_story_mention: <ImageIcon className="h-4 w-4 text-fuchsia-600" />,
   ig_comment_reply: <MessageSquare className="h-4 w-4 text-fuchsia-600" />,
+  ig_story_reply: <ImageIcon className="h-4 w-4 text-fuchsia-600" />,
   fb_comment: <MessageSquare className="h-4 w-4 text-blue-600" />,
   fb_topic_subscribed: <MessageSquare className="h-4 w-4 text-blue-600" />,
   opportunity_stage_moved: <User className="h-4 w-4 text-violet-600" />,
@@ -486,6 +487,18 @@ function triggerActivitySummary(act: TriggerActivity, t: (k: string, o?: any) =>
   // Channel ref / ad
   if (ev === "wa_ref_start") return p.ref_code ? t("activity_editors.trigger_summary.ref", { ref: p.ref_code }) : t("activity_editors.trigger_summary.set_ref_code");
   if (ev === "wa_ad_clicked") return p.ad_id ? t("activity_editors.trigger_summary.ad", { id: p.ad_id }) : t("activity_editors.trigger_summary.any_ad");
+
+  // Instagram post comment / story reply (replyagent post_filter / story_type shape)
+  if (ev === "ig_comment_reply" && (p.post_filter || p.comment_filter)) {
+    const where = p.post_filter === "specific" ? t("activity_editors.trigger_summary.ig_specific_post") : t("activity_editors.trigger_summary.ig_any_post");
+    const kws: string[] = p.comment_filter === "specific" && Array.isArray(p.includeKeywords) ? p.includeKeywords : [];
+    return kws.length ? `${where} · ${kws.slice(0, 2).join(", ")}${kws.length > 2 ? "…" : ""}` : where;
+  }
+  if (ev === "ig_story_reply") {
+    const where = p.story_type === "specific" ? t("activity_editors.trigger_summary.ig_specific_story") : t("activity_editors.trigger_summary.ig_any_story");
+    const kws: string[] = p.keyword_type === "specific" && Array.isArray(p.keywords) ? p.keywords : [];
+    return kws.length ? `${where} · ${kws.slice(0, 2).join(", ")}${kws.length > 2 ? "…" : ""}` : where;
+  }
 
   // FB / IG comment triggers
   if (ev === "fb_comment" || ev === "ig_comment_reply") {
@@ -644,6 +657,12 @@ function TriggerFieldForm({
     return <p className="text-sm text-muted-foreground">{t("activity_editors.unknown_trigger", { event })}</p>;
   }
   return (
-    <SchemaForm fields={schema.fields as any[]} value={value} onChange={onChange} />
+    <SchemaForm
+      fields={schema.fields as any[]}
+      value={value}
+      onChange={onChange}
+      // The Instagram post / story pickers list the account chosen in this trigger.
+      contextual={{ channelAccountId: value?.channel_account_id }}
+    />
   );
 }

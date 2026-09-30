@@ -89,11 +89,14 @@ const CHANNEL_TRIGGER_TEMPLATES: Array<{
   keyword?: string;
   refStart?: string;
   adClicked?: string;
+  // Further per-account triggers, listed after the ones above.
+  extras?: string[];
 }> = [
   { channel: "whatsapp", startUrl: "whatsapp_url", keyword: "wa_keyword", refStart: "wa_ref_start", adClicked: "wa_ad_clicked" },
   { channel: "telegram", startUrl: "telegram_url", keyword: "tg_keyword" },
   { channel: "messenger", refStart: "fb_messenger_ref_start", keyword: "fb_keyword" },
-  { channel: "instagram", refStart: "ig_ref_start", keyword: "ig_keyword" },
+  // replyagent AutomationStore Instagram section: comment, story reply, story mention.
+  { channel: "instagram", refStart: "ig_ref_start", keyword: "ig_keyword", extras: ["ig_comment_reply", "ig_story_reply", "ig_story_mention"] },
   { channel: "webchat", startUrl: "webchat_url", keyword: "wc_keyword" },
   { channel: "evolution", startUrl: "evolution_url", keyword: "evolution_keyword" },
   { channel: "zapi", startUrl: "zapi_url", keyword: "zapi_keyword" },
@@ -227,6 +230,7 @@ function TriggerIcon({ event }: { event: string }) {
     wa_ad_clicked: <Hand className="h-5 w-5" />,
     ig_story_mention: <ImagePlay className="h-5 w-5" />,
     ig_comment_reply: <MessageSquareIcon className="h-5 w-5" />,
+    ig_story_reply: <ImagePlay className="h-5 w-5" />,
     fb_comment: <MessageSquareIcon className="h-5 w-5" />,
     fb_topic_subscribed: <MessageSquareIcon className="h-5 w-5" />,
     fb_topic_sent: <MessageSquareIcon className="h-5 w-5" />,
@@ -320,6 +324,10 @@ export function TriggersModal({
         cards.push({ event: template.keyword, label: t("automation_modals.keywords_label"), schema: TRIGGER_SCHEMAS[template.keyword], prefill });
       if (template.adClicked && TRIGGER_SCHEMAS[template.adClicked])
         cards.push({ event: template.adClicked, label: t("automation_modals.ad_clicked_label"), schema: TRIGGER_SCHEMAS[template.adClicked], prefill });
+      for (const ev of template.extras ?? []) {
+        const schema = TRIGGER_SCHEMAS[ev];
+        if (schema) cards.push({ event: ev, label: schema.label, schema, prefill: { ...(schema.defaults ?? {}), ...prefill } });
+      }
       out.push({
         title: acc.name,
         icon: channelEmojiIcon(acc.channel),

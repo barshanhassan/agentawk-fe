@@ -5065,6 +5065,10 @@
       "any_ad": "Any ad",
       "post": "Post #{{id}}",
       "any_post_or_keyword": "Any post / keyword",
+      "ig_any_post": "Any post",
+      "ig_specific_post": "Specific post",
+      "ig_any_story": "Any story",
+      "ig_specific_story": "Specific story",
       "channel": "Channel: {{channel}}",
       "any_channel": "Any channel",
       "agent": "Agent #{{id}}",
@@ -5703,6 +5707,23 @@
       "pick_a_field": "Pick a field",
       "pick_a_system_field": "Pick a system field"
     },
+    "ig_media": {
+      "pick_account_first": "Pick the Instagram account first.",
+      "select_post": "Select a post",
+      "change_post": "Change post",
+      "select_story": "Select a story",
+      "change_story": "Change story",
+      "view": "View",
+      "no_posts": "This account has no posts yet.",
+      "no_stories": "This account has no live stories right now — stories disappear after 24 hours.",
+      "load_more": "Load more",
+      "loading": "Loading…",
+      "load_failed": "Could not load from Instagram."
+    },
+    "text_list": {
+      "placeholder": "Type a reply…",
+      "add": "Add reply"
+    },
     "match_type": {
       "is_exact": "Is exact",
       "contains": "Contains",
@@ -6241,6 +6262,12 @@
       "customer": "Customer",
       "open_in_maps": "Open in Maps",
       "shared_location": "Shared location",
+      "ig_mentioned_in_story": "Mentioned you in their story",
+      "ig_replied_to_story": "Replied to your story",
+      "ig_commented": "Commented on your post",
+      "ig_comment_reply_sent": "Replied to the comment",
+      "ig_view_story": "View story",
+      "ig_view_post": "View post",
       "contact_fallback": "Contact",
       "download_image": "Download image",
       "download_file": "Download file",

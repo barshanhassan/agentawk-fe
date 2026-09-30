@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, RefreshCw, Eye, EyeOff, Download, Send, Phone, Mail, Plus, Filter, ArrowUp, X, Image, Mic, MicOff, Paperclip, XCircle, Smile, Trash2 } from "react-feather";
-import { MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, MessagesSquare, Inbox as InboxIcon, NotebookPen, FileCheck2, History } from "lucide-react";
+import { MoreVertical, ChevronDown, ChevronLeft, User, ListFilter, CheckCircle, AlertOctagon, UserX, Check, CheckCheck, Clock, CornerUpLeft, Folder as FolderIcon, Bot, FileText, MapPin, Type as TypeIcon, Bold, Italic, Strikethrough, Code, Play, Pause, Copy, MessageSquare, MessagesSquare, Inbox as InboxIcon, NotebookPen, FileCheck2, History, ExternalLink } from "lucide-react";
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -189,6 +189,14 @@ interface Message {
   // backend from `reply_to`), so the quote survives reloads. Mirrors replyagent's
   // WhatsappMessageResource `reply`.
   reply?: { id: number; from: 'agent' | 'user'; text: string } | null;
+  // Instagram story mention / story reply / post comment — context card above
+  // the text (replyagent InstagramMessages.vue story_mention / story_replied / comment).
+  igContext?: {
+    kind: 'story_mention' | 'story_replied' | 'comment' | 'comment_reply';
+    url: string | null;
+    thumb: string | null;
+    isVideo: boolean;
+  } | null;
 }
 
 interface Agent {
@@ -208,6 +216,7 @@ interface BackendConversation {
   id: number | string;
   contacts?: { full_name?: string; first_name?: string; last_name?: string; mobile_number?: string; email?: string };
   last_message_text?: string;
+  last_message_type?: string | null;
   updated_at?: string;
   unread_count?: number;
   status?: string;
@@ -1016,7 +1025,12 @@ export default function ConversationsInbox() {
       email: item.contacts?.email || '',
       firstName: item.contacts?.first_name || '',
       lastName: item.contacts?.last_name || '',
-      lastMessage: item.last_message_text || '',
+      // Instagram story / comment rows get a label (replyagent InstagramListItem.vue);
+      // a mention's stored text is only the story link, so it shows the label alone.
+      lastMessage: item.last_message_type === 'story_mention' ? t("conversations_inbox.messages.ig_mentioned_in_story")
+        : item.last_message_type === 'story_replied' ? `${t("conversations_inbox.messages.ig_replied_to_story")}: ${item.last_message_text || ''}`
+        : item.last_message_type === 'comment' ? `${t("conversations_inbox.messages.ig_commented")}: ${item.last_message_text || ''}`
+        : item.last_message_text || '',
       time: item.updated_at || new Date().toISOString(),
       unread: item.unread_count || 0,
       status: mapStatus(item.status),
@@ -1200,7 +1214,11 @@ export default function ConversationsInbox() {
 
     // Separate image / video / audio / other uploads from parsed_files.
     // `thumb` (from the media_gallery row) drives image previews + video posters.
-    const parsedFiles: Array<{ url: string; name: string; size: number; mime: string; thumb?: string | null }> = raw.parsed_files || [];
+    const allFiles: Array<{ url: string; name: string; size: number; mime: string; thumb?: string | null; is_story?: boolean }> = raw.parsed_files || [];
+    // An Instagram story (mentioned / replied to) shows in its own context card,
+    // not as a regular image or video of the message.
+    const storyFile = allFiles.find((f) => f.is_story) ?? null;
+    const parsedFiles = allFiles.filter((f) => !f.is_story);
     const imageFiles = parsedFiles.filter((f) => f.mime?.startsWith('image/'));
     const videoFiles = parsedFiles.filter((f) => f.mime?.startsWith('video/'));
     const audioFiles = parsedFiles.filter((f) =>
@@ -1262,6 +1280,25 @@ export default function ConversationsInbox() {
       reply = { id: Number(rp.id), from: rp.direction === 'OUTGOING' ? 'agent' : 'user', text: rpText };
     }
 
+    let igContext: Message['igContext'] = null;
+    if (msgType === 'story_mention' || msgType === 'story_replied') {
+      igContext = {
+        kind: msgType,
+        url: raw.story_url ?? null,
+        thumb: storyFile?.url ?? null,
+        isVideo: !!storyFile?.mime?.startsWith('video/'),
+      };
+      // A mention's text is only the story link — the card already carries it.
+      if (msgType === 'story_mention') rawText = '';
+    } else if (msgType === 'comment' || msgType === 'comment_reply') {
+      igContext = {
+        kind: msgType,
+        url: raw.comment_post?.url ?? null,
+        thumb: raw.comment_post?.thumb ?? null,
+        isVideo: false,
+      };
+    }
+
     const hasMediaContent = imageFiles.length > 0 || videoFiles.length > 0 || audioFiles.length > 0 || otherFiles.length > 0;
     const displayText = rawText ? rawText : (!hasMediaContent ? (
       msgType === 'audio' || msgType === 'voice' ? '🎤 Voice message' :
@@ -1294,6 +1331,7 @@ export default function ConversationsInbox() {
       location: location && (location.latitude || location.longitude) ? location : null,
       vcards: vcards && vcards.length ? vcards : null,
       reply,
+      igContext,
     };
   }), [messagesResponse]);
 
@@ -3865,7 +3903,7 @@ export default function ConversationsInbox() {
                       !(msg.images && msg.images.length) &&
                       !(msg.attachments && msg.attachments.length) &&
                       !msg.video && !msg.audio && !msg.location &&
-                      !(msg as any).vcards && !(msg as any).template && !msg.reply;
+                      !(msg as any).vcards && !(msg as any).template && !msg.reply && !msg.igContext;
                     // Image (+ optional short caption) bubbles shouldn't
                     // stretch to the 70% cap the way long text does — the
                     // bubble should hug the image's own width, or the
@@ -4066,6 +4104,44 @@ export default function ConversationsInbox() {
                                 </span>
                                 <span className="block text-[11px] text-muted-foreground truncate">{msg.reply.text}</span>
                               </button>
+                            )}
+
+                            {/* Instagram story mention / story reply / comment context */}
+                            {msg.igContext && (
+                              <div className="mb-2 min-w-[12rem] max-w-[16rem]" data-testid={`ig-context-${msg.id}`}>
+                                <span className="block text-[11px] italic text-muted-foreground mb-1">
+                                  {msg.igContext.kind === "story_mention" ? t("conversations_inbox.messages.ig_mentioned_in_story")
+                                    : msg.igContext.kind === "story_replied" ? t("conversations_inbox.messages.ig_replied_to_story")
+                                    : msg.igContext.kind === "comment" ? t("conversations_inbox.messages.ig_commented")
+                                    : t("conversations_inbox.messages.ig_comment_reply_sent")}
+                                </span>
+                                {msg.igContext.thumb && (
+                                  msg.igContext.isVideo ? (
+                                    <video src={msg.igContext.thumb} controls className="rounded-md max-h-64 w-full object-cover bg-black/10" />
+                                  ) : (
+                                    <img
+                                      src={msg.igContext.thumb}
+                                      alt=""
+                                      className="rounded-md max-h-64 w-full object-cover cursor-pointer"
+                                      onClick={(e) => { e.stopPropagation(); window.open(msg.igContext!.thumb!, "_blank", "noopener"); }}
+                                    />
+                                  )
+                                )}
+                                {msg.igContext.url && (
+                                  <a
+                                    href={msg.igContext.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="mt-1 inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                  >
+                                    <ExternalLink size={12} />
+                                    {msg.igContext.kind === "story_mention" || msg.igContext.kind === "story_replied"
+                                      ? t("conversations_inbox.messages.ig_view_story")
+                                      : t("conversations_inbox.messages.ig_view_post")}
+                                  </a>
+                                )}
+                              </div>
                             )}
 
                             {/* WhatsApp template preview card */}

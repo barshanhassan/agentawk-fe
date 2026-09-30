@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Copy, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
@@ -319,6 +320,24 @@ export function PrimitiveField({ field, value, onChange, contextual }: Primitive
           onCheckedChange={(v) => onChange(v)}
         />
       );
+    case "ig-media-pick":
+      return (
+        <IgMediaPicker
+          pageId={contextual?.channelAccountId}
+          kind={(field as any).mediaKind ?? "posts"}
+          value={value ?? null}
+          onChange={onChange}
+        />
+      );
+    case "text-list":
+      return (
+        <TextListBuilder
+          value={Array.isArray(value) ? value : []}
+          onChange={onChange}
+          maxItems={(field as any).maxItems ?? 10}
+          maxLength={(field as any).maxLength}
+        />
+      );
     case "gallery-pick":
       return (
         <GalleryPickButton
@@ -536,6 +555,181 @@ function TagSelector({
   );
 }
 
+/**
+ * Pick one of the Instagram account's posts or live stories — replyagent
+ * Trigger.vue openInstaPostModal / openInstaStoryModal. Stores the Graph media
+ * object ({ id, media_type, media_url, thumbnail_url, shortcode, … }); the
+ * backend matches on `id`.
+ */
+function IgMediaPicker({
+  pageId,
+  kind,
+  value,
+  onChange,
+}: {
+  pageId?: string | number;
+  kind: "posts" | "stories";
+  value: any;
+  onChange: (v: any) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<any[]>([]);
+  const [next, setNext] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async (cursor?: string | null) => {
+    if (!pageId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const qs = cursor ? `?next=${encodeURIComponent(cursor)}` : "";
+      const res = await apiGet(`/api/instagram/pages/${pageId}/${kind}${qs}`);
+      setItems((prev) => (cursor ? [...prev, ...(res?.data ?? [])] : res?.data ?? []));
+      setNext(res?.next ?? null);
+    } catch (e: any) {
+      setError(e?.message ?? t("automation_editors.ig_media.load_failed"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const preview = (m: any) => (m?.media_type === "VIDEO" ? m?.thumbnail_url : m?.media_url) ?? null;
+  const viewUrl = value?.permalink ?? (value?.shortcode ? `https://instagram.com/p/${value.shortcode}` : null);
+
+  if (!pageId) {
+    return <p className="text-xs text-muted-foreground">{t("automation_editors.ig_media.pick_account_first")}</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {value?.id && (
+        <div className="rounded-md border overflow-hidden">
+          {preview(value) ? (
+            <img src={preview(value)} alt="" className="w-full max-h-28 object-cover" />
+          ) : (
+            <div className="h-16 bg-muted" />
+          )}
+          <div className="flex items-center justify-between px-2 py-1.5 text-[11px] text-muted-foreground">
+            <span>{value.timestamp ? new Date(value.timestamp).toLocaleString() : value.id}</span>
+            {viewUrl && (
+              <a href={viewUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                {t("automation_editors.ig_media.view")}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => {
+          setOpen(true);
+          load(null);
+        }}
+      >
+        {value?.id
+          ? t(kind === "posts" ? "automation_editors.ig_media.change_post" : "automation_editors.ig_media.change_story")
+          : t(kind === "posts" ? "automation_editors.ig_media.select_post" : "automation_editors.ig_media.select_story")}
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {t(kind === "posts" ? "automation_editors.ig_media.select_post" : "automation_editors.ig_media.select_story")}
+            </DialogTitle>
+          </DialogHeader>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {!loading && !error && items.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              {t(kind === "posts" ? "automation_editors.ig_media.no_posts" : "automation_editors.ig_media.no_stories")}
+            </p>
+          )}
+          <ScrollArea className="max-h-[60vh]">
+            <div className="grid grid-cols-3 gap-2 pr-2">
+              {items.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`relative rounded-md overflow-hidden border-2 aspect-square bg-muted ${
+                    value?.id === m.id ? "border-emerald-500" : "border-transparent hover:border-emerald-300"
+                  }`}
+                  onClick={() => {
+                    onChange(m);
+                    setOpen(false);
+                  }}
+                >
+                  {preview(m) && <img src={preview(m)} alt="" className="w-full h-full object-cover" />}
+                  {m.media_type === "VIDEO" && (
+                    <span className="absolute top-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">▶</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+          {(loading || next) && (
+            <Button type="button" variant="outline" size="sm" disabled={loading} onClick={() => load(next)}>
+              {loading ? t("automation_editors.ig_media.loading") : t("automation_editors.ig_media.load_more")}
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/**
+ * Up to `maxItems` free-text entries stored as `[{ message }]` — replyagent's
+ * Instagram comment trigger `replies` (one is picked at random).
+ */
+function TextListBuilder({
+  value,
+  onChange,
+  maxItems,
+  maxLength,
+}: {
+  value: Array<{ message?: string }>;
+  onChange: (v: Array<{ message: string }>) => void;
+  maxItems: number;
+  maxLength?: number;
+}) {
+  const { t } = useTranslation();
+  const rows = value.map((r) => ({ message: r?.message ?? "" }));
+  return (
+    <div className="space-y-2">
+      {rows.map((row, i) => (
+        <div key={i} className="flex items-start gap-2">
+          <Textarea
+            rows={2}
+            value={row.message}
+            maxLength={maxLength}
+            placeholder={t("automation_editors.text_list.placeholder")}
+            onChange={(e) => onChange(rows.map((r, j) => (j === i ? { message: e.target.value } : r)))}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onChange(rows.filter((_, j) => j !== i))}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      ))}
+      {rows.length < maxItems && (
+        <Button type="button" variant="outline" size="sm" onClick={() => onChange([...rows, { message: "" }])}>
+          <Plus className="h-3 w-3 mr-1" />
+          {t("automation_editors.text_list.add")}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function CustomFieldSelector({
   value,
   onChange,
@@ -748,7 +942,8 @@ export function TriggerEditor({
         fields={mainFields}
         value={value ?? {}}
         onChange={onChange}
-        contextual={contextual}
+        // The Instagram post / story pickers list the account chosen above.
+        contextual={{ ...(contextual ?? {}), channelAccountId: value?.channel_account_id ?? contextual?.channelAccountId }}
       />
       {payloadFields.length > 0 && showPayload && (
         <div className="border-t pt-3">
