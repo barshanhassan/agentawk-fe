@@ -56,6 +56,7 @@ import ReportBuilderSection from "@/components/sections/ai/studio/reports/Report
 import IntegrationsSection from "@/components/sections/connect/IntegrationsSection";
 import APISection from "@/components/sections/connect/APISection";
 import VisualAPISection from "@/components/sections/connect/VisualAPISection";
+import WhatsAppGroupsSection from "@/components/sections/WhatsAppGroupsSection";
 
 
 import DeveloperSettingsSection from "@/components/sections/DeveloperSettingsSection";
@@ -112,6 +113,7 @@ const SIDEBAR_LABEL_KEYS: Record<string, string> = {
   "Tags": "settings_page.sidebar.tags",
   "Quick Replies": "settings_page.sidebar.quick_replies",
   "Media Gallery": "settings_page.sidebar.media_gallery",
+  "WhatsApp Groups": "settings_page.sidebar.whatsapp_groups",
   "Developer Settings": "settings_page.sidebar.developer_settings",
   "Change Password": "settings_page.sidebar.change_password",
 };
@@ -246,6 +248,7 @@ export default function SettingsPage() {
 
 
     { name: "Media Gallery", icon: Film },
+    { name: "WhatsApp Groups", icon: Users },
     { name: "Developer Settings", icon: Code },
     // Now reachable from the "My Profile" page's own Password tab — kept
     // here (not deleted) rather than removed outright, just hidden from
@@ -673,6 +676,8 @@ export default function SettingsPage() {
                 <TeamsSection />)}
               {activeSection === "Media Gallery" && (
                 <MediaGallerySection />)}
+              {activeSection === "WhatsApp Groups" && (
+                <WhatsAppGroupsSection />)}
 
 
               {activeSection === "My Profile" && (

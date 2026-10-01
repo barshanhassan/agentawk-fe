@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, apiUploadWithProgress } from "@/lib/queryClient";
 import { getUserInfo, hasAnyPerm } from "@/lib/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users as UsersIcon } from "lucide-react";
 import { useSocket } from "@/hooks/use-socket";
 import {
   Select,
@@ -80,6 +80,8 @@ interface Conversation {
   // WhatsApp: which number this chat belongs to (per-row badge) + opt-in state (M19).
   channelNumber?: { name: string | null; phone_number: string | null } | null;
   hasOptedIn?: boolean;
+  // QR (UazAPI) WhatsApp group chat — keyed by the group JID, not a phone.
+  isGroup?: boolean;
 }
 
 // WhatsApp Cloud API file-size limits (bytes)
@@ -170,6 +172,9 @@ interface Message {
   // Outgoing sender info — drives the per-bubble agent avatar vs bot icon.
   communicationMode?: string;
   senderName?: string | null;
+  // QR WhatsApp group: the member who wrote an incoming message.
+  groupSenderName?: string | null;
+  groupSenderPhone?: string | null;
   // Failed-send error detail (replyagent error tooltip).
   errorData?: string | null;
   // WhatsApp template message → rendered as a preview card.
@@ -227,6 +232,7 @@ interface BackendConversation {
   // WhatsApp per-row badge data (M19) — which number the chat belongs to + opt-in.
   phoneNumber?: string | null;
   has_opted_in?: boolean;
+  is_group?: boolean;
 }
 
 interface BackendMessage {
@@ -1044,6 +1050,7 @@ export default function ConversationsInbox() {
       // WhatsApp per-row badge data (M19) — which number the chat belongs to + opt-in.
       channelNumber: item.phoneNumber ?? null,
       hasOptedIn: !!item.has_opted_in,
+      isGroup: !!item.is_group,
     };
   });
 
@@ -1325,6 +1332,8 @@ export default function ConversationsInbox() {
       reactions: Array.isArray(raw.reactions) ? raw.reactions : [],
       communicationMode: raw.communication_mode,
       senderName: raw.sender_name ?? null,
+      groupSenderName: raw.group_sender_name ?? null,
+      groupSenderPhone: raw.group_sender_phone ?? null,
       errorData: raw.error_data ?? raw.error_code ?? null,
       template: raw.template ?? null,
       interactive: raw.interactive ?? null,
@@ -3512,7 +3521,7 @@ export default function ConversationsInbox() {
                         <div className="w-10 h-10 relative">
                           <Avatar className="absolute">
                             <AvatarFallback className={getAvatarColor(getDisplayName(conv))}>
-                              {(() => {
+                              {conv.isGroup ? <UsersIcon className="w-4 h-4" /> : (() => {
                                 const displayName = getDisplayName(conv);
                                 const parts = displayName.trim().split(/\s+/).filter((p: string) => p.length > 0);
                                 if (parts.length === 0) return "U";
@@ -3532,12 +3541,20 @@ export default function ConversationsInbox() {
                             {conv.channel === "messenger" && (
                               <img src="/images/automations/messenger.svg" alt="Messenger" className="w-4 h-4" />
                             )}
+                            {conv.isGroup && (
+                              <img src="/images/automations/whatsapp.svg" alt="WhatsApp" className="w-4 h-4" />
+                            )}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1 gap-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <span className={`text-sm truncate ${getPendingMessagesCount(conv) > 0 ? "font-bold" : " font-semibold"}`}>{getDisplayName(conv)}</span>
+                              {conv.isGroup && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                                  {t("conversations_inbox.group_badge", { defaultValue: "Group" })}
+                                </Badge>
+                              )}
                               {activeTab === "all" && (
                                 <Badge
                                   variant="outline"
@@ -4087,6 +4104,15 @@ export default function ConversationsInbox() {
                               </div>
                             )}
 
+                            {/* WhatsApp group: which member wrote this (WhatsApp shows it the same way). */}
+                            {msg.from === "user" && (msg.groupSenderName || msg.groupSenderPhone) && (
+                              <div className="text-[12px] font-semibold text-emerald-700 dark:text-emerald-400 pr-5 truncate">
+                                {msg.groupSenderName || `+${msg.groupSenderPhone}`}
+                                {msg.groupSenderName && msg.groupSenderPhone && (
+                                  <span className="ml-1.5 font-normal text-muted-foreground">+{msg.groupSenderPhone}</span>
+                                )}
+                              </div>
+                            )}
                             {/* Quoted reply — the message this one is replying to.
                                 Click scrolls to the original bubble. */}
                             {msg.reply && (
