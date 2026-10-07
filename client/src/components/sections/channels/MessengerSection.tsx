@@ -11,6 +11,10 @@ import {
   Trash2,
   AlertCircle,
   MessageSquare,
+  Reply,
+  BookOpen,
+  UserCog,
+  BellRing,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +37,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
+import MessengerDefaultReplyDialog from "./MessengerDefaultReplyDialog";
+import MessengerIceBreakersDialog from "./MessengerIceBreakersDialog";
+import MessengerMainMenuDialog from "./MessengerMainMenuDialog";
+import MessengerPageUsersDialog from "./MessengerPageUsersDialog";
+import MessengerOtnDialog from "./MessengerOtnDialog";
 
 export default function MessengerSection() {
   const { mode } = useTheme();
@@ -80,8 +89,63 @@ export default function MessengerSection() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pageToDelete, setPageToDelete] = useState<any>(null);
 
+  // Per-page action modals (mirrors InstagramSection's own account-row → modal pattern).
+  const [defaultReplyPage, setDefaultReplyPage] = useState<any>(null);
+  const [iceBreakersPage, setIceBreakersPage] = useState<any>(null);
+  const [mainMenuPage, setMainMenuPage] = useState<any>(null);
+  const [pageUsersPage, setPageUsersPage] = useState<any>(null);
+  const [otnPage, setOtnPage] = useState<any>(null);
+
+  const syncMutation = useMutation({
+    mutationFn: async (id: number | string) => {
+      await apiRequest("POST", `/api/messenger/pages/${id}/sync`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({ title: t("messenger_section.syncing"), description: t("messenger_section.page_data_refreshed") });
+    },
+    onError: () => toast({ title: t("messenger_section.sync_failed"), description: t("messenger_section.sync_failed_description"), variant: "destructive" }),
+  });
+
+  const feederMutation = useMutation({
+    mutationFn: async ({ id, enabled }: { id: number | string; enabled: boolean }) => {
+      await apiRequest("POST", `/api/messenger/pages/${id}/toggle-feeder`, { enabled });
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/channels"] });
+      toast({
+        title: t("messenger_section.updated"),
+        description: vars.enabled ? t("messenger_section.ai_feeder_enabled") : t("messenger_section.ai_feeder_disabled"),
+      });
+    },
+    onError: () => toast({ title: t("messenger_section.feeder_failed"), description: t("messenger_section.feeder_failed_description"), variant: "destructive" }),
+  });
+
+  const capiMutation = useMutation({
+    mutationFn: async (id: number | string) => (await apiRequest("GET", `/api/messenger/pages/${id}/capi`)).json(),
+    onSuccess: (data: any) => {
+      toast({
+        title: t("messenger_section.activated"),
+        description: data?.dataset_id
+          ? t("messenger_section.conversions_api_enabled_with_id", { id: data.dataset_id })
+          : t("messenger_section.conversions_api_enabled"),
+      });
+    },
+    onError: () => toast({ title: t("messenger_section.capi_failed"), description: t("messenger_section.capi_failed_description"), variant: "destructive" }),
+  });
+
+  // Self-hosted Facebook Login for Business launcher — same replyagent
+  // "metaconnect" pattern as WhatsApp's Embedded Signup
+  // (WhatsAppSignupLauncherPage, routes /coexistence + /whatsapp): a
+  // dedicated full-page route runs Meta's FB.login (config_id) and redirects
+  // back to /messenger-pages with the result. This Meta app is Business-type,
+  // so Messenger's permissions (pages_messaging etc) can only be requested
+  // through a Login Configuration — the classic scope-based /dialog/oauth
+  // redirect is rejected for them ("this app isn't available, needs at least
+  // one supported permission").
   const handleConnect = () => {
-    toast({ title: t("messenger_section.connecting"), description: t("messenger_section.starting_auth_flow") });
+    const returnUrl = `${window.location.origin}/messenger-pages`;
+    window.location.href = `${window.location.origin}/messenger-connect?r=${encodeURIComponent(returnUrl)}`;
   };
 
   if (isLoading) {
@@ -211,10 +275,11 @@ export default function MessengerSection() {
 
                         <div className="flex items-center gap-2 shrink-0">
                           <button
-                            onClick={() => toast({ title: t("messenger_section.syncing"), description: t("messenger_section.page_data_refreshed") })}
+                            onClick={() => syncMutation.mutate(page.id)}
+                            disabled={syncMutation.isPending}
                             className={outlineBtn}
                           >
-                            <RefreshCw size={12} /> {t("messenger_section.sync")}
+                            <RefreshCw size={12} className={syncMutation.isPending ? "animate-spin" : ""} /> {t("messenger_section.sync")}
                           </button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -231,13 +296,13 @@ export default function MessengerSection() {
                                   <Bot size={12} className="text-primary" /> {t("messenger_section.ai_feeder")}
                                 </span>
                                 <Switch
-                                  checked={page.allow_in_feeder}
-                                  onCheckedChange={() => toast({ title: t("messenger_section.updated"), description: t("messenger_section.ai_feeder_saved") })}
+                                  checked={!!page.allow_in_feeder}
+                                  onCheckedChange={(v) => feederMutation.mutate({ id: page.id, enabled: v })}
                                   className="data-[state=checked]:bg-primary"
                                 />
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => toast({ title: t("messenger_section.activated"), description: t("messenger_section.conversions_api_enabled") })}
+                                onClick={() => capiMutation.mutate(page.id)}
                                 className="rounded-lg py-2 cursor-pointer gap-2 font-bold text-[11px] hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
                               >
                                 <ShieldCheck size={12} className="text-primary" /> {t("messenger_section.conversions_api")}
@@ -252,6 +317,25 @@ export default function MessengerSection() {
                           </DropdownMenu>
                         </div>
                       </div>
+
+                      {/* Action row — page-management features (mirrors InstagramSection's) */}
+                      <div className={cn("px-6 py-4 border-t flex flex-wrap gap-2", softBorder)}>
+                        <button onClick={() => setDefaultReplyPage(page)} className={cn(outlineBtn, "h-9 px-4")}>
+                          <Reply size={11} /> {t("messenger_section.btn_default_reply")}
+                        </button>
+                        <button onClick={() => setIceBreakersPage(page)} className={cn(outlineBtn, "h-9 px-4")}>
+                          <MessageSquare size={11} /> {t("messenger_section.btn_ice_breakers")}
+                        </button>
+                        <button onClick={() => setMainMenuPage(page)} className={cn(outlineBtn, "h-9 px-4")}>
+                          <BookOpen size={11} /> {t("messenger_section.btn_main_menu")}
+                        </button>
+                        <button onClick={() => setPageUsersPage(page)} className={cn(outlineBtn, "h-9 px-4")}>
+                          <UserCog size={11} /> {t("messenger_section.btn_page_users")}
+                        </button>
+                        <button onClick={() => setOtnPage(page)} className={cn(outlineBtn, "h-9 px-4")}>
+                          <BellRing size={11} /> {t("messenger_section.btn_otn")}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -260,6 +344,36 @@ export default function MessengerSection() {
           )}
         </CardContent>
       </Card>
+
+      <MessengerDefaultReplyDialog
+        open={!!defaultReplyPage}
+        page={defaultReplyPage}
+        onClose={() => setDefaultReplyPage(null)}
+      />
+
+      <MessengerIceBreakersDialog
+        open={!!iceBreakersPage}
+        page={iceBreakersPage}
+        onClose={() => setIceBreakersPage(null)}
+      />
+
+      <MessengerMainMenuDialog
+        open={!!mainMenuPage}
+        page={mainMenuPage}
+        onClose={() => setMainMenuPage(null)}
+      />
+
+      <MessengerPageUsersDialog
+        open={!!pageUsersPage}
+        page={pageUsersPage}
+        onClose={() => setPageUsersPage(null)}
+      />
+
+      <MessengerOtnDialog
+        open={!!otnPage}
+        page={otnPage}
+        onClose={() => setOtnPage(null)}
+      />
 
       {/* ── Delete Dialog ── */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>

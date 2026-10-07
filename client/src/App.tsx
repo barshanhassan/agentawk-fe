@@ -25,9 +25,12 @@ import SmartFlowBuilderPage from "@/pages/SmartFlowBuilderPage";
 import WhatsAppOnboardPage from "@/pages/WhatsAppOnboardPage";
 import WhatsAppConnectPage from "@/pages/WhatsAppConnectPage";
 import WhatsAppSignupLauncherPage from "@/pages/WhatsAppSignupLauncherPage";
+import MessengerSignupLauncherPage from "@/pages/MessengerSignupLauncherPage";
+import InstagramSignupLauncherPage from "@/pages/InstagramSignupLauncherPage";
 import InstagramCallbackPage, { InstagramOAuthRelay } from "@/pages/InstagramCallbackPage";
 import { oauthRelayTarget } from "@/lib/instagramOAuth";
 import InstagramPagesCallbackPage from "@/pages/InstagramPagesCallbackPage";
+import MessengerPagesCallbackPage from "@/pages/MessengerPagesCallbackPage";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
@@ -161,6 +164,21 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
       <Route path="/whatsapp">
         <WhatsAppSignupLauncherPage />
       </Route>
+      {/* Same self-hosted Facebook Login for Business launcher pattern, for
+          Messenger's Page connect (replyagent "metaconnect" parity). Runs
+          FB.login (config_id) then redirects to the `?r=` return URL
+          (/messenger-pages) with the code in the hash. Public for the same
+          per-origin-session reason as the WhatsApp launcher above. */}
+      <Route path="/messenger-connect">
+        <MessengerSignupLauncherPage />
+      </Route>
+      {/* Same "Connect Instagram" intro-screen pattern, for Instagram's
+          native (Preferred) login — a plain full-page OAuth redirect, not a
+          popup, so this page hands off straight to instagram.com and plays
+          no further part; Instagram returns to /instagram-callback as before. */}
+      <Route path="/instagram-connect">
+        <InstagramSignupLauncherPage />
+      </Route>
       {/* On the central app host this only relays Instagram's code to the
           workspace subdomain that started the login (lib/instagramOAuth) —
           PUBLIC for the same per-origin-session reason as the launcher above. */}
@@ -178,6 +196,16 @@ function Router({ siteType, isAgencyRoute }: { siteType: string; isAgencyRoute?:
           return relayTo
             ? <InstagramOAuthRelay to={relayTo} />
             : <ProtectedRoute><InstagramPagesCallbackPage /></ProtectedRoute>;
+        })()}
+      </Route>
+      {/* Facebook Page connect for Messenger — same central-host OAuth relay
+          as /instagram-pages (lib/instagramOAuth's helpers are generic). */}
+      <Route path="/messenger-pages">
+        {(() => {
+          const relayTo = oauthRelayTarget("/messenger-pages");
+          return relayTo
+            ? <InstagramOAuthRelay to={relayTo} />
+            : <ProtectedRoute><MessengerPagesCallbackPage /></ProtectedRoute>;
         })()}
       </Route>
       <Route path="/settings">
@@ -295,8 +323,8 @@ function AppContent() {
   // `VITE_FB_DOMAIN` set, is served from the single Meta-whitelisted domain to
   // visitors who have no session on THIS origin. Render it bare — no sidebar,
   // no agency layout — exactly like the auth screens.
-  const isLauncherRoute = location === "/coexistence" || location === "/whatsapp"
-    || ((location === "/instagram-callback" || location === "/instagram-pages") && !!oauthRelayTarget(location));
+  const isLauncherRoute = location === "/coexistence" || location === "/whatsapp" || location === "/messenger-connect" || location === "/instagram-connect"
+    || ((location === "/instagram-callback" || location === "/instagram-pages" || location === "/messenger-pages") && !!oauthRelayTarget(location));
   const siteType = siteData?.app?.site_type || "WORKSPACE";
 
   if (loading) {

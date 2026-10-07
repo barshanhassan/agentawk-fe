@@ -2044,7 +2044,21 @@
     "delete": "Delete",
     "delete_dialog_title": "Delete Facebook Page?",
     "delete_dialog_description": "will be permanently disconnected.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "sync_failed": "Sync failed",
+    "sync_failed_description": "Could not refresh page data from Meta.",
+    "ai_feeder_enabled": "AI Feeder enabled.",
+    "ai_feeder_disabled": "AI Feeder disabled.",
+    "feeder_failed": "Update failed",
+    "feeder_failed_description": "Could not update AI Feeder setting.",
+    "conversions_api_enabled_with_id": "Meta Conversions API enabled. Dataset ID: {{id}}",
+    "capi_failed": "Conversions API failed",
+    "capi_failed_description": "Could not create the Meta Conversions API dataset.",
+    "btn_default_reply": "Default Reply",
+    "btn_ice_breakers": "Ice Breakers",
+    "btn_main_menu": "Main Menu",
+    "btn_page_users": "Page Users",
+    "btn_otn": "Notifications"
   },
   "business_hours_section": {
     "title": "Business hours",
@@ -4198,7 +4212,8 @@
     "delete_modal": {
       "title": "Delete Contact",
       "confirm_prefix": "Are you sure you want to delete",
-      "confirm_suffix": "? This action cannot be undone."
+      "confirm_suffix": "? This action cannot be undone.",
+      "scope_note": "This also permanently deletes their chats and messages on every channel."
     },
     "bulk_edit_modal": {
       "title_one": "Edit Tags for {{count}} Contact",
@@ -4210,7 +4225,9 @@
       "title": "Delete Contacts",
       "confirm_prefix": "Are you sure you want to delete",
       "contact_count_one": "{{count}} contact",
-      "contact_count_other": "{{count}} contacts"
+      "contact_count_other": "{{count}} contacts",
+      "scope_note": "This also permanently deletes their chats and messages on every channel.",
+      "progress": "{{done}}/{{total}} deleted…"
     },
     "common": {
       "cancel": "Cancel",
@@ -4695,6 +4712,24 @@
     "error": "Error",
     "connected_toast_description": "{{name}} connected."
   },
+  "messenger_pages_callback_page": {
+    "title": "Connect Messenger",
+    "subtitle": "Facebook Pages",
+    "fetching": "Fetching your Facebook Pages…",
+    "no_token_error": "No access token received from Facebook.",
+    "fetch_failed_error": "Failed to fetch Facebook Pages.",
+    "connect_failed_error": "Failed to connect.",
+    "back_to_settings": "Back to Settings",
+    "no_accounts_found": "No Facebook Pages found on your account.",
+    "no_accounts_hint": "Make sure you manage at least one Facebook Page.",
+    "accounts_found_one": "{{count}} page found — select which to connect:",
+    "accounts_found_other": "{{count}} pages found — select which to connect:",
+    "default_account_name": "Facebook Page",
+    "connected": "Connected",
+    "connect": "Connect",
+    "error": "Error",
+    "connected_toast_description": "{{name}} connected."
+  },
   "template_media_picker": {
     "size_limit_error": "{{fileName}} is {{sizeMb}} MB — the limit for a {{format}} header is {{capMb}} MB.",
     "image_format_error": "Image headers must be a PNG or JPG.",
@@ -4798,6 +4833,24 @@
     "permissions_note": "We requires certain permissions to build automations with Whatsapp. Click the button below to get started. Don't worry Whatsapp is a part of Facebook ecosystem.",
     "waiting_for_facebook": "Waiting for Facebook…",
     "continue_with_facebook": "Continue with Facebook",
+    "cancel": "Cancel"
+  },
+  "messenger_signup_launcher_page": {
+    "launch_error": "Something went wrong while launching Facebook sign-in.",
+    "could_not_start": "Could not start sign-in",
+    "connect_facebook": "Connect Facebook",
+    "follow_instructions": "Follow the instructions to connect your Facebook Page",
+    "permissions_note": "We require certain permissions to build automations with Messenger. Click the button below to get started.",
+    "waiting_for_facebook": "Waiting for Facebook…",
+    "continue_with_facebook": "Continue with Facebook",
+    "cancel": "Cancel"
+  },
+  "instagram_signup_launcher_page": {
+    "connect_instagram": "Connect Instagram",
+    "follow_instructions": "Follow the instructions to connect your Instagram account",
+    "permissions_note": "Click the button below to log in to your Instagram business account.",
+    "redirecting": "Redirecting…",
+    "continue_with_instagram": "Continue with Instagram",
     "cancel": "Cancel"
   },
   "messages_sub_tab": {
@@ -6214,7 +6267,7 @@
       "assign_conversations": "Assign conversations",
       "mark_read": "Mark read",
       "mark_unread": "Mark unread",
-      "delete_confirm": "Delete {{count}} conversation(s)?",
+      "delete_confirm": "Permanently delete {{count}} conversation(s)? This also deletes all of their messages and cannot be undone.",
       "delete_chat": "Delete chat",
       "select_all": "Select all",
       "no_conversations": "No conversations found",
@@ -6252,6 +6305,7 @@
       "snooze_conversation": "Snooze conversation",
       "schedule_reminder": "Schedule reminder",
       "delete_conversation": "Delete conversation",
+      "delete_conversation_confirm": "Permanently delete this conversation? This also deletes all of its messages and cannot be undone.",
       "select_conversation_title": "Select a conversation",
       "select_conversation_desc": "Choose a conversation from the list to start messaging"
     },
@@ -6676,7 +6730,7 @@
       "cancel": "Cancel",
       "save": "Save",
       "create": "Create",
-      "delete_contact_confirm": "Delete contact \"{{name}}\"? This cannot be undone.",
+      "delete_contact_confirm": "Delete contact \"{{name}}\"? This also permanently deletes their chats and messages on every channel and cannot be undone.",
       "delete_custom_field_confirm": "Delete custom field \"{{name}}\" from the whole workspace?",
       "delete_tag_confirm": "Delete tag \"{{name}}\" from the whole workspace?",
       "address": {
@@ -9199,5 +9253,113 @@
     "sidebar": {
       "group": "AI Studio"
     }
+  },
+  "messenger_default_reply_dialog": {
+    "interval_once_label": "Once",
+    "interval_once_description": "The default reply runs the first time this contact messages this page, ever.",
+    "interval_24h_label": "Once per 24h",
+    "interval_24h_description": "The default reply runs at most once per 24 hour window per contact.",
+    "interval_always_label": "Always",
+    "interval_always_description": "The default reply runs on every inbound message from this contact.",
+    "saved": "Auto-reply saved",
+    "saved_description": "Default reply is now active for this page.",
+    "error": "Error",
+    "failed_to_save": "Failed to save.",
+    "cleared": "Auto-reply cleared",
+    "title": "Instant replies",
+    "description_prefix": "Pick a Bot to run automatically whenever a contact messages",
+    "select_automation": "Select automation",
+    "choose_automation": "— Choose an automation —",
+    "automation_number": "Automation #{{id}}",
+    "view_automation": "View Automation",
+    "trigger": "Trigger",
+    "deleting": "Deleting…",
+    "delete": "Delete",
+    "close": "Close",
+    "saving": "Saving…",
+    "save": "Save"
+  },
+  "messenger_ice_breakers_dialog": {
+    "saved": "Saved",
+    "updated_description": "Ice breakers updated.",
+    "error": "Error",
+    "failed_to_save": "Failed to save.",
+    "cleared": "Cleared",
+    "cleared_description": "All ice breakers removed.",
+    "failed_to_clear": "Failed to clear.",
+    "title": "Ice Breaker Questions",
+    "description_prefix": "Add up to 4 starter questions shown when a user first messages",
+    "description_suffix": "Each can trigger an automation.",
+    "no_questions_yet": "No ice breaker questions yet. Add up to 4.",
+    "question_placeholder": "Question text (max 60 chars)",
+    "trigger_automation": "Trigger automation",
+    "no_automation": "— No automation —",
+    "clear_all": "Clear all",
+    "add_question": "Add Question",
+    "close": "Close",
+    "saving": "Saving…",
+    "save": "Save"
+  },
+  "messenger_main_menu_dialog": {
+    "saved": "Saved",
+    "updated_description": "Main menu updated.",
+    "error": "Error",
+    "failed_to_save": "Failed to save.",
+    "cleared": "Cleared",
+    "cleared_description": "Main menu removed.",
+    "failed_to_clear": "Failed to clear.",
+    "title": "Main Menu",
+    "description_prefix": "Add up to 20 persistent menu items for",
+    "description_suffix": "Each can trigger an automation or open a URL.",
+    "no_items_yet": "No menu items yet. Add up to 20.",
+    "item_label_placeholder": "Menu item label (max 30 chars)",
+    "automation_option": "Automation",
+    "web_url_option": "Web URL",
+    "trigger_automation": "Trigger automation",
+    "no_automation": "— No automation —",
+    "url_label": "URL",
+    "clear_all": "Clear all",
+    "add_item": "Add Item",
+    "close": "Close",
+    "saving": "Saving…",
+    "save": "Save"
+  },
+  "messenger_page_users_dialog": {
+    "saved": "Saved",
+    "page_users_updated": "Page users updated.",
+    "error": "Error",
+    "failed_to_save": "Failed to save.",
+    "title": "Page Access Control",
+    "description_prefix": "Select which workspace agents can manage and respond from",
+    "no_members_found": "No workspace members found.",
+    "close": "Close",
+    "saving": "Saving…",
+    "save": "Save"
+  },
+  "messenger_otn_dialog": {
+    "title": "One-Time Notification Requests",
+    "description_prefix": "Manage reusable notification topics for",
+    "description_suffix": "An automation's OTN step offers these to subscribe.",
+    "request_title_label": "Title",
+    "request_title_placeholder": "e.g. Back in stock alert",
+    "request_topic_label": "Topic",
+    "request_description_label": "Description",
+    "request_description_placeholder": "Shown to the user on the subscribe button",
+    "type_confirmed_event_update": "Confirmed Event Update",
+    "type_post_purchase_update": "Post-Purchase Update",
+    "type_non_promotional_subscription": "Non-Promotional Subscription",
+    "create_request": "Create Request",
+    "creating": "Creating…",
+    "created": "Request created",
+    "created_description": "The OTN request is now available to automations.",
+    "deleted": "Deleted",
+    "deleted_description": "The OTN request and its subscribers were removed.",
+    "error": "Error",
+    "failed_to_create": "Failed to create request.",
+    "failed_to_delete": "Failed to delete request.",
+    "no_requests_yet": "No notification requests yet.",
+    "no_subscribers_yet": "No subscribers yet.",
+    "unnamed_contact": "Unnamed contact",
+    "close": "Close"
   }
 }

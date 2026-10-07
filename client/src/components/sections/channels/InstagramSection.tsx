@@ -50,34 +50,12 @@ import { oauthRedirectUri, buildOAuthState } from "@/lib/instagramOAuth";
 
 type View = "list" | "preferred" | "old";
 
-const IG_SCOPES = [
-  "instagram_business_basic",
-  "instagram_business_manage_messages",
-  "instagram_business_manage_comments",
-  "instagram_business_content_publish",
-  "instagram_business_manage_insights",
-].join(",");
-
 const FB_SCOPES = [
   "pages_show_list",
   "instagram_basic",
   "instagram_manage_messages",
   "pages_read_engagement",
 ].join(",");
-
-// Workspace subdomains return through the central app host (see lib/instagramOAuth);
-// `state` carries this workspace's origin so the code is relayed back here.
-function buildIgAuthUrl(appId: string, pageId?: string | number): string {
-  const redirectUri = encodeURIComponent(oauthRedirectUri("/instagram-callback"));
-  const state = encodeURIComponent(buildOAuthState(pageId));
-  return `https://www.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(IG_SCOPES)}&response_type=code&state=${state}`;
-}
-
-// Reconnect variant: carries the existing page id in OAuth `state` so the
-// callback refreshes that account's token in place (replyagent "Refresh").
-function buildIgReconnectAuthUrl(appId: string, pageId: string | number): string {
-  return buildIgAuthUrl(appId, pageId);
-}
 
 // Same app-host relay as above; Facebook returns the token (and state) in the URL hash.
 function buildFbAuthUrl(appId: string, version: string): string {
@@ -211,7 +189,6 @@ export default function InstagramSection() {
   });
 
   function handleAddNew() {
-    const igAppId = "996773679700787";
     const fbAppId = "979553311024998";
     const version = "v22.0";
     if (view === "preferred") {
@@ -220,7 +197,9 @@ export default function InstagramSection() {
         setShowLimitReached(true);
         return;
       }
-      window.location.href = buildIgAuthUrl(igAppId);
+      // Self-hosted "Connect Instagram" intro screen (replyagent "metaconnect"
+      // parity) — mirrors WhatsApp/Messenger's own launcher pattern.
+      window.location.href = `${window.location.origin}/instagram-connect`;
     } else {
       window.location.href = buildFbAuthUrl(fbAppId, version);
     }
@@ -229,8 +208,7 @@ export default function InstagramSection() {
   // Reconnect = re-run IG OAuth carrying this page's id so the existing row's
   // token is refreshed in place (replyagent "Refresh"). Preferred accounts only.
   function handleReconnect(account: any) {
-    const igAppId = "996773679700787";
-    window.location.href = buildIgReconnectAuthUrl(igAppId, account.id);
+    window.location.href = `${window.location.origin}/instagram-connect?page=${encodeURIComponent(account.id)}`;
   }
 
   // Old (Facebook-managed) reconnect = re-run FB OAuth; the page-picker upserts
