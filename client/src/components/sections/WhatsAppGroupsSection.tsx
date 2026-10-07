@@ -325,9 +325,9 @@ export default function WhatsAppGroupsSection() {
                 </p>
                 <button
                   onClick={() => navigate("/settings?tab=WhatsApp&view=qr")}
-                  className="mt-1 inline-flex items-center gap-2 h-9 px-4 rounded-xl border border-primary/30 text-primary text-[13px] font-semibold hover:bg-primary/5"
+                  className="mt-1 inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-white text-[13px] font-semibold shadow-sm hover:opacity-90"
                 >
-                  {t("whatsapp_groups.connect_number", { defaultValue: "Connect a number" })}
+                  {t("whatsapp_groups.connect_number", { defaultValue: "Connect Number" })}
                 </button>
               </div>
             ) : (
@@ -597,7 +597,12 @@ export default function WhatsAppGroupsSection() {
                       ? ""
                       : t("whatsapp_groups.participants_placeholder", { defaultValue: "Type a number, e.g. 923001234567, and press Enter" })
                   }
-                  className={cn("flex-1 min-w-[180px] h-8 bg-transparent outline-none text-[13px] px-1.5", text)}
+                  autoComplete="off"
+                  className={cn(
+                    "flex-1 min-w-[180px] h-8 bg-transparent text-[13px] px-1.5 rounded-md",
+                    "outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                    text,
+                  )}
                 />
               </div>
             </div>

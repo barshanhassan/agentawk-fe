@@ -1028,14 +1028,32 @@ export default function ContactProfileModal({
     }
   };
 
-  const deleteCompanyContactById = async (id: string, name: string) => {
-    if (!window.confirm(t("contact_profile_modal.dialogs.delete_contact_confirm", { name }))) return;
+  // Shared confirm dialog for the 3 destructive actions on this page that
+  // used to go through the browser's native window.confirm instead of the
+  // app's own styled dialog.
+  const [confirmAction, setConfirmAction] = useState<
+    | { kind: "deleteContact"; id: string; name: string }
+    | { kind: "deleteCustomField"; slug: string; name: string }
+    | { kind: "deleteTag"; id: string; name: string }
+    | null
+  >(null);
+  const [deletingContact, setDeletingContact] = useState(false);
+
+  const deleteCompanyContactById = (id: string, name: string) => {
+    setConfirmAction({ kind: "deleteContact", id, name });
+  };
+
+  const confirmDeleteContact = async (id: string) => {
+    setDeletingContact(true);
     try {
       await apiDelete(`/api/contacts/${id}`);
       invalidateProfile();
       toast({ title: t("contact_profile_modal.toasts.contact_deleted") });
+      setConfirmAction(null);
     } catch (err: any) {
       toast({ title: t("contact_profile_modal.toasts.delete_failed"), description: err?.message ?? "", variant: "destructive" });
+    } finally {
+      setDeletingContact(false);
     }
   };
 
@@ -2561,15 +2579,7 @@ export default function ContactProfileModal({
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      t("contact_profile_modal.dialogs.delete_custom_field_confirm", { name: cf.label ?? cf.name }),
-                                    )
-                                  ) {
-                                    deleteCustomFieldMutation.mutate(String(cf.slug));
-                                  }
-                                }}
+                                onClick={() => setConfirmAction({ kind: "deleteCustomField", slug: String(cf.slug), name: cf.label ?? cf.name })}
                               >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 {t("contact_profile_modal.right_panel.custom_fields.delete_field")}
@@ -2673,15 +2683,7 @@ export default function ContactProfileModal({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
-                                  onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        t("contact_profile_modal.dialogs.delete_tag_confirm", { name: tagName }),
-                                      )
-                                    ) {
-                                      deleteTagMutation.mutate(String(tg.id));
-                                    }
-                                  }}
+                                  onClick={() => setConfirmAction({ kind: "deleteTag", id: String(tg.id), name: tagName })}
                                 >
                                   <Trash2 className="h-3.5 w-3.5 mr-2" />
                                   {t("contact_profile_modal.right_panel.tags.delete_tag")}
@@ -3039,6 +3041,44 @@ export default function ContactProfileModal({
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Shared confirm dialog: delete contact / custom field / tag — was
+          window.confirm() (browser-native, looked out of place) for all 3. */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("contact_profile_modal.dialogs.confirm_delete_title", { defaultValue: "Confirm delete" })}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.kind === "deleteContact" &&
+                t("contact_profile_modal.dialogs.delete_contact_confirm", { name: confirmAction.name })}
+              {confirmAction?.kind === "deleteCustomField" &&
+                t("contact_profile_modal.dialogs.delete_custom_field_confirm", { name: confirmAction.name })}
+              {confirmAction?.kind === "deleteTag" &&
+                t("contact_profile_modal.dialogs.delete_tag_confirm", { name: confirmAction.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingContact}>{t("contact_profile_modal.dialogs.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingContact || deleteCustomFieldMutation.isPending || deleteTagMutation.isPending}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
+              onClick={() => {
+                if (!confirmAction) return;
+                if (confirmAction.kind === "deleteContact") confirmDeleteContact(confirmAction.id);
+                else if (confirmAction.kind === "deleteCustomField") {
+                  deleteCustomFieldMutation.mutate(confirmAction.slug);
+                  setConfirmAction(null);
+                } else if (confirmAction.kind === "deleteTag") {
+                  deleteTagMutation.mutate(confirmAction.id);
+                  setConfirmAction(null);
+                }
+              }}
+            >
+              {t("contact_profile_modal.dialogs.delete_button", { defaultValue: "Delete" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

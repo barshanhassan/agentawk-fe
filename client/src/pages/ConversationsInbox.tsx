@@ -1366,6 +1366,11 @@ export default function ConversationsInbox() {
 
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderAt, setReminderAt] = useState("");
+
+  // Shared confirm dialog for permanently deleting one or more conversations
+  // — a styled Dialog instead of the browser's native window.confirm, so it
+  // matches every other confirm modal in the app.
+  const [deleteChatConfirm, setDeleteChatConfirm] = useState<{ ids: number[] } | null>(null);
   const [reminderText, setReminderText] = useState("");
 
   // Reply / Note tab toggle for the compose area (replyagent has a Note tab
@@ -3468,10 +3473,7 @@ export default function ConversationsInbox() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-red-600 focus:text-red-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
-                              onClick={() => {
-                                if (window.confirm(t("conversations_inbox.list.delete_confirm", { count: selectedInboxIds.length })))
-                                  bulkDeleteMutation.mutate(selectedInboxIds);
-                              }}
+                              onClick={() => setDeleteChatConfirm({ ids: selectedInboxIds })}
                             >
                               <Trash2 size={14} className="mr-2" /> {t("conversations_inbox.list.delete_chat")}
                             </DropdownMenuItem>
@@ -3870,9 +3872,7 @@ export default function ConversationsInbox() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => {
-                                if (selectedConversation) {
-                                  deleteInboxMutation.mutate(selectedConversation);
-                                }
+                                if (selectedConversation) setDeleteChatConfirm({ ids: [selectedConversation] });
                               }}
                               className="text-red-600 dark:text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950/30 dark:focus:text-red-400"
                             >
@@ -6098,6 +6098,37 @@ export default function ConversationsInbox() {
               disabled={!reminderAt || !reminderText.trim() || reminderMutation.isPending}
             >
               {reminderMutation.isPending ? t("conversations_inbox.dialogs.reminder.scheduling") : t("conversations_inbox.dialogs.reminder.schedule")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete conversation(s) — permanent, so it gets a real confirm dialog
+          instead of the browser's native window.confirm. */}
+      <Dialog open={!!deleteChatConfirm} onOpenChange={(open) => !open && setDeleteChatConfirm(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("conversations_inbox.list.delete_chat")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {deleteChatConfirm &&
+              t("conversations_inbox.list.delete_confirm", { count: deleteChatConfirm.ids.length })}
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteChatConfirm(null)} disabled={bulkDeleteMutation.isPending}>
+              {t("conversations_inbox.dialogs.reminder.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={bulkDeleteMutation.isPending}
+              onClick={() => {
+                if (!deleteChatConfirm) return;
+                bulkDeleteMutation.mutate(deleteChatConfirm.ids, {
+                  onSettled: () => setDeleteChatConfirm(null),
+                });
+              }}
+            >
+              {bulkDeleteMutation.isPending ? t("conversations_inbox.common.deleting", { defaultValue: "Deleting…" }) : t("conversations_inbox.list.delete_chat")}
             </Button>
           </DialogFooter>
         </DialogContent>

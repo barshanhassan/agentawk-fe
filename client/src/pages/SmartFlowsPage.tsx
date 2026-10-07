@@ -128,13 +128,15 @@ export default function SmartFlowsPage() {
 
     const clearSelection = () => setSelectedIds(new Set());
 
-    const runBulk = async (action: "publish" | "unpublish" | "delete") => {
+    const [bulkConfirm, setBulkConfirm] = useState<"publish" | "unpublish" | "delete" | null>(null);
+
+    const requestBulk = (action: "publish" | "unpublish" | "delete") => {
         if (selectedIds.size === 0) return;
-        const confirmMsg =
-            action === "publish" ? t("smart_flows_page.confirm_bulk_publish", { count: selectedIds.size }) :
-            action === "unpublish" ? t("smart_flows_page.confirm_bulk_unpublish", { count: selectedIds.size }) :
-            t("smart_flows_page.confirm_bulk_delete", { count: selectedIds.size });
-        if (!window.confirm(confirmMsg)) return;
+        setBulkConfirm(action);
+    };
+
+    const runBulk = async (action: "publish" | "unpublish" | "delete") => {
+        setBulkConfirm(null);
         setBulkRunning(action);
         try {
             const ids = Array.from(selectedIds);
@@ -637,7 +639,7 @@ export default function SmartFlowsPage() {
                                 variant="outline"
                                 className="h-7 text-[11px]"
                                 disabled={!!bulkRunning}
-                                onClick={() => runBulk("publish")}
+                                onClick={() => requestBulk("publish")}
                             >
                                 {bulkRunning === "publish" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                                 {t("smart_flows_page.publish")}
@@ -647,7 +649,7 @@ export default function SmartFlowsPage() {
                                 variant="outline"
                                 className="h-7 text-[11px]"
                                 disabled={!!bulkRunning}
-                                onClick={() => runBulk("unpublish")}
+                                onClick={() => requestBulk("unpublish")}
                             >
                                 {bulkRunning === "unpublish" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                                 {t("smart_flows_page.unpublish")}
@@ -657,7 +659,7 @@ export default function SmartFlowsPage() {
                                 variant="outline"
                                 className="h-7 text-[11px] text-rose-600 border-rose-200"
                                 disabled={!!bulkRunning}
-                                onClick={() => runBulk("delete")}
+                                onClick={() => requestBulk("delete")}
                             >
                                 {bulkRunning === "delete" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                                 {t("smart_flows_page.delete")}
@@ -1140,6 +1142,50 @@ export default function SmartFlowsPage() {
                                 className="min-w-[100px]"
                             >
                                 {deleteFlowMutation.isPending ? t("smart_flows_page.deleting") : t("smart_flows_page.delete")}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Bulk publish/unpublish/delete Confirm Modal */}
+            {bulkConfirm && (
+                <Dialog open={!!bulkConfirm} onOpenChange={(open) => { if (!open) setBulkConfirm(null); }}>
+                    <DialogContent className="sm:max-w-[440px]">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {bulkConfirm === "publish" ? t("smart_flows_page.publish") :
+                                 bulkConfirm === "unpublish" ? t("smart_flows_page.unpublish") :
+                                 t("smart_flows_page.delete")}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="py-2">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                {bulkConfirm === "publish" ? t("smart_flows_page.confirm_bulk_publish", { count: selectedIds.size }) :
+                                 bulkConfirm === "unpublish" ? t("smart_flows_page.confirm_bulk_unpublish", { count: selectedIds.size }) :
+                                 t("smart_flows_page.confirm_bulk_delete", { count: selectedIds.size })}
+                            </p>
+                        </div>
+                        <div className="flex gap-3 justify-end mt-5">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setBulkConfirm(null)}
+                                disabled={!!bulkRunning}
+                            >
+                                {t("smart_flows_page.cancel")}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={bulkConfirm === "delete" ? "destructive" : "default"}
+                                onClick={() => runBulk(bulkConfirm)}
+                                disabled={!!bulkRunning}
+                                className="min-w-[100px]"
+                            >
+                                {bulkRunning === bulkConfirm ? t("smart_flows_page.deleting") :
+                                 bulkConfirm === "publish" ? t("smart_flows_page.publish") :
+                                 bulkConfirm === "unpublish" ? t("smart_flows_page.unpublish") :
+                                 t("smart_flows_page.delete")}
                             </Button>
                         </div>
                     </DialogContent>

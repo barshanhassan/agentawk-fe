@@ -8,6 +8,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import AddRoleForm from "./AddRoleForm";
 import { useTranslation } from 'react-i18next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ROW_ACCENTS = [
   'bg-violet-500', 'bg-blue-500', 'bg-emerald-500',
@@ -23,6 +24,7 @@ const AgencyRoles = () => {
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const [search, setSearch] = useState('');
+  const [roleToDelete, setRoleToDelete] = useState<any>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -355,11 +357,7 @@ const AgencyRoles = () => {
                     )}
                     {!role.isSystem && (
                       <button
-                        onClick={() => {
-                          if (window.confirm(`Delete role "${role.name}"? This cannot be undone — any agent assigned to it will lose that role.`)) {
-                            deleteRoleMutation.mutate(role);
-                          }
-                        }}
+                        onClick={() => setRoleToDelete(role)}
                         title="Delete"
                         className={cn(
                           'p-1.5 rounded-lg border transition-all shadow-sm',
@@ -378,6 +376,43 @@ const AgencyRoles = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Role Confirm — used to be window.confirm(), now matches the
+          app's own styled dialog. */}
+      <Dialog open={!!roleToDelete} onOpenChange={(open) => { if (!open) setRoleToDelete(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('agency_roles.delete_title', { defaultValue: 'Delete role' })}</DialogTitle>
+          </DialogHeader>
+          <p className={cn('text-sm', dark ? 'text-slate-400' : 'text-slate-500')}>
+            {t('agency_roles.delete_confirm', {
+              defaultValue: 'Delete role "{{name}}"? This cannot be undone — any agent assigned to it will lose that role.',
+              name: roleToDelete?.name,
+            })}
+          </p>
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              onClick={() => setRoleToDelete(null)}
+              disabled={deleteRoleMutation.isPending}
+              className={cn(
+                'px-4 h-9 rounded-lg border text-sm font-medium transition-all',
+                dark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50',
+              )}
+            >
+              {t('agency_roles.cancel', { defaultValue: 'Cancel' })}
+            </button>
+            <button
+              onClick={() => {
+                if (roleToDelete) deleteRoleMutation.mutate(roleToDelete, { onSettled: () => setRoleToDelete(null) });
+              }}
+              disabled={deleteRoleMutation.isPending}
+              className="px-4 h-9 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-medium transition-all"
+            >
+              {deleteRoleMutation.isPending ? t('agency_roles.deleting', { defaultValue: 'Deleting…' }) : t('agency_roles.delete', { defaultValue: 'Delete' })}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

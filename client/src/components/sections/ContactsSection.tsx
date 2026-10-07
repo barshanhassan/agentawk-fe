@@ -696,6 +696,8 @@ export default function ContactsSection() {
 
   // Bulk Delete Modal State
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState<{ done: number; total: number } | null>(null);
 
   const [draggedSortId, setDraggedSortId] = useState<string | null>(null);
   const [openSortColumnDropdown, setOpenSortColumnDropdown] = useState<string | null>(null);
@@ -1023,9 +1025,13 @@ export default function ContactsSection() {
 
   const handleConfirmBulkDelete = async () => {
     const selectedContactIds = Array.from(selectedRows);
+    setIsBulkDeleting(true);
+    setBulkDeleteProgress({ done: 0, total: selectedContactIds.length });
     try {
       await Promise.all(selectedContactIds.map(id =>
-        apiRequest("DELETE", `/api/contacts/${id}`)
+        apiRequest("DELETE", `/api/contacts/${id}`).finally(() =>
+          setBulkDeleteProgress((prev) => (prev ? { ...prev, done: prev.done + 1 } : prev))
+        )
       ));
       toast({
         title: t("contacts_section.toasts.contacts_deleted"),
@@ -1036,6 +1042,9 @@ export default function ContactsSection() {
       setSelectedRows(new Set());
     } catch (error) {
       toast({ title: t("contacts_section.toasts.error"), description: t("contacts_section.toasts.failed_delete_contacts"), variant: "destructive" });
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkDeleteProgress(null);
     }
   };
 
@@ -2234,10 +2243,11 @@ export default function ContactsSection() {
             <DialogTitle>{t("contacts_section.delete_modal.title")}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             <p className="text-sm text-foreground">
               {t("contacts_section.delete_modal.confirm_prefix")} <span className="font-semibold break-all">{contactToDelete?.name}</span>{t("contacts_section.delete_modal.confirm_suffix")}
             </p>
+            <p className="text-xs text-muted-foreground">{t("contacts_section.delete_modal.scope_note")}</p>
           </div>
 
           {/* Modal Footer */}
@@ -2246,6 +2256,7 @@ export default function ContactsSection() {
               onClick={() => setShowDeleteContactModal(false)}
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
+              disabled={deleteMutation.isPending}
             >
               {t("contacts_section.common.cancel")}
             </Button>
@@ -2253,8 +2264,9 @@ export default function ContactsSection() {
               onClick={handleConfirmDelete}
               className="btn-outline-destructive"
               variant="outline"
+              disabled={deleteMutation.isPending}
             >
-              {t("contacts_section.common.delete")}
+              {deleteMutation.isPending ? t("contacts_section.common.deleting", { defaultValue: "Deleting…" }) : t("contacts_section.common.delete")}
             </Button>
           </div>
         </DialogContent>
@@ -2360,10 +2372,28 @@ export default function ContactsSection() {
             <DialogTitle>{t("contacts_section.bulk_delete_modal.title")}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             <p className="text-sm text-foreground">
               {t("contacts_section.bulk_delete_modal.confirm_prefix")} <span className="font-semibold">{t("contacts_section.bulk_delete_modal.contact_count", { count: selectedRows.size })}</span>{t("contacts_section.delete_modal.confirm_suffix")}
             </p>
+            <p className="text-xs text-muted-foreground">{t("contacts_section.bulk_delete_modal.scope_note")}</p>
+            {bulkDeleteProgress && (
+              <div className="space-y-1 pt-1">
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-150"
+                    style={{ width: `${Math.round((bulkDeleteProgress.done / bulkDeleteProgress.total) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("contacts_section.bulk_delete_modal.progress", {
+                    defaultValue: "{{done}}/{{total}} deleted…",
+                    done: bulkDeleteProgress.done,
+                    total: bulkDeleteProgress.total,
+                  })}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Modal Footer */}
@@ -2372,6 +2402,7 @@ export default function ContactsSection() {
               onClick={() => setShowBulkDeleteModal(false)}
               variant="outline"
               className="border-input [border-color:hsl(var(--input))]"
+              disabled={isBulkDeleting}
             >
               {t("contacts_section.common.cancel")}
             </Button>
@@ -2379,8 +2410,9 @@ export default function ContactsSection() {
               onClick={handleConfirmBulkDelete}
               className="btn-outline-destructive"
               variant="outline"
+              disabled={isBulkDeleting}
             >
-              {t("contacts_section.common.delete")}
+              {isBulkDeleting ? t("contacts_section.common.deleting", { defaultValue: "Deleting…" }) : t("contacts_section.common.delete")}
             </Button>
           </div>
         </DialogContent>
