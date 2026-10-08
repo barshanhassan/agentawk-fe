@@ -661,11 +661,12 @@ export default function ConversationsInbox() {
       wa_message_id?: string;
       insta_message_id?: string;
       zapi_message_id?: string;
+      fb_message_id?: string;
       wamid?: string;
       status: MessageStatus;
     }) => {
       if (!selectedConversation) return;
-      const rawId = data.wa_message_id ?? data.insta_message_id ?? data.zapi_message_id;
+      const rawId = data.wa_message_id ?? data.insta_message_id ?? data.zapi_message_id ?? data.fb_message_id;
       const targetId = Number(rawId);
       if (!Number.isFinite(targetId)) return;
 
