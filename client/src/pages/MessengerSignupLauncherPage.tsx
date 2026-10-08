@@ -20,13 +20,11 @@ import { loadFacebookSdk } from "@/lib/metaEmbeddedSignup";
  * app isn't available, needs at least one supported permission").
  */
 
-// User-access-token Login Configurations consistently fail on this app with
-// Meta's "this app isn't available, needs at least one supported permission"
-// error (tested twice — same result for a fresh Instagram config too) while
-// a System-user-access-token config opens fine. Sticking with System-user
-// type; the empty-page-list symptom that config hit was traced to a real
-// backend bug (a redundant second token exchange) and fixed separately.
-const MESSENGER_LOGIN_CONFIG_ID = "1115534317507972";
+// User-access-token config. Without a role on the app, Standard Access
+// returns no Pages (a System-user config needs Advanced Access instead), so
+// this only works for people holding a role on the Meta app until App Review
+// is approved. The old System-user config is 1115534317507972.
+const MESSENGER_LOGIN_CONFIG_ID = "1762165861669416";
 
 function launchMessengerLogin(configId: string): Promise<{ code: string }> {
   return new Promise((resolve, reject) => {
